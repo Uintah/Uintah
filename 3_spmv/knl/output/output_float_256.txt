@@ -1,0 +1,504 @@
+input: ./input/sx-stackoverflow.rb
+num_of_lines_for_m_ptr_in_row_id 325248, num_of_lines_for_m_row_id 3623345, num_of_lines_for_m_data 2787189, num_of_rows 2601977, num_of_cols 2601977, num_of_entries 36233450
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 256.154700 	 1386.372400 	 236.978800 	 1249.634400
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 256.135000 	 1385.903100 	 237.110000 	 1249.889000
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 256.172800 	 1385.799600 	 236.914900 	 1249.649200
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 256.158300 	 1386.612400 	 237.030500 	 1249.851400
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 256.102300 	 1386.198400 	 237.056800 	 1249.429000
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 351.104800 ms
+input: ./input/sx-stackoverflow.rb
+num_of_lines_for_m_ptr_in_row_id 325248, num_of_lines_for_m_row_id 3623345, num_of_lines_for_m_data 2787189, num_of_rows 2601977, num_of_cols 2601977, num_of_entries 36233450
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.857200 	 1278.716200 	 216.738400 	 1183.353400
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.916300 	 1278.445600 	 216.692400 	 1183.603900
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.931200 	 1278.614900 	 229.595900 	 1183.423400
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.928800 	 1278.687200 	 216.716100 	 1183.612900
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.935700 	 1278.781200 	 216.801500 	 1183.769900
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 230.897500 	 1278.681400 	 216.703400 	 1183.122900
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 341.153900 ms
+input: ./input/sx-stackoverflow.rb
+num_of_lines_for_m_ptr_in_row_id 325248, num_of_lines_for_m_row_id 3623345, num_of_lines_for_m_data 2787189, num_of_rows 2601977, num_of_cols 2601977, num_of_entries 36233450
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.315200 	 1197.187100 	 219.010400 	 1161.862000
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.397400 	 1197.115000 	 219.220700 	 1162.180300
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 225.476700 	 1197.371400 	 218.882500 	 1162.260700
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.370400 	 1197.318200 	 218.920900 	 1162.250000
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.357100 	 1198.446400 	 218.898300 	 1162.339100
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.315100 	 1197.308000 	 218.915800 	 1162.273300
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 224.364300 	 1197.250500 	 218.805500 	 1162.314200
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 341.461000 ms
+input: ./input/atmosmodm.rb
+num_of_lines_for_m_ptr_in_row_id 186220, num_of_lines_for_m_row_id 1031976, num_of_lines_for_m_data 1289970, num_of_rows 1489752, num_of_cols 1489752, num_of_entries 10319760
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.820400 	 32.561800 	 57.072200 	 31.336900
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 57.411700 	 32.543000 	 57.071900 	 31.339300
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 57.378500 	 32.578600 	 57.326000 	 31.267400
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.498400 	 32.537100 	 57.028000 	 31.296800
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 57.553000 	 32.587000 	 56.592700 	 31.265800
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 65.207900 ms
+input: ./input/atmosmodm.rb
+num_of_lines_for_m_ptr_in_row_id 186220, num_of_lines_for_m_row_id 1031976, num_of_lines_for_m_data 1289970, num_of_rows 1489752, num_of_cols 1489752, num_of_entries 10319760
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.734900 	 28.085000 	 46.221700 	 28.698600
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.345800 	 28.126200 	 46.146200 	 28.703000
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.225100 	 28.150500 	 46.358800 	 28.634300
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.676800 	 30.239100 	 46.885100 	 28.605600
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.628200 	 28.133500 	 46.417600 	 28.646100
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 48.753200 	 28.113700 	 46.490500 	 28.624400
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 65.672700 ms
+input: ./input/atmosmodm.rb
+num_of_lines_for_m_ptr_in_row_id 186220, num_of_lines_for_m_row_id 1031976, num_of_lines_for_m_data 1289970, num_of_rows 1489752, num_of_cols 1489752, num_of_entries 10319760
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 44.644300 	 28.621700 	 41.089700 	 28.463000
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 43.258500 	 28.627400 	 40.655300 	 33.519300
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 43.191000 	 28.636900 	 40.089900 	 28.429000
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 43.339900 	 28.615900 	 40.521700 	 28.434100
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 43.285200 	 28.640900 	 40.684700 	 28.418000
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 49.096600 	 28.601800 	 43.650900 	 28.443000
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 43.133200 	 28.626500 	 40.594100 	 28.418400
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 62.834100 ms
+input: ./input/t2em.rb
+num_of_lines_for_m_ptr_in_row_id 92164, num_of_lines_for_m_row_id 417349, num_of_lines_for_m_data 176571, num_of_rows 921632, num_of_cols 921632, num_of_entries 4590832
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 25.236000 	 13.850500 	 26.620600 	 14.401300
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 25.624700 	 13.834900 	 26.837000 	 14.437900
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 25.249500 	 13.839000 	 26.583400 	 14.396800
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 25.425000 	 13.814200 	 26.613400 	 14.385600
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 25.235100 	 13.818100 	 26.556200 	 14.399700
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 29.611000 ms
+input: ./input/t2em.rb
+num_of_lines_for_m_ptr_in_row_id 92164, num_of_lines_for_m_row_id 417349, num_of_lines_for_m_data 176571, num_of_rows 921632, num_of_cols 921632, num_of_entries 4590832
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 22.710700 	 12.210700 	 22.365200 	 12.419700
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 22.589000 	 12.269500 	 21.564700 	 12.459700
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 22.572900 	 12.272100 	 21.868700 	 12.432200
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 23.024900 	 12.267000 	 21.535100 	 12.471600
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 22.744100 	 12.216000 	 21.078200 	 12.475100
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 22.869700 	 12.221900 	 21.567300 	 12.441200
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 39.783200 ms
+input: ./input/t2em.rb
+num_of_lines_for_m_ptr_in_row_id 92164, num_of_lines_for_m_row_id 417349, num_of_lines_for_m_data 176571, num_of_rows 921632, num_of_cols 921632, num_of_entries 4590832
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 23.996700 	 12.389000 	 20.235700 	 12.464900
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.712800 	 12.324600 	 20.952500 	 12.513700
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.542500 	 12.308600 	 20.919000 	 12.583200
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.682800 	 12.315000 	 20.335900 	 12.454400
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.828200 	 12.322400 	 20.628600 	 12.497600
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.338200 	 12.329500 	 20.355200 	 12.442300
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 20.504300 	 12.301100 	 26.626500 	 13.422600
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 37.582900 ms
+input: ./input/wiki-talk-temporal.rb
+num_of_lines_for_m_ptr_in_row_id 114015, num_of_lines_for_m_row_id 330960, num_of_lines_for_m_data 254584, num_of_rows 1140149, num_of_cols 1140149, num_of_entries 3309592
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 52.448100 	 613.494300 	 54.821400 	 543.276300
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 52.247100 	 614.238600 	 54.813700 	 542.843800
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 52.290300 	 613.564300 	 54.837300 	 542.913600
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 52.259100 	 613.463900 	 54.798300 	 544.083800
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 52.251200 	 613.961500 	 54.843900 	 543.309500
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 80.975900 ms
+input: ./input/wiki-talk-temporal.rb
+num_of_lines_for_m_ptr_in_row_id 114015, num_of_lines_for_m_row_id 330960, num_of_lines_for_m_data 254584, num_of_rows 1140149, num_of_cols 1140149, num_of_entries 3309592
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.076500 	 620.882200 	 55.599400 	 547.111800
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.066600 	 620.807400 	 55.594800 	 547.838700
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.097800 	 620.730400 	 55.597900 	 547.271000
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.063000 	 619.981800 	 55.608100 	 546.836500
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.069900 	 619.900000 	 55.590100 	 546.681100
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 58.060500 	 620.889300 	 55.589000 	 547.200500
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 87.648600 ms
+input: ./input/wiki-talk-temporal.rb
+num_of_lines_for_m_ptr_in_row_id 114015, num_of_lines_for_m_row_id 330960, num_of_lines_for_m_data 254584, num_of_rows 1140149, num_of_cols 1140149, num_of_entries 3309592
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.509800 	 597.426900 	 64.112900 	 547.219200
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.508000 	 597.428100 	 64.190900 	 547.034500
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.500000 	 597.548500 	 64.114000 	 547.177900
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.484800 	 597.497000 	 64.167800 	 547.180000
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.467100 	 597.490800 	 64.146300 	 547.238800
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.508300 	 597.509900 	 64.231200 	 547.150900
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 71.507400 	 597.608800 	 64.123700 	 547.231100
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 87.792300 ms
+input: ./input/mc2depi.rb
+num_of_lines_for_m_ptr_in_row_id 52583, num_of_lines_for_m_row_id 190930, num_of_lines_for_m_data 161556, num_of_rows 525825, num_of_cols 525825, num_of_entries 2100225
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 13.162900 	 6.836100 	 12.809900 	 6.884500
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 13.466100 	 6.847200 	 12.679800 	 6.881200
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 13.185800 	 6.850900 	 12.703000 	 6.878600
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 13.211400 	 6.839900 	 12.711300 	 6.863700
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 13.956400 	 6.915600 	 12.682900 	 6.871900
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 16.306200 ms
+input: ./input/mc2depi.rb
+num_of_lines_for_m_ptr_in_row_id 52583, num_of_lines_for_m_row_id 190930, num_of_lines_for_m_data 161556, num_of_rows 525825, num_of_cols 525825, num_of_entries 2100225
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.057100 	 6.932600 	 9.727000 	 6.938200
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.048500 	 6.944200 	 9.660600 	 6.934600
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.045000 	 6.907400 	 9.645700 	 6.940000
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.104600 	 6.930300 	 9.600300 	 6.934600
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.958800 	 6.949600 	 9.739900 	 6.939700
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.938500 	 6.934300 	 9.725800 	 6.932000
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 22.950600 ms
+input: ./input/mc2depi.rb
+num_of_lines_for_m_ptr_in_row_id 52583, num_of_lines_for_m_row_id 190930, num_of_lines_for_m_data 161556, num_of_rows 525825, num_of_cols 525825, num_of_entries 2100225
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.031900 	 7.226800 	 8.560700 	 7.159800
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.676100 	 7.171600 	 8.623700 	 7.177400
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.990000 	 7.181000 	 8.601700 	 7.148900
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.031500 	 7.163500 	 8.505100 	 7.192400
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.992000 	 7.182900 	 8.585100 	 7.177900
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.936900 	 7.201000 	 8.481900 	 7.159400
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.059900 	 7.167600 	 8.546400 	 7.146700
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 21.358600 ms
+input: ./input/Linux_call_graph.rb
+num_of_lines_for_m_ptr_in_row_id 32409, num_of_lines_for_m_row_id 109901, num_of_lines_for_m_data 46497, num_of_rows 324085, num_of_cols 324085, num_of_entries 1208908
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.865600 	 5.547800 	 10.914400 	 5.124200
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.817900 	 5.552700 	 10.908200 	 5.116400
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.813000 	 5.538700 	 10.882600 	 5.109500
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 10.835600 	 5.548400 	 10.879400 	 5.122600
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.044400 	 5.512900 	 10.737200 	 5.101800
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 14.286000 ms
+input: ./input/Linux_call_graph.rb
+num_of_lines_for_m_ptr_in_row_id 32409, num_of_lines_for_m_row_id 109901, num_of_lines_for_m_data 46497, num_of_rows 324085, num_of_cols 324085, num_of_entries 1208908
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.035000 	 5.320300 	 9.036100 	 5.091300
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.008800 	 5.329500 	 9.034500 	 5.082300
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.030100 	 5.333000 	 9.042300 	 5.087700
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.016000 	 5.323400 	 9.013700 	 5.083800
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.017900 	 5.317700 	 9.005000 	 5.080200
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.986200 	 5.317400 	 9.007600 	 5.071400
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 19.743500 ms
+input: ./input/Linux_call_graph.rb
+num_of_lines_for_m_ptr_in_row_id 32409, num_of_lines_for_m_row_id 109901, num_of_lines_for_m_data 46497, num_of_rows 324085, num_of_cols 324085, num_of_entries 1208908
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.515200 	 4.974500 	 7.834700 	 5.077900
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.497900 	 4.989400 	 7.809400 	 5.090100
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.503500 	 4.973600 	 7.823900 	 5.080300
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.507600 	 4.978600 	 7.834300 	 5.075700
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.509400 	 4.970800 	 7.835000 	 5.071300
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.496100 	 4.975400 	 7.818300 	 5.073700
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 7.487000 	 4.974100 	 17.037700 	 10.298100
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 22.747600 ms
+input: ./input/sx-superuser.rb
+num_of_lines_for_m_ptr_in_row_id 17645, num_of_lines_for_m_row_id 84081, num_of_lines_for_m_data 57806, num_of_rows 194085, num_of_cols 194085, num_of_entries 924886
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 12.912500 	 27.194700 	 12.140700 	 23.893700
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 12.911100 	 27.090200 	 12.138600 	 23.932800
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 12.923400 	 27.116000 	 12.148900 	 23.901600
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 12.910300 	 27.102600 	 12.162400 	 23.968400
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 12.906800 	 27.129000 	 12.122900 	 23.892900
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 20.173500 ms
+input: ./input/sx-superuser.rb
+num_of_lines_for_m_ptr_in_row_id 17645, num_of_lines_for_m_row_id 84081, num_of_lines_for_m_data 57806, num_of_rows 194085, num_of_cols 194085, num_of_entries 924886
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.090000 	 24.903400 	 10.324200 	 22.909400
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.068100 	 24.858000 	 10.311000 	 22.987600
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.075000 	 24.878900 	 10.313300 	 22.907100
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.065700 	 24.853900 	 10.308900 	 22.939400
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.057100 	 24.869600 	 10.318000 	 22.889800
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.041000 	 24.815000 	 10.295700 	 22.947600
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 27.670700 ms
+input: ./input/sx-superuser.rb
+num_of_lines_for_m_ptr_in_row_id 17645, num_of_lines_for_m_row_id 84081, num_of_lines_for_m_data 57806, num_of_rows 194085, num_of_cols 194085, num_of_entries 924886
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.192000 	 21.937800 	 10.588000 	 21.416400
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.189500 	 21.944100 	 10.584500 	 21.420400
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.183600 	 21.921500 	 10.564000 	 21.425800
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.172400 	 21.934300 	 10.570600 	 21.439500
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.177600 	 21.933200 	 10.572200 	 21.404100
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.191600 	 21.922900 	 10.600900 	 21.432900
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 11.160700 	 21.903600 	 10.574400 	 21.417500
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 25.377500 ms
+input: ./input/ch7-8-b5.rb
+num_of_lines_for_m_ptr_in_row_id 12830, num_of_lines_for_m_row_id 76975, num_of_lines_for_m_data 32567, num_of_rows 141120, num_of_cols 141120, num_of_entries 846720
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.702600 	 3.197500 	 9.430700 	 2.905700
+8 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.680300 	 3.181600 	 9.435300 	 2.903000
+16 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.691000 	 3.182000 	 9.437100 	 2.906600
+32 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.662800 	 3.181100 	 9.440100 	 2.909600
+64 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 9.628900 	 3.156700 	 9.433200 	 2.896000
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 10.481600 ms
+input: ./input/ch7-8-b5.rb
+num_of_lines_for_m_ptr_in_row_id 12830, num_of_lines_for_m_row_id 76975, num_of_lines_for_m_data 32567, num_of_rows 141120, num_of_cols 141120, num_of_entries 846720
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.196000 	 2.894900 	 7.855500 	 2.880400
+8 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.088500 	 2.901700 	 7.973100 	 2.860200
+16 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.104500 	 2.906400 	 7.892200 	 2.857300
+32 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.097000 	 2.890400 	 7.865900 	 2.855000
+64 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.119600 	 2.890400 	 7.860100 	 2.870900
+128 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 8.060300 	 2.873300 	 7.863100 	 2.839300
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 16.225100 ms
+input: ./input/ch7-8-b5.rb
+num_of_lines_for_m_ptr_in_row_id 12830, num_of_lines_for_m_row_id 76975, num_of_lines_for_m_data 32567, num_of_rows 141120, num_of_cols 141120, num_of_entries 846720
+./sparse_matvec_v3.cc 555
+./sparse_matvec_v3.cc 561
+./sparse_matvec_v3.cc 574
+./sparse_matvec_v3.cc 581
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 589
+./sparse_matvec_v3.cc 610
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+4 	 64 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.852600 	 2.998800 	 6.902300 	 3.025400
+8 	 32 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.839300 	 2.998500 	 6.975500 	 3.026700
+16 	 16 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.818300 	 2.996700 	 6.910900 	 3.024900
+32 	 8 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.918100 	 2.996100 	 6.906900 	 3.033600
+64 	 4 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.806900 	 2.994000 	 6.931300 	 3.027500
+128 	 2 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.874400 	 2.999500 	 6.929500 	 3.034900
+256 	 1 	 16 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 6.766300 	 2.980800 	 6.866700 	 3.010300
+./sparse_matvec_v3.cc 645
+--------------------- calling cublas ------------------------
+mkl success, mkl_error: 0.000000, mkl time: 17.118400 ms

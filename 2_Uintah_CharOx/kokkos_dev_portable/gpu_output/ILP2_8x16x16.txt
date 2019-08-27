@@ -1,0 +1,552 @@
+No API activities were profiled.
+Parallel: 1 MPI process (using MPI)
+Parallel: 56 OMP thread partitions per MPI process
+Parallel: 1 OMP thread per partition
+Parallel: MPI Level Required: 3, provided: 3
+Date:    Wed Sep 26 09:35:21 2018
+Machine: kp362
+SVN: UNKNOWN_REVISION
+SVN: UNKNOWN_DATE
+SVN: UNKNOWN_URL
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -O2 -DNDEBUG -g 
+Application Component: 	'arches'
+Linear Solver: 	hypre
+Load Balancer: 		Simple
+==5428== NVPROF is profiling process 5428, command: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 16 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+Scheduler: 		Unified
+Patch layout: 		(4,4,4)
+Grid statistics:
+Number of levels:		1
+Level 0:
+  Periodic boundaries:		[int 1, 1, 1]
+  Number of patches:		64
+  Total number of cells:	262144 (4096 avg. per patch)
+Total patches in grid:		64
+Total cells in grid:		262144 (4096 avg. per patch)
+
+Using "MostMessages" task queue priority algorithm
+
+WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.
+Creating 27 additional  threads for task execution (total task execution threads = 28).
+
+   Using 1/1 available GPU(s)
+   GPU Device 0: "Tesla P100-PCIE-16GB" with compute capability 6.0
+Using small, individual MPI messages (no message combining)
+ARCHES CFD level: 0
+ Time integrator: RK of order 1
+ 
+
+ Registering Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+   property_models_factory
+   source_term_factory
+   table_factory
+   transport_factory
+   turbulence_model_factory
+   utility_factory
+
+ Building Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+     Task: a_model              Desc: constant            
+     Task: temperature_coal     Desc: constant            
+     Task: devol_rate           Desc: constant            
+     Task: dqmom_variables      Desc: particle_variables_dqmom
+     Task: rho_coal             Desc: coal_density        
+     Task: char_ps              Desc: char_oxidation_ps   
+ Registering variable char_gas_reaction0_qn0 for task 
+     Task: dqmom_no_inversion   Desc: DQMOM: No Inversion 
+   property_models_factory
+     Task: CCFields             Desc: compute_rho phi     
+   source_term_factory
+   table_factory
+   transport_factory
+     Task: CCFields             Desc: Compute RHS.        
+     Task: diffusion_CCFields   Desc: Compute diffusive fluxes.
+     Task: CCFields             Desc: FE update.          
+     Task: dqmom_eqns_0_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_length Desc: DQMOM compute ic from w*ic
+   turbulence_model_factory
+   utility_factory
+     Task: grid_info            Desc: grid properties calc.
+     Task: surface_normals      Desc: surface normals calc.
+     Task: vol_fraction_calc    Desc: calc vol frac       
+
+ 
+     WARNING: No tables (Chemistry of otherwise) found in the input file!
+ 
+ 
+
+
+Compiling initialization taskgraph...
+
+ Setting BCHelper for all Factories. 
+
+Done with taskgraph compile (0.437623 seconds)
+
+Simulation and run time stats are reported at the end of each time step
+EMA == Wall time as an exponential moving average using a window of the last 10 time steps
+Timestep 0       Time=0           Next delT=0.001       Wall Time=2.80782   EMA=2.09229     Memory Use=1609.04 MBs
+Warning: finalizeContributions not implemented for LoadBalancerCommon.
+Warning: resetCostForecaster not implemented for LoadBalancerCommon.
+Compiling taskgraph...
+
+ Warning: Attempted to schedule task: density_star but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: drhodt but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: compute_cc_velocities but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: continuity_check but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+Done with taskgraph re-compile (1.07694 seconds)
+Timestep 1       Time=0.001       Next delT=0.001       Wall Time=8.6919    EMA=5.88368     Memory Use=1976.79 MBs
+Timestep 2       Time=0.002       Next delT=0.001       Wall Time=10.966    EMA=3.4773      Memory Use=2044.21 MBs
+Timestep 3       Time=0.003       Next delT=0.001       Wall Time=13.1229   EMA=2.81708     Memory Use=2100.03 MBs
+Timestep 4       Time=0.004       Next delT=0.001       Wall Time=15.2961   EMA=2.55952     Memory Use=2122.47 MBs
+Timestep 5       Time=0.005       Next delT=0.001       Wall Time=17.4848   EMA=2.43593     Memory Use=2133.24 MBs
+Timestep 6       Time=0.006       Next delT=0.001       Wall Time=19.7536   EMA=2.38818     Memory Use=2134.94 MBs
+Timestep 7       Time=0.007       Next delT=0.001       Wall Time=21.869    EMA=2.31998     Memory Use=2142.90 MBs
+WARNING (c): lowering delT from 0.1 to maximum: 0.001
+Timestep 8       Time=0.008       Next delT=0.001       Wall Time=24.111    EMA=2.30266     Memory Use=2151.91 MBs
+Timestep 9       Time=0.009       Next delT=0.001       Wall Time=26.6055   EMA=2.34103     Memory Use=2267.48 MBs
+Timestep 10      Time=0.01        Next delT=0.001       Wall Time=28.8209   EMA=2.31819     Memory Use=2278.45 MBs
+Sus: going down successfully
+==5428== Profiling application: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 16 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+==5428== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   75.48%  1.05179s      3200  328.68us  220.54us  535.13us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                   21.82%  304.06ms     73284  4.1490us     864ns  19.104us  [CUDA memcpy HtoD]
+                    2.70%  37.598ms      3200  11.749us  8.2560us  28.320us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                    0.00%  7.7120us         4  1.9280us  1.1840us  2.9760us  [CUDA memcpy DtoH]
+                    0.00%  2.5920us         1  2.5920us  2.5920us  2.5920us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_atomic(void)
+                    0.00%  2.5920us         1  2.5920us  2.5920us  2.5920us  Kokkos::Impl::_GLOBAL__N__51_tmpxft_00000386_00000000_6_Kokkos_Cuda_Impl_cpp1_ii_a8bc5097::query_cuda_kernel_arch(int*)
+                    0.00%  2.5600us         2  1.2800us  1.1520us  1.4080us  [CUDA memset]
+                    0.00%  2.4640us         1  2.4640us  2.4640us  2.4640us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_threadid(int)
+No API activities were profiled.
+Parallel: 1 MPI process (using MPI)
+Parallel: 56 OMP thread partitions per MPI process
+Parallel: 1 OMP thread per partition
+Parallel: MPI Level Required: 3, provided: 3
+Date:    Wed Sep 26 09:35:51 2018
+Machine: kp362
+SVN: UNKNOWN_REVISION
+SVN: UNKNOWN_DATE
+SVN: UNKNOWN_URL
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -O2 -DNDEBUG -g 
+Application Component: 	'arches'
+Linear Solver: 	hypre
+Load Balancer: 		Simple
+==5502== NVPROF is profiling process 5502, command: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 16 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+Scheduler: 		Unified
+Patch layout: 		(4,4,4)
+Grid statistics:
+Number of levels:		1
+Level 0:
+  Periodic boundaries:		[int 1, 1, 1]
+  Number of patches:		64
+  Total number of cells:	2097152 (32768 avg. per patch)
+Total patches in grid:		64
+Total cells in grid:		2097152 (32768 avg. per patch)
+
+Using "MostMessages" task queue priority algorithm
+
+WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.
+Creating 27 additional  threads for task execution (total task execution threads = 28).
+
+   Using 1/1 available GPU(s)
+   GPU Device 0: "Tesla P100-PCIE-16GB" with compute capability 6.0
+Using small, individual MPI messages (no message combining)
+ARCHES CFD level: 0
+ Time integrator: RK of order 1
+ 
+
+ Registering Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+   property_models_factory
+   source_term_factory
+   table_factory
+   transport_factory
+   turbulence_model_factory
+   utility_factory
+
+ Building Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+     Task: a_model              Desc: constant            
+     Task: temperature_coal     Desc: constant            
+     Task: devol_rate           Desc: constant            
+     Task: dqmom_variables      Desc: particle_variables_dqmom
+     Task: rho_coal             Desc: coal_density        
+     Task: char_ps              Desc: char_oxidation_ps   
+ Registering variable char_gas_reaction0_qn0 for task 
+     Task: dqmom_no_inversion   Desc: DQMOM: No Inversion 
+   property_models_factory
+     Task: CCFields             Desc: compute_rho phi     
+   source_term_factory
+   table_factory
+   transport_factory
+     Task: CCFields             Desc: Compute RHS.        
+     Task: diffusion_CCFields   Desc: Compute diffusive fluxes.
+     Task: CCFields             Desc: FE update.          
+     Task: dqmom_eqns_0_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_length Desc: DQMOM compute ic from w*ic
+   turbulence_model_factory
+   utility_factory
+     Task: grid_info            Desc: grid properties calc.
+     Task: surface_normals      Desc: surface normals calc.
+     Task: vol_fraction_calc    Desc: calc vol frac       
+
+ 
+     WARNING: No tables (Chemistry of otherwise) found in the input file!
+ 
+ 
+
+
+Compiling initialization taskgraph...
+
+ Setting BCHelper for all Factories. 
+
+Done with taskgraph compile (0.433116 seconds)
+
+Simulation and run time stats are reported at the end of each time step
+EMA == Wall time as an exponential moving average using a window of the last 10 time steps
+Timestep 0       Time=0           Next delT=0.001       Wall Time=4.68988   EMA=4.01197     Memory Use=10290.72 MBs
+Warning: finalizeContributions not implemented for LoadBalancerCommon.
+Warning: resetCostForecaster not implemented for LoadBalancerCommon.
+Compiling taskgraph...
+
+ Warning: Attempted to schedule task: density_star but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: drhodt but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: compute_cc_velocities but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: continuity_check but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+Done with taskgraph re-compile (0.958945 seconds)
+Timestep 1       Time=0.001       Next delT=0.001       Wall Time=13.2272   EMA=8.53694     Memory Use=11677.57 MBs
+Timestep 2       Time=0.002       Next delT=0.001       Wall Time=17.0178   EMA=5.37274     Memory Use=11708.26 MBs
+Timestep 3       Time=0.003       Next delT=0.001       Wall Time=20.3461   EMA=4.35053     Memory Use=12015.91 MBs
+Timestep 4       Time=0.004       Next delT=0.001       Wall Time=23.6061   EMA=3.91428     Memory Use=12021.41 MBs
+Timestep 5       Time=0.005       Next delT=0.001       Wall Time=27.2166   EMA=3.81303     Memory Use=12174.05 MBs
+Timestep 6       Time=0.006       Next delT=0.001       Wall Time=30.4496   EMA=3.6473      Memory Use=12088.02 MBs
+Timestep 7       Time=0.007       Next delT=0.001       Wall Time=33.6902   EMA=3.54563     Memory Use=12141.76 MBs
+WARNING (c): lowering delT from 0.1 to maximum: 0.001
+Timestep 8       Time=0.008       Next delT=0.001       Wall Time=37.1596   EMA=3.5287      Memory Use=12184.58 MBs
+Timestep 9       Time=0.009       Next delT=0.001       Wall Time=40.4422   EMA=3.47948     Memory Use=12259.83 MBs
+Timestep 10      Time=0.01        Next delT=0.001       Wall Time=43.5859   EMA=3.41843     Memory Use=12184.10 MBs
+Sus: going down successfully
+==5502== Profiling application: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 16 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==5502== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   73.58%  4.82779s      3200  1.5087ms  760.47us  2.2532ms  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                   24.25%  1.59118s     73284  21.712us     800ns  68.159us  [CUDA memcpy HtoD]
+                    2.17%  142.10ms      3200  44.406us  17.376us  180.29us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                    0.00%  7.5840us         4  1.8960us  1.1520us  3.1040us  [CUDA memcpy DtoH]
+                    0.00%  2.8160us         1  2.8160us  2.8160us  2.8160us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_atomic(void)
+                    0.00%  2.6880us         1  2.6880us  2.6880us  2.6880us  Kokkos::Impl::_GLOBAL__N__51_tmpxft_00000386_00000000_6_Kokkos_Cuda_Impl_cpp1_ii_a8bc5097::query_cuda_kernel_arch(int*)
+                    0.00%  2.4630us         1  2.4630us  2.4630us  2.4630us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_threadid(int)
+                    0.00%  2.4630us         2  1.2310us  1.1200us  1.3430us  [CUDA memset]
+No API activities were profiled.
+

@@ -1,0 +1,30 @@
+#this is for 3 timesteps only. Hence divide by 3
+======== Warning: The option --kernels "CharOxidationps" has no effect. The --kernels <kernel filter> option applies to --events, --metrics and --source-level-analysis options that follow it.
+==30900== NVPROF is profiling process 30900, command: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+==30900== Profiling application: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+==30900== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   57.39%  217.03ms       960  226.07us  140.26us  369.63us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                   25.50%  96.430ms     22660  4.2550us     896ns  19.808us  [CUDA memcpy HtoD]
+                   17.10%  64.679ms       960  67.373us  65.440us  75.327us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah27parallel_initialize_groupedINS_4CudaENS_9CudaSpaceENS3_11KokkosView3IdS6_EEdEENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeERNS3_15ExecutionObjectERKNS3_13struct1DArrayIT1_Lj16EEERKT2_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                    0.00%  8.8000us         4  2.2000us  1.5680us  2.9760us  [CUDA memcpy DtoH]
+                    0.00%  2.8800us         1  2.8800us  2.8800us  2.8800us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_threadid(int)
+                    0.00%  2.8480us         1  2.8480us  2.8480us  2.8480us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_atomic(void)
+                    0.00%  2.8160us         2  1.4080us  1.3120us  1.5040us  [CUDA memset]
+                    0.00%  2.5920us         1  2.5920us  2.5920us  2.5920us  Kokkos::Impl::_GLOBAL__N__51_tmpxft_00000386_00000000_6_Kokkos_Cuda_Impl_cpp1_ii_a8bc5097::query_cuda_kernel_arch(int*)
+No API activities were profiled.
+======== Warning: The option --kernels "CharOxidationps" has no effect. The --kernels <kernel filter> option applies to --events, --metrics and --source-level-analysis options that follow it.
+==30956== NVPROF is profiling process 30956, command: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+==30956== Profiling application: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 8 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_16_cubed.ups
+==30956== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   65.07%  180.02ms       960  187.52us  108.74us  272.41us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                   31.47%  87.045ms     22660  3.8410us     832ns  17.631us  [CUDA memcpy HtoD]
+                    3.45%  9.5557ms       960  9.9530us  6.9760us  16.992us  _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+                    0.00%  8.5440us         4  2.1360us  1.2480us  3.1360us  [CUDA memcpy DtoH]
+                    0.00%  2.6240us         2  1.3120us  1.2160us  1.4080us  [CUDA memset]
+                    0.00%  2.5920us         1  2.5920us  2.5920us  2.5920us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_atomic(void)
+                    0.00%  2.5920us         1  2.5920us  2.5920us  2.5920us  Kokkos::Impl::_GLOBAL__N__51_tmpxft_00000386_00000000_6_Kokkos_Cuda_Impl_cpp1_ii_a8bc5097::query_cuda_kernel_arch(int*)
+                    0.00%  2.5280us         1  2.5280us  2.5280us  2.5280us  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_threadid(int)
+No API activities were profiled.
+

@@ -1,0 +1,78 @@
+---------------------------------------------  unroll along rows  ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	128x128	4x1	0.002921	85.590864
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	64x64	8x2	0.000787	317.596794
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	32x32	16x4	0.000590	423.716559
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	16x16	32x8	0.000625	399.767686
+--------------------------------------------- unroll along columns ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	128x128	4x1	0.002527	98.924336
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	64x64	8x2	0.000774	323.048167
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	32x32	16x4	0.000590	423.574890
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+512	16x16	32x8	0.000625	400.227115
+---------------------------------------------  unroll along rows  ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	256x256	4x1	0.024979	80.066038
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	128x128	8x2	0.006231	320.958044
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	64x64	16x4	0.004646	430.522408
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	32x32	32x8	0.005453	366.775860
+--------------------------------------------- unroll along columns ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	256x256	4x1	0.024523	81.557592
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	128x128	8x2	0.006575	304.193639
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	64x64	16x4	0.004671	428.183957
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+1024	32x32	32x8	0.005541	360.955438
+---------------------------------------------  unroll along rows  ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	512x512	4x1	0.210661	75.951259
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	256x256	8x2	0.049676	322.087746
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	128x128	16x4	0.037064	431.681991
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	64x64	32x8	0.037910	422.050460
+--------------------------------------------- unroll along columns ---------------------------------------------
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	512x512	4x1	0.226460	70.652734
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	256x256	8x2	0.053253	300.451175
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	128x128	16x4	0.037751	423.824494
+success
+N	Blocks	ThreadsPBlock	time(s)	GFLOPS
+2048	64x64	32x8	0.038033	420.692635

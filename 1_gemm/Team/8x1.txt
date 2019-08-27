@@ -1,0 +1,168 @@
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	1	8	1	0.000069	5.918551e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	2	8	1	0.000073	5.626732e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	4	8	1	0.000074	5.556189e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	8	8	1	0.000105	3.883879e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	16	8	1	0.000154	2.654809e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	32	8	1	0.000250	1.635241e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	1	8	1	0.000069	5.910255e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	2	8	1	0.000070	5.888095e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	4	8	1	0.000072	5.704161e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	8	8	1	0.000090	4.557388e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	16	8	1	0.000136	3.016151e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	32	8	1	0.000251	1.631453e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	1	8	1	0.000062	6.627471e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	2	8	1	0.000060	6.784250e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	4	8	1	0.000058	7.031353e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	8	8	1	0.000078	5.224843e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	16	8	1	0.000134	3.047652e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	32	8	1	0.000246	1.662597e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	1	8	1	0.000053	7.729683e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	2	8	1	0.000053	7.667411e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	4	8	1	0.000054	7.636676e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	8	8	1	0.000083	4.961158e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	16	8	1	0.000142	2.894490e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	32	8	1	0.000263	1.559739e+10
+

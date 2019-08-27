@@ -1,0 +1,7 @@
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	1	64	1	0.000054	7.631739e+10
+

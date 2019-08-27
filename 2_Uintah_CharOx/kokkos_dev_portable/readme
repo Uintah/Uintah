@@ -1,0 +1,7 @@
+these are portable version from kokkos_dev branch. Can run on KNL and GPU P100.
+GPU results of CharOx originate from this code.
+KNL version is little slower than trunk version. It give 6x instead of 7.8x.
+
+modified_src_y:  there are no threads along x dimension of cuda and memory reads are strided. best works for LVL=2, PVL=1 (default)
+modified_src:    using actual simd_type with x dimension threads. works best for elements per vector lane = 2 and PVL=1, 2 or 4. comparable to modified_src_y.
+

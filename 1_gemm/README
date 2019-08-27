@@ -1,0 +1,6 @@
+Makefile is for cthulhu (KNL) and chpc P100 gpu cluster
+first install kokkos. 
+stk_simd (included in folder) is downloaded from trilinos.
+Then update paths of kokkos and stk_simd in makefile.
+compiled using Intel parallel studio 2018 or gcc + cuda9.1 combination
+

@@ -1,0 +1,225 @@
+P100:
+
+Team Policy:
+------------
+fastest config for N=15 which gives 412 GFLOPS is:
+./gpu3 15 16384 2048 32
+N	M	Teams	TeamS	VL	ele/VL	TILES	exec_time(s)	FLOPS
+15	16384	2048	32	8	1	3	0.000270	4.102288e+11
+
+Success:
+N	M	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	16384	256	1	64	1	0.000054	7.631739e+10
+
+similar config should work well for N=10 with TILE=5
+
+
+
+
+Range Policy:
+-------------
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000032	2.727591e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000029	3.055256e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000028	3.168330e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000038	2.347104e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000028	3.137313e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000027	3.329563e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	1	1	0.000028	3.139340e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000094	4.378063e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000095	4.324618e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000092	4.475291e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000094	4.371998e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000089	4.608729e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000094	4.348566e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000098	4.176729e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	1	1	0.000095	4.301717e+10
+
+
+
+
+
+KokkosKernels output:
+standard KK compiled and run.
+ N = 16384
+
+ Testing LayoutLeft Algo::Gemm::Blocked
+Compiler:
+  KOKKOS_COMPILER_GNU: 485
+  KOKKOS_COMPILER_NVCC: 1
+Architecture:
+  KOKKOS_ENABLE_ISA_KNC: no
+  KOKKOS_ENABLE_ISA_POWERPCLE: no
+  KOKKOS_ENABLE_ISA_X86_64: no
+Devices:
+  KOKKOS_ENABLE_CUDA: yes
+  KOKKOS_ENABLE_OPENMP: no
+  KOKKOS_ENABLE_THREADS: no
+  KOKKOS_ENABLE_QTHREADS: no
+  KOKKOS_ENABLE_SERIAL: yes
+Default Device:
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: yes
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: no
+Atomics:
+  KOKKOS_ENABLE_CUDA_ATOMICS: yes
+  KOKKOS_ENABLE_GNU_ATOMICS: yes
+  KOKKOS_ENABLE_INTEL_ATOMICS: no
+  KOKKOS_ENABLE_OPENMP_ATOMICS: no
+  KOKKOS_ENABLE_WINDOWS_ATOMICS: no
+  KOKKOS_ENABLE_SERIAL_ATOMICS: no
+Vectorization:
+  KOKKOS_ENABLE_PRAGMA_IVDEP: no
+  KOKKOS_ENABLE_PRAGMA_LOOPCOUNT: no
+  KOKKOS_ENABLE_PRAGMA_SIMD: no
+  KOKKOS_ENABLE_PRAGMA_UNROLL: no
+  KOKKOS_ENABLE_PRAGMA_VECTOR: no
+Memory:
+  KOKKOS_ENABLE_HBWSPACE: no
+  KOKKOS_ENABLE_INTEL_MM_ALLOC: no
+  KOKKOS_ENABLE_POSIX_MEMALIGN: no
+Options:
+  KOKKOS_ENABLE_ASM: yes
+  KOKKOS_ENABLE_CXX1Z: no
+  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK: no
+  KOKKOS_ENABLE_HWLOC: no
+  KOKKOS_ENABLE_LIBRT: no
+  KOKKOS_ENABLE_MPI: no
+  KOKKOS_ENABLE_PROFILING: yes
+Cuda Options:
+  KOKKOS_ENABLE_CUDA_LAMBDA: yes
+  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC: no
+  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: no
+  KOKKOS_ENABLE_CUDA_UVM: no
+  KOKKOS_ENABLE_CUSPARSE: no
+  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: yes
+
+Runtime Configuration:
+macro  KOKKOS_ENABLE_CUDA      : defined
+macro  CUDA_VERSION          = 9010 = version 9.1
+Kokkos::Cuda[ 0 ] Tesla P100-PCIE-16GB capability 6.0, Total Global Memory: 15.9 G, Shared Memory per Block: 48 K : Selected
+
+SIMD is defined: datatype double a vector length 16
+  Kokkos   Range BlkSize =   3 TeamSize = N/A ScratchSize (KB) =   0 time = 2.857400e-05 avg flop/s = 2.879491e+10 max flop/s = 3.096297e+10
+  Kokkos Team V1 BlkSize =   3 TeamSize =   2 ScratchSize (KB) =   0 time = 2.930800e-05 avg flop/s = 2.858068e+10 max flop/s = 3.018753e+10
+  Kokkos Team V2 BlkSize =   3 TeamSize =   4 ScratchSize (KB) =   0 time = 2.460000e-05 avg flop/s = 3.448488e+10 max flop/s = 3.596488e+10
+  Kokkos Team V3 BlkSize =   3 TeamSize =   4 ScratchSize (KB) =   2 time = 2.935300e-05 avg flop/s = 2.939446e+10 max flop/s = 3.014125e+10
+  Kokkos Team HM BlkSize =   3 TeamSize =   9 ScratchSize (KB) =   0 time = 2.511600e-05 avg flop/s = 3.365952e+10 max flop/s = 3.522599e+10
+
+SIMD is defined: datatype double a vector length 16
+  Kokkos   Range BlkSize =   5 TeamSize = N/A ScratchSize (KB) =   0 time = 7.496300e-05 avg flop/s = 5.377537e+10 max flop/s = 5.464029e+10
+  Kokkos Team V1 BlkSize =   5 TeamSize =   2 ScratchSize (KB) =   0 time = 7.241700e-05 avg flop/s = 5.491441e+10 max flop/s = 5.656130e+10
+  Kokkos Team V2 BlkSize =   5 TeamSize =   9 ScratchSize (KB) =   0 time = 5.947100e-05 avg flop/s = 6.784767e+10 max flop/s = 6.887390e+10
+  Kokkos Team V3 BlkSize =   5 TeamSize =   9 ScratchSize (KB) =   6 time = 6.670900e-05 avg flop/s = 6.043128e+10 max flop/s = 6.140101e+10
+  Kokkos Team HM BlkSize =   5 TeamSize =  25 ScratchSize (KB) =   0 time = 5.068000e-05 avg flop/s = 7.902175e+10 max flop/s = 8.082084e+10
+
+SIMD is defined: datatype double a vector length 16
+  Kokkos   Range BlkSize =  10 TeamSize = N/A ScratchSize (KB) =   0 time = 3.649150e-04 avg flop/s = 8.918642e+10 max flop/s = 8.979625e+10
+  Kokkos Team V1 BlkSize =  10 TeamSize =   2 ScratchSize (KB) =   0 time = 3.477930e-04 avg flop/s = 9.333370e+10 max flop/s = 9.421696e+10
+  Kokkos Team V2 BlkSize =  10 TeamSize =  25 ScratchSize (KB) =   0 time = 1.506380e-04 avg flop/s = 2.154711e+11 max flop/s = 2.175281e+11
+  Kokkos Team V3 BlkSize =  10 TeamSize =  25 ScratchSize (KB) =  25 time = 2.091760e-04 avg flop/s = 1.554934e+11 max flop/s = 1.566528e+11
+  Kokkos Team HM BlkSize =  10 TeamSize =  64 ScratchSize (KB) =   0 time = 2.208210e-04 avg flop/s = 1.469118e+11 max flop/s = 1.483917e+11
+
+SIMD is defined: datatype double a vector length 16
+  Kokkos   Range BlkSize =  15 TeamSize = N/A ScratchSize (KB) =   0 time = 1.176750e-03 avg flop/s = 9.110085e+10 max flop/s = 9.398088e+10
+  Kokkos Team V1 BlkSize =  15 TeamSize =   2 ScratchSize (KB) =   0 time = 1.107661e-03 avg flop/s = 9.902254e+10 max flop/s = 9.984282e+10
+  Kokkos Team V2 BlkSize =  15 TeamSize =  64 ScratchSize (KB) =   0 time = 4.816870e-04 avg flop/s = 2.285458e+11 max flop/s = 2.295931e+11
+  Kokkos Team V3 Scratch per team is too big: 56
+  Kokkos Team HM BlkSize =  15 TeamSize =  64 ScratchSize (KB) =   0 time = 6.204020e-04 avg flop/s = 1.774281e+11 max flop/s = 1.782586e+11
+
+
+
+
+
+
+

@@ -1,0 +1,160 @@
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	1	16	2	0.000056	7.281187e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	2	16	2	0.000061	6.672615e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	4	16	2	0.000073	5.596602e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	8	16	2	0.000071	5.728968e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	16	16	2	0.000099	4.151841e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883231/slurm_script: line 31: 134476 Aborted                 ./gpu5 5 16384 256 32
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	1	16	2	0.000069	5.945685e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	2	16	2	0.000068	6.067965e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	4	16	2	0.000068	6.055955e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	8	16	2	0.000068	6.020549e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	16	16	2	0.000105	3.907821e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883231/slurm_script: line 38: 134664 Aborted                 ./gpu5 5 16384 512 32
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	1	16	2	0.000071	5.767720e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	2	16	2	0.000070	5.856387e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	4	16	2	0.000070	5.877443e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	8	16	2	0.000068	5.981908e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	16	16	2	0.000109	3.750369e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883231/slurm_script: line 45: 134851 Aborted                 ./gpu5 5 16384 1024 32
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	1	16	2	0.000068	6.022830e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	2	16	2	0.000069	5.951951e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	4	16	2	0.000067	6.110958e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	8	16	2	0.000076	5.416399e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	16	16	2	0.000125	3.273884e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883231/slurm_script: line 52: 135039 Aborted                 ./gpu5 5 16384 2048 32

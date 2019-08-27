@@ -1,0 +1,26 @@
+==22620== NVPROF is profiling process 22620, command: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==22620== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==22620== Profiling application: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==22620== Profiling result:
+==22620== Metric result:
+Invocations                               Metric Name                        Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+       1280                           global_hit_rate         Global Hit Rate in unified l1/tex       9.09%       9.09%       9.09%
+       1280                            local_hit_rate                            Local Hit Rate      52.84%      52.86%      52.85%
+       1280                        tex_cache_hit_rate                    Unified Cache Hit Rate      47.42%      47.44%      47.43%
+==26252== NVPROF is profiling process 26252, command: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==26252== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==26252== Profiling application: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==26252== Profiling result:
+==26252== Metric result:
+Invocations                               Metric Name                        Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+       1280                           global_hit_rate         Global Hit Rate in unified l1/tex      51.68%      52.29%      51.99%
+       1280                            local_hit_rate                            Local Hit Rate      50.34%      50.60%      50.52%
+       1280                        tex_cache_hit_rate                    Unified Cache Hit Rate      48.80%      49.34%      48.99%
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+       1280                           global_hit_rate         Global Hit Rate in unified l1/tex       0.00%       0.00%       0.00%
+       1280                            local_hit_rate                            Local Hit Rate       0.00%       0.00%       0.00%
+       1280                        tex_cache_hit_rate                    Unified Cache Hit Rate       0.00%       0.00%       0.00%

@@ -1,0 +1,316 @@
+input: ./input/HV15R.rb
+num_of_lines_for_m_ptr_in_row_id 252147, num_of_lines_for_m_row_id 28307346, num_of_lines_for_m_data 94357820, num_of_rows 2017169, num_of_cols 2017169, num_of_entries 283073458
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 2367.878000 	 1213.592000 	 2291.231000 	 1220.695000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/HV15R.rb
+num_of_lines_for_m_ptr_in_row_id 252147, num_of_lines_for_m_row_id 28307346, num_of_lines_for_m_data 94357820, num_of_rows 2017169, num_of_cols 2017169, num_of_entries 283073458
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 1978.842000 	 1659.374000 	 1973.815000 	 1644.096000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/HV15R.rb
+num_of_lines_for_m_ptr_in_row_id 252147, num_of_lines_for_m_row_id 28307346, num_of_lines_for_m_data 94357820, num_of_rows 2017169, num_of_cols 2017169, num_of_entries 283073458
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 2161.585000 	 1996.226000 	 2324.687000 	 2081.624000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Geer.rb
+num_of_lines_for_m_ptr_in_row_id 188001, num_of_lines_for_m_row_id 11087998, num_of_lines_for_m_data 27719993, num_of_rows 1504002, num_of_cols 1504002, num_of_entries 110879972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 991.616000 	 274.000000 	 1086.900000 	 300.752000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Geer.rb
+num_of_lines_for_m_ptr_in_row_id 188001, num_of_lines_for_m_row_id 11087998, num_of_lines_for_m_data 27719993, num_of_rows 1504002, num_of_cols 1504002, num_of_entries 110879972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 601.840000 	 306.575000 	 602.821000 	 371.047000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Geer.rb
+num_of_lines_for_m_ptr_in_row_id 188001, num_of_lines_for_m_row_id 11087998, num_of_lines_for_m_data 27719993, num_of_rows 1504002, num_of_cols 1504002, num_of_entries 110879972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 514.737000 	 577.384000 	 410.585000 	 617.183000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/RM07R.rb
+num_of_lines_for_m_ptr_in_row_id 47712, num_of_lines_for_m_row_id 3405906, num_of_lines_for_m_data 12488321, num_of_rows 381689, num_of_cols 381689, num_of_entries 37464962
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 358.899000 	 178.644000 	 343.648000 	 203.366000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/RM07R.rb
+num_of_lines_for_m_ptr_in_row_id 47712, num_of_lines_for_m_row_id 3405906, num_of_lines_for_m_data 12488321, num_of_rows 381689, num_of_cols 381689, num_of_entries 37464962
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 343.702000 	 215.081000 	 328.300000 	 220.231000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/RM07R.rb
+num_of_lines_for_m_ptr_in_row_id 47712, num_of_lines_for_m_row_id 3405906, num_of_lines_for_m_data 12488321, num_of_rows 381689, num_of_cols 381689, num_of_entries 37464962
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 430.503000 	 269.829000 	 479.669000 	 292.443000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Laplace.rb
+num_of_lines_for_m_ptr_in_row_id 47126, num_of_lines_for_m_row_id 2517271, num_of_lines_for_m_data 6922493, num_of_rows 377002, num_of_cols 377002, num_of_entries 27689972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 275.728000 	 88.440000 	 273.431000 	 73.643000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Laplace.rb
+num_of_lines_for_m_ptr_in_row_id 47126, num_of_lines_for_m_row_id 2517271, num_of_lines_for_m_data 6922493, num_of_rows 377002, num_of_cols 377002, num_of_entries 27689972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 143.250000 	 83.151000 	 148.192000 	 77.364000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/ML_Laplace.rb
+num_of_lines_for_m_ptr_in_row_id 47126, num_of_lines_for_m_row_id 2517271, num_of_lines_for_m_data 6922493, num_of_rows 377002, num_of_cols 377002, num_of_entries 27689972
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 116.992000 	 159.749000 	 153.025000 	 158.847000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/cage14.rb
+num_of_lines_for_m_ptr_in_row_id 188224, num_of_lines_for_m_row_id 2713035, num_of_lines_for_m_data 9043450, num_of_rows 1505785, num_of_cols 1505785, num_of_entries 27130349
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 287.174000 	 258.080000 	 339.859000 	 246.440000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/cage14.rb
+num_of_lines_for_m_ptr_in_row_id 188224, num_of_lines_for_m_row_id 2713035, num_of_lines_for_m_data 9043450, num_of_rows 1505785, num_of_cols 1505785, num_of_entries 27130349
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 223.376000 	 243.673000 	 227.866000 	 222.131000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/cage14.rb
+num_of_lines_for_m_ptr_in_row_id 188224, num_of_lines_for_m_row_id 2713035, num_of_lines_for_m_data 9043450, num_of_rows 1505785, num_of_cols 1505785, num_of_entries 27130349
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 226.827000 	 271.991000 	 244.923000 	 257.264000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/Transport.rb
+num_of_lines_for_m_ptr_in_row_id 200264, num_of_lines_for_m_row_id 2350074, num_of_lines_for_m_data 7833577, num_of_rows 1602111, num_of_cols 1602111, num_of_entries 23500731
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 232.238000 	 124.625000 	 228.859000 	 140.783000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/Transport.rb
+num_of_lines_for_m_ptr_in_row_id 200264, num_of_lines_for_m_row_id 2350074, num_of_lines_for_m_data 7833577, num_of_rows 1602111, num_of_cols 1602111, num_of_entries 23500731
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 163.998000 	 137.006000 	 167.981000 	 107.336000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/Transport.rb
+num_of_lines_for_m_ptr_in_row_id 200264, num_of_lines_for_m_row_id 2350074, num_of_lines_for_m_data 7833577, num_of_rows 1602111, num_of_cols 1602111, num_of_entries 23500731
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 150.373000 	 157.590000 	 166.741000 	 167.917000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/CoupCons3D.rb
+num_of_lines_for_m_ptr_in_row_id 52101, num_of_lines_for_m_row_id 2029304, num_of_lines_for_m_data 7440779, num_of_rows 416800, num_of_cols 416800, num_of_entries 22322336
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 64 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 1 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 211.495000 	 68.982000 	 235.700000 	 72.495000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/CoupCons3D.rb
+num_of_lines_for_m_ptr_in_row_id 52101, num_of_lines_for_m_row_id 2029304, num_of_lines_for_m_data 7440779, num_of_rows 416800, num_of_cols 416800, num_of_entries 22322336
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 128 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 2 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 114.397000 	 67.103000 	 113.251000 	 66.567000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+input: ./input/CoupCons3D.rb
+num_of_lines_for_m_ptr_in_row_id 52101, num_of_lines_for_m_row_id 2029304, num_of_lines_for_m_data 7440779, num_of_rows 416800, num_of_cols 416800, num_of_entries 22322336
+./sparse_matvec_v3.cc 558
+./sparse_matvec_v3.cc 564
+./sparse_matvec_v3.cc 577
+./sparse_matvec_v3.cc 584
+./sparse_matvec_v3.cc 587
+./sparse_matvec_v3.cc 592
+./sparse_matvec_v3.cc 613
+R allocated 
+omp_threads: 256 
+Teams 	 Threads 	 PVL 	 LVL 	 simple_error 	 simple1_error 	 simd_error 	 simd1_error 	 simple_time 	 simple1_time 	 simd_time 	 simd1_time 
+64 	 4 	 8 	 256 	 0.000000 	 0.000000 	 0.000000 	 0.000000 	 90.063000 	 100.918000 	 79.735000 	 107.317000
+./sparse_matvec_v3.cc 650
+--------------------- calling cublas ------------------------
+

@@ -1,0 +1,56 @@
+==36094== NVPROF is profiling process 36094, command: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==36094== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==36094== Profiling application: ./1_kokkos -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==36094== Profiling result:
+==36094== Metric result:
+Invocations                               Metric Name                           Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.494400    0.633122    0.544017
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      25.26%      37.27%      29.49%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)      26.16%      36.93%      33.24%
+==39549== NVPROF is profiling process 39549, command: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 64 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==39549== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==39549== Profiling application: ./2_kokkos_simd -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 64 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==39549== Profiling result:
+==39549== Metric result:
+Invocations                               Metric Name                           Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.459088    0.620736    0.524497
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      26.16%      36.13%      30.05%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)      19.66%      22.87%      21.23%
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.442674    0.841479    0.690410
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      16.53%      41.43%      27.94%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)       0.00%       0.00%       0.00%
+==48006== NVPROF is profiling process 48006, command: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==48006== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==48006== Profiling application: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==48006== Profiling result:
+==48006== Metric result:
+Invocations                               Metric Name                           Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.454711    0.619229    0.521599
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      25.76%      36.14%      29.99%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)      20.84%      24.08%      22.47%
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.349768    0.654945    0.576888
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      17.07%      37.69%      27.92%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)       0.00%       0.00%       0.00%
+==56507== NVPROF is profiling process 56507, command: ./4_kokkos_simd_y_coalesced -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==56507== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==56507== Profiling application: ./4_kokkos_simd_y_coalesced -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -taskname_to_time ParticleModelFactory::char_ps_qn 320 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==56507== Profiling result:
+==56507== Metric result:
+Invocations                               Metric Name                           Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.415834    0.578197    0.480103
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      23.09%      33.76%      27.35%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)      28.87%      35.33%      31.99%
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+        960                                       ipc                                 Executed IPC    0.443716    0.925442    0.734909
+        960                     stall_exec_dependency   Issue Stall Reasons (Execution Dependency)      17.24%      45.22%      30.96%
+        960                   stall_memory_dependency           Issue Stall Reasons (Data Request)       0.00%       0.00%       0.00%

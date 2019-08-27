@@ -1,0 +1,78 @@
+==124259== NVPROF is profiling process 124259, command: ./sparse_matvec ../Cube_Coup_dt0.rb
+input: ../Cube_Coup_dt0.rb
+num_of_lines_for_m_ptr_in_row_id 270596, num_of_lines_for_m_row_id 6468546, num_of_lines_for_m_data 16171363, num_of_rows 2164760, num_of_cols 2164760, num_of_entries 64685452
+matrix read
+free: 14, tot: 15
+V allocated 
+free: 10, tot: 15
+R allocated 
+free: 6, tot: 15
+Blocks 	 ThreadsPerBlock 	 PVL 	 LVL 	 simple_error 	 simd_error 	 simple_time 	 simd_time 
+32768 	 8 	 64 	 256 	 3119.939459 	 3119.939459 	 142.169000 	 119.057000 
+--------------------- calling cublas ------------------------
+cublas success, cublas_error: 4145.650826, cublas time: 165.950000 ms
+==124259== Profiling application: ./sparse_matvec ../Cube_Coup_dt0.rb
+==124259== Profiling result:
+   Start  Duration            Grid Size      Block Size     Regs*    SSMem*    DSMem*      Size  Throughput  SrcMemType  DstMemType           Device   Context    Stream  Name
+1.04272s  2.7520us              (1 1 1)         (1 1 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  Kokkos::Impl::_GLOBAL__N__51_tmpxft_00000386_00000000_6_Kokkos_Cuda_Impl_cpp1_ii_a8bc5097::query_cuda_kernel_arch(int*) [110]
+1.04274s  1.3120us                    -               -         -         -         -        4B  2.9075MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.04444s  1.2160us                    -               -         -         -         -      128B  100.39MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04446s  1.2800us                    -               -         -         -         -  8.0000KB  5.9605GB/s      Device           -  Tesla P100-PCIE         1         7  [CUDA memset]
+1.04467s  1.2160us                    -               -         -         -         -      128B  100.39MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04469s     960ns                    -               -         -         -         -      128B  127.16MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04470s  1.5040us                    -               -         -         -         -  14.004KB  8.8798GB/s      Device           -  Tesla P100-PCIE         1         7  [CUDA memset]
+1.04493s  1.2160us                    -               -         -         -         -       24B  18.823MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04495s  3.0400us            (512 1 1)       (256 1 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_atomic(void) [128]
+1.04496s  2.7520us            (448 1 1)       (256 1 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  Kokkos::_GLOBAL__N__52_tmpxft_000002e9_00000000_6_Kokkos_Cuda_Locks_cpp1_ii_915ea793::init_lock_array_kernel_threadid(int) [131]
+1.04582s  1.5680us                    -               -         -         -         -      128B  77.851MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04586s  64.063us          (33825 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEiLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [144]
+1.04594s  1.7280us                    -               -         -         -         -      128B  70.643MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.04642s  1.7600us                    -               -         -         -         -      128B  69.358MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04644s  1.8590ms        (1010711 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEiLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [158]
+1.04832s  2.2720us                    -               -         -         -         -      128B  53.728MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.04908s  1.7920us                    -               -         -         -         -      128B  68.120MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+1.04910s  1.8593ms        (1010711 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEdLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [172]
+1.05098s  3.2320us                    -               -         -         -         -      128B  37.769MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.05100s  2.1120us                    -               -         -         -         -      128B  57.798MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.05623s  1.3120us                    -               -         -         -         -      128B  93.041MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+1.21208s  1.3760us                    -               -         -         -         -      128B  88.714MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+34.5190s  756.19us                    -               -         -         -         -  8.2579MB  10.665GB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+34.5199s  31.578ms                    -               -         -         -         -  246.76MB  7.6309GB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+34.5516s  62.720ms                    -               -         -         -         -  493.51MB  7.6841GB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+34.6533s  1.5680us                    -               -         -         -         -      128B  77.851MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+34.6534s  15.913ms        (8659044 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEdLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [199]
+34.6693s  3.3920us                    -               -         -         -         -      128B  35.988MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+34.6693s  1.5040us                    -               -         -         -         -      128B  81.164MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+36.9921s  606.08ms                    -               -         -         -         -  4.1290GB  6.8126GB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+39.0290s  1.3120us                    -               -         -         -         -      128B  93.041MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+39.0291s  14.558ms        (8659040 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEdLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [218]
+39.0436s  3.3280us                    -               -         -         -         -      128B  36.680MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+39.0437s  1.4400us                    -               -         -         -         -      128B  84.771MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+41.1750s     864ns                    -               -         -         -         -  4.1290GB   5e+06GB/s      Device           -  Tesla P100-PCIE         1         7  [CUDA memset]
+41.1827s  109.82ms          (33825 1 1)        (1 64 1)        14        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForIZ6resetRiRNS_4ViewIPPdJNS_11LayoutRightENS_4CudaENS_12MemoryTraitsILj2EEEEEEEUliE_NS_11RangePolicyIJS7_EEES7_EEEEvT_ [233]
+41.2926s  142.04ms          (32768 1 1)        (64 8 1)        40        8B       80B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForIZ21___csr_simple_spmv___ILi64ELi256ELi4EEvRK3spmRKNS_4ViewIPPdJNS_11LayoutRightENS_4CudaENS_12MemoryTraitsILj2EEEEEERSE_iiEUlRKNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJSB_EEESB_EEEEvT_ [244]
+41.4347s  344.70ms                    -               -         -         -         -  4.1290GB  11.979GB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+42.0656s  110.53ms          (33825 1 1)        (1 64 1)        14        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForIZ6resetRiRNS_4ViewIPPdJNS_11LayoutRightENS_4CudaENS_12MemoryTraitsILj2EEEEEEEUliE_NS_11RangePolicyIJS7_EEES7_EEEEvT_ [259]
+42.1762s  119.01ms          (32768 1 1)        (64 8 1)        48        8B       80B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForIZ19___csr_simd_spmv___ILi64ELi256EEvRK3spmRKNS_4ViewIPPdJNS_11LayoutRightENS_4CudaENS_12MemoryTraitsILj2EEEEEERSE_iiEUlRKNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJSB_EEESB_EEEEvT_ [270]
+42.2952s  343.69ms                    -               -         -         -         -  4.1290GB  12.014GB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+43.1495s  1.8880us                    -               -         -         -         -      128B  64.656MB/s    Pageable      Device  Tesla P100-PCIE         1         7  [CUDA memcpy HtoD]
+43.1496s  14.559ms        (8659040 1 1)        (1 64 1)         8        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForINS0_16ViewValueFunctorINS_4CudaEdLb1EEENS_11RangePolicyIJS4_EEES4_EEEEvT_ [288]
+43.1641s  3.7440us                    -               -         -         -         -      128B  32.604MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+43.1642s  85.018ms          (33825 1 1)        (1 64 1)        24        0B        0B         -           -           -           -  Tesla P100-PCIE         1         7  _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForIZ4mainEUliE_NS_11RangePolicyIJNS_4CudaEEEES5_EEEEvT_ [300]
+43.7000s  1.2160us                    -               -         -         -         -  4.1290GB   3e+06GB/s      Device           -  Tesla P100-PCIE         1         7  [CUDA memset]
+43.7077s  38.727ms         (33825 1 10)        (2 64 1)        48  1.4688KB  4.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=6, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [419]
+43.7464s  38.759ms         (33825 1 10)        (2 64 1)        48  1.4688KB  4.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=6, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [426]
+43.7852s  38.770ms         (33825 1 10)        (2 64 1)        48  1.4688KB  4.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=6, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [433]
+43.8240s  38.661ms         (33825 1 10)        (2 64 1)        48  1.4688KB  4.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=6, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [440]
+43.8626s  7.7214ms          (33825 1 2)        (2 64 1)        48  1.4688KB  4.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=6, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [447]
+43.8703s  3.1899ms          (33825 1 1)        (2 64 1)        40  1.4063KB  3.0000KB         -           -           -           -  Tesla P100-PCIE         1         7  void csrMm_hyb_core<double, int=7, int=4, int=2, int=1, bool=0>(cusparseCsrMmParams<double>, int) [454]
+43.8736s  2.87302s                    -               -         -         -         -  4.1290GB  1.4371GB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+47.8995s  3.6790us                    -               -         -         -         -      128B  33.180MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+47.8995s  1.8560us                    -               -         -         -         -      128B  65.771MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+47.9092s  3.2960us                    -               -         -         -         -      128B  37.036MB/s      Device    Pageable  Tesla P100-PCIE         1         7  [CUDA memcpy DtoH]
+
+Regs: Number of registers used per CUDA thread. This number includes registers used internally by the CUDA driver and/or tools and can be more than what the compiler shows.
+SSMem: Static shared memory allocated per CUDA block.
+DSMem: Dynamic shared memory allocated per CUDA block.
+SrcMemType: The type of source memory accessed by memory operation/copy
+DstMemType: The type of destination memory accessed by memory operation/copy

@@ -1,0 +1,133 @@
+==113647== NVPROF is profiling process 113647, command: ./gpu3 15 16384 2048 32
+==113647== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	32	8	1	1.016066	1.088433e+08
+
+==113647== Profiling application: ./gpu3 15 16384 2048 32
+==113647== Profiling result:
+==113647== Metric result:
+Invocations                               Metric Name                                    Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl33cuda_parallel_launch_local_memoryINS0_11ParallelForI4GemmIdENS_10TeamPolicyIJNS_4CudaEEEES6_EEEEvT_
+         33                             inst_per_warp                                 Instructions per warp  1.2581e+03  1.2581e+03  1.2581e+03
+         33                         branch_efficiency                                     Branch Efficiency     100.00%     100.00%     100.00%
+         33                 warp_execution_efficiency                             Warp Execution Efficiency      89.58%      89.58%      89.58%
+         33         warp_nonpred_execution_efficiency              Warp Non-Predicated Execution Efficiency      88.17%      88.17%      88.17%
+         33                      inst_replay_overhead                           Instruction Replay Overhead    0.000380    0.000478    0.000428
+         33      shared_load_transactions_per_request           Shared Memory Load Transactions Per Request    0.000000    0.000000    0.000000
+         33     shared_store_transactions_per_request          Shared Memory Store Transactions Per Request    0.000000    0.000000    0.000000
+         33       local_load_transactions_per_request            Local Memory Load Transactions Per Request    0.000000    0.000000    0.000000
+         33      local_store_transactions_per_request           Local Memory Store Transactions Per Request    0.000000    0.000000    0.000000
+         33              gld_transactions_per_request                  Global Load Transactions Per Request    5.714286    5.714286    5.714286
+         33              gst_transactions_per_request                 Global Store Transactions Per Request    7.142857    7.142857    7.142857
+         33                 shared_store_transactions                             Shared Store Transactions           0           0           0
+         33                  shared_load_transactions                              Shared Load Transactions           0           0           0
+         33                   local_load_transactions                               Local Load Transactions           0           0           0
+         33                  local_store_transactions                              Local Store Transactions           0           0           0
+         33                          gld_transactions                              Global Load Transactions     7372800     7372800     7372800
+         33                          gst_transactions                             Global Store Transactions      921600      921600      921600
+         33                  sysmem_read_transactions                       System Memory Read Transactions           0           0           0
+         33                 sysmem_write_transactions                      System Memory Write Transactions           5           5           5
+         33                      l2_read_transactions                                  L2 Read Transactions     1857045     1864307     1859825
+         33                     l2_write_transactions                                 L2 Write Transactions      921813      921881      921819
+         33                    dram_read_transactions                       Device Memory Read Transactions     1843543     1843811     1843611
+         33                   dram_write_transactions                      Device Memory Write Transactions      923405      925325      924102
+         33                           global_hit_rate                     Global Hit Rate in unified l1/tex      74.75%      74.83%      74.79%
+         33                            local_hit_rate                                        Local Hit Rate       0.00%       0.00%       0.00%
+         33                  gld_requested_throughput                      Requested Global Load Throughput  755.28GB/s  759.53GB/s  756.73GB/s
+         33                  gst_requested_throughput                     Requested Global Store Throughput  107.90GB/s  108.50GB/s  108.10GB/s
+         33                            gld_throughput                                Global Load Throughput  863.18GB/s  868.03GB/s  864.84GB/s
+         33                            gst_throughput                               Global Store Throughput  107.90GB/s  108.50GB/s  108.10GB/s
+         33                     local_memory_overhead                                 Local Memory Overhead       0.00%       0.00%       0.00%
+         33                        tex_cache_hit_rate                                Unified Cache Hit Rate      66.44%      66.52%      66.48%
+         33                      l2_tex_read_hit_rate                           L2 Hit Rate (Texture Reads)       0.68%       1.07%       0.84%
+         33                     l2_tex_write_hit_rate                          L2 Hit Rate (Texture Writes)      50.00%      50.00%      50.00%
+         33                      dram_read_throughput                         Device Memory Read Throughput  215.84GB/s  217.06GB/s  216.26GB/s
+         33                     dram_write_throughput                        Device Memory Write Throughput  108.13GB/s  108.84GB/s  108.40GB/s
+         33                      tex_cache_throughput                              Unified Cache Throughput  1122.1GB/s  1128.4GB/s  1124.3GB/s
+         33                    l2_tex_read_throughput                         L2 Throughput (Texture Reads)  217.52GB/s  218.93GB/s  218.06GB/s
+         33                   l2_tex_write_throughput                        L2 Throughput (Texture Writes)  107.90GB/s  108.50GB/s  108.10GB/s
+         33                        l2_read_throughput                                 L2 Throughput (Reads)  217.59GB/s  219.02GB/s  218.16GB/s
+         33                       l2_write_throughput                                L2 Throughput (Writes)  107.92GB/s  108.53GB/s  108.13GB/s
+         33                    sysmem_read_throughput                         System Memory Read Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         33                   sysmem_write_throughput                        System Memory Write Throughput  613.82KB/s  617.27KB/s  614.99KB/s
+         33                     local_load_throughput                          Local Memory Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         33                    local_store_throughput                         Local Memory Store Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         33                    shared_load_throughput                         Shared Memory Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         33                   shared_store_throughput                        Shared Memory Store Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         33                            gld_efficiency                         Global Memory Load Efficiency      87.50%      87.50%      87.50%
+         33                            gst_efficiency                        Global Memory Store Efficiency     100.00%     100.00%     100.00%
+         33                    tex_cache_transactions                            Unified Cache Transactions     9584640     9584640     9584640
+         33                             flop_count_dp           Floating Point Operations(Double Precision)   110592000   110592000   110592000
+         33                         flop_count_dp_add       Floating Point Operations(Double Precision Add)    18432000    18432000    18432000
+         33                         flop_count_dp_fma       Floating Point Operations(Double Precision FMA)    36864000    36864000    36864000
+         33                         flop_count_dp_mul       Floating Point Operations(Double Precision Mul)    18432000    18432000    18432000
+         33                             flop_count_sp           Floating Point Operations(Single Precision)           0           0           0
+         33                         flop_count_sp_add       Floating Point Operations(Single Precision Add)           0           0           0
+         33                         flop_count_sp_fma       Floating Point Operations(Single Precision FMA)           0           0           0
+         33                         flop_count_sp_mul        Floating Point Operation(Single Precision Mul)           0           0           0
+         33                     flop_count_sp_special   Floating Point Operations(Single Precision Special)      819200      819200      819200
+         33                             inst_executed                                 Instructions Executed    20613120    20613120    20613120
+         33                               inst_issued                                   Instructions Issued    20620947    20622970    20621853
+         33                          dram_utilization                             Device Memory Utilization     Mid (5)     Mid (5)     Mid (5)
+         33                        sysmem_utilization                             System Memory Utilization     Low (1)     Low (1)     Low (1)
+         33                          stall_inst_fetch              Issue Stall Reasons (Instructions Fetch)       1.97%       3.94%       2.79%
+         33                     stall_exec_dependency            Issue Stall Reasons (Execution Dependency)      17.38%      18.16%      17.82%
+         33                   stall_memory_dependency                    Issue Stall Reasons (Data Request)      44.86%      47.13%      45.91%
+         33                             stall_texture                         Issue Stall Reasons (Texture)      12.94%      13.94%      13.45%
+         33                                stall_sync                 Issue Stall Reasons (Synchronization)       0.00%       0.00%       0.00%
+         33                               stall_other                           Issue Stall Reasons (Other)       4.10%       4.70%       4.39%
+         33          stall_constant_memory_dependency              Issue Stall Reasons (Immediate constant)       0.32%       0.63%       0.45%
+         33                           stall_pipe_busy                       Issue Stall Reasons (Pipe Busy)       5.17%       5.59%       5.38%
+         33                         shared_efficiency                              Shared Memory Efficiency       0.00%       0.00%       0.00%
+         33                                inst_fp_32                               FP Instructions(Single)      819200      819200      819200
+         33                                inst_fp_64                               FP Instructions(Double)    73728000    73728000    73728000
+         33                              inst_integer                                  Integer Instructions   428621824   428621824   428621824
+         33                          inst_bit_convert                              Bit-Convert Instructions     4505600     4505600     4505600
+         33                              inst_control                             Control-Flow Instructions     3735552     3735552     3735552
+         33                        inst_compute_ld_st                               Load/Store Instructions    40550400    40550400    40550400
+         33                                 inst_misc                                     Misc Instructions    29638656    29638656    29638656
+         33           inst_inter_thread_communication                             Inter-Thread Instructions           0           0           0
+         33                               issue_slots                                           Issue Slots    19062675    19064680    19063565
+         33                                 cf_issued                      Issued Control-Flow Instructions      241664      241664      241664
+         33                               cf_executed                    Executed Control-Flow Instructions      241664      241664      241664
+         33                               ldst_issued                        Issued Load/Store Instructions     5763072     5763072     5763072
+         33                             ldst_executed                      Executed Load/Store Instructions     1468416     1468416     1468416
+         33                       atomic_transactions                                   Atomic Transactions           0           0           0
+         33           atomic_transactions_per_request                       Atomic Transactions Per Request    0.000000    0.000000    0.000000
+         33                      l2_atomic_throughput                       L2 Throughput (Atomic requests)  0.00000B/s  0.00000B/s  0.00000B/s
+         33                    l2_atomic_transactions                     L2 Transactions (Atomic requests)           0           0           0
+         33                  l2_tex_read_transactions                       L2 Transactions (Texture Reads)     1856004     1863978     1858938
+         33                     stall_memory_throttle                 Issue Stall Reasons (Memory Throttle)       0.19%       0.22%       0.20%
+         33                        stall_not_selected                    Issue Stall Reasons (Not Selected)       9.33%       9.98%       9.62%
+         33                 l2_tex_write_transactions                      L2 Transactions (Texture Writes)      921600      921600      921600
+         33                             flop_count_hp             Floating Point Operations(Half Precision)           0           0           0
+         33                         flop_count_hp_add         Floating Point Operations(Half Precision Add)           0           0           0
+         33                         flop_count_hp_mul          Floating Point Operation(Half Precision Mul)           0           0           0
+         33                         flop_count_hp_fma         Floating Point Operations(Half Precision FMA)           0           0           0
+         33                                inst_fp_16                                 HP Instructions(Half)           0           0           0
+         33                                       ipc                                          Executed IPC    1.228337    1.270823    1.247870
+         33                                issued_ipc                                            Issued IPC    1.230131    1.270062    1.250797
+         33                    issue_slot_utilization                                Issue Slot Utilization      56.86%      58.70%      57.81%
+         33                             sm_efficiency                               Multiprocessor Activity      96.24%      96.94%      96.55%
+         33                        achieved_occupancy                                    Achieved Occupancy    0.207201    0.209204    0.207973
+         33                  eligible_warps_per_cycle                       Eligible Warps Per Active Cycle    2.237923    2.389575    2.308955
+         33                        shared_utilization                             Shared Memory Utilization    Idle (0)    Idle (0)    Idle (0)
+         33                            l2_utilization                                  L2 Cache Utilization     Low (2)     Low (2)     Low (2)
+         33                           tex_utilization                             Unified Cache Utilization     Mid (6)     Mid (6)     Mid (6)
+         33                       ldst_fu_utilization                  Load/Store Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         33                         cf_fu_utilization                Control-Flow Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         33                        tex_fu_utilization                     Texture Function Unit Utilization     Mid (4)     Mid (4)     Mid (4)
+         33                    special_fu_utilization                     Special Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         33             half_precision_fu_utilization              Half-Precision Function Unit Utilization    Idle (0)    Idle (0)    Idle (0)
+         33           single_precision_fu_utilization            Single-Precision Function Unit Utilization     Mid (5)     Mid (5)     Mid (5)
+         33           double_precision_fu_utilization            Double-Precision Function Unit Utilization     Low (2)     Low (2)     Low (2)
+         33                        flop_hp_efficiency                            FLOP Efficiency(Peak Half)       0.00%       0.00%       0.00%
+         33                        flop_sp_efficiency                          FLOP Efficiency(Peak Single)       0.00%       0.00%       0.00%
+         33                        flop_dp_efficiency                          FLOP Efficiency(Peak Double)       9.92%      10.28%      10.10%
+         33                   sysmem_read_utilization                        System Memory Read Utilization    Idle (0)    Idle (0)    Idle (0)
+         33                  sysmem_write_utilization                       System Memory Write Utilization     Low (1)     Low (1)     Low (1)

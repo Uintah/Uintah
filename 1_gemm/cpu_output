@@ -1,0 +1,176 @@
+reproduced easily on knl. use 256 threads. even 512 or 1024 seem to work.
+KK uses range policy on knl. Hence use same. It works faster than team
+
+KK output:
+
+[damodars@cthulhu ~/installs/kokkos-kernels/src/perf_test] numactl --membind=1 ./KokkosBatched_Test_Gemm_Host_Real.exe -N 16384 -B 3
+ N = 16384
+
+ Testing Algo::Gemm::Blocked
+Compiler:
+  KOKKOS_COMPILER_INTEL: 1800
+Architecture:
+  KOKKOS_ENABLE_ISA_KNC: no
+  KOKKOS_ENABLE_ISA_POWERPCLE: no
+  KOKKOS_ENABLE_ISA_X86_64: no
+Devices:
+  KOKKOS_ENABLE_CUDA: no
+  KOKKOS_ENABLE_OPENMP: yes
+  KOKKOS_ENABLE_THREADS: no
+  KOKKOS_ENABLE_QTHREADS: no
+  KOKKOS_ENABLE_SERIAL: no
+Default Device:
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP: yes
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: no
+Atomics:
+  KOKKOS_ENABLE_CUDA_ATOMICS: no
+  KOKKOS_ENABLE_GNU_ATOMICS: no
+  KOKKOS_ENABLE_INTEL_ATOMICS: yes
+  KOKKOS_ENABLE_OPENMP_ATOMICS: no
+  KOKKOS_ENABLE_WINDOWS_ATOMICS: no
+  KOKKOS_ENABLE_SERIAL_ATOMICS: no
+Vectorization:
+  KOKKOS_ENABLE_PRAGMA_IVDEP: yes
+  KOKKOS_ENABLE_PRAGMA_LOOPCOUNT: yes
+  KOKKOS_ENABLE_PRAGMA_SIMD: no
+  KOKKOS_ENABLE_PRAGMA_UNROLL: yes
+  KOKKOS_ENABLE_PRAGMA_VECTOR: yes
+Memory:
+  KOKKOS_ENABLE_HBWSPACE: no
+  KOKKOS_ENABLE_INTEL_MM_ALLOC: no
+  KOKKOS_ENABLE_POSIX_MEMALIGN: no
+Options:
+  KOKKOS_ENABLE_ASM: yes
+  KOKKOS_ENABLE_CXX1Z: no
+  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK: no
+  KOKKOS_ENABLE_HWLOC: no
+  KOKKOS_ENABLE_LIBRT: no
+  KOKKOS_ENABLE_MPI: no
+  KOKKOS_ENABLE_PROFILING: yes
+
+Runtime Configuration:
+Kokkos::OpenMP thread_pool_topology[ 1 x 256 x 1 ]
+
+AVX512 is defined: datatype double a vector length 8
+   KK Vector BlkSize =   3 time = 4.809000e-05 avg flop/s = 1.610318e+10 max flop/s = 1.839750e+10 diff to ref = 0.000000e+00
+
+AVX512 is defined: datatype double a vector length 8
+   KK Vector BlkSize =   5 time = 7.108900e-05 avg flop/s = 4.858171e+10 max flop/s = 5.761792e+10 diff to ref = 0.000000e+00
+
+AVX512 is defined: datatype double a vector length 8
+   KK Vector BlkSize =  10 time = 1.846780e-04 avg flop/s = 1.345326e+11 max flop/s = 1.774332e+11 diff to ref = 0.000000e+00
+
+AVX512 is defined: datatype double a vector length 8
+   KK Vector BlkSize =  15 time = 4.358970e-04 avg flop/s = 2.203293e+11 max flop/s = 2.537113e+11 diff to ref = 0.000000e+00
+
+
+
+
+simd type Using range policy:
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 3 16384
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	8	1	0.000034	2.567816e+10
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl5 5 16384
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	8	1	0.000061	6.669956e+10
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl5 10 16384
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	0	0	8	1	0.000219	1.497540e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl5 15 16384
+kernel completed, verifying
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000454	2.436040e+11
+
+
+
+
+
+
+
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000443	2.498850e+11
+
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl5 10 16384
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	0	0	8	1	0.000199	1.647781e+11
+
+
+
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000418	2.645347e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000442	2.502097e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000436	2.535339e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000481	2.298358e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000482	2.294499e+11
+
+[damodars@cthulhu ~/simd_type/GEMM/07112018_latest/Range] numactl --membind=1 ./knl3 15 16384 
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	8	1	0.000423	2.613376e+11
+

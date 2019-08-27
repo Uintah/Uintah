@@ -1,0 +1,499 @@
+Parallel: 1 MPI process (using MPI)
+Parallel: 56 OMP thread partitions per MPI process
+Parallel: 1 OMP thread per partition
+Parallel: MPI Level Required: 3, provided: 3
+Date:    Tue Oct  9 09:58:46 2018
+Machine: kp359
+SVN: UNKNOWN_REVISION
+SVN: UNKNOWN_DATE
+SVN: UNKNOWN_URL
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -O2 -DNDEBUG -g 
+Application Component: 	'arches'
+Linear Solver: 	hypre
+Load Balancer: 		Simple
+==89894== NVPROF is profiling process 89894, command: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+Scheduler: 		Unified
+Patch layout: 		(1,1,1)
+Grid statistics:
+Number of levels:		1
+Level 0:
+  Periodic boundaries:		[int 1, 1, 1]
+  Number of patches:		1
+  Total number of cells:	32768 (32768 avg. per patch)
+Total patches in grid:		1
+Total cells in grid:		32768 (32768 avg. per patch)
+
+Using "MostMessages" task queue priority algorithm
+
+WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.
+Creating 27 additional  threads for task execution (total task execution threads = 28).
+
+   Using 1/1 available GPU(s)
+   GPU Device 0: "Tesla P100-PCIE-16GB" with compute capability 6.0
+Using small, individual MPI messages (no message combining)
+ARCHES CFD level: 0
+ Time integrator: RK of order 1
+ 
+
+ Registering Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+   property_models_factory
+   source_term_factory
+   table_factory
+   transport_factory
+   turbulence_model_factory
+   utility_factory
+
+ Building Tasks For: 
+   boundary_condition_factory
+   initialize_factory
+   lagrangian_factory
+   particle_model_factory
+     Task: a_model              Desc: constant            
+     Task: temperature_coal     Desc: constant            
+     Task: devol_rate           Desc: constant            
+     Task: dqmom_variables      Desc: particle_variables_dqmom
+     Task: rho_coal             Desc: coal_density        
+     Task: char_ps              Desc: char_oxidation_ps   
+ Registering variable char_gas_reaction0_qn0 for task 
+     Task: dqmom_no_inversion   Desc: DQMOM: No Inversion 
+   property_models_factory
+     Task: CCFields             Desc: compute_rho phi     
+   source_term_factory
+   table_factory
+   transport_factory
+     Task: CCFields             Desc: Compute RHS.        
+     Task: diffusion_CCFields   Desc: Compute diffusive fluxes.
+     Task: CCFields             Desc: FE update.          
+     Task: dqmom_eqns_0_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_0_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_0_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_0_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_1_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_1_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_1_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_2_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_2_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_2_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_3_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_3_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_3_length Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_w       Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_w Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_w Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_raw_coal Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_raw_coal Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_raw_coal Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_char_mass Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_char_mass Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_char_mass Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_up      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_up Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_up Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_vp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_vp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_vp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_wp      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_wp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_wp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_pE      Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_pE Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_pE Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_particle_max_temp Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_particle_max_temp Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_particle_max_temp Desc: DQMOM compute ic from w*ic
+     Task: dqmom_eqns_4_length  Desc: DQMOM rhs construction.
+     Task: dqmom_fe_update_dqmom_eqns_4_length Desc: DQMOM FE update.    
+     Task: dqmom_ic_from_w*ic_dqmom_eqns_4_length Desc: DQMOM compute ic from w*ic
+   turbulence_model_factory
+   utility_factory
+     Task: grid_info            Desc: grid properties calc.
+     Task: surface_normals      Desc: surface normals calc.
+     Task: vol_fraction_calc    Desc: calc vol frac       
+
+ 
+     WARNING: No tables (Chemistry of otherwise) found in the input file!
+ 
+ 
+
+
+Compiling initialization taskgraph...
+
+ Setting BCHelper for all Factories. 
+
+Done with taskgraph compile (0.00292299 seconds)
+
+Simulation and run time stats are reported at the end of each time step
+EMA == Wall time as an exponential moving average using a window of the last 10 time steps
+Timestep 0       Time=0           Next delT=0.001       Wall Time=1.06305   EMA=0.142438    Memory Use=412.52 MBs
+Warning: finalizeContributions not implemented for LoadBalancerCommon.
+Warning: resetCostForecaster not implemented for LoadBalancerCommon.
+Compiling taskgraph...
+
+ Warning: Attempted to schedule task: density_star but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: drhodt but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: compute_cc_velocities but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+
+ Warning: Attempted to schedule task: continuity_check but could not find it.
+          As a result, I will skip scheduling this task. This *may* or *may not* be by design.
+          Please consult a developer if you are concerned.
+
+Done with taskgraph re-compile (0.0179441 seconds)
+==89894== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+Timestep 1       Time=0.001       Next delT=0.001       Wall Time=57.9611   EMA=56.8979     Memory Use=669.31 MBs
+Timestep 2       Time=0.002       Next delT=0.001       Wall Time=114.617   EMA=56.7363     Memory Use=818.09 MBs
+Timestep 3       Time=0.003       Next delT=0.001       Wall Time=171.685   EMA=56.9025     Memory Use=906.24 MBs
+Sus: going down successfully
+==89894== Profiling application: ./3_kokkos_simd_y -gpu -nthreads 28 -cuda_blocks_per_loop 32 -cuda_threads_per_block 256 -mpi dqmom_example_char_no_pressure_32_cubed.ups
+==89894== Profiling result:
+==89894== Metric result:
+Invocations                               Metric Name                                    Metric Description         Min         Max         Avg
+Device "Tesla P100-PCIE-16GB (0)"
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE0_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+         15                             inst_per_warp                                 Instructions per warp  2.3268e+04  3.7080e+04  2.7921e+04
+         15                         branch_efficiency                                     Branch Efficiency     100.00%     100.00%     100.00%
+         15                 warp_execution_efficiency                             Warp Execution Efficiency     100.00%     100.00%     100.00%
+         15         warp_nonpred_execution_efficiency              Warp Non-Predicated Execution Efficiency      98.68%      98.95%      98.85%
+         15                      inst_replay_overhead                           Instruction Replay Overhead    0.000398    0.000916    0.000653
+         15      shared_load_transactions_per_request           Shared Memory Load Transactions Per Request    0.000000    0.000000    0.000000
+         15     shared_store_transactions_per_request          Shared Memory Store Transactions Per Request    0.000000    0.000000    0.000000
+         15       local_load_transactions_per_request            Local Memory Load Transactions Per Request   17.783231   18.554295   18.052151
+         15      local_store_transactions_per_request           Local Memory Store Transactions Per Request   10.403800   11.060359   10.638908
+         15              gld_transactions_per_request                  Global Load Transactions Per Request   16.000000   16.000000   16.000000
+         15              gst_transactions_per_request                 Global Store Transactions Per Request   16.000000   16.000000   16.000000
+         15                 shared_store_transactions                             Shared Store Transactions           0           0           0
+         15                  shared_load_transactions                              Shared Load Transactions           0           0           0
+         15                   local_load_transactions                               Local Load Transactions     2226176     2930688     2461013
+         15                  local_store_transactions                              Local Store Transactions     1121280     1735680     1326080
+         15                          gld_transactions                              Global Load Transactions      540672      540672      540672
+         15                          gst_transactions                             Global Store Transactions      131072      131072      131072
+         15                  sysmem_read_transactions                       System Memory Read Transactions           0           0           0
+         15                 sysmem_write_transactions                      System Memory Write Transactions           5           5           5
+         15                      l2_read_transactions                                  L2 Read Transactions     1314648     1667752     1432781
+         15                     l2_write_transactions                                 L2 Write Transactions     1252483     1866887     1457285
+         15                    dram_read_transactions                       Device Memory Read Transactions      789778      795172      792605
+         15                   dram_write_transactions                      Device Memory Write Transactions     1027076     1294387     1117712
+         15                           global_hit_rate                     Global Hit Rate in unified l1/tex      48.68%      49.04%      48.80%
+         15                            local_hit_rate                                        Local Hit Rate      53.38%      54.46%      54.08%
+         15                  gld_requested_throughput                      Requested Global Load Throughput  17.828GB/s  23.057GB/s  20.930GB/s
+         15                  gst_requested_throughput                     Requested Global Store Throughput  4.3218GB/s  5.5896GB/s  5.0740GB/s
+         15                            gld_throughput                                Global Load Throughput  35.655GB/s  46.114GB/s  41.861GB/s
+         15                            gst_throughput                               Global Store Throughput  8.6437GB/s  11.179GB/s  10.148GB/s
+         15                     local_memory_overhead                                 Local Memory Overhead      83.94%      88.39%      85.53%
+         15                        tex_cache_hit_rate                                Unified Cache Hit Rate      50.38%      50.55%      50.48%
+         15                      l2_tex_read_hit_rate                           L2 Hit Rate (Texture Reads)      38.79%      52.15%      43.51%
+         15                     l2_tex_write_hit_rate                          L2 Hit Rate (Texture Writes)      20.18%      46.65%      29.65%
+         15                      dram_read_throughput                         Device Memory Read Throughput  52.180GB/s  67.629GB/s  61.366GB/s
+         15                     dram_write_throughput                        Device Memory Write Throughput  85.020GB/s  87.799GB/s  86.537GB/s
+         15                      tex_cache_throughput                              Unified Cache Throughput  114.01GB/s  117.99GB/s  116.20GB/s
+         15                    l2_tex_read_throughput                         L2 Throughput (Texture Reads)  107.18GB/s  110.12GB/s  109.00GB/s
+         15                   l2_tex_write_throughput                        L2 Throughput (Texture Writes)  105.39GB/s  123.41GB/s  112.82GB/s
+         15                        l2_read_throughput                                 L2 Throughput (Reads)  109.01GB/s  112.27GB/s  110.93GB/s
+         15                       l2_write_throughput                                L2 Throughput (Writes)  105.40GB/s  123.42GB/s  112.83GB/s
+         15                    sysmem_read_throughput                         System Memory Read Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                   sysmem_write_throughput                        System Memory Write Throughput  345.75KB/s  447.16KB/s  405.92KB/s
+         15                     local_load_throughput                          Local Memory Load Throughput  187.34GB/s  193.74GB/s  190.54GB/s
+         15                    local_store_throughput                         Local Memory Store Throughput  94.359GB/s  114.74GB/s  102.67GB/s
+         15                    shared_load_throughput                         Shared Memory Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                   shared_store_throughput                        Shared Memory Store Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                            gld_efficiency                         Global Memory Load Efficiency      50.00%      50.00%      50.00%
+         15                            gst_efficiency                        Global Memory Store Efficiency      50.00%      50.00%      50.00%
+         15                    tex_cache_transactions                            Unified Cache Transactions     1383424     1735680     1500842
+         15                             flop_count_dp           Floating Point Operations(Double Precision)   104071168   189267968   132775936
+         15                         flop_count_dp_add       Floating Point Operations(Double Precision Add)     5488640    10436608     7183837
+         15                         flop_count_dp_fma       Floating Point Operations(Double Precision FMA)    41418752    76054528    53101636
+         15                         flop_count_dp_mul       Floating Point Operations(Double Precision Mul)    15712256    26722304    19388825
+         15                             flop_count_sp           Floating Point Operations(Single Precision)     9912320    17776640    12533760
+         15                         flop_count_sp_add       Floating Point Operations(Single Precision Add)           0           0           0
+         15                         flop_count_sp_fma       Floating Point Operations(Single Precision FMA)     4857856     8790016     6168576
+         15                         flop_count_sp_mul        Floating Point Operation(Single Precision Mul)      196608      196608      196608
+         15                     flop_count_sp_special   Floating Point Operations(Single Precision Special)     6283264    10608640     7740347
+         15                             inst_executed                                 Instructions Executed     5956648     9492520     7147696
+         15                               inst_issued                                   Instructions Issued     5960778     9496711     7152000
+         15                          dram_utilization                             Device Memory Utilization     Low (3)     Low (3)     Low (3)
+         15                        sysmem_utilization                             System Memory Utilization     Low (1)     Low (1)     Low (1)
+         15                          stall_inst_fetch              Issue Stall Reasons (Instructions Fetch)      29.85%      35.71%      33.40%
+         15                     stall_exec_dependency            Issue Stall Reasons (Execution Dependency)      25.36%      33.14%      28.28%
+         15                   stall_memory_dependency                    Issue Stall Reasons (Data Request)      27.06%      30.43%      29.15%
+         15                             stall_texture                         Issue Stall Reasons (Texture)       0.26%       0.40%       0.31%
+         15                                stall_sync                 Issue Stall Reasons (Synchronization)       0.00%       0.00%       0.00%
+         15                               stall_other                           Issue Stall Reasons (Other)       3.86%       4.50%       4.14%
+         15          stall_constant_memory_dependency              Issue Stall Reasons (Immediate constant)       0.48%       0.77%       0.58%
+         15                           stall_pipe_busy                       Issue Stall Reasons (Pipe Busy)       1.68%       2.39%       1.94%
+         15                         shared_efficiency                              Shared Memory Efficiency       0.00%       0.00%       0.00%
+         15                                inst_fp_32                               FP Instructions(Single)    22093824    39067648    27767057
+         15                                inst_fp_64                               FP Instructions(Double)    64847872   118325248    82841873
+         15                              inst_integer                                  Integer Instructions    48795180    56069676    51233119
+         15                          inst_bit_convert                              Bit-Convert Instructions      753664      950272      819200
+         15                              inst_control                             Control-Flow Instructions    14663936    25542912    18296814
+         15                        inst_compute_ld_st                               Load/Store Instructions    12099584    14229504    12809557
+         15                                 inst_misc                                     Misc Instructions    25255936    45850624    32295594
+         15           inst_inter_thread_communication                             Inter-Thread Instructions           0           0           0
+         15                               issue_slots                                           Issue Slots     5381139     8593708     6464086
+         15                                 cf_issued                      Issued Control-Flow Instructions      587776      945152      706901
+         15                               cf_executed                    Executed Control-Flow Instructions      587776      945152      706901
+         15                               ldst_issued                        Issued Load/Store Instructions     2539264     3505920     2861482
+         15                             ldst_executed                      Executed Load/Store Instructions      379136      461056      406442
+         15                       atomic_transactions                                   Atomic Transactions           0           0           0
+         15           atomic_transactions_per_request                       Atomic Transactions Per Request    0.000000    0.000000    0.000000
+         15                      l2_atomic_throughput                       L2 Throughput (Atomic requests)  0.00000B/s  0.00000B/s  0.00000B/s
+         15                    l2_atomic_transactions                     L2 Transactions (Atomic requests)           0           0           0
+         15                  l2_tex_read_transactions                       L2 Transactions (Texture Reads)     1289708     1643036     1407843
+         15                     stall_memory_throttle                 Issue Stall Reasons (Memory Throttle)       0.00%       0.00%       0.00%
+         15                        stall_not_selected                    Issue Stall Reasons (Not Selected)       2.13%       2.31%       2.20%
+         15                 l2_tex_write_transactions                      L2 Transactions (Texture Writes)     1252352     1866752     1457152
+         15                             flop_count_hp             Floating Point Operations(Half Precision)           0           0           0
+         15                         flop_count_hp_add         Floating Point Operations(Half Precision Add)           0           0           0
+         15                         flop_count_hp_mul          Floating Point Operation(Half Precision Mul)           0           0           0
+         15                         flop_count_hp_fma         Floating Point Operations(Half Precision FMA)           0           0           0
+         15                                inst_fp_16                                 HP Instructions(Half)           0           0           0
+         15                                       ipc                                          Executed IPC    0.448603    0.563223    0.488981
+         15                                issued_ipc                                            Issued IPC    0.449297    0.561271    0.489208
+         15                    issue_slot_utilization                                Issue Slot Utilization      20.28%      25.40%      22.11%
+         15                             sm_efficiency                               Multiprocessor Activity      55.94%      56.19%      56.08%
+         15                        achieved_occupancy                                    Achieved Occupancy    0.124725    0.124841    0.124777
+         15                  eligible_warps_per_cycle                       Eligible Warps Per Active Cycle    0.563085    0.680351    0.606810
+         15                        shared_utilization                             Shared Memory Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                            l2_utilization                                  L2 Cache Utilization     Low (1)     Low (2)     Low (1)
+         15                           tex_utilization                             Unified Cache Utilization     Low (1)     Low (1)     Low (1)
+         15                       ldst_fu_utilization                  Load/Store Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15                         cf_fu_utilization                Control-Flow Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15                        tex_fu_utilization                     Texture Function Unit Utilization     Low (2)     Low (3)     Low (2)
+         15                    special_fu_utilization                     Special Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15             half_precision_fu_utilization              Half-Precision Function Unit Utilization    Idle (0)    Idle (0)    Idle (0)
+         15           single_precision_fu_utilization            Single-Precision Function Unit Utilization     Low (2)     Low (2)     Low (2)
+         15           double_precision_fu_utilization            Double-Precision Function Unit Utilization     Low (2)     Low (3)     Low (2)
+         15                        flop_hp_efficiency                            FLOP Efficiency(Peak Half)       0.00%       0.00%       0.00%
+         15                        flop_sp_efficiency                          FLOP Efficiency(Peak Single)       0.33%       0.46%       0.37%
+         15                        flop_dp_efficiency                          FLOP Efficiency(Peak Double)       6.88%       9.82%       7.92%
+         15                   sysmem_read_utilization                        System Memory Read Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                  sysmem_write_utilization                       System Memory Write Utilization     Low (1)     Low (1)     Low (1)
+    Kernel: _ZN6Kokkos4Impl36cuda_parallel_launch_constant_memoryINS0_11ParallelForIZN6Uintah12parallel_forINS_4CudaEZNS3_15CharOxidationpsINS3_10CCVariableIdEEE4evalIS5_NS_9CudaSpaceEEEvPKNS3_5PatchEPNS3_21ArchesTaskInfoManagerERNS3_15ExecutionObjectEEUliiiE_EENSt9enable_ifIXsr3std7is_sameIT_S5_EE5valueEvE4typeESI_RKNS3_10BlockRangeERKT0_EUlNS0_14CudaTeamMemberEE_NS_10TeamPolicyIJS5_EEES5_EEEEvj
+         15                             inst_per_warp                                 Instructions per warp  1.1772e+03  1.1772e+03  1.1772e+03
+         15                         branch_efficiency                                     Branch Efficiency     100.00%     100.00%     100.00%
+         15                 warp_execution_efficiency                             Warp Execution Efficiency     100.00%     100.00%     100.00%
+         15         warp_nonpred_execution_efficiency              Warp Non-Predicated Execution Efficiency      97.90%      97.90%      97.90%
+         15                      inst_replay_overhead                           Instruction Replay Overhead    0.001699    0.001891    0.001742
+         15      shared_load_transactions_per_request           Shared Memory Load Transactions Per Request    0.000000    0.000000    0.000000
+         15     shared_store_transactions_per_request          Shared Memory Store Transactions Per Request    0.000000    0.000000    0.000000
+         15       local_load_transactions_per_request            Local Memory Load Transactions Per Request    0.000000    0.000000    0.000000
+         15      local_store_transactions_per_request           Local Memory Store Transactions Per Request    0.000000    0.000000    0.000000
+         15              gld_transactions_per_request                  Global Load Transactions Per Request    0.000000    0.000000    0.000000
+         15              gst_transactions_per_request                 Global Store Transactions Per Request   16.000000   16.000000   16.000000
+         15                 shared_store_transactions                             Shared Store Transactions           0           0           0
+         15                  shared_load_transactions                              Shared Load Transactions           0           0           0
+         15                   local_load_transactions                               Local Load Transactions           0           0           0
+         15                  local_store_transactions                              Local Store Transactions           0           0           0
+         15                          gld_transactions                              Global Load Transactions           0           0           0
+         15                          gst_transactions                             Global Store Transactions      131072      131072      131072
+         15                  sysmem_read_transactions                       System Memory Read Transactions           0           0           0
+         15                 sysmem_write_transactions                      System Memory Write Transactions           5           5           5
+         15                      l2_read_transactions                                  L2 Read Transactions        1136        1824        1329
+         15                     l2_write_transactions                                 L2 Write Transactions      131235      131708      131405
+         15                    dram_read_transactions                       Device Memory Read Transactions         361         967         524
+         15                   dram_write_transactions                      Device Memory Write Transactions       61302       62015       61592
+         15                           global_hit_rate                     Global Hit Rate in unified l1/tex       0.00%       0.00%       0.00%
+         15                            local_hit_rate                                        Local Hit Rate       0.00%       0.00%       0.00%
+         15                  gld_requested_throughput                      Requested Global Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                  gst_requested_throughput                     Requested Global Store Throughput  102.93GB/s  109.66GB/s  106.52GB/s
+         15                            gld_throughput                                Global Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                            gst_throughput                               Global Store Throughput  205.85GB/s  219.32GB/s  213.03GB/s
+         15                     local_memory_overhead                                 Local Memory Overhead       0.00%       0.00%       0.00%
+         15                        tex_cache_hit_rate                                Unified Cache Hit Rate       0.00%       0.00%       0.00%
+         15                      l2_tex_read_hit_rate                           L2 Hit Rate (Texture Reads)       0.00%       0.00%       0.00%
+         15                     l2_tex_write_hit_rate                          L2 Hit Rate (Texture Writes)      50.00%      50.00%      50.00%
+         15                      dram_read_throughput                         Device Memory Read Throughput  612.29MB/s  1.5187GB/s  873.10MB/s
+         15                     dram_write_throughput                        Device Memory Write Throughput  96.814GB/s  102.77GB/s  100.11GB/s
+         15                      tex_cache_throughput                              Unified Cache Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                    l2_tex_read_throughput                         L2 Throughput (Texture Reads)  0.00000B/s  0.00000B/s  0.00000B/s
+         15                   l2_tex_write_throughput                        L2 Throughput (Texture Writes)  205.85GB/s  219.32GB/s  213.03GB/s
+         15                        l2_read_throughput                                 L2 Throughput (Reads)  1.8146GB/s  2.9960GB/s  2.1610GB/s
+         15                       l2_write_throughput                                L2 Throughput (Writes)  206.85GB/s  219.75GB/s  213.57GB/s
+         15                    sysmem_read_throughput                         System Memory Read Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                   sysmem_write_throughput                        System Memory Write Throughput  8.0411MB/s  8.5671MB/s  8.3215MB/s
+         15                     local_load_throughput                          Local Memory Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                    local_store_throughput                         Local Memory Store Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                    shared_load_throughput                         Shared Memory Load Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                   shared_store_throughput                        Shared Memory Store Throughput  0.00000B/s  0.00000B/s  0.00000B/s
+         15                            gld_efficiency                         Global Memory Load Efficiency       0.00%       0.00%       0.00%
+         15                            gst_efficiency                        Global Memory Store Efficiency      50.00%      50.00%      50.00%
+         15                    tex_cache_transactions                            Unified Cache Transactions           0           0           0
+         15                             flop_count_dp           Floating Point Operations(Double Precision)           0           0           0
+         15                         flop_count_dp_add       Floating Point Operations(Double Precision Add)           0           0           0
+         15                         flop_count_dp_fma       Floating Point Operations(Double Precision FMA)           0           0           0
+         15                         flop_count_dp_mul       Floating Point Operations(Double Precision Mul)           0           0           0
+         15                             flop_count_sp           Floating Point Operations(Single Precision)           0           0           0
+         15                         flop_count_sp_add       Floating Point Operations(Single Precision Add)           0           0           0
+         15                         flop_count_sp_fma       Floating Point Operations(Single Precision FMA)           0           0           0
+         15                         flop_count_sp_mul        Floating Point Operation(Single Precision Mul)           0           0           0
+         15                     flop_count_sp_special   Floating Point Operations(Single Precision Special)       32768       32768       32768
+         15                             inst_executed                                 Instructions Executed      301352      301352      301352
+         15                               inst_issued                                   Instructions Issued      301864      301922      301872
+         15                          dram_utilization                             Device Memory Utilization     Low (2)     Low (2)     Low (2)
+         15                        sysmem_utilization                             System Memory Utilization     Low (1)     Low (1)     Low (1)
+         15                          stall_inst_fetch              Issue Stall Reasons (Instructions Fetch)      13.33%      46.98%      26.52%
+         15                     stall_exec_dependency            Issue Stall Reasons (Execution Dependency)      18.28%      32.07%      26.13%
+         15                   stall_memory_dependency                    Issue Stall Reasons (Data Request)       0.00%       0.00%       0.00%
+         15                             stall_texture                         Issue Stall Reasons (Texture)      13.83%      24.71%      19.31%
+         15                                stall_sync                 Issue Stall Reasons (Synchronization)       0.00%       0.00%       0.00%
+         15                               stall_other                           Issue Stall Reasons (Other)       1.29%       6.57%       2.59%
+         15          stall_constant_memory_dependency              Issue Stall Reasons (Immediate constant)       2.74%       4.55%       3.87%
+         15                           stall_pipe_busy                       Issue Stall Reasons (Pipe Busy)       4.59%      10.74%       8.44%
+         15                         shared_efficiency                              Shared Memory Efficiency       0.00%       0.00%       0.00%
+         15                                inst_fp_32                               FP Instructions(Single)       32768       32768       32768
+         15                                inst_fp_64                               FP Instructions(Double)           0           0           0
+         15                              inst_integer                                  Integer Instructions     8351276     8351276     8351276
+         15                          inst_bit_convert                              Bit-Convert Instructions       65536       65536       65536
+         15                              inst_control                             Control-Flow Instructions       41216       41216       41216
+         15                        inst_compute_ld_st                               Load/Store Instructions      606208      606208      606208
+         15                                 inst_misc                                     Misc Instructions      344064      344064      344064
+         15           inst_inter_thread_communication                             Inter-Thread Instructions           0           0           0
+         15                               issue_slots                                           Issue Slots      293672      293730      293680
+         15                                 cf_issued                      Issued Control-Flow Instructions       13312       13312       13312
+         15                               cf_executed                    Executed Control-Flow Instructions       13312       13312       13312
+         15                               ldst_issued                        Issued Load/Store Instructions       76800       76800       76800
+         15                             ldst_executed                      Executed Load/Store Instructions       19456       19456       19456
+         15                       atomic_transactions                                   Atomic Transactions           0           0           0
+         15           atomic_transactions_per_request                       Atomic Transactions Per Request    0.000000    0.000000    0.000000
+         15                      l2_atomic_throughput                       L2 Throughput (Atomic requests)  0.00000B/s  0.00000B/s  0.00000B/s
+         15                    l2_atomic_transactions                     L2 Transactions (Atomic requests)           0           0           0
+         15                  l2_tex_read_transactions                       L2 Transactions (Texture Reads)           0           0           0
+         15                     stall_memory_throttle                 Issue Stall Reasons (Memory Throttle)       1.55%       3.34%       2.20%
+         15                        stall_not_selected                    Issue Stall Reasons (Not Selected)       7.50%      13.27%      10.95%
+         15                 l2_tex_write_transactions                      L2 Transactions (Texture Writes)      131072      131072      131072
+         15                             flop_count_hp             Floating Point Operations(Half Precision)           0           0           0
+         15                         flop_count_hp_add         Floating Point Operations(Half Precision Add)           0           0           0
+         15                         flop_count_hp_mul          Floating Point Operation(Half Precision Mul)           0           0           0
+         15                         flop_count_hp_fma         Floating Point Operations(Half Precision FMA)           0           0           0
+         15                                inst_fp_16                                 HP Instructions(Half)           0           0           0
+         15                                       ipc                                          Executed IPC    0.390490    0.633110    0.495988
+         15                                issued_ipc                                            Issued IPC    0.391093    0.634236    0.522310
+         15                    issue_slot_utilization                                Issue Slot Utilization      19.02%      30.85%      25.41%
+         15                             sm_efficiency                               Multiprocessor Activity      37.03%      44.02%      40.95%
+         15                        achieved_occupancy                                    Achieved Occupancy    0.116696    0.120982    0.118976
+         15                  eligible_warps_per_cycle                       Eligible Warps Per Active Cycle    0.951880    1.505285    1.253410
+         15                        shared_utilization                             Shared Memory Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                            l2_utilization                                  L2 Cache Utilization     Low (1)     Low (1)     Low (1)
+         15                           tex_utilization                             Unified Cache Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                       ldst_fu_utilization                  Load/Store Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15                         cf_fu_utilization                Control-Flow Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15                        tex_fu_utilization                     Texture Function Unit Utilization     Low (1)     Low (2)     Low (1)
+         15                    special_fu_utilization                     Special Function Unit Utilization     Low (1)     Low (1)     Low (1)
+         15             half_precision_fu_utilization              Half-Precision Function Unit Utilization    Idle (0)    Idle (0)    Idle (0)
+         15           single_precision_fu_utilization            Single-Precision Function Unit Utilization     Low (2)     Low (3)     Low (2)
+         15           double_precision_fu_utilization            Double-Precision Function Unit Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                        flop_hp_efficiency                            FLOP Efficiency(Peak Half)       0.00%       0.00%       0.00%
+         15                        flop_sp_efficiency                          FLOP Efficiency(Peak Single)       0.00%       0.00%       0.00%
+         15                        flop_dp_efficiency                          FLOP Efficiency(Peak Double)       0.00%       0.00%       0.00%
+         15                   sysmem_read_utilization                        System Memory Read Utilization    Idle (0)    Idle (0)    Idle (0)
+         15                  sysmem_write_utilization                       System Memory Write Utilization     Low (1)     Low (1)     Low (1)

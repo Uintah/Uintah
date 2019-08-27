@@ -1,0 +1,217 @@
+ N = 16384
+
+ Testing Algo::Gemm::Unblocked
+Compiler:
+  KOKKOS_COMPILER_GNU: 720
+Architecture:
+  KOKKOS_ENABLE_ISA_KNC: no
+  KOKKOS_ENABLE_ISA_POWERPCLE: no
+  KOKKOS_ENABLE_ISA_X86_64: no
+Devices:
+  KOKKOS_ENABLE_CUDA: no
+  KOKKOS_ENABLE_OPENMP: yes
+  KOKKOS_ENABLE_THREADS: no
+  KOKKOS_ENABLE_QTHREADS: no
+  KOKKOS_ENABLE_SERIAL: yes
+Default Device:
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP: yes
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: no
+Atomics:
+  KOKKOS_ENABLE_CUDA_ATOMICS: no
+  KOKKOS_ENABLE_GNU_ATOMICS: yes
+  KOKKOS_ENABLE_INTEL_ATOMICS: no
+  KOKKOS_ENABLE_OPENMP_ATOMICS: no
+  KOKKOS_ENABLE_WINDOWS_ATOMICS: no
+  KOKKOS_ENABLE_SERIAL_ATOMICS: no
+Vectorization:
+  KOKKOS_ENABLE_PRAGMA_IVDEP: no
+  KOKKOS_ENABLE_PRAGMA_LOOPCOUNT: no
+  KOKKOS_ENABLE_PRAGMA_SIMD: no
+  KOKKOS_ENABLE_PRAGMA_UNROLL: no
+  KOKKOS_ENABLE_PRAGMA_VECTOR: no
+Memory:
+  KOKKOS_ENABLE_HBWSPACE: no
+  KOKKOS_ENABLE_INTEL_MM_ALLOC: no
+  KOKKOS_ENABLE_POSIX_MEMALIGN: no
+Options:
+  KOKKOS_ENABLE_ASM: no
+  KOKKOS_ENABLE_CXX14: no
+  KOKKOS_ENABLE_CXX17: no
+  KOKKOS_ENABLE_CXX20: no
+  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK: no
+  KOKKOS_ENABLE_HWLOC: no
+  KOKKOS_ENABLE_LIBRT: no
+  KOKKOS_ENABLE_MPI: no
+  KOKKOS_ENABLE_PROFILING: yes
+
+Runtime Configuration:
+Kokkos::OpenMP thread_pool_topology[ 1 x 56 x 1 ]
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =   3 time = 8.051600e-05 avg flop/s = 9.702248e+09 max flop/s = 1.098833e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.000264 ptime: 0.000263 ipc: 5.862243 instructions: 825317
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =   5 time = 1.100760e-04 avg flop/s = 1.820076e+10 max flop/s = 3.721065e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.000707 ptime: 0.000707 ipc: 8.372517 instructions: 3401495
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =  10 time = 5.847540e-04 avg flop/s = 4.949483e+10 max flop/s = 5.603724e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.002144 ptime: 0.002141 ipc: 5.174060 instructions: 6530096
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =  15 time = 1.619056e-03 avg flop/s = 6.596113e+10 max flop/s = 6.830647e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.005463 ptime: 0.005457 ipc: 3.995649 instructions: 12874409
+
+
+ Testing Algo::Gemm::Blocked
+Compiler:
+  KOKKOS_COMPILER_GNU: 720
+Architecture:
+  KOKKOS_ENABLE_ISA_KNC: no
+  KOKKOS_ENABLE_ISA_POWERPCLE: no
+  KOKKOS_ENABLE_ISA_X86_64: no
+Devices:
+  KOKKOS_ENABLE_CUDA: no
+  KOKKOS_ENABLE_OPENMP: yes
+  KOKKOS_ENABLE_THREADS: no
+  KOKKOS_ENABLE_QTHREADS: no
+  KOKKOS_ENABLE_SERIAL: yes
+Default Device:
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP: yes
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS: no
+  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: no
+Atomics:
+  KOKKOS_ENABLE_CUDA_ATOMICS: no
+  KOKKOS_ENABLE_GNU_ATOMICS: yes
+  KOKKOS_ENABLE_INTEL_ATOMICS: no
+  KOKKOS_ENABLE_OPENMP_ATOMICS: no
+  KOKKOS_ENABLE_WINDOWS_ATOMICS: no
+  KOKKOS_ENABLE_SERIAL_ATOMICS: no
+Vectorization:
+  KOKKOS_ENABLE_PRAGMA_IVDEP: no
+  KOKKOS_ENABLE_PRAGMA_LOOPCOUNT: no
+  KOKKOS_ENABLE_PRAGMA_SIMD: no
+  KOKKOS_ENABLE_PRAGMA_UNROLL: no
+  KOKKOS_ENABLE_PRAGMA_VECTOR: no
+Memory:
+  KOKKOS_ENABLE_HBWSPACE: no
+  KOKKOS_ENABLE_INTEL_MM_ALLOC: no
+  KOKKOS_ENABLE_POSIX_MEMALIGN: no
+Options:
+  KOKKOS_ENABLE_ASM: no
+  KOKKOS_ENABLE_CXX14: no
+  KOKKOS_ENABLE_CXX17: no
+  KOKKOS_ENABLE_CXX20: no
+  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK: no
+  KOKKOS_ENABLE_HWLOC: no
+  KOKKOS_ENABLE_LIBRT: no
+  KOKKOS_ENABLE_MPI: no
+  KOKKOS_ENABLE_PROFILING: yes
+
+Runtime Configuration:
+Kokkos::OpenMP thread_pool_topology[ 1 x 56 x 1 ]
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =   3 time = 8.006500e-05 avg flop/s = 1.019374e+10 max flop/s = 1.105022e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.000250 ptime: 0.000248 ipc: 5.236891 instructions: 689296
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =   5 time = 1.461760e-04 avg flop/s = 1.801213e+10 max flop/s = 2.802102e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.000714 ptime: 0.000713 ipc: 7.790450 instructions: 3171526
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =  10 time = 6.799150e-04 avg flop/s = 4.510651e+10 max flop/s = 4.819426e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.002360 ptime: 0.002358 ipc: 5.958162 instructions: 8269554
+
+SIMD (compiler vectorization) is defined: datatype double a vector length 8
+   KK Vector BlkSize =  15 time = 1.952752e-03 avg flop/s = 5.561982e+10 max flop/s = 5.663392e+10 diff to ref = 0.000000e+00
+error: 0 rtime: 0.006495 ptime: 0.006489 ipc: 5.758059 instructions: 22057624
+
+
+
+
+
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	2	1	0.000119	7.413090e+09
+error: 0 rtime: 0.015468 ptime: 0.015447 ipc: 2.156843 instructions: 31334259
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	2	1	0.000213	1.922957e+10
+error: 0 rtime: 0.032307 ptime: 0.032306 ipc: 2.556892 instructions: 67248782
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	0	0	2	1	0.000598	5.482187e+10
+error: 0 rtime: 0.123094 ptime: 0.122595 ipc: 2.438632 instructions: 222966929
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	2	1	0.001589	6.958172e+10
+error: 0 rtime: 0.306048 ptime: 0.302193 ipc: 2.045908 instructions: 521959039
+
+kernel completed, verifying
+
+
+
+
+
+
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	0	0	2	1	0.000076	1.161513e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	2	1	0.000852	1.298403e+11
+
+kernel completed, verifying
+
+
+
+
+
+
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	0	0	2	1	0.000120	3.403855e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	0	0	2	1	0.000339	9.668259e+10
+
+kernel completed, verifying
+
+
+Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	0	0	2	1	0.000702	1.575072e+11
+

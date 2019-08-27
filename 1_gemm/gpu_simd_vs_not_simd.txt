@@ -1,0 +1,1096 @@
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	1	16	1	0.000026	3.388672e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	1	16	1	0.000028	3.189594e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	2	16	1	0.000024	3.668815e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	2	16	1	0.000022	3.939841e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	4	16	1	0.000023	3.841111e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	4	16	1	0.000022	3.966792e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	8	16	1	0.000024	3.693474e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	8	16	1	0.000023	3.783278e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	16	16	1	0.000037	2.407279e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	16	16	1	0.000037	2.400590e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	32	16	1	0.000056	1.584794e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	256	32	16	1	0.000059	1.488822e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	1	16	1	0.000020	4.393068e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	1	16	1	0.000019	4.604595e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	2	16	1	0.000020	4.450614e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	2	16	1	0.000020	4.438779e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	4	16	1	0.000020	4.379729e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	4	16	1	0.000019	4.603429e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	8	16	1	0.000023	3.830109e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	8	16	1	0.000023	3.870942e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	16	16	1	0.000036	2.484769e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	16	16	1	0.000035	2.537566e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	32	16	1	0.000057	1.564105e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	512	32	16	1	0.000056	1.587307e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	1	16	1	0.000029	3.012869e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	1	16	1	0.000023	3.867642e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	2	16	1	0.000020	4.469447e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	2	16	1	0.000019	4.727829e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	4	16	1	0.000020	4.391549e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	4	16	1	0.000019	4.584592e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	8	16	1	0.000021	4.164051e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	8	16	1	0.000022	3.985938e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	16	16	1	0.000038	2.341461e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	16	16	1	0.000038	2.341263e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	32	16	1	0.000062	1.427225e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	1024	32	16	1	0.000060	1.485891e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	1	16	1	0.000018	4.809733e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	1	16	1	0.000018	5.016060e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	2	16	1	0.000018	4.814811e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	2	16	1	0.000018	5.046090e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	4	16	1	0.000019	4.603205e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	4	16	1	0.000020	4.327755e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	8	16	1	0.000023	3.917136e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	8	16	1	0.000022	4.023984e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	16	16	1	0.000041	2.183728e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	16	16	1	0.000039	2.259810e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	32	16	1	0.000072	1.230411e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+3	2048	32	16	1	0.000070	1.261145e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	1	16	1	0.000055	7.386480e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	1	16	1	0.000049	8.347492e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	2	16	1	0.000050	8.231462e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	2	16	1	0.000050	8.239912e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	4	16	1	0.000057	7.233456e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	4	16	1	0.000068	6.050654e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	8	16	1	0.000100	4.091988e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	8	16	1	0.000095	4.323679e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	16	16	1	0.000156	2.628088e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	256	16	16	1	0.000137	2.995750e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 61: 33339 Aborted                 ./gpu5 5 16384 256 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	1	16	1	0.000046	8.892350e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	1	16	1	0.000049	8.280831e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	2	16	1	0.000037	1.116577e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	2	16	1	0.000044	9.244853e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	4	16	1	0.000051	8.046450e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	4	16	1	0.000057	7.173514e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	8	16	1	0.000091	4.476581e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	8	16	1	0.000082	4.993953e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	16	16	1	0.000158	2.591402e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	512	16	16	1	0.000140	2.928083e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 68: 33528 Aborted                 ./gpu5 5 16384 512 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	1	16	1	0.000042	9.843125e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	1	16	1	0.000044	9.395781e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	2	16	1	0.000048	8.529442e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	2	16	1	0.000046	8.913921e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	4	16	1	0.000052	7.935647e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	4	16	1	0.000051	8.106503e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	8	16	1	0.000093	4.400607e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	8	16	1	0.000081	5.066132e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	16	16	1	0.000162	2.530922e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	1024	16	16	1	0.000141	2.914968e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 75: 33719 Aborted                 ./gpu5 5 16384 1024 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	1	16	1	0.000045	9.028125e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	1	16	1	0.000045	9.157977e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	2	16	1	0.000041	1.000489e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	2	16	1	0.000043	9.513494e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	4	16	1	0.000051	7.966702e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	4	16	1	0.000053	7.699591e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	8	16	1	0.000090	4.544522e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	8	16	1	0.000081	5.056803e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	16	16	1	0.000166	2.463831e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+5	2048	16	16	1	0.000147	2.780426e+10
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 82: 33907 Aborted                 ./gpu5 5 16384 2048 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	1	16	1	0.000247	1.328367e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	1	16	1	0.000216	1.520143e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	2	16	1	0.000134	2.437507e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	2	16	1	0.000128	2.555034e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	4	16	1	0.000103	3.196265e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	4	16	1	0.000131	2.499756e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	8	16	1	0.000131	2.503023e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	8	16	1	0.000152	2.161512e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	16	16	1	0.000239	1.371973e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	256	16	16	1	0.000225	1.459491e+11
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 90: 34097 Aborted                 ./gpu5 10 16384 256 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	1	16	1	0.000170	1.930812e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	1	16	1	0.000212	1.548791e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	2	16	1	0.000102	3.201488e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	2	16	1	0.000132	2.473958e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	4	16	1	0.000102	3.207179e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	4	16	1	0.000111	2.963718e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	8	16	1	0.000127	2.571991e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	8	16	1	0.000134	2.454168e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	16	16	1	0.000225	1.454598e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	512	16	16	1	0.000220	1.487413e+11
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 97: 34288 Aborted                 ./gpu5 10 16384 512 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	1	16	1	0.000169	1.943342e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	1	16	1	0.000179	1.826739e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	2	16	1	0.000101	3.233634e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	2	16	1	0.000109	3.010311e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	4	16	1	0.000102	3.211379e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	4	16	1	0.000102	3.227298e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	8	16	1	0.000116	2.816303e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	8	16	1	0.000126	2.596802e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	16	16	1	0.000231	1.416173e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	1024	16	16	1	0.000222	1.478071e+11
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 104: 34477 Aborted                 ./gpu5 10 16384 1024 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	1	16	1	0.000168	1.950656e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	1	16	1	0.000179	1.829000e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	2	16	1	0.000102	3.204630e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	2	16	1	0.000111	2.951087e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	4	16	1	0.000101	3.236568e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	4	16	1	0.000100	3.286696e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	8	16	1	0.000116	2.836897e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	8	16	1	0.000127	2.570777e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	16	16	1	0.000234	1.402498e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+10	2048	16	16	1	0.000225	1.456057e+11
+
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Kokkos::Impl::ParallelFor< Cuda > requested too large team size.
+Traceback functionality not available
+
+/uufs/kingspeak.peaks/sys/var/slurm/slurmd.spool/job6883454/slurm_script: line 111: 34667 Aborted                 ./gpu5 10 16384 2048 32
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	1	16	1	0.001322	8.368312e+10
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	1	16	1	0.001603	6.899772e+10
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	2	16	1	0.000833	1.326955e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	2	16	1	0.000948	1.166926e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	4	16	1	0.000585	1.889420e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	4	16	1	0.000632	1.749913e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	8	16	1	0.000415	2.667299e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	8	16	1	0.000433	2.552371e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	16	16	1	0.000436	2.537064e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	16	16	1	0.000480	2.303552e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	32	16	1	0.000367	3.012066e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	256	32	16	1	0.000404	2.734198e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	1	16	1	0.000885	1.249295e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	1	16	1	0.000968	1.142026e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	2	16	1	0.000612	1.805627e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	2	16	1	0.000649	1.703449e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	4	16	1	0.000498	2.222539e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	4	16	1	0.000497	2.224074e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	8	16	1	0.000409	2.701875e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	8	16	1	0.000430	2.573846e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	16	16	1	0.000385	2.869624e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	16	16	1	0.000421	2.629006e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	32	16	1	0.000369	2.998445e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	512	32	16	1	0.000405	2.733960e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	1	16	1	0.000715	1.547644e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	1	16	1	0.000733	1.508709e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	2	16	1	0.000536	2.063664e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	2	16	1	0.000533	2.076371e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	4	16	1	0.000491	2.253192e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	4	16	1	0.000499	2.215614e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	8	16	1	0.000402	2.753755e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	8	16	1	0.000421	2.624286e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	16	16	1	0.000382	2.893949e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	16	16	1	0.000415	2.665868e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	32	16	1	0.000373	2.966064e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	1024	32	16	1	0.000405	2.733642e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	1	16	1	0.000716	1.545600e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	1	16	1	0.000735	1.504458e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	2	16	1	0.000540	2.049656e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	2	16	1	0.000537	2.059105e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	4	16	1	0.000491	2.252931e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	4	16	1	0.000499	2.214945e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	8	16	1	0.000402	2.753106e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	8	16	1	0.000419	2.637068e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	16	16	1	0.000381	2.901659e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	16	16	1	0.000416	2.660612e+11
+
+
+
+SCALAR Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	32	16	1	0.000378	2.926484e+11
+
+
+
+SIMD Success:
+ N	Teams	TeamS	VL	ele/VL	exec_time(s)	FLOPS
+15	2048	32	16	1	0.000406	2.723685e+11
+

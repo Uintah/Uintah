@@ -1,0 +1,1 @@
+slurmstepd: error: *** JOB 5960884 ON kp362 CANCELLED AT 2018-09-26T11:41:37 ***
