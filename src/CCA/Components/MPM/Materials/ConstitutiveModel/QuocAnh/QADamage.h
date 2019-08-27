@@ -31,7 +31,7 @@
  //      Usage:
 
 
-#ifndef _QADamage_CONSTITUTIVE_MODEL_H__
+#ifndef __QADamage_CONSTITUTIVE_MODEL_H__
 #define __QADamage_CONSTITUTIVE_MODEL_H__
 
 namespace Uintah {

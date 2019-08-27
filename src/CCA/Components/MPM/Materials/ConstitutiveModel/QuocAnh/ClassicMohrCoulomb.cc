@@ -1,4 +1,3 @@
-#pragma once
 #include "stdafx.h"
 #include "ClassicMohrCoulomb.h"
 
@@ -134,14 +133,14 @@ return (0); //it is helpful not to calculate it each time...
 
 double ClassicMohrCoulomb::CalcElastic (double * Strain, BBMPoint * InitialPoint, BBMPoint * FinalPoint)
 {
-double Stress[6], Zeros[6], InitialSuction;
+	double Stress[6], Zeros[6];// , InitialSuction;
 
 for (int i=0; i<6; i++)
 {
 	Zeros[i]=0;
 }
 
-InitialSuction=InitialPoint->GetSuction();
+//InitialSuction=InitialPoint->GetSuction();
 
 CalcStressElast (InitialPoint->GetSpecVol(), InitialPoint->stress, InitialPoint->strain,  Strain,  Stress);
 //for (int i=0; i<6; i++) cout<<"Stress increment is:"<<Stress[i]<<endl;
@@ -473,7 +472,7 @@ for (int i=1; i<6; i++) DEPS.PutElement (i,1,EPStrain[i-1]);  //increase of epsi
 //cout<<"Mean Stress:"<<Point.GetMeanStress()<<" PMIN="<<PMIN<<endl;
 
 
-int Alert=0;
+//int Alert=0;
 
 	//for all stresses different
 	A.PutElement(1,1,1.0-SinPhi);
@@ -937,8 +936,8 @@ bool ClassicMohrCoulomb::CheckGradient (BBMPoint * InitialPoint, BBMPoint * Fina
 	STRESS_INC.Print();*/
 
 	for (int i=0; i<6; i++) ds[i]=STRESS_INC.GetElement(i+1,1); //in ds values of stress increment calculated using tangent D
-	double cosinus, SuctionIncrement;
-	SuctionIncrement=STRAIN_INC.GetElement(7,1);
+	double cosinus;// , SuctionIncrement;
+	//SuctionIncrement=STRAIN_INC.GetElement(7,1);
 	//cout<<"Suction Increment="<<SuctionIncrement<<endl;
 	cosinus=FindGradient ( InitialPoint->state ,InitialPoint->stress, ds, df, 0,0);
 	//cout<<"Cosinus is:"<<cosinus<<endl;
@@ -1219,7 +1218,7 @@ for (int i=1; i<6; i++) DEPS.PutElement (i,1,EPStrain[i-1]);  //increase of epsi
 
 bool correct;
 
-int Alert;
+//int Alert;
 
 
 
@@ -1303,7 +1302,7 @@ BBMMatrix dJ2dSIG (6,1), dJ3dSIG (6,1), dqdSIG (6,1), dI1dSIG (6,1), dI2dSIG (6,
 
 
 //Getting lambda and Dep
-Alert=0;
+//Alert=0;
 
 	/*
 if (fabs(Point->stress[0]-Point->stress[1])<TINY) Alert=1;
@@ -1481,10 +1480,10 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				MM.PutElement (3,1,1); //rest is zero as initialized
 
 
-				//*************************************
+
 				SpecificVolume=PointCopy.GetSpecVol();  //specific volume need to be used the right one
 				//cout<<"Specific Volume:"<<SpecificVolume<<endl;
-				//***************************************
+
 				PZeroStar=PointCopy.GetPStar ();
 
 				//convention - matrices names are made from CAPITALIZED letters
@@ -1520,7 +1519,7 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				//cout<<"A:"<<endl; A.Print();
 				//dF/dsigma - inserted into A
 
-				/*if (NonAssociated)
+				if (NonAssociated)
 				{
 					temp=alfa*(2*Point->stress[0]-Point->stress[1]-Point->stress[2])+M*M/3*(2*MeanStress+k*Suction-PZero);
 					GG.PutElement(1,1,temp);
@@ -1551,13 +1550,9 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				PEP.PutElement (1,1,temp); //dP0* /depsplv
 				//cout<<"DPZeroStar/Depsvpl:"<<temp<<endl;
 				//DEL... elastic matrix... values of K. Here we need values of K at the point...
-				/*We need to have the K - bulk modulus of the soil calculated, and then it is
-				possible to fill into the DEL Matrix...
-				So, the way of doing it will be repeated, algorithm as before... , in procedure find stress elast, but, this time
-				it will be made inside and the results will be put into the matrix.
-				*/
 
-/*
+
+
 				// Checks whether Mean stress is large enough to hold K in right range.
 				if ((MeanStress<PMIN)&&(MeanStress>(-PMIN)))
 				{
@@ -1683,7 +1678,7 @@ for (int i=1; i<6; i++) DEPS.PutElement (i,1,EPStrain[i-1]);  //increase of epsi
 
 bool correct;
 
-int Alert;
+//int Alert;
 
 
 
@@ -1817,7 +1812,7 @@ if (correct==TRUE)
 
 
 //Getting lambda and Dep
-Alert=0;
+//Alert=0;
 A.Transpose(&NUMERATOR);
 NUMERATOR.Multiply(&DEL,&NUMERATOR); //NUMERATOR=aT*Del -->Numerator of Lambda without multiplication by dEpsilon
 NUMERATOR.Multiply(&GG,&DENOMINATOR);
@@ -1950,12 +1945,12 @@ The plastic/elastic part of the strain is also linked to the
 
 
 bool PurelyElastic;
-bool OnTheYieldLocus;
-bool Unloading;
-double PurelyElasticStrain[7],PurelyPlasticStrain[7], IntersectionStrain[7], NewIntersectionStrain[7];
+//bool OnTheYieldLocus;
+//bool Unloading;
+//double PurelyElasticStrain[7],PurelyPlasticStrain[7], IntersectionStrain[7], NewIntersectionStrain[7];
 
 BBMMatrix EigenVectors(3,3);
-double EigenValues [3];
+//double EigenValues [3];
 
 //cout<<"Strains:"<<StrainIncrement[0]<<' '<<StrainIncrement[1]<<' '<<StrainIncrement[2]<<' '<<StrainIncrement[3]<<' '<<StrainIncrement[4]<<' '<<StrainIncrement[5]<<endl;
 
@@ -2058,7 +2053,7 @@ else  // we have elasto-plastic step
 			if (FindIntersectionPlastic (PurelyPlasticStrain,&FinalPoint,IntersectionStrain))
 			{
 				//intersection== true
-/*
+
 				if (CheckStayInCorner (&FinalPoint,IntersectionStrain))
 				{
 					//yes: we are done: final stress is achieved
@@ -2076,7 +2071,7 @@ else  // we have elasto-plastic step
 				Region=CalculatePlasticMC_NEW (IntersectionStrain,&FinalPoint);
 				//all well, we don't need to do anything more
 			}
-					/*
+					
 					Major rehaul of this procedure is needed...
 					Note: intersection is already found, so there is no trouble about that...
 					Consists of:
@@ -2091,8 +2086,8 @@ else  // we have elasto-plastic step
 						Additional question (leading to a paper) is whether with the updated method a consistent tangent matrix may be derived
 						...
 
-					*/
-/*
+					
+
 			//this should be not concluded here, but several steps (due to crossing the active surface lines) should be invoked
 			//and subsequently plastic part
 			//FinalPoint.Copy(InitialPoint);
@@ -2165,10 +2160,10 @@ sad
 //as such difference between sigma1 and sigma2 and sigma 3 is indicative
 
 double HowFarStress;
-double HowFarStrain, Alpha, Factor[2];
+double HowFarStrain, Alpha;// Factor[2];
 BBMPoint TestPoint;
 BBMMatrix EigenVectors(3,3),DEPS (6,1);
-double EigenValues [3], EigenValuesInitial[3], Delta[3];
+double EigenValues[3], EigenValuesInitial[3];// Delta[3];
 
 FinalPoint->Copy(&TestPoint);
 FinalPoint->GetEigen(EigenValuesInitial);
@@ -2217,13 +2212,13 @@ else
 
 		//rotate the stress to get the principal stresses
 		TestPoint.GetEigen(EigenValues);
-		for (int i=0; i<3; i++) Delta[i]=EigenValuesInitial[i]-EigenValues[i];
+		//for (int i=0; i<3; i++) Delta[i]=EigenValuesInitial[i]-EigenValues[i];
 		//now we have the increment in EigenValues corresponding to the increment in strains.
 		//Assuming linear relationship, we can extrapolate to get the right amount of stress
 
 		//we need to decide whether we will get sigma1=sigma2 or sigma2=sigma3 first.
-		Factor[0]=1/Alpha*(EigenValuesInitial[0]-EigenValuesInitial[1])/(Delta[1]-Delta[0]);
-		Factor[1]=1/Alpha*(EigenValuesInitial[1]-EigenValuesInitial[2])/(Delta[2]-Delta[1]);
+		//Factor[0]=1/Alpha*(EigenValuesInitial[0]-EigenValuesInitial[1])/(Delta[1]-Delta[0]);
+		//Factor[1]=1/Alpha*(EigenValuesInitial[1]-EigenValuesInitial[2])/(Delta[2]-Delta[1]);
 		//now, we can compute things with given Factor. If Factor more than 1, we should be able to get the whole thing done.
 		//note that if both factors are less than one, it seems that we will get to the tip of the cone...
 		//also, not sure, but those Factors may be approximate only - maybe using Pegasus to get them right would be best...
@@ -2263,13 +2258,14 @@ bool ClassicMohrCoulomb::CheckStayInCorner (BBMPoint *FinalPoint, double *Inters
 /*
 void ClassicMohrCoulomb::IntegrateMC (double* StrainIncrement, BBMPoint* InitialPoint)
 {
-/*written in mind that InitialPoint may be equal to the FinalPoint
+written in mind that InitialPoint may be equal to the FinalPoint
 Basically the procedure made before should be re-introduced, with some changes
 due to the different approach to parameters setting. It should also incorporate the
 correct value of plastic strain, instead of useless lambda. This should have been done
 long time ago, but well, better late then never.
 The plastic/elastic part of the strain is also linked to the
 */
+
 /*
 BBMPoint FinalPoint;
 bool PurelyElastic;
@@ -2392,7 +2388,7 @@ bool Unloading;
 double PurelyElasticStrain[7],PurelyPlasticStrain[7];
 
 BBMMatrix EigenVectors(3,3);
-double EigenValues [3];
+//double EigenValues [3];
 
 //cout<<'Strains:'<<StrainIncrement[0]<<' '<<StrainIncrement[1]<<' '<<StrainIncrement[2]<<' '<<StrainIncrement[3]<<' '<<StrainIncrement[4]<<' '<<StrainIncrement[5]<<endl;
 
@@ -2794,7 +2790,7 @@ int Region=1;
 	BBMMatrix DEP(6,6),DSIGMA(6,1),DEPS(6,1);
 	BBMPoint PointCopy, PointEigen;
 	BBMMatrix EigenVectors(3,3);
-	double EigenValues [3], Percentage,Strain[6],RemainingStrain[6];
+	double EigenValues[3], Strain[6];// Percentage;
 	Point->Copy(&PointCopy);
 
 	for (int i=0; i<6; i++) Strain[i]=PurelyPlasticStrain[i];
@@ -2812,10 +2808,10 @@ int Region=1;
     //EigenVectors.RotateToEigen(&DEPS,&EigenVectors);
 	//EigenVectors.RotateToEigen(Strain,&EigenVectors);
 	CalcElastic (Strain,&PointCopy,&PointCopy);
-	double YieldE=ComputeYieldFunction(&PointCopy);
+	//double YieldE=ComputeYieldFunction(&PointCopy);
 	CorrectDriftOnce (&PointCopy);	//	CorrectDriftOnce (&PointCopy);
 	//EigenVectors.RotateToOrigin(PointCopy.stress,&EigenVectors);
-	double Yield=ComputeYieldFunction(&PointCopy);
+	//double Yield=ComputeYieldFunction(&PointCopy);
 //	cout<<"DEPS after rotation:"<<endl;
 //	DEPS.Print();
 
@@ -2832,9 +2828,9 @@ state being on the yield locus.
 */
 	if (CheckYield(&PointCopy))
 	{
-			Percentage=FindPercentageBis(Strain,&PointEigen);
+			//Percentage=FindPercentageBis(Strain,&PointEigen);
 			Point->Copy(&PointEigen);
-			double PartStrain[6]; for (int i=0; i<6; i++) PartStrain[i]=Percentage*Strain[i];
+			//double PartStrain[6]; for (int i=0; i<6; i++) PartStrain[i]=Percentage*Strain[i];
 			CalcElastic (Strain,&PointEigen,&PointEigen);
 			CorrectDriftOnce (&PointEigen);
 			PointEigen.GetEigen(EigenValues,&EigenVectors);
@@ -3377,14 +3373,14 @@ double ClassicMohrCoulomb::FindPercentage (double * Strain, BBMPoint* InitialPoi
 	//Procedure finds the percentage of strain required to get principal stresses equal (S1=S2 or S2=S3).
 
 	double Percentage=1.0,Delta;
-	double DiffLow,DiffHigh,PercLow=0,PercHigh=1,Theta,ThetaOld=0,Theta1,Theta2,TargetDeg;
+	double PercLow=0,PercHigh=1,Theta,ThetaOld=0,Theta1,Theta2,TargetDeg;
 	double TempStrain[6], Eigens[3];
 	BBMPoint FinalPoint;
 	InitialPoint->Copy(&FinalPoint);
 	CalcElastic(Strain,InitialPoint,&FinalPoint);
 	CorrectDriftOnce(&FinalPoint);
 	FinalPoint.GetEigen(Eigens);
-	double YieldF=ComputeYieldFunction (&FinalPoint);
+	//double YieldF=ComputeYieldFunction (&FinalPoint);
 
 	//1: we need to find out whether we are going for S1=S2 or S2=S3 case. To do that, a Theta check is made
 
@@ -3451,15 +3447,15 @@ double ClassicMohrCoulomb::FindPercentageBis (double * Strain, BBMPoint* Initial
 {
 	//Finding Percentage by bisection
 
-	double Percentage=1.0,Delta;
-	double DiffLow,DiffHigh,PercLow=0,PercHigh=1,Theta,ThetaOld=0,Theta1,Theta2,TargetDeg;
+	double Percentage=1.0;
+	double PercLow=0,PercHigh=1;
 	double TempStrain[6], Eigens[3];
 	BBMPoint FinalPoint;
 	InitialPoint->Copy(&FinalPoint);
 	CalcElastic(Strain,InitialPoint,&FinalPoint);
 	CorrectDriftOnce(&FinalPoint);
 	FinalPoint.GetEigen(Eigens);
-	double YieldF=ComputeYieldFunction (&FinalPoint);
+	//double YieldF=ComputeYieldFunction (&FinalPoint);
 
 
 	int Exit=0;
@@ -3588,7 +3584,7 @@ double ClassicMohrCoulomb::CalculatePZero (BBMPoint * Point)
 bool ClassicMohrCoulomb::CheckYield (double *state, double *s, double suction)
 {
 
-	/*
+	
 	Purpose of this routine is to calculate value of yield function to determine, whether we have yielding
 	or not.
 
@@ -4232,7 +4228,7 @@ void ClassicMohrCoulomb::read ()
 	// file opened
 	string s;
 	int slength=0, index=0, line=0;
-	double temp=0;
+	//double temp=0;
 
 
 	do
@@ -4414,7 +4410,7 @@ return time;
 
 double ClassicMohrCoulomb::CalculatePlastic (double * PurelyPlasticStrain, BBMPoint* Point)
 {
-double time,StressIncrAbs[7];
+double time=0,StressIncrAbs[7];
 int NumberIter;
 
 
@@ -4475,22 +4471,21 @@ case 9:
 		time=PlasticExtrapol (Point,PurelyPlasticStrain,StressIncrAbs,&NumberIter);
 	}
 	break;
+
+	
 default:
 	{
 		cout<<"Unknown Solution Algorithm. Value of SOLUTION_ALGORITHM variable is set to:"<<SOLUTION_ALGORITHM<<endl;
 		cout<<"Acceptable values are ints from 1 to 9. Procedure Calculate Plastic exits without any calculations done. Please press any key to continue"<<endl; getchar ();
 	}
 	break;
+	
 }
 
 //cout<<"Runge Kutta result computed in "<<NumberIter<<" iterations."<<endl;
 
 return time;
 }
-
-
-
-
 
 double ClassicMohrCoulomb::PlasticEuler (BBMPoint* Point, double* EPStrain, double* AbsStress, int NumberIterations)
 {
@@ -4542,7 +4537,6 @@ for (int loop=0; loop<NumberIterations; loop++)
 
 EndTime=clock () ;
 
-
 /*
 cout<<"Calculation took:"<<double(EndTime-StartTime)/CLOCKS_PER_SEC<<" s."<<endl;
 cout<<"The INTEGRATION_TOL parameter is equal to:"<<INTEGRATION_TOL<<endl;
@@ -4563,8 +4557,6 @@ cout<<"Final specific volume="<<Point->GetSpecVol()<<endl;
 cout<<"Change of specific volume is equal to="<<(OldPoint.GetSpecVol()-Point->GetSpecVol())<<endl;
 cout<<"Change of mean stress p is equal to:"<<Point->GetMeanStress()-OldPoint.GetMeanStress()<<endl;
 cout<<"Change of shear stress q is equal to:"<<Point->GetShearStress()-OldPoint.GetShearStress()<<endl;
-
-
 
 FILE * StressFile;
 FILE * StrainFile;
@@ -4690,7 +4682,6 @@ NewStepSize=1.0;
 //cout<<"NewStepSize="<<NewStepSize<<endl;
 if (NewStepSize>1) NewStepSize=1;
 
-
 do
 {
 StepAccepted=false;
@@ -4805,10 +4796,6 @@ else
 		DSigma[0][i]=DSIGMA.GetElement(i+1,1);
 		PlasticStrain[0][i]=PlasticStrainTemp[i];
 	}
-
-
-
-
 }
 
 //NICE SCHEME does NOT work for the Mohr Coulomb
@@ -5259,7 +5246,7 @@ BBMPoint MidPoint[8], OldPoint, TrialPoint;
 
 double DSigma[8][6], DSigmaTemp[7], Result[7];
 double DPZeroStar[8],DPZeroStarTemp, PlasticStrain[8][6], PlasticStrainTemp[6];
-double Error[7],RError, TotRError, NewStepSize,TotalSize, StepLength, Temp, MethodPower;
+double Error[7],RError, TotRError,TotalSize, StepLength, Temp, MethodPower;
 double Frequency=15000/MethodOrder; //how often display info about steps
 
 
@@ -5267,7 +5254,7 @@ for (int i=0; i<MethodOrder; i++) {
 	for (int j=0; j<6; j++) DSigma[i][j]=0;
 	DPZeroStar[i]=0;	}
 
-bool Finished=false, StepAccepted=false;
+//bool Finished=false, StepAccepted=false;
 double SubstepStrain [7], CurrentStrain[7];
 double MicroStep=0;
 double StepAccuracyCheck;
@@ -5287,9 +5274,9 @@ for (int i=0; i<7; i++)
 	SubstepStrain[i]=StepLength*EPStrain[i]; // strain increment in all steps (equally sized)
 	AbsStress[i]=0;
 }
-TotalSize=0; NewStepSize=1;
+TotalSize=0; //NewStepSize=1;
 MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
-StepAccepted=true;
+//StepAccepted=true;
 RError=0;
 TotRError=0;
 
@@ -5462,7 +5449,7 @@ StepAccuracyCheck=TotalSize;
 MicroStep=MicroStep+StepLength;
 TotalSize=TotalSize+MicroStep; //total part of step done updated
 MicroStep=MicroStep-(TotalSize-StepAccuracyCheck);
-if (TotalSize>=1) Finished=true;
+//if (TotalSize>=1) Finished=true;
 Temp=double(StepNo)/Frequency;
 /*if (modf(Temp,&Temp)==0)
 	{
@@ -5522,22 +5509,22 @@ BBMMatrix DSIGMA (6,1);
 BBMPoint TrialPoint, OldPoint;
 double WORTH_EXTRAPOL=3;
 
-double DSigma[8][6];
-double DPZeroStar[8];
-double RError, NewStepSize,TotalSize, StepLength, Temp, MethodPower;
+//double DSigma[8][6];
+//double DPZeroStar[8];
+double RError, NewStepSize,TotalSize, StepLength, Temp;
 double Frequency=15000/MethodOrder; //how often display info about steps
-bool ReUseStep=false;
+//bool ReUseStep=false;
 
 StepLength=1;
 TotalSize=0; NewStepSize=1;
-MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
+//MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
 
-for (int i=0; i<MethodOrder; i++) {
-	for (int j=0; j<6; j++) DSigma[i][j]=0;
-	DPZeroStar[i]=0;	}
+//for (int i=0; i<MethodOrder; i++) {
+	//for (int j=0; j<6; j++) DSigma[i][j]=0;
+	//DPZeroStar[i]=0;	}
 
 bool Finished=false, StepAccepted=false;
-double SubstepStrain [7], CurrentStrain[7];
+double SubstepStrain [7];
 double MicroStep=0;
 double StepAccuracyCheck;
 
@@ -5581,7 +5568,7 @@ if ((StepLength+TotalSize)>1) StepLength=1-TotalSize; //check whether the step n
 for (int i=0; i<7; i++)
 {
 	SubstepStrain[i]=StepLength*EPStrain[i]; // strain increment in current step
-	CurrentStrain[i]=0;
+	//CurrentStrain[i]=0;
 }
 RError=0;
 
@@ -5617,10 +5604,10 @@ if (!StepAccepted)
 	//check the extrapolation and go into it, if it looks sensible. otherwise reject the step...
 	if (NewStepSize<WORTH_EXTRAPOL)
 	{
-		double Result[7];
+		//double Result[7];
 		int TempNumber=0;
-		for (int i=0; i<6; i++) Result[i]=TrialPoint.stress[i]-OldPoint.stress[i];
-		Result[6]=TrialPoint.GetPStar()-OldPoint.GetPStar();
+		//for (int i=0; i<6; i++) Result[i]=TrialPoint.stress[i]-OldPoint.stress[i];
+		//Result[6]=TrialPoint.GetPStar()-OldPoint.GetPStar();
 		TrialPoint.Copy(&OldPoint);
 		Point->Copy(&TrialPoint);
 		RKExtrapolation(A, B,BRes, C, &TrialPoint, SubstepStrain, AbsStress
@@ -5645,7 +5632,7 @@ if (StepAccepted)
 	TrialPoint.Copy(Point);
 		//Point->Update(0,SubstepStrain,DSigmaTemp,OldPoint.GetPStar()-TrialPoint.GetPStar());
 	//drift is already corrected
-	ReUseStep=false;
+	//ReUseStep=false;
 	StepAccuracyCheck=TotalSize;
 	MicroStep=MicroStep+StepLength;
 	TotalSize=TotalSize+MicroStep; //total part of step done updated
@@ -6569,7 +6556,7 @@ BBMMatrix SIGMA(6,1);
 vector <double>::iterator Iter;
 
 double DSigma[6], CurrentStrain[7], HalfCurrentStrain[7], PlasticStrain[6];
-double Lambda=0, h, DPZeroStar=0;
+double h, DPZeroStar=0;
 double dStressDrift[6], dLambdaDrift;
 
 h=*NumberIter;
@@ -6651,7 +6638,7 @@ BBMMatrix SIGMA(6,1);
 vector <double>::iterator Iter;
 
 double DSigma[6], CurrentStrain[7], HalfCurrentStrain[7], PlasticStrain[6];
-double Lambda=0, h, DPZeroStar=0;
+double h, DPZeroStar=0;
 double dStressDrift[6], dLambdaDrift;
 
 h=*NumberIter;
@@ -6773,7 +6760,7 @@ double ApproximationTableOld[16][20];
 double hSquareTable [16][15];
 double DError[15], RError;
 double InitialStress[7], InitialPlasticStrain[6], PlasticStrain[6];
-double Lambda=0, DSigma[6];
+double DSigma[6];
 /*
 double TestTable[5]={0.375,0.37109375,0.36945588,0.36879683,0.36829712};
 double TestApproxTable[5]; double TestApproxTableOld[5];
@@ -6966,7 +6953,7 @@ for (int i=0; i<loop+1; i++) *NumberIter=*NumberIter+Divisions[i];
 else
 {
 loop--;
-double Lambda=0, DSigma[6];
+double DSigma[6];
 for (int i=0; i<6; i++)
 {
 	DSigma[i]=ApproximationTable[loop][i];
@@ -7145,7 +7132,7 @@ double ApproximationTableOld[16][20];
 double hSquareTable [16][15];
 double DError[15], RError;
 double InitialStress[7], InitialPlasticStrain[6], PlasticStrain[6];
-double Lambda=0, DSigma[6];
+double DSigma[6];
 bool StepAccepted=false;
 /*
 double TestTable[5]={0.375,0.37109375,0.36945588,0.36879683,0.36829712};
@@ -7327,7 +7314,7 @@ return (EndTime-StartTime);
 else
 {
 loop--;
-double Lambda=0, DSigma[6];
+double DSigma[6];
 for (int i=0; i<6; i++)
 {	DSigma[i]=ApproximationTable[loop][i];
 	AbsStress[i]=ApproximationTable[loop][i+7];
@@ -7487,11 +7474,8 @@ if (P>TINY) DRError[7]=ErrorP/P;
 //norm of q...
 
 
-double InitialShear, FinalShearMin, FinalShearMax, FinalShear;
+double FinalShearMin, FinalShearMax, FinalShear;
 double ShearError;
-
-
-InitialShear=InitialPoint->GetShearStress();
 
 //computing shear stress like this is much more effective than calling the point to give the shear stress
 //as the point would have to be updated and copied. It is not time effective, as there are more
@@ -7648,13 +7632,8 @@ switch (RetentionModel)
 			cout<<"Procedure Compute G1. Unknown Retention Model... No matrix G1 calculated. Please press any key to continue..."<<endl;
 			getchar();
 		}
-
 }
-
-
 }
-
-
 
 double ClassicMohrCoulomb::GetLambda (double * deriv, double stresspq[3], double strainpq[3])
 {
@@ -7681,7 +7660,6 @@ double ClassicMohrCoulomb::GetLambda (double * deriv, double stresspq[3], double
 	return numerator[0]/denominator[0]; //numerator/denominator=lambda
 }
 
-
 double ClassicMohrCoulomb::Getk ()
 {
 	return 0;// k;
@@ -7707,6 +7685,3 @@ double ClassicMohrCoulomb::Getpc ()
 {
 	return 0;//pc;
 }
-
-
-

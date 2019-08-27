@@ -1,5 +1,3 @@
-
-#pragma once
 #include "stdafx.h"
 #include "BBMPoint.h"
 
@@ -144,8 +142,8 @@ double BBMPoint::GetThetaDeg_0 ()
 
 void BBMPoint::Update (double* PlasticStrainInc, double *Strain_Incr, double *Stress_Incr, double dPZeroStar)
 {
-	double dplastic_strain [7];
-	for (int i=0; i<7; i++) dplastic_strain[i]=0  ;  //Lambda is not used
+	//double dplastic_strain [7];
+	//for (int i=0; i<7; i++) dplastic_strain[i]=0  ;  //Lambda is not used
 	//***** LINE ABOVE INCORRECT !!!! ************
 	double MicroCheck;
 
@@ -197,7 +195,7 @@ ifstream infile("point.dta", ios_base::in);
 	// file opened
 	string s;
 	int slength=0, index=0, line=0;
-	double temp=0;
+	//double temp=0;
 
 	do
 	{

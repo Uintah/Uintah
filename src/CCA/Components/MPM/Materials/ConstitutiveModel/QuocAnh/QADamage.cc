@@ -25,9 +25,6 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
-//#include <Core/Containers/StaticArray.h>
-
- //#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -110,8 +107,6 @@ QADamage::QADamage(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 		ParticleVariable<Matrix3>::getTypeDescription());
 
 	d_INPUT = 11;
-	UI[d_INPUT];
-	rinit[d_INPUT];
 
 	// pre-initialize all of the user inputs to zero.
 	for (int i = 0; i < d_INPUT; i++) {
@@ -719,13 +714,11 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 	double rho_orig = matl->getInitialDensity();
 	double flow = 0.0;
 	double K = 0.0;
-
-
+	
 	// Damage
 	double nu = (3 * bulk - 2 * shear) / 2 / (3 * bulk + shear);
 	double Young_modul = (9 * bulk * shear) / (3 * bulk + shear);
 	double ini_tensile = d_initialData.tensile;
-	double length = d_initialData.length;
 	double ini_Gf = d_initialData.Gf;
 	double mesh = d_initialData.mesh;
 
@@ -733,7 +726,6 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 	double b = d_initialData.b;
 	double betarate = d_initialData.beta;
 	double ref_eqstrain = d_initialData.ref_eqstrain;
-	double n_nonlocal = d_initialData.nNonlocal;
 
 	Ghost::GhostType  gan = Ghost::AroundNodes;
 
@@ -929,7 +921,7 @@ void QADamage::computeStressTensor(const PatchSubset* patches,
 			}
 			
 			double EqStrainold = svarg[7];
-			double tensile_old = svarg[8];
+			//double tensile_old = svarg[8];
 			double EQStrainRateOld = svarg[9];
 			double ko = d_initialData.kRatio; 
 					
