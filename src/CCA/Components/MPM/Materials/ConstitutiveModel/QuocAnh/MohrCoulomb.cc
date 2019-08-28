@@ -1,5 +1,4 @@
 /*
-
 The MIT License
 
 Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and
@@ -24,9 +23,7 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
 */
-
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/ShengMohrCoulomb.h>
@@ -289,14 +286,7 @@ MohrCoulomb::MohrCoulomb(ProblemSpecP& ps,MPMFlags* Mflag)
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   int nx;
-  char* namea[5000];
-  char* keya[5000];
-  double rdim[700];
-  int iadvct[100];
-  int itype[100];
-
-  //DMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
-    nx=d_NBASICINPUTS;
+     nx=d_NBASICINPUTS;
 
     for (int i=0;i<nx;i++)
     {
@@ -667,11 +657,12 @@ double rho_orig = matl->getInitialDensity();
 	  svarg[31] = strain12;
 	  svarg[32] = strain23;
 	  svarg[33] = strain13;
-	  
+	
+	  /*
 // Non local 
   double n_nonlocal = UI[46];
   double l_nonlocal = UI[47];
-  /*
+  
   double domain_nonlocal = l_nonlocal * l_nonlocal;
   double Up = 0;
   double Up1 = 0;
@@ -708,7 +699,12 @@ double rho_orig = matl->getInitialDensity();
   shear_strain_nonlocal = (1 - n_nonlocal)*shear_strain_local + (n_nonlocal*Up/Down);
   shear_strain_rate_nonlocal = (1 - n_nonlocal)*shear_strain_rate + (n_nonlocal*Up1 / Down);
 
+  
+  */
+
   double elastic_strain = svarg[2] / svarg[0];
+  double shear_strain_nonlocal = shear_strain_local;
+  double shear_strain_rate_nonlocal = shear_strain_rate;
 
   if (Use_regular > 0)
   {
@@ -717,13 +713,6 @@ double rho_orig = matl->getInitialDensity();
 		  shear_strain_rate_nonlocal = shear_strain_rate_nonlocal * tFE / tShear;
 	  }
   }
-  */
-
-  //cerr << shear_strain_nonlocal << ' ' << shear_strain_local << endl;
-  //cerr << shear_strain_rate_nonlocal << ' ' << shear_strain_rate << endl;
-
-  double shear_strain_nonlocal = shear_strain_local;
-  double shear_strain_rate_nonlocal = shear_strain_rate;
 
   svarg[24] = shear_strain_local;
   svarg[20] = shear_strain_rate;
@@ -1391,7 +1380,6 @@ USM=Factor*(G+0.3*K)/3.0;
 //as the elastic wave should be the quickest and it apparently work in diamm
 //maybe I missed something important there
 }
-
 
 void MohrCoulomb::CheckModel(double UI[])
 {

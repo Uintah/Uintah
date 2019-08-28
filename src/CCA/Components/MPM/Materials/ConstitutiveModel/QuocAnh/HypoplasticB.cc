@@ -46,7 +46,7 @@
 #include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
+//#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -77,6 +77,8 @@ extern "C" {
 		char* keya[], double rinit[], double rdim[], int iadvct[],
 		int itype[]);
 }
+
+/*
 double ElAreaB[20000];
 double coordXB[1][20000];
 double coordYB[1][20000];
@@ -84,6 +86,7 @@ double coordYB[1][20000];
 double dlocMB[1][20000];
 double dnonlocMB[1][20000];
 int iNLB;
+*/
 
 using namespace std; using namespace Uintah;
 
@@ -186,6 +189,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 
 	ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
+	/*
 	// PVoidRatio
 	ParticleVariable<double>  pVoidRatio;
 	new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
@@ -197,6 +201,7 @@ void HypoplasticB::initializeCMData(const Patch* patch,
 		pVoidRatio[idx] = 0.0;
 
 	}
+	*/
 
 	//StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 	std::vector<ParticleVariable<double> > ISVs(d_NINSV + 1);
@@ -302,12 +307,13 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			old_dw->get(ISVs[i], ISVLabels[i], pset);
 		}
 
-		ParticleVariable<double> pdTdt, p_q, pVoidRatio;
+		ParticleVariable<double> pdTdt, p_q;
+		//ParticleVariable<double> pVoidRatio;
 
 		new_dw->allocateAndPut(pstress_new, lb->pStressLabel_preReloc, pset);
 		new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel, pset);
 		// void ratio
-		new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
+		//new_dw->allocateAndPut(pVoidRatio, lb->pVoidRatioLabel, pset);
 
 		new_dw->allocateAndPut(p_q, lb->p_qLabel_preReloc, pset);
 		new_dw->get(deformationGradient_new,
@@ -406,7 +412,7 @@ void HypoplasticB::computeStressTensor(const PatchSubset* patches,
 			//calculateStress for each particle
 			CalculateStress(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
 
-			pVoidRatio[idx] = svarg[10];
+			//pVoidRatio[idx] = svarg[10];
 
 
 			// Unload ISVs from 1D array into ISVs_new
@@ -486,6 +492,7 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
 		// This method is defined in the ConstitutiveModel base class.
 		carryForwardSharedData(pset, old_dw, new_dw, matl);
 
+		/*
 		// PVoidratio
 		ParticleVariable<double>  pVoidRatio;
 
@@ -497,7 +504,7 @@ void HypoplasticB::carryForward(const PatchSubset* patches,
 
 			pVoidRatio[idx] = 0.0;
 		}
-
+		*/
 
 		// Carry forward the data local to this constitutive model
 		std::vector<constParticleVariable<double> > ISVs(d_NINSV + 1);
@@ -547,7 +554,7 @@ void HypoplasticB::addComputesAndRequires(Task* task,
 	const MaterialSubset* matlset = matl->thisMaterial();
 	addSharedCRForHypoExplicit(task, matlset, patches);
 
-	task->computes(lb->pVoidRatioLabel, matlset);
+	//task->computes(lb->pVoidRatioLabel, matlset);
 
 	// Computes and requires for internal state data
 	for (int i = 0; i < d_NINSV; i++) {

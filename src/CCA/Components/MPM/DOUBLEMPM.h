@@ -348,6 +348,26 @@ MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 	  DataWarehouse* old_dw,
 	  DataWarehouse* new_dw);
 
+  // XPIC2
+  virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
+	  const MaterialSet*);
+
+  virtual void computeSSPlusVp(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
+  virtual void computeSPlusSSPlusVp(const ProcessorGroup*,
+	  const PatchSubset* patches,
+	  const MaterialSubset* matls,
+	  DataWarehouse* old_dw,
+	  DataWarehouse* new_dw);
+
+
   virtual void scheduleInterpolateToParticlesAndUpdate_DOUBLEMPM(SchedulerP&,
 	  const PatchSet*,
 	  const MaterialSet*);

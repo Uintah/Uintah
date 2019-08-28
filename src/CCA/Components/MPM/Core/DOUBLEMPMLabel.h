@@ -69,6 +69,8 @@ namespace Uintah {
 		const VarLabel* pVelocityLiquidXLabel;
 		const VarLabel* pVelocityLiquidXLabel_preReloc;
 
+		const VarLabel* pVelocityLiquidSSPlusLabel;
+
 		const VarLabel* pVelocityGradLiquidLabel;
 		const VarLabel* pVelocityGradLiquidLabel_preReloc;
 
@@ -90,6 +92,8 @@ namespace Uintah {
 		//const VarLabel* gVolumeLiquidLabel;
 		const VarLabel* gVelocityLiquidLabel;
 		const VarLabel* gVelocityStarLiquidLabel;
+		const VarLabel* gVelLiquidSPSSPLabel;
+
 		const VarLabel* gInternalForceLiquidLabel;
 
 		const VarLabel* gPorosityLabel;

@@ -87,14 +87,14 @@ return (0); //it is helpful not to calculate it each time...
 
 double ShengMohrCoulomb::CalcElastic (double * Strain, BBMPoint * InitialPoint, BBMPoint * FinalPoint)
 {
-double Stress[6], Zeros[6], InitialSuction;
+	double Stress[6], Zeros[6];// , InitialSuction;
 
 for (int i=0; i<6; i++)
 {
 	Zeros[i]=0;
 }
 
-InitialSuction=InitialPoint->GetSuction();
+//InitialSuction=InitialPoint->GetSuction();
 
 CalcStressElast (InitialPoint->GetSpecVol(), InitialPoint->stress, InitialPoint->strain,  Strain,  Stress);
 //for (int i=0; i<6; i++) cout<<"Stress increment is:"<<Stress[i]<<endl;
@@ -871,7 +871,7 @@ For more theoretical explanation what is being done below please see
 This procedure is quite similar to procedure CalcPlastic where the stress increment using
 the tangent elasto-plastic matrix is calculated. The matrix itself, however, is not explicitly
 calculated there.
-//***************************************/
+
 
 	// at the beginning we need to calculate the derivatives a, b, c, d, g, p...)
 BBMMatrix A (6,1); //dF/dsigma
@@ -1077,7 +1077,7 @@ Factor=1+Alpha4-(1-Alpha4)*Factor;
 double Factor025=pow(Factor,0.25);
 double Factor075=pow(Factor,-0.75);
 double M=(3-SinPhi)/(6*Alpha*SinPhi);
-double MPsi=(3-SinPsi)/(6*Alpha*SinPsi);
+//double MPsi=(3-SinPsi)/(6*Alpha*SinPsi);
 
 
 BBMMatrix dJ2dSIG (6,1), dJ3dSIG (6,1), dqdSIG (6,1), dI1dSIG (6,1), dI2dSIG (6,1), dI3dSIG (6,1), TEMP(6,1);
@@ -1406,8 +1406,8 @@ bool ShengMohrCoulomb::CheckGradient (BBMPoint * InitialPoint, BBMPoint * FinalP
 	STRESS_INC.Print();*/
 
 	for (int i=0; i<6; i++) ds[i]=STRESS_INC.GetElement(i+1,1); //in ds values of stress increment calculated using tangent D
-	double cosinus, SuctionIncrement;
-	SuctionIncrement=STRAIN_INC.GetElement(7,1);
+	double cosinus;// , SuctionIncrement;
+	//SuctionIncrement=STRAIN_INC.GetElement(7,1);
 	//cout<<"Suction Increment="<<SuctionIncrement<<endl;
 	cosinus=FindGradient ( InitialPoint->state ,InitialPoint->stress, ds, df, 0,0);
 
@@ -1513,7 +1513,7 @@ if (Point->GetYieldSuction()-Suction<-SUCTIONTOL)
 	dslength=sqrt(dslength);
 	for (int i=0; i<3; i++) dF[i]=dF[i]/dFlength;
 	cosin=(dF[0]*dMeanStress+dF[1]*dShearStress+dF[2]*dsuction)/dslength;  //it should be d vector multiplied by gradient
-	/*cout<<"Mean Stress="<<MeanStress<<"  Shear Stress="<<ShearStress<< " Suction="<<Suction<<endl;
+	cout<<"Mean Stress="<<MeanStress<<"  Shear Stress="<<ShearStress<< " Suction="<<Suction<<endl;
 	cout<<"dMean Stress="<<dMeanStress<<"  dShear Stress="<<dShearStress<<" dSuction="<<dsuction<<endl;
 	for (int i=0; i<3; i++) cout<<"value of F["<<i<<"] is:"<<dF[i]<<endl;
 	cout<<"df length is:"<<dFlength<<endl;
@@ -1918,10 +1918,8 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				MM.PutElement (3,1,1); //rest is zero as initialized
 
 
-				//*************************************
 				SpecificVolume=PointCopy.GetSpecVol();  //specific volume need to be used the right one
 				//cout<<"Specific Volume:"<<SpecificVolume<<endl;
-				//***************************************
 				PZeroStar=PointCopy.GetPStar ();
 
 				//convention - matrices names are made from CAPITALIZED letters
@@ -1957,7 +1955,7 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				//cout<<"A:"<<endl; A.Print();
 				//dF/dsigma - inserted into A
 
-				/*if (NonAssociated)
+				if (NonAssociated)
 				{
 					temp=alfa*(2*Point->stress[0]-Point->stress[1]-Point->stress[2])+M*M/3*(2*MeanStress+k*Suction-PZero);
 					GG.PutElement(1,1,temp);
@@ -1988,7 +1986,7 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				PEP.PutElement (1,1,temp); //dP0* /depsplv
 				//cout<<"DPZeroStar/Depsvpl:"<<temp<<endl;
 				//DEL... elastic matrix... values of K. Here we need values of K at the point...
-				/*We need to have the K - bulk modulus of the soil calculated, and then it is
+				We need to have the K - bulk modulus of the soil calculated, and then it is
 				possible to fill into the DEL Matrix...
 				So, the way of doing it will be repeated, algorithm as before... , in procedure find stress elast, but, this time
 				it will be made inside and the results will be put into the matrix.
@@ -2302,10 +2300,8 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 
 
 
-				//*************************************
 				SpecificVolume=PointCopy.GetSpecVol();  //specific volume need to be used the right one
 				//cout<<"Specific Volume:"<<SpecificVolume<<endl;
-				//***************************************
 				PZeroStar=PointCopy.GetPStar ();
 
 				//convention - matrices names are made from CAPITALIZED letters
@@ -2341,7 +2337,7 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				//cout<<"A:"<<endl; A.Print();
 				//dF/dsigma - inserted into A
 
-				/*if (NonAssociated)
+				if (NonAssociated)
 				{
 					temp=alfa*(2*Point->stress[0]-Point->stress[1]-Point->stress[2])+M*M/3*(2*MeanStress+k*Suction-PZero);
 					GG.PutElement(1,1,temp);
@@ -2371,7 +2367,7 @@ double temp, PZero, MeanStress, ShearStress, Suction, PZeroStar, SpecificVolume,
 				PEP.PutElement (1,1,temp); //dP0* /depsplv
 				//cout<<"DPZeroStar/Depsvpl:"<<temp<<endl;
 				//DEL... elastic matrix... values of K. Here we need values of K at the point...
-				/*We need to have the K - bulk modulus of the soil calculated, and then it is
+				We need to have the K - bulk modulus of the soil calculated, and then it is
 				possible to fill into the DEL Matrix...
 				So, the way of doing it will be repeated, algorithm as before... , in procedure find stress elast, but, this time
 				it will be made inside and the results will be put into the matrix.
@@ -2694,7 +2690,7 @@ double ShengMohrCoulomb::CalculatePZero (BBMPoint * Point)
 bool ShengMohrCoulomb::CheckYield (double *state, double *s, double suction)
 {
 
-	/*
+	
 	Purpose of this routine is to calculate value of yield function to determine, whether we have yielding
 	or not.
 
@@ -3323,7 +3319,7 @@ void ShengMohrCoulomb::read ()
 	// file opened
 	string s;
 	int slength=0, index=0, line=0;
-	double temp=0;
+	//double temp=0;
 
 
 	do
@@ -3505,7 +3501,7 @@ return time;
 
 double ShengMohrCoulomb::CalculatePlastic (double * PurelyPlasticStrain, BBMPoint* Point)
 {
-double time,StressIncrAbs[7];
+double time=0,StressIncrAbs[7];
 int NumberIter;
 
 
@@ -4231,7 +4227,7 @@ BBMPoint MidPoint[8], OldPoint, TrialPoint;
 
 double DSigma[8][6], DSigmaTemp[7], Result[7];
 double DPZeroStar[8],DPZeroStarTemp, PlasticStrain[8][6], PlasticStrainTemp[6];
-double Error[7],RError, TotRError, NewStepSize,TotalSize, StepLength, Temp, MethodPower;
+double Error[7],RError, TotRError, TotalSize, StepLength, Temp, MethodPower;
 double Frequency=15000/MethodOrder; //how often display info about steps
 
 
@@ -4239,7 +4235,7 @@ for (int i=0; i<MethodOrder; i++) {
 	for (int j=0; j<6; j++) DSigma[i][j]=0;
 	DPZeroStar[i]=0;	}
 
-bool Finished=false, StepAccepted=false;
+//bool Finished=false, StepAccepted=false;
 double SubstepStrain [7], CurrentStrain[7];
 double MicroStep=0;
 double StepAccuracyCheck;
@@ -4259,9 +4255,9 @@ for (int i=0; i<7; i++)
 	SubstepStrain[i]=StepLength*EPStrain[i]; // strain increment in all steps (equally sized)
 	AbsStress[i]=0;
 }
-TotalSize=0; NewStepSize=1;
+TotalSize=0; //NewStepSize=1;
 MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
-StepAccepted=true;
+//StepAccepted=true;
 RError=0;
 TotRError=0;
 
@@ -4434,7 +4430,7 @@ StepAccuracyCheck=TotalSize;
 MicroStep=MicroStep+StepLength;
 TotalSize=TotalSize+MicroStep; //total part of step done updated
 MicroStep=MicroStep-(TotalSize-StepAccuracyCheck);
-if (TotalSize>=1) Finished=true;
+//if (TotalSize>=1) Finished=true;
 Temp=double(StepNo)/Frequency;
 /*if (modf(Temp,&Temp)==0)
 	{
@@ -4492,22 +4488,22 @@ BBMMatrix DSIGMA (6,1);
 BBMPoint TrialPoint, OldPoint;
 double WORTH_EXTRAPOL=3;
 
-double DSigma[8][6];
-double DPZeroStar[8];
-double RError, NewStepSize,TotalSize, StepLength, Temp, MethodPower;
+//double DSigma[8][6];
+//double DPZeroStar[8];
+double RError, NewStepSize, TotalSize, StepLength, Temp;// MethodPower;
 double Frequency=15000/MethodOrder; //how often display info about steps
-bool ReUseStep=false;
+//bool ReUseStep=false;
 
 StepLength=1;
 TotalSize=0; NewStepSize=1;
-MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
+//MethodPower=pow(2.0,MethodOrder)*INTEGRATION_TOL;
 
-for (int i=0; i<MethodOrder; i++) {
-	for (int j=0; j<6; j++) DSigma[i][j]=0;
-	DPZeroStar[i]=0;	}
+//for (int i=0; i<MethodOrder; i++) {
+	//for (int j=0; j<6; j++) DSigma[i][j]=0;
+	//DPZeroStar[i]=0;	}
 
 bool Finished=false, StepAccepted=false;
-double SubstepStrain [7], CurrentStrain[7];
+double SubstepStrain[7];// CurrentStrain[7];
 double MicroStep=0;
 double StepAccuracyCheck;
 
@@ -4551,7 +4547,7 @@ if ((StepLength+TotalSize)>1) StepLength=1-TotalSize; //check whether the step n
 for (int i=0; i<7; i++)
 {
 	SubstepStrain[i]=StepLength*EPStrain[i]; // strain increment in current step
-	CurrentStrain[i]=0;
+	//CurrentStrain[i]=0;
 }
 RError=0;
 
@@ -4587,10 +4583,10 @@ if (!StepAccepted)
 	//check the extrapolation and go into it, if it looks sensible. otherwise reject the step...
 	if (NewStepSize<WORTH_EXTRAPOL)
 	{
-		double Result[7];
+		//double Result[7];
 		int TempNumber=0;
-		for (int i=0; i<6; i++) Result[i]=TrialPoint.stress[i]-OldPoint.stress[i];
-		Result[6]=TrialPoint.GetPStar()-OldPoint.GetPStar();
+		//for (int i=0; i<6; i++) Result[i]=TrialPoint.stress[i]-OldPoint.stress[i];
+		//Result[6]=TrialPoint.GetPStar()-OldPoint.GetPStar();
 		TrialPoint.Copy(&OldPoint);
 		Point->Copy(&TrialPoint);
 		RKExtrapolation(A, B,BRes, C, &TrialPoint, SubstepStrain, AbsStress
@@ -4615,7 +4611,7 @@ if (StepAccepted)
 	TrialPoint.Copy(Point);
 		//Point->Update(0,SubstepStrain,DSigmaTemp,OldPoint.GetPStar()-TrialPoint.GetPStar());
 	//drift is already corrected
-	ReUseStep=false;
+	//ReUseStep=false;
 	StepAccuracyCheck=TotalSize;
 	MicroStep=MicroStep+StepLength;
 	TotalSize=TotalSize+MicroStep; //total part of step done updated
@@ -5534,7 +5530,7 @@ BBMMatrix SIGMA(6,1);
 vector <double>::iterator Iter;
 
 double DSigma[6], CurrentStrain[7], HalfCurrentStrain[7], PlasticStrain[6];
-double Lambda=0, h, DPZeroStar=0;
+double h, DPZeroStar=0;
 double dStressDrift[6], dLambdaDrift;
 
 h=*NumberIter;
@@ -5614,7 +5610,7 @@ BBMMatrix SIGMA(6,1);
 vector <double>::iterator Iter;
 
 double DSigma[6], CurrentStrain[7], HalfCurrentStrain[7], PlasticStrain[6];
-double Lambda=0, h, DPZeroStar=0;
+double h, DPZeroStar=0;
 double dStressDrift[6], dLambdaDrift;
 
 h=*NumberIter;
@@ -5734,7 +5730,7 @@ double ApproximationTableOld[16][20];
 double hSquareTable [16][15];
 double DError[15], RError;
 double InitialStress[7], InitialPlasticStrain[6], PlasticStrain[6];
-double Lambda=0, DSigma[6];
+double DSigma[6];
 /*
 double TestTable[5]={0.375,0.37109375,0.36945588,0.36879683,0.36829712};
 double TestApproxTable[5]; double TestApproxTableOld[5];
@@ -5927,7 +5923,7 @@ for (int i=0; i<loop+1; i++) *NumberIter=*NumberIter+Divisions[i];
 else
 {
 loop--;
-double Lambda=0, DSigma[6];
+double DSigma[6];
 for (int i=0; i<6; i++)
 {
 	DSigma[i]=ApproximationTable[loop][i];
@@ -6104,7 +6100,7 @@ double ApproximationTableOld[16][20];
 double hSquareTable [16][15];
 double DError[15], RError;
 double InitialStress[7], InitialPlasticStrain[6], PlasticStrain[6];
-double Lambda=0, DSigma[6];
+double DSigma[6];
 bool StepAccepted=false;
 /*
 double TestTable[5]={0.375,0.37109375,0.36945588,0.36879683,0.36829712};
@@ -6286,7 +6282,7 @@ return (EndTime-StartTime);
 else
 {
 loop--;
-double Lambda=0, DSigma[6];
+double DSigma[6];
 for (int i=0; i<6; i++)
 {	DSigma[i]=ApproximationTable[loop][i];
 	AbsStress[i]=ApproximationTable[loop][i+7];
@@ -6446,11 +6442,11 @@ if (P>TINY) DRError[7]=ErrorP/P;
 //norm of q...
 
 
-double InitialShear, FinalShearMin, FinalShearMax, FinalShear;
+double FinalShearMin, FinalShearMax, FinalShear;//InitialShear;
 double ShearError;
 
 
-InitialShear=InitialPoint->GetShearStress();
+//InitialShear=InitialPoint->GetShearStress();
 
 //computing shear stress like this is much more effective than calling the point to give the shear stress
 //as the point would have to be updated and copied. It is not time effective, as there are more

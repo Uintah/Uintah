@@ -58,7 +58,6 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	pFreeSurfaceLabel			= VarLabel::create("p.FreeSurface", ParticleVariable<double>::getTypeDescription());
 	pFreeSurfaceLabel_preReloc  = VarLabel::create("p.FreeSurface+", ParticleVariable<double>::getTypeDescription());
 
-
 	pStressFilterLabel			= VarLabel::create("p.StressFilter", ParticleVariable<Matrix3>::getTypeDescription());
 
 	pPorosityLabel				= VarLabel::create("p.Porosity", ParticleVariable<double>::getTypeDescription());
@@ -75,6 +74,7 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 	pVelocityLiquidXLabel = VarLabel::create("p.VelocityLiquidX", ParticleVariable<double>::getTypeDescription());
 	pVelocityLiquidXLabel_preReloc = VarLabel::create("p.VelocityLiquidX+", ParticleVariable<double>::getTypeDescription());
 
+	pVelocityLiquidSSPlusLabel = VarLabel::create("p.velocityLiquidSSPlus",	ParticleVariable<Vector>::getTypeDescription());
 
 	pVelocityGradLiquidLabel	= VarLabel::create("p.VelocityGradLiquid", ParticleVariable<Vector>::getTypeDescription());
 	pVelocityGradLiquidLabel_preReloc = VarLabel::create("p.VelocityGradLiquid+", ParticleVariable<Vector>::getTypeDescription());
@@ -102,11 +102,13 @@ DOUBLEMPMLabel::DOUBLEMPMLabel()
 
 	gVelocityLiquidLabel		= VarLabel::create("g.velocityLiquid", NCVariable<Vector>::getTypeDescription());
 
+	gVelLiquidSPSSPLabel = VarLabel::create("g.velocityLiquidSPLusSSPlus", NCVariable<Vector>::getTypeDescription());
+
 	gVelocityStarLiquidLabel	= VarLabel::create("g.velocityStarLiquid", NCVariable<Vector>::getTypeDescription());
 
 	gInternalForceLiquidLabel	= VarLabel::create("g.internalforceLiquid", NCVariable<Vector>::getTypeDescription());
 
-	gPorosityLabel				= VarLabel::create("g.Porosity", NCVariable<double>::getTypeDescription());
+	gPorosityLabel = VarLabel::create("g.Porosity", NCVariable<double>::getTypeDescription());
 
 	gDragForceLabel				= VarLabel::create("g.DragForce", NCVariable<Vector>::getTypeDescription());
 
@@ -160,6 +162,8 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	VarLabel::destroy(pVelocityLiquidXLabel);
 	VarLabel::destroy(pVelocityLiquidXLabel_preReloc);
 
+	VarLabel::destroy(pVelocityLiquidSSPlusLabel);
+
 	VarLabel::destroy(pVelocityGradLiquidLabel);
 	VarLabel::destroy(pVelocityGradLiquidLabel_preReloc);
 
@@ -181,6 +185,7 @@ DOUBLEMPMLabel::~DOUBLEMPMLabel()
 	//VarLabel::destroy(gVolumeLiquidLabel);
 	VarLabel::destroy(gVelocityLiquidLabel);
 	VarLabel::destroy(gVelocityStarLiquidLabel);
+	VarLabel::destroy(gVelLiquidSPSSPLabel);
 
 	VarLabel::destroy(gInternalForceLiquidLabel);
 

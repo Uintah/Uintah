@@ -117,9 +117,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 	  return(scinew HypoplasticB(child, flags));
   }
 
-  else if (cm_type == "MohrCoulomb")
+  else if (cm_type == "MohrCoulomb") {
 	  return(scinew MohrCoulomb(child, flags));
-
+  }
 
   else if (cm_type == "QADamage") {
 	  if (flags->d_integrator_type == "explicit" ||

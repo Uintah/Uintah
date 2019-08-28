@@ -1,4 +1,3 @@
-#pragma once
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/stdafx.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/BBMMatrix.h>
 
@@ -293,7 +292,7 @@ Index->clear();	//cleaning...
 
 
 const double Tiny=1e-20;
-int i, imax, j, k, n;
+int i, imax=0, j, k, n;
 double Max, Dummy, Sum;
 n=maxrow;
 double * Scaling;
