@@ -37,12 +37,12 @@
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DOUT.hpp>
 
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_CUDA
   #include <Core/Parallel/CrowdMonitor.hpp>
 #endif
-
-#include <sci_defs/cuda_defs.h>
 
 #include <atomic>
 #include <sstream>
@@ -69,8 +69,11 @@ namespace {
   
   Dout g_detailed_dw_dbg(    "DetailedDWDBG", "DetailedTasks", "report when var is saved in varDB", false);
   Dout g_detailed_tasks_dbg( "DetailedTasks", "DetailedTasks", "general bdg info for DetailedTasks", false);
-  Dout g_message_tags_dbg(   "MessageTags",   "DetailedTasks", "info on MPI message tag assignment", false);
-
+  Dout g_message_tags_dbg(           "MessageTags",         "DetailedTasks", "info on MPI message tag assignment", false);
+  Dout g_message_tags_stats_dbg(     "MessageTagStats",     "DetailedTasks", "stats on MPI message tag assignment", false);
+#ifdef HAVE_VISIT
+  Dout g_message_tags_task_stats_dbg("MessageTagTaskStats", "DetailedTasks", "stats on MPI message tag task assignment", false);
+#endif  
 
 #ifdef HAVE_CUDA
   struct device_transfer_complete_queue_tag{};
@@ -152,16 +155,24 @@ void
 DetailedTasks::assignMessageTags( unsigned int index )
 {
   int me = m_proc_group->myRank();
-  
-  m_comm_info.clear();
-  m_comm_info.setKeyName( "Rank" );
-  
-  // Insert the stats to be collected. In this case collect stats for
-  // this rank only for both messages passed to it and recieved from
-  // other ranks.
-  m_comm_info.insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
-  m_comm_info.insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
 
+  std::pair< std::string, std::string > allTasks("All", "Tasks");
+
+  m_comm_info.clear();
+
+  // Insert the stats to be collected for all tasks. In this case
+  // collect stats for all tasks on this rank only for both messages
+  // passed to it and recieved from other ranks.
+
+  // These counts which start at one serve as the message tags.
+  m_comm_info[ allTasks ].setKeyName( "Rank" );
+  m_comm_info[ allTasks ].insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
+  m_comm_info[ allTasks ].insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
+    
+  // Map for individual task pairs.
+  std::map< std::pair< std::string, std::string >, int > taskPairs;
+
+  // Loop through all of the tasks to get the counts.
   for (size_t i = 0; i < m_dep_batches.size(); i++) {
     DependencyBatch* batch = m_dep_batches[i];
 
@@ -171,15 +182,43 @@ DetailedTasks::assignMessageTags( unsigned int index )
     int to = batch->m_to_rank;
     ASSERTRANGE(to, 0, m_proc_group->nRanks());
 
+    // Only look at tasks assigned to this rank.
     if (from == me || to == me) {
 
+#ifdef HAVE_VISIT
+      std::pair< std::string, std::string >
+        taskPair( batch->m_from_task->getTask()->getName(),
+                  batch->m_to_tasks.front()->getTask()->getName() );
+
+      // Check to see if this task to/from pair has been found before.
+      // If not, add it to the map and insert the metrics to be
+      // collected.
+      if( taskPairs.find( taskPair ) == taskPairs.end() ) {
+
+        m_comm_info[taskPair].setKeyName( "Rank" );
+        m_comm_info[taskPair].insert( CommPTPMsgTo,   std::string("ToRank")  , "messages" );
+        m_comm_info[taskPair].insert( CommPTPMsgFrom, std::string("FromRank"), "messages" );
+
+        taskPairs[taskPair];
+      }
+#endif
       // Start the message tag with one.
       if( from == me ) {
-        m_dep_batches[i]->m_message_tag = ++m_comm_info[ to ][CommPTPMsgTo];
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[allTasks][ to ][CommPTPMsgTo];
+
+#ifdef HAVE_VISIT
+        // Individual task comm stats.
+        ++m_comm_info[taskPair][ to ][CommPTPMsgTo];
+#endif  
       }
       
       if( to == me ) {
-        m_dep_batches[i]->m_message_tag = ++m_comm_info[ from ][CommPTPMsgFrom];
+        m_dep_batches[i]->m_message_tag = ++m_comm_info[allTasks][ from ][CommPTPMsgFrom];
+
+#ifdef HAVE_VISIT
+        // Individual task comm stats.
+        ++m_comm_info[taskPair][ from ][CommPTPMsgFrom];
+#endif  
       }
 
       DOUT(g_message_tags_dbg, "Rank-" << me
@@ -190,15 +229,48 @@ DetailedTasks::assignMessageTags( unsigned int index )
     }
   }
 
-  // Dump both the summary and individual stats. 
-  if (g_message_tags_dbg) {
-    unsigned int timeStep = m_sched_common->getApplication()->getTimeStep();
-    double simTime = m_sched_common->getApplication()->getSimTime();
-    std::string title = "Communication TG [" + std::to_string(index) + "]";
-    m_comm_info.calculateMinimum( true );
-    m_comm_info.reduce();
-    m_comm_info.reportSummaryStats   ( title.c_str(), me, timeStep, simTime, false );
-    m_comm_info.reportIndividualStats( title.c_str(), me, timeStep, simTime );
+  // Loop through all of the task to/from pairs and make sure all
+  // ranks are included. The ranks in the total to/from counts is the
+  // union of all ranks. For visualization each individual task
+  // to/from pair needs to have all ranks as well even though the
+  // count is zero.
+  for (auto& info: m_comm_info) {
+
+    std::pair< std::string, std::string > taskPair = info.first;
+    
+    // Do the stats first so they are not affected by adding in the
+    // other (possibly) unused ranks.
+    info.second.calculateMinimum( true );
+    info.second.reduce();
+
+    if ( ((taskPair.first == "All" && taskPair.second == "Tasks") && g_message_tags_stats_dbg) ||
+#ifdef HAVE_VISIT
+         ((taskPair.first != "All" || taskPair.second != "Tasks") && g_message_tags_task_stats_dbg) ||
+#endif
+         0 ) {
+      unsigned int timeStep = m_sched_common->getApplication()->getTimeStep();
+      double simTime = m_sched_common->getApplication()->getSimTime();
+      std::string title = "Communication TG [" + std::to_string(index) + "] " +
+        "for task <" + taskPair.first + "|" + taskPair.second + ">";
+      
+      info.second.reportSummaryStats   ( title.c_str(), me, timeStep, simTime, false );
+      info.second.reportIndividualStats( title.c_str(), me, timeStep, simTime );
+    }
+
+    // If the number of keys (ranks) is different then add in the
+    // missing ranks (the counts will be zero).
+    if( info.second.size() != m_comm_info[allTasks].size() ) {
+      
+      unsigned int nComms = m_comm_info[allTasks].size();
+      
+      for( unsigned int i=0; i<nComms; ++i) {
+        
+        unsigned int key = m_comm_info[allTasks].getKey(i); // rank
+        
+        // This call adds in the ranks and inits the value to zero.
+        info.second[ key ];
+      }
+    }
   }
 }  // end assignMessageTags()
 
