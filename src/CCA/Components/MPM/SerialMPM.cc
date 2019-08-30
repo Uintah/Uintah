@@ -124,7 +124,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   NGP     = 1;
   NGN     = 1;
 
-  d_ndim = 0;
   d_fracture = false;
   activateReductionVariable( endSimulation_name, true);
   activateReductionVariable( recomputeTimeStep_name, true);
@@ -966,7 +965,6 @@ void SerialMPM::scheduleComputeSSPlusVp(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->requires(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
 
@@ -993,7 +991,6 @@ void SerialMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
   t->requires(Task::OldDW, lb->pMassLabel,                  gan, NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,               gan, NGP);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
   t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
   t->requires(Task::NewDW, lb->gMassLabel,                  gac, NGN);
 
@@ -1180,7 +1177,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::NewDW,lb->pCurSizeLabel,              gan,NGP);
-//  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,   gan,NGP);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
@@ -2105,8 +2101,13 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     // - Initialize NC_CCweight = 0.125
     // - Find the walls with symmetry BC and double NC_CCweight
     NC_CCweight.initialize(0.125);
-    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face=Patch::nextFace(face)){
+    
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    
+    for( auto itr = bf.begin(); itr != bf.end(); ++itr ){
+      Patch::FaceType face = *itr;   
+        
       int mat_id = 0;
 
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
@@ -5066,7 +5067,6 @@ void SerialMPM::addParticles(const ProcessorGroup*,
          cout << "numNewPartNeeded = " << numNewPartNeeded << endl;
        }
 
-//       delete newGeomPiece.get_rep();
       }
 
       int fourOrEight=pow(PaPeCe,flags->d_ndim);
@@ -5738,6 +5738,8 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     // Keep the standard surface normal code around for now
     // Needed to compute the normal traction
     // At this point, everything from here on is only for diagnostics
+    printTask(patches, patch, cout_doing, "Doing MPM::computeNormals");
+
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -5806,7 +5808,6 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
     // Make normal vectors colinear by setting all norms to be
     // in the opposite direction of the norm with the largest magnitude
     if(flags->d_computeColinearNormals){
-      cout << "Fix colinearNormals" << endl;
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;

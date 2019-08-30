@@ -156,12 +156,10 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
 {
   //__________________________________
   //
-  std::string tName = "SlipExch::sched_AddExch_VelFC";
-
-  Task* t = scinew Task( tName, this, &SlipExch::addExch_VelFC,
+  Task* t = scinew Task( "SlipExch::addExch_VelFC", this, &SlipExch::addExch_VelFC,
                          BC_globalVars, recursion);
 
-  printSchedule( patches, dbgExch, tName );
+  printSchedule( patches, dbgExch, "SlipExch::sched_AddExch_VelFC" );
 
   if(recursion) {
     t->requires(Task::ParentOldDW, Ilb->delTLabel,getLevel(patches));
@@ -170,6 +168,9 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   }
 
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf_X = Ghost::AroundFacesX;
+  Ghost::GhostType  gaf_Y = Ghost::AroundFacesY;
+  Ghost::GhostType  gaf_Z = Ghost::AroundFacesZ;
 
   //__________________________________
   // define parent data warehouse
@@ -183,12 +184,12 @@ void SlipExch::sched_AddExch_VelFC(SchedulerP           & sched,
   }
 
   // All matls
-  t->requires( pNewDW,      Ilb->rho_CCLabel,     gac, 1 );
-  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac, 1 );
-  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac, 1 );
-  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gac, 2 );
-  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gac, 2 );
-  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gac, 2 );
+  t->requires( pNewDW,      Ilb->rho_CCLabel,     gac,   1);
+  t->requires( pNewDW,      Ilb->sp_vol_CCLabel,  gac,   1);
+  t->requires( pNewDW,      Ilb->vol_frac_CCLabel,gac,   1);
+  t->requires( Task::NewDW, Ilb->uvel_FCLabel,    gaf_X, 1);
+  t->requires( Task::NewDW, Ilb->vvel_FCLabel,    gaf_Y, 1);
+  t->requires( Task::NewDW, Ilb->wvel_FCLabel,    gaf_Z, 1);
 
   t->requires( pNewDW,      d_meanFreePathLabel,   ice_matls,  gac, 1 );
   t->requires( pNewDW,      d_surfaceNormLabel,    mpm_matls,  gac, 1 );
@@ -408,6 +409,9 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
     std::vector< SFCZVariable<double> >wvel_FCME( d_numMatls ), sp_vol_ZFC( d_numMatls );
 
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf_X = Ghost::AroundFacesX;
+    Ghost::GhostType  gaf_Y = Ghost::AroundFacesY;
+    Ghost::GhostType  gaf_Z = Ghost::AroundFacesZ;
     pNewDW->get( isSurfaceCell, d_isSurfaceCellLabel, 0, patch, gac, 1);
 
     //__________________________________
@@ -424,9 +428,9 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       pNewDW->get( sp_vol_CC[m],   Ilb->sp_vol_CCLabel,  indx, patch,gac, 1);
       pNewDW->get( vol_frac_CC[m], Ilb->vol_frac_CCLabel,indx, patch,gac, 1);
 
-      new_dw->get( uvel_FC[m],     Ilb->uvel_FCLabel,    indx, patch,gac, 2);
-      new_dw->get( vvel_FC[m],     Ilb->vvel_FCLabel,    indx, patch,gac, 2);
-      new_dw->get( wvel_FC[m],     Ilb->wvel_FCLabel,    indx, patch,gac, 2);
+      new_dw->get( uvel_FC[m],     Ilb->uvel_FCLabel,    indx, patch,gaf_X, 1);
+      new_dw->get( vvel_FC[m],     Ilb->vvel_FCLabel,    indx, patch,gaf_Y, 1);
+      new_dw->get( wvel_FC[m],     Ilb->wvel_FCLabel,    indx, patch,gaf_Z, 1);
 
       if(mpm_matl) {
         pNewDW->get( vel_CC[m],         Ilb->vel_CCLabel, indx, patch,gac, 1);

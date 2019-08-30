@@ -18,8 +18,7 @@
   </Time>
   <DataArchiver>
     <filebase>KS_helium.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
-    <outputInitTimestep/>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="x-mom"/>
     <save label="volFraction"/>
     <save label="cellType"/>
@@ -66,7 +65,7 @@
     <save label="ucellX"/>
     <save label="vcellY"/>
     <save label="wcellZ"/>
-    <checkpoint cycle="2" interval=".3"/>
+    <checkpoint cycle="1" interval=".0006"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>

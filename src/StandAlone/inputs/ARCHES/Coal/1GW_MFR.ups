@@ -18,11 +18,11 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="m_dot_g"/>
-    <save label="m_dot_p"/>
+    <save label="m_dot_p_organics"/>
     <save label="m_dot_g_velinlet"/>
-    <save label="m_dot_p_velinlet"/>
+    <save label="m_dot_p_organics_velinlet"/>
     <save label="m_dot_g_coal_burner_46"/>
-    <save label="m_dot_p_coal_burner_46"/>
+    <save label="m_dot_p_organics_coal_burner_46"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>

@@ -111,13 +111,13 @@ class UnifiedScheduler : public MPIScheduler  {
                                            // update this value if it ever changes.
 
     // timing statistics for Uintah infrastructure overhead
-    enum ThreadStatEnum {
+    enum ThreadStatsEnum {
         WaitTime
       , NumTasks
       , NumPatches
     };
     
-    VectorInfoMapper< ThreadStatEnum, double > thread_info_;
+    VectorInfoMapper< ThreadStatsEnum, double > m_thread_info;
 
     static std::string myRankThread();
 

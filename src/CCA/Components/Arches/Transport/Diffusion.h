@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
+#include <CCA/Components/Arches/UPSHelper.h>
 
 namespace Uintah{
 
@@ -87,6 +88,8 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void Diffusion<T>::problemSetup( ProblemSpecP& db ){
+
+    std::string eqn_grp_name = strip_class_name();
 
     for( ProblemSpecP input_db = db->findBlock("eqn"); input_db != nullptr;
          input_db = input_db->findNextBlock("eqn") ) {

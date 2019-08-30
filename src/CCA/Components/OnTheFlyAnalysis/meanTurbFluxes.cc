@@ -427,8 +427,8 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
       throw InternalError( warn, __FILE__, __LINE__ );
     }
 
-    string line;    // row from the file
-    int fpos;       // file fposition
+    string line;            // row from the file
+    int fpos = ifs.tellg(); // file fposition
 
     //__________________________________
     //  ignore header lines (#)
@@ -436,7 +436,7 @@ void meanTurbFluxes::populateVerifyLabels(const ProcessorGroup * pg,
       if ( line[0] != '#'){
         break;
       }
-      fpos= ifs.tellg();
+      fpos = ifs.tellg();
     }
 
     // rewind one line

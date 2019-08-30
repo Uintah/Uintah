@@ -37,11 +37,13 @@ namespace Uintah{
 
     /** @brief Register tasks in a convenient container **/
     void register_task( std::string task_name,
-                        TaskInterface::TaskBuilder* builder );
+                        TaskInterface::TaskBuilder* builder,
+                        ProblemSpecP db = nullptr );
 
     /** @brief Register tasks in a convenient container **/
     void register_atomic_task( std::string task_name,
-                               AtomicTaskInterface::AtomicTaskBuilder* builder );
+                               AtomicTaskInterface::AtomicTaskBuilder* builder,
+                               ProblemSpecP db = nullptr );
 
     /** @brief Retrieve a subset (collection) of tasks given the subset name **/
     virtual std::vector<std::string> retrieve_task_subset(const std::string subset) = 0;

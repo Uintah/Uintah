@@ -275,6 +275,12 @@ WARNING
          }
        }
      }
+      for(int i = 1; i<(int)d_time.size(); i++){
+        if (d_time[i]==d_time[i-1]){
+          throw ProblemSetupException("**ERROR** Identical time entries in Load Curve",
+                                       __FILE__, __LINE__);
+        }
+      }
    }
 
    template<class T>

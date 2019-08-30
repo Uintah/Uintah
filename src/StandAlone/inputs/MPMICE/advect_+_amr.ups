@@ -160,9 +160,9 @@
     <save label = "p.velocity"      levels = "-1"/>
     <save label = "p.temperature"   levels = "-1"/>
     <!--
-        <checkpoint cycle = "2" timestepInterval = "100"/>
+        <checkpoint cycle = "1" timestepInterval = "100"/>
     -->
-    <checkpoint cycle = "2" timestepInterval = "25"/>
+    <checkpoint cycle = "1" timestepInterval = "25"/>
   </DataArchiver>
 
   <!--____________________________________________________________________-->

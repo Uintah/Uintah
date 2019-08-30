@@ -42,7 +42,7 @@ UpdateParticleSize::register_initialize(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const bool packed_tasks)
 {
-  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -66,10 +66,10 @@ UpdateParticleSize::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
   register_variable( _size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
-      variable_registry );
+      variable_registry, m_task_name );
 
 }
 

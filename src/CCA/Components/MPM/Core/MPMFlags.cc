@@ -82,7 +82,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doingDissolution              =  false;
   d_computeColinearNormals        =  true;
   d_restartOnLargeNodalVelocity   =  false;
-  d_addFrictionWork               =  0.0;
   d_ndim                          =  3;
   d_addFrictionWork               =  0.0;               // don't do frictional heating by default
 
@@ -298,7 +297,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
   mpm_flag_ps->get("d_ndim",                      d_ndim);
   mpm_flag_ps->get("do_contact_friction_heating",d_do_contact_friction);
+  mpm_flag_ps->get("useLogisticRegression",       d_useLogisticRegression);
   mpm_flag_ps->get("computeColinearNormals",     d_computeColinearNormals);
+  mpm_flag_ps->get("d_ndim",                      d_ndim);
   mpm_flag_ps->get("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
   if (!d_do_contact_friction){
     d_addFrictionWork = 0.0;
@@ -513,6 +514,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("ChangeGrainMaterials",    d_changeGrainMaterials);
   ps->appendElement("AcceptorMaterialIndex",   d_acceptorMaterialIndex);
   ps->appendElement("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
+  ps->appendElement("d_ndim",                      d_ndim);
 }
 
 bool

@@ -66,17 +66,6 @@
 #include <CCA/Components/FVM/MPNP.h>
 #endif
 
-#ifndef NO_HEAT
-#  include <CCA/Components/Heat/CCHeat2D.h>
-#  include <CCA/Components/Heat/NCHeat2D.h>
-#  include <CCA/Components/Heat/CCHeat3D.h>
-#  include <CCA/Components/Heat/NCHeat3D.h>
-#  include <CCA/Components/Heat/AMRCCHeat2D.h>
-#  include <CCA/Components/Heat/AMRNCHeat2D.h>
-#  include <CCA/Components/Heat/AMRCCHeat3D.h>
-#  include <CCA/Components/Heat/AMRNCHeat3D.h>
-#endif
-
 #ifndef NO_ICE
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
@@ -106,8 +95,7 @@
 #endif
 
 #ifndef NO_PHASEFIELD
-#  include <CCA/Components/PhaseField/PhaseField.h>
-#  include <CCA/Components/PhaseField/AMRPhaseField.h>
+#  include <CCA/Components/PhaseField/Applications/ApplicationFactory.h>
 #endif 
 
 #ifndef NO_WASATCH
@@ -191,45 +179,6 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   }
   else
     turned_on_options += "mpnp ";
-#endif
-
-  //----------------------------
-
-#ifndef NO_HEAT
-  if ( sim_comp == "fdheat" || sim_comp == "FDHEAT" ) {
-    bool doNC;
-    int verbosity;
-    int dimension;
-    prob_spec->findBlock ( "FDHeat" )->getWithDefault ( "node_centered", doNC, false );
-    prob_spec->findBlock ( "FDHeat" )->getWithDefault ( "verbosity", verbosity, 0 );
-    prob_spec->findBlock ( "FDHeat" )->getWithDefault ( "dimension", dimension, 2 );
-    if ( doAMR ) {
-      if ( doNC ) {
-        if ( dimension > 2 ) {
-          return scinew AMRNCHeat3D ( myworld, materialManager, verbosity );
-        } else {
-          return scinew AMRNCHeat2D ( myworld, materialManager, verbosity );
-      } } else { // CC
-        if ( dimension > 2 ) {
-          return scinew AMRCCHeat3D ( myworld, materialManager, verbosity );
-        } else {
-          return scinew AMRCCHeat2D ( myworld, materialManager, verbosity );
-      } } } else { // noAMR
-      if ( doNC ) {
-        if ( dimension > 2 ) {
-          return scinew NCHeat3D ( myworld, materialManager, verbosity );
-        } else {
-          return scinew NCHeat2D ( myworld, materialManager, verbosity );
-      } } else { // CC
-        if ( dimension > 2 ) {
-          return scinew CCHeat3D ( myworld, materialManager, verbosity );
-        } else {
-          return scinew CCHeat2D ( myworld, materialManager, verbosity );
-    } } }
-  }
-  else
-    turned_on_options += "fdheat ";
-
 #endif
 
   //----------------------------
@@ -346,52 +295,8 @@ ApplicationFactory::create( ProblemSpecP& prob_spec,
   //----------------------------
 
 #ifndef NO_PHASEFIELD
-  if ( sim_comp == "phasefield" || sim_comp == "PHASEFIELD" ) {
-    bool doNC, doTest;
-    int verbosity;
-    int dimension;
-    prob_spec->findBlock ( "PhaseField" )->getWithDefault ( "node_centered", doNC, false );
-    prob_spec->findBlock ( "PhaseField" )->getWithDefault ( "ws_test", doTest, false );
-    prob_spec->findBlock ( "PhaseField" )->getWithDefault ( "verbosity", verbosity, 0 );
-    prob_spec->findBlock ( "PhaseField" )->getWithDefault ( "dimension", dimension, 2 );
-    if ( doAMR ) {
-      if ( doTest ) {
-        if ( doNC ) {
-          if ( dimension > 2 ) {
-            return scinew AMRNCPhaseField3DTest ( myworld, materialManager, verbosity );
-          } else {
-            return scinew AMRNCPhaseField2DTest ( myworld, materialManager, verbosity );
-        } } else { // CC
-          if ( dimension > 2 ) {
-            return scinew AMRCCPhaseField3DTest ( myworld, materialManager, verbosity );
-          } else {
-            return scinew AMRCCPhaseField2DTest ( myworld, materialManager, verbosity );
-      } } } else { // noTest
-        if ( doNC ) {
-          if ( dimension > 2 ) {
-            return scinew AMRNCPhaseField3D ( myworld, materialManager, verbosity );
-          } else {
-            return scinew AMRNCPhaseField2D ( myworld, materialManager, verbosity );
-        } } else { // CC
-          if ( dimension > 2 ) {
-            return scinew AMRCCPhaseField3D ( myworld, materialManager, verbosity );
-          } else {
-            return scinew AMRCCPhaseField2D ( myworld, materialManager, verbosity );
-    } } } } else { // noAMR
-      if ( doNC ) {
-        if ( dimension > 2 ) {
-          return scinew NCPhaseField3D ( myworld, materialManager, verbosity );
-       }  else {
-          return scinew NCPhaseField2D ( myworld, materialManager, verbosity );
-      } } else { // CC
-        if ( dimension > 2 ) {
-          return scinew CCPhaseField3D ( myworld, materialManager, verbosity );
-        } else {
-          return scinew CCPhaseField2D ( myworld, materialManager, verbosity );
-  } } } }
-  else
-    turned_on_options += "phasefield ";
-
+  if ( sim_comp == "phasefield" || sim_comp == "PHASEFIELD" )
+    return PhaseField::ApplicationFactory::create ( myworld, materialManager, prob_spec->findBlock ( "PhaseField" ), doAMR );
 #endif
 
   //----------------------------

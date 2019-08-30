@@ -371,7 +371,6 @@ namespace Uintah {
       const VarLabel* pPlasticStrainLabel_preReloc;
       const VarLabel* pYieldStressLabel;
       const VarLabel* pYieldStressLabel_preReloc;
-
     };
 } // End namespace Uintah
 

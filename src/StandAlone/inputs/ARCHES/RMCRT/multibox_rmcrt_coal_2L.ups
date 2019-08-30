@@ -795,7 +795,7 @@
           <value>-0.0</value>
         </BCType>
       </Face>
-      <Face ellipse="y-" minor_radius="0.1695632112260993" major_radius="0.1983772367581740" name="y_minus_oxy" origin="0.384768292682927 0.0 1.52439024390244">
+      <Face ellipse="y-" angle="0.0" minor_radius="0.1695632112260993" major_radius="0.1983772367581740" name="y_minus_oxy" origin="0.384768292682927 0.0 1.52439024390244">
         <BCType label="mass_inlet_primary_air_y-" var="MassFlowInlet">
           <value>8.34412</value>
           <massflow_unitVector>[0,0.707106781186547,-0.707106781186547 ]</massflow_unitVector>
@@ -995,7 +995,7 @@
           <value>-0.0</value>
         </BCType>
       </Face>
-      <Face ellipse="y+" minor_radius="0.1695632112260993" major_radius="0.1983772367581740" name="y_plus_oxy" origin="0.384768292682927 3.04878048780488 1.52439024390244">
+      <Face ellipse="y+" angle="0.0" minor_radius="0.1695632112260993" major_radius="0.1983772367581740" name="y_plus_oxy" origin="0.384768292682927 3.04878048780488 1.52439024390244">
         <BCType label="mass_inlet_primary_air_y+" var="MassFlowInlet">
           <value>8.34412</value>
           <massflow_unitVector>[0,-0.707106781186547,0.707106781186547 ]</massflow_unitVector>
@@ -1195,7 +1195,7 @@
           <value>-0.0</value>
         </BCType>
       </Face>
-      <Face ellipse="y-" minor_radius="0.1277185823" major_radius="0.1391999950184148" name="y_minus_coal" origin="0.689646341463415 0.0 1.52439024390244">
+      <Face ellipse="y-" angle="0.0" minor_radius="0.1277185823" major_radius="0.1391999950184148" name="y_minus_coal" origin="0.689646341463415 0.0 1.52439024390244">
         <BCType label="mass_inlet_primary_coal_y-" var="MassFlowInlet">
           <value>1.0584746411</value>
           <massflow_unitVector>[0,0.707106781186547,0.707106781186547 ]</massflow_unitVector>
@@ -1349,7 +1349,7 @@
           <value>-1.0</value>
         </BCType>
       </Face>
-      <Face ellipse="y+" minor_radius="0.1277185823" major_radius="0.1391999950184148" name="y_plus_coal" origin="0.689646341463415 3.04878048780488 1.52439024390244">
+      <Face ellipse="y+" angle="0.0" minor_radius="0.1277185823" major_radius="0.1391999950184148" name="y_plus_coal" origin="0.689646341463415 3.04878048780488 1.52439024390244">
         <BCType label="mass_inlet_primary_coal_y+" var="MassFlowInlet">
           <value>1.0584746411</value>
           <massflow_unitVector>[0,-0.707106781186547,-0.707106781186547 ]</massflow_unitVector>

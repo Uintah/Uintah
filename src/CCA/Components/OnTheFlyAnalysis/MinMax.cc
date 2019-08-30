@@ -95,10 +95,14 @@ MinMax::~MinMax()
   VarLabel::destroy(d_lb->lastCompTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
   
-  // delete min/max reduction variables
+  // d_analyzeVars 
   for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
     VarLabel::destroy( d_analyzeVars[i].reductionMinLabel );
     VarLabel::destroy( d_analyzeVars[i].reductionMaxLabel );
+    
+    if( d_analyzeVars[i].matSubSet && d_analyzeVars[i].matSubSet->removeReference()){
+      delete d_analyzeVars[i].matSubSet;
+    }
   }
   
   delete d_lb;
@@ -265,6 +269,10 @@ void MinMax::problemSetup(const ProblemSpecP&,
     me.level = level;
     me.reductionMaxLabel = meMax;
     me.reductionMinLabel = meMin;
+    me.matSubSet = scinew MaterialSubset();
+    me.matSubSet->add( matl );
+    me.matSubSet->addReference();
+    
     d_analyzeVars.push_back(me);
   
 #ifdef HAVE_VISIT
@@ -429,18 +437,11 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
                            + name , __FILE__, __LINE__);
       }
 
-      MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_analyzeVars[i].matl );
-      matSubSet->addReference();
-
+      MaterialSubset* matSubSet = d_analyzeVars[i].matSubSet;
       t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
      
       t0->computes( d_analyzeVars[i].reductionMinLabel, level, matSubSet );
       t0->computes( d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
-
-      if(matSubSet && matSubSet->removeReference()){
-        delete matSubSet;
-      }
     }
   }
   
@@ -462,12 +463,11 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
   
     int myLevel = d_analyzeVars[i].level;
     if ( isRightLevel( myLevel, L_indx, level) ){
-      MaterialSubset* matSubSet = scinew MaterialSubset();
-      matSubSet->add( d_analyzeVars[i].matl );
-      matSubSet->addReference();
-
+    
+      MaterialSubset* matSubSet = d_analyzeVars[i].matSubSet;
+      
       t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level, matSubSet );
-      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level, matSubSet );
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level, matSubSet );      
     }
   }
 
@@ -480,6 +480,11 @@ void MinMax::scheduleDoAnalysis(SchedulerP   & sched,
   zeroPatch->addReference();
   
   sched->addTask( t1, zeroPatch , d_matl_set );
+  
+  if( zeroPatch && zeroPatch->removeReference() ) {
+    delete zeroPatch;
+  }
+  
 }
 
 //______________________________________________________________________

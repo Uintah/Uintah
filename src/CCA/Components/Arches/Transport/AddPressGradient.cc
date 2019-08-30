@@ -19,14 +19,17 @@ AddPressGradient::~AddPressGradient()
 void AddPressGradient::problemSetup( ProblemSpecP& db ){
 
   m_eps_name = "volFraction";
-  m_xmom = "x-mom";
-  m_ymom = "y-mom";
-  m_zmom = "z-mom";
+  m_xmom = ArchesCore::default_uMom_name;
+  m_ymom = ArchesCore::default_vMom_name;
+  m_zmom = ArchesCore::default_wMom_name;
   m_press = "pressure";
 }
 
 //--------------------------------------------------------------------------------------------------
 void AddPressGradient::create_local_labels(){
+  register_new_variable<SFCXVariable<double> >("uHat");
+  register_new_variable<SFCYVariable<double> >("vHat");
+  register_new_variable<SFCZVariable<double> >("wHat");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -37,6 +40,9 @@ void AddPressGradient::register_timestep_eval( std::vector<AFC::VariableInformat
   register_variable( m_zmom, AFC::MODIFIES, variable_registry, time_substep, m_task_name );
   register_variable( m_press, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name  );
+  register_variable("uHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable("vHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
+  register_variable("wHat", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
 }
 
 void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
@@ -48,6 +54,14 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   SFCZVariable<double>& zmom = tsk_info->get_uintah_field_add<SFCZVariable<double> >( m_zmom );
   constCCVariable<double>& p = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_press);
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
+
+  SFCXVariable<double>& uhat = tsk_info->get_uintah_field_add<SFCXVariable<double> >( "uHat" );
+  SFCYVariable<double>& vhat = tsk_info->get_uintah_field_add<SFCYVariable<double> >( "vHat" );
+  SFCZVariable<double>& what = tsk_info->get_uintah_field_add<SFCZVariable<double> >( "wHat" );
+
+  uhat.copyData(xmom);
+  vhat.copyData(ymom);
+  what.copyData(zmom); 
 
   // because the hypre solve required a positive diagonal
   // so we -1 * ( Ax = b ) requiring that we change the sign

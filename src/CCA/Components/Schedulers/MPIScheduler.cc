@@ -795,8 +795,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
   int ntasks = dts->numLocalTasks();
 
-  if( d_runtimeStats )
-    (*d_runtimeStats)[NumTasks] += ntasks;
+  if( m_runtimeStats )
+    (*m_runtimeStats)[NumTasks] += ntasks;
                    
   dts->initializeScrubs(m_dws, m_dwmap);
   dts->initTimestep();
@@ -914,7 +914,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     // This seems like the best place to collect and save these runtime stats.
     // They are reported in outputTimingStats.
-    if( d_runtimeStats ) {
+    if( m_runtimeStats ) {
       int numCells = 0, numParticles = 0;
       OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
       const GridP grid(const_cast<Grid*>(dw->getGrid()));
@@ -934,9 +934,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
         }
       }
       
-      (*d_runtimeStats)[NumPatches]   = myPatches->size();
-      (*d_runtimeStats)[NumCells]     = numCells;
-      (*d_runtimeStats)[NumParticles] = numParticles;
+      (*m_runtimeStats)[NumPatches]   = myPatches->size();
+      (*m_runtimeStats)[NumCells]     = numCells;
+      (*m_runtimeStats)[NumParticles] = numParticles;
     }    
     
     outputTimingStats( "MPIScheduler" );
@@ -998,10 +998,10 @@ MPIScheduler::outputTimingStats( const char* label )
 
     double  totalexec = m_exec_timer().seconds();
 
-    if( d_runtimeStats ) {
-      emitTime("NumPatches"  , (*d_runtimeStats)[NumPatches]);
-      emitTime("NumCells"    , (*d_runtimeStats)[NumCells]);
-      emitTime("NumParticles", (*d_runtimeStats)[NumParticles]);
+    if( m_runtimeStats ) {
+      emitTime("NumPatches"  , (*m_runtimeStats)[NumPatches]);
+      emitTime("NumCells"    , (*m_runtimeStats)[NumCells]);
+      emitTime("NumParticles", (*m_runtimeStats)[NumParticles]);
     }
     
     emitTime("Total send time"  , mpi_info_[TotalSend]);
@@ -1121,11 +1121,11 @@ MPIScheduler::outputTimingStats( const char* label )
 //  Take the various timers and compute the net results
 void MPIScheduler::computeNetRuntimeStats()
 {
-  if( d_runtimeStats ) {
+  if( m_runtimeStats ) {
     // don't count output time
-    (*d_runtimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*d_runtimeStats)[TotalIOTime];
-    (*d_runtimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    (*d_runtimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
-    (*d_runtimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
+    (*m_runtimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*m_runtimeStats)[TotalIOTime];
+    (*m_runtimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    (*m_runtimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
+    (*m_runtimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
   }
 }

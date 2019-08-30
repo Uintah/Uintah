@@ -118,7 +118,7 @@
       <save label="p.volume"/>
       <save label="p.stress"/>
       <save label="p.temperature"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "1" timestepInterval = "100"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

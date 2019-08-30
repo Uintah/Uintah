@@ -26,16 +26,6 @@ void
 SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
 {
 
-  /*
-
-      <SourceV2>
-        <src label= "Oscar_test" type = "MMS" >
-
-        </src>
-      </SourceV2>
-
-  */
-
   if ( db->findBlock("SourceV2") ){
 
     ProblemSpecP db_init = db->findBlock("SourceV2");
@@ -64,7 +54,7 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
           tsk = scinew MMS_mom<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_Shunn" ) {
@@ -84,7 +74,7 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
           tsk = scinew MMS_Shunn<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_Shunn_p3" ) {
@@ -104,7 +94,7 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
           tsk = scinew MMS_ShunnP3<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "MMS_mom_csmag" ) {
@@ -124,20 +114,20 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
           tsk = scinew MMS_mom_csmag<SFCZVariable<double> >::Builder( name, 0, _materialManager );
         }
 
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
 
       } else if ( type == "MMS_scalar" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew MMS_scalar::Builder( name, 0 , _materialManager );
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
       } else if ( type == "gravity" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew GravityA::Builder( name, 0  );
-        register_task( name, tsk );
+        register_task( name, tsk, db_src );
         _pre_update_source_tasks.push_back( name );
 
       } else {
@@ -157,26 +147,26 @@ void
 SourceTermFactoryV2::build_all_tasks( ProblemSpecP& db )
 {
 
-  if ( db->findBlock("SourceV2") ){
-
-    ProblemSpecP db_init = db->findBlock("SourceV2");
-
-    for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
-
-      std::string name;
-      std::string type;
-      db_src->getAttribute("label",name );
-      db_src->getAttribute("type", type );
-
-      TaskInterface* tsk = retrieve_task(name);
-      tsk->problemSetup( db_src );
-      tsk->create_local_labels();
-
-      //Assuming that everything here is independent:
-      //_task_order.push_back(name);
-
-    }
-  }
+  // if ( db->findBlock("SourceV2") ){
+  //
+  //   ProblemSpecP db_init = db->findBlock("SourceV2");
+  //
+  //   for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
+  //
+  //     std::string name;
+  //     std::string type;
+  //     db_src->getAttribute("label",name );
+  //     db_src->getAttribute("type", type );
+  //
+  //     TaskInterface* tsk = retrieve_task(name);
+  //     tsk->problemSetup( db_src );
+  //     tsk->create_local_labels();
+  //
+  //     //Assuming that everything here is independent:
+  //     //_task_order.push_back(name);
+  //
+  //   }
+  // }
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -143,8 +143,6 @@ void MMS_ShunnP3<T>::problemSetup( ProblemSpecP& db ){
 
         db_cf->getAttribute("label", label);
 
-        std::cout << "LABEL = " << label << std::endl;
-
         if ( label == "density" ){
           db_cf->getAttribute("stream_0", value0);
           db_cf->getAttribute("stream_1", value1);

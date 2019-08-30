@@ -90,6 +90,16 @@ namespace Uintah {
     /// Destructor
     ~BoundCondReader();
 
+    bool is_on_face(const int dir, 
+                    const Point p,
+                    const std::vector<Point>& points);
+
+    bool isPtOnFace( const int dir,
+                     const int plusMinusFaces,
+                     const Point pt,
+                     const std::vector<Point>& grid_LoPts,
+                     const std::vector<Point>& grid_HiPts );
+
     void whichPatchFace(const std::string fc, Patch::FaceType& face_side,
                         int& plusMinusFaces, int& p_dir);
 

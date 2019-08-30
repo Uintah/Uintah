@@ -3479,9 +3479,14 @@ the \tt <materials> \normalfont tag is optional.  If it is omitted,
 the assumption is that all materials will interact via the same contact model.
 (This will be further discussed below.)
 
-The ultimate in contact models is the \tt friction \normalfont contact 
+There are now two models in Uintah-MPM that treat frictional sliding.  For
+a long time, the ultimate in contact models is the
+\tt friction\_bard \normalfont contact 
 model.  For a full description, the reader is directed to the paper by
-Bardenhagen et al.\cite{bard_contact}.  Briefly, the model both overcomes
+Bardenhagen et al.\cite{bard_contact}.  This model has more recent improvements
+for delaying contact until particles are nearly touching.  These were
+adapted from various manuscripts of John Nairn.  Briefly, this model 
+both overcomes
 some deficiences in the single velocity field contact (either the ``free"
 contact or the model described above, which behave identically), and it
 enables some additional features.  With single velocity field contact,
@@ -3498,7 +3503,26 @@ the objects.  An example of the use of this model is given here:
 
 \begin{Verbatim}[fontsize=\footnotesize]
            <contact>
-              <type>friction</type>
+              <type>friction_bard</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+              <separation_factor>0.85</separation_factor>
+           </contact>
+\end{Verbatim}
+
+In 2019, a new frictional contact model was added.  This is based on as yet
+unpublished work by John Nairn.  The model incorporates two new ideas.  First,
+for most MPM interpolators (GIMP and CPDI), particles have size and shape.
+Knowledge of this information is projected to the grid, and the onset of contact
+is controlled by the time at which the most prominent portions of adjacent
+materials overlap.  Second, a ``logistic regression" technique is used to find a single normal vector that divides the contacting materials.  This method is
+more costly, but definitely gives improved answers in situations where
+knowledge of the interface is important.  An example of the use of this model
+is give here:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+              <type>friction_LR</type>
               <materials>[0,1,2]</materials>
               <mu> 0.5 </mu>
            </contact>

@@ -3252,9 +3252,11 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                ProblemSpecP                & doc )
 {
 
-  cout << "saveLabels_PIDX()\n";
   size_t totalBytesSaved = 0;
-#if HAVE_PIDX
+#ifdef HAVE_PIDX
+  if(dbgPIDX.active())
+    dbgPIDX << "saveLabels_PIDX()\n";
+
   const int timeStep = m_application->getTimeStep();
 
   const int     levelid = getLevel( patches )->getIndex(); 
@@ -3639,9 +3641,11 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   free(pidx.varDesc); 
   pidx.varDesc=0;
 
-#endif
-  cout << "end saveLabels_PIDX()\n";
+  if(dbgPIDX.active())
+    dbgPIDX << "end saveLabels_PIDX()\n";
 
+#endif
+  
   return totalBytesSaved;
 } // end saveLabels_PIDX();
 

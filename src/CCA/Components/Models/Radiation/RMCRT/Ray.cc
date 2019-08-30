@@ -85,8 +85,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
 
   // Time Step
-  m_timeStepLabel =
-    VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -173,13 +172,11 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
-  proc0cout << "__________________________________ " << endl;
-
   if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
-    proc0cout << "  RMCRT: Using Latin Hyper Cube method for selecting ray directions.";
+    proc0cout << "  - Using Latin Hyper Cube method for selecting ray directions.\n";
   } else{
-    proc0cout << "  RMCRT: Using traditional Monte-Carlo method for selecting ray directions.";
+    proc0cout << "  - Using traditional Monte-Carlo method for selecting ray directions.\n";
   }
 
   //__________________________________
@@ -187,14 +184,13 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
-    bool getExtraInputs = false;
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid, getExtraInputs );
+    d_radiometer->problemSetup( prob_spec, rad_ps, grid );
   }
 
   //__________________________________
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  proc0cout<< "    - sigmaScat: " << d_sigmaScat << endl;
   if (d_sigmaScat>0) {
     std::ostringstream warn;
     warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << endl;
@@ -205,22 +201,22 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 #endif
 
 #ifdef RAY_SCATTER
-  proc0cout<< endl << "  RMCRT:  Ray scattering is enabled." << endl;
+  proc0cout<< "  - Ray scattering is enabled." << endl;
   if(d_sigmaScat<1e-99){
-    proc0cout << "  WARNING:  You are running a non-scattering case, and you have the following in your configure line..." << endl;
-    proc0cout << "                    --enable-ray-scatter" << endl;
-    proc0cout << "            This will run slower than necessary." << endl;
-    proc0cout << "            You can remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "    WARNING:  You are running a non-scattering case but the following is in your configure line...\n"
+              << "                    --enable-ray-scatter"
+              << "            This will run slower than necessary."
+              << "            You can remove --enable-ray-scatter from the configure line, re-configure and re-compile" << endl;
   }
 #endif
 
   if( d_nDivQRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    proc0cout << "                  For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+    proc0cout << "    WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    proc0cout << "              For higher accuracy specify nDivQRays greater than 2." << endl;
   }
 
-  if( d_nFluxRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+  if( d_nFluxRays == 1 && d_whichAlgo != radiometerOnly){
+    proc0cout << "    WARNING: You have specified only 1 ray to compute radiative fluxes on the boundaries." << endl;
   }
 
 
@@ -426,10 +422,17 @@ Ray::sched_rayTrace( const LevelP& level,
     // accomplished with repeatable random numbers passed in.
 
     timeStep_vartype timeStepVar(0);
-    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
-      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
-    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
-      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    
+    DataWarehouse* old_dw = sched->get_dw(0);
+    DataWarehouse* new_dw = sched->get_dw(1);
+    
+    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
+      old_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
+      new_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    
     int timeStep = timeStepVar;
     
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
@@ -493,19 +496,6 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-  }
-
-
-  //__________________________________
-  // Radiometer
-  if ( d_radiometer ){
-    const VarLabel* VRFluxLabel = d_radiometer->getRadiometerLabel();
-    if (!(Uintah::Parallel::usingDevice())) {
-      // needed for carry Forward                       CUDA HACK
-      tsk->requires(Task::OldDW, VRFluxLabel, d_gn, 0);
-    }
-
-    tsk->modifies( VRFluxLabel );
   }
 
 #ifdef USE_TIMER 
@@ -867,11 +857,19 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     taskname = "Ray::rayTraceDataOnionGPU";
 
     timeStep_vartype timeStepVar(0);
-    if( sched->get_dw(0) && sched->get_dw(0)->exists( m_timeStepLabel ) )
-      sched->get_dw(0)->get( timeStepVar, m_timeStepLabel );
-    else if( sched->get_dw(1) && sched->get_dw(1)->exists( m_timeStepLabel ) )
-      sched->get_dw(1)->get( timeStepVar, m_timeStepLabel );
+    
+    DataWarehouse* old_dw = sched->get_dw(0);
+    DataWarehouse* new_dw = sched->get_dw(1);
+    
+    if( old_dw && old_dw->exists( m_timeStepLabel ) ){
+      old_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
+      new_dw->get( timeStepVar, m_timeStepLabel );
+    }
+    
     int timeStep = timeStepVar;
+    
     
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);

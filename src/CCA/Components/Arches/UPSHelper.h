@@ -3,6 +3,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{ namespace ArchesCore {
 
@@ -89,12 +90,60 @@ namespace Uintah{ namespace ArchesCore {
     }
 
     return mydefault;
+
+  }
+
+  /** @brief Find a node with a specific attribute **/
+  /** Use the *=> combination of characters to delineate between nodes. **/
+  /** The * indicates the node name. **/
+  /** Everything starts at the ARCHES node **/
+  static ProblemSpecP inline find_node_with_att( ProblemSpecP& db, std::string start,
+                                          std::string children_name,
+                                          std::string att,
+                                          std::string att_value ){
+
+    ProblemSpecP db_arches = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
+    std::string delimiter = "=>";
+    size_t pos = 0;
+    std::vector<std::string> nodes;
+    while ((pos = start.find(delimiter)) != std::string::npos) {
+      std::string n = start.substr(0, pos);
+      start.erase(0, pos+delimiter.length());
+      nodes.push_back(n);
+    }
+
+    ProblemSpecP db_parent = db;
+    for ( auto i = nodes.begin(); i != nodes.end(); i++){
+      if ( db_parent->findBlock(*i)){
+        db_parent = db_parent->findBlock(*i);
+      } else{
+        throw ProblemSetupException("Error: UPS node not found - "+*i, __FILE__, __LINE__);
+      }
+    }
+
+    //once the parent is found, assume there are many children with the same
+    // name. The requires that we search all potential children and
+    // compare attributes to the one sought after.
+    for ( ProblemSpecP db_child = db_parent->findBlock(children_name); db_child != nullptr;
+          db_child = db_child->findNextBlock(children_name)){
+      std::string found_att;
+      db_child->getAttribute(att, found_att);
+      if ( found_att == att_value ){
+        return db_child;
+      }
+    }
+
+    return nullptr;
+
   }
 
   // Defining default names for specific CFD variables.
   static std::string default_uVel_name{"uVelocity"};             // u-velocity, staggered
   static std::string default_vVel_name{"vVelocity"};             // v-velocity, staggered
   static std::string default_wVel_name{"wVelocity"};             // w-velocity, staggered
+  static std::string default_uMom_name{"x-mom"};                 // x-momentum, staggered
+  static std::string default_vMom_name{"y-mom"};                 // y-momentum, staggered
+  static std::string default_wMom_name{"z-mom"};                 // z-momentum, staggered
   static std::string default_viscosity_name{"total_viscosity"};  // total viscosity (molecular + turb closure) - note: turb closure may or may not exist
 
 }} // end Uintah::ArchesCore

@@ -19,6 +19,7 @@ from os import system
 from optparse import OptionParser
 from sys import argv, exit
 from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
+from helpers.modUPS      import modUPS
 
 ####################################################################################
 

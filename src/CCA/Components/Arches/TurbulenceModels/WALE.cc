@@ -23,14 +23,16 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc" );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc" );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc" );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc"  );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc"  );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc"  );
+
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
 
   std::stringstream composite_name;
   composite_name << "strainMagnitudeLabel_" << m_task_name;
@@ -41,7 +43,7 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("Cs", m_Cs, .5);
 
-  m_total_vis_name = m_task_name;
+  //m_total_vis_name = m_task_name;
 
   // Use the production velocity name to signal if this is being used in the ExplicitSolver.
   if (m_u_vel_name == "uVelocitySPBC") {

@@ -409,9 +409,10 @@ Level::getTotalCellsInRegion(const TypeDescription::Type varType,
 
   Patch::VariableBasis basis = Patch::translateTypeToBasis(varType, false);
 
-  for (size_t i = 0; i < m_real_patches.size(); ++i) {
-    IntVector patchLow = m_real_patches[i]->getExtraLowIndex(basis, boundaryLayer);
-    IntVector patchHigh = m_real_patches[i]->getExtraHighIndex(basis, boundaryLayer);
+  // scjmc - using also virtual patches to take into account periodic boundaries on non cubic levels such as refined amr levels
+  for( size_t i = 0; i < m_virtual_and_real_patches.size(); ++i ) {
+    IntVector patchLow  =  m_virtual_and_real_patches[i]->getExtraLowIndex(  basis, boundaryLayer );
+    IntVector patchHigh =  m_virtual_and_real_patches[i]->getExtraHighIndex( basis, boundaryLayer );
 
     if (doesIntersect(lowIndex, highIndex, patchLow, patchHigh)) {
 
@@ -618,7 +619,7 @@ Level::setIsNonCubicLevel()
   double levelVol = levelSides.x() * levelSides.y() * levelSides.z();
   
   m_isNonCubicDomain = false;
-  double fuzz = 100 * DBL_EPSILON;
+  double fuzz = 0.5 * cellVolume(); // 100 * DBL_EPSILON;
   if ( std::fabs( patchesVol - levelVol ) > fuzz ) {
     m_isNonCubicDomain = true;
   }
@@ -767,11 +768,6 @@ Level::finalizeLevel()
   // determines and sets the boundary conditions for the patches
   setBCTypes();
 
-  // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
-    (*iter)->finalizePatch();
-  }
-
   // compute the number of cells in the level
   m_total_cells = 0;
   for (size_t i = 0; i < m_real_patches.size(); ++i) {
@@ -874,12 +870,8 @@ Level::finalizeLevel( bool periodicX, bool periodicY, bool periodicZ )
   std::sort(m_real_patches.begin(), m_real_patches.end(), Patch::Compare());
   std::sort(m_virtual_and_real_patches.begin(), m_virtual_and_real_patches.end(), Patch::Compare());
 
+  // defind boundary conditions
   setBCTypes();
-
-  //finalize the patches
-  for (patch_iterator iter = m_virtual_and_real_patches.begin(); iter != m_virtual_and_real_patches.end(); ++iter) {
-    (*iter)->finalizePatch();
-  }
 
   //compute the number of cells in the level
   m_total_cells = 0;

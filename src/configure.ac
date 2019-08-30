@@ -749,13 +749,6 @@ SCI_ARG_ENABLE(fvm,
   [BUILD_FVM="no"
    DEF_FVM=["#define NO_FVM"]])
 
-SCI_ARG_ENABLE(heat,
-  AC_HELP_STRING(--enable-heat,
-                 Turn on the Heat component.),
-  [BUILD_HEAT="yes"],
-  [BUILD_HEAT="no"
-   DEF_HEAT=["#define NO_HEAT"]])
-
 SCI_ARG_ENABLE(ice,
   AC_HELP_STRING(--enable-ice,
                  Turn on the Ice component.),
@@ -791,16 +784,16 @@ SCI_ARG_ENABLE(all_components,
    BUILD_ARCHES="yes"
    BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
-   BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
+   BUILD_PHASEFIELD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
    DEF_FVM=
-   DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_PHASEFIELD=
    DEF_UNIT_TESTS=
    DEF_WASATCH=
   ],
@@ -823,7 +816,6 @@ fi
 if test \( "$enable_arches"     = "yes" -o  \
            "$enable_examples"   = "yes" -o  \
            "$enable_fvm"        = "yes" -o  \
-           "$enable_heat"       = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
@@ -1392,7 +1384,6 @@ fi
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_EXAMPLES)
 AC_SUBST(BUILD_FVM)
-AC_SUBST(BUILD_HEAT)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
@@ -1402,7 +1393,6 @@ AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_EXAMPLES)
 AC_SUBST(DEF_FVM)
-AC_SUBST(DEF_HEAT)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_MODELS_RADIATION)

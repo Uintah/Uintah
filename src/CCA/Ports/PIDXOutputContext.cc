@@ -26,10 +26,15 @@
 #if HAVE_PIDX
 
 #include <Core/Util/StringUtil.h>
+#include <Core/Util/DebugStream.h>
 #include <vector>
 
 using namespace std;
 using namespace Uintah;
+
+namespace {
+  DebugStream dbgPIDX ("PIDXOutputContext", "PIDXOutputContext", "PIDXOutputContext PIDX debug stream", false);
+}
 
 //______________________________________________________________________
 //                P I D X _ F L A G S   C L A S S
@@ -290,7 +295,8 @@ PIDXOutputContext::initialize( const string       & filename,
 			             PIDX_point     dim,
                                const int            typeOutput )
 {
-  cout << "PIDXOutputContext::initialize()\n";
+  if(dbgPIDX.active())
+    dbgPIDX << "PIDXOutputContext::initialize()\n";
 
   this->filename = filename;
   this->timestep = timeStep;

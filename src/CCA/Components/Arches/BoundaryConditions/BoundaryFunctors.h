@@ -282,15 +282,12 @@ void BCFunctors<T>::build_bcs( ProblemSpecP db_bc, const std::vector<std::string
 
          } else if ( custom_type == "PressureOutlet" ){
            std::string vel_name;
-           if (varname == "x-mom"){
+           if (varname == ArchesCore::default_uMom_name){
              vel_name = ArchesCore::default_uVel_name;
-             //vel_name = "x-mom";
-           } else if (varname == "y-mom") {
+           } else if (varname == ArchesCore::default_vMom_name) {
              vel_name = ArchesCore::default_vVel_name;
-             //vel_name = "y-mom";
-           } else if  (varname == "z-mom") {
+           } else if  (varname == ArchesCore::default_wMom_name) {
              vel_name = ArchesCore::default_wVel_name;
-             //vel_name = "z-mom";
            } else {
              throw InvalidValue("Error: can not find velocity name "+type, __FILE__, __LINE__);
            }
@@ -345,10 +342,11 @@ public:
              proper execution of the boundary condition. This may be a nullptr op. **/
   virtual void add_mod( std::vector<std::string>& master_mod ) = 0;
   /** @brief Actually evaluate the boundary condition **/
-    template <typename ExecutionSpace, typename MemorySpace>
-    void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
-    std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
-    const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ) {
+  template <typename ExecutionSpace, typename MemorySpace>
+  void eval_bc( ExecutionObject<ExecutionSpace,MemorySpace> executionObject,
+  std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter )
+  {
     if (BCFunctors<T>::Dirichlet*             child   = dynamic_cast<BCFunctors<T>::Dirichlet*           >(this)){
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else if (BCFunctors<T>::Neumann*               child   = dynamic_cast<BCFunctors<T>::Neumann*             >(this)){
@@ -369,8 +367,8 @@ public:
       child->eval_bc(executionObject,var_name,patch,tsk_info,bnd,bndIter);
     }else {
           throw InvalidValue("Portable Boundary condition not properly included in source code.",__FILE__,__LINE__);
-   }
-}
+    }
+  }
 
 protected:
 
@@ -1288,6 +1286,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
                    "  Functor name: " << spec->functorName << std::endl;
             throw InvalidValue( msg.str(), __FILE__, __LINE__);
           }
+          
         }
       }
     }

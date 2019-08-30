@@ -1085,9 +1085,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
   if(d_flags->d_SingleFieldMPM){
-    particle_state.push_back(d_lb->pSurfLabel);
-    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
-
     particle_state.push_back(d_lb->pSurfGradLabel);
     particle_state_preReloc.push_back(d_lb->pSurfGradLabel_preReloc);
   }
@@ -1144,12 +1141,12 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
-  if (ndim>2){
+  if (d_flags->d_ndim==3) {
     // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
       ss++;
     // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
       ss++;
   }
 
@@ -1183,18 +1180,18 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
-  if (d_flags->d_ndim>2){
+  if (d_flags->d_ndim==3) {
     // Check below (-z)
-    if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
       ss++;
     // Check above (+z)
-    if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
       ss++;
   }
 
   if(ss>0){
     return 1.0;
-  }else{
+  } else {
     return 0.0;
   }
 #if 0

@@ -421,4 +421,4 @@ public:
   double *data;
 };
 
-#endif // UINTAH_DATATYPES_H
+#endif // UINTAH_VISIT_INTERFACES_DATATYPES_H

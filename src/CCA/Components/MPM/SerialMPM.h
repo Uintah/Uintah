@@ -694,7 +694,6 @@ protected:
   double           d_SMALL_NUM_MPM;
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
-  int              d_ndim;   // Num. of dimensions, 2 or 3.  If 2, assume x-y
   BurialHistory*   burialHistory;
   
   std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...

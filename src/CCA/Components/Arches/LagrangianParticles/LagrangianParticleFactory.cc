@@ -66,17 +66,17 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
     //UPDATE PARTICLE POSITION
     std::string task_name = "update_particle_position";
     TaskInterface::TaskBuilder* tsk = scinew UpdateParticlePosition::Builder(task_name, 0);
-    register_task( task_name, tsk );
+    register_task( task_name, tsk, db_lp );
 
     //UPDATE PARTICLE VELOCITY
     task_name = "update_particle_velocity";
     tsk = scinew UpdateParticleVelocity::Builder(task_name, 0);
-    register_task( task_name, tsk );
+    register_task( task_name, tsk, db_lp );
 
     //UPDATE PARTICLE SIZE
     task_name = "update_particle_size";
     tsk = scinew UpdateParticleSize::Builder(task_name, 0);
-    register_task( task_name, tsk );
+    register_task( task_name, tsk, db_lp );
 
   }
 }
@@ -84,24 +84,24 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 void
 LagrangianParticleFactory::build_all_tasks( ProblemSpecP& db )
 {
-
-  if ( db->findBlock("LagrangianParticles")) {
-
-    ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
-
-    TaskInterface* tsk = retrieve_task( "update_particle_velocity");
-    print_task_setup_info( "update_particle_velocity", "lagrangian velocity update");
-    tsk->problemSetup( db_lp );
-
-    tsk = retrieve_task( "update_particle_position");
-    print_task_setup_info( "update_particle_position", "lagrangian position update");
-    tsk->problemSetup( db_lp );
-
-    tsk = retrieve_task( "update_particle_size");
-    print_task_setup_info( "update_particle_size", "lagrangian size update");
-    tsk->problemSetup( db_lp );
-
-    tsk->create_local_labels();
-
-  }
+  //
+  // if ( db->findBlock("LagrangianParticles")) {
+  //
+  //   ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
+  //
+  //   TaskInterface* tsk = retrieve_task( "update_particle_velocity");
+  //   print_task_setup_info( "update_particle_velocity", "lagrangian velocity update");
+  //   tsk->problemSetup( db_lp );
+  //
+  //   tsk = retrieve_task( "update_particle_position");
+  //   print_task_setup_info( "update_particle_position", "lagrangian position update");
+  //   tsk->problemSetup( db_lp );
+  //
+  //   tsk = retrieve_task( "update_particle_size");
+  //   print_task_setup_info( "update_particle_size", "lagrangian size update");
+  //   tsk->problemSetup( db_lp );
+  //
+  //   tsk->create_local_labels();
+  //
+  // }
 }

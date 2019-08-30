@@ -319,7 +319,7 @@ namespace Uintah{ namespace ArchesCore{
       uvel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
       vvel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
       wvel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
     }
     std::string vol_frac_name = "volFraction";
     std::string mu_name;
@@ -330,7 +330,7 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct GridVarMap<SFCXVariable<double> >{
     void problemSetup( ProblemSpecP db ){
-      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
     }
     std::string vol_frac_name = "volFractionX";
     std::string uvel_name = "ucell_xvel";
@@ -344,7 +344,7 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct GridVarMap<SFCYVariable<double> >{
     void problemSetup( ProblemSpecP db ){
-      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
     }
     std::string vol_frac_name = "volFractionY";
     std::string uvel_name = "vcell_xvel";
@@ -358,7 +358,7 @@ namespace Uintah{ namespace ArchesCore{
   template <>
   struct GridVarMap<SFCZVariable<double> >{
     void problemSetup( ProblemSpecP db ){
-      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "NotSet");
+      mu_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
     }
     std::string vol_frac_name = "volFractionZ";
     std::string uvel_name = "wcell_xvel";

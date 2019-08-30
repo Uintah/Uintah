@@ -140,7 +140,7 @@ std::string ProcessorGroup::myNodeName() const
 }
 
 // For any rank get the node index.
-int ProcessorGroup::getNodeIndexFromRank( int rank ) const
+int ProcessorGroup::getNodeIndexFromRank( unsigned int rank ) const
 {
   // Make sure the rank is valid.
   if( 0 <= rank && rank < m_all_proc_indexs.size() )
@@ -150,7 +150,7 @@ int ProcessorGroup::getNodeIndexFromRank( int rank ) const
 }
 
 // For any rank get the node name.
-std::string ProcessorGroup::getNodeNameFromRank( int rank ) const
+std::string ProcessorGroup::getNodeNameFromRank( unsigned int rank ) const
 {
   // Make sure the rank is valid.
   if( 0 <= rank && rank < m_all_proc_indexs.size() )
@@ -160,7 +160,7 @@ std::string ProcessorGroup::getNodeNameFromRank( int rank ) const
 }
 
 // For any node get the node name.
-std::string ProcessorGroup::getNodeName( int node ) const
+std::string ProcessorGroup::getNodeName( unsigned int node ) const
 {
   // Make sure the node is valid.
   if( 0 <= node && node < m_all_proc_names.size() )
