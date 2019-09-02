@@ -30,7 +30,6 @@
 using namespace Uintah;
 using namespace std;
 
-
 Tri::Tri(Point& p1, Point& p2, Point& p3)
 {
   d_points[0] = p1;
@@ -455,4 +454,34 @@ void UniformGrid::countIntersections( const Point& pt, const Point& pt_away,
           }
         }
   } } }
+}
+
+LineSeg::LineSeg(Point& p1, Point& p2)
+{
+  d_points[0] = p1;
+  d_points[1] = p2;
+}
+
+LineSeg::LineSeg()
+{
+}
+
+LineSeg::~LineSeg()
+{
+}
+
+Point LineSeg::centroid()
+{
+  Vector cent(0.,0.,0);
+  for (int i = 0; i < 2; i++)
+    cent += d_points[i].asVector();
+
+  cent /= 3.;
+
+  return Point(cent.x(),cent.y(),cent.z());
+}
+
+Point LineSeg::vertex(int i)
+{
+  return d_points[i];
 }

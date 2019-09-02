@@ -41,6 +41,7 @@
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
 #include <Core/GeometryPiece/TorusGeometryPiece.h>
 #include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/GeometryPiece/LineSegGeometryPiece.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
@@ -302,6 +303,9 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
     }
     else if ( go_type == TriGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew TriGeometryPiece(child);
+    }
+    else if ( go_type == LineSegGeometryPiece::TYPE_NAME ) {
+      newGeomPiece = scinew LineSegGeometryPiece(child);
     }
     else if ( go_type == UnionGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew UnionGeometryPiece(child);
