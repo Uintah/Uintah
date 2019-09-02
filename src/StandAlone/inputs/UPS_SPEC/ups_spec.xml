@@ -224,6 +224,12 @@
       <name                   spec="OPTIONAL STRING" /> <!-- The name of a file containing triangles... I think. -->
     </tri>
 
+    <line_segment             spec="OPTIONAL NO_DATA"
+                              attribute1="label    OPTIONAL STRING"
+                              children1="ALL_OR_NONE_OF( CHILD name )" >
+      <name                   spec="OPTIONAL STRING" /> 
+    </line_segment>
+
     <difference               spec="FORWARD_DECLARATION" />
     <union                    spec="FORWARD_DECLARATION" />
     <intersection             spec="FORWARD_DECLARATION" />
@@ -243,6 +249,7 @@
       <cylinder_shell         spec="MULTIPLE" />
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
+      <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
       <smoothcyl              spec="MULTIPLE" />
@@ -264,6 +271,7 @@
       <cylinder_shell         spec="MULTIPLE" />
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
+      <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
     </difference>
@@ -283,6 +291,7 @@
       <cylinder_shell         spec="MULTIPLE" />
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
+      <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
     </intersection>
@@ -303,6 +312,7 @@
       <plane_shell            spec="MULTIPLE" />
       <smoothcyl              spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
+      <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
 
