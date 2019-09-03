@@ -993,10 +993,17 @@ fi
 # Figure out which compiler we are using (gcc, clang, etc)
 AC_MSG_CHECKING(the type of compiler we are using)
 USING_GCC=no
+USING_NVCC=no
 USING_ICC=no
 USING_CLANG=no
 USING_XLC=no
 USING_PGCC=no
+
+($CXX --version | grep -iq "NVIDIA") &> /dev/null
+if test "$?" = 0; then
+  AC_MSG_RESULT(Using the NVIDIA compiler.)
+  USING_NVCC=yes
+fi
 
 ($CC --version | grep -iq "Free Software Foundation") &> /dev/null
 if test "$?" = 0; then
@@ -1833,12 +1840,16 @@ case $host in
       if test "$sci_required_fortran" = "yes"; then
         SCI_CHECK_VERSION($F77,--version,0.5.25,,echo configure: error: wrong $F77 version.; exit)
       fi
-      SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
+      if test "$USING_NVCC" = "no"; then
+        SCI_CHECK_VERSION($CXX,--version,2.95.3,,echo configure: error: wrong $CXX version.; exit)
+      else
+        AC_MSG_WARN(Not verifying version of '$CXX')
+      fi
     else
       if test "$USING_ICC" = "yes"; then
         SCI_CHECK_VERSION($CC,--version,14.0.0,,echo configure: error: wrong $CC version.; exit)
       else
-        AC_MSG_WARN(Not checking for version of $CC)
+        AC_MSG_WARN(Not verifying version of $CC)
       fi
     fi
 
