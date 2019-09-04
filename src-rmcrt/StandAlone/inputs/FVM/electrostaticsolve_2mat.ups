@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Electrostatic Solver test1</title>
+   </Meta>
+
+   <SimulationComponent type="electrostatic_solver" />
+
+   <Time>
+     <maxTime>0.1</maxTime>                          
+     <initTime>0.0</initTime>                        
+     <delt_min>0.1</delt_min>                    
+     <delt_max>1</delt_max>                          
+     <timestep_multiplier>2</timestep_multiplier>    
+   </Time>
+   
+   <DataArchiver>
+     <filebase>electrostaticsolve_2mat.uda</filebase>                   
+     <outputTimestepInterval>1</outputTimestepInterval>    
+     <!--
+     -->
+     <save label = "cc.esPotential"/>                            
+     <save label = "cc.rhsEsPotential"/>                            
+     <save label = "fcx.Conductivity"/>                            
+     <save label = "fcy.Conductivity"/>                            
+     <save label = "fcz.Conductivity"/>                            
+     <save label = "cc.Conductivity"/>                            
+     <save label = "cc.GridConductivity"/>                            
+     <checkpoint cycle = "2" interval = ".01"/>            
+   </DataArchiver>
+
+   <Grid>
+     <Level>                                          
+       <Box label = "1">                                
+         <lower>      [0,0,0]       </lower>               
+         <upper>      [0.5,1.0,1.0] </upper>               
+         <resolution> [50,100,100]  </resolution> 
+         <extraCells> [1,1,1]       </extraCells>
+         <patches>    [2,1,1]       </patches>             
+         <!--<extraCells> [1,0,0]       </extraCells>-->
+       </Box>                                           
+     </Level>                                         
+     <BoundaryConditions>
+       <Face side = "x-">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "x+">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "y-">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "y+">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+       </Face>
+       <Face side = "z-">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 1.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+       </Face>                  
+       <Face side = "z+">
+         <BCType id = "0" label = "Voltage" var = "Dirichlet">
+                <value> 0.0 </value>
+         </BCType>
+         <BCType id = "0" label = "Conductivity" var = "Dirichlet">
+                <value> 300.0 </value>
+         </BCType>
+        </Face>
+     </BoundaryConditions>
+   </Grid>
+
+   <Solver type = "hypre" />
+
+   <MaterialProperties>
+     <FVM>
+       <material>
+         <geom_object>
+           <difference>
+             <box label="wholeDomain">
+               <min>       [ 0.0, 0.0, 0.0 ]       </min>
+               <max>       [ 0.5, 1.0, 1.0 ]       </max>
+             </box>
+             <box label="blobInMiddle">
+               <min>       [ 0.1, 0.3, 0.0 ]       </min>
+               <max>       [ 0.4, 0.7, 1.0 ]       </max>
+             </box>
+           </difference>
+           <res>          [2,2,2] </res>
+           <conductivity> 10.0   </conductivity>
+         </geom_object>
+       </material>
+       <material>
+         <geom_object>
+           <box label="blobInMiddle">  </box>
+           <res>          [2,2,2] </res>
+           <conductivity> 200.0   </conductivity>
+         </geom_object>
+       </material>
+     </FVM>
+   </MaterialProperties>           
+
+   <FVM>
+     <delt>.1</delt>
+     <Parameters variable="electrostatic_solver">
+       <!-- CGSolver options -->
+       <norm>     LInfinity  </norm>
+       <criteria> Absolute   </criteria>
+
+       <!-- Hypre options -->
+       <solver>         cg  </solver>
+       <preconditioner> pfmg    </preconditioner>
+       <tolerance>      1.e-5  </tolerance>
+       <maxiterations>  7500    </maxiterations>
+       <npre>           1       </npre>
+       <npost>          1       </npost>
+       <skip>           0       </skip>
+       <jump>           0       </jump>
+       <setupFrequency> 3       </setupFrequency>
+     </Parameters>
+   </FVM> 
+</Uintah_specification>
+

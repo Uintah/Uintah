@@ -1,0 +1,87 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script parses the output file from sus and 
+#  generates a data file used for scaling plots.  The data file is layed out
+#     
+#  fileName  MPIprocs threadsPerMPI totalThreads  startWallTime  endWallTime  totalSolve+SetupTime  totalSolveTime  AveTimePerTimeStep  aveTotalSolve+setup  aveSolveTime
+#    1         2         3             4                  5            6                7                     8                9                10               11
+#  usage:
+#      extractSolverScalingData  <sus_output.1, sus_output_2, sus_output_3 >
+#  
+#______________________________________________________________________
+
+if ( $#argv < 1 ) then
+  echo "    Usage:  extractSolverScalingData  <sus_output.1, sus_output_2, sus_output_3 >"
+  exit
+endif
+
+#__________________________________
+# DEFAULTS:  Edit these
+set startTimestep = "3"
+set endTimestep   = "100"  # timestep to extract elapsed time from.
+#__________________________________
+
+set out = ($argv)
+
+set here = .tmpFiles
+
+/bin/rm -rf $here >& /dev/null
+mkdir $here
+touch $here/data
+
+foreach X ( $out[*] )
+
+  grep -q "Timestep $endTimestep" $X
+  
+  if ($status == 0 ) then
+    echo $X > $here/file
+
+    grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
+    grep processors $X | awk '{ print $2 }' > $here/processors
+    @ procs    = `grep "MPI processes" $X           | awk '{print $2}'`
+    @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+    @ nThreads = $procs * $threads
+    
+    echo $procs    > $here/nMPI
+    echo $threads  > $here/threadsPerMPI
+    echo $nThreads > $here/nThreads
+        
+    grep "Timestep $startTimestep " $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/startTime
+    grep "Timestep $endTimestep "   $X | awk -F "=" '{print $4}' | tr -d "[:alpha:]" > $here/endTime
+
+    #__________________________________
+    # compute time spent in solver
+    @ endTimeStep = $endTimestep 
+    
+    sed -n /"Timestep $startTimestep "/,/"Timestep $endTimestep "/p $X | grep Solve > $here/out.clean
+    awk 'NR==1 {sum=$9}  ; NR > 1 {sum = sum + $9 };  END {print sum}'  $here/out.clean >$here/totalSolveTime
+    awk 'NR==1 {sum=$13} ; NR > 1 {sum = sum + $13 }; END {print sum}'  $here/out.clean >$here/solveTime
+
+    paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/startTime $here/endTime $here/totalSolveTime $here/solveTime >> $here/data
+
+    echo "working on $X"
+  else
+    echo "---------------------$X did not run to completion"
+  endif
+  
+end
+#__________________________________
+# compute the average times
+
+@ n = $endTimestep - $startTimestep
+
+echo " computing average mean time per timestep for $n timesteps"
+echo "#file MPIprocs threadsPerMPI totalThreads startWallTime endWallTime totalSolve+SetupTime totalSolveTime AveTimePerTimeStep aveTotalSolve+setup aveSolveTime"> $here/data2
+
+awk -vnSteps=$n '{print ($6-$5)/nSteps}' $here/data >> $here/aveMeanTime
+awk -vnSteps=$n '{print ($7)/nSteps}'    $here/data >> $here/aveTotalSolveTime
+awk -vnSteps=$n '{print ($8)/nSteps}'    $here/data >> $here/aveSolveTime  
+
+paste -d " " $here/data $here/aveMeanTime $here/aveTotalSolveTime $here/aveSolveTime>> $here/data2
+sort -n -k2 $here/data2 |column -t >sortedData
+
+more sortedData
+
+
+/bin/rm -rf $here
+exit

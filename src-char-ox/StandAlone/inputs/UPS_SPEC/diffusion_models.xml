@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <diffusion_model         spec="OPTIONAL NO_DATA"
+                           attribute1="type REQUIRED STRING 'jg, rf1,
+                                       non_linear1, non_linear2, constant_rate'">
+    <diffusivity           spec="OPTIONAL DOUBLE" />
+    <boltzmann_const       spec="OPTIONAL DOUBLE" />
+    <operating_temp        spec="OPTIONAL DOUBLE" />
+    <max_concentration     spec="OPTIONAL DOUBLE" />
+    <partial_atomic_vol    spec="OPTIONAL DOUBLE" />
+    <unit_charge           spec="OPTIONAL DOUBLE" />
+    <init_conc             spec="OPTIONAL DOUBLE" />
+    <tuning1               spec="OPTIONAL DOUBLE" />
+    <tuning2               spec="OPTIONAL DOUBLE" />
+    <tuning3               spec="OPTIONAL DOUBLE" />
+    <tuning4               spec="OPTIONAL DOUBLE" />
+    <tuning5               spec="OPTIONAL DOUBLE" />
+    <ramp_time             spec="OPTIONAL DOUBLE" />
+    <use_pressure          spec="OPTIONAL BOOLEAN" />
+    <diff_curve            spec="OPTIONAL NO_DATA" >
+      <time_point          spec="MULTIPLE NO_DATA" >
+        <time              spec="REQUIRED DOUBLE" />
+        <flux_direction    spec="REQUIRED STRING 'in, out, transition'" />
+      </time_point>
+    </diff_curve>
+    <constant_rate         spec="OPTIONAL DOUBLE" />
+    <conductivity_equation   spec="OPTIONAL NO_DATA"
+                             attribute1="type REQUIRED STRING 'fixed, binary'">
+      <min_conc              spec="OPTIONAL DOUBLE" />
+      <max_conc              spec="OPTIONAL DOUBLE" />
+      <conductivity          spec="OPTIONAL DOUBLE" />
+      <min_conductivity      spec="OPTIONAL DOUBLE" />
+      <max_conductivity      spec="OPTIONAL DOUBLE" />
+    </conductivity_equation>
+  </diffusion_model>
+</Uintah_Include>

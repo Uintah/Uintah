@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Three point bending problem</title>
+   </Meta>
+
+   <SimulationComponent type="impm" />
+
+   <Time>
+       <maxTime>1</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>1.</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+      <filebase>barimplicit.uda</filebase>
+      <outputTimestepInterval> 1 </outputTimestepInterval>
+ <!--     <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/> -->
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>implicit</time_integrator>
+       <dynamic>true</dynamic>
+   </MPM>
+
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <ideal_gas_constant>1.0</ideal_gas_constant>
+       <pressure>1.0</pressure>
+       <viscosity>0.3</viscosity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+                <density>1.0</density>
+                <thermal_conductivity>237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <heat_transfer_coefficient>111</heat_transfer_coefficient>
+              <constitutive_model type="comp_neo_hook"> 
+                    <bulk_modulus>1000</bulk_modulus>
+                    <shear_modulus>500</shear_modulus>
+               </constitutive_model>
+              <geom_object>
+                  <box label="gp1">
+                     <min>[ 1,1,1 ]</min>
+                     <max>[ 2,2,2 ]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[1.,0.,0.]</velocity>
+                  <temperature>300.</temperature>
+               </geom_object>
+           </material>
+
+            <contact>
+               <type>null</type>
+               <materials>[1,2,3]</materials>
+            </contact>
+
+            <thermal_contact></thermal_contact>
+
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <Level>
+           <Box label="1">
+              <lower>[ 0.0, 0.0, 0.0   ]</lower>
+              <upper>[ 3.0, 3.0, 3.0 ]</upper>
+               <resolution>[3,3,3]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    </Grid>
+
+    
+    <InitialConditions>
+
+       <MPM>
+       </MPM>
+
+    </InitialConditions>
+
+</Uintah_specification>

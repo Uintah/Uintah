@@ -1,0 +1,71 @@
+New in Version 2.0.0
+
+- Require a C++11 compliant compiler.
+- Updated instructions for building Uintah on MacOSX, Fedora 25, OpenSuse Leap,
+  Ubuntu 16.04, Debian Jessie, CentOS 7.
+- Updated build instructions for VisIt 2.12.2 using Uintah build directory
+  for building the Uintah plugin reader.
+
+New in Version 1.6.0
+
+Build System changes
+
+- Components are only built if specified in the configure line.
+- Boost is now required for Arches and Wasatch and encouraged for all other components.
+- configure --enable-all-components will build all components
+- configure --help will list new configure options.  See installation manual for build
+  instructions.
+
+Wasatch Changes
+
+- configure requires --enable-wasatch --enable-wasatch_3p  --with-boost=[path to boost]
+- Scalar transport with arbitrary coupling and source terms
+- Full 3D, constant density, Navier-Stokes equations
+- Boundary conditions: Dirichlet, Neumann, Inlets, Walls, Outlets, and Open
+- Large Eddy Simulation Turbulence models: Smagorinsky, Dynamic Smagorinsky, WALE, Vreman
+- Support for arbitrarily complex intrusions based on geometry	primitives or triangulated
+  geometries
+- Support for interior boundary conditions using surface primitives (i.e. disks,
+  rectangles, etc.)
+- Support for particle transport will two-way coupling with gas phase. Assumes a small solid volume fraction.
+- Particle boundary conditions: Elastic, Partially Elastic, and Inelastic Walls,
+  Particle inlets, and Particle outlets
+- Formal spatial and temporal order verification
+- Novel graph-based approach for dynamic algorithm construction
+- Platform independent syntax for immediate deployment on hybrid architectures
+
+Arches Changes
+
+- configure requires --enable-arches --enable-wasatch --enable-wasatch_3p
+  --with-boost=[path to boost]
+- Supports generic task construction using the Arches Task Interface
+- Tasks built using the Arches Task Interface enjoy full Nebo/SpatialOps support
+- Tasks built using the Arches Task Interface enjoy full native Uintah grid operations
+- Task management of tasks created using the Arches Task Interface is easily managed
+  using the TaskFactory abstraction
+- Several bug fixes in various physics models
+- Now includes some limited Lagrangian particle support
+- Conditional Quadrature Method of Moments now implemented and working
+- Improved coal physics: both from a modeling and an algorithmic standpoint
+
+Infrastruture Changes
+
+- Added new multi-threaded scheduler. The ThreadedMPI scheduler uses a combination
+  of MPI + Pthreads, with dynamic scheduling and non-deterministic, out-of-order
+  execution of tasks at runtime. This efficiently overlaps computation with communication,
+  and also offers a significant reduction in memory footprint by using a shared-memory
+  model on-node (only one MPI rank per multi-core node). Pthreads are pinned to
+  individual CPU cores where computational tasks are executed. Uses a centralized model
+  with 1 control thread and "numCores − 1" task execution threads. The control thread
+  assigns tasks and processes MPI receives, while the task worker threads execute tasks
+  and have shared access to the DataWarehouse (requires MPI THREAD MULTIPLE support).
+- Added documentation for all task schedulers Uintah provides and how to use them.
+  This is in the Uintah User-Guide.
+- Improved reporting on MPI statistics, communication, etc.
+- GPU development is under ongoing development within the Uintah Unified scheduler.
+  Details of this support and functionality will be in a point release.
+
+VisIt UDA Reader Changes
+
+- Building the UDA reader for VisIt can be performed using build_visit --uintah option.
+

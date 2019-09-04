@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <Uintah_specification> 
+    <FVM                   spec="OPTIONAL NO_DATA">
+      <delt                spec="REQUIRED DOUBLE 'positive'" />
+      <unit_charge         spec="OPTIONAL DOUBLE"/>
+      <include href="solver_spec.xml" section="Parameters" />
+    </FVM>
+    
+    <ESMPM                  spec="OPTIONAL NO_DATA">
+      <conductivity_model   spec="REQUIRED STRING 'ivd'" />                               
+    </ESMPM>
+  </Uintah_specification>
+
+  <MaterialProperties>
+    <FVM               spec="OPTIONAL NO_DATA">
+      <material        spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <geom_object   spec="MULTIPLE" />
+      </material>
+    </FVM>
+  </MaterialProperties>
+
+  <AMR>
+    <FVM   spec="OPTIONAL NO_DATA" >
+    </FVM>
+  </AMR>
+
+  
+</Uintah_Include>

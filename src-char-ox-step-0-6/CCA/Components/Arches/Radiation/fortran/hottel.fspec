@@ -1,0 +1,1 @@
+void hottel( IntVector idxlo, IntVector idxhi, constCCVariable<double> tg, constCCVariable<double> co2, constCCVariable<double> h2o, constCCVariable<double> volfrac, double opl, constCCVariable<double> sfv, CCVariable<double> abskg , double pressure);

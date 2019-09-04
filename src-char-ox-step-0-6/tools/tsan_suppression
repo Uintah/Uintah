@@ -1,0 +1,25 @@
+#______________________________________________________________________
+#  This file contains "race conditions" that will be suppressed from normal tsan output.
+#  These are the false positives.
+#
+#  To invoke the suppression rules below set the environmental variable
+#
+#    tcsh/csh   setenv TSAN_OPTIONS "suppressions=<path>/src/tools/tsan_suppression"
+#
+#  Run sus as normal assuming that you've compiled with the tsan options
+#
+#  --enable-optimize='-g -O1  -fsanitize=thread'\
+#    CC=clang-3.8 \     << you need to use the clang compilers.  There are issues compiling/linking with gnu gcc.  10/26/17
+#    CXX=clang++-3.8 \
+#
+#  For details on the different suppression types see
+#
+#      https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
+#______________________________________________________________________
+
+#type  :  location
+
+race:thread_fence
+race:Uintah::UnifiedScheduler::runTasks
+race:Uintah::UnifiedScheduler::execute
+race:Uintah::Impl::(anonymous namespace)::thread_driver

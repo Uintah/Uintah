@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Uranium -->
+<Uintah_Include>
+  <melting_temp_model type="scg_Tm">
+    <T_m0> 1710.0 </T_m0> 
+    <Gamma_0> 2.32 </Gamma_0>
+    <a> 1.8 </a>
+  </melting_temp_model>
+</Uintah_Include>

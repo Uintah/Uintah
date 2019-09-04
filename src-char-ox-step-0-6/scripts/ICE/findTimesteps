@@ -1,0 +1,21 @@
+#!/bin/csh -f
+#--------------------------------------
+#    findTimesteps
+#  This scripts returns all the timesteps dumped out
+#  by printdata
+#--------------------------------------
+
+set timesteps = `find . -name "[0-9]*" -maxdepth 2 -exec basename {} \; | sort -n`
+
+#echo $timesteps
+#----------------------------
+#  remove duplicate timesteps
+@ count = 0
+foreach X ( $timesteps[*]:q )
+  if ( $X != $timesteps[$count] ) then
+    echo $X
+  endif
+  @ count ++
+end
+
+exit(1)

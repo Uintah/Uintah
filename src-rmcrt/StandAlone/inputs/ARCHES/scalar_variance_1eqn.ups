@@ -1,0 +1,278 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Methane Jet Case</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime> 1.0 </maxTime>
+    <max_Timesteps>25</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>0.35</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <outputInitTimestep/>
+    <filebase>scalar_variance_1eqn.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="passive_scalar"/>
+    <save label="CCVelocity"/>
+    <save label="density"/>
+    <save label="cellType"/>
+    <save label="scalarDiss"/>
+    <save label="turb_viscosity"/>
+    <save label="normScalarVar"/>
+    <save label="mf2_src"/>
+    <save label="mixture_fraction"/>
+    <save label="mf_moment_2"/>
+    <checkpoint cycle="2" timestepInterval="10"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[.2,.2,.1]</upper>
+        <resolution>[32,32,16]</resolution>
+        <extraCells>[1,1,0]</extraCells>
+        <patches>[2,2,1]</patches>
+      </Box>
+      <periodic> [0,0,1] </periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="floor">
+        <BCType label="bottom wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="SolidWallTemperature" var="Dirichlet">
+          <value>293.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face rectangle="x-" lower="0 .075 0" upper="0 .125 0.1" name="inlet">
+        <BCType label="inlet" var="VelocityInlet">
+          <value>[1.0,0.0,0.0]</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Dirichlet">
+          <value> 1.0 </value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="top" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="y-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="y+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="z-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="z+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="passive_scalar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="normScalarVar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mf_moment_2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="passive_scalar" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="mf_moment_2" type="CCscalar">
+          <doDiff> true </doDiff>
+          <doConv> true </doConv>
+          <conv_scheme> super_bee </conv_scheme>
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <src label="mf2_src"/>
+          <determines_properties/>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Sources>
+          <src label="mf2_src" type="moment2_mixture_fraction_src">
+            <density_label> density </density_label>
+            <scalar_dissipation_label> scalarDiss </scalar_dissipation_label>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <PropertyModels>
+        <model type="algebraic_scalar_diss" label="scalarDiss">
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
+          <turbulent_Sc> 0.4 </turbulent_Sc>
+          <D> 0.00001 </D>
+        </model>
+        <model type="norm_scalar_var" label="normScalarVar">
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
+          <second_moment_label> mf_moment_2 </second_moment_label>
+          <Clip> true </Clip>
+        </model>
+      </PropertyModels>
+      <Turbulence model="compdynamicprocedure"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298.0</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-9</tolerance>
+            <solver>        cg    </solver>
+            <preconditioner>pfmg  </preconditioner>
+            <maxiterations> 250    </maxiterations>
+            <relax_type> 2 </relax_type>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

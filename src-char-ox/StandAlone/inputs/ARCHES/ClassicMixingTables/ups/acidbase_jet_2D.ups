@@ -1,0 +1,256 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title> Acid Base Chemistry with Mixing Table </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>.50</maxTime>
+    <max_Timesteps>25</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase> acidbase_jet.uda </filebase>
+    <outputTimestepInterval> 5 </outputTimestepInterval>
+    <save label="pressurePS"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="CCVelocity"/>
+    <save label="vorticity"/>
+    <save label="totalKineticEnergy"/>
+    <save label="viscosityCTS"/>
+    <save label="mixture_fraction"/>
+    <save label="rxn_extent"/>
+    <save label="residence_time"/>
+    <save label="temperature" table_lookup="true"/>
+    <!--save label="density" table_lookup="true"/-->
+    <save label="pH" table_lookup="true"/>
+    <save label="S" table_lookup="true"/>
+    <save label="Eq-CaCO3" table_lookup="true"/>
+    <save label="Vtest1" table_lookup="true"/>
+    <save label="Vtest2" table_lookup="true"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.002"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[15,15,15]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-">
+        <BCType label="BottomWall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+        <BCType label="Inlet" var="MassFlowInlet">
+          <value>40000</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="Press y-" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="Press y+" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="Press z-" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="Press z+" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="rxn_extent" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="residence_time" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity> [-9.8,0,0] </gravity>
+    <reference_point> [-1,-1,-1] </reference_point>
+    <viscosity> 0.001 </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
+      <ExplicitSolver>
+        <initial_dt> 0.01 </initial_dt>
+        <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
+        <PressureSolver>
+          <Parameters>
+            <tolerance> 1.0e-8 </tolerance>
+            <solver> cg </solver>
+            <preconditioner> pfmg </preconditioner>
+            <maxiterations> 500 </maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
+          <convection_scheme> central </convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+      <!-- TURBULENCE Specification -->
+      <Turbulence model="smagorinsky">
+        <cf> 0.17 </cf>
+        <fac_mesh> 1.0 </fac_mesh>
+        <filterl> 0.000001 </filterl>
+      </Turbulence>
+      <!-- TABLE and Properties -->
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state f="0.0" extent="0.0"/>
+          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
+          <cold_flow> true </cold_flow>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
+        </table>
+      </Properties>
+      <!-- EXTRA SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff> true </doDiff>
+          <doConv> true </doConv>
+          <conv_scheme> super_bee </conv_scheme>
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="rxn_extent" type="CCscalar">
+          <doDiff> true </doDiff>
+          <doConv> true </doConv>
+          <conv_scheme> super_bee </conv_scheme>
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <src label="rxn_extent_src"/>
+        </Eqn>
+        <Eqn label="residence_time" type="CCscalar">
+          <doDiff> true </doDiff>
+          <doConv> true </doConv>
+          <conv_scheme> super_bee </conv_scheme>
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <src label="residence_time_src"/>
+        </Eqn>
+        <Sources>
+          <src label="residence_time_src" type="constant_src">
+            <constant> 1000.0 </constant>
+          </src>
+          <src label="rxn_extent_src" type="tab_rxn_rate">
+            <rxn_rate> Vtest2 </rxn_rate>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <!-- BOUNDARY Specification -->
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+      </BoundaryConditions>
+    </ARCHES>
+  </CFD>
+  <Multimaterial>
+    <fluidThermalConductivity> 0.03 </fluidThermalConductivity>
+    <heatExchange> false </heatExchange>
+    <turbulentPrandtNo> 0.7 </turbulentPrandtNo>
+    <fluidHeatCapacity> 1007. </fluidHeatCapacity>
+    <IfCutCell> false </IfCutCell>
+    <StationarySolid> true </StationarySolid>
+    <inviscid> false </inviscid>
+    <restart> true </restart>
+    <fixedCellType> true </fixedCellType>
+    <fixedTemp> true </fixedTemp>
+    <TestCutCells> true </TestCutCells>
+    <stairstep> true </stairstep>
+  </Multimaterial>
+</Uintah_specification>

@@ -1,0 +1,269 @@
+\gdef \the@ipfilectr {@-1}
+\contentsline {chapter}{\numberline {1}Overview of Uintah}{6}{chapter.1}
+\contentsline {section}{\numberline {1.1}The Center for the Simulation of Accidental Fires and Explosions (C-SAFE)}{6}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Center History}{6}{subsection.1.1.1}
+\contentsline {subsubsection}{Center Objective}{6}{section*.2}
+\contentsline {subsubsection}{Target Simulation}{6}{section*.3}
+\contentsline {section}{\numberline {1.2}Uintah Software}{7}{section.1.2}
+\contentsline {subsection}{\numberline {1.2.1}Software Ports}{8}{subsection.1.2.1}
+\contentsline {subsection}{\numberline {1.2.2}Uintah Software History}{8}{subsection.1.2.2}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-2}
+\contentsline {chapter}{\numberline {2}Using Uintah}{9}{chapter.2}
+\contentsline {section}{\numberline {2.1}Installing the Uintah Software}{9}{section.2.1}
+\contentsline {section}{\numberline {2.2}Mechanics of Running sus}{9}{section.2.2}
+\contentsline {section}{\numberline {2.3}Uintah Problem Specification (UPS)}{10}{section.2.3}
+\contentsline {section}{\numberline {2.4}Simulation Components}{10}{section.2.4}
+\contentsline {section}{\numberline {2.5}Time Related Variables}{10}{section.2.5}
+\contentsline {section}{\numberline {2.6}Data Archiver}{12}{section.2.6}
+\contentsline {section}{\numberline {2.7}Simulation Options}{12}{section.2.7}
+\contentsline {section}{\numberline {2.8}Geometry objects}{13}{section.2.8}
+\contentsline {section}{\numberline {2.9}Boundary conditions}{16}{section.2.9}
+\contentsline {section}{\numberline {2.10}Grid specification}{18}{section.2.10}
+\contentsline {section}{\numberline {2.11}Schedulers}{19}{section.2.11}
+\contentsline {subsection}{\numberline {2.11.1}MPI Scheduler}{21}{subsection.2.11.1}
+\contentsline {subsection}{\numberline {2.11.2}Dynamic MPI Scheduler}{22}{subsection.2.11.2}
+\contentsline {subsection}{\numberline {2.11.3}Unified Scheduler}{23}{subsection.2.11.3}
+\contentsline {section}{\numberline {2.12}GPU Support}{25}{section.2.12}
+\contentsline {section}{\numberline {2.13}AMR}{26}{section.2.13}
+\contentsline {subsection}{\numberline {2.13.1}AMR Grids}{31}{subsection.2.13.1}
+\contentsline {subsubsection}{Regridding}{31}{section*.4}
+\contentsline {subsubsection}{Static Grids}{32}{section*.5}
+\contentsline {subsubsection}{Ideal Patch Configuration for Good Scaling}{33}{section*.6}
+\contentsline {subsection}{\numberline {2.13.2}AMR Cycle}{33}{subsection.2.13.2}
+\contentsline {section}{\numberline {2.14}Regridder}{33}{section.2.14}
+\contentsline {section}{\numberline {2.15}Dynamic Load Balancing}{35}{section.2.15}
+\contentsline {subsection}{\numberline {2.15.1}Input File Specs}{35}{subsection.2.15.1}
+\contentsline {section}{\numberline {2.16}UDA}{36}{section.2.16}
+\contentsline {chapter}{\numberline {3}Visualization tools -- VisIt}{38}{chapter.3}
+\contentsline {section}{\numberline {3.1}Reading Uintah Data Archives}{38}{section.3.1}
+\contentsline {section}{\numberline {3.2}Plots}{38}{section.3.2}
+\contentsline {section}{\numberline {3.3}Operators}{39}{section.3.3}
+\contentsline {section}{\numberline {3.4}Vectors}{39}{section.3.4}
+\contentsline {section}{\numberline {3.5}AMR datasets}{41}{section.3.5}
+\contentsline {section}{\numberline {3.6}Examples}{41}{section.3.6}
+\contentsline {subsection}{\numberline {3.6.1}Volume visualization}{41}{subsection.3.6.1}
+\contentsline {subsection}{\numberline {3.6.2}Particle visualization}{43}{subsection.3.6.2}
+\contentsline {subsection}{\numberline {3.6.3}Visualizing patch boundaries}{43}{subsection.3.6.3}
+\contentsline {subsection}{\numberline {3.6.4}Iso-surfaces}{44}{subsection.3.6.4}
+\contentsline {subsection}{\numberline {3.6.5}Streamlines}{44}{subsection.3.6.5}
+\contentsline {subsection}{\numberline {3.6.6}Visualizing extra cells}{46}{subsection.3.6.6}
+\contentsline {subsection}{\numberline {3.6.7}Picking on particles}{46}{subsection.3.6.7}
+\contentsline {subsection}{\numberline {3.6.8}Selectively visualizing vectors}{47}{subsection.3.6.8}
+\contentsline {chapter}{\numberline {4}Data Extraction Tools}{50}{chapter.4}
+\contentsline {section}{\numberline {4.1}puda}{50}{section.4.1}
+\contentsline {section}{\numberline {4.2}partextract}{51}{section.4.2}
+\contentsline {section}{\numberline {4.3}lineextract}{52}{section.4.3}
+\contentsline {section}{\numberline {4.4}compute\_Lnorm\_udas}{53}{section.4.4}
+\contentsline {section}{\numberline {4.5}timeextract}{54}{section.4.5}
+\contentsline {section}{\numberline {4.6}particle2tiff}{54}{section.4.6}
+\contentsline {section}{\numberline {4.7}On the fly analysis}{56}{section.4.7}
+\contentsline {chapter}{\numberline {5}Order of Accuracy}{58}{chapter.5}
+\contentsline {section}{\numberline {5.1}Using The Framework}{58}{section.5.1}
+\contentsline {section}{\numberline {5.2}Tests}{58}{section.5.2}
+\contentsline {section}{\numberline {5.3}Additional information}{61}{section.5.3}
+\contentsline {subsection}{\numberline {5.3.1}Post Processing Tools}{61}{subsection.5.3.1}
+\contentsline {subsection}{\numberline {5.3.2}Gnuplot scripts}{61}{subsection.5.3.2}
+\contentsline {subsection}{\numberline {5.3.3}Debugging}{61}{subsection.5.3.3}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-3}
+\contentsline {chapter}{\numberline {6}Uda Management }{62}{chapter.6}
+\contentsline {section}{\numberline {6.1}pscp2}{62}{section.6.1}
+\contentsline {section}{\numberline {6.2}Make Master Uda}{62}{section.6.2}
+\contentsline {section}{\numberline {6.3}pTarUda}{63}{section.6.3}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-4}
+\contentsline {chapter}{\numberline {7}Arches}{64}{chapter.7}
+\contentsline {section}{\numberline {7.1}Introduction}{64}{section.7.1}
+\contentsline {section}{\numberline {7.2}Governing Equations}{64}{section.7.2}
+\contentsline {subsection}{\numberline {7.2.1}Subgrid Turbulence Models}{67}{subsection.7.2.1}
+\contentsline {subsection}{\numberline {7.2.2}Subgrid Momentum Dissipation}{68}{subsection.7.2.2}
+\contentsline {subsection}{\numberline {7.2.3}LES Algorithm}{69}{subsection.7.2.3}
+\contentsline {subsection}{\numberline {7.2.4}Direct Quadrature Method of Moments}{71}{subsection.7.2.4}
+\contentsline {subsubsection}{Number Density Function}{72}{section*.7}
+\contentsline {subsubsection}{Moments}{73}{section*.8}
+\contentsline {subsubsection}{Moment Methods for NDF Transport}{74}{section*.9}
+\contentsline {subsubsection}{Quadrature}{74}{section*.10}
+\contentsline {subsubsection}{Quadrature-Approximated Moment Transport Equation}{75}{section*.11}
+\contentsline {subsubsection}{Build of Ax=B}{76}{section*.12}
+\contentsline {subsubsection}{solution of DQMOM matrix}{77}{section*.13}
+\contentsline {subsubsection}{Simplest method in DQMOM}{77}{section*.14}
+\contentsline {subsubsection}{Summary}{78}{section*.15}
+\contentsline {subsection}{\numberline {7.2.5}Wall Heat Transfer Model in Arches}{79}{subsection.7.2.5}
+\contentsline {subsubsection}{Basic assumptions and models for wall heat transfer}{79}{section*.16}
+\contentsline {subsubsection}{Algorithms of wall heat transfer solution in Arches}{79}{section*.17}
+\contentsline {subsubsection}{black body or grey body assumption?}{80}{section*.18}
+\contentsline {subsubsection}{numerical steadyness, especially for adiabatic wall BC or small thermal conductivities}{80}{section*.19}
+\contentsline {subsection}{\numberline {7.2.6}Digital Filter Generator for Turbulent Inlet Conditions}{81}{subsection.7.2.6}
+\contentsline {subsubsection}{Digital Filter}{81}{section*.20}
+\contentsline {subsubsection}{Implementation Algorithm}{82}{section*.21}
+\contentsline {section}{\numberline {7.3}Uintah Specification}{83}{section.7.3}
+\contentsline {subsection}{\numberline {7.3.1}Basic Inputs}{83}{subsection.7.3.1}
+\contentsline {subsection}{\numberline {7.3.2}Boundary Conditions}{83}{subsection.7.3.2}
+\contentsline {subsection}{\numberline {7.3.3}Time Integrator}{86}{subsection.7.3.3}
+\contentsline {subsubsection}{Explicit Time Integrator}{86}{section*.30}
+\contentsline {subsubsection}{Implicit Time Integrator}{89}{section*.31}
+\contentsline {subsection}{\numberline {7.3.4}Scalar Transport Equations}{89}{subsection.7.3.4}
+\contentsline {subsubsection}{Options for Scalar Transport Equations}{90}{section*.32}
+\contentsline {subsection}{\numberline {7.3.5}Transport Equation Options}{90}{subsection.7.3.5}
+\contentsline {subsubsection}{Momentum Solver}{90}{section*.33}
+\contentsline {subsubsection}{Pressure Solver}{91}{section*.34}
+\contentsline {subsubsection}{Mixture Fraction Solver}{92}{section*.35}
+\contentsline {subsubsection}{Enthalpy Solver}{92}{section*.36}
+\contentsline {subsection}{\numberline {7.3.6}Initial and Boundary Conditions}{94}{subsection.7.3.6}
+\contentsline {subsubsection}{Solid Intrusions (MPMArches only)}{94}{section*.37}
+\contentsline {subsubsection}{Species Efficiency Calculations}{94}{section*.38}
+\contentsline {subsection}{\numberline {7.3.7}Properties, Reaction and Sub-Grid Mixing}{96}{subsection.7.3.7}
+\contentsline {subsubsection}{Classic Table Format}{98}{section*.39}
+\contentsline {subsection}{\numberline {7.3.8}Direct Quadrature Method of Moments}{100}{subsection.7.3.8}
+\contentsline {subsubsection}{Linear Solver, $<$LinearSolver$>$}{101}{section*.40}
+\contentsline {subsubsection}{Coal Models for DQMOM, $<$Models$>$}{102}{section*.41}
+\contentsline {subsubsection}{Velocity Model}{102}{section*.42}
+\contentsline {subsubsection}{Weight Transport Equation Options, $<$Weights$>$}{104}{section*.43}
+\contentsline {subsubsection}{Weighted Abscissa Transport Equation Options, $<$Ic$>$}{106}{section*.44}
+\contentsline {subsubsection}{Moments, $<$Moment$>$}{107}{section*.45}
+\contentsline {subsubsection}{Verification, $<$Verify\_Linear\_Solver$>$, $<$Verify\_AB\_Construction$>$}{107}{section*.46}
+\contentsline {subsection}{\numberline {7.3.9}Models}{108}{subsection.7.3.9}
+\contentsline {subsection}{\numberline {7.3.10}Digital Filter Generator}{110}{subsection.7.3.10}
+\contentsline {section}{\numberline {7.4}Examples}{112}{section.7.4}
+\contentsline {subsection}{Almgren MMS}{112}{section*.47}
+\contentsline {subsection}{Periodic Box Problem}{113}{section*.50}
+\contentsline {subsection}{Helium Plume}{114}{section*.53}
+\contentsline {subsection}{Methane Plume}{115}{section*.57}
+\contentsline {subsection}{Fast Cookoff}{116}{section*.61}
+\contentsline {section}{\numberline {7.5}References}{116}{section.7.5}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-5}
+\contentsline {chapter}{\numberline {8}ICE}{118}{chapter.8}
+\contentsline {section}{\numberline {8.1}Introduction}{118}{section.8.1}
+\contentsline {subsection}{\numberline {8.1.1}Governing Equations}{118}{subsection.8.1.1}
+\contentsline {section}{\numberline {8.2}Algorithm Description}{120}{section.8.2}
+\contentsline {section}{\numberline {8.3}Uintah Specification}{121}{section.8.3}
+\contentsline {subsection}{\numberline {8.3.1}Basic Inputs}{121}{subsection.8.3.1}
+\contentsline {subsection}{\numberline {8.3.2}Semi-Implicit Pressure Solve}{122}{subsection.8.3.2}
+\contentsline {subsection}{\numberline {8.3.3}Physical Constants}{123}{subsection.8.3.3}
+\contentsline {subsection}{\numberline {8.3.4}Material Properties}{123}{subsection.8.3.4}
+\contentsline {subsection}{\numberline {8.3.5}Equation of State}{123}{subsection.8.3.5}
+\contentsline {subsection}{\numberline {8.3.6}Specific Heat Models}{125}{subsection.8.3.6}
+\contentsline {subsection}{\numberline {8.3.7}Exchange Properties}{126}{subsection.8.3.7}
+\contentsline {subsection}{\numberline {8.3.8}BoundaryConditions}{127}{subsection.8.3.8}
+\contentsline {subsection}{\numberline {8.3.9}Variable Volume Fraction}{128}{subsection.8.3.9}
+\contentsline {subsection}{\numberline {8.3.10}Output Variable Names}{129}{subsection.8.3.10}
+\contentsline {subsection}{\numberline {8.3.11}XML tag description}{131}{subsection.8.3.11}
+\contentsline {section}{\numberline {8.4}Examples}{132}{section.8.4}
+\contentsline {subsection}{Poiseuille Flow}{132}{section*.66}
+\contentsline {subsection}{Combined Couette-Poiseuille Flow}{134}{section*.70}
+\contentsline {subsection}{Shock Tube}{136}{section*.74}
+\contentsline {subsection}{Shock Tube with Adaptive Mesh Refinement}{138}{section*.78}
+\contentsline {subsection}{2D Riemann Problem with Adaptive Mesh Refinement}{140}{section*.81}
+\contentsline {subsection}{Explosion 2D}{142}{section*.85}
+\contentsline {subsection}{ANFO Rate Stick}{146}{section*.89}
+\contentsline {section}{\numberline {8.5}Verification and Validation}{148}{section.8.5}
+\contentsline {subsection}{Rayleigh Problem}{148}{section*.93}
+\contentsline {subsection}{2-D Lid-Driven Cavity Flow}{150}{section*.97}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-6}
+\contentsline {chapter}{\numberline {9}MPM}{155}{chapter.9}
+\contentsline {section}{\numberline {9.1}Introduction}{155}{section.9.1}
+\contentsline {section}{\numberline {9.2}Algorithm Description}{156}{section.9.2}
+\contentsline {section}{\numberline {9.3}Shape functions for MPM and GIMP}{158}{section.9.3}
+\contentsline {section}{\numberline {9.4}Uintah Implementation}{162}{section.9.4}
+\contentsline {section}{\numberline {9.5}Uintah Specification}{168}{section.9.5}
+\contentsline {subsection}{\numberline {9.5.1}Common Inputs}{168}{subsection.9.5.1}
+\contentsline {subsection}{\numberline {9.5.2}Physical Constants}{169}{subsection.9.5.2}
+\contentsline {subsection}{\numberline {9.5.3}MPM Flags}{169}{subsection.9.5.3}
+\contentsline {subsection}{\numberline {9.5.4}Material Properties}{170}{subsection.9.5.4}
+\contentsline {subsection}{\numberline {9.5.5}Constitutive Models}{171}{subsection.9.5.5}
+\contentsline {subsection}{\numberline {9.5.6}Hypo-Elastic Plasticity in Uintah}{178}{subsection.9.5.6}
+\contentsline {paragraph}{Adiabatic Heating and Specific Heat}{180}{section*.102}
+\contentsline {subparagraph}{Default specific heat model}{180}{section*.103}
+\contentsline {subparagraph}{Cubic specific heat model}{181}{section*.104}
+\contentsline {subparagraph}{Specific heat model for copper}{181}{section*.105}
+\contentsline {subparagraph}{Specific heat model for steel}{181}{section*.106}
+\contentsline {paragraph}{Equation of State Models}{182}{section*.107}
+\contentsline {subparagraph}{Default hypoelastic equation of state}{182}{section*.108}
+\contentsline {subparagraph}{Default hyperelastic equation of state}{183}{section*.109}
+\contentsline {subparagraph}{Mie-Gruneisen equation of state}{183}{section*.110}
+\contentsline {paragraph}{Deviatoric Stress Models}{185}{section*.111}
+\contentsline {subparagraph}{Default Hypoelastic Deviatoric Stress}{186}{section*.112}
+\contentsline {subparagraph}{Linear Hypoviscoelastic Deviatoric Stress}{186}{section*.113}
+\contentsline {paragraph}{Melting Temperature}{186}{section*.114}
+\contentsline {subparagraph}{Default model}{186}{section*.115}
+\contentsline {subparagraph}{Linear melt model}{186}{section*.116}
+\contentsline {subparagraph}{SCG melt model}{187}{section*.117}
+\contentsline {subparagraph}{BPS melt model}{187}{section*.118}
+\contentsline {paragraph}{Shear Modulus}{188}{section*.119}
+\contentsline {subparagraph}{Default model}{188}{section*.120}
+\contentsline {subparagraph}{MTS Shear Modulus Model}{188}{section*.121}
+\contentsline {subparagraph}{SCG Shear Modulus Model}{188}{section*.122}
+\contentsline {subparagraph}{NP Shear Modulus Model}{189}{section*.123}
+\contentsline {subparagraph}{PTW Shear model}{189}{section*.124}
+\contentsline {paragraph}{Yield conditions}{189}{section*.125}
+\contentsline {subparagraph}{The von Mises yield condition}{189}{section*.126}
+\contentsline {subparagraph}{The Gurson-Tvergaard-Needleman (GTN) yield condition}{190}{section*.127}
+\contentsline {subparagraph}{Porosity model}{190}{section*.128}
+\contentsline {paragraph}{Flow Stress}{191}{section*.129}
+\contentsline {subparagraph}{Isotropic Hardening Flow Stress Model}{191}{section*.130}
+\contentsline {subparagraph}{JC Flow Stress Model}{192}{section*.131}
+\contentsline {subparagraph}{SCG Flow Stress Model}{192}{section*.132}
+\contentsline {subparagraph}{ZA Flow Stress Model}{193}{section*.133}
+\contentsline {subparagraph}{ZA for Polymers Flow Stress Model}{193}{section*.134}
+\contentsline {subparagraph}{MTS Flow Stress Model}{194}{section*.135}
+\contentsline {subparagraph}{PTW Flow Stress Model}{196}{section*.136}
+\contentsline {paragraph}{Return Algorithms}{197}{section*.137}
+\contentsline {subparagraph}{Radial Return Algorithm}{197}{section*.138}
+\contentsline {subparagraph}{Modified Nemat-Nasser/Maudlin Return Algorithm}{200}{section*.139}
+\contentsline {paragraph}{Damage Models and Failure}{200}{section*.140}
+\contentsline {paragraph}{Damage model}{200}{section*.141}
+\contentsline {paragraph}{Erosion algorithm}{201}{section*.142}
+\contentsline {paragraph}{Implementation}{202}{section*.143}
+\contentsline {paragraph}{Example input file for the elastic-plastic model}{203}{section*.144}
+\contentsline {paragraph}{Adding new models}{204}{section*.145}
+\contentsline {subsection}{\numberline {9.5.7}Contact}{206}{subsection.9.5.7}
+\contentsline {subsection}{\numberline {9.5.8}BoundaryConditions}{208}{subsection.9.5.8}
+\contentsline {subsection}{\numberline {9.5.9}Physical Boundary Conditions}{209}{subsection.9.5.9}
+\contentsline {subsection}{\numberline {9.5.10}On the Fly DataAnalysis}{211}{subsection.9.5.10}
+\contentsline {subsection}{\numberline {9.5.11}Prescribed Motion}{211}{subsection.9.5.11}
+\contentsline {subsection}{\numberline {9.5.12}Cohesive Zones}{212}{subsection.9.5.12}
+\contentsline {subsection}{\numberline {9.5.13}Particle Insertion}{214}{subsection.9.5.13}
+\contentsline {section}{\numberline {9.6}Examples}{215}{section.9.6}
+\contentsline {subsection}{Colliding Disks}{215}{section*.146}
+\contentsline {subsection}{Taylor Impact Test}{216}{section*.150}
+\contentsline {subsection}{Sphere Rolling Down an Inclined Plane}{217}{section*.154}
+\contentsline {subsection}{Crushing a Foam Microstructure}{220}{section*.158}
+\contentsline {subsection}{Hole in an Elastic Plate}{222}{section*.162}
+\contentsline {subsection}{Tungsten Sphere Impacting a Steel Target}{224}{section*.166}
+\contentsline {subsection}{\numberline {9.6.1}Method Of Manufactured Solutions (MMS)}{225}{subsection.9.6.1}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-7}
+\contentsline {chapter}{\numberline {10}MPMICE}{232}{chapter.10}
+\contentsline {section}{\numberline {10.1}Introduction}{232}{section.10.1}
+\contentsline {section}{\numberline {10.2}Theory - Algorithm Description}{232}{section.10.2}
+\contentsline {section}{\numberline {10.3}Solid State Kinetic Models}{232}{section.10.3}
+\contentsline {section}{\numberline {10.4}HE Reaction Models}{234}{section.10.4}
+\contentsline {subsection}{\numberline {10.4.1}Simple Burn}{234}{subsection.10.4.1}
+\contentsline {subsection}{\numberline {10.4.2}Steady Burn}{235}{subsection.10.4.2}
+\contentsline {subsection}{\numberline {10.4.3}Unsteady Burn}{238}{subsection.10.4.3}
+\contentsline {subsection}{\numberline {10.4.4}Ignition \& Growth}{240}{subsection.10.4.4}
+\contentsline {subsection}{\numberline {10.4.5}JWL++}{241}{subsection.10.4.5}
+\contentsline {subsection}{\numberline {10.4.6}DDT0}{242}{subsection.10.4.6}
+\contentsline {subsection}{\numberline {10.4.7}DDT1}{243}{subsection.10.4.7}
+\contentsline {subsubsection}{Dynamic Output Intervals}{245}{section*.171}
+\contentsline {subsubsection}{Induction Time}{246}{section*.172}
+\contentsline {section}{\numberline {10.5}Examples}{247}{section.10.5}
+\contentsline {subsection}{Mach 2 Wedge}{247}{section*.173}
+\contentsline {subsection}{Cylinder in a Crossflow}{249}{section*.177}
+\contentsline {subsection}{"Cylinder Test"}{251}{section*.181}
+\contentsline {subsection}{Cylinder Pressurization Using Simple Burn}{252}{section*.185}
+\contentsline {subsection}{Exploding Cylinder Using Steady Burn}{255}{section*.189}
+\contentsline {subsection}{T-Burner Example Using Unsteady Burn}{257}{section*.193}
+\contentsline {subsection}{Lizard Lung}{260}{section*.197}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-8}
+\contentsline {chapter}{\numberline {11}Wasatch}{263}{chapter.11}
+\gdef \the@ipfilectr {}
+\gdef \the@ipfilectr {@-9}
+\contentsline {chapter}{\numberline {12}Glossary}{264}{chapter.12}
+\contentsline {chapter}{Appendices}{266}{section*.202}
+\contentsline {chapter}{\numberline {A}Bomb Units}{266}{appendix.A}
+\gdef \the@ipfilectr {}

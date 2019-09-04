@@ -1,0 +1,36 @@
+\contentsline {chapter}{\numberline {1}Overview of the Uintah Framework}{3}{chapter.1}
+\contentsline {section}{\numberline {1.1}Scheduler}{4}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}needRecompile()}{4}{subsection.1.1.1}
+\contentsline {section}{\numberline {1.2}Tasks}{6}{section.1.2}
+\contentsline {section}{\numberline {1.3}Tasks and Scheduler Description -- Programmer Interface}{7}{section.1.3}
+\contentsline {subsection}{\numberline {1.3.1}Simulation Component Class Description}{7}{subsection.1.3.1}
+\contentsline {subsubsection}{ProblemSetup}{8}{section*.2}
+\contentsline {subsubsection}{ScheduleInitialize}{8}{section*.3}
+\contentsline {subsubsection}{ScheduleComputeStableTimestep}{9}{section*.4}
+\contentsline {subsubsection}{ScheduleTimeAdvance}{9}{section*.5}
+\contentsline {subsection}{\numberline {1.3.2}Data Storage Concepts}{9}{subsection.1.3.2}
+\contentsline {subsubsection}{Data Archiver}{9}{section*.6}
+\contentsline {subsubsection}{Two Data Warehouses}{9}{section*.7}
+\contentsline {subsubsection}{Storing and Retrieving Variables}{10}{section*.8}
+\contentsline {subsubsection}{Variables}{10}{section*.9}
+\contentsline {section}{\numberline {1.4}Grid}{12}{section.1.4}
+\contentsline {subsection}{\numberline {1.4.1}Cells}{12}{subsection.1.4.1}
+\contentsline {subsection}{\numberline {1.4.2}Patches}{12}{subsection.1.4.2}
+\contentsline {subsubsection}{Boundary Cells}{12}{section*.10}
+\contentsline {subsection}{\numberline {1.4.3}Indexing}{14}{subsection.1.4.3}
+\contentsline {chapter}{\numberline {2}Examples}{15}{chapter.2}
+\contentsline {section}{\numberline {2.1}Poisson1}{15}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}Description of Scheduling Functions}{17}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}Description of Computational Functions}{19}{subsection.2.1.2}
+\contentsline {subsubsection}{Running the Poisson1 Example}{24}{section*.11}
+\contentsline {section}{\numberline {2.2}Poisson2}{24}{section.2.2}
+\contentsline {section}{\numberline {2.3}Burger}{28}{section.2.3}
+\contentsline {section}{\numberline {2.4}HeatEquation}{31}{section.2.4}
+\contentsline {section}{\numberline {2.5}HeatEquation Using Petsc Solver Interface}{32}{section.2.5}
+\contentsline {section}{\numberline {2.6}WaveEquation}{32}{section.2.6}
+\contentsline {section}{\numberline {2.7}AdvectionDiffusion}{32}{section.2.7}
+\contentsline {section}{\numberline {2.8}Specifying Boundary Conditions}{32}{section.2.8}
+\contentsline {section}{\numberline {2.9}Input File Specification}{32}{section.2.9}
+\contentsline {section}{\numberline {2.10}Output File Format}{32}{section.2.10}
+\contentsline {chapter}{\numberline {3}Implementing a New Simulation Component}{33}{chapter.3}
+\contentsline {chapter}{\numberline {4}Saving Simulation Data}{41}{chapter.4}

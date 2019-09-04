@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of the intrusions with fluxing boundaries</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>4.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>40</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>cold_handoff_intrusion_test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="uvelRhoHat"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="cellType"/>
+    <save label="areaFraction"/>
+    <save label="CCVelocity"/>
+    <save label="pressurePS"/>
+    <save label="cellType"/>
+    <save label="uvelRhoHat"/>
+    <!-- Table Variables -->
+    <!-- iv's -->
+    <save label="mixture_fraction"/>
+    <save label="mixture_fraction_Fconv"/>
+    <!-- dv's -->
+    <save label="density" table_lookup="true"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="surf_out_normX"/>
+    <save label="surf_out_normY"/>
+    <save label="surf_out_normZ"/>
+    <save label="surf_in_normX"/>
+    <save label="surf_in_normY"/>
+    <save label="surf_in_normZ"/>
+    <save label="volFraction"/>
+    <checkpoint cycle="2" interval="0.0001"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="x- wall">
+        <BCType label="bottom_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="y-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="y+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="z-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="z+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[25,25,25]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="third"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <determines_properties/>
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <geom_object>
+              <difference>
+                <cylinder label="outer cylinder"/>
+                <cylinder label="inner cylinder"/>
+              </difference>
+            </geom_object>
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+      <Turbulence model="compdynamicprocedure"/>
+      <Properties>
+        <table label="a_user_generated_label" type="coldflow">
+          <reference_density value="1.18"/>
+          <stream_1 density="1.18" temperature="298"/>
+          <stream_0 density="0.1" temperature="1000"/>
+          <mixture_fraction label="mixture_fraction"/>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <intrusions>
+          <intrusion label="stack_1">
+            <geom_object>
+              <box>
+                <min>[-1.0,.6,.6]</min>
+                <max>[.5,1,1]</max>
+              </box>
+            </geom_object>
+            <flux_dir>x+</flux_dir>
+            <velocity type="from_file">
+              <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_velocity.dat</input_file>
+              <relative_xyz>[0,.8,.8]</relative_xyz>
+            </velocity>
+            <scalars>
+              <scalar label="mixture_fraction" type="from_file">
+                <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_scalar.dat</input_file>
+                <relative_xyz>[0,.8,.8]</relative_xyz>
+              </scalar>
+            </scalars>
+          </intrusion>
+          <intrusion label="stack_2">
+            <geom_object>
+              <box>
+                <min>[-1.0,1.6,1.6]</min>
+                <max>[.5,2,2]</max>
+              </box>
+            </geom_object>
+            <flux_dir>x+</flux_dir>
+            <velocity type="from_file">
+              <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_velocity.dat</input_file>
+              <relative_xyz>[0,1.8,1.8]</relative_xyz>
+            </velocity>
+            <scalars>
+              <scalar label="mixture_fraction" type="from_file">
+                <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_scalar.dat</input_file>
+                <relative_xyz>[0,1.8,1.8]</relative_xyz>
+              </scalar>
+            </scalars>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

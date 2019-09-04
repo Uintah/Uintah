@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Scalar Test, +x inlet</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>xplus_scalar_test.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="mixture_fraction_sb"/>
+    <!-- Super Bee flux lim. -->
+    <save label="mixture_fraction_roe"/>
+    <!-- Roe Min/Mod flux lim. -->
+    <save label="mixture_fraction_up"/>
+    <!-- Upwind -->
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x+" name="inlet">
+        <BCType label="velocity inlet" var="VelocityInlet">
+          <value>[-1,0,0]</value>
+        </BCType>
+        <BCType label="mixture_fraction_sb" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_up" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_roe" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" name="outlet">
+        <BCType label="the outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_sb" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_up" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_roe" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[6,1,1]</upper>
+        <resolution>[60,6,6]</resolution>
+        <extraCells>[1,0,0]</extraCells>
+        <patches>[6,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.001000</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <BoundaryConditions/>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction_sb" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="mixture_fraction_roe" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="mixture_fraction_up" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="constant">
+            <constant>0.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+      <Turbulence model="none"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.18</density>
+        </table>
+      </Properties>
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>1.0e-10</tolerance>
+            <solver>cg</solver>
+            <preconditioner>jacobi</preconditioner>
+            <precond_maxiters> 2  </precond_maxiters>
+            <maxiterations>250</maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

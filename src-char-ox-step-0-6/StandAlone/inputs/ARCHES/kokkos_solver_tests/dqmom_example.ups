@@ -1,0 +1,265 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-3</delt_min>
+    <delt_max>1e-3</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>5</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>dqmom_example.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="x-mom_RHS"/>
+    <save label="x-mom_x_flux"/>
+    <save label="x-mom_y_flux"/>
+    <save label="x-mom_z_flux"/>
+    <save label="phi"/>
+    <save label="pressure"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="ucell_yvel"/>
+    <save label="ucell_zvel"/>
+    <save label="ucell_xvel"/>
+    <save label="gamma"/>
+    <save label="b_press"/>
+    <save label="A_press"/>
+    <save label="raw_coal_qn0"/>
+    <save label="raw_coal_qn1"/>
+    <save label="raw_coal_qn2"/>
+    <save label="raw_coal_qn3"/>
+    <save label="raw_coal_qn4"/>
+    <save label="raw_coal_0"/>
+    <save label="raw_coal_1"/>
+    <save label="raw_coal_2"/>
+    <save label="raw_coal_3"/>
+    <save label="raw_coal_4"/>
+    <save label="length_qn0"/>
+    <save label="length_qn1"/>
+    <save label="length_qn2"/>
+    <save label="length_qn3"/>
+    <save label="length_qn4"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="length_2"/>
+    <save label="length_3"/>
+    <save label="length_4"/>
+    <save label="up_0"/>
+    <save label="up_1"/>
+    <save label="up_2"/>
+    <save label="up_3"/>
+    <save label="up_4"/>
+    <save label="up_qn0"/>
+    <save label="up_qn1"/>
+    <save label="up_qn2"/>
+    <save label="up_qn3"/>
+    <save label="up_qn4"/>
+    <save label="vp_0"/>
+    <save label="vp_1"/>
+    <save label="vp_2"/>
+    <save label="vp_3"/>
+    <save label="vp_4"/>
+    <save label="vp_qn0"/>
+    <save label="vp_qn1"/>
+    <save label="vp_qn2"/>
+    <save label="vp_qn3"/>
+    <save label="vp_qn4"/>
+    <save label="wp_0"/>
+    <save label="wp_1"/>
+    <save label="wp_2"/>
+    <save label="wp_3"/>
+    <save label="wp_4"/>
+    <save label="wp_qn0"/>
+    <save label="wp_qn1"/>
+    <save label="wp_qn2"/>
+    <save label="wp_qn3"/>
+    <save label="wp_qn4"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="w_4"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="w_qn2"/>
+    <save label="w_qn3"/>
+    <save label="w_qn4"/>
+    <save label="w_qn0_RHS"/>
+    <save label="w_qn1_RHS"/>
+    <save label="w_qn2_RHS"/>
+    <save label="w_qn3_RHS"/>
+    <save label="w_qn4_RHS"/>
+    <save label="raw_coal_qn0_RHS"/>
+    <save label="raw_coal_qn1_RHS"/>
+    <save label="raw_coal_qn2_RHS"/>
+    <save label="raw_coal_qn3_RHS"/>
+    <save label="raw_coal_qn4_RHS"/>
+    <save label="char_mass_qn0"/>
+    <save label="char_mass_qn1"/>
+    <save label="char_mass_qn2"/>
+    <save label="char_mass_qn3"/>
+    <save label="char_mass_0"/>
+    <save label="char_mass_1"/>
+    <save label="char_mass_2"/>
+    <save label="char_mass_3"/>
+    <save label="char_mass_4"/>
+    <save label="char_mass_qn0_RHS"/>
+    <save label="char_mass_qn1_RHS"/>
+    <save label="char_mass_qn2_RHS"/>
+    <save label="char_mass_qn3_RHS"/>
+    <save label="char_mass_qn4_RHS"/>
+    <checkpoint cycle="2" interval="1e-3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties> 
+        <model label="my_constant_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <convection scheme="central"/>
+        <inviscid/>
+        <initialize u = "1.0" v = "0.0" w = "0.0" />
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <eqn label="phi">
+            <convection scheme="superbee"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="length" role="size"/>
+          <variable label="up" role="uvel"/>
+          <variable label="vp" role="vvel"/>
+          <variable label="wp" role="wvel"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <ParticleModels>
+        <model label="a_model" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[1,2,3,4,5]</constant>
+        </model>
+        <model label="PFV" type="particle_face_velocity">
+          <grid independent_type="CC" dependent_type="CC"/>
+        </model>
+      </ParticleModels>
+      <DQMOM>
+        <write_input_with_dqmom_eqns>dqmom_example_fragment.xml</write_input_with_dqmom_eqns>
+        <number_quad_nodes>5</number_quad_nodes>
+        <kokkos_translate/>
+        <diffusion  scheme="central" D_label="gamma"/>
+        <convection scheme="upwind"/>
+        <Weights>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.01"/>
+            <env_constant qn="1" value="1.01"/>
+            <env_constant qn="2" value="2.01"/>
+            <env_constant qn="3" value="3.01"/>
+            <env_constant qn="4" value="4.01"/>
+          </initialization>
+          <scaling_const>[2,2,2,2,2]</scaling_const>
+        </Weights>
+        <Ic label="raw_coal">
+          <model label="a_model"/>
+        </Ic>
+        <Ic label="char_mass"/>
+        <Ic label="length">
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.01"/>
+            <env_constant qn="1" value="1.01"/>
+            <env_constant qn="2" value="2.01"/>
+            <env_constant qn="3" value="3.01"/>
+            <env_constant qn="4" value="4.01"/>
+          </initialization>
+        </Ic>
+        <Ic label="up">
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1"/>
+            <env_constant qn="1" value="1"/>
+            <env_constant qn="2" value="1"/>
+            <env_constant qn="3" value="1"/>
+            <env_constant qn="4" value="1"/>
+          </initialization>
+        </Ic>
+        <Ic label="vp"/>
+        <Ic label="wp"/>
+        <Ic label="pE"/>
+        <Ic label="particle_max_temp">
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1000"/>
+            <env_constant qn="1" value="1000"/>
+            <env_constant qn="2" value="1000"/>
+            <env_constant qn="3" value="1000"/>
+            <env_constant qn="4" value="1000"/>
+          </initialization>
+        </Ic>
+      </DQMOM>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver/>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

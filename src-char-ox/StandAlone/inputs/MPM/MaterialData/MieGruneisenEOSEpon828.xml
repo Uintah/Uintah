@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Epon 828 -->
+<!-- At density: 1.20 g/cm^3 -->
+<!-- From: Austin, R.A., McDowell, D.L., Benson, D.J. Numerical
+           simulation of shock wave propagation in spatially-
+		   resolved particle systems. Modelling Simul. Mater. Sci.
+		   Eng. 14, 2006, pp 537-561.
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0>       2.60  </C_0>
+    <Gamma_0>   2.18 </Gamma_0>
+    <S_alpha>   1.59 </S_alpha>
+    <S_2>       0.0  </S_2>
+    <S_3>       0.0  </S_3>
+  </equation_of_state>
+</Uintah_Include>
+

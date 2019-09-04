@@ -1,0 +1,13 @@
+"V1" "V2"
+"Sample" "Mason sand #052212-006"
+"Strain rate" "424/s"
+"Moisture content" "0% (dry)"
+"Initial density" "1.70 g/cc"
+"Note, time is in unit of second; stresses are in unit of MPa." ""
+"sample is cylinder in 0.408 L x 0.500 D." ""
+"SHPB bar diameter is 3/4, made of steel, Young's modulus as 200 GPa, 
+Steel sleeve has ID 0.50 and OD 1.0, made of steel, same modulus and 0.29 Poisson's ratio.
+
+The data format is in the following collumn as:
+Time, Axial strain (incident), Axial strain (reflected), Axial strain (transmitted), Hoop strain (sleeve), Axial strain(computed), Axial stress (computed), mean stress (computed), Shear stress (computed).
+" ""

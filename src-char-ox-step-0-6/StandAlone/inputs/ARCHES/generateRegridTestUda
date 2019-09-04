@@ -1,0 +1,167 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+#  This script regenerates the regridTestArches.uda used by the
+#  regression testing checkpoints restarting mechanism
+#
+#   localRT Instructions:
+#     cd <build>/StandAlone
+#
+#     run the script
+#
+#     inputs/ARCHES/generateRegridTestUda
+#
+#     mkdir -p CheckPoints/ARCHES/regridTestArches
+#
+#     cp -r regridTestArches.uda.000 /CheckPoints/ARCHES/regridTestArches
+#
+#   Nightly RT Instructions
+#
+#     cd /home/csafe-tester/Linux/last_ran.lock/opt/build/StandAlone
+#
+#     run the script
+#
+#     inputs/ARCHES/generateRegridTestUda
+#
+#     cp -r regridTestArches.uda.000 ~csafe-tester//CheckPoints/ARCHES/regridTestArches
+#
+#    It will modify the input file, run it and modify the input.xml file
+#    appropriately.
+#______________________________________________________________________
+
+set ups     = "methane_fire_8patch.ups"
+set patches = "[1,1,1]"
+set uda     = "regridTestArches.uda"
+set SUS     = "mpirun -np 1 ./sus $ups"
+
+
+#______________________________________________________________________
+# bulletproofing
+
+set tmp = (`which xmlstarlet`)cd 
+if ( $status ) then
+  echo ""
+  echo " ERROR: Could not find the xml editing program xmlstarlet.  Make sure that it's installed and in your path"
+  echo ""
+  exit(-1)
+endif
+
+
+if ( ! -e sus && ! -d inputs ) then
+  echo ""
+  echo " ERROR: You must execute this script in the opt/build/StandAlone directory"
+  echo ""
+  exit(-1)
+endif
+
+
+#__________________________________
+# Modify the input file
+
+cp inputs/ARCHES/$ups .
+
+if ( ! -e $ups ) then
+  echo ""
+  echo " ERROR: Could not find the xml file ($ups) to edit."
+  echo ""
+  exit(-1)
+endif
+
+# now change the number of patches
+xmlstarlet edit --inplace --update "Uintah_specification/Grid/Level/Box/patches" --value "$patches"  $ups
+@ s = $status
+
+# Change the output uda name
+xmlstarlet edit --inplace --update "Uintah_specification/DataArchiver/filebase" --value "$uda" $ups
+@ s = $s + $status
+
+# change the checkpoint output interval
+sed -i s/interval=\"0.02\"/timestepInterval=\"3\"/g $ups
+@ s = $s + $status
+
+if( $s ) then
+  echo " $s"
+  echo " ERROR there was a problem editing the xml file.  No changes have been make"
+  echo ""
+  exit(-1)
+endif
+
+#mv tmp2 $ups
+#/bin/rm tmp*
+
+#__________________________________
+echo "__________________________________"
+echo " Successfully modified the input file $ups"
+echo ""
+echo "__________________________________"
+echo " Now running it ( $SUS )"
+echo ""
+
+$SUS
+
+#__________________________________
+if( $status ) then
+  echo " $s"
+  echo " ERROR there was a problem running the inputfile $ups"
+  echo ""
+  exit(-1)
+endif
+
+#__________________________________
+echo ""
+echo "__________________________________"
+echo " Now modifying $uda/input.xml"
+echo ""
+
+cat > spec << fin
+  <!--__________________________________-->
+  <AMR>
+    <Regridder type="SingleLevel">
+      <regrid_once>               true      </regrid_once>
+      <max_levels>                   1      </max_levels>
+      <new_patch_layout>          [2,2,2]   </new_patch_layout>
+      <cell_refinement_ratio>    [[1,1,1]]  </cell_refinement_ratio>
+    </Regridder>
+    <useLockStep> true </useLockStep>
+  </AMR>
+  <!--__________________________________-->
+fin
+
+sed -i.orginal '/<Uintah_specification>/r spec' $uda/input.xml 
+@ s = $status
+
+# change the checkpoint output interval
+sed -i s/timestepInterval=\"3\"/timestepInterval=\"1\"/g $uda/input.xml
+@ s = $s + $status
+
+
+# change the grid spec
+xmlstarlet edit --inplace --insert "Uintah_specification/Grid" --type attr -n doAMR --value true $uda/input.xml
+@ s = $s + $status
+
+if( $s ) then
+  echo " $s"
+  echo " ERROR modifying the $uda/input.xml"
+  echo ""
+  exit(-1)
+endif
+
+chmod -R ugo+rw regridTestArches.uda/
+
+#__________________________________
+echo "__________________________________"
+echo " SUCCESS!  You're almost done."
+echo ""
+echo ""
+echo " Now copy regridTestArches.uda.000 to "
+echo ""
+echo "  <startPath>/CheckPoints/ARCHES/regridTestArches"
+echo ""
+echo " You may want to keep the old uda for posterity"
+echo ""
+
+
+/bin/rm spec
+exit
+
+

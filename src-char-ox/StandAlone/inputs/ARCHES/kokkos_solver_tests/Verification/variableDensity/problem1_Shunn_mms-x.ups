@@ -1,0 +1,218 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>problem1 of Shunn et al. </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1.0</timestep_multiplier>
+    <!--max_Timesteps>3</max_Timesteps-->
+  </Time>
+  <DataArchiver>
+    <filebase>x-problem1_Shunn_mms.uda</filebase>
+    <!--outputInterval>0.1</outputInterval-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <save label="x_mms"/>
+    <save label="x_mms_rho_u"/>
+    <save label="x_mms_scalar"/>
+    <save label="x_mms_rho_scalar"/>
+    <save label="x_mms_rho"/>
+    <save label="x_mms_rho_face"/>
+    <save label="x_mms_drhodt"/>
+    <save label="drhodt"/>
+    <!--save label="drhodt2"/-->
+    <save label="x_mms_source_scalar"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="x-mom_RHS"/>
+    <save label="x-mom_x_flux"/>
+    <save label="x-mom_y_flux"/>
+    <save label="x-mom_z_flux"/>
+    <save label="y-mom_x_flux"/>
+    <save label="y-mom_y_flux"/>
+    <save label="y-mom_z_flux"/>
+    <save label="z-mom_x_flux"/>
+    <save label="z-mom_y_flux"/>
+    <save label="z-mom_z_flux"/>
+    <save label="rho_phi"/>
+    <save label="phi"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="ucell_yvel"/>
+    <save label="ucell_zvel"/>
+    <save label="ucell_xvel"/>
+    <save label="gamma"/>
+    <save label="density"/>
+    <save label="density_star"/>
+    <!--save label="density_exact"/-->
+    <save label="continuity_balance"/>
+    <save label="b_press"/>
+    <save label="pressure"/>
+    <save label="A_press"/>
+    <save label="gridX"/>
+    <save label="ucellX"/>
+    <checkpoint cycle="2" interval=".3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[2.0,0.1,0.1]</upper>
+        <resolution>[96,4,4]</resolution>
+        <extraCells>[1,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!--Face side="x-" type="Velocity"-->
+      <Face side="x-" type="Inlet">
+        <BCType var="Custom" label="x-mom" type="velocity">
+        <!--BCType var="Dirichlet" label="x-mom"-->
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0</value>
+        </BCType>
+        <!--BCType var="Custom" label="phi" type ="MMS_shunn">
+          <value>1.0</value>
+          <rho0>20.0</rho0>
+          <rho1>1.0</rho1>
+          <coordinates x="gridX" />
+        </BCType-->
+      </Face>
+      <Face side="x+" type="Outflow">
+        <BCType var="Neumann" label="x-mom">
+        <!--BCType var="Custom" label="x-mom" type="velocity_outlet"-->
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <!--model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model-->
+
+        <!--model label="Guess_density" type="density_predictor_Shunn">
+          <use_exact_guess/>
+          <mixture_fraction label="rho_phi"/>
+          <guess_density label="exact_density"/>
+        </model-->
+
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>0.03</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties>
+        <model label= "comp_density" type = "coldflow" >
+          <property label = "density" stream_0 = "1.0" stream_1 = "20.0" >
+            <volumetric/>
+          </property>
+          <mixture_fraction label = "phi"/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <!--drhodt label="x_mms_drhodt"/-->
+        <convection scheme="central"/>
+        <!--inviscid/-->
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <Initialization>
+        <task task_label="u-init" variable_label="uVel" type="shunn_mms">
+          <variable type="FX"/>
+          <which_vel>u</which_vel>
+          <grid x="ucellX"/>
+          <which_density label="density" />
+        </task>
+        <!--task task_label="x-mom-init" variable_label="uVel" type="shunn_mms">
+          <variable type="FX"/>
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" />
+        </task-->
+        <task task_label="phi-init" variable_label="phi" type="shunn_mms">
+          <variable type="CC"/>
+          <which_vel>p</which_vel>
+          <grid x="gridX"/>
+        </task>
+      </Initialization>
+      <SourceV2>
+        <src label="x_mms" type="MMS_Shunn">
+          <variable type="FX"/>
+          <grid x_face ="ucellX"  x ="gridX"/>
+        </src>
+      </SourceV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <diffusion_coef label="gamma"/>
+          <eqn label="phi">
+            <convection scheme="central"/>
+            <src label="x_mms_source_scalar"/>
+            <diffusion scheme ="central"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver/>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+   <ParticleProperties type="coal">
+      <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution><!-- [m] -->
+      <!--particle_weights>[0.574,0.263,0.163]</particle_weights--><!-- [mass fractions of each particle size] -->
+      <density>1300.0</density><!-- [kg/m^3] -->
+      <temperature>300.0</temperature><!-- initial particle temperature [K] -->
+      <ultimate_analysis>
+        <C>0.6674982537</C>
+        <H>0.0450054885</H>
+        <O>0.1357149985</O>
+        <N>0.0116754815</N>
+        <S>0.0035924558</S>
+        <CHAR>0.0000000000</CHAR>
+        <ASH>0.0786348668</ASH>
+        <H2O>0.0578784552</H2O>        
+      </ultimate_analysis>
+      <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy><!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
+      <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
+      <ash_enthalpy>-9.5686e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
+      <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
+      <!-- Yamamto 1 step rate coefficients in the following order:  -->
+      <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
+      <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
+      <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+      <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
+      <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
+      <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+      <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
+      <FOWYDevol>
+        <v_hiT>6.042e-01</v_hiT>
+        <A>19724227.36</A>
+        <Ta>1.113e4</Ta>
+        <Tbp_graphite>3e3</Tbp_graphite>
+        <T_mu>1100.0</T_mu>
+        <T_sigma>250.0</T_sigma>
+        <T_hardened_bond>1800.0</T_hardened_bond>
+        <sigma>8.258e2</sigma>
+      </FOWYDevol>
+      <ShaddixChar>
+        <As> 344.0 </As>
+        <Es> 45.5e3 </Es>
+        <n> 0.18 </n>
+      </ShaddixChar>
+  </ParticleProperties>
+</Uintah_Include>
+
+
+

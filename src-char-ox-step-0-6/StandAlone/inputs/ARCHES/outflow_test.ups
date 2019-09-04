@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Uintah_specification>
+  <Meta>
+   </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>         10.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.00001     </delt_min>
+    <delt_max>        0.01        </delt_max>
+    <max_Timesteps>   50          </max_Timesteps>
+    <timestep_multiplier>0.35     </timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>outflow_test.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="vorticity"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.01"/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="my world">
+        <lower>       [0,-2,-0.1]   </lower>
+        <upper>       [4,2,0.1]   </upper>
+        <resolution>  [320,160,2]</resolution>
+        <extraCells>  [1,1,0]   </extraCells>
+        <patches>     [2,2,1]   </patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face rectangle="x-" lower="0 -.1 -.1" upper="0 .1 .1" name="doineedthis">
+        <BCType label="inlet" var="VelocityInlet">
+          <value>[0.1,0,0]</value>
+        </BCType>
+      </Face>
+      <Face side="x-" name="myx-">
+        <BCType label="backwall" var="WallBC">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="myy-">
+        <BCType label="y- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="myy+">
+        <BCType label="y+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <!-- Outlet -->
+      <Face side="x+" name="myx+">
+        <!-- Momentum BCs -->
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>         [0,0,0]    </gravity>
+    <reference_point>       [1,1,1]    </reference_point>
+    <viscosity>       1.790e-5      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions/>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

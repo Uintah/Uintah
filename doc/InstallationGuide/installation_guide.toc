@@ -1,0 +1,34 @@
+\contentsline {section}{\numberline {1}Overview of Uintah}{3}{section.1}
+\contentsline {subsection}{\numberline {1.1}Obtaining the Code}{3}{subsection.1.1}
+\contentsline {section}{\numberline {2}Installation Overview}{3}{section.2}
+\contentsline {section}{\numberline {3}Generic Library Dependencies}{3}{section.3}
+\contentsline {section}{\numberline {4}OS Version Dependencies}{4}{section.4}
+\contentsline {subsection}{\numberline {4.1}Debian \& Ubuntu Dependencies}{4}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Fedora Core Dependencies}{5}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}CentOS Dependencies}{5}{subsection.4.3}
+\contentsline {subsubsection}{\numberline {4.3.1}Boost}{6}{subsubsection.4.3.1}
+\contentsline {subsubsection}{\numberline {4.3.2}CMake}{6}{subsubsection.4.3.2}
+\contentsline {subsection}{\numberline {4.4}OpenSuse Dependencies}{6}{subsection.4.4}
+\contentsline {subsection}{\numberline {4.5}MacOSX Dependencies}{6}{subsection.4.5}
+\contentsline {section}{\numberline {5}Hypre Installation -- Required}{7}{section.5}
+\contentsline {subsection}{\numberline {5.1}Fedora \& CentOS}{7}{subsection.5.1}
+\contentsline {subsection}{\numberline {5.2}OpenSuse}{8}{subsection.5.2}
+\contentsline {section}{\numberline {6}PETSc Installation -- Optional}{8}{section.6}
+\contentsline {subsection}{\numberline {6.1}Fedora \& CentOS}{8}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}OpenSuse}{9}{subsection.6.2}
+\contentsline {section}{\numberline {7}Configuring and Building Uintah}{9}{section.7}
+\contentsline {subsection}{\numberline {7.1}Configure}{9}{subsection.7.1}
+\contentsline {subsubsection}{\numberline {7.1.1}Other configure options}{11}{subsubsection.7.1.1}
+\contentsline {subsubsection}{\numberline {7.1.2}Common Configure Lines}{12}{subsubsection.7.1.2}
+\contentsline {paragraph}{Debian \& Ubuntu}{12}{section*.2}
+\contentsline {paragraph}{Fedora \& CentOS}{12}{section*.3}
+\contentsline {paragraph}{OpenSuse}{12}{section*.4}
+\contentsline {paragraph}{MacOSX}{12}{section*.5}
+\contentsline {subsection}{\numberline {7.2}Build}{13}{subsection.7.2}
+\contentsline {section}{\numberline {8}Installing VisIt}{13}{section.8}
+\contentsline {subsection}{\numberline {8.1}VisIt Installation}{13}{subsection.8.1}
+\contentsline {subsubsection}{\numberline {8.1.1}Caveats}{13}{subsubsection.8.1.1}
+\contentsline {subsubsection}{\numberline {8.1.2}Using the ``build\_visit'' Script to Build VisIt}{14}{subsubsection.8.1.2}
+\contentsline {subsubsection}{\numberline {8.1.3}VisIt executable}{16}{subsubsection.8.1.3}
+\contentsline {subsubsection}{\numberline {8.1.4}Remote visualization}{16}{subsubsection.8.1.4}
+\contentsline {subsubsection}{\numberline {8.1.5}Host Profile}{16}{subsubsection.8.1.5}

@@ -1,0 +1,153 @@
+#!/bin/csh
+#______________________________________________________________________
+#  This script parses the output file from sus and exectimes.* to
+#  generate data files used for scaling plots
+#
+#  It computes the mean time per timestep and the average 
+#  TaskWaitCommTime, TaskExec, TaskWaitThreadTime and gathers
+#  Task:Ray::rayTrace data
+# 
+#  usage:
+#      extractScalingData  <sus_output.1, exectimes.1 >
+#  
+#______________________________________________________________________
+
+if ( $#argv < 1 ) then
+  echo "    Usage:  extractScalingData  <sus_output.1, exectimes.1 >"
+  exit
+endif
+
+#__________________________________
+# DEFAULTS:  Edit these
+set startTimestep     = "3"
+set endTimestep       = "10" # timestep to extract elapsed time from
+#__________________________________
+
+set out = ($argv)
+
+set here = .tmpFiles
+
+/bin/rm  -rf $here  >& /dev/null
+mkdir $here
+touch $here/data
+
+
+#___________________________
+# Parse each sus output file
+#___________________________ 
+
+foreach X ( $out[*] )
+
+  grep -q "Timestep $endTimestep" $X
+  
+  # Ensure that the final timestep exists
+  if ($status == 0 ) then
+    echo $X > $here/file
+
+            # Include the recompile time in the output
+    grep "(using MPI)" $X   | awk -F " " '{print $2}' > $here/ranks
+
+    # Incorporate the contribution from startTimestep into elap T averages
+    if ($startTimestep == 0) then
+      # Hackery to 0 the start time
+      grep "Timestep $startTimestep" $X | awk -F "=" '{print 4}' | cut -d " " -f1 > $here/startTime
+    else
+      @ startMinus1 = $startTimestep - 1
+      grep "Timestep $startMinus1" $X | awk -F "=" '{print $4}' | cut -d " " -f1 > $here/startTime
+    endif
+
+    grep "Timestep $endTimestep"   $X | awk -F "=" '{print $4}' | cut -d " " -f1 > $here/endTime
+
+    paste -d " " $here/file $here/ranks $here/startTime $here/endTime >> $here/data
+
+    echo "working on $X"
+  else
+
+    # Silence output when checking an exectimes.* file
+    grep -q "rayTrace" $X
+
+    if ($status != 0 ) then
+      echo "---------------------$X did not run to completion"
+    endif
+  endif
+  
+end
+
+
+#_______________________________________
+# Compute the avgMean for timesteps 1-10
+#_______________________________________
+
+@ n = $endTimestep - $startTimestep
+@ n = $n + 1
+echo " Computing the average mean time per timestep for timesteps $startTimestep to $endTimestep"
+echo "%file ranks startTime endTime avgMean">$here/data.1
+
+awk -v nSteps=$n '{print ($4-$3)/nSteps}' $here/data >> $here/avgMeanTime
+
+paste -d " " $here/data $here/avgMeanTime >> $here/data.1
+sort -n -k1 $here/data.1 | column -t > scalingData
+
+more scalingData
+
+
+#___________________________________________________________
+# Compute the TaskExec, TasLocalComm, and TaskWaitThreadTime
+# averages for timesteps 1-10
+#___________________________________________________________
+
+set these = `grep --files-with-matches "loopTime" $out`
+
+if ( $#these != 0 ) then
+
+  echo " Computing the averages for the SCI_DEBUG: ComponentTimings variables for timesteps $startTimestep to $endTimestep."
+
+  foreach X ( $out[*] )
+
+    # Include the recompile time in the output
+    grep "(using MPI)" $X   | awk -F " " '{print $2}' > $here/ranks
+
+    grep -q "loopTime" $X
+
+    if ($status == 0 ) then
+      grep -q "Timestep $endTimestep" $X
+
+      # Ensure that the final timestep exists
+      if ($status == 0 ) then  
+        echo $X > $here/file
+
+        # Extract the output between the start and ending timesteps
+        @ endPlus1 = $endTimestep + 1
+        sed -n /"Timestep $startTimestep"/,/"Timestep $endPlus1"/p $X > $here/out.clean
+        set me = $here/out.clean
+
+        grep loopTime $me     | cut -d ":" -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/avg.loop
+        grep "Memory Use" $me | cut -d "=" -f6 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/avg.mem
+        grep upTime $me       | cut -d ":" -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/avg.up
+        grep downTime $me     | cut -d ":" -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/avg.down
+        paste -d " " $here/file $here/ranks $here/avg.loop $here/avg.mem $here/avg.up $here/avg.down >> $here/avgComponentTimes
+
+        echo "working on $X"
+
+      else
+
+        # Silence output when checking an exectimes.* file
+        grep -q "rayTrace" $X
+
+        if ($status != 0 ) then
+          echo "---------------------$X did not run to completion"
+        endif
+      endif
+    endif   # 
+  end  # loop over files
+
+  #  header
+  echo "%file ranks avgLoop avgMem avgUp avgDown" > $here/avgComponentTimes.1
+  sort -n -k1 $here/avgComponentTimes >>  $here/avgComponentTimes.1
+  column -t $here/avgComponentTimes.1 > avgComponentTimes
+
+  more avgComponentTimes
+endif
+
+/bin/rm -rf $here
+exit

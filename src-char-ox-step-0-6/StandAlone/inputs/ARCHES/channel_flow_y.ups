@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Laminar Channel Flow</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>21</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>channel_flow_y.uda</filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="volFraction"/>
+    <save label="CCVelocity"/>
+    <save label="densityCP"/>
+    <save label="continuityResidual"/>
+    <save label="pressurePS"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <MPM>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>linear</interpolator>
+  </MPM>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="y-" name="y- face">
+        <BCType label="velocity inlet" var="MassFlowInlet">
+          <value>0.01</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="the outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" name="x- wall">
+        <BCType label="ymwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="ypwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="zmwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="zpwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,6,1]</upper>
+        <resolution>[10,60,10]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[1,1,1]</reference_point>
+    <viscosity>0.001000</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <determines_properties/>
+          <D_mol_constant value="0.001"/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>1.00</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>1.0e-16</tolerance>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
+            <maxiterations>250</maxiterations>
+            <relax_type>2</relax_type>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <Uintah_specification> 
+    <FVM                   spec="OPTIONAL NO_DATA">
+      <delt                spec="REQUIRED DOUBLE 'positive'" />
+      <Parameters          spec="OPTIONAL NO_DATA"                                           
+                             attribute1="variable OPTIONAL STRING
+                                        'electrostatic_solver,
+                                         gauss1_solver'" >
+        <initial_tolerance spec="OPTIONAL DOUBLE 'positive'"/>
+        <criteria          spec="OPTIONAL STRING 'Absolute relative'" />                     
+        <jump              spec="OPTIONAL INTEGER" />                                        
+        <logging           spec="OPTIONAL INTEGER 'positive'" />                             
+        <maxiterations     spec="OPTIONAL INTEGER 'positive'" />                             
+        <norm              spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+        <npost             spec="OPTIONAL INTEGER" />                                        
+        <npre              spec="OPTIONAL INTEGER" />                                        
+        <preconditioner    spec="OPTIONAL STRING 'none, pfmg, smg'" />                            
+        <outputEquations   spec="OPTIONAL BOOLEAN" />                                        
+        <skip              spec="OPTIONAL INTEGER" />                                        
+        <setupFrequency    spec="OPTIONAL INTEGER" />                                        
+        <updateCoefFrequency  spec="OPTIONAL INTEGER" />          
+        <solveFrequency    spec="OPTIONAL INTEGER" />                                                  
+        <solver            spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                         
+        <tolerance         spec="REQUIRED DOUBLE 'positive'" /> 
+        <relax_type        spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
+      </Parameters>
+      <unit_charge         spec="OPTIONAL DOUBLE"/>
+    </FVM>
+    
+    <ESMPM                  spec="OPTIONAL NO_DATA">
+      <conductivity_model   spec="REQUIRED STRING 'ivd'" />                               
+    </ESMPM>
+  </Uintah_specification>
+
+  <MaterialProperties>
+    <FVM               spec="OPTIONAL NO_DATA">
+      <material        spec="MULTIPLE NO_DATA" attribute1="name OPTIONAL STRING" >
+        <geom_object   spec="MULTIPLE" />
+      </material>
+    </FVM>
+  </MaterialProperties>
+
+  <AMR>
+    <FVM   spec="OPTIONAL NO_DATA" >
+    </FVM>
+  </AMR>
+
+  
+</Uintah_Include>

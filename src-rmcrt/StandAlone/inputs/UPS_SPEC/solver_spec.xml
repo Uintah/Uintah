@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<!--____________________________________________________________________-->
+<!--  This file contains all the ups specs needed for the solvers       -->
+<!--  in CCA/Compoents/Solvers.                                         -->
+<!--____________________________________________________________________-->
+
+<Uintah_Include>
+
+<Parameters            spec="OPTIONAL NO_DATA"
+                                 attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+  <criteria            spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />
+  <initial_tolerance   spec="OPTIONAL DOUBLE 'positive'"/>
+  <jump                spec="OPTIONAL INTEGER" />
+  <logging             spec="OPTIONAL INTEGER 'positive'" />
+  <maxiterations       spec="OPTIONAL INTEGER 'positive'" />
+  <norm                spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />
+  <npost               spec="OPTIONAL INTEGER" />
+  <npre                spec="OPTIONAL INTEGER" />
+  <outputEquations     spec="OPTIONAL BOOLEAN" />
+  <preconditioner      spec="OPTIONAL STRING 'none, pfmg, smg,, sparsemsg,jacobi,diagonal'" />
+  <precond_maxiters    spec="OPTIONAL INTEGER 'positive'" />
+  <precond_tolerance   spec="OPTIONAL DOUBLE" />
+  <relax_type          spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
+  <setupFrequency      spec="OPTIONAL INTEGER" />
+  <skip                spec="OPTIONAL INTEGER" />
+  <solveFrequency      spec="OPTIONAL INTEGER" />
+  <solver              spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, PCG, pcg, Hybrid, hybrid, GMRES, gmres amg'" />
+  <tolerance           spec="REQUIRED DOUBLE 'positive'" />
+  <updateCoefFrequency spec="OPTIONAL INTEGER" />
+
+</Parameters>
+
+</Uintah_Include>

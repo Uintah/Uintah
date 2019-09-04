@@ -1,0 +1,343 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of the intrusions with fluxing boundaries</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>4.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>400</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>hot_handoff_intrusion_test.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="cellType"/>
+    <save label="areaFraction"/>
+    <save label="CCVelocity"/>
+    <save label="cellType"/>
+    <save label="continuityResidual"/>
+
+    <!-- Table Variables -->
+    <!-- iv's -->
+    <save label="mixture_fraction"/>
+    <save label="mixture_fraction_2"/>
+    <save label="heat_loss"/>
+    <save label="enthalpy"/>
+
+    <!-- dv's -->
+    <save label="density" table_lookup="true"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="volFraction"/>
+
+    <!-- other -->
+    <save label="pos_source"/>
+    <checkpoint cycle="2" interval="0.0001"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="x- wall">
+        <BCType label="bottom_wall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="y-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="y+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="z-pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="z+pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction_2" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[25,25,25]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="third"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <determines_properties/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <src label="pos_source">
+            <weight>1.0</weight>
+          </src>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="mixture_fraction_2" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+          <src label="pos_source">
+            <weight>-1.0</weight>
+          </src>
+        </Eqn>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>upwind</conv_scheme>
+          <determines_properties/>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <!--<src label="div_q"/>-->
+        </Eqn>
+        <Sources>
+          <src label="pos_source" type="westbrook_dryer">
+            <A>4e9</A>
+            <E_R>24358</E_R>
+            <m>-0.3</m>
+            <n>1.3</n>
+            <fp_label>mixture_fraction_2</fp_label>
+            <eta_label>mixture_fraction</eta_label>
+            <flammability_limit>
+              <const_diluent>0.0</const_diluent>
+              <lower slope="0.046" intercept="0.015"/>
+              <upper slope="-0.286" intercept="0.089"/>
+            </flammability_limit>
+            <hot_spot>
+              <geom_object>
+                <box>
+                  <min>[.5,.6,.6]</min>
+                  <max>[.7,1,1]</max>
+                </box>
+              </geom_object>
+              <start_time>0.0</start_time>
+              <stop_time>1.0</stop_time>
+              <temperature>1800</temperature>
+            </hot_spot>
+          </src>
+         </Sources>
+      </TransportEqns>
+      <Turbulence model="compdynamicprocedure"/>
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state eta="0.0" fp="0.0" hl="0.0"/>
+          <rcce eta_label="mixture_fraction" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_gogolek.mix.gz</inputfile>
+        </table>
+      </Properties>
+      <PropertyModels>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+      </PropertyModels>
+      <BoundaryConditions>
+        <intrusions>
+          <intrusion label="stack_1">
+            <geom_object>
+              <box>
+                <min>[-1.0,.6,.6]</min>
+                <max>[.5,1,1]</max>
+              </box>
+            </geom_object>
+            <flux_dir>x+</flux_dir>
+            <velocity type="from_file">
+              <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_velocity.dat</input_file>
+              <relative_xyz>[0,.8,.8]</relative_xyz>
+            </velocity>
+            <scalars>
+              <scalar label="mixture_fraction_2" type="from_file">
+                <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_scalar.dat</input_file>
+                <relative_xyz>[0,.8,.8]</relative_xyz>
+              </scalar>
+              <scalar label="mixture_fraction" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="heat_loss" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="enthalpy" type="tabulated">
+                <depend_varname>adiabaticenthalpy</depend_varname>
+              </scalar>
+            </scalars>
+          </intrusion>
+          <intrusion label="stack_2">
+            <geom_object>
+              <box>
+                <min>[-1.0,1.2,1.2]</min>
+                <max>[.5,1.4,1.4]</max>
+              </box>
+            </geom_object>
+            <flux_dir>x+</flux_dir>
+            <velocity type="from_file">
+              <!-- Ignoring the non-normal components -->
+              <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_velocity.dat</input_file>
+              <relative_xyz>[0,1.3,1.3]</relative_xyz>
+            </velocity>
+            <scalars>
+              <scalar label="mixture_fraction_2" type="from_file">
+                <input_file>inputs/ARCHES/handoff/input/intrusion_test/handoff_scalar.dat</input_file>
+                <relative_xyz>[0,1.3,1.3]</relative_xyz>
+              </scalar>
+              <scalar label="mixture_fraction" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="heat_loss" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="enthalpy" type="tabulated">
+                <depend_varname>adiabaticenthalpy</depend_varname>
+              </scalar>
+            </scalars>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
