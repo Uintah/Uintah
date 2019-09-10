@@ -1164,14 +1164,14 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
-#if 1
-  // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-    ss++;
-  // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-    ss++;
-#endif
+  if (d_flags->d_ndim==3) {
+    // Check below (-z)
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
+      ss++;
+    // Check above (+z)
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
+      ss++;
+  }
 
   if(ss>0){
     return 1;
@@ -1203,16 +1203,21 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.),true))
     ss++;
-  // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
-    ss++;
-  // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
-    ss++;
+  if (d_flags->d_ndim==3) {
+    // Check below (-z)
+    if(!piece->inside(p-Vector(0.,0.,dxpp.z()),true))
+      ss++;
+    // Check above (+z)
+    if(!piece->inside(p+Vector(0.,0.,dxpp.z()),true))
+      ss++;
+  }
 
   if(ss>0){
     return 1.0;
+  } else {
+    return 0.0;
   }
+#if 0
   else {
     // Check to the left (-x)
     if(!piece->inside(p-Vector(2.0*dxpp.x(),0.,0.),true))
@@ -1262,4 +1267,5 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   } else {
     return 0.0;
   }
+#endif
 }

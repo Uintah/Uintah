@@ -40,91 +40,74 @@
 #include <vector>
 
 namespace Uintah {
-  
 
-/**************************************
 
-CLASS
-   lineExtract
-   
-GENERAL INFORMATION
-
-   lineExtract.h
-
-   Todd Harman
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-
-KEYWORDS
-   lineExtract
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
   class lineExtract : public AnalysisModule {
   public:
     lineExtract(const ProcessorGroup* myworld,
                 const MaterialManagerP materialManager,
                 const ProblemSpecP& module_spec);
-    
+
     lineExtract();
-                    
+
     virtual ~lineExtract();
-   
+
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
-                              
+
     virtual void outputProblemSpec(ProblemSpecP& ps){};
-                              
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
-                                    
+
     virtual void restartInitialize(){};
-                                    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
-   
+
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
-                                      
+
   private:
 
-    void initialize(const ProcessorGroup*, 
+    void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void createFile(std::string& filename, FILE*& fp);
-    
+
     void createDirectory(std::string& lineName, std::string& levelIndex);
-                    
-    
+
+    void printHeader( FILE*& fp,
+                      const Uintah::TypeDescription::Type myType);
+
+    template< class D, class V >
+    void fprintf_Arrays( FILE*& fp,
+                         const IntVector& c,
+                         const D&  doubleData,
+                         const V&  VectorData);
+
     // general labels
     class lineExtractLabel {
     public:
       VarLabel* lastWriteTimeLabel;
       VarLabel* fileVarsStructLabel;
     };
-    
+
     lineExtractLabel* ps_lb;
 
     struct line{
@@ -140,6 +123,7 @@ WARNING
     std::vector<VarLabel*> d_varLabels;
     std::vector<int>       d_varMatl;
     std::vector<line*>     d_lines;
+    int                    d_col_width = 16;    //  column width
 
     const Material  * d_matl;
     MaterialSet     * d_matl_set;

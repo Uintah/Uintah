@@ -121,7 +121,6 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   d_loadCurveIndex=0;
   d_switchCriteria = 0;
 
-  d_ndim = 0;
   d_fracture = false;
 
   // Diffusion related
@@ -872,7 +871,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,gan,NGP);
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
     t->requires(Task::NewDW,  lb->pExternalForceCorner2Label,gan,NGP);
@@ -936,7 +934,6 @@ void SerialMPM::scheduleComputeSSPlusVp(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   t->requires(Task::NewDW, lb->gVelocityLabel,                  gac,NGN);
 
@@ -963,7 +960,6 @@ void SerialMPM::scheduleComputeSPlusSSPlusVp(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                     gan, NGP);
   t->requires(Task::OldDW, lb->pMassLabel,                  gan, NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,               gan, NGP);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,    gan, NGP);
   t->requires(Task::NewDW, lb->pVelocitySSPlusLabel,        gan, NGP);
   t->requires(Task::NewDW, lb->gMassLabel,                  gac, NGN);
 
@@ -1150,7 +1146,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::NewDW,lb->pCurSizeLabel,              gan,NGP);
-//  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,   gan,NGP);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
@@ -1347,7 +1342,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
-//  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -2035,6 +2029,21 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 {
   particleIndex totalParticles=0;
 
+  const Level* level = getLevel(patches);
+  IntVector lowNode, highNode;
+  level->findInteriorNodeIndexRange(lowNode, highNode);
+
+  // Determine dimensionality for particle splitting
+  // To be recognized as 2D, must be in the x-y plane
+  // A 1D problem must be in the x-direction.
+  flags->d_ndim=3;
+  if(highNode.z() - lowNode.z()==2) {
+     flags->d_ndim=2;
+    if(highNode.y() - lowNode.y()==2) {
+       flags->d_ndim=1;
+    }
+  }
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2089,18 +2098,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   } // patches
 
-  const Level* level = getLevel(patches);
-  IntVector lowNode, highNode;
-  level->findInteriorNodeIndexRange(lowNode, highNode);
-  string interp_type = flags->d_interpolator_type;
-
-  // Determine dimensionality for particle splitting
-  // To be recognized as 2D, must be in the x-y plane
-  d_ndim=3;
-  if(highNode.z() - lowNode.z()==2) {
-     d_ndim=2;
-  }
-
   // Only allow axisymmetric runs if the grid is one cell
   // thick in the theta dir.
   if(flags->d_axisymmetric){
@@ -2116,6 +2113,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   // Bulletproofing for extra cells/interpolators/periodic BCs
   IntVector num_extra_cells=level->getExtraCells();
   IntVector periodic=level->getPeriodicBoundaries();
+  string interp_type = flags->d_interpolator_type;
   if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
     if(!flags->d_with_ice && !flags->d_with_arches){
       ostringstream msg;
@@ -2302,7 +2300,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       new_dw->get(psize,          lb->pCurSizeLabel,       pset);
-//      old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
 
       // JBH -- Scalar diffusion related
       constParticleVariable<double> pConcentration, pExternalScalarFlux;
@@ -2574,7 +2571,6 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
       old_dw->get(px,       lb->pXLabel,                         pset);
       new_dw->get(psize,    lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,    lb->pDeformationMeasureLabel,        pset);
 
       new_dw->allocateAndPut(pvelSSPlus,lb->pVelocitySSPlusLabel,    pset);
 
@@ -2639,7 +2635,6 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
       old_dw->get(px,         lb->pXLabel,                         pset);
       old_dw->get(pmass,      lb->pMassLabel,                      pset);
       new_dw->get(psize,      lb->pCurSizeLabel,                   pset);
-//      old_dw->get(pFOld,      lb->pDeformationMeasureLabel,        pset);
       new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       new_dw->get(gmass,      lb->gMassLabel,         dwi,patch,gac,NGP);
       new_dw->allocateAndPut(gvelSPSSP,   lb->gVelSPSSPLabel,   dwi,patch);
@@ -2713,7 +2708,6 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
       constParticleVariable<Point> czx;
       constParticleVariable<Vector> czforce;
       constParticleVariable<int> czTopMat, czBotMat;
-//      constParticleVariable<Matrix3> pDeformationMeasure;
 
       old_dw->get(czx,          lb->pXLabel,                          pset);
       new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
@@ -2997,7 +2991,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       new_dw->get(psize,   lb->pCurSizeLabel,                pset);
-//      old_dw->get(pFOld,   lb->pDeformationMeasureLabel,     pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -3807,7 +3800,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-//      old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
@@ -4794,13 +4786,13 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                 pSplitR1R2R3[pp]=1;
               } else if (R1_R2_ratSq < tV_invSq) {
                 pSplitR1R2R3[pp]=-1;
-              } else if (R1_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R1_R3_ratSq > tVSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=2;
-              } else if (R1_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R1_R3_ratSq < tV_invSq && flags->d_ndim==3){
                 pSplitR1R2R3[pp]=-2;
-              } else if (R2_R3_ratSq > tVSq && d_ndim==3){
+              } else if (R2_R3_ratSq > tVSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=3;
-              } else if (R2_R3_ratSq < tV_invSq && d_ndim==3){
+              } else if (R2_R3_ratSq < tV_invSq && flags->d_ndim==3){
                  pSplitR1R2R3[pp]=-3;
               } else {
                  pSplitR1R2R3[pp]=0;
@@ -4822,7 +4814,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
        }
       }  // Loop over original particles
 
-      int fourOrEight=pow(2,d_ndim);
+      int fourOrEight=pow(2,flags->d_ndim);
       if(splitForStretch){
         fourOrEight=4;
       }

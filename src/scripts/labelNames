@@ -1,0 +1,97 @@
+#! /bin/bash
+#
+#_____________________________________________________________________.
+#  This script spits out the variable names for the different components
+#   usage:    
+#     labelNames <ICE/MPMICE/Arches/MPMArches>
+#
+#_____________________________________________________________________.
+
+if [ $# -ne 1 ]; then
+    echo ""
+    echo "Usage:"
+    echo ""
+    echo "    labelNames <ICE | MPMICE | MPM | Arches> "
+    echo ""
+    echo "'`basename $0`' will display a list of VarLabel labels used in the"
+    echo "specified component.  Note, the list may not be exhaustive."
+    echo ""
+    exit
+fi
+
+component=$1
+
+dir=`pwd`
+
+if [ "`basename $dir`" != "src" ]; then
+    echo ""
+    echo "ERROR: `basename $0` must be run from the Uintah top level src/ directory."
+    echo ""
+    exit
+fi
+
+componentDir=$dir/CCA/Components
+
+if [ ! -d $componentDir/$component ]; then
+
+    echo ""
+    echo "ERROR: '$component' does not appear to exist in $componentDir."
+    echo "       Make sure capitalization exactly matches component."
+    echo ""
+    exit
+
+fi
+
+#__________________________________
+# set which label files to look at
+if [ "$component" == "ICE" ]; then
+    files=$componentDir/ICE/Core/ICELabel.cc
+
+elif [ "$component" == "MPMICE" ]; then
+    files="$componentDir/ICE/Core/ICELabel.cc $componentDir/MPMICE/Core/MPMICELabel.cc $componentDir/MPM/Core/MPMLabel.cc"
+
+elif [ "$component" == "MPM" ]; then
+    files=$componentDir/MPM/Core/MPMLabel.cc
+
+elif [ "$component" == "Arches" ]; then
+    files=$componentDir/Arches/ArchesLabel.cc
+
+else 
+    echo ""
+    echo "ERROR: Ability to search for labels in the '$component' component has not been implemented yet. Exiting..."
+    echo ""
+    exit
+fi
+
+#___________________________________
+# find all the varLabels
+
+ORIG_IFS=$IFS
+
+for file in $files
+do
+    
+    echo "----------------- Below is a listing of all label names in: $file"
+    labels=""
+
+    IFS=$'\n'
+    for label in `grep "VarLabel::create" $file`
+    do
+        if [[ $label == *std::string* ]]; then
+            name=`echo $label | cut -f2- -d\( | cut -f1 -d\. `
+        else
+            name=`echo $label | cut -f2 -d\( | cut -f1 -d\, `
+        fi
+        name=`echo $name | tr -d " "`
+        labels="$labels"$'\n'"$name"
+    done
+
+    IFS=$ORIG_IFS
+    
+    sorted=`echo "$labels" | sort -f -u -d`
+
+    for label in $sorted
+    do
+        echo $label
+    done
+done

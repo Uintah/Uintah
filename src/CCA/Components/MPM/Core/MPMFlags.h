@@ -102,6 +102,7 @@ class Output;
     bool        d_computeNormals;
     bool        d_useLogisticRegression;
     bool        d_computeColinearNormals;
+    int         d_ndim;
     bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 

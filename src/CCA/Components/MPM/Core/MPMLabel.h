@@ -358,6 +358,7 @@ namespace Uintah {
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+
     };
 } // End namespace Uintah
 
