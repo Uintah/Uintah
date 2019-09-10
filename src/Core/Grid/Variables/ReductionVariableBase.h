@@ -82,9 +82,9 @@ WARNING
     virtual void*  getBasePointer() const = 0;
     
     virtual void emitNormal( std::ostream& out, const IntVector& l,
-                             const IntVector& h, ProblemSpecP varnode, 
-                             bool outputDoubleAsFloat ) = 0;;
-    virtual void readNormal(std::istream& in, bool swapbytes) = 0;      
+                             const IntVector& h, ProblemSpecP varnode,
+                             bool outputDoubleAsFloat ) = 0;
+    virtual void readNormal(std::istream& in, bool swapbytes) = 0;
     virtual void allocate(const Patch* patch, const IntVector& boundary);
 
     virtual void print(std::ostream&) const = 0;
