@@ -935,7 +935,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
     } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
+      return KokkosView3<const T, Kokkos::CudaSpace>();
     }
   }
 
