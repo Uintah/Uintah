@@ -25,8 +25,8 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 #define UINTAH_COMPONENTS_SCHEDULERS_ONDEMANDDATAWAREHOUSE_H
 
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/SendState.h>
@@ -612,34 +612,6 @@ public:
                          );
 
   template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, NCVariable<T> >::type
-  getNCVariable( const VarLabel         *   label
-               ,       int                matlIndex
-               , const Patch            * patch
-               ,       Ghost::GhostType   gtype         = Ghost::None
-               ,       int                numGhostCells = 0
-               )
-  {
-    NCVariable<T> var;
-    this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
-    return var;
-  }
-
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constNCVariable<T> >::type
-  getConstNCVariable( const VarLabel         * label
-                    ,       int                matlIndex
-                    , const Patch            * patch
-                    ,       Ghost::GhostType   gtype
-                    ,       int                numGhostCells
-                    )
-  {
-    constNCVariable<T> constVar;
-    this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
-    return constVar;
-  }
-
-  template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, CCVariable<T> >::type
   getCCVariable( const VarLabel         * label
                ,       int                matlIndex
@@ -650,10 +622,56 @@ public:
   {
     CCVariable<T> var;
     if ( matlIndex != -999 ) {
-      this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      // Assumption: Modifies if it exists; Computes otherwise
+      if ( this->exists( label, matlIndex, patch ) ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
     }
     return var;
   }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+  getCCVariable( const VarLabel         * label
+               ,       int                matlIndex
+               , const Patch            * patch
+               ,       Ghost::GhostType   gtype         = Ghost::None
+               ,       int                numGhostCells = 0
+               )
+  {
+    CCVariable<T> var;
+    if ( matlIndex != -999 ) {
+      // Assumption: Modifies if it exists; Computes otherwise
+      if ( this->exists( label, matlIndex, patch ) ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
+    return var.getKokkosView();
+  }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  getCCVariable( const VarLabel         * label
+               ,       int                matlIndex
+               , const Patch            * patch
+               ,       Ghost::GhostType   gtype         = Ghost::None
+               ,       int                numGhostCells = 0
+               )
+  {
+    if ( matlIndex != -999 ) {
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+    } else {
+      return KokkosView3<T, Kokkos::CudaSpace>();
+    }
+  }
+#endif
 
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constCCVariable<T> >::type
@@ -671,66 +689,7 @@ public:
     return constVar;
   }
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
-  getNCVariable( const VarLabel         * label
-               ,       int                matlIndex
-               , const Patch            * patch
-               ,       Ghost::GhostType   gtype         = Ghost::None
-               ,       int                numGhostCells = 0
-               )
-  {
-    NCVariable<T> var;
-    if ( matlIndex != -999 ) {
-      if ( this->exists(label, matlIndex, patch) ){
-        // Assumption is this is a modifies.
-        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      } else {
-        // Assumption is this is a computes.
-        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
-      }
-    }
-    return var.getKokkosView();
-
-  }
-
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
-  getConstNCVariable( const VarLabel         * label
-                    ,       int                matlIndex
-                    , const Patch            * patch
-                    ,       Ghost::GhostType   gtype
-                    ,       int                numGhostCells
-                    )
-  {
-    constNCVariable<T> constVar;
-    this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
-    return constVar.getKokkosView();
-  }
-
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
-  getCCVariable( const VarLabel         * label
-               ,       int                matlIndex
-               , const Patch            * patch
-               ,       Ghost::GhostType   gtype         = Ghost::None
-               ,       int                numGhostCells = 0
-               )
-  {
-    CCVariable<T> var;
-    if ( matlIndex != -999 ) {
-      if ( this->exists(label, matlIndex, patch) ){
-        // Assumption is this is a modifies.
-        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      } else {
-        // Assumption is this is a computes.
-        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
-      }
-    }
-    return var.getKokkosView();
-  }
-
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
   getConstCCVariable( const VarLabel         * label
@@ -746,48 +705,9 @@ public:
     }
     return constVar.getKokkosView();
   }
+#endif
+
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
-  getNCVariable( const VarLabel         * label
-               ,       int                matlIndex
-               , const Patch            * patch
-               ,       Ghost::GhostType   gtype         = Ghost::None
-               ,       int                numGhostCells = 0
-               )
-  {
-    return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
-  }
-
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
-  getConstNCVariable( const VarLabel         * label
-                    ,       int                matlIndex
-                    , const Patch            * patch
-                    ,       Ghost::GhostType   gtype
-                    ,       int                numGhostCells
-                    )
-  {
-    return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
-  }
-
-  template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
-  getCCVariable( const VarLabel         * label
-               ,       int                matlIndex
-               , const Patch            * patch
-               ,       Ghost::GhostType   gtype         = Ghost::None
-               ,       int                numGhostCells = 0
-               ,       bool               allocate      = true
-               )
-  {
-    if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
-    } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
-    }
-  }
-
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
   getConstCCVariable( const VarLabel         * label
@@ -803,8 +723,121 @@ public:
       return KokkosView3<const T, Kokkos::CudaSpace>();
     }
   }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif
+
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, NCVariable<T> >::type
+  getNCVariable( const VarLabel         * label
+               ,       int                matlIndex
+               , const Patch            * patch
+               ,       Ghost::GhostType   gtype         = Ghost::None
+               ,       int                numGhostCells = 0
+               )
+  {
+    NCVariable<T> var;
+    if ( matlIndex != -999 ) {
+      // Assumption: Modifies if it exists; Computes otherwise
+      if ( this->exists( label, matlIndex, patch ) ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
+    return var;
+  }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+  getNCVariable( const VarLabel         * label
+               ,       int                matlIndex
+               , const Patch            * patch
+               ,       Ghost::GhostType   gtype         = Ghost::None
+               ,       int                numGhostCells = 0
+               )
+  {
+    NCVariable<T> var;
+    if ( matlIndex != -999 ) {
+      // Assumption: Modifies if it exists; Computes otherwise
+      if ( this->exists( label, matlIndex, patch ) ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      } else {
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
+    return var.getKokkosView();
+  }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  getNCVariable( const VarLabel         * label
+               ,       int                matlIndex
+               , const Patch            * patch
+               ,       Ghost::GhostType   gtype         = Ghost::None
+               ,       int                numGhostCells = 0
+               )
+  {
+    if ( matlIndex != -999 ) {
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+    } else {
+      return KokkosView3<T, Kokkos::CudaSpace>();
+    }
+  }
+#endif
+
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, constNCVariable<T> >::type
+  getConstNCVariable( const VarLabel         * label
+                    ,       int                matlIndex
+                    , const Patch            * patch
+                    ,       Ghost::GhostType   gtype
+                    ,       int                numGhostCells
+                    )
+  {
+    constNCVariable<T> constVar;
+    if ( matlIndex != -999 ) {
+      this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
+    }
+    return constVar;
+  }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+  getConstNCVariable( const VarLabel         * label
+                    ,       int                matlIndex
+                    , const Patch            * patch
+                    ,       Ghost::GhostType   gtype
+                    ,       int                numGhostCells
+                    )
+  {
+    constNCVariable<T> constVar;
+    if ( matlIndex != -999 ) {
+      this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
+    }
+    return constVar.getKokkosView();
+  }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  template <typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+  getConstNCVariable( const VarLabel         * label
+                    ,       int                matlIndex
+                    , const Patch            * patch
+                    ,       Ghost::GhostType   gtype
+                    ,       int                numGhostCells
+                    )
+  {
+    if ( matlIndex != -999 ) {
+      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+    } else {
+      return KokkosView3<const T, Kokkos::CudaSpace>();
+    }
+  }
+#endif
 
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_T >::type
@@ -827,6 +860,48 @@ public:
     return var;
   }
 
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename grid_T,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
+  getGridVariable( const VarLabel         * label
+                 ,       int                matlIndex
+                 , const Patch            * patch
+                 ,       Ghost::GhostType   gtype           = Ghost::None
+                 ,       int                numGhostCells   = 0
+                 ,       bool               l_getModifiable = false
+                 )
+  {
+    grid_T var;
+    if ( matlIndex != -999 ) {
+      if ( l_getModifiable ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      }else{
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
+    return var.getKokkosView();
+  }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  template <typename grid_T,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  getGridVariable( const VarLabel         * label
+                 ,       int                matlIndex
+                 , const Patch            * patch
+                 ,       Ghost::GhostType   gtype           = Ghost::None
+                 ,       int                numGhostCells   = 0
+                 ,       bool               l_getModifiable = false
+                 )
+  {
+    if ( matlIndex != -999 ) {
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+    } else {
+      return KokkosView3<T, Kokkos::CudaSpace>();
+    }
+  }
+#endif
+
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, grid_CT >::type
   getConstGridVariable( const VarLabel         * label
@@ -842,6 +917,42 @@ public:
     }
     return constVar;
   }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  template <typename grid_CT,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
+  getConstGridVariable( const VarLabel         * label
+                      ,       int                matlIndex
+                      , const Patch            * patch
+                      ,       Ghost::GhostType   gtype
+                      ,       int                numGhostCells
+                      )
+  {
+    grid_CT constVar;
+    if ( matlIndex != -999 ) {
+      this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
+    }
+    return constVar.getKokkosView();
+  }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  template <typename grid_CT,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+  getConstGridVariable( const VarLabel         * label
+                      ,       int                matlIndex
+                      , const Patch            * patch
+                      ,       Ghost::GhostType   gtype
+                      ,       int                numGhostCells
+                      )
+  {
+    if ( matlIndex != -999 ) {
+      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+    } else {
+      return KokkosView3<const T, Kokkos::CudaSpace>();
+    }
+  }
+#endif
 
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void>::type
@@ -863,28 +974,7 @@ public:
     }
   }
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-  template <typename grid_T,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<T, Kokkos::HostSpace> >::type
-  getGridVariable( const VarLabel         * label
-                 ,       int                matlIndex
-                 , const Patch            * patch
-                 ,       Ghost::GhostType   gtype           = Ghost::None
-                 ,       int                numGhostCells   = 0
-                 ,       bool               l_getModifiable = false
-                 )
-  {
-    grid_T var;
-    if ( matlIndex != -999 ) {
-      if ( l_getModifiable ) {
-        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
-      }else{
-        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
-      }
-    }
-    return var.getKokkosView();
-  }
-
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & kvar
@@ -906,56 +996,9 @@ public:
     }
     kvar = var.getKokkosView();
   }
+#endif
 
-    template <typename grid_CT,typename T, typename MemSpace>
-    inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<const T, Kokkos::HostSpace> >::type
-    getConstGridVariable( const VarLabel         * label
-                        ,       int                matlIndex
-                        , const Patch            * patch
-                        ,       Ghost::GhostType   gtype
-                        ,       int                numGhostCells
-                        )
-  {
-    grid_CT constVar;
-    if ( matlIndex != -999 ) {
-      this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
-    }
-    return constVar.getKokkosView();
-  }
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-  template <typename grid_CT,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
-  getConstGridVariable( const VarLabel         * label
-                      ,       int                matlIndex
-                      , const Patch            * patch
-                      ,       Ghost::GhostType   gtype
-                      ,       int                numGhostCells
-                      )
-  {
-    if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
-    } else {
-      return KokkosView3<const T, Kokkos::CudaSpace>();
-    }
-  }
-
-  template <typename grid_T,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
-  getGridVariable( const VarLabel         * label
-                 ,       int                matlIndex
-                 , const Patch            * patch
-                 ,       Ghost::GhostType   gtype           = Ghost::None
-                 ,       int                numGhostCells   = 0
-                 ,       bool               l_getModifiable = false
-                 )
-  {
-    if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
-    } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
-    }
-  }
-
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & var
@@ -968,13 +1011,12 @@ public:
                     )
   {
     if ( matlIndex != -999 ) {
-      var = this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0) ;
+      var = this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
     } else {
       var = KokkosView3<T, Kokkos::CudaSpace>();
     }
   }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif
 
   ScrubMode getScrubMode() const { return m_scrub_mode; }
 
