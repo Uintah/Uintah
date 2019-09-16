@@ -53,13 +53,12 @@ set f = `find -maxdepth $depth -type f | xargs grep -l delT= | sort`
 echo "examining each of these output files"
 echo $f
 #__________________________________
-/bin/rm -f scraps/procs scraps/date scraps/elapsedTime scraps/data
 touch scraps/procs scraps/date scraps/elapsedTime
 
 foreach X ($f[*]:q)
  grep Date $X -m 1          | cut -d":" -f2-4            >> scraps/date
  grep "MPI processes" $X    | cut -d" " -f 2             >> scraps/procs
- grep Time= $X |  tail -n 1 | awk -F "=|   " '{print $7}'>> scraps/elapsedTime
+ grep Time= $X |  tail -n 1 | cut -d"=" -f 4 | tr -d '[:alpha:]' >> scraps/elapsedTime
 end
 
 #__________________________________
@@ -86,6 +85,7 @@ echo "date #procs  #elapsed Time  cpu hrs  cum cpu hrs"
 more scraps/data
 
 /bin/rm -f gp
+
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
@@ -99,6 +99,7 @@ else
 cat > gp << fin
 set terminal x11 font "fixed,bold,12" size 1024,768
 fin
+
 #__________________________________
 # generate the  plot script
 cat >> gp << fin
@@ -127,9 +128,11 @@ plot 'scraps/data' using 1:2 lw 3 t           'CPUs' with impulse
 set nomultiplot
 
 fin
+
 if( $hardcopy == "n") then
   echo "pause -1 'Hit return to exit'" >> gp
 endif
+
 #__________________________________
 # plot it up
 gnuplot gp
