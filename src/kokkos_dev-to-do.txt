@@ -40,6 +40,18 @@ Revisit src/Core/Grid/Variables/ListOfCellsIterator.h and use with parallel_for_
 - Special handling of MemSpace handled correctly in parallel_for_unstructured implementations and their use in Arches?
 - Necessary to perform deep copies for the Kokkos::CUDA version of get_ref_to_iterator?
 
+Revisit src/CCA/Components/Schedulers/OnDemandDataWarehouse.h
+- get<type>Variable and getConst<type>Variable were introduced for CCVariable, NCVariable, and templated variable types
+- Able to replace CCVariable and NCVariable functions with getGridVariable and getConstGridVariable?
+- If so, replace use and remove type specific implementations to ease maintainability
+
+Revisit src/CCA/Components/Examples/PortableDependencyTest.cc
+- As of kokkos_dev commit r59646, 2 MPI process runs using the MPI Scheduler with src/StandAlone/inputs/Examples/portableDependencyTest.ups hang at the start of timestep 1
+- These hangs are encountered on the buildbot when using the optimized kokkos_rt build with no SCI_DEBUG flags
+- Hangs occur on the m_recvs.find_any(wait_request) in the WAIT_ALL case of MPIScheduler::processMPIRecvs()
+- Hangs are seemingly resolved by passing a flag in an unnamed namespace regardless of enabled/disabled (e.g., export SCI_DEBUG="TaskGraphDetailedDeps:-")
+- Attributed to TaskGraph and/or DetailedTasks destructor execution order?
+
 Revisit src/CCA/Components/Arches/Task/SampleTask.cc/h and src/CCA/Components/Arches/Task/TemplatedSampleTask.cc/h
 - Update portable tasks to reflect the latest infrastructure (e.g., use of auto variables templated on MemSpace, passing execObj into parallel patterns, etc)
 - Standardize existing use of this infrastructure across Arches tasks for searchability
