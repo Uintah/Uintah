@@ -116,6 +116,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_containerRadius                    =  9.e99;
   d_KEMaterial                         = -999;
   d_useTracers                         =  false;
+  d_useLineSegments                    =  false;
   d_outputDataOnLoadCurveChange        =  true;
   
   d_reductionVars = scinew reductionVars();
@@ -263,6 +264,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("containerRadius",   d_containerRadius);
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
+  mpm_flag_ps->get("use_linesegments",  d_useLineSegments);
   mpm_flag_ps->get("OutputDataOnLoadCurveChange",       
                                         d_outputDataOnLoadCurveChange);
 
@@ -295,10 +297,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("useLogisticRegression",       d_useLogisticRegression);
   mpm_flag_ps->get("doingDissolution",            d_doingDissolution);
   mpm_flag_ps->get("computeColinearNormals",      d_computeColinearNormals);
-  mpm_flag_ps->get("d_ndim",                      d_ndim);
-  mpm_flag_ps->get("do_contact_friction_heating",d_do_contact_friction);
-  mpm_flag_ps->get("useLogisticRegression",       d_useLogisticRegression);
-  mpm_flag_ps->get("computeColinearNormals",     d_computeColinearNormals);
   mpm_flag_ps->get("d_ndim",                      d_ndim);
   mpm_flag_ps->get("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
   if (!d_do_contact_friction){
@@ -434,6 +432,7 @@ else{
     dbg << " containerRadius             = " << d_containerRadius   << endl;
     dbg << " KEMaterial                  = " << d_KEMaterial << endl;
     dbg << " Use Tracers                 = " << d_useTracers << endl;
+    dbg << " Use Line Segments           = " << d_useLineSegments << endl;
     dbg << " OutputDataOnLoadCurveChange = " << d_outputDataOnLoadCurveChange 
                                                              << endl;
     dbg << "---------------------------------------------------------\n";
@@ -507,6 +506,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
+  ps->appendElement("use_linesegments",  d_useLineSegments);
   ps->appendElement("OutputDataOnLoadCurveChange",
                                          d_outputDataOnLoadCurveChange);
   ps->appendElement("DoAuthigenesis",    d_doAuthigenesis);

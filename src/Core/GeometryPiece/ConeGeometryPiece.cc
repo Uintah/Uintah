@@ -132,7 +132,7 @@ ConeGeometryPiece::inside(const Point &pt, const bool defVal=false) const
   double rad = d_radius*(1.0-tt) + d_topRad*tt;
 
   // Find the length of the vector from point to axis
-  Vector projOnAxis = d_bottom*(1.0-tt) + d_top*tt;
+  Point projOnAxis = d_bottom*(1.0-tt) + d_top*tt;
   Vector normal = pt.asVector() - projOnAxis;
   double dist = normal.length();
 

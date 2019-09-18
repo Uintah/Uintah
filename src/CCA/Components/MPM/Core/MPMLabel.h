@@ -165,6 +165,7 @@ namespace Uintah {
       const VarLabel* gPositionF0Label;
       const VarLabel* gPositionF1Label;
       const VarLabel* gExternalForceLabel;
+      const VarLabel* gLSContactForceLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gContactLabel;
@@ -359,6 +360,10 @@ namespace Uintah {
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* tracerIDLabel; 
       const VarLabel* tracerIDLabel_preReloc; 
+      const VarLabel* linesegIDLabel; 
+      const VarLabel* linesegIDLabel_preReloc; 
+      const VarLabel* lsMidToEndVectorLabel; 
+      const VarLabel* lsMidToEndVectorLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
       const VarLabel* pCellNATracerIDLabel;
       const VarLabel* pModalIDLabel;

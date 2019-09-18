@@ -395,6 +395,9 @@ MPMLabel::MPMLabel()
   gExternalForceLabel = VarLabel::create( "g.externalforce",
                         NCVariable<Vector>::getTypeDescription() );
   
+  gLSContactForceLabel = VarLabel::create( "g.lscontactforce",
+                        NCVariable<Vector>::getTypeDescription() );
+  
   gInternalForceLabel = VarLabel::create( "g.internalforce",
                         NCVariable<Vector>::getTypeDescription() );
   
@@ -862,6 +865,18 @@ MPMLabel::MPMLabel()
   tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  linesegIDLabel = VarLabel::create("ls.linesegID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  linesegIDLabel_preReloc = VarLabel::create("ls.linesegID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  lsMidToEndVectorLabel = VarLabel::create("ls.MidToEndVector",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  lsMidToEndVectorLabel_preReloc = VarLabel::create("ls.MidToEndVector+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pModalIDLabel = VarLabel::create("p.modalID",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -953,6 +968,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(tracerIDLabel);
   VarLabel::destroy(tracerIDLabel_preReloc);
+  VarLabel::destroy(linesegIDLabel);
+  VarLabel::destroy(linesegIDLabel_preReloc);
+  VarLabel::destroy(lsMidToEndVectorLabel);
+  VarLabel::destroy(lsMidToEndVectorLabel_preReloc);
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
@@ -1018,6 +1037,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gPositionF0Label);
   VarLabel::destroy(gPositionF1Label);
   VarLabel::destroy(gExternalForceLabel);
+  VarLabel::destroy(gLSContactForceLabel);
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);

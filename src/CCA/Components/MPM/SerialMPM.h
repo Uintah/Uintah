@@ -416,6 +416,22 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void updateLineSegments(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void computeLineSegmentForces(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void setPrescribedMotion(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -602,6 +618,18 @@ protected:
                                      const MaterialSubset*,
                                      const MaterialSet*);
 
+  virtual void scheduleUpdateLineSegments(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSubset*,
+                                          const MaterialSubset*,
+                                          const MaterialSet*);
+
+  virtual void scheduleComputeLineSegmentForces(SchedulerP&, 
+                                                const PatchSet*,
+                                                const MaterialSubset*,
+                                                const MaterialSubset*,
+                                                const MaterialSet*);
+
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
@@ -694,6 +722,7 @@ protected:
   double           d_SMALL_NUM_MPM;
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
+  int              d_ndim;   // Num. of dimensions, 2 or 3.  If 2, assume x-y
   BurialHistory*   burialHistory;
   
   std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...

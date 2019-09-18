@@ -188,7 +188,8 @@ Uintah::contactStress( DataArchive * da, CommandLineFlags & clf )
                  mat2=mother;
                  val3=val2;
                }
-               Vector centerOfMassPos, sepvec1, sepvec2;
+               Point centerOfMassPos;
+               Vector sepvec1, sepvec2;
                double centerOfMassMass=(massthis[c] + massother[mat2][c]);
                centerOfMassPos = (massthis[c] *posthis[c]+
                                   massother[mat2][c]*posother[mat2][c])

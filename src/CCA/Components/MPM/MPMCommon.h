@@ -62,6 +62,9 @@ namespace Uintah {
     virtual void tracerProblemSetup(const ProblemSpecP& prob_spec,
                                     MPMFlags* flags);
 
+    virtual void lineSegmentProblemSetup(const ProblemSpecP& prob_spec,
+                                         MPMFlags* flags);
+
     virtual void dissolutionProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags);
 
@@ -75,6 +78,9 @@ namespace Uintah {
 
       d_tracerState.clear();
       d_tracerState_preReloc.clear();
+
+      d_linesegState.clear();
+      d_linesegState_preReloc.clear();
 
       d_particleState.clear();
       d_particleState_preReloc.clear();
@@ -90,6 +96,9 @@ namespace Uintah {
     
     std::vector<std::vector<const VarLabel* > > d_tracerState;
     std::vector<std::vector<const VarLabel* > > d_tracerState_preReloc;
+    
+    std::vector<std::vector<const VarLabel* > > d_linesegState;
+    std::vector<std::vector<const VarLabel* > > d_linesegState_preReloc;
     
     inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
       particle_ghost_type = type;

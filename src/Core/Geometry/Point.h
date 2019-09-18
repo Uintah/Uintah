@@ -61,9 +61,10 @@ public:
   int operator==(const Point&) const;
   int operator!=(const Point&) const;
   inline Point& operator=(const Point&);
-  inline Vector operator+(const Point&) const;
+  inline Point operator+(const Point&) const;
   inline Vector operator-(const Point&) const;
   inline Point operator+(const Vector&) const;
+//  inline Point operator+(const Point&) const;
   inline Point operator-(const Vector&) const;
   inline Point operator*(double) const;
   inline Point& operator*=(const double);
@@ -178,10 +179,15 @@ inline Point& Point::operator=(const Point& p)
     return *this;
 }
 
-inline Vector Point::operator+(const Point& p) const
+inline Point Point::operator+(const Point& p) const
 {
-    return Vector(x_+p.x_, y_+p.y_, z_+p.z_);
+    return Point(x_+p.x_, y_+p.y_, z_+p.z_);
 }
+
+//inline Point Point::operator+(const Point& p2) const
+//{
+//    return Vector(x_+p2.x_, y_+p2.y_, z_+p2.z_);
+//}
 
 inline Vector Point::operator-(const Point& p) const
 {
