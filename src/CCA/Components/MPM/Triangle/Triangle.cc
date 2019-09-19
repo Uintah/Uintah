@@ -1,0 +1,312 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2018 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+#include <CCA/Components/MPM/Triangle/Triangle.h>
+#include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Math/Matrix3.h>
+#include <fstream>
+
+using namespace Uintah;
+using namespace std;
+
+//______________________________________________________________________
+Triangle::Triangle(TriangleMaterial* tm, MPMFlags* flags, MaterialManagerP& ss)
+{
+  d_lb = scinew MPMLabel();
+
+  d_flags = flags;
+
+  d_materialManager = ss;
+
+  registerPermanentTriangleState(tm);
+}
+
+Triangle::~Triangle()
+{
+  delete d_lb;
+}
+//______________________________________________________________________
+ParticleSubset* 
+Triangle::createTriangles(TriangleMaterial* matl,
+                          particleIndex numTriangles,
+                          const Patch* patch,
+                          DataWarehouse* new_dw,
+                          const string fileroot)
+{
+  int dwi = matl->getDWIndex();
+  Matrix3 Identity; Identity.Identity();
+  ParticleSubset* subset = allocateVariables(numTriangles,dwi,patch,new_dw);
+
+  string ptsfilename = fileroot + ".pts";
+  string trifilename = fileroot + ".tri";
+
+  std::ifstream pts(ptsfilename.c_str());
+  if (!pts ){
+    throw ProblemSetupException(
+      "ERROR Opening pts file "+ptsfilename+" in createTriangles \n",
+                                                         __FILE__, __LINE__);
+  }
+
+  std::ifstream tri(trifilename.c_str());
+  if (!tri ){
+    throw ProblemSetupException(
+      "ERROR Opening tri file "+trifilename+" in createTriangles \n",
+                                                         __FILE__, __LINE__);
+  }
+
+    Vector dx=patch->dCell();
+
+    vector<double> px, py, pz;
+    double p1,p2,p3 = 0.0;
+    particleIndex start = 0;
+    int numpts = 0;
+    while (pts >> p1 >> p2 >> p3) {
+     px.push_back(p1);
+     py.push_back(p2);
+     pz.push_back(p3);
+     numpts++;
+    } // while lines in the pts file
+
+    vector<int> i0, i1, i2;
+    vector<long64> TID;
+    int ip0,ip1,ip2;
+    unsigned int numtri = 0;
+    while (tri >> ip0 >> ip1 >> ip2) {
+     long64 tid = numtri;
+     i0.push_back(ip0);
+     i1.push_back(ip1);
+     i2.push_back(ip2);
+     TID.push_back(tid);
+     numtri++;
+    } // while lines in the tri file
+
+    // make triangles from subsequent points if their midpoint is on patch
+    for(unsigned int i = 0; i<numtri; i++){
+      Point P0(px[i0[i]], py[i0[i]], pz[i0[i]]);
+      Point P1(px[i1[i]], py[i1[i]], pz[i1[i]]);
+      Point P2(px[i2[i]], py[i2[i]], pz[i2[i]]);
+      Point test((px[i0[i]]+px[i1[i]]+px[i2[i]])/3.,
+                 (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
+                 (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
+      
+      if(patch->containsPoint(test)){
+        particleIndex pidx   = start;
+        triangle_pos[pidx]    = test;
+        triangleID[pidx]      = TID[i];
+        triangleMidToNode0[pidx] = P0 - test;
+        triangleMidToNode1[pidx] = P1 - test;
+        triangleMidToNode2[pidx] = P2 - test;
+        Vector r0 = P1 - P0;
+        Vector r1 = P2 - P0;
+        Vector r2 = -.1*Cross(r1,r0);
+        Matrix3 size =Matrix3(r0.x()/dx.x(), r1.x()/dx.x(), r2.x()/dx.x(),
+                              r0.y()/dx.y(), r1.y()/dx.y(), r2.y()/dx.y(),
+                              r0.z()/dx.z(), r1.z()/dx.z(), r2.z()/dx.z());
+
+        double Jsize = size.Determinant();
+        if(Jsize <= 0.0){
+         cout << "negative J" << endl;
+        }
+        triangleSize[pidx]    = size;
+        triangleDefGrad[pidx] = Identity;
+        start++;
+      }
+    }
+
+    tri.close();
+    pts.close();
+
+  return subset;
+}
+
+//__________________________________
+//
+ParticleSubset* 
+Triangle::allocateVariables(particleIndex numTriangles, 
+                               int dwi, const Patch* patch,
+                               DataWarehouse* new_dw)
+{
+  ParticleSubset* subset =new_dw->createParticleSubset(numTriangles,dwi,patch);
+
+  new_dw->allocateAndPut(triangle_pos,   d_lb->pXLabel,                 subset);
+  new_dw->allocateAndPut(triangleID,     d_lb->triangleIDLabel,         subset);
+  new_dw->allocateAndPut(triangleSize,   d_lb->pSizeLabel,              subset);
+  new_dw->allocateAndPut(triangleDefGrad,d_lb->pDeformationMeasureLabel,subset);
+  new_dw->allocateAndPut(triangleMidToNode0,
+                                         d_lb->triMidToN0VectorLabel,   subset);
+  new_dw->allocateAndPut(triangleMidToNode1,
+                                         d_lb->triMidToN1VectorLabel,   subset);
+  new_dw->allocateAndPut(triangleMidToNode2,
+                                         d_lb->triMidToN2VectorLabel,   subset);
+
+  return subset;
+}
+
+//__________________________________
+//
+particleIndex 
+Triangle::countTriangles(const Patch* patch, const string fileroot)
+{
+  particleIndex sum = 0;
+
+  string ptsfilename = fileroot + ".pts";
+  string trifilename = fileroot + ".tri";
+
+  std::ifstream pts(ptsfilename.c_str());
+  if (!pts ){
+    throw ProblemSetupException(
+      "ERROR Opening pts file "+ptsfilename+" in countTriangles \n",
+                                                         __FILE__, __LINE__);
+  }
+
+  std::ifstream tri(trifilename.c_str());
+  if (!tri ){
+    throw ProblemSetupException(
+      "ERROR Opening tri file "+trifilename+" in countTriangles \n",
+                                                         __FILE__, __LINE__);
+  }
+
+    vector<double> px, py, pz;
+    double p1,p2,p3 = 0.0;
+    int numpts = 0;
+    while (pts >> p1 >> p2 >> p3) {
+     px.push_back(p1);
+     py.push_back(p2);
+     pz.push_back(p3);
+     numpts++;
+    } // while lines in the pts file
+
+    vector<int> i0, i1, i2;
+    vector<long64> TID;
+    int ip0,ip1,ip2;
+    unsigned int numtri = 0;
+    while (tri >> ip0 >> ip1 >> ip2) {
+     long64 tid = numtri;
+     i0.push_back(ip0);
+     i1.push_back(ip1);
+     i2.push_back(ip2);
+     TID.push_back(tid);
+     numtri++;
+    } // while lines in the tri file
+
+    // make triangles from the three tri points if their midpoint is on patch
+    for(unsigned int i = 0; i<numtri; i++){
+      Point test((px[i0[i]]+px[i1[i]]+px[i2[i]])/3.,
+                 (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
+                 (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
+      
+      if(patch->containsPoint(test)){
+        sum++;
+      }
+    }
+    
+    tri.close();
+    pts.close();
+
+  return sum;
+}
+//__________________________________
+//
+vector<const VarLabel* > Triangle::returnTriangleState()
+{
+  return d_triangle_state;
+}
+//__________________________________
+//
+vector<const VarLabel* > Triangle::returnTriangleStatePreReloc()
+{
+  return d_triangle_state_preReloc;
+}
+//__________________________________
+//
+void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
+{
+  d_triangle_state.push_back(d_lb->triangleIDLabel);
+  d_triangle_state.push_back(d_lb->pSizeLabel);
+  d_triangle_state.push_back(d_lb->pDeformationMeasureLabel);
+  d_triangle_state.push_back(d_lb->pScaleFactorLabel);
+  d_triangle_state.push_back(d_lb->triMidToN0VectorLabel);
+  d_triangle_state.push_back(d_lb->triMidToN1VectorLabel);
+  d_triangle_state.push_back(d_lb->triMidToN2VectorLabel);
+
+  d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triMidToN0VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triMidToN1VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triMidToN2VectorLabel_preReloc);
+}
+//__________________________________
+//
+void Triangle::scheduleInitialize(const LevelP& level,
+                                     SchedulerP& sched, MaterialManagerP &mm)
+{
+  Task* t = scinew Task("Triangle::initialize",
+                  this, &Triangle::initialize);
+
+  t->computes(d_lb->pXLabel);
+  t->computes(d_lb->pSizeLabel);
+  t->computes(d_lb->triangleIDLabel);
+  t->computes(d_lb->triMidToN0VectorLabel);
+  t->computes(d_lb->triMidToN1VectorLabel);
+  t->computes(d_lb->triMidToN2VectorLabel);
+  t->computes(d_lb->pDeformationMeasureLabel);
+
+  sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
+}
+
+//__________________________________
+//
+void Triangle::initialize(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* triangle_matls,
+                             DataWarehouse* ,
+                             DataWarehouse* new_dw)
+{
+  particleIndex totalTriangles=0;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    //printTask(patches,patch,cout_doing,"Doing initialize for Triangles\t");
+
+    for(int m=0;m<triangle_matls->size();m++){
+      TriangleMaterial* triangle_matl = 
+        (TriangleMaterial*) d_materialManager->getMaterial("Triangle", m);
+      string filename = triangle_matl->getTriangleFilename();
+      particleIndex numTriangles = countTriangles(patch,filename);
+      totalTriangles+=numTriangles;
+
+    cout << "Total Triangles =  " << totalTriangles << endl;
+
+      createTriangles(triangle_matl, numTriangles,
+                    patch, new_dw, filename);
+    }
+    cout << "Total Triangles =  " << totalTriangles << endl;
+  }
+}
