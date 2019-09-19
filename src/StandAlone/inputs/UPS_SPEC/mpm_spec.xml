@@ -47,6 +47,7 @@
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_tracers                        spec="OPTIONAL BOOLEAN" />
       <use_linesegments                   spec="OPTIONAL BOOLEAN" />
+      <use_triangles                      spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
@@ -280,6 +281,11 @@
         <associated_material               spec="OPTIONAL INTEGER" />
         <lineseg_filename                  spec="REQUIRED STRING" />
       </LineSegment>
+      <Triangle                         spec="MULTIPLE NO_DATA"
+                                           attribute1="name OPTIONAL STRING" >
+        <associated_material               spec="OPTIONAL INTEGER" />
+        <triangle_filename                  spec="REQUIRED STRING" />
+      </Triangle>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
       <include href="diffusion_interface.xml" />
     </MPM>

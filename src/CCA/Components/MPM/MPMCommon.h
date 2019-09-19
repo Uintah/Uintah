@@ -65,6 +65,9 @@ namespace Uintah {
     virtual void lineSegmentProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags);
 
+    virtual void triangleProblemSetup(const ProblemSpecP& prob_spec,
+                                         MPMFlags* flags);
+
     virtual void dissolutionProblemSetup(const ProblemSpecP& prob_spec,
                                          MPMFlags* flags);
 
@@ -99,6 +102,9 @@ namespace Uintah {
     
     std::vector<std::vector<const VarLabel* > > d_linesegState;
     std::vector<std::vector<const VarLabel* > > d_linesegState_preReloc;
+    
+    std::vector<std::vector<const VarLabel* > > d_triangleState;
+    std::vector<std::vector<const VarLabel* > > d_triangleState_preReloc;
     
     inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
       particle_ghost_type = type;

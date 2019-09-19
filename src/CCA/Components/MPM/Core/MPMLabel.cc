@@ -871,10 +871,34 @@ MPMLabel::MPMLabel()
   linesegIDLabel_preReloc = VarLabel::create("ls.linesegID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  triangleIDLabel = VarLabel::create("tri.triangleID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  triangleIDLabel_preReloc = VarLabel::create("tri.triangleID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
   lsMidToEndVectorLabel = VarLabel::create("ls.MidToEndVector",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   lsMidToEndVectorLabel_preReloc = VarLabel::create("ls.MidToEndVector+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN0VectorLabel = VarLabel::create("tri.MidToN0Vector",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN0VectorLabel_preReloc = VarLabel::create("tri.MidToN0Vector+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN1VectorLabel = VarLabel::create("tri.MidToN1Vector",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN1VectorLabel_preReloc = VarLabel::create("tri.MidToN1Vector+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN2VectorLabel = VarLabel::create("tri.MidToN2Vector",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triMidToN2VectorLabel_preReloc = VarLabel::create("tri.MidToN2Vector+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pModalIDLabel = VarLabel::create("p.modalID",
@@ -970,8 +994,16 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(linesegIDLabel);
   VarLabel::destroy(linesegIDLabel_preReloc);
+  VarLabel::destroy(triangleIDLabel);
+  VarLabel::destroy(triangleIDLabel_preReloc);
   VarLabel::destroy(lsMidToEndVectorLabel);
   VarLabel::destroy(lsMidToEndVectorLabel_preReloc);
+  VarLabel::destroy(triMidToN0VectorLabel);
+  VarLabel::destroy(triMidToN0VectorLabel_preReloc);
+  VarLabel::destroy(triMidToN1VectorLabel);
+  VarLabel::destroy(triMidToN1VectorLabel_preReloc);
+  VarLabel::destroy(triMidToN2VectorLabel);
+  VarLabel::destroy(triMidToN2VectorLabel_preReloc);
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);

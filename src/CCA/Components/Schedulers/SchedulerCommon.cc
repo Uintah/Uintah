@@ -2075,6 +2075,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
                                            ,       int            which
                                            )
 {
+  // MPM Particles
   if (which == 1) {
     if (m_reloc_new_pos_label) {
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
@@ -2085,6 +2086,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
     releasePort("load balancer");
   }
 
+  // Cohesive Zones
   if (which == 2) {
     if (m_reloc_new_pos_label) {
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
@@ -2094,6 +2096,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
     m_relocate_2.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
   }
 
+  // Tracers
   if (which == 3) {
     if (m_reloc_new_pos_label) {
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
@@ -2103,6 +2106,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
     m_relocate_3.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
   }
 
+  // Line Segments
   if (which == 4) {
     if (m_reloc_new_pos_label) {
       ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
@@ -2110,6 +2114,16 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP       & level
     m_reloc_new_pos_label = new_posLabel;
 
     m_relocate_4.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
+  }
+
+  // Triangles
+  if (which == 5) {
+    if (m_reloc_new_pos_label) {
+      ASSERTEQ(m_reloc_new_pos_label, new_posLabel);
+    }
+    m_reloc_new_pos_label = new_posLabel;
+
+    m_relocate_5.scheduleParticleRelocation(this, d_myworld, m_loadBalancer, level, old_posLabel, old_labels, new_posLabel, new_labels, particleIDLabel, matls);
   }
 }
 

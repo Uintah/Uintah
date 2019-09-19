@@ -44,6 +44,7 @@ PSELIBS := \
 	$(SRCDIR)/CohesiveZone   \
 	$(SRCDIR)/Tracer         \
 	$(SRCDIR)/LineSegment    \
+	$(SRCDIR)/Triangle       \
 	$(SRCDIR)/Core           \
 	$(SRCDIR)/HeatConduction \
 	$(SRCDIR)/Materials      \
@@ -84,6 +85,7 @@ SUBDIRS := \
 	$(SRCDIR)/CohesiveZone      \
 	$(SRCDIR)/Tracer            \
 	$(SRCDIR)/LineSegment       \
+	$(SRCDIR)/Triangle          \
 	$(SRCDIR)/Core              \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/Materials         \

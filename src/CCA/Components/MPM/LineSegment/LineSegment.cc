@@ -83,32 +83,15 @@ LineSegment::createLineSegments(LineSegmentMaterial* matl,
      istringstream ss(line);
      string token;
      long64 tid = count;
-//     ss >> token;
-//     tid = stoull(token);
      ss >> token;
      p1 = stof(token);
      ss >> token;
      p2 = stof(token);
-//     ss >> token;
-//     p3 = stof(token);
      px.push_back(p1);
      py.push_back(p2);
      pz.push_back(p3);
      TID.push_back(tid);
      count++;
-/*
-     ss >> token;
-     ss >> token;
-     ss >> token;
-
-     ss >> token;
-     ss >> token;
-     ss >> token;
-
-     ss >> token;
-     ss >> token;
-     ss >> token;
-*/
     } // while lines in the file
 
     // make line segments from subsequent points if their midpoint is on patch

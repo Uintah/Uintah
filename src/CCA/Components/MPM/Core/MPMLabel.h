@@ -362,8 +362,16 @@ namespace Uintah {
       const VarLabel* tracerIDLabel_preReloc; 
       const VarLabel* linesegIDLabel; 
       const VarLabel* linesegIDLabel_preReloc; 
+      const VarLabel* triangleIDLabel; 
+      const VarLabel* triangleIDLabel_preReloc; 
       const VarLabel* lsMidToEndVectorLabel; 
       const VarLabel* lsMidToEndVectorLabel_preReloc; 
+      const VarLabel* triMidToN0VectorLabel; 
+      const VarLabel* triMidToN0VectorLabel_preReloc; 
+      const VarLabel* triMidToN1VectorLabel; 
+      const VarLabel* triMidToN1VectorLabel_preReloc; 
+      const VarLabel* triMidToN2VectorLabel; 
+      const VarLabel* triMidToN2VectorLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
       const VarLabel* pCellNATracerIDLabel;
       const VarLabel* pModalIDLabel;

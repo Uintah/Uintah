@@ -117,6 +117,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_KEMaterial                         = -999;
   d_useTracers                         =  false;
   d_useLineSegments                    =  false;
+  d_useTriangles                       =  false;
   d_outputDataOnLoadCurveChange        =  true;
   
   d_reductionVars = scinew reductionVars();
@@ -265,6 +266,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("KEMaterial",        d_KEMaterial);
   mpm_flag_ps->get("use_tracers",       d_useTracers);
   mpm_flag_ps->get("use_linesegments",  d_useLineSegments);
+  mpm_flag_ps->get("use_triangles",     d_useTriangles);
   mpm_flag_ps->get("OutputDataOnLoadCurveChange",       
                                         d_outputDataOnLoadCurveChange);
 
@@ -433,6 +435,7 @@ else{
     dbg << " KEMaterial                  = " << d_KEMaterial << endl;
     dbg << " Use Tracers                 = " << d_useTracers << endl;
     dbg << " Use Line Segments           = " << d_useLineSegments << endl;
+    dbg << " Use Triangles               = " << d_useTriangles << endl;
     dbg << " OutputDataOnLoadCurveChange = " << d_outputDataOnLoadCurveChange 
                                                              << endl;
     dbg << "---------------------------------------------------------\n";
@@ -507,6 +510,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("KEMaterial",        d_KEMaterial);
   ps->appendElement("use_tracers",       d_useTracers);
   ps->appendElement("use_linesegments",  d_useLineSegments);
+  ps->appendElement("use_triangles",     d_useTriangles);
   ps->appendElement("OutputDataOnLoadCurveChange",
                                          d_outputDataOnLoadCurveChange);
   ps->appendElement("DoAuthigenesis",    d_doAuthigenesis);

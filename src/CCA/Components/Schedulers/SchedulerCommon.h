@@ -413,10 +413,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     std::ofstream*              m_mem_logfile{nullptr};
 
-    Relocate                    m_relocate_1;
-    Relocate                    m_relocate_2;
-    Relocate                    m_relocate_3;
-    Relocate                    m_relocate_4;
+    Relocate                    m_relocate_1;  // MPM Particles
+    Relocate                    m_relocate_2;  // CohesiveZones
+    Relocate                    m_relocate_3;  // Tracers
+    Relocate                    m_relocate_4;  // Line Segments
+    Relocate                    m_relocate_5;  // Triangles
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)

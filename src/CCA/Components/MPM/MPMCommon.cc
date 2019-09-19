@@ -31,6 +31,7 @@
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
+#include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 using namespace std;
 using namespace Uintah;
@@ -239,6 +240,54 @@ void MPMCommon::lineSegmentProblemSetup(const ProblemSpecP& prob_spec,
     }
     else{
       m_materialManager->registerMaterial("LineSegment", mat);
+    }
+  }
+}
+
+void MPMCommon::triangleProblemSetup(const ProblemSpecP& prob_spec, 
+                                     MPMFlags* flags)
+{
+  //Search for the MaterialProperties block and then get the MPM section
+  ProblemSpecP mat_ps =  
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  for (ProblemSpecP ps = mpm_mat_ps->findBlock("Triangle"); ps != nullptr;
+       ps = ps->findNextBlock("Triangle") ) {
+
+    string index("");
+    ps->getAttribute("index",index);
+    stringstream id(index);
+    const int DEFAULT_VALUE = -1;
+    int index_val = DEFAULT_VALUE;
+
+    id >> index_val;
+
+    if( !id ) {
+      // stringstream parsing failed... on many (most) systems, the
+      // original value assigned to index_val would be left
+      // intact... but on some systems it inserts garbage,
+      // so we have to manually restore the value.
+      index_val = DEFAULT_VALUE;
+    }
+    // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
+
+    //Create and register as an Triangle material
+    TriangleMaterial *mat = 
+                       scinew TriangleMaterial(ps, m_materialManager, flags);
+
+    mat->registerParticleState( d_triangleState,
+                                d_triangleState_preReloc );
+
+    // When doing restart, we need to make sure that we load the materials
+    // in the same order that they were initially created.  Restarts will
+    // ALWAYS have an index number as in <material index = "0">.
+    // Index_val = -1 means that we don't register the material by its 
+    // index number.
+    if (index_val > -1){
+      m_materialManager->registerMaterial("Triangle", mat,index_val);
+    }
+    else{
+      m_materialManager->registerMaterial("Triangle", mat);
     }
   }
 }

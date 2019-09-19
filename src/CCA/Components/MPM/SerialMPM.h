@@ -432,6 +432,22 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void updateTriangles(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void computeTriangleForces(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void setPrescribedMotion(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -629,6 +645,18 @@ protected:
                                                 const MaterialSubset*,
                                                 const MaterialSubset*,
                                                 const MaterialSet*);
+
+  virtual void scheduleUpdateTriangles(SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSubset*,
+                                       const MaterialSubset*,
+                                       const MaterialSet*);
+
+  virtual void scheduleComputeTriangleForces(SchedulerP&, 
+                                             const PatchSet*,
+                                             const MaterialSubset*,
+                                             const MaterialSubset*,
+                                             const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,

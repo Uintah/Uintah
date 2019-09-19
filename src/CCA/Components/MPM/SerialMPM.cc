@@ -37,6 +37,8 @@
 #include <CCA/Components/MPM/Tracer/Tracer.h>
 #include <CCA/Components/MPM/LineSegment/LineSegmentMaterial.h>
 #include <CCA/Components/MPM/LineSegment/LineSegment.h>
+#include <CCA/Components/MPM/Triangle/Triangle.h>
+#include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -317,6 +319,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   lineSegmentProblemSetup(restart_mat_ps, flags);
 
+  triangleProblemSetup(restart_mat_ps, flags);
+
   dissolutionModel = 
                   DissolutionFactory::create(UintahParallelComponent::d_myworld,
                                      restart_mat_ps,m_materialManager,lb,flags);
@@ -381,13 +385,19 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   for (unsigned int i = 0; i < m_materialManager->getNumMatls("Tracer");i++) {
     TracerMaterial* mat = (TracerMaterial *) 
-                                    m_materialManager->getMaterial("Tracer", i);
+                                   m_materialManager->getMaterial("Tracer", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
-  for (unsigned int i = 0;i< m_materialManager->getNumMatls("LineSegment");i++){
+  for(unsigned int i = 0;i< m_materialManager->getNumMatls("LineSegment");i++){
     LineSegmentMaterial* mat = (LineSegmentMaterial *) 
-                               m_materialManager->getMaterial("LineSegment", i);
+                              m_materialManager->getMaterial("LineSegment", i);
+    ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
+  }
+
+  for(unsigned int i = 0;i< m_materialManager->getNumMatls("Triangle");i++){
+    TriangleMaterial* mat = (TriangleMaterial *) 
+                              m_materialManager->getMaterial("Triangle", i);
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
 
@@ -512,7 +522,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   // code below
   unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
   for(unsigned int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", m);
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
     CohesiveZone* ch = cz_matl->getCohesiveZone();
     ch->scheduleInitialize(level, sched, cz_matl);
   }
@@ -528,8 +538,17 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   int numLineSegmentM = m_materialManager->getNumMatls("LineSegment");
   if(numLineSegmentM>0){
    LineSegmentMaterial* ls_matl = (LineSegmentMaterial *) 
-                               m_materialManager->getMaterial("LineSegment", 0);
+                              m_materialManager->getMaterial("LineSegment", 0);
    LineSegment* ls = ls_matl->getLineSegment();
+   ls->scheduleInitialize(level, sched, m_materialManager);
+  }
+
+  int numTriangleM = m_materialManager->getNumMatls("Triangle");
+  cout << "numTriangleM = " << numTriangleM << endl;
+  if(numTriangleM>0){
+   TriangleMaterial* ls_matl = (TriangleMaterial *) 
+                              m_materialManager->getMaterial("Triangle", 0);
+   Triangle* ls = ls_matl->getTriangle();
    ls->scheduleInitialize(level, sched, m_materialManager);
   }
 
@@ -706,6 +725,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   const MaterialSet* cz_matls     = m_materialManager->allMaterials( "CZ" );
   const MaterialSet* tracer_matls = m_materialManager->allMaterials("Tracer");
   const MaterialSet* lineseg_matls= m_materialManager->allMaterials("LineSegment");
+  const MaterialSet* triangle_matls=m_materialManager->allMaterials("Triangle");
   const MaterialSet* all_matls    = m_materialManager->allMaterials();
 
   const MaterialSubset* mpm_matls_sub    = 
@@ -716,6 +736,8 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                             (tracer_matls ? tracer_matls->getUnion() : nullptr);
   const MaterialSubset* lineseg_matls_sub = 
                           (lineseg_matls ? lineseg_matls->getUnion() : nullptr);
+  const MaterialSubset* triangle_matls_sub = 
+                        (triangle_matls ? triangle_matls->getUnion() : nullptr);
 
   if (flags->d_useLoadCurves){
     scheduleModifyLoadCurves(             level, sched,   matls);
@@ -727,6 +749,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_useLineSegments){
     scheduleComputeLineSegmentForces(     sched, patches, mpm_matls_sub,
                                                           lineseg_matls_sub,
+                                                          all_matls);
+  }
+  if(flags->d_useTriangles){
+    scheduleComputeTriangleForces(        sched, patches, mpm_matls_sub,
+                                                          triangle_matls_sub,
                                                           all_matls);
   }
   scheduleFindGrainCollisions(            sched, patches, matls);
@@ -779,6 +806,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   if(flags->d_useLineSegments){
     scheduleUpdateLineSegments(           sched, patches, mpm_matls_sub,
                                                           lineseg_matls_sub,
+                                                          all_matls);
+  }
+  if(flags->d_useTriangles){
+    scheduleUpdateTriangles(              sched, patches, mpm_matls_sub,
+                                                          triangle_matls_sub,
                                                           all_matls);
   }
   if(flags->d_computeScaleFactor){
@@ -834,6 +866,14 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     lb->pXLabel,
                                     d_linesegState,
                                     lb->linesegIDLabel, lineseg_matls, 4);
+ }
+
+ if(flags->d_useTriangles){
+  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                    d_triangleState_preReloc,
+                                    lb->pXLabel,
+                                    d_triangleState,
+                                    lb->triangleIDLabel, triangle_matls, 5);
  }
 
   //__________________________________
@@ -1588,6 +1628,47 @@ void SerialMPM::scheduleUpdateLineSegments(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSubset* mpm_matls,
+                                        const MaterialSubset* triangle_matls,
+                                        const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateTriangles");
+
+  Task* t=scinew Task("MPM::updateTriangles",
+                      this, &SerialMPM::updateTriangles);
+
+  t->requires(Task::OldDW, lb->delTLabel );
+
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,2*NGN);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,2*NGN);
+  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+                                                     triangle_matls, gnone);
+
+  t->computes(lb->pXLabel_preReloc,                      triangle_matls);
+  t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
+  t->computes(lb->triangleIDLabel_preReloc,              triangle_matls);
+  t->computes(lb->triMidToN0VectorLabel_preReloc,        triangle_matls);
+  t->computes(lb->triMidToN1VectorLabel_preReloc,        triangle_matls);
+  t->computes(lb->triMidToN2VectorLabel_preReloc,        triangle_matls);
+  t->computes(lb->pDeformationMeasureLabel_preReloc,     triangle_matls);
+
+  sched->addTask(t, patches, matls);
+}
+
 void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* mpm_matls,
@@ -1610,6 +1691,36 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gan, 1);
   t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gan, 1);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, 2*NGN);
+
+  t->computes(lb->gLSContactForceLabel,             mpm_matls);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSubset* mpm_matls,
+                                            const MaterialSubset* triangle_matls,
+                                            const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeTriangleForces");
+
+  Task* t=scinew Task("MPM::computeTriangleForces",
+                      this, &SerialMPM::computeTriangleForces);
+
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+
+  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gan, 1);
+  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gan, 1);
+  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gan, 1);
+  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gan, 1);
+  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gan, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,2*NGN);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 
@@ -3229,6 +3340,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
   level->findInteriorNodeIndexRange(lowNode, highNode);
   string interp_type = flags->d_interpolator_type;
 
+  //double maxVelMag = 0.;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -3306,11 +3418,12 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
        for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
-        if(c.x()>lowNode.x() && c.x()<highNode.x() &&
-           c.y()>lowNode.y() && c.y()<highNode.y() &&
-           c.z()>lowNode.z() && c.z()<highNode.z()){
-           if((velocity_star[c]*delT).length2() > 0.25*cell_size_sq){
-            cerr << "Aborting timestep, velocity star too large" << endl;
+        if(c.x()>=lowNode.x() && c.x()<highNode.x() &&
+           c.y()>=lowNode.y() && c.y()<highNode.y() &&
+           c.z()>=lowNode.z() && c.z()<highNode.z()){
+           //maxVelMag = max(maxVelMag,velocity_star[c].length());
+           if((velocity_star[c]*delT).length2() > 0.01*cell_size_sq){
+            cerr << "Restarting timestep, velocity star too large" << endl;
             cerr << "velocity_star[" << c << "] = " << velocity_star[c] << endl;
             new_dw->put( bool_or_vartype(true), 
                          VarLabel::find(abortTimeStep_name));
@@ -4426,6 +4539,7 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           cerr << "Resetting F for particle " << pids[idx] 
                << " with F = " << pFNew[idx] << endl;
           cerr << "imax, jmax = " << imax << ", " << jmax << endl;
+          cerr << "matl  = " << m << endl;
           cerr << "pmass = " << pmass[idx] << endl;
           cerr << "px = " << px[idx] << endl;
           cerr << "pvolume = " << pVolumeOld[idx] << endl;
@@ -4719,7 +4833,6 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing updateLineSegments");
 
-//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -4811,7 +4924,7 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
   
         right += vel*delT;
   
-        // First update the position of the "left" end of the segment
+        // Next update the position of the "left" end of the segment
         Point left = tx[idx]-lsMidToEndVec[idx];
         // Get the node indices that surround the cell
         NN = interpolator->findCellAndWeights(left, ni, S, tsize[idx]);
@@ -4953,6 +5066,10 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       LineSegmentMaterial* t_matl0 = (LineSegmentMaterial *) 
                              m_materialManager->getMaterial("LineSegment", tmo);
       int adv_matl0 = t_matl0->getAssociatedMaterial();
+
+//      if(adv_matl0==14){
+//         cout << "tmo = " << tmo << endl;
+//      }
 
       ParticleSubset* pset0 = psetvec[tmo];
 
@@ -5117,6 +5234,456 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
           }
         } //  Outer loop over linesegments
        }
+      } // inner loop over line segment materials
+    } // outer loop over line segment materials
+//    cout << "numChecks = " << numChecks << endl;
+//    cout << "numNear = " << numNear << endl;
+//    cout << "numOverlap = " << numOverlap << endl;
+    delete interpolator;
+  }
+}
+
+void SerialMPM::updateTriangles(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing updateTriangles");
+
+    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    Vector dx = patch->dCell();
+
+    BBox domain;
+    const Level* level = getLevel(patches);
+    level->getInteriorSpatialRange(domain);
+    Point dom_min = domain.min();
+    Point dom_max = domain.max();
+    IntVector periodic = level->getPeriodicBoundaries();
+
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
+    unsigned int numMPMMatls=m_materialManager->getNumMatls("MPM");
+    std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
+    std::vector<constNCVariable<double> > gmass(numMPMMatls);
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl=(MPMMaterial*) 
+                                     m_materialManager->getMaterial("MPM",m);
+      int dwi = mpm_matl->getDWIndex();
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, 2*NGN);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, 2*NGN);
+    }
+
+    int numLSMatls=m_materialManager->getNumMatls("Triangle");
+    for(int ls = 0; ls < numLSMatls; ls++){
+      TriangleMaterial* ls_matl = (TriangleMaterial *) 
+                              m_materialManager->getMaterial("Triangle", ls);
+      int dwi = ls_matl->getDWIndex();
+
+      int adv_matl = ls_matl->getAssociatedMaterial();
+
+      // Not populating the delset, but we need this to satisfy Relocate
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      new_dw->deleteParticles(delset);
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the arrays of particle values to be changed
+      constParticleVariable<Point> tx;
+      ParticleVariable<Point> tx_new;
+      constParticleVariable<Matrix3> tsize, tF;
+      ParticleVariable<Matrix3> tsize_new, tF_new;
+      constParticleVariable<long64> triangle_ids;
+      ParticleVariable<long64> triangle_ids_new;
+      constParticleVariable<Vector> triMidToN0Vec, triMidToN1Vec, triMidToN2Vec;
+      ParticleVariable<Vector> triMidToN0Vec_new, 
+                               triMidToN1Vec_new,triMidToN2Vec_new;
+
+      old_dw->get(tx,            lb->pXLabel,                         pset);
+      old_dw->get(tsize,         lb->pSizeLabel,                      pset);
+      old_dw->get(triangle_ids,  lb->triangleIDLabel,                 pset);
+      old_dw->get(tF,            lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(triMidToN0Vec, lb->triMidToN0VectorLabel,           pset);
+      old_dw->get(triMidToN1Vec, lb->triMidToN1VectorLabel,           pset);
+      old_dw->get(triMidToN2Vec, lb->triMidToN2VectorLabel,           pset);
+
+      new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
+      new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
+      new_dw->allocateAndPut(triangle_ids_new,lb->triangleIDLabel_preReloc,pset);
+      new_dw->allocateAndPut(tF_new,lb->pDeformationMeasureLabel_preReloc,pset);
+      new_dw->allocateAndPut(triMidToN0Vec_new,
+                                       lb->triMidToN0VectorLabel_preReloc,pset);
+      new_dw->allocateAndPut(triMidToN1Vec_new,
+                                       lb->triMidToN1VectorLabel_preReloc,pset);
+      new_dw->allocateAndPut(triMidToN2Vec_new,
+                                       lb->triMidToN2VectorLabel_preReloc,pset);
+
+      triangle_ids_new.copyData(triangle_ids);
+      tF_new.copyData(tF);
+
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Update the positions of the triangle vertices
+        Point P0 = tx[idx]+triMidToN0Vec[idx];
+        Point P1 = tx[idx]+triMidToN1Vec[idx];
+        Point P2 = tx[idx]+triMidToN2Vec[idx];
+        // Get the node indices that surround the point
+        int NN = interpolator->findCellAndWeights(P0, ni, S, tsize[idx]);
+        Vector vel(0.0,0.0,0.0);
+  
+        double sumSk=0.0;
+        // Accumulate the contribution from each surrounding vertex
+        for(unsigned int m = 0; m < numMPMMatls; m++){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+            sumSk += gmass[adv_matl][node]*S[k];
+          }
+        }
+        vel/=sumSk;
+  
+        P0 += vel*delT;
+  
+        // Get the node indices that surround the point
+        NN = interpolator->findCellAndWeights(P1, ni, S, tsize[idx]);
+        vel = Vector(0.0,0.0,0.0);
+  
+        sumSk=0.0;
+        // Accumulate the contribution from each surrounding vertex
+        for(unsigned int m = 0; m < numMPMMatls; m++){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+            sumSk += gmass[adv_matl][node]*S[k];
+          }
+        }
+        vel/=sumSk;
+  
+        P1 += vel*delT;
+
+        // Get the node indices that surround the point
+        NN = interpolator->findCellAndWeights(P2, ni, S, tsize[idx]);
+        vel = Vector(0.0,0.0,0.0);
+  
+        sumSk=0.0;
+        // Accumulate the contribution from each surrounding vertex
+        for(unsigned int m = 0; m < numMPMMatls; m++){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+            sumSk += gmass[adv_matl][node]*S[k];
+          }
+        }
+        vel/=sumSk;
+  
+        P2 += vel*delT;
+
+        tx_new[idx] = (P0+P1+P2)/3.;
+
+        triMidToN0Vec_new[idx] = P0 - tx_new[idx];
+        triMidToN1Vec_new[idx] = P1 - tx_new[idx];
+        triMidToN2Vec_new[idx] = P2 - tx_new[idx];
+
+        Vector r0 = P1 - P0;
+        Vector r1 = P2 - P0;
+        Vector r2 = 0.1*Cross(r1,r0);
+        Matrix3 size =Matrix3(r0.x()/dx.x(), r1.x()/dx.x(), r2.x()/dx.x(),
+                              r0.y()/dx.y(), r1.y()/dx.y(), r2.y()/dx.y(),
+                              r0.z()/dx.z(), r1.z()/dx.z(), r2.z()/dx.z());
+        tsize_new[idx] = size;
+  
+        // Check to see if a line segment has left the domain
+        // Check to see if a line segment has left the domain
+        if(!domain.inside(tx_new[idx])){
+          double epsilon = 1.e-15;
+          Point txn = tx_new[idx];
+          if(periodic.x()==0){
+           if(tx_new[idx].x()<dom_min.x()){
+            tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+           }
+           if(tx_new[idx].x()>dom_max.x()){
+            tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = tx_new[idx];
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
+          if(periodic.y()==0){
+           if(tx_new[idx].y()<dom_min.y()){
+            tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = tx_new[idx];
+           }
+           if(tx_new[idx].y()>dom_max.y()){
+            tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = tx_new[idx];
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
+          if(periodic.z()==0){
+           if(tx_new[idx].z()<dom_min.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+           }
+           if(tx_new[idx].z()>dom_max.z()){
+            tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+           }
+           static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           warn.invoke();
+          }
+        }
+      }
+    }
+    delete interpolator;
+  }
+}
+
+void SerialMPM::computeTriangleForces(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* ,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeTriangleForces");
+
+//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+
+    Ghost::GhostType gan = Ghost::AroundNodes;
+    Ghost::GhostType gac = Ghost::AroundCells;
+    Vector dxCell = patch->dCell();
+    double cell_length2 = dxCell.length2();
+
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
+    std::vector<constNCVariable<double> > gmass(numMPMMatls);
+    std::vector<double> stiffness(numMPMMatls);
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      double inv_stiff = mpm_matl->getConstitutiveModel()->getCompressibility();
+      stiffness[m] = 1./inv_stiff;
+
+      new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
+      new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
+                                                                    gac, 2*NGN);
+      LSContForce[m].initialize(Vector(0.0));
+    }
+
+    int numLSMatls=m_materialManager->getNumMatls("Triangle");
+
+    // Get the arrays of particle values to be changed
+    std::vector<constParticleVariable<Point>  >  tx0(numLSMatls);
+    std::vector<constParticleVariable<Vector>  > triMidToN0Vec(numLSMatls);
+    std::vector<constParticleVariable<Vector>  > triMidToN1Vec(numLSMatls);
+    std::vector<constParticleVariable<Vector>  > triMidToN2Vec(numLSMatls);
+    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
+    std::vector<ParticleSubset*> psetvec;
+
+    for(int tmo = 0; tmo < numLSMatls; tmo++) {
+      TriangleMaterial* t_matl0 = (TriangleMaterial *) 
+                             m_materialManager->getMaterial("Triangle", tmo);
+      int dwi0 = t_matl0->getDWIndex();
+
+      ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
+                                                       gan, 1, lb->pXLabel);
+      psetvec.push_back(pset0);
+
+      old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
+      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
+      old_dw->get(triMidToN0Vec[tmo],  lb->triMidToN0VectorLabel,     pset0);
+      old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
+      old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
+    }
+
+    long int numChecks=0;
+    int numNear=0;
+    int numOverlap=0;
+    for(int tmo = 0; tmo < numLSMatls; tmo++) {
+      TriangleMaterial* t_matl0 = (TriangleMaterial *) 
+                             m_materialManager->getMaterial("Triangle", tmo);
+      int adv_matl0 = t_matl0->getAssociatedMaterial();
+
+      ParticleSubset* pset0 = psetvec[tmo];
+
+      for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
+        TriangleMaterial* t_matl1 = (TriangleMaterial *) 
+                              m_materialManager->getMaterial("Triangle",tmi);
+        int adv_matl1 = t_matl1->getAssociatedMaterial();
+
+        if(adv_matl0==adv_matl1){
+          continue;
+        }
+
+
+        ParticleSubset* pset1 = psetvec[tmi];
+
+        int numPar_pset1 = pset1->numParticles();
+
+        double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
+                         (stiffness[adv_matl0] + stiffness[adv_matl1]);
+
+#if 0
+       if(numPar_pset1 > 0){
+
+        // Loop over zeroth line segment subset
+        // Only test the "left" end of the line segment for
+        // penetration into other segments, because the right
+        // end will get checked as the left end of the next segment
+        for(ParticleSubset::iterator iter0 = pset0->begin();
+            iter0 != pset0->end(); iter0++){
+          particleIndex idx0 = *iter0;
+
+          Point px0=tx0[tmo][idx0] - lsMidToEndVec0[tmo][idx0];
+
+          double min_sep  = 9.e99;
+          int closest = 99999;
+          // Loop over other particle subset
+          for(ParticleSubset::iterator iter1 = pset1->begin();
+              iter1 != pset1->end(); iter1++){
+            particleIndex idx1 = *iter1;
+            numChecks++;
+            Point px1 = tx0[tmi][idx1];
+            double sep = (px1-px0).length2();
+            if(sep < min_sep && sep < 0.25*cell_length2){
+              numNear++;
+              min_sep  = sep;
+              closest  = idx1;
+            }
+          }
+
+          double forceMag=0.0;
+          if(closest < 99999){
+            // Following the description in stackexchange:
+            // https://math.stackexchange.com/questions/2193720/find-a-point-on-a-line-segment-which-is-the-closest-to-other-point-not-on-the-li
+            Point A = tx0[tmi][closest] + lsMidToEndVec0[tmi][closest];
+            Point B = tx0[tmi][closest] - lsMidToEndVec0[tmi][closest];
+            Vector v = B - A;
+            double vLength2 = v.length2();
+            double vLength = sqrt(vLength2);
+
+            Vector u = A - px0;
+            double t = -Dot(v,u)/vLength2;
+            if(t >= 0.0 && t <= 1.0){
+              Vector fromLineSegToPoint = px0.asVector() - ((1.-t)*A + t*B);
+              //normal = v X (0,0,1)
+              Vector normal = Vector(v.y(), -v.x(), 0.)
+                            / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
+              double overlap = Dot(normal,fromLineSegToPoint);
+              if(overlap < 0.0){
+               numOverlap++;
+               double K = K_l*vLength;
+               forceMag = overlap*K;
+
+               Vector tForce0  = -forceMag*normal;
+#if 0
+//               sumTForce0+=tForce0;
+               cout << "LS, lsMTEV1      = " << lsMidToEndVec1[closest] << endl;
+               cout << "LS, overlap, forceMag = " << overlap << ", " 
+                                              << forceMag << endl;
+
+               cout << "LS, adv_matl0 = " << adv_matl0 << endl;
+               cout << "LS, adv_matl1 = " << adv_matl1 << endl;
+               cout << "LS, A      = " << A << endl;
+               cout << "LS, B      = " << B << endl;
+               cout << "LS, px0    = " << px0 << endl;
+               cout << "LS, normal = " << normal << endl;
+               cout << "LS, u      = " << u << endl;
+               cout << "LS, t      = " << t << endl;
+#endif
+
+               // See comments in addCohesiveZoneForces for a description of how
+               // the force is put on the nodes
+
+               // Get the node indices that surround the cell
+               Matrix3 size = tsize0[tmo][idx0];
+               int NN = interpolator->findCellAndWeights(px0, ni, S, size);
+  
+               double totMass = 0.;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass += S[k]*gmass[adv_matl0][node];
+               }
+
+               // Accumulate the contribution from each surrounding vertex
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForce0*S[k]
+                                               * gmass[adv_matl0][node]/totMass;
+                 }
+               }
+
+               Vector tForce1A = (1.-t)*forceMag*normal;
+
+               size = tsize0[tmi][closest];
+               // Get the node indices that surround the cell
+               NN = interpolator->findCellAndWeights(A, ni, S, size);
+
+               totMass = 0.;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass += S[k]*gmass[adv_matl1][node];
+               }
+
+               // Accumulate the contribution from each surrounding vertex
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                  // Distribute force according to material mass on the nodes
+                  // to get approximately equal contribution to the acceleration
+                  LSContForce[adv_matl1][node] += tForce1A*S[k]
+                                               * gmass[adv_matl1][node]/totMass;
+                 }
+               }
+
+               Vector tForce1B = t*forceMag*normal;
+//               sumTForce1+=tForce1B;
+
+               // Get the node indices that surround the cell
+               NN = interpolator->findCellAndWeights(B, ni, S, size);
+
+               totMass = 0.;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass += S[k]*gmass[adv_matl1][node];
+               }
+
+               // Accumulate the contribution from each surrounding vertex
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                  // Distribute force according to material mass on the nodes
+                  // to get approximately equal contribution to the acceleration
+                  LSContForce[adv_matl1][node] += tForce1B*S[k]
+                                               * gmass[adv_matl1][node]/totMass;
+                 }
+                }
+              }
+            }
+          }
+        } //  Outer loop over linesegments
+       }
+#endif
       } // inner loop over line segment materials
     } // outer loop over line segment materials
 //    cout << "numChecks = " << numChecks << endl;
@@ -5973,12 +6540,39 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
           pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-                                               0,dx[1],0,
-                                               0,0,dx[2])*psize[idx]));
+                                                0,dx[1],0,
+                                                0,0,dx[2])*psize[idx]));
         } // for particles
       } // isOutputTimestep
     } // loop over LineSegment matls
    }  // if using line segments
+
+   if(flags->d_useTriangles){
+    unsigned int numLSMatls=m_materialManager->getNumMatls( "Triangle" );
+    for(unsigned int m = 0; m < numLSMatls; m++){
+      LineSegmentMaterial* ls_matl = 
+        (LineSegmentMaterial*) m_materialManager->getMaterial("Triangle", m);
+      int dwi = ls_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Matrix3> psize,pF;
+      ParticleVariable<Matrix3> pScaleFactor;
+      new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
+      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
+      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
+
+      if(m_output->isOutputTimeStep()){
+        Vector dx = patch->dCell();
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
+                                                0,dx[1],0,
+                                                0,0,dx[2])*psize[idx]));
+        } // for particles
+      } // isOutputTimestep
+    } // loop over Triangle matls
+   }  // if using triangles
 
   } // patches
 }
