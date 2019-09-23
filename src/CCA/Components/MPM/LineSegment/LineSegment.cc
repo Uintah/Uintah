@@ -126,7 +126,7 @@ LineSegment::createLineSegments(LineSegmentMaterial* matl,
     if(patch->containsPoint(test)){
       particleIndex pidx   = start;
       lineseg_pos[pidx]    = test;
-      linesegID[pidx]      = TID[last-1];
+      linesegID[pidx]      = TID[last];
       Vector lsETE = Vector(px[0]-px[last], 
                             py[0]-py[last], 
                             pz[0]-pz[last]);
