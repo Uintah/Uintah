@@ -246,17 +246,18 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_mom = db->findBlock("KMomentum");
 
-    // stress tensor
     m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
     m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
     m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
     m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-    std::string stress_name = "[StressTensor]";
-    TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
-    register_task(stress_name, stress_tsk, db_mom);
-    _momentum_builders.push_back( stress_name );
-    _momentum_stress_tensor.push_back( stress_name );
+    if ( !db_mom->findBlock("inviscid")) {
+      std::string stress_name = "[StressTensor]";
+      TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
+      register_task(stress_name, stress_tsk, db_mom);
+      _momentum_builders.push_back( stress_name );
+      _momentum_stress_tensor.push_back( stress_name );
+    }
 
     // X-mom
     std::string update_task_name = "[KFEUpdate]x-mom-update";
@@ -318,7 +319,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_update.push_back(update_task_name);
     _momentum_conv.push_back( mom_task_name );
 
-    if ( db ->findBlock("KMomentum")->findBlock("PressureSolver")){
+    if ( db->findBlock("KMomentum")->findBlock("PressureSolver")){
       //Pressure eqn
       ProblemSpecP db_press = db ->findBlock("KMomentum")->findBlock("PressureSolver");
       std::string tsk_name = "[PressureEqn]";

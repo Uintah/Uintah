@@ -156,7 +156,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name, const bool ignore_m
       if ( ignore_missing_task ){
         return NULL;
       } else {
-        throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
+        throw InvalidValue("Error: Cannot find task named: "+task_name+" for factory: "+_factory_name,__FILE__,__LINE__);
       }
 
     }

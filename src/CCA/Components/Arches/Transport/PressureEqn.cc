@@ -68,10 +68,31 @@ PressureEqn::sched_restartInitialize( const LevelP& level, SchedulerP& sched ){
 void
 PressureEqn::setup_solver( ProblemSpecP& db ){
 
-  ProblemSpecP db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");
+  ProblemSpecP db_pressure{nullptr};
 
-  if ( !db_pressure ){
-    throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
+  //Pressure Solve as part of the momentum solver
+  if ( db->findBlock("KMomentum") != nullptr ){
+
+    db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");
+    if ( !db_pressure ){
+      throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
+    }
+
+  } else {
+
+    //Part of the utility_factory?
+    ProblemSpecP db_all_util = db->findBlock("Utilities");
+    if ( db_all_util != nullptr ){
+      for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr;
+            db_util = db_util->findNextBlock("utility")){
+
+        std::string type;
+        db_util->getAttribute("type", type);
+        if ( type == "poisson" ){
+          db_pressure = db_util->findBlock("PoissonSolver");
+        }
+      }
+    }
   }
 
   m_hypreSolver->readParameters(db_pressure, "pressure" );
@@ -82,11 +103,11 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
   //makes any sense at the moment.
   m_hypreSolver->getParameters()->setSetupFrequency(0.0);
 
-  m_enforceSolvability = false;
-  if ( db->findBlock("enforce_solvability")){
-    m_enforceSolvability = true;
+  if ( db_pressure != nullptr ){
+    if ( db_pressure->findBlock("enforce_solvability") != nullptr ){
+      m_enforceSolvability = true;
+    }
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -194,10 +215,9 @@ PressureEqn::register_timestep_init(
   std::vector<AFC::VariableInformation>& variable_registry,
   const bool packed_tasks ){
 
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "A_press", AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( "b_press", AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "guess_press", AFC::COMPUTES, variable_registry, m_task_name );
 
 }
@@ -205,18 +225,13 @@ PressureEqn::register_timestep_init(
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
-
   CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   constCCVariable<Stencil7>& old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
   CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
-
-  b.initialize(0.0);
+  Apress.copyData( old_Apress );
   x.initialize(0.0);
   guess.initialize(0.0);
-  Apress.copyData( old_Apress );
-
 }
 
 
@@ -226,7 +241,7 @@ PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( "b_press", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( ArchesCore::default_uMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( ArchesCore::default_vMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
@@ -251,6 +266,8 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
   constCCVariable<double>& drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_drhodt_name);
+
+  b.initialize(0.0);
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -285,40 +302,6 @@ PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
   CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
-
-  //const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  //for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
-  //  Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-  //  IntVector iDir = patch->faceDirection( i_bc->second.face );
-  //  Patch::FaceType face = i_bc->second.face;
-  //  BndTypeEnum my_type = i_bc->second.type;
-
-  //  double sign;
-
-  //  if ( my_type == OUTLET ||
-  //       my_type == PRESSURE ){
-      // Dirichlet
-      // P = 0
-  //    sign = -1.0;
-  //  } else {
-      // Applies to Inlets, walls where
-      // P satisfies a Neumann condition
-      // dP/dX = 0
-  //    sign = 1.0;
-  //  }
-
-  //  parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-
-  //    const int im=i- iDir[0];
-  //    const int jm=j- iDir[1];
-  //    const int km=k- iDir[2];
-
-  //    A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
-  //    A(im,jm,km)[face] = 0.;
-
-   // });
-  //}
 
   //Now take care of intrusions:
   for (CellIterator iter=patch->getCellIterator();

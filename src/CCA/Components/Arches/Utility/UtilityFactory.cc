@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/Utility/SurfaceVolumeFractionCalc.h>
 #include <CCA/Components/Arches/Utility/MassFlowRate.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Arches/Transport/PressureEqn.h>
 
 using namespace Uintah;
 
@@ -27,21 +28,22 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
   _base_tasks.push_back(tname);
   register_task( tname, tsk, db );
 
-  tname = "surface_normals";
-  tsk = scinew SurfaceNormals::Builder( tname, 0 );
-  _base_tasks.push_back(tname);
-  register_task( tname, tsk, db );
-
   if ( db->findBlock("KokkosSolver")){
     tname = "vol_fraction_calc";
     tsk = scinew SurfaceVolumeFractionCalc::Builder( tname, 0 );
     _base_tasks.push_back(tname);
     register_task( tname, tsk, db );
   }
+  
+  tname = "surface_normals";
+  tsk = scinew SurfaceNormals::Builder( tname, 0 );
+  _base_tasks.push_back(tname);
+  register_task( tname, tsk, db );
+
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
 
-  //<Utilities>
+  //<Utilities  >
   if ( db_all_util ){
     for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr;
           db_util = db_util->findNextBlock("utility")){
@@ -80,15 +82,19 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
         _base_tasks.push_back(name);
         register_task(name, tsk, db_util);
 
-      }
-      else if ( type == "mass_flow_rate" ){
+      } else if ( type == "mass_flow_rate" ){
 
         tsk = scinew MassFlowRate::Builder( name, 0 );
         _mass_flow_rate.push_back(name);
         register_task( name, tsk, db_util );
 
-      }
-      else {
+      } else if ( type == "poisson"){
+
+        std::string press_name = "[PressureEqn]";
+        tsk = scinew PressureEqn::Builder(press_name, 0, _materialManager);
+        register_task( press_name, tsk, db_util);
+
+      } else {
 
         throw InvalidValue("Error: Utility type not recognized.",__FILE__,__LINE__);
       }
