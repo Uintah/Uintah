@@ -878,7 +878,6 @@ KokkosSolver::SandBox( const LevelP     & level
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
 
   PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
