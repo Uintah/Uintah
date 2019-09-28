@@ -80,28 +80,3 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 
   }
 }
-
-void
-LagrangianParticleFactory::build_all_tasks( ProblemSpecP& db )
-{
-  //
-  // if ( db->findBlock("LagrangianParticles")) {
-  //
-  //   ProblemSpecP db_lp = db->findBlock("LagrangianParticles");
-  //
-  //   TaskInterface* tsk = retrieve_task( "update_particle_velocity");
-  //   print_task_setup_info( "update_particle_velocity", "lagrangian velocity update");
-  //   tsk->problemSetup( db_lp );
-  //
-  //   tsk = retrieve_task( "update_particle_position");
-  //   print_task_setup_info( "update_particle_position", "lagrangian position update");
-  //   tsk->problemSetup( db_lp );
-  //
-  //   tsk = retrieve_task( "update_particle_size");
-  //   print_task_setup_info( "update_particle_size", "lagrangian size update");
-  //   tsk->problemSetup( db_lp );
-  //
-  //   tsk->create_local_labels();
-  //
-  // }
-}

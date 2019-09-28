@@ -47,34 +47,6 @@ ChemMixFactory::register_all_tasks( ProblemSpecP& db )
 }
 
 void
-ChemMixFactory::build_all_tasks( ProblemSpecP& db )
-{
-  //
-  // if ( db->findBlock("StateProperties") ){
-  //
-  //   ProblemSpecP db_sp = db->findBlock("StateProperties");
-  //
-  //   for ( ProblemSpecP db_p = db_sp->findBlock("model");
-	//     db_p.get_rep() != nullptr;
-  //     db_p = db_p->findNextBlock("model")){
-  //
-  //     std::string label;
-  //     std::string type;
-  //
-  //     db_p->getAttribute("label", label);
-  //     db_p->getAttribute("type", type);
-  //
-  //     TaskInterface* tsk = retrieve_task( label );
-  //     tsk->problemSetup( db_p );
-  //     tsk->create_local_labels();
-  //
-  //     m_task_order.push_back( label );
-  //
-  //   }
-  // }
-}
-
-void
 ChemMixFactory::add_task( ProblemSpecP& db )
 {
 }

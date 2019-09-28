@@ -179,7 +179,7 @@ private:
       }
 
       if ( new_op.ind1_is_temp && new_op.create_temp_variable ){
-        throw ProblemSetupException("Error: One cannot ind1_is_temp and dep_is_temp for task_math op: "+label, __FILE__, __LINE__ );
+        throw ProblemSetupException("Error: Both ind1_is_temp and dep_is_temp cannot be set for task_math op: "+label, __FILE__, __LINE__ );
       }
 
       if( new_op.create_temp_variable && new_op.create_new_variable ){

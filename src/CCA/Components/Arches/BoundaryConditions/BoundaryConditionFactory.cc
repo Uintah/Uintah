@@ -45,29 +45,6 @@ BoundaryConditionFactory::register_all_tasks( ProblemSpecP & db )
 }
 
 void
-BoundaryConditionFactory::build_all_tasks( ProblemSpecP& db )
-{
-  //
-  // if ( db->findBlock("BoundaryConditions")){
-  //
-  //   ProblemSpecP db_m = db->findBlock("BoundaryConditions");
-  //
-  //   for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != nullptr; db_bc=db_bc->findNextBlock("bc") ) {
-  //
-  //     std::string name;
-  //     std::string type;
-  //     db_bc->getAttribute("label", name);
-  //     db_bc->getAttribute("type", type);
-  //
-  //     print_task_setup_info( name, type );
-  //     TaskInterface* tsk = retrieve_task(name);
-  //     tsk->problemSetup(db_bc);
-  //     tsk->create_local_labels();
-  //   }
-  // }
-}
-
-void
 BoundaryConditionFactory::add_task( ProblemSpecP& db )
 {
 

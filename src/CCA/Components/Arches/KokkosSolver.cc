@@ -176,21 +176,12 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  proc0cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering and Building Tasks For: " << std::endl;
   for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->set_materialManager(m_materialManager);
     i->second->register_all_tasks(db);
-
-  }
-
-  proc0cout << "\n Building Tasks For: " << std::endl;
-
-  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->build_all_tasks(db);
 
   }
 
