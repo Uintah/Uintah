@@ -375,9 +375,6 @@ KokkosSolver::sched_initialize( const LevelP& level,
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  TaskController& tsk_controller = TaskController::self();
-  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
-
   // Setup BCs
   setupBCs( level, sched, matls );
 
@@ -409,11 +406,6 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
                                     SchedulerP & sched )
 {
   using namespace Uintah::ArchesCore;
-
-  TaskController& tsk_controller = TaskController::self();
-  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
-
-  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   //clear the factory ghost lists from information inserted from scheduleInitialize
   for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
@@ -885,11 +877,8 @@ KokkosSolver::SandBox( const LevelP     & level
   const int time_substep = 0;
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
-  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
 
   PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(

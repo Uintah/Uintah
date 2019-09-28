@@ -125,8 +125,9 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, bool do_time_ave ) :
-  m_do_time_ave(do_time_ave),
-  TaskInterface( task_name, matl_index ){}
+  TaskInterface( task_name, matl_index ),
+  m_do_time_ave(do_time_ave)
+  {}
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
