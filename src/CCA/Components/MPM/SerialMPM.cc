@@ -57,8 +57,6 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/GIMPInterpolator.h>
-#include <Core/Grid/fastCpdiInterpolator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/MaterialManager.h>
@@ -1250,9 +1248,10 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
-  t->requires(Task::NewDW,lb->gVolumeLabel, m_materialManager->getAllInOneMatls(),
-              Task::OutOfDomain, gnone);
+  t->requires(Task::NewDW,lb->gVolumeLabel,               gnone);
+  t->requires(Task::NewDW,lb->gVolumeLabel, 
+              m_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
+  t->requires(Task::NewDW,lb->gLSContactForceLabel,       gnone);
   t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
@@ -1610,8 +1609,8 @@ void SerialMPM::scheduleUpdateLineSegments(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,2*NGN);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,2*NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
   t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gnone);
   t->requires(Task::OldDW, lb->linesegIDLabel,       lineseg_matls, gnone);
@@ -1647,8 +1646,8 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,2*NGN);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,2*NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
   t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gnone);
@@ -1657,6 +1656,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
                                                      triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,                      triangle_matls);
   t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
@@ -1665,6 +1665,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(lb->triMidToN1VectorLabel_preReloc,        triangle_matls);
   t->computes(lb->triMidToN2VectorLabel_preReloc,        triangle_matls);
   t->computes(lb->pDeformationMeasureLabel_preReloc,     triangle_matls);
+  t->computes(lb->triUseInPenaltyLabel_preReloc,         triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -1684,13 +1685,12 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
   Task* t=scinew Task("MPM::computeLineSegmentForces",
                       this, &SerialMPM::computeLineSegmentForces);
 
-  Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gan, 1);
-  t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gan, 1);
-  t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gan, 1);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, 2*NGN);
+  t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gac, 1);
+//  t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gac, 1);
+  t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gac, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+1);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 
@@ -1720,7 +1720,8 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gan, 1);
   t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gan, 1);
   t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gan, 1);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,2*NGN);
+  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gan, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+1);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 
@@ -3099,6 +3100,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     bndyTraction[iface]  = Vector(0.);
   }
 
+  Ghost::GhostType  gnone = Ghost::None;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing MPM::computeInternalForce");
@@ -3122,9 +3124,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gvolumeglobal;
     new_dw->get(gvolumeglobal,  lb->gVolumeLabel,
-                m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None,0);
+           m_materialManager->getAllInOneMatls()->get(0), patch, gnone,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel,
-                           m_materialManager->getAllInOneMatls()->get(0), patch);
+           m_materialManager->getAllInOneMatls()->get(0), patch);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -3141,6 +3143,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
+      constNCVariable<Vector>        gContForce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -3151,7 +3154,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       new_dw->get(psize,   lb->pCurSizeLabel,                pset);
 
-      new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gvolume,    lb->gVolumeLabel,         dwi, patch, gnone, 0);
+      new_dw->get(gContForce, lb->gLSContactForceLabel, dwi, patch, gnone, 0);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
@@ -3277,7 +3281,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
               IntVector ijk(i,j,k);
 
               // flip sign so that pushing on boundary gives positive force
-              bndyForce[iface] -= internalforce[ijk];
+              bndyForce[iface] -= (internalforce[ijk]/* + gContForce[ijk]*/);
 
               double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
               for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
@@ -4833,10 +4837,11 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing updateLineSegments");
 
-    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     Vector dx = patch->dCell();
+    Matrix3 size; size.Identity();
 
     BBox domain;
     const Level* level = getLevel(patches);
@@ -4856,8 +4861,8 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, 2*NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, 2*NGN);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+1);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("LineSegment");
@@ -4908,7 +4913,7 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
         // First update the position of the "right" end of the segment
         Point right = tx[idx]+lsMidToEndVec[idx];
         // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(right, ni, S, tsize[idx]);
+        int NN = interpolator->findCellAndWeights(right, ni, S, size);
         Vector vel(0.0,0.0,0.0);
   
         double sumSk=0.0;
@@ -4927,7 +4932,7 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
         // Next update the position of the "left" end of the segment
         Point left = tx[idx]-lsMidToEndVec[idx];
         // Get the node indices that surround the cell
-        NN = interpolator->findCellAndWeights(left, ni, S, tsize[idx]);
+        NN = interpolator->findCellAndWeights(left, ni, S, size);
         vel = Vector(0.0,0.0,0.0);
   
         sumSk=0.0;
@@ -4947,10 +4952,10 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
 
         Vector lsETE = (right-left);
         lsMidToEndVec_new[idx] = 0.5*lsETE;
-        Matrix3 size =Matrix3(lsETE.x()/dx.x(), 0.1*lsETE.y()/dx.y(), 0.0,
-                              lsETE.y()/dx.x(), -.1*lsETE.x()/dx.y(), 0.0,
-                                           0.0,                  0.0, 1.0);
-        tsize_new[idx] = size;
+        Matrix3 size_new =Matrix3(lsETE.x()/dx.x(), 0.1*lsETE.y()/dx.y(), 0.0,
+                                  lsETE.y()/dx.x(), -.1*lsETE.x()/dx.y(), 0.0,
+                                              0.0,                  0.0, 1.0);
+        tsize_new[idx] = size_new;
   
         // Check to see if a line segment has left the domain
         // Check to see if a line segment has left the domain
@@ -5009,12 +5014,11 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeLineSegmentForces");
 
-//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
+    Matrix3 size; size.Identity();
 
-    Ghost::GhostType gan = Ghost::AroundNodes;
     Ghost::GhostType gac = Ghost::AroundCells;
     Vector dxCell = patch->dCell();
     double cell_length2 = dxCell.length2();
@@ -5033,7 +5037,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                    gac, 2*NGN);
+                                                                     gac,NGN+1);
       LSContForce[m].initialize(Vector(0.0));
     }
 
@@ -5042,7 +5046,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     // Get the arrays of particle values to be changed
     std::vector<constParticleVariable<Point>  >  tx0(numLSMatls);
     std::vector<constParticleVariable<Vector>  > lsMidToEndVec0(numLSMatls);
-    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
+//    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -5051,11 +5055,11 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       int dwi0 = t_matl0->getDWIndex();
 
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
-                                                       gan, 1, lb->pXLabel);
+                                                       gac, 1, lb->pXLabel);
       psetvec.push_back(pset0);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
-      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
+//      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
       old_dw->get(lsMidToEndVec0[tmo], lb->lsMidToEndVectorLabel,     pset0);
     }
 
@@ -5066,10 +5070,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       LineSegmentMaterial* t_matl0 = (LineSegmentMaterial *) 
                              m_materialManager->getMaterial("LineSegment", tmo);
       int adv_matl0 = t_matl0->getAssociatedMaterial();
-
-//      if(adv_matl0==14){
-//         cout << "tmo = " << tmo << endl;
-//      }
 
       ParticleSubset* pset0 = psetvec[tmo];
 
@@ -5143,10 +5143,11 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                double K = K_l*vLength;
                forceMag = overlap*K;
 
-               Vector tForce0  = -forceMag*normal;
+               Vector tForce1A = (1.-t)*forceMag*normal;
+               Vector tForce1B = t*forceMag*normal;
+
 #if 0
-//               sumTForce0+=tForce0;
-               cout << "LS, lsMTEV1      = " << lsMidToEndVec1[closest] << endl;
+               cout << "LS, lsMTEV1      = " << lsMidToEndVec0[tmi][closest] << endl;
                cout << "LS, overlap, forceMag = " << overlap << ", " 
                                               << forceMag << endl;
 
@@ -5164,13 +5165,15 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                // the force is put on the nodes
 
                // Get the node indices that surround the cell
-               Matrix3 size = tsize0[tmo][idx0];
-               int NN = interpolator->findCellAndWeights(px0, ni, S, size);
+               //Matrix3 size = tsize0[tmo][idx0];
+               int NN = interpolator->findCellAndWeights(A, ni, S, size);
   
-               double totMass = 0.;
+               double totMass0 = 0.;
+               double totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
-                 totMass += S[k]*gmass[adv_matl0][node];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
                }
 
                // Accumulate the contribution from each surrounding vertex
@@ -5179,56 +5182,36 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                  if(patch->containsNode(node)) {
                    // Distribute force according to material mass on the nodes
                    // to get nearly equal contribution to the acceleration
-                   LSContForce[adv_matl0][node] += tForce0*S[k]
-                                               * gmass[adv_matl0][node]/totMass;
+                   LSContForce[adv_matl0][node] -= tForce1A*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] += tForce1A*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
                  }
                }
-
-               Vector tForce1A = (1.-t)*forceMag*normal;
-
-               size = tsize0[tmi][closest];
-               // Get the node indices that surround the cell
-               NN = interpolator->findCellAndWeights(A, ni, S, size);
-
-               totMass = 0.;
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 totMass += S[k]*gmass[adv_matl1][node];
-               }
-
-               // Accumulate the contribution from each surrounding vertex
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                  // Distribute force according to material mass on the nodes
-                  // to get approximately equal contribution to the acceleration
-                  LSContForce[adv_matl1][node] += tForce1A*S[k]
-                                               * gmass[adv_matl1][node]/totMass;
-                 }
-               }
-
-               Vector tForce1B = t*forceMag*normal;
-//               sumTForce1+=tForce1B;
 
                // Get the node indices that surround the cell
                NN = interpolator->findCellAndWeights(B, ni, S, size);
-
-               totMass = 0.;
+  
+               totMass0 = 0.;
+               totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
-                 totMass += S[k]*gmass[adv_matl1][node];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
                }
 
                // Accumulate the contribution from each surrounding vertex
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
                  if(patch->containsNode(node)) {
-                  // Distribute force according to material mass on the nodes
-                  // to get approximately equal contribution to the acceleration
-                  LSContForce[adv_matl1][node] += tForce1B*S[k]
-                                               * gmass[adv_matl1][node]/totMass;
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] -= tForce1B*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] += tForce1B*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
                  }
-                }
+               }
               }
             }
           }
@@ -5254,7 +5237,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing updateTriangles");
 
-    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     Vector dx = patch->dCell();
@@ -5277,8 +5260,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, 2*NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, 2*NGN);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+1);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("Triangle");
@@ -5305,14 +5288,17 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<Vector> triMidToN0Vec, triMidToN1Vec, triMidToN2Vec;
       ParticleVariable<Vector> triMidToN0Vec_new, 
                                triMidToN1Vec_new,triMidToN2Vec_new;
+      constParticleVariable<IntVector> triUseInPenalty;
+      ParticleVariable<IntVector> triUseInPenalty_new;
 
-      old_dw->get(tx,            lb->pXLabel,                         pset);
-      old_dw->get(tsize,         lb->pSizeLabel,                      pset);
-      old_dw->get(triangle_ids,  lb->triangleIDLabel,                 pset);
-      old_dw->get(tF,            lb->pDeformationMeasureLabel,        pset);
-      old_dw->get(triMidToN0Vec, lb->triMidToN0VectorLabel,           pset);
-      old_dw->get(triMidToN1Vec, lb->triMidToN1VectorLabel,           pset);
-      old_dw->get(triMidToN2Vec, lb->triMidToN2VectorLabel,           pset);
+      old_dw->get(tx,              lb->pXLabel,                         pset);
+      old_dw->get(tsize,           lb->pSizeLabel,                      pset);
+      old_dw->get(triangle_ids,    lb->triangleIDLabel,                 pset);
+      old_dw->get(tF,              lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(triMidToN0Vec,   lb->triMidToN0VectorLabel,           pset);
+      old_dw->get(triMidToN1Vec,   lb->triMidToN1VectorLabel,           pset);
+      old_dw->get(triMidToN2Vec,   lb->triMidToN2VectorLabel,           pset);
+      old_dw->get(triUseInPenalty, lb->triUseInPenaltyLabel,            pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
@@ -5324,9 +5310,12 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                        lb->triMidToN1VectorLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN2Vec_new,
                                        lb->triMidToN2VectorLabel_preReloc,pset);
+      new_dw->allocateAndPut(triUseInPenalty_new,
+                                       lb->triUseInPenaltyLabel_preReloc, pset);
 
       triangle_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
+      triUseInPenalty_new.copyData(triUseInPenalty);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -5459,12 +5448,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeTriangleForces");
 
-//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    ParticleInterpolator* interpolator=scinew fastCpdiInterpolator(patch,0.9);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    Ghost::GhostType gan = Ghost::AroundNodes;
     Ghost::GhostType gac = Ghost::AroundCells;
     Vector dxCell = patch->dCell();
     double cell_length2 = dxCell.length2();
@@ -5483,7 +5470,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                    gac, 2*NGN);
+                                                                    gac, NGN+1);
       LSContForce[m].initialize(Vector(0.0));
     }
 
@@ -5494,8 +5481,14 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<Vector>  > triMidToN0Vec(numLSMatls);
     std::vector<constParticleVariable<Vector>  > triMidToN1Vec(numLSMatls);
     std::vector<constParticleVariable<Vector>  > triMidToN2Vec(numLSMatls);
+
+    std::vector<std::vector<constParticleVariable<Vector>  > >
+                                                    triMidToNodeVec(numLSMatls);
+
     std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
+    std::vector<constParticleVariable<IntVector>  > triUseInPenalty(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
+    Matrix3 size; size.Identity();
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
@@ -5503,7 +5496,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       int dwi0 = t_matl0->getDWIndex();
 
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
-                                                       gan, 1, lb->pXLabel);
+                                                       gac, 1, lb->pXLabel);
       psetvec.push_back(pset0);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
@@ -5511,6 +5504,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triMidToN0Vec[tmo],  lb->triMidToN0VectorLabel,     pset0);
       old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
       old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
+      old_dw->get(triUseInPenalty[tmo],lb->triUseInPenaltyLabel,      pset0);
+      triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
+      triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
+      triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
     }
 
     long int numChecks=0;
@@ -5540,18 +5537,22 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
         double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
                          (stiffness[adv_matl0] + stiffness[adv_matl1]);
 
-#if 0
        if(numPar_pset1 > 0){
 
-        // Loop over zeroth line segment subset
-        // Only test the "left" end of the line segment for
-        // penetration into other segments, because the right
-        // end will get checked as the left end of the next segment
+        // Loop over zeroth triangle subset
+        // Then loop over the vertices of the triangle
+        // Check to see if they are to be "used" in force
+        // calculation.  Every vertex should only be used once.
         for(ParticleSubset::iterator iter0 = pset0->begin();
             iter0 != pset0->end(); iter0++){
           particleIndex idx0 = *iter0;
 
-          Point px0=tx0[tmo][idx0] - lsMidToEndVec0[tmo][idx0];
+         for(int iu = 0; iu < 3; iu++){
+
+          if(triUseInPenalty[tmo][idx0](iu)==0){
+           continue;
+          }
+          Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
 
           double min_sep  = 9.e99;
           int closest = 99999;
@@ -5571,10 +5572,142 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
           double forceMag=0.0;
           if(closest < 99999){
-            // Following the description in stackexchange:
-            // https://math.stackexchange.com/questions/2193720/find-a-point-on-a-line-segment-which-is-the-closest-to-other-point-not-on-the-li
-            Point A = tx0[tmi][closest] + lsMidToEndVec0[tmi][closest];
-            Point B = tx0[tmi][closest] - lsMidToEndVec0[tmi][closest];
+            // Following the description at:
+            // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
+//            Vector triNormal = Cross(B - A, C - A);
+//              cout << "triNormal = " << triNormal << endl;
+            Vector triNormal =Cross(triMidToN0Vec[tmi][closest],
+                                    triMidToN1Vec[tmi][closest]);
+            triNormal.safe_normalize();
+            Vector AP = px0 - tx0[tmi][closest];
+//            cout << "AP = " << AP << endl;
+            double overlap = Dot(AP,triNormal);
+//            cout << "overlap = " << overlap << endl;
+            if(overlap < 0.0){ // Point is past the plane of the triangle
+              numOverlap++;
+              // Find the point on the plane nearest the test point
+              Point inPlane = px0 - overlap*triNormal;
+              //Now, see if that point is inside the triangle or not
+              Point A = tx0[tmi][closest] + triMidToN0Vec[tmi][closest];
+              Point B = tx0[tmi][closest] + triMidToN1Vec[tmi][closest];
+              Point C = tx0[tmi][closest] + triMidToN2Vec[tmi][closest];
+              Vector a = A - inPlane;
+              Vector b = B - inPlane;
+              Vector c = C - inPlane;
+              Vector u = Cross(b,c);
+              Vector v = Cross(c,a);
+              Vector w = Cross(a,b);
+              if(Dot(u,v) > 0. && Dot(u,w) > 0.){
+#if 0
+                cout << "Overlap = " << overlap << endl;
+                cout << "triNormal = " << triNormal << endl;
+                cout << "px0 = " << px0 << endl;
+                cout << "A = " << A << endl;
+                cout << "B = " << B << endl;
+                cout << "C = " << C << endl;
+                cout << "inPlane = " << inPlane << endl;
+#endif
+                double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
+                double K = K_l*Length;
+                forceMag = overlap*K;
+                // Find the weights for each of the vertices
+                // These are actually twice the areas, doesn't matter, dividing
+                double areaA = (Cross(b,c)).length();
+                double areaB = (Cross(c,a)).length();
+                double areaC = (Cross(a,b)).length();
+                double totalArea = areaA+areaB+areaC;
+                areaA/=totalArea;
+                areaB/=totalArea;
+                areaC/=totalArea;
+                Vector tForceA  = -forceMag*triNormal*areaA;
+                Vector tForceB  = -forceMag*triNormal*areaB;
+                Vector tForceC  = -forceMag*triNormal*areaC;
+
+                // Distribute the force to the grid from the triangles
+                // from the triangle vertices.  Use same spatial location
+                // for both adv_matls
+
+                // First for Point A
+
+                // Get the node indices that surround the cell
+                int NN = interpolator->findCellAndWeights(A, ni, S, size);
+  
+                double totMass0 = 0.;
+                double totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceA*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceA*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+                // Next for Point B
+
+                // Get the node indices that surround the cell
+                NN = interpolator->findCellAndWeights(B, ni, S, size);
+
+                totMass0 = 0.;
+                totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceB*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceB*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+                // Finally for Point C
+
+                // Get the node indices that surround the cell
+                NN = interpolator->findCellAndWeights(B, ni, S, size);
+
+                totMass0 = 0.;
+                totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceC*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceC*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+              }
+            }
+#if 0
             Vector v = B - A;
             double vLength2 = v.length2();
             double vLength = sqrt(vLength2);
@@ -5583,31 +5716,11 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             double t = -Dot(v,u)/vLength2;
             if(t >= 0.0 && t <= 1.0){
               Vector fromLineSegToPoint = px0.asVector() - ((1.-t)*A + t*B);
-              //normal = v X (0,0,1)
-              Vector normal = Vector(v.y(), -v.x(), 0.)
-                            / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
-              double overlap = Dot(normal,fromLineSegToPoint);
               if(overlap < 0.0){
-               numOverlap++;
                double K = K_l*vLength;
                forceMag = overlap*K;
 
                Vector tForce0  = -forceMag*normal;
-#if 0
-//               sumTForce0+=tForce0;
-               cout << "LS, lsMTEV1      = " << lsMidToEndVec1[closest] << endl;
-               cout << "LS, overlap, forceMag = " << overlap << ", " 
-                                              << forceMag << endl;
-
-               cout << "LS, adv_matl0 = " << adv_matl0 << endl;
-               cout << "LS, adv_matl1 = " << adv_matl1 << endl;
-               cout << "LS, A      = " << A << endl;
-               cout << "LS, B      = " << B << endl;
-               cout << "LS, px0    = " << px0 << endl;
-               cout << "LS, normal = " << normal << endl;
-               cout << "LS, u      = " << u << endl;
-               cout << "LS, t      = " << t << endl;
-#endif
 
                // See comments in addCohesiveZoneForces for a description of how
                // the force is put on the nodes
@@ -5680,12 +5793,13 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 }
               }
             }
-          }
-        } //  Outer loop over linesegments
-       }
 #endif
-      } // inner loop over line segment materials
-    } // outer loop over line segment materials
+          } // closest < 99999
+         } // loop over the three vertices of the triangle
+        } //  Outer loop over triangles
+       }  // if num particles in the inner pset is > 0
+      } // inner loop over triangle materials
+    } // outer loop over triangle materials
 //    cout << "numChecks = " << numChecks << endl;
 //    cout << "numNear = " << numNear << endl;
 //    cout << "numOverlap = " << numOverlap << endl;
@@ -6531,7 +6645,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize,pF;
       ParticleVariable<Matrix3> pScaleFactor;
       new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
-      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
+//    new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
       if(m_output->isOutputTimeStep()){
@@ -6539,9 +6653,12 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-                                                0,dx[1],0,
-                                                0,0,dx[2])*psize[idx]));
+//          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
+//                                                0,dx[1],0,
+//                                                0,0,dx[2])*psize[idx]));
+          pScaleFactor[idx] = ((Matrix3(dx[0],0,0,
+                                        0,dx[1],0,
+                                        0,0,dx[2])*psize[idx]));
         } // for particles
       } // isOutputTimestep
     } // loop over LineSegment matls
@@ -6558,7 +6675,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize,pF;
       ParticleVariable<Matrix3> pScaleFactor;
       new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
-      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
+//    new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
       if(m_output->isOutputTimeStep()){
@@ -6566,9 +6683,12 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-                                                0,dx[1],0,
-                                                0,0,dx[2])*psize[idx]));
+//          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
+//                                                0,dx[1],0,
+//                                                0,0,dx[2])*psize[idx]));
+          pScaleFactor[idx] = ((Matrix3(dx[0],0,0,
+                                        0,dx[1],0,
+                                        0,0,dx[2])*psize[idx]));
         } // for particles
       } // isOutputTimestep
     } // loop over Triangle matls
