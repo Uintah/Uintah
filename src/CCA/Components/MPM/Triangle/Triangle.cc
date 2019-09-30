@@ -105,6 +105,8 @@ Triangle::createTriangles(TriangleMaterial* matl,
      numtri++;
     } // while lines in the tri file
 
+    vector<int> useInPen(numpts,1);
+
     // make triangles from subsequent points if their midpoint is on patch
     for(unsigned int i = 0; i<numtri; i++){
       Point P0(px[i0[i]], py[i0[i]], pz[i0[i]]);
@@ -132,6 +134,14 @@ Triangle::createTriangles(TriangleMaterial* matl,
         if(Jsize <= 0.0){
          cout << "negative J" << endl;
         }
+
+        triangleUseInPenalty[pidx] = IntVector(useInPen[i0[i]],
+                                               useInPen[i1[i]],
+                                               useInPen[i2[i]]);
+        useInPen[i0[i]]=0;
+        useInPen[i1[i]]=0;
+        useInPen[i2[i]]=0;
+
         triangleSize[pidx]    = size;
         triangleDefGrad[pidx] = Identity;
         start++;
@@ -163,6 +173,8 @@ Triangle::allocateVariables(particleIndex numTriangles,
                                          d_lb->triMidToN1VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode2,
                                          d_lb->triMidToN2VectorLabel,   subset);
+  new_dw->allocateAndPut(triangleUseInPenalty,
+                                         d_lb->triUseInPenaltyLabel,    subset);
 
   return subset;
 }
@@ -253,6 +265,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_lb->triMidToN0VectorLabel);
   d_triangle_state.push_back(d_lb->triMidToN1VectorLabel);
   d_triangle_state.push_back(d_lb->triMidToN2VectorLabel);
+  d_triangle_state.push_back(d_lb->triUseInPenaltyLabel);
 
   d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -261,6 +274,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_lb->triMidToN0VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triMidToN1VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triMidToN2VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triUseInPenaltyLabel_preReloc);
 }
 //__________________________________
 //
@@ -301,8 +315,6 @@ void Triangle::initialize(const ProcessorGroup*,
       string filename = triangle_matl->getTriangleFilename();
       particleIndex numTriangles = countTriangles(patch,filename);
       totalTriangles+=numTriangles;
-
-    cout << "Total Triangles =  " << totalTriangles << endl;
 
       createTriangles(triangle_matl, numTriangles,
                     patch, new_dw, filename);

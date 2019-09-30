@@ -901,6 +901,12 @@ MPMLabel::MPMLabel()
   triMidToN2VectorLabel_preReloc = VarLabel::create("tri.MidToN2Vector+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  triUseInPenaltyLabel = VarLabel::create("tri.UseInPenalty",
+			ParticleVariable<IntVector>::getTypeDescription() );
+
+  triUseInPenaltyLabel_preReloc = VarLabel::create("tri.UseInPenalty+",
+			ParticleVariable<IntVector>::getTypeDescription() );
+
   pModalIDLabel = VarLabel::create("p.modalID",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -1004,6 +1010,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(triMidToN1VectorLabel_preReloc);
   VarLabel::destroy(triMidToN2VectorLabel);
   VarLabel::destroy(triMidToN2VectorLabel_preReloc);
+  VarLabel::destroy(triUseInPenaltyLabel);
+  VarLabel::destroy(triUseInPenaltyLabel_preReloc);
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
