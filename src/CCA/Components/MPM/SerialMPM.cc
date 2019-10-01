@@ -1687,9 +1687,8 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gac, 1);
-//  t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gac, 1);
-  t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gac, 1);
+  t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gac, 2);
+  t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+1);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
@@ -5046,7 +5045,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     // Get the arrays of particle values to be changed
     std::vector<constParticleVariable<Point>  >  tx0(numLSMatls);
     std::vector<constParticleVariable<Vector>  > lsMidToEndVec0(numLSMatls);
-//    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -5055,11 +5053,10 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       int dwi0 = t_matl0->getDWIndex();
 
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
-                                                       gac, 1, lb->pXLabel);
+                                                       gac, 2, lb->pXLabel);
       psetvec.push_back(pset0);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
-//      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
       old_dw->get(lsMidToEndVec0[tmo], lb->lsMidToEndVectorLabel,     pset0);
     }
 
@@ -5089,8 +5086,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
         double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
                          (stiffness[adv_matl0] + stiffness[adv_matl1]);
-//        double K_l=5.0e6;
-//        double K_l=5.0e9;
 
        if(numPar_pset1 > 0){
 
@@ -5147,6 +5142,12 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                Vector tForce1B = t*forceMag*normal;
 
 #if 0
+	       bool spew = false;
+               if(adv_matl0==2 || adv_matl1==2){
+                if(px0.x()>0.01 && px0.x()<0.05 && px0.y()>0.24){
+
+               cout << "tmo = " << tmo << endl;
+               cout << "tmi = " << tmi << endl;
                cout << "LS, lsMTEV1      = " << lsMidToEndVec0[tmi][closest] << endl;
                cout << "LS, overlap, forceMag = " << overlap << ", " 
                                               << forceMag << endl;
@@ -5159,6 +5160,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                cout << "LS, normal = " << normal << endl;
                cout << "LS, u      = " << u << endl;
                cout << "LS, t      = " << t << endl;
+	         }
+	       }
 #endif
 
                // See comments in addCohesiveZoneForces for a description of how
