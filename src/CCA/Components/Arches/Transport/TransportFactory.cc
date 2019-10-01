@@ -246,17 +246,18 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_mom = db->findBlock("KMomentum");
 
-    // stress tensor
     m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
     m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
     m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
     m_density_name = parse_ups_for_role( DENSITY, db, "density" );
 
-    std::string stress_name = "[StressTensor]";
-    TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
-    register_task(stress_name, stress_tsk, db_mom);
-    _momentum_builders.push_back( stress_name );
-    _momentum_stress_tensor.push_back( stress_name );
+    if ( !db_mom->findBlock("inviscid")) {
+      std::string stress_name = "[StressTensor]";
+      TaskInterface::TaskBuilder* stress_tsk = scinew StressTensor::Builder( stress_name, 0 );
+      register_task(stress_name, stress_tsk, db_mom);
+      _momentum_builders.push_back( stress_name );
+      _momentum_stress_tensor.push_back( stress_name );
+    }
 
     // X-mom
     std::string update_task_name = "[KFEUpdate]x-mom-update";
@@ -318,7 +319,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     _momentum_update.push_back(update_task_name);
     _momentum_conv.push_back( mom_task_name );
 
-    if ( db ->findBlock("KMomentum")->findBlock("PressureSolver")){
+    if ( db->findBlock("KMomentum")->findBlock("PressureSolver")){
       //Pressure eqn
       ProblemSpecP db_press = db ->findBlock("KMomentum")->findBlock("PressureSolver");
       std::string tsk_name = "[PressureEqn]";
@@ -351,134 +352,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     }
 
   }
-}
-
-void
-TransportFactory::build_all_tasks( ProblemSpecP& db )
-{
-
-  // for ( auto itsk = _active_tasks.begin(); itsk != _active_tasks.end(); itsk++ ){
-  //   TaskInterface* tsk = retrieve_task(*itsk);
-  //   print_task_setup_info(tsk->get_task_name(), tsk->get_task_function());
-  //   tsk->problemSetup(db);
-  //   tsk->create_local_labels();
-  // }
-
-  // if ( db->findBlock("KScalarTransport") ){
-  //
-  //   ProblemSpecP db_st = db->findBlock("KScalarTransport");
-  //
-  //   for (ProblemSpecP group_db = db_st->findBlock("eqn_group"); group_db != nullptr; group_db = group_db->findNextBlock("eqn_group")){
-  //
-  //     std::string group_name = "null";
-  //     std::string type = "null";
-  //     group_db->getAttribute("label", group_name);
-  //     group_db->getAttribute("type", type );
-  //
-  //     //RHS builders
-  //     TaskInterface* tsk = retrieve_task(group_name);
-  //     print_task_setup_info(group_name, "Compute RHS.");
-  //     tsk->problemSetup(group_db);
-  //     tsk->create_local_labels();
-  //
-  //     std::string diffusion_task_name = "diffusion_"+group_name;
-  //     print_task_setup_info(diffusion_task_name, "Compute diffusive fluxes.");
-  //     TaskInterface* diff_tsk = retrieve_task(diffusion_task_name);
-  //     diff_tsk->problemSetup( group_db );
-  //     diff_tsk->create_local_labels();
-  //
-  //     //TaskInterface* fe_tsk = retrieve_task("scalar_fe_update_"+group_name);
-  //     //print_task_setup_info(group_name, "FE update.");
-  //     //fe_tsk->problemSetup( group_db );
-  //     //fe_tsk->create_local_labels();
-  //
-  //     TaskInterface* rk_tsk = retrieve_task("rk_time_avg_"+group_name);
-  //     print_task_setup_info(group_name, "RK time avg.");
-  //     rk_tsk->problemSetup( group_db );
-  //     rk_tsk->create_local_labels();
-  //
-  //     TaskInterface* sup_tsk = retrieve_task("scalar_update_"+group_name);
-  //     print_task_setup_info(group_name, "Scalar update.");
-  //     sup_tsk->problemSetup( group_db );
-  //     sup_tsk->create_local_labels();
-  //
-  //     // tsk = retrieve_task("scalar_ssp_update_"+group_name);
-  //     // tsk->problemSetup( group_db );
-  //     // tsk->create_local_labels();
-  //
-  //   }
-  // }
-  //
-  // if ( db->findBlock("DQMOM")){
-  //   if ( db->findBlock("DQMOM")->findBlock("kokkos_translate") ){
-  //     build_DQMOM( db );
-  //   }
-  // }
-  //
-  // ProblemSpecP db_mom = db->findBlock("KMomentum");
-  //
-  // if ( db_mom != nullptr ){
-  //
-  //   TaskInterface* stress_tsk = retrieve_task("stress_tensor");
-  //   print_task_setup_info( stress_tsk->get_task_name(), "compute stress tensor");
-  //   stress_tsk->problemSetup( db_mom );
-  //   stress_tsk->create_local_labels();
-  //
-  //   TaskInterface* tsk = retrieve_task( "x-mom" );
-  //   print_task_setup_info( tsk->get_task_name(), "compute rhs");
-  //   tsk->problemSetup( db_mom );
-  //   tsk->create_local_labels();
-  //
-  //   TaskInterface* fe_tsk = retrieve_task("x-mom-update");
-  //   print_task_setup_info( fe_tsk->get_task_name(), "fe update");
-  //   fe_tsk->problemSetup( db_mom );
-  //   fe_tsk->create_local_labels();
-  //
-  //   tsk = retrieve_task( "y-mom" );
-  //   print_task_setup_info( tsk->get_task_name(), "compute rhs");
-  //   tsk->problemSetup( db_mom );
-  //   tsk->create_local_labels();
-  //
-  //   fe_tsk = retrieve_task("y-mom-update");
-  //   print_task_setup_info( fe_tsk->get_task_name(), "fe update");
-  //   fe_tsk->problemSetup( db_mom );
-  //   fe_tsk->create_local_labels();
-  //
-  //   tsk = retrieve_task( "z-mom" );
-  //   print_task_setup_info( tsk->get_task_name(), "compute rhs");
-  //   tsk->problemSetup( db_mom );
-  //   tsk->create_local_labels();
-  //
-  //   fe_tsk = retrieve_task("z-mom-update");
-  //   print_task_setup_info( fe_tsk->get_task_name(), "fe update");
-  //   fe_tsk->problemSetup( db_mom );
-  //   fe_tsk->create_local_labels();
-  //
-  //   if ( db_mom ->findBlock("PressureSolver")){
-  //     TaskInterface* press_tsk = retrieve_task("build_pressure_system");
-  //     print_task_setup_info(press_tsk->get_task_name(), "building pressure terms, A, b");
-  //     press_tsk->problemSetup( db_mom );
-  //     press_tsk->create_local_labels();
-  //
-  //     AtomicTaskInterface* rhouhatbc_tsk = retrieve_atomic_task("vel_rho_hat_bc");
-  //     print_task_setup_info(rhouhatbc_tsk->get_task_name(), "applies bc on rhouhat");
-  //     rhouhatbc_tsk->problemSetup(db_mom);
-  //     rhouhatbc_tsk->create_local_labels();
-  //
-  //     AtomicTaskInterface* gradP_tsk = retrieve_atomic_task("pressure_correction");
-  //     print_task_setup_info(gradP_tsk->get_task_name(), "correction for vels");
-  //     gradP_tsk->problemSetup(db_mom);
-  //     gradP_tsk->create_local_labels();
-  //
-  //     AtomicTaskInterface* press_bc_tsk = retrieve_atomic_task("pressure_bcs");
-  //     print_task_setup_info(press_bc_tsk->get_task_name(), "apply bcs to the solution of the linear pressure system");
-  //     press_bc_tsk->problemSetup(db_mom);
-  //     press_bc_tsk->create_local_labels();
-  //  } else {
-  //    throw ProblemSetupException("Error: Please update UPS file to include a <PressureSolver> tag since momentum was detected.", __FILE__, __LINE__);
-  //  }
-  //
-  // }
 }
 
 //--------------------------------------------------------------------------------------------------

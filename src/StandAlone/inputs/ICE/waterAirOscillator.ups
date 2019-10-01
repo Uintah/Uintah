@@ -178,6 +178,9 @@
 
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!-- Thermophysical properties of water                                 -->
+    <!-- "Fundamentals of Heat and Mass Transfer 7th edition" Bergman,      -->
+    <!-- Lavine, Incropera and Dewitt, pg 1003.                             -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
@@ -191,10 +194,15 @@
               <L>  8.0e-6     </L>    <!-- (1/K^2)    -->
               <vo> 1.00008e-3 </vo>   <!-- (m^3/kg)   -->
             </EOS>
-                              <!-- 855 -->
+
             <dynamic_viscosity>    0           </dynamic_viscosity>
             <thermal_conductivity> 0           </thermal_conductivity>
-                   
+            
+            <!--
+            <dynamic_viscosity>    855e-6       </dynamic_viscosity>
+            <thermal_conductivity> 0.613        </thermal_conductivity>
+            -->
+                               
             <specific_heat>        4145.37627765 </specific_heat>
             <gamma>                1.000009      </gamma>
             <geom_object>

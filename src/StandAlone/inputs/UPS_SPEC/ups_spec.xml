@@ -742,7 +742,7 @@
 
       <SINE_BC              spec="OPTIONAL NO_DATA">
         <omega              spec="REQUIRED DOUBLE 'positive'"/>
-        <A                  spec="REQUIRED DOUBLE 'positive'"/>
+        <A                  spec="REQUIRED DOUBLE"/>
         <reference_pressure spec="REQUIRED DOUBLE 'positive'"/>
         <reference_velocity spec="REQUIRED VECTOR 'positive'"/>
       </SINE_BC>

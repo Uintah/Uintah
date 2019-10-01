@@ -34,7 +34,9 @@
       <Utilities                        spec="OPTIONAL NO_DATA">
         <utility                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'variable_math, mass_flow_rate'">
+                                        attribute2="type REQUIRED STRING 'variable_math, 
+                                                                          mass_flow_rate, 
+                                                                          poisson'">
 
           <!-- mass_flow_rate -->
           <!-- The mass_flow_rate utility computes the mass flowrate of inlet boundary conditions.
@@ -81,6 +83,13 @@
             <op                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           </exe_order>
+
+          <!-- for an independent poisson solver -->
+          <!-- note that the use of this still requires u,v,w be defined -->
+          <PoissonSolver                spec="REQUIRED NO_DATA"
+                                        need_applies_to="type poisson">
+            <include href="solver_spec.xml" section="Parameters" />
+          </PoissonSolver>
         </utility>
 
       </Utilities>

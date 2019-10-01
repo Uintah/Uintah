@@ -335,7 +335,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   _task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2F));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  proc0cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering and Building Tasks For: " << std::endl;
   for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
@@ -343,16 +343,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     i->second->register_all_tasks(db);
 
   }
-
-  proc0cout << "\n Building Tasks For: " << std::endl;
-
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->build_all_tasks(db);
-
-  }
-
   proc0cout << endl;
 
   //Checking for lagrangian particles:

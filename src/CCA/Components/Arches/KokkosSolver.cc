@@ -101,7 +101,6 @@ KokkosSolver::sched_restartInitialize( const LevelP     & level
   // Setup BCs
   setupBCs( level, sched, matls );
 
-
   // initialize hypre objects
   if ( m_task_factory_map["transport_factory"]->has_task("[PressureEqn]")){
     PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("[PressureEqn]"));
@@ -176,7 +175,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  proc0cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering and Building Tasks For: " << std::endl;
   for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
@@ -185,18 +184,13 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
 
   }
 
-  proc0cout << "\n Building Tasks For: " << std::endl;
-
-  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->build_all_tasks(db);
-
-  }
-
   //Set the hypre solver in the pressure eqn:
   if ( m_task_factory_map["transport_factory"]->has_task("[PressureEqn]")){
     PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("[PressureEqn]"));
+    press_tsk->set_solver( m_hypreSolver );
+    press_tsk->setup_solver( db );
+  } else if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
     press_tsk->set_solver( m_hypreSolver );
     press_tsk->setup_solver( db );
   }
@@ -230,7 +224,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
   var_names.push_back(vname);
   std::string wname = parse_ups_for_role( WVELOCITY, m_arches_spec, ArchesCore::default_wVel_name );
   var_names.push_back(wname);
-  std::string muname = parse_ups_for_role( TOTAL_VISCOSITY, m_arches_spec, ArchesCore::default_viscosity_name );
+  std::string muname = parse_ups_for_role( TOTAL_VISCOSITY, m_arches_spec, "NotFound" );
   var_names.push_back(muname);
   std::string rhoname = parse_ups_for_role( DENSITY, m_arches_spec, "NotFound" );
   var_names.push_back(rhoname);
@@ -383,11 +377,104 @@ KokkosSolver::sched_initialize( const LevelP& level,
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  TaskController& tsk_controller = TaskController::self();
-  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
-
   // Setup BCs
   setupBCs( level, sched, matls );
+
+  if ( m_nonlinear_solver == SANDBOX ){
+
+    SandBox_initialize( level, sched );
+
+  } else {
+
+    SSPRKSolve_initialize( level, sched );
+
+  }
+
+  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
+    insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing information per task.
+    i->second->print_variable_max_ghost();
+  }
+
+  // SCI_DEBUG for printing across ALL tasks.
+  print_variable_max_ghost();
+
+}
+
+//--------------------------------------------------------------------------------------------------
+int
+KokkosSolver::sched_nonlinearSolve( const LevelP & level,
+                                    SchedulerP & sched )
+{
+  using namespace Uintah::ArchesCore;
+
+  //clear the factory ghost lists from information inserted from scheduleInitialize
+  for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    (*i->second).clear_max_ghost_list();
+  }
+
+  //also clear the master ghost list
+  clear_max_ghost_list();
+
+
+  if ( m_nonlinear_solver == SANDBOX ){
+
+    SandBox( level, sched );
+
+  } else {
+
+    SSPRKSolve( level, sched );
+
+  }
+
+  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
+    insert_max_ghost( the_ghost_info );
+    //SCI_DEBUG for printing across tasks per factory
+    i->second->print_variable_max_ghost();
+  }
+
+  //SCI_DEBUG for printing across all tasks
+  print_variable_max_ghost();
+
+  return 0;
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+KokkosSolver::setupBCs( const LevelP      & level
+                      ,       SchedulerP  & sched
+                      , const MaterialSet * matls
+                      )
+{
+  //boundary condition helper
+  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
+
+  //computes the area for each inlet through the use of a reduction variables
+  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
+
+  //copies the reduction area variable information on area to a double in the BndCond spec
+  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
+
+  proc0cout << "\n Setting BCHelper for all Factories. \n" << std::endl;
+  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
+    i->second->set_bcHelper( m_bcHelper[level->getID()]);
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+KokkosSolver::SSPRKSolve_initialize( const LevelP & level,
+                                     SchedulerP & sched )
+{
+  using namespace Uintah::ArchesCore;
+
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
+
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
   // initialize hypre objects
   if ( m_task_factory_map["transport_factory"]->has_task("[PressureEqn]")){
@@ -465,46 +552,32 @@ KokkosSolver::sched_initialize( const LevelP& level,
   // source_term_kokkos_factory
   m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
-  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
-    insert_max_ghost( the_ghost_info );
-    //SCI_DEBUG for printing information per task.
-    i->second->print_variable_max_ghost();
-  }
-
-  // SCI_DEBUG for printing across ALL tasks.
-  print_variable_max_ghost();
-
 }
 
 //--------------------------------------------------------------------------------------------------
-int
-KokkosSolver::sched_nonlinearSolve( const LevelP & level,
-                                    SchedulerP & sched )
+void
+KokkosSolver::SSPRKSolve( const LevelP & level,
+                          SchedulerP & sched )
 {
-  using namespace Uintah::ArchesCore;
 
-  TaskController& tsk_controller = TaskController::self();
-  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
+  using namespace Uintah::ArchesCore;
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
   BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
+  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
+  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
   BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
   BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
 
-  //clear the factory ghost lists from information inserted from scheduleInitialize
-  for ( auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    (*i->second).clear_max_ghost_list();
-  }
-  //also clear the master ghost list
-  clear_max_ghost_list();
-
   TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
+  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
+
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
   // ----------------- Timestep Initialize ---------------------------------------------------------
 
@@ -534,84 +607,6 @@ KokkosSolver::sched_nonlinearSolve( const LevelP & level,
 
   m_task_factory_map["table_factory"]->schedule_task_group( "all_tasks",
     TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls );
-
-  // --------------- Actual Solve ------------------------------------------------------------------
-
-  if ( m_nonlinear_solver == SANDBOX ){
-
-    SandBox( level, sched );
-
-  } else if (m_nonlinear_solver == HELIUM_PLUME){
-
-    SSPRKv2Solve( level, sched );
-
-  } else {
-
-    SSPRKSolve( level, sched );
-
-  }
-
-  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
-    insert_max_ghost( the_ghost_info );
-    //SCI_DEBUG for printing across tasks per factory
-    i->second->print_variable_max_ghost();
-  }
-
-  //SCI_DEBUG for printing across all tasks
-  print_variable_max_ghost();
-
-  return 0;
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-KokkosSolver::setupBCs( const LevelP      & level
-                      ,       SchedulerP  & sched
-                      , const MaterialSet * matls
-                      )
-{
-  //boundary condition helper
-  m_bcHelper.insert(std::make_pair(level->getID(), scinew WBCHelper( level, sched, matls, m_arches_spec )));
-
-  //computes the area for each inlet through the use of a reduction variables
-  m_bcHelper[level->getID()]->sched_computeBCAreaHelper( sched, level, matls );
-
-  //copies the reduction area variable information on area to a double in the BndCond spec
-  m_bcHelper[level->getID()]->sched_bindBCAreaHelper( sched, level, matls );
-
-  proc0cout << "\n Setting BCHelper for all Factories. \n" << std::endl;
-  for ( BFM::iterator i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ) {
-    i->second->set_bcHelper( m_bcHelper[level->getID()]);
-  }
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-KokkosSolver::SSPRKSolve( const LevelP & level,
-                          SchedulerP & sched )
-{
-
-  using namespace Uintah::ArchesCore;
-
-  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
-
-  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
-  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
-  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
-  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
-  BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
-  BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
-
-  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
-
-  TaskController& tsk_controller = TaskController::self();
-  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
 
   // ----------------- SSP RK LOOP -----------------------------------------------------------------
 
@@ -831,279 +826,83 @@ KokkosSolver::SSPRKSolve( const LevelP & level,
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
   } // RK Integrator
+
   //Variable stats stuff
   i_prop_fac->second->schedule_task_group( "variable_stat_models",
     TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, 1 );
 
 }
+
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::SSPRKv2Solve( const LevelP     & level
-                        ,       SchedulerP & sched
-                        )
+KokkosSolver::SandBox_initialize( const LevelP & level,
+                                     SchedulerP & sched )
 {
-
-  using namespace Uintah::ArchesCore;
-
-  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
-
-  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
-  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
-  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
-  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
-  BFM::iterator i_turb_model_fac = m_task_factory_map.find("turbulence_model_factory");
-  //BFM::iterator i_particle_model_fac = m_task_factory_map.find("particle_model_factory");
-
-  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
+  using namespace ArchesCore;
 
   TaskController& tsk_controller = TaskController::self();
   const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
+  const int time_substep = 0;
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  // ----------------- SSP RK LOOP -----------------------------------------------------------------
+  BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
 
-  for ( int time_substep = 0; time_substep < m_rk_order; time_substep++ ){
+  // initialize hypre objects
+  if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
+    press_tsk->sched_Initialize( level, sched );
+  }
 
-    // utilityFactory
-    i_util_fac->second->schedule_task_group( "mass_flow_rate",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-    // pre-update properties)
-    i_prop_fac->second->schedule_task_group( "pre_update_property_models",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+  i_prop_fac->second->schedule_task_group( "all_tasks",
+    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-    // momentum closure: LES model
-    i_turb_model_fac->second->schedule_task_group("momentum_closure",
-      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
+  i_util_fac->second->schedule_task_group( "all_tasks",
+    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-    // scalar closure:
-    i_prop_fac->second->schedule_task_group( "diffusion_property_models",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-   // (pre-update source terms)
-    i_source_fac->second->schedule_task_group( "pre_update_source_tasks",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls , time_substep );
-
-    // ** SCALARS **
-    // PRE-PROJECTION
-    i_transport->second->schedule_task_group("diffusion_flux_builders",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    // now construct the RHS:
-    i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    //i_transport->second->schedule_task_group("scalar_fe_update",
-    //  TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    // update phi
-    i_transport->second->schedule_task_group("scalar_update",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    // Compute density star
-    i_prop_fac->second->schedule_task( "density_star", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, time_substep, false, true );
-
-    // Compute exact density from rho*phi
-    //i_table_fac->second->schedule_task_group("compute_exact_density",
-    //  TaskInterface::TIMESTEP_EVAL, m_global_pack_tasks, level, sched, matls, time_substep );
-
-    // get phi from rho*phi :
-    i_transport->second->schedule_task_group("phi_from_rho_phi",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+  m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks",
+    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
 
-    //Compute density from phi
-    //i_prop_fac->second->schedule_task( "density_guess", TaskInterface::TIMESTEP_EVAL,
-    //  level, sched, matls, time_substep, false, true );
-
-    // bc factory tasks
-    i_bc_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    // Scalar BCs
-    i_transport->second->schedule_task_group("scalar_rhs_builders",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    // Set BC for rho*phi
-    i_transport->second->schedule_task_group("phi_from_rho_phi",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    // Set BC for density exact
-    //i_table_fac->second->schedule_task_group("compute_exact_density",
-    //  TaskInterface::BC, m_global_pack_tasks, level, sched, matls, time_substep );
-
-    // ** TABLE LOOKUP **
-    i_table_fac->second->schedule_task_group("all_tasks",
-     TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-    i_table_fac->second->schedule_task_group("all_tasks",
-     TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    if (time_substep > 0) {
-      // time average using rk method
-      i_transport->second->schedule_task_group("rk_time_ave",
-        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-     }
-     // Compute density rk
-     i_prop_fac->second->schedule_task( "density_rk", TaskInterface::TIMESTEP_EVAL,
-       level, sched, matls, time_substep, false, true );
-
-     if (time_substep > 0) {
-      // get phi from phi*rho
-      i_transport->second->schedule_task_group("phi_from_rho_phi",
-        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-      // Scalar BCs
-      i_transport->second->schedule_task_group("scalar_rhs_builders",
-        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-      // Set BC for rho*phi
-      i_transport->second->schedule_task_group("phi_from_rho_phi",
-        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-      // ** TABLE LOOKUP **
-      i_table_fac->second->schedule_task_group("all_tasks",
-       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-      i_table_fac->second->schedule_task_group("all_tasks",
-       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-     }
-
-    // bc factory tasks
-    i_bc_fac->second->schedule_task_group("all_tasks",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    // ** MOMENTUM **
-
-    i_transport->second->schedule_task_group( "momentum_stress_tensor", TaskInterface::TIMESTEP_EVAL,
-      packed_info.global, level, sched, matls, time_substep );
-
-    // compute wall momentum closure
-    i_turb_model_fac->second->schedule_task_group("wall_momentum_closure",
-      TaskInterface::TIMESTEP_EVAL, packed_info.turbulence, level, sched, matls, time_substep );
-
-    i_transport->second->schedule_task_group( "momentum_conv", TaskInterface::TIMESTEP_EVAL,
-      packed_info.global, level, sched, matls, time_substep );
-
-
-    i_transport->second->schedule_task_group( "momentum_fe_update", TaskInterface::TIMESTEP_EVAL,
-      packed_info.global, level, sched, matls, time_substep );
-
-    // apply boundary conditions
-     i_transport->second->schedule_task_group( "momentum_conv", TaskInterface::BC, false,
-                                              level, sched, matls, time_substep );
-
-    //Compute drhodt
-    i_prop_fac->second->schedule_task( "drhodt", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, time_substep, false, true );
-
-    // ** PRESSURE PROJECTION **
-    if ( i_transport->second->has_task("[PressureEqn]")){
-
-      //APPLY BC for OULET AND PRESSURE PER STAS'S BCs
-      i_transport->second->schedule_task("[VelRhoHatBC]", TaskInterface::ATOMIC,
-                                          level, sched, matls, time_substep );
-
-      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
-        i_transport->second->retrieve_task("[PressureEqn]"));
-
-      // Compute the coeffificients
-      i_transport->second->schedule_task("[PressureEqn]", TaskInterface::TIMESTEP_EVAL,
-                                          level, sched, matls, time_substep );
-
-      // Compute the boundary conditions on the linear system
-      i_transport->second->schedule_task("[PressureEqn]", TaskInterface::BC,
-                                          level, sched, matls, time_substep );
-
-      // Solve it - calling out to hypre external lib
-      press_tsk->solve(level, sched, time_substep);
-
-      // Apply boundary conditions on the pressure field. The BCs are initially applied on the
-      // linear system, however, the resulting pressure field also needs BCs so that the correction
-      // to the velocities is done correctly.
-      i_transport->second->schedule_task("[PressureBC]", TaskInterface::ATOMIC,
-                                          level, sched, matls, time_substep );
-
-      // Correct velocities
-      i_transport->second->schedule_task("[AddPressGradient]", TaskInterface::ATOMIC,
-                                          level, sched, matls, time_substep );
-
-    // apply boundary conditions
-     i_transport->second->schedule_task_group( "momentum_conv", TaskInterface::BC, false,
-                                              level, sched, matls, time_substep );
-
-    }
-    // Get velocities from momemtum: u = x-mom/rho
-    i_transport->second->schedule_task_group("u_from_rhou",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-   // apply boundary conditions to rho*ui
-    i_prop_fac->second->schedule_task_group("u_from_rhou",
-      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-
-    i_prop_fac->second->schedule_task( "compute_cc_velocities", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, time_substep, false, true );
-
-    //Continuity check
-    i_prop_fac->second->schedule_task( "continuity_check", TaskInterface::TIMESTEP_EVAL,
-      level, sched, matls, time_substep, false, true );
-
-
-    // compute kinetic energy
-    i_prop_fac->second->schedule_task_group( "post_update_property_models",
-      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
-
-  } // RK Integrator
-
-
-  //Variable stats stuff
-  i_prop_fac->second->schedule_task_group( "variable_stat_models",
-    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, 1 );
 }
-
 
 //--------------------------------------------------------------------------------------------------
 void
 KokkosSolver::SandBox( const LevelP     & level
-                     ,       SchedulerP & sched
-                     )
+                           , SchedulerP & sched )
 {
-  //const bool pack_tasks = true;
-  //const bool dont_pack_tasks = false;
 
+  using namespace ArchesCore;
+
+  TaskController& tsk_controller = TaskController::self();
+  const TaskController::Packing& packed_info = tsk_controller.get_packing_info();
   const int time_substep = 0;
-
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  BFM::iterator i_transport = m_task_factory_map.find("transport_factory");
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
-  BFM::iterator i_bc_fac = m_task_factory_map.find("boundary_condition_factory");
-  BFM::iterator i_table_fac = m_task_factory_map.find("table_factory");
-  BFM::iterator i_source_fac = m_task_factory_map.find("source_term_factory");
-  TaskFactoryBase::TaskMap all_bc_tasks = i_bc_fac->second->retrieve_all_tasks();
-  TaskFactoryBase::TaskMap all_table_tasks = i_table_fac->second->retrieve_all_tasks();
+  BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+
+  PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
+                           i_util_fac->second->retrieve_task("[PressureEqn]"));
 
   // ----------------- Time Integration ------------------------------------------------------------
-  // (pre-update properties tasks)
-  i_prop_fac->second->schedule_task( "pre_update_property_models", TaskInterface::TIMESTEP_EVAL,
-    level, sched, matls, time_substep );
+  i_prop_fac->second->schedule_task_group("all_tasks",
+    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-   // (pre-update source terms)
-  i_source_fac->second->schedule_task( "pre_update_source_task", TaskInterface::TIMESTEP_EVAL,
-    level, sched, matls, time_substep );
+  i_util_fac->second->schedule_task_group("all_tasks",
+    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-  // now construct the RHS:
-  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::TIMESTEP_EVAL,
-    level, sched, matls, time_substep );
+  //m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
+  i_prop_fac->second->schedule_task_group( "all_tasks",
+    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  i_transport->second->schedule_task( "scalar_rhs_builders", TaskInterface::BC,
-    level, sched, matls, time_substep );
+  i_util_fac->second->schedule_task_group( "all_tasks",
+    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  // now update them:
-  i_transport->second->schedule_task( "scalar_fe_update", TaskInterface::TIMESTEP_EVAL,
-    level, sched, matls, time_substep );
+  i_util_fac->second->schedule_task_group( "all_tasks",
+    TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+
+  // Solve it - calling out to hypre external lib
+  press_tsk->solve(level, sched, time_substep);
 
 }

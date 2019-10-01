@@ -121,10 +121,31 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
   if(!do_custom_arches_linear_solve){
     //);
     //custom_solver->sched_PreconditionerConstruction( sched, matls, level );// hard coded for level 0 
-    ProblemSpecP db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");
+    ProblemSpecP db_pressure{nullptr};
 
-    if ( !db_pressure ){
-      throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
+    //Pressure Solve as part of the momentum solver
+    if ( db->findBlock("KMomentum") != nullptr ){
+
+      db_pressure = db->findBlock("KMomentum")->findBlock("PressureSolver");
+      if ( !db_pressure ){
+        throw ProblemSetupException("Error: You must specify a <PressureSolver> block in the UPS file.",__FILE__,__LINE__);
+      }
+
+    } else {
+
+      //Part of the utility_factory?
+      ProblemSpecP db_all_util = db->findBlock("Utilities");
+      if ( db_all_util != nullptr ){
+        for ( ProblemSpecP db_util = db_all_util->findBlock("utility"); db_util != nullptr;
+              db_util = db_util->findNextBlock("utility")){
+
+          std::string type;
+          db_util->getAttribute("type", type);
+          if ( type == "poisson" ){
+            db_pressure = db_util->findBlock("PoissonSolver");
+          }
+        }
+      }
     }
 
     m_hypreSolver->readParameters(db_pressure, "pressure" );
@@ -135,14 +156,14 @@ PressureEqn::setup_solver( ProblemSpecP& db ){
     //makes any sense at the moment.
     m_hypreSolver->getParameters()->setSetupFrequency(0.0);
 
-    m_enforceSolvability = false;
-    if ( db->findBlock("enforce_solvability")){
-      m_enforceSolvability = true;
+    if ( db_pressure != nullptr ){
+      if ( db_pressure->findBlock("enforce_solvability") != nullptr ){
+        m_enforceSolvability = true;
+      }
     }
   } else {
     proc0cout << "\n     WARNING: Using custom Arches linear solve instead of hypre!" << std::endl;
   }
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -249,10 +270,9 @@ PressureEqn::register_timestep_init(
   std::vector<AFC::VariableInformation>& variable_registry,
   const bool packed_tasks ){
 
+  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "A_press", AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "A_press", AFC::REQUIRES, 0, AFC::OLDDW, variable_registry, m_task_name );
-  register_variable( "b_press", AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( m_pressure_name, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( "guess_press", AFC::COMPUTES, variable_registry, m_task_name );
 
 }
@@ -260,19 +280,16 @@ PressureEqn::register_timestep_init(
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace> void
 PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-
- auto  Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
- auto  old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7>, const Stencil7, MemSpace>("A_press");
- auto  b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
- auto  x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_pressure_name);
- auto  guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("guess_press");
+  auto Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7>, const Stencil7, MemSpace>("A_press");
+  auto x = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_pressure_name);
+  auto guess = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("guess_press");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-  parallel_for(execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
-    b(i,j,k)=0.0;
-    x(i,j,k)=0.0;
-    guess(i,j,k)=0.0;
-    Apress(i,j,k)=old_Apress(i,j,k);
+  parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
+    Apress(i,j,k) = old_Apress(i,j,k);
+    x(i,j,k) = 0.0;
+    guess(i,j,k) = 0.0;
   });
 }
 
@@ -283,7 +300,7 @@ PressureEqn::register_timestep_eval(
   std::vector<AFC::VariableInformation>& variable_registry,
   const int time_substep, const bool packed_tasks ){
 
-  register_variable( "b_press", AFC::MODIFIES, variable_registry, time_substep, m_task_name );
+  register_variable( "b_press", AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable( m_eps_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( ArchesCore::default_uMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
   register_variable( ArchesCore::default_vMom_name, AFC::REQUIRES, 1, AFC::NEWDW, variable_registry, time_substep, m_task_name );
@@ -308,6 +325,11 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   auto ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
   auto zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
   auto drhodt = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_drhodt_name);
+
+  Uintah::BlockRange range2(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+  parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
+    b(i,j,k) = 0.0;
+  });
 
   const double dt = tsk_info->get_dt();
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -342,40 +364,6 @@ void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_in
   auto A = tsk_info->get_uintah_field_add<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
   auto b = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("b_press");
   auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
-
-  //const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  //for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-
-  //  Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID() );
-  //  IntVector iDir = patch->faceDirection( i_bc->second.face );
-  //  Patch::FaceType face = i_bc->second.face;
-  //  BndTypeEnum my_type = i_bc->second.type;
-
-  //  double sign;
-
-  //  if ( my_type == OUTLET ||
-  //       my_type == PRESSURE ){
-      // Dirichlet
-      // P = 0
-  //    sign = -1.0;
-  //  } else {
-      // Applies to Inlets, walls where
-      // P satisfies a Neumann condition
-      // dP/dX = 0
-  //    sign = 1.0;
-  //  }
-
-  //  parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-
-  //    const int im=i- iDir[0];
-  //    const int jm=j- iDir[1];
-  //    const int km=k- iDir[2];
-
-  //    A(im,jm,km).p = A(im,jm,km).p + sign * A(im,jm,km)[face];
-  //    A(im,jm,km)[face] = 0.;
-
-   // });
-  //}
 
   //Now take care of intrusions:
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -450,8 +438,10 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
   IntVector m_periodic_vector = level->getPeriodicBoundaries();
 
-  bool modifies_x = true; //because x was computed upstream
   bool isFirstSolve = true;
+
+  bool modifies_x = true; //because x was computed upstream
+
   if(do_custom_arches_linear_solve){
     sched_custom(level, sched,  matls,
         A,      Task::NewDW,
@@ -459,15 +449,15 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
         b,      Task::NewDW,
         guess,  Task::NewDW,
         time_substep);
-  }else{ // use hypre
-  const bool isPeriodic = m_periodic_vector.x() == 1 && m_periodic_vector.y() == 1 && m_periodic_vector.z() ==1;
-  if ( isPeriodic || m_enforceSolvability ) {
-    m_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, time_substep);
-  }
+  } else { // use hypre
+   const bool isPeriodic = m_periodic_vector.x() == 1 && m_periodic_vector.y() == 1 && m_periodic_vector.z() ==1;
+   if ( isPeriodic || m_enforceSolvability ) {
+     m_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, time_substep);
+    }
 
-  if ( time_substep > 0 ) {
-    isFirstSolve = false;
-  }
+    if ( time_substep > 0 ) {
+      isFirstSolve = false;
+    }
 
     m_hypreSolver->scheduleSolve(level, sched,  matls,
         A,      Task::NewDW,
@@ -476,7 +466,6 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
         guess,  Task::NewDW,
         isFirstSolve);
   }
-
 }
 
  void

@@ -143,33 +143,6 @@ SourceTermFactoryV2::register_all_tasks( ProblemSpecP& db )
   }
 
 //--------------------------------------------------------------------------------------------------
-void
-SourceTermFactoryV2::build_all_tasks( ProblemSpecP& db )
-{
-
-  // if ( db->findBlock("SourceV2") ){
-  //
-  //   ProblemSpecP db_init = db->findBlock("SourceV2");
-  //
-  //   for (ProblemSpecP db_src = db_init->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
-  //
-  //     std::string name;
-  //     std::string type;
-  //     db_src->getAttribute("label",name );
-  //     db_src->getAttribute("type", type );
-  //
-  //     TaskInterface* tsk = retrieve_task(name);
-  //     tsk->problemSetup( db_src );
-  //     tsk->create_local_labels();
-  //
-  //     //Assuming that everything here is independent:
-  //     //_task_order.push_back(name);
-  //
-  //   }
-  // }
-}
-
-//--------------------------------------------------------------------------------------------------
 
 void
 SourceTermFactoryV2::add_task( ProblemSpecP& db )

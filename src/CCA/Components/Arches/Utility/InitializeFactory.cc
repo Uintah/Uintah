@@ -45,7 +45,7 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       db_task->getAttribute("variable_label", eqn_name );
       db_task->getAttribute("type", type );
 
-      bool mom_variable = is_mom_var(eqn_name); 
+      bool mom_variable = is_mom_var(eqn_name);
 
       if ( type == "wave" ){
 
@@ -207,33 +207,6 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       }
     }
   }
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-InitializeFactory::build_all_tasks( ProblemSpecP& db )
-{
-
-  // if ( db->findBlock("Initialization") ){
-  //
-  //   ProblemSpecP db_init = db->findBlock("Initialization");
-  //
-  //   for (ProblemSpecP db_task = db_init->findBlock("task"); db_task != nullptr; db_task = db_task->findNextBlock("task")){
-  //
-  //     std::string task_name;
-  //     std::string type;
-  //     db_task->getAttribute("task_label",task_name );
-  //     db_task->getAttribute("type", type );
-  //
-  //     print_task_setup_info( task_name, type );
-  //
-  //     TaskInterface* tsk = retrieve_task(task_name);
-  //     tsk->problemSetup( db_task );
-  //
-  //     tsk->create_local_labels();
-  //
-  //   }
-  // }
 }
 
 //--------------------------------------------------------------------------------------------------

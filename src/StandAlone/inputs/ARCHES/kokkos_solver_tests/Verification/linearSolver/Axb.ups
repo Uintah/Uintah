@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <!-- Note that this problem isn't particularly elegant. Rather, it
+         just takes part of the almgren init. condition (otherwise the source
+         for the pressure equation is zero because it the init condition is 
+         divergence free) and results in 
+         an equiv. pressure solution.
+         In the future, we may want to implement an analytical sol. -->
+    <title>Solve Ax=b with pressure solver/hypre</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>3</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>Axb.uda</filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="pressure"/>
+    <save label="b_press"/>
+    <save label="volFraction"/>
+    <save label="A_press"/>
+    <checkpoint cycle="2" interval="1e-5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <PropertyModelsV2>
+        <model label="uVelocity" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+        <model label="vVelocity" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="wVelocity" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+        <model label="x-mom" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+        <model label="y-mom" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="z-mom" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+        <model label="drhodt" type="constant_property">
+          <grid type="CC"/>
+          <value>0.</value>
+        </model>
+      </PropertyModelsV2>
+      <Initialization>
+        <!-- initialize one component of the momentum to get a non-trivial solution -->
+        <task task_label="uVel-init" variable_label="x-mom" type="almgren_mms">
+          <variable type="FX"/>
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+        </task>
+      </Initialization>
+      <Utilities>
+        <utility label="poisson_solve" type="poisson">
+          <PoissonSolver>
+            <Parameters>
+              <solver>           cg     </solver>
+              <preconditioner>  pfmg    </preconditioner>
+              <tolerance>      1.0e-10  </tolerance>
+              <maxiterations>    75     </maxiterations>
+              <skip>              1     </skip>
+              <setupFrequency>    0     </setupFrequency>
+              <jump>              0     </jump>
+            </Parameters>
+          </PoissonSolver>
+        </utility>
+      </Utilities>
+      <KokkosSolver>
+        <integrator>sandbox</integrator>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

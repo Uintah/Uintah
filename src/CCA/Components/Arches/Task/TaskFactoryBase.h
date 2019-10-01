@@ -32,9 +32,6 @@ namespace Uintah{
     /** @brief Parse the input file and create builders for all tasks listed in the UPS file **/
     virtual void register_all_tasks( ProblemSpecP& db ) = 0;
 
-    /** @brief Actually build and call problemSetups for each tasks **/
-    virtual void build_all_tasks( ProblemSpecP& db ) = 0;
-
     /** @brief Register tasks in a convenient container **/
     void register_task( std::string task_name,
                         TaskInterface::TaskBuilder* builder,

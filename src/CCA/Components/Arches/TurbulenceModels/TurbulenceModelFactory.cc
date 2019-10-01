@@ -181,66 +181,6 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 }
 
 //--------------------------------------------------------------------------------------------------
-void
-TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
-{
-
-  // if ( db->findBlock("TurbulenceModels")){
-  //   ProblemSpecP db_m = db->findBlock("TurbulenceModels");
-  //
-  //   for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr;
-  //         db_model=db_model->findNextBlock("model")){
-  //
-  //     std::string name;
-  //     std::string type;
-  //     db_model->getAttribute("label", name);
-  //     db_model->getAttribute("type", type);
-  //
-  //     if (type == "dynamic_smagorinsky" ) {
-  //
-  //       name = "DSFT_task1";
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //
-  //       name = "DSmaMML_task2";
-  //       TaskInterface* tsk2 = retrieve_task(name);
-  //       tsk2->problemSetup(db_model);
-  //       tsk2->create_local_labels();
-  //
-  //       name = "DSmaCs_task3";
-  //       TaskInterface* tsk3 = retrieve_task(name);
-  //       tsk3->problemSetup(db_model);
-  //       tsk3->create_local_labels();
-  //
-  //     }else if (type == "multifractal" ) {
-  //
-  //        name="fractal_UD";
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //
-  //       name="MultifractalSGS";
-  //       TaskInterface* tsk2 = retrieve_task(name);
-  //       tsk2->problemSetup(db_model);
-  //       tsk2->create_local_labels();
-  //
-  //       name="TransportCouple";
-  //       TaskInterface* tsk3 = retrieve_task(name);
-  //       tsk3->problemSetup(db_model);
-  //       tsk3->create_local_labels();
-  //
-  //     } else {
-  //
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //     }
-  //   }
-  // }
-}
-
-//--------------------------------------------------------------------------------------------------
 void TurbulenceModelFactory::schedule_initialization( const LevelP& level,
                                                       SchedulerP& sched,
                                                       const MaterialSet* matls,

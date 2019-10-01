@@ -644,21 +644,21 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
       exit (1)
 
-  MPIHEAD="%s -np" % MPIRUN       #default
+  MPIHEAD="%s -n" % MPIRUN       #default
   
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
-    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi
   rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
                                    #  mvapich
   rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s -genvlist MALLOC_STATS -np" % MPIRUN
+    MPIHEAD="%s -genvlist MALLOC_STATS -n" % MPIRUN
 
 
   # if running performance tests, strip the output and checkpoints portions

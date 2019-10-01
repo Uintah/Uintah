@@ -157,7 +157,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name, const bool ignore_m
       if ( ignore_missing_task ){
         return NULL;
       } else {
-        throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
+        throw InvalidValue("Error: Cannot find task named: "+task_name+" for factory: "+_factory_name,__FILE__,__LINE__);
       }
 
     }
@@ -541,6 +541,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   };
 
   bool non_const_pack_tasks = pack_tasks;
+
   // We must know which memory space(s) the Arches task embedded within the Uintah task will execute
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
