@@ -1714,12 +1714,12 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gan, 1);
-  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gan, 1);
-  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gan, 1);
-  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gan, 1);
-  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gan, 1);
-  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gan, 1);
+  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+1);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
@@ -5499,7 +5499,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       int dwi0 = t_matl0->getDWIndex();
 
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
-                                                       gac, 1, lb->pXLabel);
+                                                       gac, 2, lb->pXLabel);
       psetvec.push_back(pset0);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
