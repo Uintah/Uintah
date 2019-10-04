@@ -542,7 +542,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   int numTriangleM = m_materialManager->getNumMatls("Triangle");
-  cout << "numTriangleM = " << numTriangleM << endl;
   if(numTriangleM>0){
    TriangleMaterial* ls_matl = (TriangleMaterial *) 
                               m_materialManager->getMaterial("Triangle", 0);
@@ -1251,7 +1250,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gVolumeLabel,               gnone);
   t->requires(Task::NewDW,lb->gVolumeLabel, 
               m_materialManager->getAllInOneMatls(), Task::OutOfDomain, gnone);
-  t->requires(Task::NewDW,lb->gLSContactForceLabel,       gnone);
   t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
@@ -3142,7 +3140,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gvolume;
-      constNCVariable<Vector>        gContForce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        Ghost::AroundNodes, NGP,
@@ -3154,7 +3151,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->get(psize,   lb->pCurSizeLabel,                pset);
 
       new_dw->get(gvolume,    lb->gVolumeLabel,         dwi, patch, gnone, 0);
-      new_dw->get(gContForce, lb->gLSContactForceLabel, dwi, patch, gnone, 0);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
@@ -5685,7 +5681,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // Finally for Point C
 
                 // Get the node indices that surround the cell
-                NN = interpolator->findCellAndWeights(B, ni, S, size);
+                NN = interpolator->findCellAndWeights(C, ni, S, size);
 
                 totMass0 = 0.;
                 totMass1 = 0.;
