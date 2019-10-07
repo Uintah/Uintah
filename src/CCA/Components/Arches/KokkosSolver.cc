@@ -277,6 +277,9 @@ KokkosSolver::computeTimestep( const LevelP     & level
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
     }
 
+    m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init ); 
+    proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
+
     Task* tsk = scinew Task( "KokkosSolver::setTimeStep", this,
                              &KokkosSolver::setTimeStep );
 

@@ -17,7 +17,7 @@
     <maxTime>100.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-5</delt_min>
-    <delt_max>1e-5</delt_max>
+    <delt_max>1e-1</delt_max>
     <delt_init>1e-1</delt_init>
     <timestep_multiplier>1</timestep_multiplier>
     <max_Timesteps>3</max_Timesteps>
