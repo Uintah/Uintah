@@ -153,16 +153,18 @@ template< class ENUM, class T >
 void addVectorReductionStats( visit_handle md, VectorInfoMapper< ENUM, T > stats,
 			      std::string statName, std::string meshName )
 {
-  const unsigned int nReductions = 4;
+  const unsigned int nReductions = 6;
   std::string reduction[nReductions] =
-    {"/Average", "/Minimum", "/Maximum", "/StdDev"};
+    {"/Size", "/Sum", "/Average", "/Minimum", "/Maximum", "/StdDev"};
 
   for( unsigned j=0; j<nReductions; ++j )
   {
-    if( (j == 0 && stats.calculateAverage()) ||
-	(j == 1 && stats.calculateMinimum()) ||
-	(j == 2 && stats.calculateMaximum()) ||
-	(j == 3 && stats.calculateStdDev() ) )
+    if( (j == 0) ||
+	(j == 1 && stats.calculateSum()) ||
+	(j == 2 && stats.calculateAverage()) ||
+	(j == 3 && stats.calculateMinimum()) ||
+	(j == 4 && stats.calculateMaximum()) ||
+	(j == 5 && stats.calculateStdDev() ) )
     {  
       for( unsigned int i=0; i<stats[0].size(); ++i )
       {
@@ -172,7 +174,8 @@ void addVectorReductionStats( visit_handle md, VectorInfoMapper< ENUM, T > stats
 	{
 	  std::string tmp_name =
 	    statName + stats[0].getName( i ) + reduction[j];
-	  std::string units = stats[0].getUnits( i );
+
+	  std::string units = (j ? stats[0].getUnits( i ) : "" );
       
 	  VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
 	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
@@ -241,16 +244,18 @@ void addMapReductionStats( visit_handle md, MapInfoMapper< KEY, ENUM, T > stats,
   
   KEY key = stats.getKey(0);
 
-  const unsigned int nReductions = 4;
+  const unsigned int nReductions = 6;
   std::string reduction[nReductions] =
-    {"/Average", "/Minimum", "/Maximum", "/StdDev"};
+    {"/Size", "/Sum", "/Average", "/Minimum", "/Maximum", "/StdDev"};
 
   for( unsigned j=0; j<nReductions; ++j )
   {
-    if( (j == 0 && stats.calculateAverage()) ||
-	(j == 1 && stats.calculateMinimum()) ||
-	(j == 2 && stats.calculateMaximum()) ||
-	(j == 3 && stats.calculateStdDev() ) )
+    if( (j == 0) ||
+	(j == 1 && stats.calculateSum()) ||
+	(j == 2 && stats.calculateAverage()) ||
+	(j == 3 && stats.calculateMinimum()) ||
+	(j == 4 && stats.calculateMaximum()) ||
+	(j == 5 && stats.calculateStdDev() ) )
     {  
       for( unsigned int i=0; i<stats[key].size(); ++i )
       {
@@ -259,12 +264,12 @@ void addMapReductionStats( visit_handle md, MapInfoMapper< KEY, ENUM, T > stats,
 	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
 	{
 	  std::string tmp_name =
-	    statName + stats[key].getName( i ) + reduction[j];;
+	    statName + stats[key].getName( i ) + reduction[j];
 
 	  if( statIndex.size() )
 	    tmp_name += statIndex;
 
-	  std::string units = stats[key].getUnits( i );
+	  std::string units = (j ? stats[key].getUnits( i ) : "" );
       
 	  VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
 	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
