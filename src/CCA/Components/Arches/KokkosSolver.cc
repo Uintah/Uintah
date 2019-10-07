@@ -283,7 +283,9 @@ KokkosSolver::computeTimestep( const LevelP     & level
     }
 
     auto taskDependencies = [&](Task* tsk) {
-        tsk->computes( m_delTLabel, level.get_rep() );
+      m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init ); 
+      proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
+      tsk->computes( m_delTLabel, level.get_rep() );
     };
 
     create_portable_tasks(taskDependencies, this,

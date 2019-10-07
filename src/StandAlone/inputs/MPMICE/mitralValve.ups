@@ -12,7 +12,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1         </maxTime>
+       <maxTime>            10         </maxTime>
        <initTime>           0.0        </initTime>
        <delt_min>           0.0        </delt_min>
        <delt_max>           0.003      </delt_max>
@@ -31,7 +31,7 @@
       <SINE_BC>
         <omega>    3    </omega>
         <A>        -50  </A>
-        <reference_pressure> 1.0132500000010138e+05 </reference_pressure>
+        <reference_pressure> 2026500.0 </reference_pressure>
         <reference_velocity> [0., 0., 0.]  </reference_velocity>
       </SINE_BC>
 
@@ -48,15 +48,12 @@
         <BCType id = "all" label = "Density"        var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Dirichlet">
                               <value> 0.0 </value>
         </BCType>
       </Face>
 
-      <Face circle = "x-" origin = "-0.1 -0.035 0.0" radius = "0.01">
+      <Face circle = "x-" origin = "-0.1 -0.0 0.0" radius = "0.01">
         <BCType id = "0"   label = "Pressure"       var = "Sine">
                               <value> 0</value>
         </BCType>
@@ -67,9 +64,6 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "all" label = "Density"        var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Dirichlet">
@@ -91,17 +85,14 @@
         <BCType id = "all" label = "Density"        var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Dirichlet">
                               <value> 0.0 </value>
         </BCType>
       </Face>
 
-      <Face circle = "x+" origin = "0.15 -0.035 0.0" radius = ".01">
+      <Face circle = "x+" origin = "0.15 -0.0 0.0" radius = ".01">
         <BCType id = "0"   label = "Pressure"       var = "Dirichlet">
-                              <value> 101325 </value>
+                              <value> 2026500.0 </value>
         </BCType>
         <BCType id = "all" label = "Velocity"       var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -110,9 +101,6 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "all" label = "Density"        var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Neumann">
@@ -133,9 +121,6 @@
         <BCType id = "all" label = "Density"        var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
@@ -152,9 +137,6 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "Density"        var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"    var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "1"   label = "scalar-f"       var = "Neumann">
@@ -184,12 +166,12 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>MitralValve.uda</filebase>
-      <outputInterval>2e-3</outputInterval>
+      <outputInterval>1e-2</outputInterval>
 
-<!--      <outputInitTimestep/> -->
       <save label = "press_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "vel_CC"/>
+      <save label = "sp_vol_CC"/>
       <save label = "rho_CC"/>
       <save label = "scalar-f"/>
       <save label = "vorticity"/>
@@ -198,7 +180,7 @@
       <save label = "p.color"         levels = "-1"/>
       <save label = "p.volume"        levels = "-1"/>
       <save label = "p.displacement"  levels = "-1"/>
-      <checkpoint cycle = "2" timestepInterval = "1000"/>
+  <!--    <checkpoint cycle = "2" timestepInterval = "1000"/> -->
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -243,7 +225,7 @@
     <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
-       <reference_pressure> 101325.0  </reference_pressure>
+       <reference_pressure> 2026500.0  </reference_pressure>
     </PhysicalConstants>
 
     <!--____________________________________________________________________-->
@@ -309,11 +291,21 @@
 
        <ICE>
          <material name="fluid">
-           <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>          1e-6            </dynamic_viscosity>
-           <thermal_conductivity>       26.3e-3         </thermal_conductivity>
-           <specific_heat>              716.0           </specific_heat>
-           <gamma>                      1.4             </gamma>
+           <EOS type="Thomsen_Hartka_water">
+             <a>  2.0e-7     </a>    <!-- (K/Pa)     -->
+             <b>  2.6        </b>    <!-- (J/kg K^2) -->
+             <co> 4205.7     </co>   <!-- (J/Kg K)   -->
+             <ko> 5.0e-10    </ko>   <!-- (1/Pa)     -->
+             <To> 277.0      </To>   <!-- (K)        -->
+             <L>  8.0e-6     </L>    <!-- (1/K^2)    -->
+             <vo> 1.00008e-3 </vo>   <!-- (m^3/kg)   -->
+           </EOS>
+
+           <dynamic_viscosity>     8.9e-4   </dynamic_viscosity>
+           <thermal_conductivity>  .607     </thermal_conductivity>
+           <specific_heat>        4180      </specific_heat>
+           <gamma>                1.000009  </gamma>
+
            <geom_object>
               <difference>
                 <box label = "computationalDomain">
@@ -323,10 +315,10 @@
                 <difference label="mitralValue"/>
               </difference>
                <res>                [2,2,2]             </res>
-               <velocity>           [0.0,0.0,0.0]      </velocity>
+               <velocity>           [0.0,0.0,0.0]       </velocity>
                <temperature>        300.0               </temperature>
-               <density>    1.1792946927374306000e+00   </density>
-               <pressure>           101325.0            </pressure>
+               <density>        996.5623739544401       </density>
+               <pressure>           202650.0            </pressure>
            </geom_object>
          </material>
       </ICE>
@@ -419,8 +411,8 @@
 
       <lines>
         <line name="inlet">
-              <startingPt>  [-0.11, -0.035, 0.0]   </startingPt>
-              <endingPt>    [-0.09, -0.035,0.00]   </endingPt>
+              <startingPt>  [-0.101, -0.035, 0.0]   </startingPt>
+              <endingPt>    [-0.09,  -0.035,0.00]   </endingPt>
         </line>
       </lines>
     </Module>
