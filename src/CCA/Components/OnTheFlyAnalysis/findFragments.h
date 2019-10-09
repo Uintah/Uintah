@@ -32,7 +32,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-
+#include <list>
 #include <vector>
 
 namespace Uintah {
@@ -100,13 +100,30 @@ namespace Uintah {
                            const MaterialSubset *,
                            DataWarehouse        *,
                            DataWarehouse        * new_dw);
-                           
-    void checkNeighborCells( const std::string    & level,
+
+    std::list<IntVector> 
+    intersection_of( const std::list<IntVector>& a, 
+                     const std::list<IntVector>& b);
+                                   
+    void checkNeighborCells( const std::string    & desc,
+                             std::list<IntVector> & cellList,
                              const IntVector      & cell, 
                              const Patch          * patch,
                              const int              fragID,
                              constCCVariable<int> & numLocalized,
-                             CCVariable<int>      & fragmentID );
+                             CCVariable<int>      & fragmentID,
+                             CCVariable<int>      & nTouched );
+                             
+    void sched_sumQ_inFragments( SchedulerP   & sched,
+                                 const LevelP & level);
+
+
+    void sumQ_inFragments( const ProcessorGroup * pg,
+                           const PatchSubset    * patches,
+                           const MaterialSubset *,
+                           DataWarehouse        * old_dw,
+                           DataWarehouse        * new_dw);
+
 
     void createFile( const std::string  & filename,
                      const VarLabel     * varLabel,
@@ -124,6 +141,8 @@ namespace Uintah {
       VarLabel* prevAnalysisTimeLabel;
       VarLabel* fileVarsStructLabel;
       VarLabel* fragmentIDLabel;
+      VarLabel* maxFragmentIDLabel;
+      VarLabel* nTouchedLabel;
       VarLabel* gMassLabel;
       VarLabel* pMassLabel;
       VarLabel* pLocalizedLabel;

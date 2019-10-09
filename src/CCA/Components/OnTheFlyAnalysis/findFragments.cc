@@ -47,6 +47,7 @@
 #include <dirent.h>
 #include <iostream>
 #include <fstream>
+#include <set>
 
 using namespace Uintah;
 using namespace std;
@@ -57,14 +58,11 @@ using namespace std;
 //______________________________________________________________________
 //    To Do
 //    - Read variables (Q) from ups to compute mean quantities
-//    - Interpolate Q from the particles to nodes and then to cell centers.
 //    - Identify fragments.  What is the criteria???
 //    - Find data structure for mean quantities (Q), doubles and vectors and matrix3??
 //    - MPI code for summing each Q for each fragment
 //    - compute mass weighted average for each Q and each fragment
 //    - output mean quantites for each fragment
-//    Optimization:
-//      - use a vector of neighbor cells in checkNeighborCells()
 //
 //______________________________________________________________________
 //
@@ -83,9 +81,11 @@ findFragments::findFragments(ProblemSpecP     & module_spec,
   d_lb           = scinew findFragmentsLabel();
   
   d_lb->prevAnalysisTimeLabel = VarLabel::create( "prevAnalysisTime", max_vartype::getTypeDescription() );
-  d_lb->fragmentIDLabel      = VarLabel::create(  "fragmentID",       CCVariable<int>::getTypeDescription() );
+  d_lb->fragmentIDLabel       = VarLabel::create( "fragmentID",       CCVariable<int>::getTypeDescription() );
+  d_lb->nTouchedLabel         = VarLabel::create( "nTouched",         CCVariable<int>::getTypeDescription() );
   d_lb->numLocalized_CCLabel  = VarLabel::create( "sumLocalized_CC",  CCVariable<int>::getTypeDescription() );
-  
+  d_lb->maxFragmentIDLabel    = VarLabel::create( "nFragments",       max_vartype::getTypeDescription() );
+
   d_lb->gMassLabel            = VarLabel::find( "g.mass" );
   d_lb->pMassLabel            = VarLabel::find( "p.mass" );
   d_lb->pLocalizedLabel       = VarLabel::find( "p.localizedMPM+" );
@@ -102,6 +102,7 @@ findFragments::~findFragments()
 
   VarLabel::destroy( d_lb->prevAnalysisTimeLabel );
   VarLabel::destroy( d_lb->fragmentIDLabel );
+  VarLabel::destroy( d_lb->nTouchedLabel );
   VarLabel::destroy( d_lb->gMassLabel );
   VarLabel::destroy( d_lb->numLocalized_CCLabel );
   
@@ -241,11 +242,10 @@ void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
 
   Task* t = scinew Task("findFragments::doAnalysis",
                    this,&findFragments::doAnalysis);
-
-
   sched_sumLocalizedParticles( sched, level);
   sched_identifyFragments(     sched, level);
-
+  sched_sumQ_inFragments(      sched, level);
+  
 
   t->requires(Task::OldDW, d_lb->prevAnalysisTimeLabel);
   Ghost::GhostType gac = Ghost::AroundCells;
@@ -376,6 +376,8 @@ void findFragments::sched_identifyFragments(SchedulerP   & sched,
     t->requires(Task::NewDW, d_lb->numLocalized_CCLabel, d_matl_subSet, gac,1);
     
     t->computes( d_lb->fragmentIDLabel, d_matl_subSet);
+    t->computes( d_lb->nTouchedLabel,   d_matl_subSet);
+    t->computes( d_lb->maxFragmentIDLabel );
     
     sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -400,23 +402,41 @@ void findFragments::identifyFragments(const ProcessorGroup * pg,
     int indx = d_matl->getDWIndex();
     
     CCVariable<int>         fragmentID;
+    CCVariable<int>         nTouched;           // how many time has this cell been interogated
     constNCVariable<double> gmass;
     constCCVariable<int>    numLocalized;
 
     new_dw->get( numLocalized, d_lb->numLocalized_CCLabel,indx,patch, gac,1);
     
     new_dw->allocateAndPut( fragmentID, d_lb->fragmentIDLabel, indx, patch);
+    new_dw->allocateAndPut( nTouched,   d_lb->nTouchedLabel,   indx, patch);
     fragmentID.initialize( 0 );
+    nTouched.initialize( 0 );
     
-    int fragID = 1;
+    int fragID = 0;
     
-    
+    // This linked list contains all the cells that have been searched
+    std::list<IntVector> patchCellList;
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      patchCellList.push_back( c );
+    } 
+
+    std::cout << "patchCellList contains:\n";
+    for (auto& x: patchCellList){
+      std::cout << "  " << x << endl;;
+    }
     
     //__________________________________
     //  Loop over all cells
+    // Optimization is to search through the patchCellList
+    // that is dynamically updated
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
-    
+  
+      cout << "  topLevel: " << c << endl;
+      nTouched[c] += 1;
+      
       if (fragmentID[c] != 0 ){
         continue;
       }
@@ -424,71 +444,224 @@ void findFragments::identifyFragments(const ProcessorGroup * pg,
       // cell is fragmented
       if ( numLocalized[c] != 0 ){
         
-        fragmentID[c] = fragID;
-        cout << "Top Level c: " << c << " is a fragment: " << fragmentID[c] << ".  Patch limits: " << patch->getExtraCellLowIndex() << " " << patch->getExtraCellHighIndex() << endl;
-        checkNeighborCells( "  cell-neighbor",c, patch, fragID, numLocalized, fragmentID );
-        
         fragID ++;
+        
+        fragmentID[c] = fragID;
+        patchCellList.remove( c );
+        
+        cout << "Top Level c: " << c << " is a fragment: " << fragmentID[c] << ".  Patch limits: " << patch->getExtraCellLowIndex() << " " << patch->getExtraCellHighIndex() << endl;
+        cout << "cellList.size() " <<patchCellList.size() << endl;
+        
+        checkNeighborCells( "cell-neighbor", patchCellList, c, patch, fragID, numLocalized, fragmentID, nTouched );
+        
+
       }  // if: is cellfragmented
       
+      patchCellList.remove( c );
+      
     }  // cellIterator
+    
+    new_dw->put( max_vartype(fragID), d_lb->maxFragmentIDLabel); 
   }  // patches
 }
 
+
 //______________________________________________________________________
-//  Loop over all neighboring cells that share a node with cells node
-void findFragments::checkNeighborCells( const std::string    & level,
+//
+std::list<IntVector> 
+findFragments::intersection_of(const std::list<IntVector>& a, 
+                               const std::list<IntVector>& b)
+{
+  std::list<IntVector> intersect;
+  std::set<IntVector> tmpSet;
+
+  auto func1 = [](int i = 6) { return i + 4; };
+
+
+  std::for_each( a.begin(), a.end(), 
+    [&tmpSet](const IntVector& k)         // lamda that populates the set
+    { 
+      tmpSet.insert(k); 
+    } 
+  );
+
+  std::for_each( b.begin(), b.end(),
+      [&tmpSet, &intersect](const IntVector& k)
+      {
+        auto iter = tmpSet.find(k);
+
+        if(iter != tmpSet.end()){
+          intersect.push_front(k);
+          tmpSet.erase(iter);
+        }
+      }
+  );
+  return intersect;
+}
+//______________________________________________________________________
+//  Loop over all neighboring cells  mark cells that are fragmented
+
+void findFragments::checkNeighborCells( const std::string    & desc,
+                                        std::list<IntVector> & patchCellList,
                                         const IntVector      & cell, 
                                         const Patch          * patch,
-                                        const int             fragID,
+                                        const int              fragID,
                                         constCCVariable<int> & numLocalized,
-                                        CCVariable<int>      & fragmentID )
+                                        CCVariable<int>      & fragmentID,
+                                        CCVariable<int>      & nTouched )
 {
-  // Loop over all nodes
-  IntVector nodeIdx[8];
+  cout << "__________________________________" << desc << " cell: " << cell << endl;
+  // create a list of adjacent cells to "cell"
+  std::list< IntVector > adjCellList;
   
-  patch->findNodesFromCell( cell, nodeIdx );
-  for (int ni=0; ni<8; ni++){
-
-    const IntVector n = nodeIdx[ni];
-
-    // Loop over neighbor cells
-    IntVector neighborCells[8];
-    patch->findCellsFromNode( n, neighborCells );        // There's overlapping cells
-    
-    
-/*`==========TESTING==========*/
-    cout << "      cell: " << cell <<"  nodeIndx: " << ni << " node: " << n << " neighborCells: ";
-    for (int ci=0; ci<8; ci++){
-      cout << neighborCells[ci] << ", ";
+  for (int k=-1; k<= 1; k++){
+    for (int j=-1; j<= 1; j++){
+      for (int i=-1; i<= 1; i++){
+        const IntVector n = (cell + IntVector(i,j, k) );
+        adjCellList.push_back( n );
+      }
     }
-    cout << "\n"; 
-/*===========TESTING==========`*/
-    
-    
-    for (int ci=0; ci<8; ci++){
-      IntVector nc = neighborCells[ci];
-      
-      if ( !patch->containsCell(nc) ){
-        continue;
-      }
-      
-      if (fragmentID[nc] != 0 ){
-        cout << "        BBB cell: "<< nc << " is a fragment: "<< fragmentID[nc] << endl;
-        continue;
-      }
+  }
+ 
+  //__________________________________
+  // Find the intersection between the patchCellsList and adjacent list
+  // This creates a list of cells that hasn't been searched.
+  std::list<IntVector> nbrCellList;
+  nbrCellList = intersection_of( patchCellList, adjCellList );
+  nbrCellList.sort();
+  
+  
+#if 0
+  std::cout << "  adjCellList contains:" << endl;
+  for (auto& x: adjCellList){
+    std::cout << "    " << x << endl;;
+  }
+#endif
 
-      // cell is fragmented
-      if ( numLocalized[nc] != 0 ){
-        fragmentID[nc] = fragID;
-        cout << level << " " << nc << " is a fragment: "<< fragmentID[nc] << endl;
-        checkNeighborCells( "    cell-neighbor-neighbor: ",nc, patch, fragID, numLocalized, fragmentID );
+  if ( desc == "cell-neighbor-neighbor" || desc == "cell-neighbor"){
+    std::cout << "  nbrCellList contains:" << endl;
+    for (auto& x: nbrCellList){
+      std::cout << "    " << x << endl;;
+    }
+  }
+
+  cout << "  nbrCellList.size() " << nbrCellList.size() << endl;
+
+  //__________________________________
+  //  Search neighboring cells
+  for (auto& nc: nbrCellList){
+
+    nTouched[nc] += 1;
+    patchCellList.remove(nc);
+    
+    cout << "  removing from patchCellList: " << nc << endl;
+    
+    if ( !patch->containsCell(nc) ){
+      continue;
+    }
+
+    if ( fragmentID[nc] != 0 ){
+      cout << "        BBB cell: "<< nc << " is a fragment: "<< fragmentID[nc] << endl;
+      continue;
+    }
+
+    // cell is fragmented
+    if ( numLocalized[nc] != 0 ){
+      fragmentID[nc] = fragID;
+      cout << desc << " " << nc << " is a fragment: "<< fragmentID[nc] << endl;
+
+      checkNeighborCells( "cell-neighbor-neighbor",patchCellList, nc, patch, fragID, numLocalized, fragmentID, nTouched );
+
+    }
+  }  // neighborCell loop
+  
+  
+  cout << "   patchCellList.size() " << patchCellList.size() << endl;
+#if 0  
+  std::cout << "patchCellList contains:" << endl;
+  for (auto& x: patchCellList){
+    std::cout << "    " << x << endl;;
+  }  
+#endif  
+  cout << "__________________________________exit" << endl;
+}
+
+
+
+
+//______________________________________________________________________
+//
+void findFragments::sched_sumQ_inFragments(SchedulerP   & sched,
+                                           const LevelP & level)
+{
+    Task* t = scinew Task( "findFragments::sumQ_inFragments", this,
+                           &findFragments::sumQ_inFragments);
+                 
+    printSchedule(level,dbg, "findFragments::sched_sumQ_inFragments" );
+                      
+    Ghost::GhostType  gn = Ghost::None;
+    t->requires( Task::NewDW, d_lb->fragmentIDLabel, d_matl_subSet, gn, 0);
+    t->requires( Task::NewDW, d_lb->pXLabel,         d_matl_subSet, gn, 0); 
+    t->requires( Task::NewDW, d_lb->pMassLabel,      d_matl_subSet, gn, 0); 
+    t->requires( Task::NewDW, d_lb->maxFragmentIDLabel );
+    
+    sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+
+//______________________________________________________________________
+// 
+void findFragments::sumQ_inFragments(const ProcessorGroup      * pg,
+                                          const PatchSubset    * patches,
+                                          const MaterialSubset *,
+                                          DataWarehouse        * old_dw,
+                                          DataWarehouse        * new_dw)
+{
+  const Level* level = getLevel(patches);
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    printTask( patch, dbg,"Doing findFragments::sumQ_inFragments" );
+    
+    max_vartype nFragments;
+    new_dw->get( nFragments, d_lb->maxFragmentIDLabel );
+    
+    vector<double> fragMass( nFragments+1, 0.0 );
+    
+    int dwi = d_matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset( dwi, patch );
+
+    constCCVariable<int> fragID;
+    constParticleVariable<Point>  px;
+    constParticleVariable<double> pMass;
+    
+    new_dw->get( fragID, d_lb->fragmentIDLabel, dwi, patch,  Ghost::None, 0 );
+    new_dw->get( px,     d_lb->pXLabel,     pset);
+    new_dw->get( pMass,  d_lb->pMassLabel,  pset);
+
+    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
+      particleIndex idx = *iter;
+      
+      IntVector c = level->getCellIndex( px[idx] );
+
+      const int ID = fragID[c];
+      if( ID != 0 ){
+        fragMass[ID] += pMass[idx];
         
+        cout << " c " << c << " ID: " << ID << " fragMass: " << fragMass[ID] << endl;  
       }
-      //cout << cnt << "  parent Cell: " << c << " node: " << n << " neighorCell: " << nc << endl;
-    }  // neighborCell loop
+    }
+    
+    for ( size_t i=0;i<fragMass.size(); i++){
+      cout << " patch: " << patch->getID() << " fragment ID: " << i << " mass: " << fragMass[i] << endl;
+    }
+    
+    
   }
 }
+
+
+
 
 
 //______________________________________________________________________
