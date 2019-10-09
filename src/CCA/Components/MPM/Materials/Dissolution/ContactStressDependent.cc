@@ -99,7 +99,6 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     std::vector<constNCVariable<double> > gnormtrac(numMatls);
-    std::vector<constNCVariable<Matrix3> > gStress(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
     constNCVariable<double> NC_CCweight;
     std::vector<bool> masterMatls(numMatls);
@@ -109,7 +108,6 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,       dwi, patch, gnone, 0);
-      new_dw->get(gStress[m],   lb->gStressLabel,       dwi, patch, gnone, 0);
       new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
 
       new_dw->getModifiable(massBurnRate[m], 
@@ -153,15 +151,23 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             inContactMatl = n;
           }
         }
+        // Maybe mass weight this?
+        double normtrac_ave = 0.5*(gnormtrac[md][c] + 
+                                   gnormtrac[inContactMatl][c]);
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
-          (-gnormtrac[md][c] > d_StressThresh || // Compressive stress is neg
-           -gnormtrac[inContactMatl][c] > d_StressThresh)){
+          -normtrac_ave > d_StressThresh){   // Compressive stress is neg
+//           cout << "normtrac_ave = " << normtrac_ave << endl;
+//           cout << "gnormtrac_max = " << std::min(gnormtrac[md][c], gnormtrac[inContactMatl][c])  << endl;
+//           cout << "gnormtrac_min = " << std::max(gnormtrac[md][c], gnormtrac[inContactMatl][c])  << endl;
+//          (-gnormtrac[md][c] > d_StressThresh || // Compressive stress is neg
+//           -gnormtrac[inContactMatl][c] > d_StressThresh)){
             double rho = gmass[md][c]/gvolume[md][c];
-            double stressDiff = std::max(
-                                 (-gnormtrac[md][c]-d_StressThresh),
-                                 (-gnormtrac[inContactMatl][c]-d_StressThresh));
+//          double stressDiff = std::max(
+//                               (-gnormtrac[md][c]-d_StressThresh),
+//                               (-gnormtrac[inContactMatl][c]-d_StressThresh));
+            double stressDiff = (-normtrac_ave - d_StressThresh);
 //	    cout << "stressDiff = " << stressDiff << endl;
             massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
@@ -192,7 +198,6 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
 
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gStressLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
