@@ -1148,14 +1148,15 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
                         m_load_balancer->getPatchwiseProcessorAssignment(neighbor) != my_rank) {
                       continue;
                     }
-
-                    DOUT(true, "Failure finding " << *req << " for " << *dtask);
+                    
+                    DOUT(true,"*******************************" );
+                    DOUT(true, "  Rank-" << my_rank << ", Task Graph Index: "<< m_index  );
+                    DOUT(true, "  Failure finding " << *req << " for " << *dtask);
                     if (creator) {
-                      std::cout << "creator=" << *creator << "\n";
+                      std::cout << "  creator=" << *creator << "\n";
                     }
-                    DOUT(true, "neighbor=" << *fromNeighbor << ", matl=" << matl);
-                    DOUT(true, "Rank-" << my_rank);
-
+                    DOUT(true, "  neighbor=" << *fromNeighbor << ", matl=" << matl);
+                    DOUT(true,"*******************************" )
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
                 }
