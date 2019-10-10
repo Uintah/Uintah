@@ -543,9 +543,11 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     d_RMCRT->set_abskg_dw_perLevel ( level, Task::NewDW );
     
-    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label,    RMCRTCommon::TG_CARRY_FORWARD ); 
+    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label,        RMCRTCommon::TG_CARRY_FORWARD ); 
     
-    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel,  RMCRTCommon::TG_CARRY_FORWARD);
+    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel,      RMCRTCommon::TG_CARRY_FORWARD);
+    
+    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRIntensityLabel, RMCRTCommon::TG_CARRY_FORWARD);
 
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );
