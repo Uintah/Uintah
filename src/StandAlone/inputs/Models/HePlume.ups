@@ -251,7 +251,7 @@
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <compression>gzip</compression>
-      <checkpoint cycle = "2" timestepInterval = "20"/>
+      <checkpoint cycle = "1" timestepInterval = "20"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

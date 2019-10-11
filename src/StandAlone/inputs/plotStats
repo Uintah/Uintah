@@ -94,19 +94,20 @@ cat >> gp << fin
 
 #__________________________________
 # compute stats this version of gnuplot is > 3.8
-haveStats =0
-# does this version have the stats patch
+
 if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
   print "Computing the statistics of the mean time per timestep"; 
-  haveStats = 1
+} else {
+  print " This version of gnuplot does not support computing statistics.";
+  print " Now exiting...."
+  exit
 }
-if ( haveStats == 1 ) {
-  stats 'data' using 4 name "A";
-  stats 'data' using 2 name "B";
-  stats 'data' using 3 name "C";
-  stats 'data' using 6 name "D";
-  stats 'data' using 7 name "E";
-}
+
+stats 'data' using 4 name "A";
+stats 'data' using 2 name "B";
+stats 'data' using 3 name "C";
+stats 'data' using 6 name "D";
+stats 'data' using 7 name "E";
 
 
 set multiplot
@@ -137,7 +138,7 @@ set ylabel 'Mean Time/timestep' textcolor lt 1
 set y2label 'Time per timestep [sec]'     textcolor lt 2
 set y2tics
 set autoscale
-set yrange[0:B_mean + B_stddev]
+set yrange[0:B_up_quartile + B_stddev]
 set y2range[0:C_up_quartile + C_median]
 
 plot 'data' using 2           t 'meanTime/timestep' with lines, \

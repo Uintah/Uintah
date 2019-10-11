@@ -84,13 +84,6 @@ ifeq ($(BUILD_MPM)$(BUILD_ICE),yesyes)
         $(SRCDIR)/1stLawThermo.cc
 endif
 
-# Radiation analysis modules
-ifeq ($(BUILD_MODELS_RADIATION),yes)
-  SRCS += \
-        $(SRCDIR)/radiometer.cc
-
-  PSELIBS += CCA/Components/Models
-endif
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 

@@ -71,7 +71,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
                                 const MaterialSet* all_matls)
 {
   Task* t;
-  Ghost::GhostType  gac = Ghost::AroundCells;  
+  Ghost::GhostType  gaf = Ghost::AroundFaces;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
@@ -84,12 +84,12 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
             
   t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
   t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
-  t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
-  t->requires( whichDW,   lb->sp_volY_FCLabel,    gac,1);        
-  t->requires( whichDW,   lb->sp_volZ_FCLabel,    gac,1);        
-  t->requires( whichDW,   lb->vol_fracX_FCLabel,  gac,1);        
-  t->requires( whichDW,   lb->vol_fracY_FCLabel,  gac,1);        
-  t->requires( whichDW,   lb->vol_fracZ_FCLabel,  gac,1);        
+  t->requires( whichDW,   lb->sp_volX_FCLabel,    gaf,1);        
+  t->requires( whichDW,   lb->sp_volY_FCLabel,    gaf,1);        
+  t->requires( whichDW,   lb->sp_volZ_FCLabel,    gaf,1);        
+  t->requires( whichDW,   lb->vol_fracX_FCLabel,  gaf,1);        
+  t->requires( whichDW,   lb->vol_fracY_FCLabel,  gaf,1);        
+  t->requires( whichDW,   lb->vol_fracZ_FCLabel,  gaf,1);        
   t->requires( Task::ParentNewDW,   
                           lb->sumKappaLabel, one_matl,oims,gn,0);      
 
@@ -337,7 +337,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
                    level, ice_matls, mpm_matls);
  
   t->hasSubScheduler();
-  Ghost::GhostType  gac = Ghost::AroundCells;  
+  Ghost::GhostType  gac = Ghost::AroundCells; 
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   //__________________________________
@@ -372,12 +373,12 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   
   //__________________________________
   // setup Matrix
-  t->requires( Task::NewDW, lb->sp_volX_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->sp_volY_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->sp_volZ_FCLabel,    gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracX_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracY_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->vol_fracZ_FCLabel,  gac,1);            
+  t->requires( Task::NewDW, lb->sp_volX_FCLabel,    gaf,1);            
+  t->requires( Task::NewDW, lb->sp_volY_FCLabel,    gaf,1);            
+  t->requires( Task::NewDW, lb->sp_volZ_FCLabel,    gaf,1);            
+  t->requires( Task::NewDW, lb->vol_fracX_FCLabel,  gaf,1);            
+  t->requires( Task::NewDW, lb->vol_fracY_FCLabel,  gaf,1);            
+  t->requires( Task::NewDW, lb->vol_fracZ_FCLabel,  gaf,1);            
   t->requires( Task::NewDW, lb->sumKappaLabel,  press_matl,oims,gn,0);         
    
   //__________________________________
@@ -444,10 +445,8 @@ ICE::setupMatrix( const ProcessorGroup *,
               
     DataWarehouse* whichDW = old_dw;
 
-    DataWarehouse* parent_old_dw = 
-          new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
-    DataWarehouse* parent_new_dw = 
-          new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+    DataWarehouse* parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+    DataWarehouse* parent_new_dw = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
             
     delt_vartype delT;
     parent_old_dw->get(delT, lb->delTLabel,level);
@@ -458,7 +457,7 @@ ICE::setupMatrix( const ProcessorGroup *,
     constCCVariable<double> sumKappa;
    
     Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
     new_dw->allocateAndPut(A,       lb->matrixLabel,    0, patch, gn, 0);
     new_dw->allocateAndPut(imp_delP,lb->imp_delPLabel,  0, patch, gn, 0);
     parent_new_dw->get(sumKappa,    lb->sumKappaLabel,  0, patch, gn, 0);
@@ -485,13 +484,13 @@ ICE::setupMatrix( const ProcessorGroup *,
       constSFCYVariable<double> sp_volY_FC, vol_fracY_FC;
       constSFCZVariable<double> sp_volZ_FC, vol_fracZ_FC;
       
-      whichDW->get(sp_volX_FC,   lb->sp_volX_FCLabel,    indx,patch,gac, 1);     
-      whichDW->get(sp_volY_FC,   lb->sp_volY_FCLabel,    indx,patch,gac, 1);     
-      whichDW->get(sp_volZ_FC,   lb->sp_volZ_FCLabel,    indx,patch,gac, 1);     
+      whichDW->get(sp_volX_FC,   lb->sp_volX_FCLabel,    indx,patch,gaf, 1);     
+      whichDW->get(sp_volY_FC,   lb->sp_volY_FCLabel,    indx,patch,gaf, 1);     
+      whichDW->get(sp_volZ_FC,   lb->sp_volZ_FCLabel,    indx,patch,gaf, 1);     
 
-      whichDW->get(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch,gac, 1);        
-      whichDW->get(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch,gac, 1);        
-      whichDW->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch,gac, 1);        
+      whichDW->get(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch,gaf, 1);        
+      whichDW->get(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch,gaf, 1);        
+      whichDW->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch,gaf, 1);        
             
       //__________________________________
       // Sum (<upwinded volfrac> * sp_vol on faces)
@@ -512,7 +511,6 @@ ICE::setupMatrix( const ProcessorGroup *,
         A_tmp.s += vol_fracY_FC[bottom] * sp_volY_FC[bottom];
         A_tmp.t += vol_fracZ_FC[front]  * sp_volZ_FC[front];
         A_tmp.b += vol_fracZ_FC[back]   * sp_volZ_FC[back];
-        
       }    
     }  //matl loop
         
@@ -944,6 +942,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
 {
+  int proc = d_myworld->myRank();
   printTask(patch_sub, cout_doing, "Doing implicitPressureSolve" );
   
   //__________________________________
@@ -986,11 +985,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       ParentOldDW->get( hypre_solverP, hypre_solver_label );
       subNewDW->put(    hypre_solverP, hypre_solver_label );
     }
-
     m_solver->getParameters()->setWhichOldDW( Task::ParentOldDW );
-
   }
-
 #endif
 
   subNewDW->transferFrom(ParentNewDW,lb->sum_imp_delPLabel, patch_sub, d_press_matl);
@@ -1016,10 +1012,20 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   double smallest_max_RHS_sofar = max_RHS; 
   int counter = 0;
   bool recompute = false;
-  Vector dx = level->dCell();
+  Vector dx  = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
   
   m_solver->getParameters()->setResidualNormalizationFactor(vol);
+  
+  // debugging set output file name for hypre objects
+  timeStep_vartype timeStepVar;
+  ParentOldDW->get(timeStepVar, lb->timeStepLabel);
+  double timeStep = timeStepVar;
+
+  ostringstream fname;
+  fname << "." << proc <<"." << timeStep << "." << counter;
+  m_solver->getParameters()->setOutputFileName(fname.str());
+  
 
   d_subsched->setInitTimestep(false);
   
@@ -1082,26 +1088,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     //__________________________________
     // diagnostics
-    int proc = d_myworld->myRank();
-    
     subNewDW->get(max_RHS,     lb->max_RHSLabel);
     subOldDW->get(max_RHS_old, lb->max_RHSLabel);
 
     DOUT( proc == 0, "  Outer iteration " << counter
           << " max_rhs before solve "<< max_RHS_old
           << " after solve " << max_RHS );
-    
-    // output files for debugging
-    // double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
-
-    timeStep_vartype timeStepVar;
-    ParentOldDW->get(timeStepVar, lb->timeStepLabel);
-    double timeStep = timeStepVar;
-
-    ostringstream fname;
-    
-    fname << "." << proc <<"." << timeStep << "." << counter;
-    m_solver->getParameters()->setOutputFileName(fname.str());
    
     //__________________________________
     // recompute timestep

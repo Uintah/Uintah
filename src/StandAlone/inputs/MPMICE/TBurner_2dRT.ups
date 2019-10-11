@@ -179,8 +179,8 @@
       <save label = "delP_MassX"/>
 <!--  Above this line -->
 
-      <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
-      <checkpoint cycle="2" timestepInterval="100"/>
+      <!-- <checkpoint cycle="1" timestepInterval="3000"/> -->
+      <checkpoint cycle="1" timestepInterval="100"/>
     </DataArchiver>
 
 

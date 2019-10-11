@@ -850,7 +850,6 @@ DEF_PHASEFIELD
 DEF_MODELS_RADIATION
 DEF_MPM
 DEF_ICE
-DEF_HEAT
 DEF_FVM
 DEF_EXAMPLES
 DEF_ARCHES
@@ -859,7 +858,6 @@ BUILD_PHASEFIELD
 BUILD_MPM
 BUILD_MODELS_RADIATION
 BUILD_ICE
-BUILD_HEAT
 BUILD_FVM
 BUILD_EXAMPLES
 BUILD_ARCHES
@@ -1012,7 +1010,6 @@ enable_minimal
 enable_arches
 enable_examples
 enable_fvm
-enable_heat
 enable_ice
 enable_mpm
 enable_phasefield
@@ -1688,7 +1685,6 @@ Optional Features:
 --enable-examples       Turn on the Examples component - and Radiation
                           Model.
 --enable-fvm            Turn on the FVM component.
---enable-heat           Turn on the Heat component.
 --enable-ice            Turn on the Ice component.
 --enable-mpm            Turn on the Mpm component.
 --enable-phasefield     Turn on the PhaseField component.
@@ -6074,18 +6070,6 @@ fi
 
 
 
-  # Check whether --enable-heat was given.
-if test "${enable_heat+set}" = set; then :
-  enableval=$enable_heat; BUILD_HEAT="yes"
-else
-  BUILD_HEAT="no"
-   DEF_HEAT="#define NO_HEAT"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-heat --disable-heat"
-
-
-
   # Check whether --enable-ice was given.
 if test "${enable_ice+set}" = set; then :
   enableval=$enable_ice; BUILD_ICE="yes"
@@ -6140,16 +6124,16 @@ if test "${enable_all_components+set}" = set; then :
    BUILD_ARCHES="yes"
    BUILD_EXAMPLES="yes"
    BUILD_FVM="yes"
-   BUILD_HEAT="yes"
    BUILD_ICE="yes"
    BUILD_MPM="yes"
+   BUILD_PHASEFIELD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_EXAMPLES=
    DEF_FVM=
-   DEF_HEAT=
    DEF_ICE=
    DEF_MPM=
+   DEF_PHASEFIELD=
    DEF_UNIT_TESTS=
    DEF_WASATCH=
 
@@ -6177,7 +6161,6 @@ fi
 if test \( "$enable_arches"     = "yes" -o  \
            "$enable_examples"   = "yes" -o  \
            "$enable_fvm"        = "yes" -o  \
-           "$enable_heat"       = "yes" -o  \
            "$enable_ice"        = "yes" -o  \
            "$enable_mpm"        = "yes" -o  \
            "$enable_phasefield" = "yes" -o  \
@@ -8287,8 +8270,6 @@ if test "$with_fortran" = "no"; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
 
 
 

@@ -35,8 +35,9 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
   {
-    if( &ps == 0 )
+    if( ps.getUnion() == nullptr ) {
       out << "(null PatchSet)";
+    }
     else {
       out << "Patches: {";
       for(int i=0;i<ps.size();i++){
@@ -53,7 +54,7 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::PatchSubset& pss)
   {
-    if( &pss == 0 ) {
+    if( pss.size() == 0 ) {
       out << "(null PatchSubset)";
     }
     else {
@@ -72,7 +73,7 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::MaterialSet& ms)
   {
-    if( &ms == 0 ) {
+    if( ms.getUnion() == nullptr ) {
       out << "(null Materials)";
     }
     else {
@@ -91,7 +92,7 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
   {
-    if( &mss == 0 ) {
+    if( mss.size() == 0 ) {
       out << "(null MaterialSubset)";
     }
     else {

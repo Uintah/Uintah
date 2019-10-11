@@ -42,9 +42,28 @@
 
 namespace Uintah {
 
+class IntVector;
+class Vector;
+class Point;
+
 bool string_to_int(const std::string &str, int &result);
 bool string_to_double(const std::string &str, double &result);
 bool string_to_unsigned_long(const std::string &str, unsigned long &res);
+
+//////////
+// Convert a string, separated by any of the separator characters, into a Uintah::IntVector
+IntVector string_to_IntVector(const std::string        &input, 
+                              const std::vector<char>  separators );
+
+//////////
+// Convert a string, separated by any of the separator characters, into a Uintah::Vector
+Vector string_to_Vector(const std::string       & input, 
+                        const std::vector<char>   separators );
+
+//////////
+// Convert a string, separated by any of the separator characters, into a Uintah::Point
+Point string_to_Point(const std::string      & input, 
+                      const std::vector<char>  separators );
 
 std::string to_string(int val);
 std::string to_string(unsigned int val);
@@ -63,7 +82,9 @@ std::string basename(const std::string &path);
 std::string pathname(const std::string &path);
 
 // Split a std::string into multiple parts, separated by any of the separator characters.
-std::vector<std::string> split_string( const std::string & str, const std::vector<char> & separators );
+std::vector<std::string> split_string( const std::string & str, 
+                                       const std::vector<char> & separators );
+                                       
 std::string concatStrings( const std::vector<std::string> strings );
 
 /////////
@@ -80,14 +101,16 @@ char* ccast_unsafe( const std::string & str );
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'.  'str' is updated in place.
 void replace_substring( std::string & str,
-                                 const std::string &substr,
-                                 const std::string &replacement );
+                        const std::string &substr,
+                        const std::string &replacement );
 
 // Returns true if 'str' ends with the std::string 'substr'
-bool ends_with( const std::string & str, const std::string & substr );
+bool ends_with( const std::string & str, 
+                const std::string & substr );
 
 // Returns the number of 'substr' in 'str'.  (ie: if str is 'aaaa' and substr is 'aaa', then 2 is returned.)
-unsigned int count_substrs( const std::string & str, const std::string & substr );
+unsigned int count_substrs( const std::string & str, 
+                            const std::string & substr );
 
 } // End namespace Uintah
 

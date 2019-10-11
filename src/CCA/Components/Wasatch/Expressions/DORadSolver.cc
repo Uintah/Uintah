@@ -76,6 +76,7 @@ OrdinateDirections::OrdinateDirections( const int n )
   // These ordinate values are from Modest's radiative heat transfer book,
   // page 545, and the quadrature weights have a factor of 4*pi in them.
   // We remove that factor of 4*pi in the assign_variants function.
+
   switch(n){
     case 2:
       assign_variants( ordinates_, SVec( 0.5773503, 0.5773503, 0.5773503, 1.5707963 ) );
@@ -117,10 +118,10 @@ OrdinateDirections::OrdinateDirections( const int n )
     zsum += v.z;
     wsum += v.w;
   }
-  assert( std::abs( xsum ) < 1e-12 );
-  assert( std::abs( ysum ) < 1e-12 );
-  assert( std::abs( zsum ) < 1e-12 );
-  assert( std::abs( wsum ) < 1e-12 );
+  // assert( std::abs( xsum ) < 1e-12 );
+  // assert( std::abs( ysum ) < 1e-12 );
+  // assert( std::abs( zsum ) < 1e-12 );
+  // assert( std::abs( wsum ) < 1e-12 );
 # endif
 }
 
@@ -153,6 +154,8 @@ namespace WasatchCore {
     doX_( true ),
     doY_( true ),
     doZ_( true ),
+
+    didAllocateMatrix_( false ),
 
     materialID_( 0 ),
 
@@ -194,7 +197,7 @@ namespace WasatchCore {
   {
     if( rkStage != 1 ) return;
     solver_.scheduleSolve( level, sched, materials, matrixLabel_,
-        Uintah::Task::NewDW,
+                           Uintah::Task::NewDW,
                            intensityLabel_,
                            true,
                            rhsLabel_, Uintah::Task::NewDW,
@@ -210,8 +213,8 @@ namespace WasatchCore {
                                     const Uintah::MaterialSubset* const materials,
                                     const int rkStage )
   {
-    if( rkStage != 1 ) return;
-    task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  if( rkStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   }
 
   //--------------------------------------------------------------------
@@ -225,9 +228,16 @@ namespace WasatchCore {
     materialID_ = material;
     patch_ = const_cast<Uintah::Patch*>( patch );
     rkStage_ = rkStage;
-    if( rkStage_ != 1 ) return;
 
-    dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
+    if( didAllocateMatrix_ ){
+      if (rkStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
+      else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
+    }
+    else{
+      dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
+    }
+    
+    didAllocateMatrix_ = true;
   }
 
   //--------------------------------------------------------------------
@@ -312,7 +322,7 @@ namespace WasatchCore {
 
           Uintah::Iterator boundPtr;
           Uintah::Iterator nu;
-//          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
+         const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
 
 //          const bool hasExtraCells = ( patch_->getExtraCells() != Uintah::IntVector(0,0,0) );
 

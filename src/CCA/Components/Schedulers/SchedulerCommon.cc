@@ -1023,14 +1023,14 @@ void SchedulerCommon::addTask(       std::shared_ptr<Task>   task
   else {
     // Add it to all "Normal" task graphs (default value == -1, from public addTask() method).
     if (tg_num < 0) {
-      for (int i = 0; i < m_task_graphs.size(); ++i) {
-        m_task_graphs[i]->addTask(task, patches, matls);
+      for( unsigned int i = 0; i < m_task_graphs.size(); i++ ) {
+        m_task_graphs[i]->addTask( task, patches, matls );
         m_num_tasks++;
       }
     }
     // Otherwise, add this task to a specific task graph.
     else {
-      m_task_graphs[tg_num]->addTask(task, patches, matls);
+      m_task_graphs[tg_num]->addTask( task, patches, matls );
       m_num_tasks++;
     }
   }

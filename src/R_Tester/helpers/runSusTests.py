@@ -4,7 +4,7 @@ from os         import getenv,environ,unsetenv,rmdir,mkdir,path,system,chdir,sta
 from os         import makedirs
 from time       import strftime,time,gmtime,asctime,localtime
 from sys        import argv,exit,stdout
-from .modUPS     import modUPS
+from modUPS     import modUPS
 from subprocess   import getoutput
 from subprocess import PIPE, Popen
 
@@ -20,8 +20,13 @@ import re         # regular expressions
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
 #______________________________________________________________________
 
+#print("000 %s %s" % (argv, len(argv) ))
+
 # default value for the inputs path
-inputpath = path.abspath( argv[2] )
+if ( len(argv) > 1 ):
+  inputpath = path.abspath( argv[2] )
+else:
+  inputpath = ""
 
 
 def getTestName(test):
@@ -37,11 +42,8 @@ def getTestOS(test):
     return test[3].upper()
 
 def setInputsDir( here ):
-    global inputpath
-    if inputpath == "":
-      inputpath = path.abspath( argv[2] )
-    else: 
-      inputpath = here
+    global inputpath 
+    inputpath = here
 
 def getInputsDir():
     global inputpath
@@ -642,21 +644,21 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
       exit (1)
 
-  MPIHEAD="%s -np" % MPIRUN       #default
+  MPIHEAD="%s -n" % MPIRUN       #default
   
   # pass in environmental variables to mpirun
   if environ['OS'] == "Linux":
-    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
                                    # openmpi
   rc = system("%s -x TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s %s -np" % (MPIRUN, MALLOCSTATS)
+    MPIHEAD="%s %s -n" % (MPIRUN, MALLOCSTATS)
 
                                    #  mvapich
   rc = system("%s -genvlist TERM echo 'hello' > /dev/null 2>&1" % MPIRUN)
   if rc == 0:
-    MPIHEAD="%s -genvlist MALLOC_STATS -np" % MPIRUN
+    MPIHEAD="%s -genvlist MALLOC_STATS -n" % MPIRUN
 
 
   # if running performance tests, strip the output and checkpoints portions
@@ -755,6 +757,8 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     print( "\t*** An exception was thrown ***" )
     rc = -9
 
+  (nTimeSteps,err,rc) = cmdline("grep -c 'Timestep [0-9]' sus.log.txt")
+  
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace this test's goldStandards run:\n\t    "
 
@@ -768,10 +772,10 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
   replace_msg = "%s\n\t\t\tor\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
 
   #__________________________________
+  #  Error checking
   return_code = 0
   if rc == 35072 or rc == 36608 :
-    print( "\t*** Test %s exceeded maximum allowable run time" % (testname) )
-    print( )
+    print( "\t*** Test %s exceeded maximum allowable run time\n" % (testname) )
     system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     return_code = 1
     return return_code
@@ -783,12 +787,18 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
       print( "\t\tMake sure the problem makes checkpoints before finishing" )
 
     print( sus_log_msg )
-    print( "" )
     
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
     
     return_code = 1
     return return_code
+    
+  elif int( nTimeSteps ) <= 1 :         
+    print( "\t*** ERROR Test %s did not run a sufficient number of timeteps.\n" % (testname) )
+    system("echo '  :%s: %s test did not run a sufficient number of timeteps.' >> %s/%s-short.log" % (testname,restart_text,startpath,application))
+    return_code = 1
+    return return_code
+  
   else:
     # Sus completed successfully - now run memory, compare_uda and performance tests
     # get the time from sus.log

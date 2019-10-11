@@ -227,10 +227,30 @@ public:
     }
   };
 
-  // if the values are the same, sort by the first box id, so that we can keep things
-  // in order (in future iterations) when the pointers are in a different order
+  // If the values are the same, sort by the first box id, so that we can keep things
+  // in order (in future iterations) when the pointers are in a different order.
   struct ValueCompare {
     bool operator()(const SB* b1, const SB* b2) const
+    {
+      return b1->getValue() == b2->getValue() ?
+        (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 :
+         b1->getBoxes()[0]->getID() > b2->getBoxes()[0]->getID()) :
+        b1->getValue() > b2->getValue();
+    }
+  };
+
+  // FIXME: Dd: This struct (ValueCompare2) is necessary in order to get the newest (Arp 2019)
+  // XCode (Mac) compiler to work.  The compiler error occurs on lines like this (for CompositeBox):
+  //
+  // std::set<SB*, typename SB::ValueCompare> activeConflicts_;
+  //
+  // where it appears that the XCode compiler doesn't realize that a CompositeBox is a child class of
+  // SuperBox and thus the (original) ValueCompare function should just work.  My guess is that
+  // in a later version of XCode, this will be fixed and we can get rid of this 'hack' ValueCompare2
+  // function.
+  // 
+  struct ValueCompare2 {
+    bool operator()(const CB* b1, const CB* b2) const
     {
       return b1->getValue() == b2->getValue() ?
         (b1->getBoxes()[0]->getID() == b2->getBoxes()[0]->getID() ? b1 > b2 :
@@ -431,13 +451,12 @@ class BasicBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator> {
   typedef BasicBox<BoxP, Point, Volume, Value, Evaluator>     BB;
 
 public:
-  BasicBox(BoxP box)
+  BasicBox( BoxP box )
     : SB(typename SB::Region(box->getLow(), box->getHigh()), box->getVolume()),
       available_(true)
   { this->init(box); }
 
-  BoxP getBox() const
-  { return this->getBoxes()[0]; }
+  BoxP getBox() const { return this->getBoxes()[0]; }
 
 #if 0
   template <class RangeQuerier>
@@ -448,11 +467,9 @@ public:
                                   const Region* withinRegion = 0);
 #endif
 
-  bool isAvailable()
-  { return available_; }
+  bool isAvailable() { return available_; }
 
-  const std::set<CB*,typename SB::ValueCompare>& getActiveEnclosingSuperBoxes() const
-  { return activeEnclosingSuperBoxes_; }
+  const std::set<CB*,typename SB::ValueCompare>& getActiveEnclosingSuperBoxes() const { return activeEnclosingSuperBoxes_; }
 
   // Find any active enclosing SuperBox having the same region as
   // the given region.
@@ -462,8 +479,7 @@ public:
 
   // If any of the ective enclosing superboxes also enclose other, it
   // will return that active enclosing superbox, otherwise return null.
-  CB* anyActiveEnclosingSuperBoxAlsoEnclosing(SB* other)
-    const;
+  CB* anyActiveEnclosingSuperBoxAlsoEnclosing(SB* other) const;
 
   void makeAvailable() { available_ = true; }
 
@@ -475,15 +491,15 @@ public:
     activeEnclosingSuperBoxes_.insert(enclosingBox);
   }
 
-  void removeActiveEnclosingSuperBox(CB* inactivatedBox)
-  { activeEnclosingSuperBoxes_.erase(inactivatedBox); }
+  void removeActiveEnclosingSuperBox(CB* inactivatedBox) { activeEnclosingSuperBoxes_.erase(inactivatedBox); }
 
-  virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&)
-  { return std::vector<BB*>(1, this); }
+  virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&) { return std::vector<BB*>(1, this); }
+
 private:
   std::set<CB*,typename SB::ValueCompare> activeEnclosingSuperBoxes_;
   bool available_;
-};
+
+}; // end class BasicBox
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class CompositeBox : public SuperBox<BoxP, Point, Volume, Value, Evaluator>  {
@@ -500,18 +516,17 @@ public:
   { this->init(basicBoxes_); }
 
   template <class BoxPIterator>
-  static CB* makeCompositeBox(typename SBS::BoxHashMap& boxMap,
-                              BoxPIterator begin, BoxPIterator end);
+  static CB* makeCompositeBox( typename SBS::BoxHashMap   & boxMap,
+                                             BoxPIterator   begin,
+                                             BoxPIterator   end );
 
   ~CompositeBox();
 
-  const std::set<CB*, typename SB::ValueCompare>& getActiveConflicts() const
-  { return activeConflicts_; }
+  const std::set<CB*, typename SB::ValueCompare2>& getActiveConflicts() const { return activeConflicts_; }
 
   virtual void makeActive();
 
-  bool isActive() const
-  { return isActive_; }
+  bool isActive() const { return isActive_; }
 
   void inactivate();
 
@@ -533,19 +548,19 @@ public:
                            Value& maxPossibleValue);
 
   // reactivate the conflicts.
-  void reactivateConflicts(std::set<SB*, typename SB::ValueCompare>& activeBoxes,
-                           Value& maxPossibleValue);
+  void reactivateConflicts( std::set<SB*, typename SB::ValueCompare>& activeBoxes,
+                            Value & maxPossibleValue );
 
-  virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&)
-  { return basicBoxes_; }
+  virtual std::vector<BB*> getBasicBoxes(typename SBS::BoxHashMap&) { return basicBoxes_; }
 
   // The sub value can never really be more than this one's value.
   // (it only gets calculated as more due to overlapping/conflicting
   // sub SuperBoxes).
-  Value getCurrentMaximumPossibleSubValue() const
-  { return activeSubSuperBoxMaxValue_ > this->getValue() ?
-      this->getValue() : activeSubSuperBoxMaxValue_; }
+  Value getCurrentMaximumPossibleSubValue() const  { return activeSubSuperBoxMaxValue_ > this->getValue() ?
+                                                                       this->getValue() : activeSubSuperBoxMaxValue_; }
+
 protected:
+
   void makeAvailable();
   void makeUnavailable();
   void setParent(CB* parent)
@@ -559,15 +574,14 @@ protected:
     conflict->activeConflicts_.insert(this);
   }
 
-  void removeActiveConflict(CB* inactivatedBox)
-  { activeConflicts_.erase(inactivatedBox); }
+  void removeActiveConflict(CB* inactivatedBox) { activeConflicts_.erase(inactivatedBox); }
 
 private:
   void addCreatedSubSuperBoxes(const std::vector<SB*>& candidates);
 
   bool isActive_;
   std::vector<BB*> basicBoxes_;
-  std::set<CB*, typename SB::ValueCompare> activeConflicts_;
+  std::set<CB*, typename SB::ValueCompare2> activeConflicts_;
 
   // sub-SuperBoxes activated when this box was deactivated.
   // When this SuperBox reactivates then these need to deactivate again
@@ -578,7 +592,8 @@ private:
   // store to be deleted in this CompositeBox's destructor
   std::vector<SB*> createdSubSuperBoxes_;
   CB* parent_;
-};
+
+}; // end class CompositeBox
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 void SuperBox<BoxP, Point, Volume, Value, Evaluator>::init()

@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 
+
 #include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
@@ -41,6 +42,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/StringUtil.h>
 
 #include   <utility>
 #include   <typeinfo>
@@ -53,6 +55,8 @@
 #include   <set>
 
 using namespace Uintah;
+using std::string;
+using std::stringstream;
 
 namespace {
   DebugStream BCR_dbg ("BCR_DBG", "BoundaryCondReader", "report info regarding the BC setup", false);
@@ -76,9 +80,9 @@ BoundCondReader::~BoundCondReader()
 // given a set of lower or upper bounds for multiple boxes (points)
 // this function checks if Point p (usually center of circle, ellipse, or annulus)
 // is on a given face on any of the boxes.
-bool is_on_face(const int dir, 
-                const Point p,
-                const std::vector<Point>& points)
+bool BoundCondReader::is_on_face(const int dir, 
+                                 const Point p,
+                                 const std::vector<Point>& points)
 {
   std::vector<Point>::const_iterator iter = points.begin();
   while (iter != points.end()) {
@@ -88,6 +92,25 @@ bool is_on_face(const int dir,
     ++iter;
   }
   return false;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+bool BoundCondReader::isPtOnFace( const int dir,
+                                  const int plusMinusFaces,
+                                  const Point pt,
+                                  const std::vector<Point>& grid_LoPts,
+                                  const std::vector<Point>& grid_HiPts )
+{
+  bool isOnFace = false;
+  if(plusMinusFaces == -1){    // x-, y-, z- faces
+    isOnFace = is_on_face( dir, pt, grid_LoPts );
+  }
+
+  if(plusMinusFaces == 1){     // x+, y+, z+ faces
+    isOnFace = is_on_face( dir, pt, grid_HiPts );      
+  }
+  return isOnFace;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -131,9 +154,9 @@ void BoundCondReader::whichPatchFace(const std::string fc,
 
 //-------------------------------------------------------------------------------------------------
 
-BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
-                                              const ProblemSpecP& grid_ps,
-                                                    Patch::FaceType& face_side)
+BCGeomBase* BoundCondReader::createBoundaryConditionFace( ProblemSpecP       & face_ps,
+                                                          const ProblemSpecP & grid_ps,
+                                                          Patch::FaceType    & face_side)
 {
 
   // Determine the Level 0 grid high and low points, need by 
@@ -141,6 +164,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   Point grid_LoPt(1e30, 1e30, 1e30);
   Point grid_HiPt(-1e30, -1e30, -1e30); 
   
+  std::vector<char> delimiters = {' ', ',' };  // used to parse input strings
   std::vector<Point> grid_LoPts; // store the lower bounds of all boxes
   std::vector<Point> grid_HiPts; // store the upper bounds of all boxes
   
@@ -159,19 +183,24 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
      }
    }
 
-  std::map<std::string,std::string> values;
+  std::map<string,string> values;
   face_ps->getAttributes( values );
       
-  // Have three possible types for the boundary condition face:
-  // a. side (original -- entire side is one bc)
-  // b. cirle (part of the side consists of a circle)
-  // c. rectangle (part of the side consists of a rectangle)
-  // This allows us to specify variable boundary conditions on a given
+  // Possible boundary condition types for a face:
+  //    side (original -- entire side is one bc)
+  //   Optional geometry objects on a side
+  //    circle
+  //    annulus
+  //    rectangulus
+  //    ellipse
+  //    rectangle
+  // This allows a user to specify variable boundary conditions on a given
   // side.  Will use the notion of a UnionBoundaryCondtion and Difference
   // BoundaryCondition.
   
-  std::string fc;
-  int plusMinusFaces, p_dir;
+  string fc;
+  int plusMinusFaces;
+  int p_dir;
   BCGeomBase* bcGeom;
 
   if (values.find("side") != values.end()) {
@@ -179,307 +208,298 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     bcGeom = scinew SideBCData();
   }
+  //__________________________________
+  //
   else if (values.find("circle") != values.end()) {
     fc = values["circle"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    std::string origin = values["origin"];
-    std::string radius = values["radius"];
-    std::stringstream origin_stream(origin);
-    std::stringstream radius_stream(radius);
-    double r,o[3];
-    radius_stream >> r;
-    origin_stream >> o[0] >> o[1] >> o[2];
-    Point p(o[0],o[1],o[2]);
 
-    if( !radius_stream || !origin_stream ) {
-      std::cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << std::endl;
-    }    
+    string origin_str = values["origin"];
+    string radius_str = values["radius"];   
+
+    if (origin_str == "" || radius_str == "") {
+      std::ostringstream warn;
+      warn<<"ERROR\n Circle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " you must specify origin \"x,y,z\" and radius [r] \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    } 
+    
+    double radius = stod( radius_str );
+    Point origin  = string_to_Point( origin_str, delimiters );
     
     //  bullet proofing-- origin must be on the same plane as the face
+    bool isOnFace = isPtOnFace( p_dir, plusMinusFaces, origin, grid_LoPts, grid_HiPts );
 
-    bool isOnFace = false;
-    
-    if(plusMinusFaces == -1){    // x-, y-, z- faces
-      isOnFace = is_on_face(p_dir,p,grid_LoPts);
-    }
-    
-    if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
-    }    
-    
     if(!isOnFace){
       std::ostringstream warn;
-      warn<<"ERROR: Input file\n The Circle BC geometry is not correctly specified."
-          << " The origin " << p << " must be on the same plane" 
+      warn<<"ERROR: Input file\n The Circle BC geometry on face "<< fc << " was not correctly specified."
+          << " The origin " << origin << " must be on the same plane" 
           << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    
-    if (origin == "" || radius == "") {
+    if( radius <= 0.0){
       std::ostringstream warn;
-      warn<<"ERROR\n Circle BC geometry not correctly specified \n"
-          << " you must specify origin [x,y,z] and radius [r] \n\n";
+      warn<<"ERROR: Input file\n The Circle BC geometry on face "<< fc << " was not correctly specified."
+          << " The radius (" << radius << ") must be > 0. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
-    
-    bcGeom = scinew CircleBCData(p,r);
+
+    bcGeom = scinew CircleBCData( origin, radius );
   }
+  //__________________________________
+  //
   else if (values.find("annulus") != values.end()) {
     fc = values["annulus"];
+    
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    std::string origin = values["origin"];
-    std::string in_radius = values["inner_radius"];
-    std::string out_radius = values["outer_radius"];
-    std::stringstream origin_stream(origin);
-    std::stringstream in_radius_stream(in_radius);
-    std::stringstream out_radius_stream(out_radius);
-    double i_r,o_r,o[3];
-    in_radius_stream >> i_r;
-    out_radius_stream >> o_r;
-    origin_stream >> o[0] >> o[1] >> o[2];
-    Point p(o[0],o[1],o[2]);
+    
+    string origin_str = values["origin"];
+    string in_radius_str = values["inner_radius"];
+    string out_radius_str = values["outer_radius"];
+
+    if (origin_str == "" || in_radius_str == "" || out_radius_str == "" ) {
+      std::ostringstream warn;
+      warn<<"ERROR\n Annulus BC geometry on face "<< fc << " was not correctly specified \n"
+          << " you must specify origin \"x,y,z\", inner_radius \"r\" outer_radius \"r\" \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    double in_radius  = stod( in_radius_str );
+    double out_radius = stod( out_radius_str );
+    Point origin  = string_to_Point( origin_str, delimiters );
 
     //  bullet proofing-- origin must be on the same plane as the face
-    bool isOnFace = false;
-    
-    if(plusMinusFaces == -1){    // x-, y-, z- faces
-      isOnFace = is_on_face(p_dir,p,grid_LoPts);
-    }
-    
-    if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
-    }    
+    bool isOnFace = isPtOnFace( p_dir, plusMinusFaces, origin, grid_LoPts, grid_HiPts );
     
     if(!isOnFace){
       std::ostringstream warn;
-      warn<<"ERROR: Input file\n The Annulus BC geometry is not correctly specified."
-          << " The origin " << p << " must be on the same plane" 
+      warn<<"ERROR: Input file\n The Annulus BC geometry on face "<< fc << " was not correctly specified."
+          << " The origin " << origin << " must be on the same plane" 
           << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    if (origin == "" || in_radius == "" || out_radius == "" ) {
+    if ( out_radius < in_radius) {
       std::ostringstream warn;
-      warn<<"ERROR\n Annulus BC geometry not correctly specified \n"
-          << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
+      warn<<"ERROR\n Annulus BC geometry on face "<< fc << " was not correctly specified \n"
+      << " The outer radius must be larger than the inner radius \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    bcGeom = scinew AnnulusBCData(p,i_r,o_r);
+    
+    if( in_radius <= 0.0 || out_radius <= 0.0){
+      std::ostringstream warn;
+      warn<<"ERROR: Input file\n The Annulus BC geometry on face "<< fc << " was not correctly specified."
+          << " The inner_radius (" << in_radius << ") or outer_radius (" << out_radius << ") must be > 0. \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    bcGeom = scinew AnnulusBCData( origin ,in_radius, out_radius);
   }
+  //__________________________________
+  //
   else if (values.find("rectangulus") != values.end()) {
     fc = values["rectangulus"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    std::string in_low = values["inner_lower"];
-    std::string in_up = values["inner_upper"];
-    std::string out_low = values["outer_lower"];
-    std::string out_up = values["outer_upper"];
-    std::stringstream in_low_stream(in_low), in_up_stream(in_up);
-    std::stringstream out_low_stream(out_low), out_up_stream(out_up);
-    double in_lower[3],in_upper[3];
-    double out_lower[3],out_upper[3];
-    in_low_stream >> in_lower[0] >> in_lower[1] >> in_lower[2];
-    out_low_stream >> out_lower[0] >> out_lower[1] >>out_lower[2];
-    in_up_stream >> in_upper[0] >> in_upper[1] >> in_upper[2];
-    out_up_stream >> out_upper[0] >> out_upper[1] >> out_upper[2];
-    Point l(in_lower[0],in_lower[1],in_lower[2]),u(in_upper[0],in_upper[1],in_upper[2]);
-    Point l2(out_lower[0],out_lower[1],out_lower[2]),u2(out_upper[0],out_upper[1],out_upper[2]);
-   
-    //  bullet proofing-- both rectangles must be on the same plane as the face
-    bool isOnFace1 = false;
-    bool isOnFace2 = false;
-
-    if(plusMinusFaces == -1){    // x-, y-, z- faces
-      isOnFace1 = is_on_face(p_dir,l,grid_LoPts) && is_on_face(p_dir,u,grid_LoPts);
-      isOnFace2 = is_on_face(p_dir,l2,grid_LoPts) && is_on_face(p_dir,u2,grid_LoPts);
+    string in_low_str  = values["inner_lower"];
+    string in_up_str   = values["inner_upper"];
+    string out_low_str = values["outer_lower"];
+    string out_up_str  = values["outer_upper"];
+    
+    if (in_low_str == "" || in_up_str == "") {
+      std::ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " you must specify inner_lower \"x,y,z\" and inner_upper\"x,y,z\" \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    if (out_low_str == "" || out_up_str == "") {
+      std::ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " you must specify outer_lower \"x,y,z\" and outer_upper \"x,y,z\" \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      isOnFace1 = is_on_face(p_dir,l,grid_HiPts) && is_on_face(p_dir,u,grid_HiPts);      
-      isOnFace2 = is_on_face(p_dir,l2,grid_HiPts) && is_on_face(p_dir,u2,grid_HiPts);      
-    }    
+    Point in_low  = string_to_Point( in_low_str,  delimiters );
+    Point in_up   = string_to_Point( in_up_str,   delimiters );
+    Point out_low = string_to_Point( out_low_str, delimiters );
+    Point out_up  = string_to_Point( out_up_str,  delimiters );
+
+    //  bullet proofing-- both rectangles must be on the same plane as the face
+    bool isOnFace_inLow  = isPtOnFace( p_dir, plusMinusFaces, in_low,  grid_LoPts, grid_HiPts );
+    bool isOnFace_inUp   = isPtOnFace( p_dir, plusMinusFaces, in_up,   grid_LoPts, grid_HiPts );
+    bool isOnFace_outLow = isPtOnFace( p_dir, plusMinusFaces, out_low, grid_LoPts, grid_HiPts );
+    bool isOnFace_outUp  = isPtOnFace( p_dir, plusMinusFaces, out_up,  grid_LoPts, grid_HiPts );
     
-    if(!isOnFace1 || !isOnFace2){
+    if( !isOnFace_inLow || !isOnFace_inUp || !isOnFace_outLow || !isOnFace_outUp ){
       std::ostringstream warn;
-      warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
-          << " The low " << l << " high " << u << " points must be on the same plane" 
-          << " The low " << l2 << " high " << u2 << " points must be on the same plane" 
+      warn<<"ERROR: Input file\n The rectangle BC geometry on face "<< fc << " was not correctly specified."
+          << " The low " << in_low  << " high " << in_up << " points must be on the same plane" 
+          << " The low " << out_low << " high " << out_up << " points must be on the same plane" 
           << " as face (" << fc <<"). Double check against and Level:box spec. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }   
    
-    if (in_low == "" || in_up == "") {
+    if ( (in_low.x() >  in_up.x() || in_low.y() >  in_up.y() || in_low.z() >  in_up.z()) ||
+         (in_low.x() == in_up.x() && in_low.y() == in_up.y() && in_low.z() == in_up.z())){
       std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " you must specify in_lower [x,y,z] and in_upper[x,y,z] \n\n";
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " inner_lower "<< in_low <<" inner_upper " << in_up;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    if (out_low == "" || out_up == "") {
+    
+    if ( (out_low.x() >  out_up.x() || out_low.y() >  out_up.y() || out_low.z() >  out_up.z()) ||
+         (out_low.x() == out_up.x() && out_low.y() == out_up.y() && out_low.z() == out_up.z())){
       std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " you must specify out_lower [x,y,z] and out_upper[x,y,z] \n\n";
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " outer_lower "<< out_low <<" outer_upper " << out_up;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    if ( (l.x() >  u.x() || l.y() >  u.y() || l.z() >  u.z()) ||
-         (l.x() == u.x() && l.y() == u.y() && l.z() == u.z())){
-      std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " lower pt "<< l <<" upper pt " << u;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    if ( (l2.x() >  u2.x() || l2.y() >  u2.y() || l2.z() >  u2.z()) ||
-         (l2.x() == u2.x() && l2.y() == u2.y() && l2.z() == u2.z())){
-      std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " lower pt "<< l <<" upper pt " << u;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    bcGeom = scinew RectangulusBCData(l,u,l2,u2);
+    bcGeom = scinew RectangulusBCData( in_low, in_up, out_low, out_up);
   }
+  //__________________________________
+  //
   else if (values.find("ellipse") != values.end()) {
     fc = values["ellipse"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    std::string str_origin = values["origin"];
-    std::string str_minor_radius = values["minor_radius"];    
-    std::string str_major_radius = values["major_radius"];
-    std::string str_angle = values["angle"];    
-    std::stringstream origin_stream(str_origin);
-    std::stringstream minor_radius_stream(str_minor_radius);
-    std::stringstream major_radius_stream(str_major_radius);
-    std::stringstream angle_stream(str_angle);
-    double minor_r,major_r,origin[3], angle;
-    minor_radius_stream >> minor_r;
-    major_radius_stream >> major_r;
-    origin_stream >> origin[0] >> origin[1] >> origin[2];
-    Point p(origin[0],origin[1],origin[2]);
-    angle_stream >> angle;
     
-    //  bullet proofing-- origin must be on the same plane as the face
-    bool isOnFace = false;
+    string origin_str       = values["origin"];
+    string minor_radius_str = values["minor_radius"];    
+    string major_radius_str = values["major_radius"];
+    string angle_str        = values["angle"];    
     
-    if(plusMinusFaces == -1){    // x-, y-, z- faces
-      isOnFace = is_on_face(p_dir,p,grid_LoPts);
+    if (origin_str == "" || minor_radius_str == "" || major_radius_str == "" || angle_str == "") {
+      std::ostringstream warn;
+      warn<<"ERROR\n Ellipse BC geometry on face "<< fc << " was not correctly specified \n"
+      << " you must specify origin \"x,y,z\", minor_radius \"r\" major_radius \"r\"  and  angle \"degree\" \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
-    if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      isOnFace = is_on_face(p_dir,p,grid_HiPts);      
-    }    
+
+    double minor_radius = stod( minor_radius_str );
+    double major_radius = stod( major_radius_str );
+    double angle        = stod( angle_str );
+    Point origin  = string_to_Point( origin_str, delimiters );
+
+    //  bullet proofing-- origin must be on the same plane as the face
+    bool isOnFace = isPtOnFace( p_dir, plusMinusFaces, origin, grid_LoPts, grid_HiPts );
     
     if(!isOnFace){
       std::ostringstream warn;
-      warn<<"ERROR: Input file\n The Ellipse BC geometry is not correctly specified."
-      << " The origin " << p << " must be on the same plane" 
+      warn<<"ERROR: Input file\n The Ellipse BC geometry on face "<< fc << " was not correctly specified."
+      << " The origin " << origin << " must be on the same plane" 
       << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    if (major_r < minor_r) {
+    if (major_radius < minor_radius) {
       std::ostringstream warn;
-      warn<<"ERROR\n Ellipse BC geometry not correctly specified \n"
+      warn<<"ERROR\n Ellipse BC geometry on face "<< fc << " was not correctly specified \n"
       << " Major radius must be larger than minor radius \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    if( minor_radius <= 0.0 || major_radius <= 0.0){
+      std::ostringstream warn;
+      warn<<"ERROR: Input file\n The Ellipse BC geometry on face "<< fc << " was not correctly specified."
+          << " The inner_radius (" << minor_radius << ") or outer_radius (" << major_radius << ") must be > 0. \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }    
     
-    if (str_origin == "" || str_minor_radius == "" || str_major_radius == "" ) {
-      std::ostringstream warn;
-      warn<<"ERROR\n Ellipse BC geometry not correctly specified \n"
-      << " you must specify origin [x,y,z], minor_radius [r] major_radius [r] \n\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    
-    bcGeom = scinew EllipseBCData(p,minor_r,major_r,fc,angle);
+    bcGeom = scinew EllipseBCData( origin, minor_radius, major_radius, fc, angle);
   }
-  
+  //__________________________________
+  //
   else if (values.find("rectangle") != values.end()) {
     fc = values["rectangle"];
+    
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    std::string low = values["lower"];
-    std::string up = values["upper"];
-    std::stringstream low_stream(low), up_stream(up);
-    double lower[3],upper[3];
-    low_stream >> lower[0] >> lower[1] >> lower[2];
-    up_stream >> upper[0] >> upper[1] >> upper[2];
-    Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
-   
-    //  bullet proofing-- rectangle must be on the same plane as the face
-    bool isOnFace = false;
-
-    if(plusMinusFaces == -1){    // x-, y-, z- faces
-      isOnFace = is_on_face(p_dir,l,grid_LoPts) && is_on_face(p_dir,u,grid_LoPts);
-    }
     
-    if(plusMinusFaces == 1){     // x+, y+, z+ faces
-      isOnFace = is_on_face(p_dir,l,grid_HiPts) && is_on_face(p_dir,u,grid_HiPts);      
-    }    
+    string low_str = values["lower"];
+    string up_str  = values["upper"];
     
-    if(!isOnFace){
+    if (low_str == "" || up_str == "") {
       std::ostringstream warn;
-      warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
-          << " The low " << l << " high " << u << " points must be on the same plane" 
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " you must specify lower \"x,y,z\" and upper\"x,y,z\" \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    Point lowPt  = string_to_Point( low_str, delimiters );
+    Point upPt   = string_to_Point( up_str,  delimiters );
+       
+    //  bullet proofing-- rectangle must be on the same plane as the face
+    bool isOnFace_lowPt = isPtOnFace( p_dir, plusMinusFaces, lowPt, grid_LoPts, grid_HiPts );
+    bool isOnFace_upPt  = isPtOnFace( p_dir, plusMinusFaces, upPt,  grid_LoPts, grid_HiPts );
+    
+    if(!isOnFace_lowPt || !isOnFace_upPt ){
+      std::ostringstream warn;
+      warn<<"ERROR: Input file\n The rectangle BC geometry on face "<< fc << " was not correctly specified."
+          << " The lower (" << lowPt << ") and  upper (" << upPt << ") points must be on the same plane" 
           << " as face (" << fc <<"). Double check against and Level:box spec. \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }   
    
-    if (low == "" || up == "") {
+
+    if ( (lowPt.x() >  upPt.x() || lowPt.y() >  upPt.y() || lowPt.z() >  upPt.z()) ||
+         (lowPt.x() == upPt.x() && lowPt.y() == upPt.y() && lowPt.z() == upPt.z())){
       std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " you must specify lower [x,y,z] and upper[x,y,z] \n\n";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-    if ( (l.x() >  u.x() || l.y() >  u.y() || l.z() >  u.z()) ||
-         (l.x() == u.x() && l.y() == u.y() && l.z() == u.z())){
-      std::ostringstream warn;
-      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
-          << " lower pt "<< l <<" upper pt " << u;
+      warn<<"ERROR\n Rectangle BC geometry on face "<< fc << " was not correctly specified \n"
+          << " lower ("<< lowPt <<") upper (" << upPt <<")";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    bcGeom = scinew RectangleBCData(l,u);
+    bcGeom = scinew RectangleBCData( lowPt, upPt );
   }
   
+  //__________________________________
+  //
   else {
     std::ostringstream warn;
-    warn << "ERROR\n Boundary condition geometry not correctly specified "
-      " Valid options (side, circle, rectangle, annulus";
+    warn << "ERROR\n Boundary condition geometry on face "<< fc << " was not correctly specified "
+      " Valid options (side, circle, rectangle, annulus, ellipse, rectangulus ";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
   }
 
   // name the boundary condition object:
-  std::string bcname; 
+  string bcname; 
   if (values.find("name") != values.end()){
-    std::string name = values["name"];
+    string name = values["name"];
     BCR_dbg << "Setting name to: " << name << std::endl;
     bcGeom->setBCName( name ); 
   }
   
   // get the bctype - mainly used by wasatch:
   if (values.find("type") != values.end()){
-    std::string bndType = values["type"];
+    string bndType = values["type"];
     BCR_dbg << "Setting bc type to: " << bndType << std::endl;
     bcGeom->setBndType( bndType );
   }
 
   if (face_ps->findBlock("ParticleBC")) {
+  
     ProblemSpecP particleBCps = face_ps->findBlock("ParticleBC");
     ProblemSpecP pWallBC = particleBCps->findBlock("Wall");
     ProblemSpecP pInletBC= particleBCps->findBlock("Inlet");
+    
     BCGeomBase::ParticleBndSpec pBndSpec;
     if (pWallBC) {
       pBndSpec.bndType = BCGeomBase::ParticleBndSpec::WALL;
-      std::string wallType;
+      string wallType;
       pWallBC->getAttribute("walltype",wallType);
+      
       if (wallType=="Elastic") {
         pBndSpec.wallType = BCGeomBase::ParticleBndSpec::ELASTIC;
         pBndSpec.restitutionCoef = 1.0;
-      } else if (wallType=="Inelastic") {
+      } 
+      else if (wallType=="Inelastic") {
         pBndSpec.wallType = BCGeomBase::ParticleBndSpec::INELASTIC;
         pBndSpec.restitutionCoef = 0.0;
-      } else if (wallType=="PartiallyElastic") {
+      } 
+      else if (wallType=="PartiallyElastic") {
         pBndSpec.wallType = BCGeomBase::ParticleBndSpec::PARTIALLYELASTIC;
         pWallBC->get("Restitution", pBndSpec.restitutionCoef);
       }
-    } else if (pInletBC) {
+    } 
+    else if (pInletBC) {
       pBndSpec.bndType = BCGeomBase::ParticleBndSpec::INLET;
       pInletBC->get("ParticlesPerSecond", pBndSpec.particlesPerSec);
     }

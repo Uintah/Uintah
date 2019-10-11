@@ -47,6 +47,20 @@ namespace Uintah{
     std::vector<std::string> _unweighted_var_tasks; // these taks do NOT depend on density
     std::vector<std::string> _weighted_var_tasks; // these taks do depend on density
 
+    std::vector<std::string> _momentum_variables; // these need to be initialized in their own location
+
+    /// @brief Checks to see if this string matches a momentum variable string.  
+    bool is_mom_var( std::string var ){
+      bool value = false;
+      for ( auto i = _momentum_variables.begin(); i != _momentum_variables.end(); i++ ){
+        if ( *i == var ){
+          return value;
+        }
+      }
+      return value;
+    }
+
+
 
 
   };

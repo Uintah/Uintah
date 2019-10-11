@@ -117,7 +117,7 @@ public:
   double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c);
 
   /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
-  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
+  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions, bool do_inverse = false );
 
   /** @brief Method to find the index for any dependent variable.  **/
   int inline findIndex( std::string name ){

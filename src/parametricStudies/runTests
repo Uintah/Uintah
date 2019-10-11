@@ -33,6 +33,7 @@
 #______________________________________________________________________
 use strict;
 use warnings;
+#use diagnostics;
 use XML::LibXML;
 use Data::Dumper;
 use File::Path;
@@ -145,10 +146,11 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
    $ENV{"PATH"} = "$p:$orgPath";
 
    # additional symbolic links to make OPTIONAL
-   my @symLinks = ();
+   my @symLinks;
 
    if( $whatToRun->exists( 'symbolicLinks' ) ){
      my $sl     = $whatToRun->findvalue('symbolicLinks');
+
      @symLinks  = split(/ /,$sl);
      @symLinks  = cleanStr(@symLinks);
    }
@@ -169,11 +171,11 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
      my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
      my $tstData  = $dom->documentElement;
- 
+
                     # Inputs directory default path (src/StandAlone/inputs)
      my $default_path = $src_path . "/StandAlone/inputs/";
      my $inputs_path = get_XML_value( $tstData, 'inputs_path', $default_path );
-    
+
                    # UPS file
      my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
      my $upsFile  = $inputs_path.$component."/".$ups_tmp;
@@ -205,9 +207,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
      chdir($testName);
 
-     print "\n\n=======================================================================================\n";
-     print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile other Files: $otherFiles\n";
-     print "=======================================================================================\n";
+
 
      # bulletproofing
      # do these files exist
@@ -235,16 +235,30 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      my $sus = `which sus`;
      system("ln -s $sus > /dev/null 2>&1");
 
+     # make a symbolic link to inputs
+     system("ln -s $inputs_path > /dev/null 2>&1");
+
      # create any symbolic links requested by that component
-     my $j = 0;
-     foreach $j (@symLinks) {
-       if( -e $j ){
-         system("ln -s $j > /dev/null 2>&1");
+     if( $#symLinks > 0 ){
+       foreach my $s (@symLinks) {
+         if( $s ne ""){
+           system("ln -s $s> /dev/null 2>&1");
+         }
        }
      }
 
+     print "\n\n===================================================================================\n";
+     print "Test Name      : $testName \n";
+     print "ups File       : $upsFile \n";
+     print "tst File       : $tstFile \n";
+     print "inputs dir     : $inputs_path\n";
+     print "sus            : $sus";
+     print "other Files    : $otherFiles\n";
+     print "results path   : $testing_path\n";
+     print "=======================================================================================\n";
+
      # Bulletproofing
-     print "\t Checking that the tst file is a properly formatted xml file  \n";
+     print "Checking that the tst file is a properly formatted xml file  \n";
      system("xmlstarlet val --err $tst_basename") == 0 ||  die("\nERROR: $tst_basename, contains errors.\n");
 
 
@@ -255,13 +269,13 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
      #__________________________________
      # run the tests
-     print "\n\nLaunching: run_tests.pl $testing_path/$tst_basename\n\n";
+     print "\n\nLaunching: run_tests.pl $tst_basename\n\n";
      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tst_basename", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n\n");
 
      chdir("..");
    }  # loop over tests
-   
+
    chdir("..");
  }
 

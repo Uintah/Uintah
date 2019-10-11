@@ -90,7 +90,6 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
                                        variable_registry, const bool packed_tasks ){
 
   register_variable( m_label_densityRK , ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( m_label_density , ArchesFieldContainer::REQUIRES,0, ArchesFieldContainer::NEWDW, variable_registry);
 
 }
 
@@ -99,12 +98,7 @@ void
 DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rhoRK = tsk_info->get_uintah_field_add<CCVariable<double> >( m_label_densityRK );
-  constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density );
-
-  Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
-  Uintah::parallel_for( range, [&](int i, int j, int k){
-    rhoRK(i,j,k)   = rho(i,j,k);
-  });
+  rhoRK.initialize(0.0);
 
 }
 

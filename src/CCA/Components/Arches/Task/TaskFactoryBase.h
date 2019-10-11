@@ -32,16 +32,15 @@ namespace Uintah{
     /** @brief Parse the input file and create builders for all tasks listed in the UPS file **/
     virtual void register_all_tasks( ProblemSpecP& db ) = 0;
 
-    /** @brief Actually build and call problemSetups for each tasks **/
-    virtual void build_all_tasks( ProblemSpecP& db ) = 0;
-
     /** @brief Register tasks in a convenient container **/
     void register_task( std::string task_name,
-                        TaskInterface::TaskBuilder* builder );
+                        TaskInterface::TaskBuilder* builder,
+                        ProblemSpecP db = nullptr );
 
     /** @brief Register tasks in a convenient container **/
     void register_atomic_task( std::string task_name,
-                               AtomicTaskInterface::AtomicTaskBuilder* builder );
+                               AtomicTaskInterface::AtomicTaskBuilder* builder,
+                               ProblemSpecP db = nullptr );
 
     /** @brief Retrieve a subset (collection) of tasks given the subset name **/
     virtual std::vector<std::string> retrieve_task_subset(const std::string subset) = 0;

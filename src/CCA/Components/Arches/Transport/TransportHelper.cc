@@ -12,7 +12,7 @@ ArchesCore::EQUATION_CLASS assign_eqn_class_enum( std::string my_class ){
   } else if ( my_class == "dqmom" ){
     return DQMOM;
   } else if ( my_class == "volumetric"){
-    return NO_PREMULT;
+    return VOLUMETRIC;
   } else if ( my_class == "momentum" ){
     return MOMENTUM;
   } else {
@@ -31,8 +31,8 @@ std::string get_premultiplier_name(ArchesCore::EQUATION_CLASS eqn_class){
     case DQMOM:
       //return "w_";
       return "";
-    case NO_PREMULT:
-      return "none";
+    case VOLUMETRIC:
+      return "";
     default:
       return "none";
   }
@@ -47,8 +47,8 @@ std::string get_postmultiplier_name(ArchesCore::EQUATION_CLASS eqn_class){
       return "";
     case DQMOM:
       return "qn";
-    case NO_PREMULT:
-      return "none";
+    case VOLUMETRIC:
+      return "";
     default:
       return "none";
   }

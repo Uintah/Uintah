@@ -269,12 +269,14 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
 
-  bool needNormals=false;
+  bool needNormals = false;
+  bool useLR       = false;
   contactModel = ContactFactory::create(d_myworld,
-                                        restart_mat_ps,m_materialManager,lb,flags,
-                                        needNormals);
+                                        restart_mat_ps,m_materialManager,lb,
+                                        flags, needNormals, useLR);
 
   flags->d_computeNormals=needNormals;
+  flags->d_useLogisticRegression=useLR;
 
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);

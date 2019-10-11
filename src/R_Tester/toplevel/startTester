@@ -59,11 +59,8 @@ if [ "$MACHINE" == "uintah-build" ]; then
     names=(\
       "ahumphrey@sci.utah.edu,"            \
       "t.harman@utah.edu,"                 \
-      "bradpeterson@gmail.com,"            \
       "jholmen@sci.utah.edu,"              \
       "jeremy.thornock@utah.edu,"          \
-      "derkhar@gmail.com,"                 \
-      "bisaac2@gmail.com,"                 \
       "allen@sci.utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
@@ -72,19 +69,18 @@ if [ "$MACHINE" == "uintah-build" ]; then
   fi
 
   if [ "$LOGNAME" == "kokkos_rt" ]; then
+  
+    export TEST_COMPONENTS="Examples ARCHES"
+    WHICH_TESTS="NIGHTLYTESTS"
+    DO_DBG="0"
+    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
+    
     names=(\
-    "bradpeterson@gmail.com,"     \
     "jholmen@sci.utah.edu,"       \
     "jeremy.thornock@utah.edu,"   \
-    "derkhar@gmail.com,"          \
-    "ohdiazi@gmail.com,"          \
     "t.harman@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
-
-    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
-    export TEST_COMPONENTS="Examples ARCHES"
-    WHICH_TESTS="KOKKOSTESTS"
     IFS=" "
   fi
 

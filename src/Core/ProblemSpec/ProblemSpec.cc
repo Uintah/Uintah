@@ -1598,11 +1598,12 @@ ProblemSpecP
 ProblemSpec::getParent() 
 {
   xmlNode* d = d_node->parent;
-  if( d->content != nullptr) {
+  
+  if ( d ){
     return scinew ProblemSpec( d, false );
-  }
+  } 
   else {
-    return 0;
+    return nullptr;
   }
 }
 

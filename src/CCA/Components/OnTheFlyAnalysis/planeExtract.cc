@@ -66,18 +66,18 @@ planeExtract::planeExtract(const ProcessorGroup* myworld,
 planeExtract::~planeExtract()
 {
   DOUT(dbg_OTF_PE, " Doing: destructor planeExtract " );
- 
+
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
    if(d_zero_matl && d_zero_matl->removeReference()) {
     delete d_zero_matl;
-  } 
-  
+  }
+
   VarLabel::destroy(d_lb->lastWriteTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
   delete d_lb;
-  
+
   // delete each plane
   vector<plane*>::iterator iter;
   for( iter  = d_planes.begin();iter != d_planes.end(); iter++){
@@ -94,12 +94,12 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   DOUT(dbg_OTF_PE , "Doing problemSetup \t\t\t\tplaneExtract" );
-  
+
   int numMatls  = m_materialManager->getNumMatls();
-                               
+
   d_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
                                             max_vartype::getTypeDescription());
- 
+
   //__________________________________
   //  Read in timing information
   m_module_spec->require("samplingFrequency", m_analysisFreq);
@@ -109,11 +109,11 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("planeExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);
-  } 
+  }
 
-  
+
   // find the material to extract data from.  Default is matl 0.
-  // The user can use either 
+  // The user can use either
   //  <material>   atmosphere </material>
   //  <materialIndex> 1 </materialIndex>
 
@@ -128,36 +128,36 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
   } else {
     matl = m_materialManager->getMaterial(0);
   }
-  
+
   int defaultMatl = matl->getDWIndex();
-  
+
   //__________________________________
   //  Read in the optional material index from the variables that may be different
   //  from the default index
   vector<int> m;
-  
+
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
-    
+
   for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     var_spec->getAttributes(attribute);
-   
+
     int matl = defaultMatl;
     if (attribute["matl"].empty() == false){
       matl = atoi(attribute["matl"].c_str());
     }
-    
+
     // bulletproofing
     if(matl < 0 || matl > numMatls){
       throw ProblemSetupException("planeExtract: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
-    
+
     d_varMatl.push_back(matl);
     m.push_back(matl);
   }
-  
+
   // remove any duplicate entries
   sort(m.begin(), m.end());
   vector<int>::iterator it;
@@ -167,32 +167,32 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
   //Construct the matl_set
   d_matl_set->addAll(m);
   d_matl_set->addReference();
-  
+
   //__________________________________
-  //  Read in variables label names                
+  //  Read in variables label names
   for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     var_spec->getAttributes(attribute);
-    
+
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
     if(label == nullptr){
       throw ProblemSetupException("planeExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
-    
+
     //__________________________________
     //  Bulletproofing
     // The user must specify the matl for single matl variables
     if ( name == "press_CC" && attribute["matl"].empty() ){
       throw ProblemSetupException("planeExtract: You must add (matl='0') to the press_CC plane." , __FILE__, __LINE__);
     }
-    
+
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
-    
+
     //__________________________________
-    bool throwException = false;  
-    
+    bool throwException = false;
+
     // only CC, SFCX, SFCY, SFCZ variables
     if(td->getType() != TypeDescription::CCVariable   &&
        td->getType() != TypeDescription::SFCXVariable &&
@@ -215,25 +215,25 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
          subtype->getType() != TypeDescription::double_type &&
          subtype->getType() != TypeDescription::Vector ){
       throwException = true;
-    } 
-    if(throwException){       
+    }
+    if(throwException){
       ostringstream warn;
-      warn << "ERROR:AnalysisModule:planeExtact: ("<<label->getName() << " " 
+      warn << "ERROR:AnalysisModule:planeExtact: ("<<label->getName() << " "
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     d_varLabels.push_back(label);
   }
-  
+
   //__________________________________
   //  Read in planes
-  ProblemSpecP planes_ps = m_module_spec->findBlock("planes"); 
+  ProblemSpecP planes_ps = m_module_spec->findBlock("planes");
   if( !planes_ps ) {
-    throw ProblemSetupException("\n ERROR:planeExtract: Couldn't find <planes> tag \n", __FILE__, __LINE__);    
-  }        
-             
+    throw ProblemSetupException("\n ERROR:planeExtract: Couldn't find <planes> tag \n", __FILE__, __LINE__);
+  }
+
   for( ProblemSpecP plane_spec = planes_ps->findBlock( "plane" ); plane_spec != nullptr; plane_spec = plane_spec->findNextBlock( "plane" ) ) {
-                    
+
     plane_spec->getAttributes(attribute);
     string name = attribute["name"];
 
@@ -247,18 +247,18 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     // -plane must be parallel to the coordinate system
     // -plane can't exceed computational domain
     if(name == ""){
-      throw ProblemSetupException("\n ERROR:planeExtract: You must name each plane <plane name= something>\n", 
+      throw ProblemSetupException("\n ERROR:planeExtract: You must name each plane <plane name= something>\n",
                                   __FILE__, __LINE__);
     }
-    
+
     // plane must be parallel to the coordinate system
     bool X = (start.x() == end.x());
     bool Y = (start.y() == end.y());  // 1 out of 3 of these must be true
     bool Z = (start.z() == end.z());
-    
+
     bool validPlane = false;
     PlaneType planeType = NONE;
-    
+
     if( !X && !Y && Z){               /* XY plane */
       validPlane = true;
       planeType  = XY;
@@ -273,11 +273,11 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     }
     if(validPlane == false){
       ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start 
+      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
            << " " << end << " is not parallel to the coordinate system. \n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
+
     //plane can't exceed computational domain
     BBox compDomain;
     grid->getSpatialRange(compDomain);
@@ -288,19 +288,19 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     if(start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
          end.x() > max.x() ||   end.y() > max.y() ||  end.z() > max.z() ){
       ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start 
+      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
            << " " << end << " begins or ends outside of the computational domain. \n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
+
     if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
       ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start 
+      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
            << " " << end << " the starting point is > than the ending point \n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
-    
+
+
     // Start time < stop time
     if(d_startTime > d_stopTime ){
       throw ProblemSetupException("\n ERROR:planeExtract: startTime > stopTime. \n", __FILE__, __LINE__);
@@ -321,16 +321,16 @@ void planeExtract::scheduleInitialize(SchedulerP& sched,
                                       const LevelP& level)
 {
   printSchedule(level,dbg_OTF_PE, "planeExtract::scheduleInitialize " );
-  
-  Task* t = scinew Task("planeExtract::initialize", 
+
+  Task* t = scinew Task("planeExtract::initialize",
                   this, &planeExtract::initialize);
 
   t->computes(d_lb->lastWriteTimeLabel);
- 
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
-void planeExtract::initialize(const ProcessorGroup*, 
+void planeExtract::initialize(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse*,
@@ -339,11 +339,11 @@ void planeExtract::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask( patch, dbg_OTF_PE,"Doing  planeExtract::initialize" );
-     
+
     double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put(max_vartype(tminus), d_lb->lastWriteTimeLabel);
 
-    
+
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
 
@@ -355,8 +355,8 @@ void planeExtract::initialize(const ProcessorGroup*,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
       closedir(check);
-    } 
-  }  
+    }
+  }
 }
 
 //______________________________________________________________________
@@ -368,34 +368,34 @@ void planeExtract::scheduleRestartInitialize(SchedulerP   & sched,
 //______________________________________________________________________
 void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                                       const LevelP& level)
-{ 
+{
   printSchedule(level,dbg_OTF_PE, "planeExtract::scheduleDoAnalysis");
-  
-  Task* t = scinew Task("planeExtract::doAnalysis", 
+
+  Task* t = scinew Task("planeExtract::doAnalysis",
                    this,&planeExtract::doAnalysis);
-                        
+
   t->requires( Task::OldDW, m_timeStepLabel);
   sched_TimeVars( t, level, d_lb->lastWriteTimeLabel, true );
-    
+
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
     if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
-      throw InternalError("planeExtract: scheduleDoAnalysis label not found: " 
+      throw InternalError("planeExtract: scheduleDoAnalysis label not found: "
                           + name , __FILE__, __LINE__);
     }
 
     MaterialSubset* matSubSet = scinew MaterialSubset();
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
-    
+
     t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
-    
+
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
   }
-  
+
   sched->addTask(t, level->eachPatch(), d_matl_set );
 
 }
@@ -411,74 +411,74 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
   timeVars tv;
   getTimeVars( old_dw, level, d_lb->lastWriteTimeLabel, tv );
   putTimeVars( new_dw,        d_lb->lastWriteTimeLabel, tv );
-  
+
   if( tv.isItTime == false ){
     return;
   }
-  
+
   //__________________________________
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    
+
     int proc =
       m_scheduler->getLoadBalancer()->getPatchwiseProcessorAssignment(patch);
-    
+
     //__________________________________
     // write data if this processor owns this patch
     if( proc == pg->myRank() ){
-    
+
      printTask( patch, dbg_OTF_PE,"Doing planeExtract::doAnalysis" );
-     
+
       //__________________________________
-      // loop over each plane 
+      // loop over each plane
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
 
         // create the directory structure
         string udaDir = m_output->getOutputLocation();
         string dirName = d_planes[p]->name;
         string planePath = udaDir + "/" + dirName;
-        
-        timeStep_vartype timeStep_var;      
+
+        timeStep_vartype timeStep_var;
         old_dw->get(timeStep_var, m_timeStepLabel);
         int ts = timeStep_var;
 
         ostringstream tname;
         tname << "t" << std::setw(5) << std::setfill('0') << ts;
         string timestep = tname.str();
-        
+
         ostringstream li;
         li<<"L-"<<level->getIndex();
         string levelIndex = li.str();
         string path = planePath + "/" + timestep + "/" + levelIndex;
-        
+
         if( d_isDirCreated.count(path) == 0 ){
           createDirectory( planePath, timestep, tv.now, levelIndex );
           d_isDirCreated.insert( path );
         }
-        
+
         //__________________________________
         // find the physical domain and index range
         // associated with this patch
         Point start_pt = d_planes[p]->startPt;
         Point end_pt   = d_planes[p]->endPt;
-        
+
         Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
           patchDomain = patch->getBox();
         }
-        
+
         IntVector l(patch->getExtraCellLowIndex());
         IntVector h(patch->getExtraCellHighIndex());
-        
-        IntVector start_idx=level->getCellIndex( start_pt ); 
+
+        IntVector start_idx=level->getCellIndex( start_pt );
         IntVector end_idx  =level->getCellIndex( end_pt );
 
         // intersection
         start_idx = Max( l, start_idx );
         end_idx   = Min( h, end_idx );
-        
+
         // increase the end_idx by 1 in the out of plane direction
         // you need this for 2D planes
         for(int d=0; d<3; d++){
@@ -486,14 +486,14 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             end_idx[d] += 1;
           }
         }
-        
-        bool doWrite = ( containsCellInclusive(l, h, start_idx, d_planes[p]->planeType) &&  
-                         containsCellInclusive(l, h, end_idx,   d_planes[p]->planeType) );
+
+        bool doWrite = ( containsCellInclusive(l, h, start_idx ) &&
+                         containsCellInclusive(l, h, end_idx ) );
 
         //__________________________________
         //  Loop over all the variables
         if( doWrite ){
-        
+
           for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
 
             int matl = d_varMatl[i];
@@ -502,7 +502,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
 
             // bulletproofing
             if(varLabel == nullptr){
-              throw InternalError("planeExtract: analyze label not found: " 
+              throw InternalError("planeExtract: analyze label not found: "
                               + labelName , __FILE__, __LINE__);
             }
 
@@ -511,7 +511,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             string filename = fname.str();
 
             //__________________________________
-            //  Open the file pointer 
+            //  Open the file pointer
             FILE *fp;
             createFile(filename, varLabel, matl, fp);
 
@@ -519,18 +519,18 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             //
             const Uintah::TypeDescription* td = varLabel->typeDescription();
             const Uintah::TypeDescription* subtype = td->getSubType();
-            
+
             CellIterator iterLim = getIterator( td, patch, start_idx, end_idx );
 
             // determing the offset for the different variable types
             Vector offset;
-                        
+
             switch( td->getType() ){
               //__________________________________
               //            CC Variables
               case Uintah::TypeDescription::CCVariable: {
                 offset = Vector(0,0,0);
-                
+
                 switch( subtype->getType( )) {
 
                   case Uintah::TypeDescription::double_type:
@@ -549,17 +549,17 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                     writeDataS7< constCCVariable<Stencil7> >(new_dw, varLabel, matl, patch, offset, iterLim, fp );
                     break;
                   default:
-                    throw InternalError("planeExtract: (CCVariable) invalid data type", __FILE__, __LINE__); 
-                }                
-                
+                    throw InternalError("planeExtract: (CCVariable) invalid data type", __FILE__, __LINE__);
+                }
+
                 break;
               }
-              
+
               //__________________________________
               //            SFCXVariables
               case Uintah::TypeDescription::SFCXVariable: {
                 offset.x( -dx.x()/2 );
-                
+
                 switch( subtype->getType( )) {
 
                   case Uintah::TypeDescription::double_type:
@@ -575,17 +575,17 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                     break;
 
                   default:
-                    throw InternalError("planeExtract: (SFCXVariable>invalid data type", __FILE__, __LINE__); 
-                }                
-                
+                    throw InternalError("planeExtract: (SFCXVariable>invalid data type", __FILE__, __LINE__);
+                }
+
                 break;
               }
-              
+
               //__________________________________
-              //            SFCYVariables  
+              //            SFCYVariables
               case Uintah::TypeDescription::SFCYVariable: {
                 offset.y( -dx.y()/2 );
-                
+
                 switch( subtype->getType( )) {
 
                   case Uintah::TypeDescription::double_type:
@@ -601,17 +601,17 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                     break;
 
                   default:
-                    throw InternalError("planeExtract: (SFCYVariable) invalid data type", __FILE__, __LINE__); 
-                }                
-                
+                    throw InternalError("planeExtract: (SFCYVariable) invalid data type", __FILE__, __LINE__);
+                }
+
                 break;
               }
-              
+
               //__________________________________
-              //            SFCZVariables              
+              //            SFCZVariables
               case Uintah::TypeDescription::SFCZVariable: {
                 offset.z( -dx.z()/2 );
-                
+
                 switch( subtype->getType( )) {
 
                   case Uintah::TypeDescription::double_type:
@@ -627,22 +627,22 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                     break;
 
                   default:
-                    throw InternalError("planeExtract: (SFCZVariable) invalid data type", __FILE__, __LINE__); 
-                }                
-                
+                    throw InternalError("planeExtract: (SFCZVariable) invalid data type", __FILE__, __LINE__);
+                }
+
                 break;
               }
               default:
                 ostringstream warn;
-                warn << "ERROR:AnalysisModule:planeExtact: ("<< labelName << " " 
+                warn << "ERROR:AnalysisModule:planeExtact: ("<< labelName << " "
                      << td->getName() << " ) has not been implemented" << endl;
                 throw InternalError(warn.str(), __FILE__, __LINE__);
             }
 
             fclose(fp);
-          }  // loop over variables 
-        }  // doWrite    
-      }  // loop over planes    
+          }  // loop over variables
+        }  // doWrite
+      }  // loop over planes
     }  // time to write data
   }  // patches
 }
@@ -660,47 +660,46 @@ void planeExtract::createFile(const string& filename,
     fp = fopen(filename.c_str(), "a");
     return;
   }
-  
+
   fp = fopen(filename.c_str(), "w");
-  
+
   if (!fp){
     perror("Error opening file:");
     throw InternalError("\nERROR:dataAnalysisModule:planeExtract:  failed opening file"+filename,__FILE__, __LINE__);
   }
-  
+
   //__________________________________
   //Write out the header
-  fprintf(fp,"# X      Y      Z "); 
-
-  
+  fprintf(fp,"#    X                      Y                     Z ");
+ 
   const Uintah::TypeDescription* td = varLabel->typeDescription();
   const Uintah::TypeDescription* subtype = td->getSubType();
   string labelName = varLabel->getName();
-  
+
   switch( subtype->getType( )) {
 
     case Uintah::TypeDescription::double_type:
-      fprintf(fp,"     %s(%i)", labelName.c_str(), matl);
+      fprintf(fp,"                       %s(%i)", labelName.c_str(), matl);
       break;
 
     case Uintah::TypeDescription::Vector:
-      fprintf(fp,"     %s(%i).x      %s(%i).y      %s(%i).z", labelName.c_str(), matl, labelName.c_str(), matl, labelName.c_str(), matl);
+      fprintf(fp,"                       %s(%i).x      %s(%i).y      %s(%i).z", labelName.c_str(), matl, labelName.c_str(), matl, labelName.c_str(), matl);
       break;
 
     case Uintah::TypeDescription::int_type:
-      fprintf(fp,"     %s(%i)", labelName.c_str(), matl);
+      fprintf(fp,"                       %s(%i)", labelName.c_str(), matl);
       break;
 
     case Uintah::TypeDescription::Stencil7:
-      fprintf(fp,"     %s(%i).n      s      e      w      t      b      p", labelName.c_str(), matl );
+      fprintf(fp,"                       %s(%i).n      s      e      w      t      b      p", labelName.c_str(), matl );
       break;
     default:
-      throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__); 
+      throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__);
   }
-  
+
   fprintf(fp,"\n");
   fflush(fp);
-  
+
   cout << Parallel::getMPIRank() << " OnTheFlyAnalysis planeExtract results are located in " << filename << endl;
 }
 //______________________________________________________________________
@@ -720,18 +719,18 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
   // timestep
   string path = planeName + "/" + timestep;
   check = opendir( path.c_str() );
-  
+
   if ( check == nullptr ) {
     cout << Parallel::getMPIRank() << " planeExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
-    
+
     // write out physical time
     string filename = planeName + "/" + timestep + "/physicalTime";
     FILE *fp;
-    
+
     bool done = false;
     int tries = 0;
-    
+
     // On larger machines (stampede) you need to try more than once
     while ( !done ){
       tries ++;
@@ -744,19 +743,19 @@ planeExtract::createDirectory(string& planeName, string& timestep, const double 
       if ( tries > 100){
         throw InternalError( "planeExtract::createDirectory(): Unable to create file!", __FILE__, __LINE__ );
       }
-    } 
-    
+    }
+
     fprintf( fp, "%16.15E\n",now);
     fclose(fp);
-    
+
   } else {
     closedir(check);
   }
-    
+
   // level index
   path = planeName + "/" + timestep + "/" + levelIndex;
   check = opendir( path.c_str() );
-  
+
   if ( check == nullptr ) {
     MKDIR( path.c_str(), 0777 );
   } else {
@@ -773,18 +772,18 @@ void planeExtract::writeDataD( DataWarehouse*  new_dw,
                               const Vector&   offset,
                               CellIterator    iter,
                               FILE*     fp )
-{  
+{
   Tvar Q_var;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
-  
+
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
     here += offset;
-                      
-    fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(),here.y(),here.z());
+
+    fprintf(fp,    "%16.15E %16.15E  %16.15E ",here.x(),here.y(),here.z());
     fprintf(fp, "    %16.15E\n",Q_var[c]);
-  }  
+  }
 }
 
 //______________________________________________________________________
@@ -796,19 +795,19 @@ void planeExtract::writeDataV( DataWarehouse*  new_dw,
                                const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
-{  
+{
 
   Tvar Q_var;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
-  
+
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
     here += offset;
-    
-    fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
-    fprintf(fp, "   %16.15E\t %16.15E\t %16.15E\n",Q_var[c].x(), Q_var[c].y(), Q_var[c].z() );
-  }  
+
+    fprintf(fp,    "%16.15E %16.15E %16.15E ",here.x(), here.y(), here.z());
+    fprintf(fp, "   %16.15E %16.15E %16.15E\n",Q_var[c].x(), Q_var[c].y(), Q_var[c].z() );
+  }
 }
 //______________________________________________________________________
 template <class Tvar>
@@ -819,18 +818,18 @@ void planeExtract::writeDataI( DataWarehouse*  new_dw,
                                const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
-{  
+{
   Tvar Q_var;
   new_dw->get(Q_var, varLabel, indx, patch, Ghost::None, 0);
-  
+
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
     here += offset;
-                      
-    fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
+
+    fprintf(fp,    "%16.15E %16.15E %16.15E ",here.x(), here.y(), here.z());
     fprintf(fp, "   %i \n",Q_var[c] );
-  }  
+  }
 }
 //______________________________________________________________________
 template <class Tvar>
@@ -841,29 +840,29 @@ void planeExtract::writeDataS7( DataWarehouse*  new_dw,
                                const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
-{  
+{
   Tvar Q;
   new_dw->get(Q, varLabel, indx, patch, Ghost::None, 0);
-  
+
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
     here += offset;
-        
-    fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
-    fprintf(fp, "   %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E \n",
+
+    fprintf(fp,    "%16.15E %16.15E %16.15E ",here.x(), here.y(), here.z());
+    fprintf(fp, "   %16.15E %16.15E %16.15E %16.15E %16.15E %16.15E %16.15E \n",
             Q[c].n, Q[c].s, Q[c].e, Q[c].w, Q[c].t, Q[c].b, Q[c].p );
-  }  
+  }
 }
 
 //______________________________________________________________________
 //
-CellIterator 
-planeExtract::getIterator( const Uintah::TypeDescription* td, 
+CellIterator
+planeExtract::getIterator( const Uintah::TypeDescription* td,
                            const Patch* patch,
                            const IntVector& start_idx,
-                           const IntVector& end_idx  ) 
-{ 
+                           const IntVector& end_idx  )
+{
   // for face-centered data you need to add 1 for the last cell face
   // in the extra cell
   int x=0;
@@ -879,7 +878,7 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
       y = patch->getBCType(Patch::yplus) != Patch::Neighbor?1:0;
       break;
     case Uintah::TypeDescription::SFCZVariable:
-      z = patch->getBCType(Patch::zplus) != Patch::Neighbor?1:0; 
+      z = patch->getBCType(Patch::zplus) != Patch::Neighbor?1:0;
       break;
     default:
       ostringstream warn;
@@ -888,7 +887,7 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
   }
 
   IntVector stop_idx = end_idx + IntVector(x,y,z);
-  
+
   //DOUT( dbg_OTF_PE,  " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,stop_idx) );
   return CellIterator(start_idx,stop_idx);
 }
@@ -896,43 +895,18 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
 
 //______________________________________________________________________
 //
-inline bool planeExtract::containsCellInclusive(const IntVector &low, 
-                                                const IntVector &high, 
-                                                const IntVector &cell,
-                                                const PlaneType plane)
+inline bool planeExtract::containsCellInclusive(const IntVector &low,
+                                                const IntVector &high,
+                                                const IntVector &cell)
 {
-  bool testLo =( low.x() <= cell.x()  && 
+  bool testLo =( low.x() <= cell.x()  &&
                  low.y() <= cell.y()  &&
                  low.z() <= cell.z() );
-  //__________________________________
-  //  Use exclusive test in the out of plane
-  //  direction  otherwise use inclusive testing.
-  bool testHi = false;
-  
-  switch (plane){
-    case( XY ): {               
-      testHi = ( high.x() >=  cell.x() && 
-                 high.y() >=  cell.y() &&
-                 high.z() >   cell.z() );
-      break;
-    }
-    case( XZ ): {               
-      testHi = ( high.x() >=  cell.x() && 
-                 high.y() >   cell.y() &&
-                 high.z() >=  cell.z() );
-      break;
-    }
-    case( YZ ): {               
-      testHi = ( high.x() >  cell.x() && 
-                 high.y() >= cell.y() &&
-                 high.z() >= cell.z() );
-      break;
-    }
-    case( NONE ): {               
-      throw InternalError("planeExtract::  ", __FILE__, __LINE__); 
-      break;
-    } 
-  }             
+
+
+  bool testHi = ( high.x() >= cell.x() &&
+                  high.y() >= cell.y() &&
+                  high.z() >= cell.z() );
 
   return (testLo && testHi );
 }

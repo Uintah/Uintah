@@ -146,7 +146,7 @@
       <save label = "mag_grad_sigmaT4" levels="-1"/>
       <save label = "flaggedCells"     levels="-1"/> -->
       
-      <checkpoint cycle = "2" timestepInterval = "3"/>
+      <checkpoint cycle = "1" timestepInterval = "3"/>
   </DataArchiver>
   
   

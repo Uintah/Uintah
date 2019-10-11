@@ -81,7 +81,7 @@
       <save label="totalHeatReleased"/>
       <save label="modelMass_src"/>
       
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "1" timestepInterval = "100"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->

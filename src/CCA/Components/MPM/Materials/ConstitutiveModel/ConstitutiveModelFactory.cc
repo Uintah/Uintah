@@ -66,11 +66,17 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
-#include <CCA/Components/MPM/Core/MPMFlags.h>
 
+// Generalized Viscoelastic CMs
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/KelvinVoigt.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/MaxwellWeichert.h>
+
+// Geomaterials
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
+
+#include <CCA/Components/MPM/Core/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -112,24 +118,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   if (cm_type == "rigid")
     return(scinew RigidMaterial(child,flags));
-
-  else if (cm_type == "HypoplasticB") {
-	  return(scinew HypoplasticB(child, flags));
-  }
-
-  else if (cm_type == "MohrCoulomb") {
-	  return(scinew MohrCoulomb(child, flags));
-  }
-
-  else if (cm_type == "QADamage") {
-	  if (flags->d_integrator_type == "explicit" ||
-		  flags->d_integrator_type == "fracture") {
-		  return(scinew QADamage(child, flags, false, false));
-	  }
-	  else if (flags->d_integrator_type == "implicit") {
-		  return(scinew QADamage(child, flags, false, false));
-	  }
-  }
 
   else if (cm_type == "comp_mooney_rivlin") {
     return(scinew CompMooneyRivlin(child,flags));
@@ -309,6 +297,34 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type == "ArrudaBoyce8") {
     computes_pLocalizedMPM = false;
     return(scinew ArrudaBoyce8Chain(child,flags));
+  }
+
+  else if (cm_type == "Kelvin_Voigt") {
+    computes_pLocalizedMPM = false;
+    return(scinew KelvinVoigt(child,flags));
+  }
+
+  else if (cm_type == "Maxwell_Weichert") {
+    computes_pLocalizedMPM = false;
+    return(scinew MaxwellWeichert(child,flags));
+  }
+
+else if (cm_type == "HypoplasticB") {
+	  return(scinew HypoplasticB(child, flags));
+  }
+
+  else if (cm_type == "MohrCoulomb") {
+	  return(scinew MohrCoulomb(child, flags));
+  }
+
+  else if (cm_type == "QADamage") {
+	  if (flags->d_integrator_type == "explicit" ||
+		  flags->d_integrator_type == "fracture") {
+		  return(scinew QADamage(child, flags, false, false));
+	  }
+	  else if (flags->d_integrator_type == "implicit") {
+		  return(scinew QADamage(child, flags, false, false));
+	  }
   }
 
   else

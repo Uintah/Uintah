@@ -82,6 +82,21 @@ WARNING
    Plane d_plane;
  };
 
+ class LineSeg {
+
+ public:
+   enum coord {X=0,Y=1,Z=2};
+
+   LineSeg(Point& p1, Point& p2);
+   LineSeg();
+   ~LineSeg();
+   Point centroid();
+   Point vertex(int i);
+//   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
+ private:
+   Point d_points[2];
+ };
+
  class UniformGrid {
 
  public:

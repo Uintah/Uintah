@@ -53,8 +53,9 @@ BrittleDamage::BrittleDamage( ProblemSpecP& dam_ps )
   dam_ps->get("brittle_damage_recoveryCoeff",       d_brittle_damage.recoveryCoeff);
   dam_ps->get("brittle_damage_printDamage",         d_brittle_damage.printDamage);
 
-  if (d_brittle_damage.recoveryCoeff <0.0 || d_brittle_damage.recoveryCoeff>1.0){
-    std::cerr << "brittle_damage_recoveryCoeff must be between 0.0 and 1.0" << std::endl;
+  if(d_brittle_damage.recoveryCoeff<0.0 || d_brittle_damage.recoveryCoeff>1.0){
+    std::cerr << "brittle_damage_recoveryCoeff must be between 0.0 and 1.0" << 
+    std::endl;
   }
   ProblemSpecP matl_ps = dam_ps->getParent();
   ProblemSpecP cm_ps   = matl_ps->findBlock("constitutive_model");
@@ -68,7 +69,7 @@ BrittleDamage::BrittleDamage( ProblemSpecP& dam_ps )
   
   pFailureStressOrStrainLabel = VarLabel::create("p.epsf",          P_dbl );
   pFailureStressOrStrainLabel_preReloc = VarLabel::create("p.epsf+",P_dbl );
-    
+ 
   pDamageLabel             = VarLabel::create("p.damage",     P_dbl );
   pDamageLabel_preReloc    = VarLabel::create("p.damage+",    P_dbl );
 }

@@ -113,7 +113,7 @@
       <save label = "abskg"   />
       <save label = "sigmaT4" />
       <save label = "RMCRTboundFlux"/>
-      <checkpoint cycle = "2" timestepInterval = "2"/>
+      <checkpoint cycle = "1" timestepInterval = "2"/>
   </DataArchiver>
   
   

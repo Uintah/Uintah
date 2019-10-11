@@ -243,7 +243,7 @@
         </model>
       </PropertyModelsV2>
       <KScalarTransport>
-        <eqn_group label="CCFields" type="CC">
+        <eqn_group label="CCFields" type="CC" class="volumetric">
           <eqn label="cc_phi_upwind">
             <convection scheme="upwind"/>
           </eqn>
@@ -257,7 +257,7 @@
             <convection scheme="central"/>
           </eqn>
         </eqn_group>
-        <eqn_group label="FZFields" type="FZ">
+        <eqn_group label="FZFields" type="FZ" class="volumetric">
           <eqn label="fc_phi_upwind">
             <convection scheme="upwind"/>
           </eqn>

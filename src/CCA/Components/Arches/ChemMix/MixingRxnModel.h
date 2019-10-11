@@ -113,7 +113,7 @@ namespace Uintah {
 
     /** @brief Get a table value **/
     virtual double getTableValue( std::vector<double> iv, std::string depend_varname,
-                   doubleMap inert_mixture_fractions ) = 0;
+                   doubleMap inert_mixture_fractions, bool do_inverse = false ) = 0;
 
     /** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
     virtual void tableMatching() = 0;

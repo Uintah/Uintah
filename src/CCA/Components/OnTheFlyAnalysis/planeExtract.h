@@ -168,8 +168,7 @@ WARNING
                                          
     inline bool containsCellInclusive( const IntVector& low, 
                                        const IntVector& high, 
-                                       const IntVector& cell,
-                                       const PlaneType plane );
+                                       const IntVector& cell );
                                        
     // general labels
     class planeExtractLabel {

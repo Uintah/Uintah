@@ -2419,6 +2419,14 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase & var
       patchHi = patch->getExtraHighIndex( basis, label->getBoundaryLayer() );
     }
 
+    IntVector offset ( 0, 0, 0 );
+    if (patch->isVirtual()) {
+      offset = patch->getVirtualOffset();
+    }
+
+    patchLo -= offset;
+    patchHi -= offset;
+
     IntVector l = Max( patchLo, reqLow );
     IntVector h = Min( patchHi, reqHigh );
 
@@ -2446,8 +2454,8 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase & var
 
       IntVector varLo = v->getLow();
       IntVector varHi = v->getHigh();
-      bool doesCoverRegion = ( Min(l, varLo) == varLo && Max(h, varHi) == varHi );
 
+      bool doesCoverRegion = ( Min(l, varLo) == varLo && Max(h, varHi) == varHi );
       if ( (v != nullptr) && v->isValid() && doesCoverRegion) {
         varFound  = true;
         break;
@@ -3080,20 +3088,11 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     // correct window of the data.
     USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
     ASSERT(no_realloc);
-  }
+  }   
   else {
-    IntVector dn = high - low;
-
-    Patch::selectType neighbors;
     IntVector lowIndex, highIndex;
     patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells, lowIndex, highIndex);
 
-    if (numGhostCells > 0) {
-      patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
-    }
-    else {
-      neighbors.push_back( patch );
-    }
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18

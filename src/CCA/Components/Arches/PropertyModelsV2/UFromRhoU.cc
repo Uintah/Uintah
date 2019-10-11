@@ -21,9 +21,9 @@ void UFromRhoU::problemSetup( ProblemSpecP& db ){
   m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
 
   m_density_name = parse_ups_for_role( DENSITY, db, "density" );
-  m_xmom = "x-mom";
-  m_ymom = "y-mom";
-  m_zmom = "z-mom";
+  m_xmom = default_uMom_name;
+  m_ymom = default_vMom_name;
+  m_zmom = default_wMom_name;
   m_eps_name = "cc_volume_fraction";
 
 }

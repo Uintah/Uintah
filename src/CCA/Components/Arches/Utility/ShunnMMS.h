@@ -64,9 +64,9 @@ private:
     double m_k2 ;
     double m_k1 ;
     double m_w0 ;
-    double m_rho0; 
+    double m_rho0;
     double m_rho1;
-    
+
     const std::string m_var_name;
 
     std::string m_x_name;
@@ -100,14 +100,12 @@ private:
     db->getWithDefault( "rho1", m_rho1, 1.0);
 
     db->require("which_vel", m_which_vel);
-    
+
     m_use_density = false;
     if (db->findBlock("which_density")) {
       db->findBlock("which_density")->getAttribute("label", m_density_name);
       m_use_density = true;
     }
-    
-
 
     ProblemSpecP db_coord = db->findBlock("grid");
     if ( db_coord ){
@@ -135,7 +133,7 @@ private:
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-    
+
     T& f_mms = *(tsk_info->get_uintah_field<T>(m_var_name));
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
 
@@ -144,7 +142,7 @@ private:
     const double k12 = m_k1-m_k2;
     //const double k21 = m_k2-m_k1;
     const double z1 = std::exp(-m_k1 * time_d);
-    const double r01 = m_rho0 - m_rho1; 
+    const double r01 = m_rho0 - m_rho1;
 
     if ( m_which_vel == "u" ){
     // for velocity
@@ -153,32 +151,32 @@ private:
         //const double z2 = std::cosh (m_w0 * std::exp (-m_k2 * time_d) * x(i,j,k)); // x at face
         //const double phi_f = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
         const double u1  = std::exp(m_w0*std::exp(-m_k2*time_d)*x(i,j,k));
-//        const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
+//        const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0);
         //I use density that was computed with same mms but at cc, becuase I want to get same x-mom as option rho_u
         const double rho = 0.5*(density(i-1,j,k) + density(i,j,k)); // only works for x. Fix me !!!
-        
-        f_mms(i,j,k) = (2.0*m_k2*x(i,j,k)*r01*std::exp(-m_k1*time_d)*u1/(u1*u1 + 1.0) + 
-          r01*k12*std::exp(-k12*time_d)/m_w0*(2.0*std::atan(u1)-m_pi/2.0))/rho; 
-      
+
+        f_mms(i,j,k) = (2.0*m_k2*x(i,j,k)*r01*std::exp(-m_k1*time_d)*u1/(u1*u1 + 1.0) +
+          r01*k12*std::exp(-k12*time_d)/m_w0*(2.0*std::atan(u1)-m_pi/2.0))/rho;
+
     });
     } else if ( m_which_vel == "rho_u" ){
     // for velocity
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double u1  = std::exp(m_w0*std::exp(-m_k2*time_d)*x(i,j,k));
-        //const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0); 
-        
-        f_mms(i,j,k) = 2.0*m_k2*x(i,j,k)*r01*std::exp(-m_k1*time_d)*u1/(u1*u1 + 1.0) + 
-          r01*k12*std::exp(-k12*time_d)/m_w0*(2.0*std::atan(u1)-m_pi/2.0); 
-      
+        //const double rho = 1.0/(phi_f/m_rho1 + (1.0- phi_f )/m_rho0);
+
+        f_mms(i,j,k) = 2.0*m_k2*x(i,j,k)*r01*std::exp(-m_k1*time_d)*u1/(u1*u1 + 1.0) +
+          r01*k12*std::exp(-k12*time_d)/m_w0*(2.0*std::atan(u1)-m_pi/2.0);
+
     });
-    
+
     } else {
     // for scalar
       Uintah::parallel_for( range, [&](int i, int j, int k){
         const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) * x(i,j,k)); // x is cc value
         f_mms(i,j,k) = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
     });
-    }       
+    }
   }
 }
 #endif

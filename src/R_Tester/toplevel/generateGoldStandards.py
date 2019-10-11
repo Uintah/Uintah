@@ -19,6 +19,7 @@ from os import system
 from optparse import OptionParser
 from sys import argv, exit
 from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
+from helpers.modUPS      import modUPS
 
 ####################################################################################
 
@@ -385,7 +386,7 @@ def generateGS() :
               MPIHEAD="%s -genvlist MALLOC_STATS" % MPIRUN    
       
             np = int( np )
-            my_mpirun = "%s -np %s  " % (MPIHEAD, np)
+            my_mpirun = "%s -n %s  " % (MPIHEAD, np)
 
             command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
 

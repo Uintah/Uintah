@@ -59,10 +59,10 @@ public:
     void set_solver( SolverInterface* solver ){ m_hypreSolver = solver; }
 
     void setup_solver( ProblemSpecP& db );
-    
-    
+
+
     void sched_Initialize( const LevelP& level, SchedulerP& sched );
-    
+
     void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
 
 private:
@@ -75,8 +75,9 @@ private:
     std::string m_density_name;
     std::string m_drhodt_name;
 
-    bool m_enforceSolvability;
+    bool m_enforceSolvability{false};
     bool m_use_mms_drhodt;
+    bool m_standAlone{false};
 
     SolverInterface* m_hypreSolver;
 

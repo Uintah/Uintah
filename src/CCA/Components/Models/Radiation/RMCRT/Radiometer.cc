@@ -52,11 +52,13 @@ extern Dout g_ray_dbg;
 Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
   if ( FLT_DBL == TypeDescription::double_type ){
-    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << std::endl;
+    d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<double>::getTypeDescription() );
+    d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<double>::getTypeDescription() );
+    proc0cout << "  - Using double implementation of the radiometer" << std::endl;
   } else {
-    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << std::endl;
+    d_VRFluxLabel      = VarLabel::create( "VRFlux",      CCVariable<float>::getTypeDescription() );
+    d_VRIntensityLabel = VarLabel::create( "VRIntensity", CCVariable<float>::getTypeDescription() );
+    proc0cout << "  - Using float implementation of the radiometer" << std::endl;
   }
 }
 
@@ -67,6 +69,7 @@ Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_
 Radiometer::~Radiometer()
 {
   VarLabel::destroy( d_VRFluxLabel );
+  VarLabel::destroy( d_VRIntensityLabel );
 }
 
 //______________________________________________________________________
@@ -75,40 +78,20 @@ Radiometer::~Radiometer()
 void
 Radiometer::problemSetup( const ProblemSpecP& prob_spec,
                           const ProblemSpecP& radps,
-                          const GridP&        grid,
-                          const bool getExtraInputs)
+                          const GridP&        grid)
 {
   ProblemSpecP rad_ps = radps;
   Vector orient;
-  rad_ps->getWithDefault( "VRViewAngle"    ,    d_viewAng,         180 );              // view angle of the radiometer in degrees
-  rad_ps->getWithDefault( "VROrientation"  ,    orient,          Vector(0,0,1) );      // Normal vector of the radiometer orientation (Cartesian)
-  rad_ps->getWithDefault( "nRadRays"  ,         d_nRadRays ,       1000 );
-  rad_ps->get(            "VRLocationsMin" ,    d_VRLocationsMin );                    // minimum extent of the string or block of virtual radiometers in physical units
-  rad_ps->get(            "VRLocationsMax" ,    d_VRLocationsMax );                    // maximum extent
-
-  if( getExtraInputs ){
-    rad_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-    rad_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );              // When to terminate a ray
-    rad_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );              // random or deterministic seed.
-    rad_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);         // Units are W/(m^2-K)
-    rad_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  } else {
-                   // bulletproofing.
-    for( ProblemSpecP n = rad_ps->getFirstChild(); n != nullptr; n=n->getNextSibling() ){
-      std::string me = n->getNodeName();
-      if( ( me == "sigmaScat"  ||  me == "Threshold" || me == "randomSeed" ||  me == "StefanBoltzmann" || me == "allowReflect" ) && me !="text" ){
-        std::ostringstream warn;
-        warn << "\n ERROR:Radiometer::problemSetup: You've specified the variable (" << me << ")"
-             << " which will be ignored.  You should set the variable outside <Radiometer> section. \n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
-  }
+  double viewAngle;
+  rad_ps->require( "viewAngle"    ,    viewAngle );           // view angle of the radiometer in degrees
+  rad_ps->require( "orientation"  ,    orient );              // Normal vector of the radiometer orientation (Cartesian)
+  rad_ps->require( "nRays"  ,          d_VR_nRays );
+  rad_ps->require( "locationsMin" ,    d_VRLocationsMin );    // minimum extent of the string or block of virtual radiometers in physical units
+  rad_ps->require( "locationsMax" ,    d_VRLocationsMax );    // maximum extent
 
   //__________________________________
   //  Warnings and bulletproofing
   //
-  //the VRLocations can't exceed computational domain
   BBox compDomain;
   grid->getSpatialRange(compDomain);
   Point start = d_VRLocationsMin;
@@ -141,37 +124,31 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-#ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << std::endl;
-  if(d_sigmaScat>0){
-    std:: ostringstream warn;
-    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << std::endl;
-    warn << "--enable-ray-scatter" << std::endl;
-    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << std::endl;
-    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << std::endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  for(int L = 0; L<grid->numLevels(); L++){
+    LevelP level = grid->getLevel(L);
+    IntVector lo = level->getCellIndex( start );
+    IntVector hi = level->getCellIndex( end );    
+    IntVector nCells = hi - lo;
+    
+    proc0cout << "  - radiometer: lower cell " << lo << " upper cell " << hi << " nCells " << nCells << "\n";
+    
+    if ( nCells.x() <= 0 || nCells.y() <= 0 || nCells.z() <= 0){
+      std::ostringstream warn;
+      warn << "\n ERROR:Radiometer::problemSetup: The specified radiometer has the same "
+           << "starting and ending points.  There must be at least 1 cell between locationMin & locationMax in each direction:\n "
+           << "                                startCell: " << lo << " endCell: " << hi;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
   }
-#endif
 
-#ifdef RAY_SCATTER
-  if(d_sigmaScat<1e-99){
-    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << std::endl;
-    proc0cout << "--enable-ray-scatter" << std::endl;
-    proc0cout << "As such, this task will run slower than is necessary." << std::endl;
-    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << std::endl;
-    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << std::endl;
-  }
-  proc0cout<< std::endl << "RAY_SCATTER IS DEFINED" << std::endl;
-#endif
-
-  if ( d_viewAng > 360 ){
+  if ( viewAngle > 360 ){
     std::ostringstream warn;
-    warn << "ERROR:  VRViewAngle ("<< d_viewAng <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
+    warn << "ERROR:  VRViewAngle ("<< viewAngle <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if ( d_nRadRays < int(15 + pow(5.4, d_viewAng/40) ) ){
-    proc0cout << "RMCRT: WARNING Number of radiometer rays:  ("<< d_nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, d_viewAng/40) ) <<"). Errors will exceed 1%. " << std::endl;
+  if ( d_VR_nRays < int(15 + pow(5.4, viewAngle/40) ) ){
+    proc0cout << "    WARNING Number of radiometer rays:  ("<< d_VR_nRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, viewAngle/40) ) <<"). Errors will exceed 1%. " << std::endl;
   }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
@@ -209,7 +186,7 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   //  possible rotations can be accomplished using the other two.
   d_VR.phiRot = 0;
 
-  double deltaTheta = d_viewAng/360*M_PI;       // divides view angle by two and converts to radians
+  double deltaTheta = viewAngle/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
   d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view
   d_VR.deltaTheta   = deltaTheta;
@@ -235,39 +212,32 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 //
 //______________________________________________________________________
 void
-Radiometer::sched_initializeRadVars( const LevelP& level,
+Radiometer::sched_initialize_VRFlux( const LevelP& level,
                                      SchedulerP& sched )
 {
 
-  std::string taskname = "Radiometer::initializeRadVars";
+  std::string taskname = "Radiometer::initialize_VRFlux";
 
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< double > );
   }else{
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float > );
+    tsk= scinew Task( taskname, this, &Radiometer::initialize_VRFlux< float > );
   }
   
   printSchedule(level, g_ray_dbg, taskname);
 
-  tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
-
+  tsk->computes( d_VRIntensityLabel );
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
-  // Carry Forward d_VRFluxlabel if you're not computing it
-  sched_CarryForward_Var(level, sched, d_VRFluxLabel  , RMCRTCommon::TG_CARRY_FORWARD);
-
 }
 
 //______________________________________________________________________
-//  - Initialize the flux on all patches or move that variable forward
-//    The flux is modified downstream.
-//  - Determine if the taskgraph should be recompiled
+//
 //______________________________________________________________________
 template< class T >
 void
-Radiometer::initializeRadVars( const ProcessorGroup*,
+Radiometer::initialize_VRFlux( const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -279,11 +249,15 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initializeVars");
+    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::initialize_VRFlux");
 
-    CCVariable< T > VRFlux;
-    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
-    VRFlux.initialize( 0.0 );
+    CCVariable< T > flux;
+    CCVariable< T > intensity;
+    new_dw->allocateAndPut( flux,      d_VRFluxLabel,       d_matl, patch );
+    new_dw->allocateAndPut( intensity, d_VRIntensityLabel, d_matl, patch );
+    
+    flux.initialize( 0.0 );
+    intensity.initialize( 0.0 );
   }
 }
 
@@ -299,6 +273,14 @@ Radiometer::sched_radiometer( const LevelP& level,
                               Task::WhichDW celltype_dw )
 {
   
+  
+  //__________________________________
+  //  There has to be a value of VRFlux on all patches for output
+  sched_initialize_VRFlux( level, sched );
+  
+  
+  //__________________________________
+  //  Compute VRFlux on subset of patches
   // only schedule on the patches that contain radiometers - Spatial task scheduling
   //   we want a PatchSet like: { {19}, {22}, {25} } (singleton subsets like level->eachPatch())
   //     NOT -> { {19,22,25} }, as one proc isn't guaranteed to own the entire, 3-element subset.
@@ -321,7 +303,7 @@ Radiometer::sched_radiometer( const LevelP& level,
 
   tsk->setType(Task::Spatial);
 
-  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer");
+  printSchedule(level, g_ray_dbg, "Radiometer::sched_radiometer on patches ");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -334,6 +316,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   tsk->requires(celltype_dw, d_cellTypeLabel, gac, SHRT_MAX);
 
   tsk->modifies(d_VRFluxLabel);
+  tsk->modifies(d_VRIntensityLabel);
 
   sched->addTask(tsk, radiometerPatchSet, d_matlSet, RMCRTCommon::TG_RMCRT);
 
@@ -379,7 +362,6 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, g_ray_dbg, "Doing Radiometer::radiometer");
 
     bool modifiesFlux= true;
     radiometerFlux < T > ( patch, level, new_dw, mTwister, sigmaT4OverPi, abskg, celltype, modifiesFlux );
@@ -404,11 +386,15 @@ Radiometer::radiometerFlux( const Patch* patch,
   printTask(patch, g_ray_dbg, "Doing Radiometer::radiometerFlux");
 
   CCVariable< T > VRFlux;
+  CCVariable< T > intensity;
   if( modifiesFlux ){
-    new_dw->getModifiable( VRFlux,  d_VRFluxLabel,  d_matl, patch );
+    new_dw->getModifiable( VRFlux,     d_VRFluxLabel,      d_matl, patch );
+    new_dw->getModifiable( intensity,  d_VRIntensityLabel, d_matl, patch );
   }else{
-    new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
+    new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,      d_matl, patch );
+    new_dw->allocateAndPut( intensity, d_VRIntensityLabel, d_matl, patch );
     VRFlux.initialize( 0.0 );
+    intensity.initialize( 0.0 );
   }
 
   unsigned long int size = 0;                   // current size of PathIndex
@@ -436,7 +422,7 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       // ray loop
-      for (int iRay=0; iRay < d_nRadRays; iRay++){
+      for (int iRay=0; iRay < d_VR_nRays; iRay++){
 
         Vector rayOrigin;
         bool useCCRays = true;
@@ -458,8 +444,8 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       //  Compute VRFlux
-      VRFlux[c] = (T) sumProjI * d_VR.sldAngl/d_nRadRays;
-
+      VRFlux[c]    = (T) sumProjI * d_VR.sldAngl/d_VR_nRays;
+      intensity[c] = (T) sumProjI/d_VR_nRays;
     }  // end VR cell iterator
   }  // is radiometer on this patch
 }
@@ -491,7 +477,7 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
   double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
 
   // This guarantees that the polar angle of the ray is within the delta_theta
-  double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
+  double VRTheta = acos( cos(deltaTheta) + range * mTwister.randDblExc());
   cosVRTheta = cos(VRTheta);
 
   // Convert to Cartesian x,y, and z represent the pre-rotated direction vector of a ray
@@ -525,8 +511,27 @@ Radiometer::getPatchSet( SchedulerP& sched,
                          PatchSet* ps )
 {
   //__________________________________
-  // find patches that contain radiometers
-  std::vector<const Patch*> radiometer_patches;
+  //  bulletproofing
+  IntVector L_lo;
+  IntVector L_hi;
+  level->findInteriorCellIndexRange( L_lo, L_hi );
+  IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
+  IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
+  if( !doesIntersect (VR_posLo, VR_posHi, L_lo, L_hi ) ){
+    std::ostringstream warn;
+    warn << "\n ERROR:Radiometer::problemSetup: The VR locations:\n"
+         << "     VR min " << d_VRLocationsMin << "  cell index: " << VR_posLo << "\n"
+         << "     VR max " << d_VRLocationsMax << "  cell index: " << VR_posHi << "\n"
+         << "     Number of cells: " << VR_posHi - VR_posLo << "\n"
+         << " do not overlap with the domain, " << L_lo << " -> " << L_hi << "\n"
+         << " There must be at least 1 cell in each direction" ;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  //__________________________________
+  // find patches that contain radiometers  
+  std::vector<const Patch*> radiometer_patches;   
   LoadBalancer * lb = sched->getLoadBalancer();
   const PatchSet * procPatches = lb->getPerProcessorPatchSet(level);
 
@@ -537,8 +542,7 @@ Radiometer::getPatchSet( SchedulerP& sched,
       const Patch* patch = patches->get(p);
       IntVector lo = patch->getCellLowIndex();
       IntVector hi = patch->getCellHighIndex();
-      IntVector VR_posLo = level->getCellIndex(d_VRLocationsMin);
-      IntVector VR_posHi = level->getCellIndex(d_VRLocationsMax);
+      
 
       if (doesIntersect(VR_posLo, VR_posHi, lo, hi)) {
         radiometer_patches.push_back(patch);
@@ -546,6 +550,9 @@ Radiometer::getPatchSet( SchedulerP& sched,
     }
   }
   size_t num_patches = radiometer_patches.size();
+
+
+
   for (size_t i = 0; i < num_patches; ++i) {
     ps->add(radiometer_patches[i]);
   }

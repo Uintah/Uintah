@@ -12,10 +12,6 @@
       <XPIC2                              spec="OPTIONAL BOOLEAN" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
-	  <DOUBLEMPM                          spec="OPTIONAL BOOLEAN" />
-	  <NullSpaceFilter                    spec="OPTIONAL BOOLEAN" />
-	  <GeneralizedAlpha                   spec="OPTIONAL BOOLEAN" />
-	  <SpectralRadius                     spec="OPTIONAL DOUBLE 'positive'"/> 
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
       <computeColinearNormals             spec="OPTIONAL BOOLEAN" />
@@ -146,7 +142,7 @@
         <colinear_norms                  spec="OPTIONAL BOOLEAN"/>
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
-        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction, approach'" />
+        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction_bard, friction_LR, approach'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
@@ -157,10 +153,7 @@
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
-		<density_liquid                  	spec="OPTIONAL DOUBLE" />
-		<Porosity                			spec="OPTIONAL DOUBLE" />
-		<Permeability            			spec="OPTIONAL DOUBLE" />
-		<BulkLiquidModulus          		spec="OPTIONAL DOUBLE" />
+
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
         <!-- Damage models -->

@@ -47,39 +47,45 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
   }
 
 //----------------------set name of total absorption coefficient ------------//
-  bool foundName=false;
+
   ProblemSpecP db_source = db_prop->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ;
+  
   for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
+
     std::string radiation_model;
     db_src->getAttribute("type", radiation_model);
+    
     if (radiation_model == "do_radiation" || radiation_model== "rmcrt_radiation"){
-      if (foundName == false){
-        if (db_src->findBlock("abskt")){
-          db_src->findBlock("abskt")->getAttribute("label",m_abskt_name);
-          foundName=true;
-          //--------Now check if scattering is on for DO----//
-          if(radiation_model == "do_radiation"){
-            bool scatteringOn=false;
-
-            db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
-            if (scatteringOn){
-              _gas_part_name.push_back("scatkt");
-            }
-          //------------------------------------------------//
-          }
-        }else{
-          throw ProblemSetupException("Absorption coefficient not specified.",__FILE__, __LINE__);
-        }
+    
+      std::string my_abskt_name = "notSet";
+      ProblemSpecP db_abskt = db_src->findBlock("abskt");
+      
+      if ( db_abskt ){
+        db_abskt->getAttribute("label", my_abskt_name);
       }else{
-        std::string checkString;
-        db_src->findBlock("abskg")->getAttribute("label",checkString);
-        if (checkString != m_abskt_name){
-          throw ProblemSetupException("Error: Multiple Radiation solvers detected, but they are using different absorption coefficients, which is not supported. ",__FILE__, __LINE__);
-        }
+        throw ProblemSetupException("Absorption coefficient not specified.",__FILE__, __LINE__);
       }
+      
+      if (m_abskt_name != "undefined" && my_abskt_name != m_abskt_name ){
+        throw ProblemSetupException("Error: Multiple Radiation solvers detected, but they are using different absorption coefficients, which is not supported. ",__FILE__, __LINE__);
+      }
+      m_abskt_name = my_abskt_name;
+      
+
+      //--------Now check if scattering is on for DO----//
+      if(radiation_model == "do_radiation"){
+        bool scatteringOn=false;
+
+        db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
+        if (scatteringOn){
+          _gas_part_name.push_back("scatkt");
+        }
+      //------------------------------------------------//
+      } 
     }
   }
 }
+
 
 //--------------------------------------------------------------------------------------------------
 void

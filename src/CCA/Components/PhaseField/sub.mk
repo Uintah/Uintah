@@ -9,10 +9,10 @@
 #  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 #  sell copies of the Software, and to permit persons to whom the Software is
 #  furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included in
 #  all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,49 +20,50 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
-# 
-# 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory 
+#
+#
+#
+#
+#
+# Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/PhaseField
 
-SRCS += $(SRCDIR)/PhaseField.cc
+SUBDIRS := \
+  $(SRCDIR)/DataWarehouse \
+  $(SRCDIR)/BoundaryConditions \
+  $(SRCDIR)/AMR \
+  $(SRCDIR)/Applications \
+  $(SRCDIR)/Exceptions \
 
-PSELIBS :=                         \
-        CCA/Components/Application \
-        CCA/Components/Schedulers  \
-        CCA/Ports                  \
-        Core/Disclosure            \
-        Core/Exceptions            \
-        Core/Geometry              \
-        Core/GeometryPiece         \
-        Core/Grid                  \
-        Core/IO                    \
-        Core/Math                  \
-        Core/Parallel              \
-        Core/ProblemSpec           \
-        Core/Util
+SRCS += \
 
-LIBS :=                                                              \
-#        $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
-#        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
-#        $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
-#        $(NSCBC_LIBRARY)                                            \
-#        $(POKITT_LIBRARY)                                           \
-#        $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
+BLDSRCS := \
 
-INCLUDES :=                                                           \
-             $(INCLUDES)                                              \
-#            $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)                 \
-#            $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(NSCBC_INCLUDE) \
-#            $(POKITT_INCLUDE) $(BOOST_INCLUDE) $(LAPACK_INCLUDE)
+PSELIBS :=                   \
+  CCA/Components/Application \
+  CCA/Components/Schedulers  \
+  CCA/Ports                  \
+  Core/Disclosure            \
+  Core/Exceptions            \
+  Core/Geometry              \
+  Core/GeometryPiece         \
+  Core/Grid                  \
+  Core/IO                    \
+  Core/Math                  \
+  Core/Parallel              \
+  Core/ProblemSpec           \
+  Core/Util
 
-#include $(SCIRUN_SCRIPTS)/recurse.mk
+LIBS := $(M_LIBRARY)
+
+INCLUDES := $(INCLUDES)
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+$(BLDSRCS): %-bld.cc: %-bld.sh
+	bash $<

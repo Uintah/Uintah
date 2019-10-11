@@ -43,17 +43,17 @@ public:
 
     static const std::string get_task_type_string( TASK_TYPE type ){
       if ( type == TIMESTEP_INITIALIZE ){
-        return "Timestep Initialize";
+        return "Time step Initialize";
       } else if ( type == INITIALIZE ){
-        return "Initialize";
+        return "INITIALIZE";
       } else if ( type == TIMESTEP_EVAL ){
-        return "Timestep Evaluation";
+        return "TIMESTEP_EVAL";
       } else if ( type == BC ) {
-        return "Boundary Condition Evalulation";
+        return "BC";
       } else if ( type == RESTART_INITIALIZE ){
-        return "Restart Initialize";
+        return "RESTART_INITIALIZE";
       } else if ( type == ATOMIC ){
-        return "Atomic Task";
+        return "ATOMIC";
       } else {
         std::cout << type << std::endl;
         //return "Unknown task type. Please fix."
@@ -78,6 +78,9 @@ public:
 
     /** @brief Get task name **/
     const std::string get_task_name(){ return m_task_name; }
+
+    /** @brief Get task function **/
+    const std::string get_task_function(){ return m_task_function; }
 
     /** @brief Input file interface **/
     virtual void problemSetup( ProblemSpecP& db ) = 0;
@@ -147,15 +150,16 @@ protected:
 
     WBCHelper* m_bcHelper;
 
-    std::string                  m_task_name;
-    const int                    m_matl_index;
-    std::vector<const VarLabel*> m_local_labels;
+    std::string                  m_task_name{"undefined"};      ///< String identifier of the task
+    std::string                  m_task_function{"undefined"};  ///< String identifier on the task function (what does the task do?)
+    const int                    m_matl_index;                  ///< Uintah material index
+    std::vector<const VarLabel*> m_local_labels;                ///< Labels held by the task
 
     /** @brief A helper struct for creating new varlabels as requested by the task **/
     template <typename T>
     struct RegisterNewVariableHelper{
 
-      RegisterNewVariableHelper(){};
+      RegisterNewVariableHelper(const std::string task_name):m_task_name(task_name){};
 
       void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
         const VarLabel* test = nullptr;
@@ -163,27 +167,41 @@ protected:
 
         if ( test == nullptr ){
 
+          //std::cout << "[Task Interface]  Registering new variable: " << name << " in task: " << m_task_name << std::endl;
           const VarLabel* label = VarLabel::create( name, T::getTypeDescription() );
           local_labels.push_back(label);
 
         } else {
 
           std::stringstream msg;
-          msg << "Error: VarLabel already registered (with Uintah): " << name << " (name your task variable something else and try again)." << std::endl;
+          msg << "Error: Trying to register a variable, " << name << ", in Task " << m_task_name <<
+          ", that was created elsewhere. " << std::endl;
           throw InvalidValue(msg.str(), __FILE__, __LINE__);
 
         }
       }
+
+      const std::string m_task_name;
+
     };
 
     /** @brief Register a local varlabel for this task **/
     template <typename T>
     void register_new_variable(const std::string name){
 
-      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
+      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>(m_task_name);
       helper->create_variable( name, m_local_labels );
       delete helper;
 
+    }
+
+    /** @brief Strip the class name from the m_task_name **/
+    /** This assumes that the format is: [CLASSNAME]*
+        where * = wildcard name
+        so this should return *
+    **/
+    std::string strip_class_name(){
+      return m_task_name.substr(m_task_name.find("]")+1, m_task_name.size());
     }
 
   };

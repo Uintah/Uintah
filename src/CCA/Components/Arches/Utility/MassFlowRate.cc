@@ -32,6 +32,13 @@
 using namespace Uintah;
 using namespace ArchesCore;
 
+// NOTE: This code is computing the mass flow of the gas and
+//       mass flow of the organics in the particle phase.
+//       To get the total mass flow rate of the particles you
+//       need to compute it from the fixed ash and moisture content:
+//       m_dot_part = m_dot_org / ( mass fraction of organics )
+//       where m_dot_org is what is computed here.
+
 // Constructor -----------------------------------------------------------------
 MassFlowRate::MassFlowRate( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){
@@ -87,7 +94,7 @@ void MassFlowRate::problemSetup( ProblemSpecP& db ){
       }
     }
   }
-  // Get name of inlets 
+  // Get name of inlets
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions");
   for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != nullptr; db_face = db_face->findNextBlock("Face") ) {
     std::string Type;
@@ -102,11 +109,11 @@ void MassFlowRate::problemSetup( ProblemSpecP& db ){
       m_m_gas_info.push_back(info_g);
 
       MFInfo info_p ;
-      info_p.name = "m_dot_p_" + faceName;
+      info_p.name = "m_dot_p_organics_" + faceName;
       info_p.face_name = faceName;
       info_p.value = 0;
       m_m_p_info.push_back(info_p);
-      
+
     }
   }
 
@@ -118,16 +125,16 @@ void
 MassFlowRate::create_local_labels(){
 
   register_new_variable<sum_vartype> ("m_dot_g");  // Gas phase mass flow rate
-  register_new_variable<sum_vartype> ("m_dot_p");  // Particle phase mass flow rate
-  
+  register_new_variable<sum_vartype> ("m_dot_p_organics");  // Particle phase mass flow rate
+
   for (auto iface = m_m_gas_info.begin(); iface != m_m_gas_info.end(); iface++){
     MFInfo info = *iface;
-    register_new_variable<sum_vartype> (info.name);  
+    register_new_variable<sum_vartype> (info.name);
   }
 
   for (auto iface = m_m_p_info.begin(); iface != m_m_p_info.end(); iface++){
     MFInfo info = *iface;
-    register_new_variable<sum_vartype> (info.name);  
+    register_new_variable<sum_vartype> (info.name);
   }
 
 
@@ -151,7 +158,7 @@ void MassFlowRate::register_timestep_eval( std::vector<ArchesFieldContainer::Var
   typedef ArchesFieldContainer AFC;
 
   register_variable( "m_dot_g"    , AFC::COMPUTES, variable_registry, m_task_name );
-  register_variable( "m_dot_p"    , AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "m_dot_p_organics"    , AFC::COMPUTES, variable_registry, m_task_name );
 
   for (auto iface = m_m_gas_info.begin(); iface != m_m_gas_info.end(); iface++){
     MFInfo info = *iface;
@@ -225,97 +232,72 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
   if(particleMethod_bool){
 
-    //const int istart = 0;
-    //int iend = m_m_p_info.size();
-    //for (int i = istart; i < iend; i++ ){
-    //    m_m_p_info[i].value = 0;
-    //}
-
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
       // Coal phase
       constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[qn]  ));
       constCCVariable<double>& RCqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_RC_names[qn] ));
       constCCVariable<double>& CHqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_CH_names[qn] ));
-      
+
       constCCVariable<double>& uvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] ));
       constCCVariable<double>& vvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] ));
       constCCVariable<double>& wvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] ));
-      
+
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-      
+
         // Sweep through, for type == Inlet, then sweep through the specified cells
         if ( i_bc->second.type == INLET ){
-      
+
           // Get the cell iterator - range of cellID:
           Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-      
+
           // Get the face direction (this is the outward facing normal):
           const IntVector iDir     = patch->faceDirection(i_bc->second.face);
-      
+
           //Now loop through the cells:
           double value_m_dot = 0;
           parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-      
+
           const int ic = i - iDir[0]; // interior cell index
           const int jc = j - iDir[1];
           const int kc = k - iDir[2];
-      
+
           const double eps_interp  =  eps(i,j,k)*eps(ic,jc,kc);
-      
+
           const double RCqn_interp = 0.5 * ( RCqn(i,j,k) + RCqn(ic,jc,kc) );
           const double CHqn_interp = 0.5 * ( CHqn(i,j,k) + CHqn(ic,jc,kc) );
           const double wqn_interp  = 0.5 * ( wqn (i,j,k) + wqn (ic,jc,kc) );
-      
+
           const double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
           const double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
           const double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
-      
+
           const double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[qn] / wqn_interp ;
           const double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[qn] / wqn_interp ;
           const double wvel_p_i = wvel_p_interp * m_p_wVel_scaling_constant[qn] / wqn_interp ;
-      
+
           const double RCi = RCqn_interp * m_RC_scaling_constant[qn] / wqn_interp; // kg of i / m3
           const double CHi = CHqn_interp * m_CH_scaling_constant[qn] / wqn_interp;
-          
+
           const double wi =  wqn_interp * m_w_scaling_constant[qn];
- 
+
           value_m_dot += -( RCi + CHi ) * uvel_p_i * area_x * wi * eps_interp * iDir[0]
                          -( RCi + CHi ) * vvel_p_i * area_y * wi * eps_interp * iDir[1]
                          -( RCi + CHi ) * wvel_p_i * area_z * wi * eps_interp * iDir[2];
-      
+
           });
 
           m_dot_coal += value_m_dot;
-          
-          new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_p_"+i_bc->second.name));
-          proc0cout << "\n Particle mass flow : " << i_bc->second.name << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
-          //const int istart = 0;
-          //int iend = m_m_p_info.size();
-          //for (int i = istart; i < iend; i++ ){
-          //  if (m_m_p_info[i].face_name == i_bc->second.name){
-          //    m_m_p_info[i].value += value_m_dot;
-          //  }
-          //}
+
+          new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_p_organics_"+i_bc->second.name));
+
         }
       }
-      }
+    }
 
-    new_dw->put(sum_vartype(m_dot_coal), VarLabel::find("m_dot_p"));
-    // ----------------------------------------------------------------------
-    //for (int i = istart; i < iend; i++ ){
-    //  new_dw->put(sum_vartype(m_m_p_info[i].value), VarLabel::find(m_m_p_info[i].name));
-    //  proc0cout << "\n Particle flow gas  : " << m_m_p_info[i].face_name  << " = "  << m_m_p_info[i].value << " [kg/s]\n" << std::endl;
-    //}
+    new_dw->put(sum_vartype(m_dot_coal), VarLabel::find("m_dot_p_organics"));
 
-    proc0cout << "\n Total particle mass flow  : Inlet face = " << m_dot_coal << " [kg/s]" << std::endl;
   }
-
-  //const int istart = 0;
-  //int iend = m_m_gas_info.size();
-  //for (int i = istart; i < iend; i++ ){
-  //    m_m_gas_info[i].value = 0;
-  //}
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
     // Sweep through, for type == Inlet, then sweep through the specified cells
@@ -331,48 +313,32 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
       //Now loop through the cells:
       double value_m_dot = 0;
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-      
+
         const int im = i - iDir[0]; // interior cell index
         const int jm = j - iDir[1];
         const int km = k - iDir[2];
-      
+
         const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
         const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
 
-        // x- => (-1,0,0)  x+ => (1,0,0) 
-        // y- => (0,-1,0)  y+ => (0,1,0) 
-        // z- => (0,0,-1)  z+ => (0,0,1) 
+        // x- => (-1,0,0)  x+ => (1,0,0)
+        // y- => (0,-1,0)  y+ => (0,1,0)
+        // z- => (0,0,-1)  z+ => (0,0,1)
 
-        value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * iDir[0] 
+        value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * iDir[0]
                        -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * iDir[1]
                        -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * iDir[2];
 
 
       });
+
       // total mass flow
       m_dot_gas += value_m_dot;
 
       new_dw->put(sum_vartype(value_m_dot), VarLabel::find("m_dot_g_"+i_bc->second.name));
-      proc0cout << "\n Mass flow gas  : " << i_bc->second.name  << " = "  << value_m_dot << " [kg/s]\n" << std::endl;
-      //const int istart = 0;
-      //int iend = m_m_gas_info.size();
-      //for (int i = istart; i < iend; i++ ){
-      //  if (m_m_gas_info[i].face_name == i_bc->second.name){
-          //m_m_gas_info[i].value += value_m_dot;
-      //  }
-      // }
-
-
     }
-    }
-    new_dw->put(sum_vartype(m_dot_gas), VarLabel::find("m_dot_g"));
+  }
 
-    //for (int i = istart; i < iend; i++ ){
-    //  new_dw->put(sum_vartype(m_m_gas_info[i].value), VarLabel::find(m_m_gas_info[i].name));
-    //  proc0cout << "\n Mass flow gas  : " << m_m_gas_info[i].face_name  << " = "  << m_m_gas_info[i].value << " [kg/s]\n" << std::endl;
-    //}
-    // ----------------------------------------------------------------------
+  new_dw->put(sum_vartype(m_dot_gas), VarLabel::find("m_dot_g"));
 
-    proc0cout << "\n Total mass flow gas  = " << m_dot_gas << " [kg/s]\n" << std::endl;
-  //}
 }

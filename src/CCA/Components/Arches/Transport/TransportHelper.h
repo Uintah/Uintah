@@ -5,7 +5,7 @@
 
 namespace Uintah{ namespace ArchesCore{
 
-  enum EQUATION_CLASS {DENSITY_WEIGHTED, DQMOM, MOMENTUM, NO_PREMULT};
+  enum EQUATION_CLASS {DENSITY_WEIGHTED, DQMOM, MOMENTUM, VOLUMETRIC};
 
   EQUATION_CLASS assign_eqn_class_enum( std::string my_class );
 

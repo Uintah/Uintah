@@ -611,8 +611,8 @@ void RuntimeStats::report( MPI_Comm comm )
           ,w_num,  "Min:"
           ,w_num,  "Max:"
           ,w_num,  "Max rank:"
-          ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-          ,w_load, "\%Load Imbalance"
+          ,w_hist, "Hist %% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+          ,w_load, "%%Load Imbalance"
       );
 
       for (auto const& value : group.second) {

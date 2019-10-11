@@ -100,7 +100,9 @@ class Output;
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
     bool        d_computeNormals;
+    bool        d_useLogisticRegression;
     bool        d_computeColinearNormals;
+    int         d_ndim;
     bool        d_restartOnLargeNodalVelocity;
     bool        d_computeNodalHeatFlux;                        // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;                          // compute the scale factor for viz 
@@ -129,20 +131,6 @@ class Output;
     bool        d_withGaussSolver;
     //********** End Reactive Flow Section *********************
     
-    // Flags for DOUBLEMPM
-	bool		d_DOUBLEMPM;
-	bool        d_insertPorePressure;                        // Prescribe Pore Pressure
-	std::string d_insertPorePressureFile;                   // File containing prescribed Pore Pressure
-	bool		d_NullSpaceFilter;
-	bool		d_FreeSurface;
-
-	// Flag for Generalized Alpha scheme
-	bool        d_GeneralizedAlpha;
-	double      d_SpectralRadius;
-
-	// Flags for Hypoplasticity
-	bool		d_Hypoplasticity;
-
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;

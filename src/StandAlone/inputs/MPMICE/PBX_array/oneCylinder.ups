@@ -119,7 +119,7 @@
       <save label="p.stress"/>
       <save label="p.externalforce"/>
       <save label="p.velocity"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "1" timestepInterval = "100"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->

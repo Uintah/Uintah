@@ -80,7 +80,7 @@
       <save label="detonating"/>
       <save label="burning"/>
       
-      <checkpoint cycle = "2" timestepInterval = "10"/>
+      <checkpoint cycle = "1" timestepInterval = "10"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->

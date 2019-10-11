@@ -119,19 +119,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     d_sdm = nullptr;
   }
   
+  
+
   // Step 4 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
   
-  if (flags->d_DOUBLEMPM) {
-	  ps->require("density_liquid", d_densityLiquid);
-	  ps->require("Porosity", d_Porosity);
-	  ps->require("Permeability", d_Permeability);
-	  ps->require("BulkLiquidModulus", d_BulkLiquidModulus);
-  }
-
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
 
@@ -199,9 +194,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
        mainpiece = pieces[0];
      }
 
-     //    piece_num++;
-     d_geom_objs.push_back(scinew GeometryObject(mainpiece, 
-                           geom_obj_ps, geom_obj_data));
+     GeometryObject* obj = scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data);
+
+     d_geom_objs.push_back( obj );
     }
   }
 }
@@ -254,16 +249,6 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
 
-  // DOUBLEMPM
-  //if (flags->d_DOUBLEMPM) {
-	  mpm_ps->appendElement("density_liquid", d_densityLiquid);
-	  mpm_ps->appendElement("Porosity", d_Porosity);
-	  mpm_ps->appendElement("Permeability", d_Permeability);
-	  mpm_ps->appendElement("BulkLiquidModulus", d_BulkLiquidModulus);
- //}
-
- 
-
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
   d_erosionModel->outputProblemSpec(mpm_ps);
@@ -294,14 +279,6 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
 
-  // DOUBLEMPM
-  if (flags->d_DOUBLEMPM) {
-
-  d_densityLiquid = mat->d_densityLiquid;
-  d_Porosity = mat->d_Porosity;
-  d_Permeability = mat->d_Permeability;
-  d_Permeability = mat->d_BulkLiquidModulus;
-  }
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 }
@@ -357,7 +334,7 @@ ParticleCreator* MPMMaterial::getParticleCreator()
 
 double MPMMaterial::getInitialDensity() const
 {
-	return d_density;
+  return d_density;
 }
 
 double 
@@ -408,26 +385,6 @@ double MPMMaterial::getThermalConductivity() const
   return d_thermalConductivity;
 }
 
-// DOUBLEMPM
-double MPMMaterial::getInitialDensityLiquid() const
-{
-	return d_densityLiquid;
-}
-
-double MPMMaterial::getInitialPorosity() const
-{
-	return d_Porosity;
-}
-
-double MPMMaterial::getInitialPermeability() const
-{
-	return d_Permeability;
-}
-
-double MPMMaterial::getBulkLiquidModulus() const
-{
-	return d_BulkLiquidModulus;
-}
 
 /* --------------------------------------------------------------------- 
  Function~  MPMMaterial::initializeCells--

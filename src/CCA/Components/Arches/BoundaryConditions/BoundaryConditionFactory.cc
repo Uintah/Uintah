@@ -32,7 +32,7 @@ BoundaryConditionFactory::register_all_tasks( ProblemSpecP & db )
       if ( type == "handoff" ){
 
         TaskInterface::TaskBuilder* tsk = scinew HandOff<CCVariable<double> >::Builder( name, 0 );
-        register_task( name, tsk );
+        register_task( name, tsk, db_bc );
 
       }
       else {
@@ -40,29 +40,6 @@ BoundaryConditionFactory::register_all_tasks( ProblemSpecP & db )
       }
 
       assign_task_to_type_storage(name, type);
-    }
-  }
-}
-
-void
-BoundaryConditionFactory::build_all_tasks( ProblemSpecP& db )
-{
-
-  if ( db->findBlock("BoundaryConditions")){
-
-    ProblemSpecP db_m = db->findBlock("BoundaryConditions");
-
-    for ( ProblemSpecP db_bc = db_m->findBlock("bc"); db_bc != nullptr; db_bc=db_bc->findNextBlock("bc") ) {
-
-      std::string name;
-      std::string type;
-      db_bc->getAttribute("label", name);
-      db_bc->getAttribute("type", type);
-
-      print_task_setup_info( name, type );
-      TaskInterface* tsk = retrieve_task(name);
-      tsk->problemSetup(db_bc);
-      tsk->create_local_labels();
     }
   }
 }

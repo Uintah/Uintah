@@ -77,8 +77,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_interpolator                  =  scinew LinearInterpolator();
   d_do_contact_friction           =  false;
   d_computeNormals                =  false;
+  d_useLogisticRegression         =  false;
   d_computeColinearNormals        =  true;
   d_restartOnLargeNodalVelocity   =  false;
+  d_ndim                          =  3;
   d_addFrictionWork               =  0.0;               // don't do frictional heating by default
 
   d_extraSolverFlushes                 =  0;            // Have PETSc do more flushes to save memory
@@ -130,19 +132,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   } else if(d_mms_type=="AxisAligned3L"){
     d_mms_type = "AxisAligned3L";
   }
-
-  // DOUBLEMPM
-  d_DOUBLEMPM = false;
-  d_insertPorePressure = false;
-  d_NullSpaceFilter = false;
-  d_FreeSurface = false;
-
-  // Generalized Alpha scheme
-  d_GeneralizedAlpha = false;
-  d_SpectralRadius = 1;
-
-  // Hypoplasticity
-  d_Hypoplasticity = false;
 }
 
 MPMFlags::~MPMFlags()
@@ -265,7 +254,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("do_contact_friction_heating",d_do_contact_friction);
   mpm_flag_ps->get("computeNormals",             d_computeNormals);
+  mpm_flag_ps->get("useLogisticRegression",       d_useLogisticRegression);
   mpm_flag_ps->get("computeColinearNormals",     d_computeColinearNormals);
+  mpm_flag_ps->get("d_ndim",                      d_ndim);
   mpm_flag_ps->get("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
   if (!d_do_contact_friction){
     d_addFrictionWork = 0.0;
@@ -397,24 +388,6 @@ else{
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
   }
-
-  // DOUBLEMPM
-  mpm_flag_ps->get("DOUBLEMPM", d_DOUBLEMPM);
-  mpm_flag_ps->get("InsertPorePressure", d_insertPorePressure);
-  if (d_insertPorePressure) {
-	  mpm_flag_ps->require("InsertPorePressureFile", d_insertPorePressureFile);
-  }
-  mpm_flag_ps->get("NullSpaceFilter", d_NullSpaceFilter);
-  mpm_flag_ps->get("FreeSurface", d_FreeSurface);
-
-
-  // Generalized Alpha scheme
-  mpm_flag_ps->get("GeneralizedAlpha", d_GeneralizedAlpha);
-  mpm_flag_ps->get("SpectralRadius", d_SpectralRadius);
-
-  // Hypoplasticity
-  mpm_flag_ps->get("Hypoplasticity", d_Hypoplasticity);
-
 }
 
 void
@@ -457,26 +430,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("maximum_particle_velocity",          d_max_vel);
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
 
-  // DOUBLEMPM
-  ps->appendElement("DOUBLEMPM", d_DOUBLEMPM);
-
-  ps->appendElement("InsertPorePressure", d_insertPorePressure);
-  if (d_insertPorePressure) {
-	  ps->appendElement("InsertPorePressureFile", d_insertPorePressureFile);
-  }
-  ps->appendElement("NullSpaceFilter", d_NullSpaceFilter);
-  ps->appendElement("FreeSurface", d_FreeSurface);
-
-  // Generalized Alpha scheme
-  ps->appendElement("GeneralizedAlpha", d_GeneralizedAlpha);
-  if (d_GeneralizedAlpha) {
-	  ps->appendElement("SpectralRadius", d_SpectralRadius);
-  }
-
-  // Hypoplasticity
-  ps->appendElement("Hypoplasticity", d_Hypoplasticity);
-  
-  // PrescribeDeformation
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);
   }
@@ -489,11 +442,13 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("do_contact_friction_heating",d_do_contact_friction);
   ps->appendElement("computeNormals",             d_computeNormals);
+  ps->appendElement("useLogisticRegression",       d_useLogisticRegression);
   ps->appendElement("computeColinearNormals",     d_computeColinearNormals);
   ps->appendElement("restartOnLargeNodalVelocity",d_restartOnLargeNodalVelocity);
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
+  ps->appendElement("d_ndim",                      d_ndim);
 }
 
 bool

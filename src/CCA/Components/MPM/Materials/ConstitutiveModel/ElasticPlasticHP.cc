@@ -87,26 +87,14 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
-  d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
-  ps->get("coeff_thermal_expansion", d_initialData.alpha);
-  d_initialData.Chi = 0.9;
-  ps->get("taylor_quinney_coeff",d_initialData.Chi);
-
-  d_tol = 1.0e-10;
-  ps->get("tolerance",d_tol);
-
-  d_useModifiedEOS = false;
-  ps->get("useModifiedEOS",d_useModifiedEOS);
-
-  d_initialMaterialTemperature = 294.0;
-  ps->get("initial_material_temperature",d_initialMaterialTemperature);
-
-  d_checkTeplaFailureCriterion = true;
-  ps->get("check_TEPLA_failure_criterion",d_checkTeplaFailureCriterion);
-
-  d_doMelting = true;
-  ps->get("do_melting",d_doMelting);
-
+  // default is per K.  Only used in implicit code
+  ps->getWithDefault("coeff_thermal_expansion",       d_initialData.alpha,          0.0);
+  ps->getWithDefault("taylor_quinney_coeff",          d_initialData.Chi,            0.9);
+  ps->getWithDefault("tolerance",                     d_tol,                        1.0e-10);
+  ps->getWithDefault("useModifiedEOS",                d_useModifiedEOS,             false);
+  ps->getWithDefault("initial_material_temperature",  d_initialMaterialTemperature, 294.0);
+  ps->getWithDefault("check_TEPLA_failure_criterion", d_checkTeplaFailureCriterion, true);
+  ps->getWithDefault("do_melting",                    d_doMelting,                  true);
   
   // plasticity convergence Algorithm
   d_plasticConvergenceAlgo = "radialReturn";   // default
@@ -129,56 +117,26 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   //__________________________________
   // 
   d_yield = YieldConditionFactory::create(ps, usingRR );
-  if(!d_yield){
-    ostringstream desc;
-    desc << "An error occured in the YieldConditionFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
+  if(!d_yield) bulletProofingError("YieldConditionFactory", "Biswajit");
 
   d_stable = StabilityCheckFactory::create(ps);
   if(!d_stable) cerr << "Stability check disabled\n";
 
   d_flow = FlowStressModelFactory::create(ps);
-  if(!d_flow){
-    ostringstream desc;
-    desc << "An error occured in the FlowModelFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
+  if(!d_flow) bulletProofingError("FlowModelFactory","Biswajit");
   
   d_eos = MPMEquationOfStateFactory::create(ps);
+  if(!d_eos) bulletProofingError("EquationOfStateFactory","Jim");
   d_eos->setBulkModulus(d_initialData.Bulk);
-  if(!d_eos){
-    ostringstream desc;
-    desc << "An error occured in the EquationOfStateFactory that has \n"
-         << " slipped through the existing bullet proofing. Please tell \n"
-         << " Jim.  "<< endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
 
   d_shear = ShearModulusModelFactory::create(ps);
-  if (!d_shear) {
-    ostringstream desc;
-    desc << "ElasticPlasticHP::Error in shear modulus model factory" << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
+  if (!d_shear) bulletProofingError("ShearModulusModelFactory","someone");
   
   d_melt = MeltingTempModelFactory::create(ps);
-  if (!d_melt) {
-    ostringstream desc;
-    desc << "ElasticPlasticHP::Error in melting temp model factory" << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
+  if (!d_melt) bulletProofingError("MeltingTempModelFactory", "someone");
   
   d_devStress = DevStressModelFactory::create(ps);
-  if (!d_devStress) {
-    ostringstream desc;
-    desc << "ElasticPlasticHP::Error creating deviatoric stress model" << endl;
-    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-  }
+  if (!d_devStress) bulletProofingError("DevStressModelFactory", "someone");
 
   d_computeSpecificHeat = false;
   ps->get("compute_specific_heat",d_computeSpecificHeat);
@@ -188,6 +146,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
 }
+
 
 #if 0
 ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
@@ -262,6 +221,20 @@ ElasticPlasticHP::~ElasticPlasticHP()
   delete d_Cp;
   delete d_devStress;
 }
+
+//______________________________________________________________________
+//
+void
+ElasticPlasticHP::bulletProofingError(const std::string methodName
+                                     ,const std::string responsibleParty)
+{
+  ostringstream desc;
+  desc << "An error occured in the " << methodName << " that has \n"
+       << " slipped through the existing bullet proofing. Please tell \n"
+       << responsibleParty << "." << endl;
+  throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+}
+
 
 //______________________________________________________________________
 //
@@ -353,22 +326,16 @@ ElasticPlasticHP::initializeLocalMPMLabels()
 void 
 ElasticPlasticHP::getInitialPorosityData(ProblemSpecP& ps)
 {
-  d_evolvePorosity = true;
-  ps->get("evolve_porosity",d_evolvePorosity);
-  d_porosity.f0 = 0.002;  // Initial porosity
-  d_porosity.f0_std = 0.002;  // Initial STD porosity
-  d_porosity.fc = 0.5;    // Critical porosity
-  d_porosity.fn = 0.1;    // Volume fraction of void nucleating particles
-  d_porosity.en = 0.3;    // Mean strain for nucleation
-  d_porosity.sn = 0.1;    // Standard deviation strain for nucleation
-  d_porosity.porosityDist = "constant";
-  ps->get("initial_mean_porosity",         d_porosity.f0);
-  ps->get("initial_std_porosity",          d_porosity.f0_std);
-  ps->get("critical_porosity",             d_porosity.fc);
-  ps->get("frac_nucleation",               d_porosity.fn);
-  ps->get("meanstrain_nucleation",         d_porosity.en);
-  ps->get("stddevstrain_nucleation",       d_porosity.sn);
-  ps->get("initial_porosity_distrib",      d_porosity.porosityDist);
+  ps->getWithDefault("evolve_porosity",               d_evolvePorosity,         true);
+
+  ps->getWithDefault("initial_mean_porosity",         d_porosity.f0,            0.002);
+  ps->getWithDefault("initial_std_porosity",          d_porosity.f0_std,        0.002);
+  ps->getWithDefault("critical_porosity",             d_porosity.fc,            0.5);
+  // Volume fraction of void nucleating particles
+  ps->getWithDefault("frac_nucleation",               d_porosity.fn,            0.1);
+  ps->getWithDefault("meanstrain_nucleation",         d_porosity.en,            0.3);
+  ps->getWithDefault("stddevstrain_nucleation",       d_porosity.sn,            0.1);
+  ps->getWithDefault("initial_porosity_distrib",      d_porosity.porosityDist,  "constant");
 }
 
 /*! Compute specific heat
@@ -582,6 +549,7 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
+  task->requires(Task::OldDW, lb->pLocalizedMPMLabel, matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -652,6 +620,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get the particle location,  particle mass, particle volume, etc.
+    constParticleVariable<int>    pLocalized;
     constParticleVariable<double> pMass;
     constParticleVariable<double> pVolume;
     constParticleVariable<double> pTemperature;
@@ -665,10 +634,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,       pset);
 
     constParticleVariable<double> pPlasticStrain, pPorosity;
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
-    constParticleVariable<int> pLocalized;
     constParticleVariable<Matrix3> pRotation;
 
     old_dw->get(pPlasticStrain,     pPlasticStrainLabel,     pset);
@@ -726,14 +695,15 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     d_flow     ->allocateAndPutInternalVars(pset, new_dw);
     d_devStress->allocateAndPutInternalVars(pset, new_dw);
 
+    // Copy localized data to new DW.  Will modify below.
+    pLocalized_new.copyData(pLocalized);
+
     //______________________________________________________________________
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;      
       
-      pLocalized_new[idx] = false;
-
       // Assign zero int. heating by default, modify with appropriate sources
       // This has units (in MKS) of K/s  (i.e. temperature/time)
       pdTdt[idx] = 0.0;

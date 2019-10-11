@@ -107,7 +107,7 @@ protected:
     template <typename T>
     struct RegisterNewVariableHelper{
 
-      RegisterNewVariableHelper(){};
+      RegisterNewVariableHelper(const std::string task_name) : m_task_name(task_name){}
 
       void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
         const VarLabel* test = nullptr;
@@ -121,18 +121,22 @@ protected:
         } else {
 
           std::stringstream msg;
-          msg << "Error: VarLabel already registered: " << name << " (name your task variable something else and try again)." << std::endl;
+          msg << "Error: Trying to register a variable, " << name << ", in Task " << m_task_name <<
+          ", that was created elsewhere. " << std::endl;
           throw InvalidValue(msg.str(), __FILE__, __LINE__);
 
         }
       }
+
+      const std::string m_task_name;
+
     };
 
     /** @brief Register a local varlabel for this task **/
     template <typename T>
     void register_new_variable(const std::string name){
 
-      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
+      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>(m_task_name);
       helper->create_variable( name, m_local_labels );
       delete helper;
 

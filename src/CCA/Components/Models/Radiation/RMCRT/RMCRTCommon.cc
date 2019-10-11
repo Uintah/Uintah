@@ -47,7 +47,7 @@ using namespace Uintah;
 
 // These are used externally (e.g. Radiamoter.cc), keep them visible
 // outside this unit
-Dout g_ray_dbg("Ray_dbg", "Radiation Models", "RMCRT Ray general debug stream", false);
+Dout g_ray_dbg("Ray",     "Radiation Models", "RMCRT Ray general debug stream", false);
 Dout g_ray_BC ("Ray_BC",  "Radiation Models", "RMCRT RayBC debug stream", false);
 //______________________________________________________________________
 // Static variable declarations
@@ -63,6 +63,7 @@ double      RMCRTCommon::d_maxRayLength;               // max ray length.
 bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
+int         RMCRTCommon::d_whichAlgo{singleLevel};
 std::string RMCRTCommon::d_abskgBC_tag;
 std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
@@ -90,11 +91,11 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 {
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
-    proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << std::endl;
+    proc0cout << "  - Using double implementation of RMCRT" << std::endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
     d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
-    proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << std::endl;
+    proc0cout << "  - Using float implementation of RMCRT" << std::endl;
   }
 
   d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
@@ -137,23 +138,26 @@ RMCRTCommon::~RMCRTCommon()
 // Register the material index and label names
 //______________________________________________________________________
 void
-RMCRTCommon::registerVarLabels(int   matlIndex,
+RMCRTCommon::registerVariables(int   matlIndex,
                                const VarLabel* abskg,
                                const VarLabel* temperature,
                                const VarLabel* celltype,
-                               const VarLabel* divQ )
+                               const VarLabel* divQ,
+                               const int whichAlgo )
 {
   d_matl            = matlIndex;
   d_compAbskgLabel  = abskg;
   d_compTempLabel   = temperature;
   d_cellTypeLabel   = celltype;
   d_divQLabel       = divQ;
+  d_whichAlgo       = whichAlgo;
 
   d_abskgBC_tag = d_compAbskgLabel->getName(); // The label name changes when using floats.
 
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+  
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
@@ -200,7 +204,8 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   tsk->requires( abskgDW,       d_compAbskgLabel, d_gn, 0 );
   tsk->computes(d_abskgLabel);
 
-  sched->addTask( tsk, level->eachPatch(), d_matlSet);
+  // shedule on all taskgraphs not just TG_RMCRT.  The output task needs d_abskgLabel
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //______________________________________________________________________
 //
@@ -261,7 +266,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   printSchedule(level, g_ray_dbg, "RMCRTCommon::sched_sigmaT4");
 
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
-  tsk->computes(d_sigmaT4Label);
+  tsk->computes( d_sigmaT4Label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
@@ -308,7 +313,50 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::sched_initialize_sigmaT4( const LevelP  & level,
+                                       SchedulerP    & sched )
+{
+  std::string taskname = "RMCRTCommon::initialize_sigmaT4";
 
+  Task* tsk = nullptr;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<double> );
+  } else {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<float> );
+  }
+
+  printSchedule(level, g_ray_dbg, "RMCRTCommon::initialize_sigmaT4");
+
+  tsk->computes(d_sigmaT4Label);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//______________________________________________________________________
+// Initialize sigmaT4 = 0
+//______________________________________________________________________
+template< class T>
+void
+RMCRTCommon::initialize_sigmaT4( const ProcessorGroup *,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset *,
+                                 DataWarehouse        *,
+                                 DataWarehouse        * new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::initialize_sigmaT4");
+
+    CCVariable< T > sigmaT4;
+    new_dw->allocateAndPut( sigmaT4, d_sigmaT4Label, d_matl, patch );
+    sigmaT4.initialize( 0.0 );
+  }
+}
 
 //______________________________________________________________________
 //

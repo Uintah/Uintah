@@ -103,8 +103,8 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index )
-      : m_task_name(task_name), m_matl_index(matl_index){}
+      Builder( std::string task_name, ProblemSpecP& db, int matl_index )
+      : m_task_name(task_name), m_db(db), m_matl_index(matl_index){}
       ~Builder(){}
 
       KScalarRHS* build()
@@ -113,6 +113,7 @@ public:
       private:
 
       std::string m_task_name;
+      ProblemSpecP& m_db;
       int m_matl_index;
 
     };
@@ -131,9 +132,7 @@ private:
     typedef typename ArchesCore::VariableHelper<PT>::YFaceType FluxYT;
     typedef typename ArchesCore::VariableHelper<PT>::ZFaceType FluxZT;
 
-
     std::string m_D_name;
-    //std::string m_premultiplier_name;
     std::string m_x_velocity_name;
     std::string m_y_velocity_name;
     std::string m_z_velocity_name;
@@ -151,9 +150,9 @@ private:
     std::vector<double> m_init_value;
 
     bool m_has_D;
+    bool m_has_unweighted_rep;             ///< Has an unweighted version of itself (e.g., phi = rho*phi/rho)
 
     int m_total_eqns;
-
     int m_boundary_int{0};
     int m_dir{0};
 
@@ -203,6 +202,15 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::problemSetup( ProblemSpecP& input_db ){
 
+    using namespace ArchesCore;
+
+    std::string eqn_grp_name = strip_class_name();
+
+    m_has_unweighted_rep = false;
+    if ( input_db->findBlock("weight_factor") != nullptr ){
+      m_has_unweighted_rep = true;
+    }
+
     m_total_eqns = 0;
 
     ConvectionHelper* conv_helper = scinew ConvectionHelper();
@@ -212,12 +220,12 @@ private:
       input_db->getAttribute("class", eqn_class);
     }
 
-    m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
+    m_eqn_class = assign_eqn_class_enum( eqn_class );
     std::string premultiplier_name = get_premultiplier_name(m_eqn_class);
     std::string postmultiplier_name = get_postmultiplier_name(m_eqn_class);
 
     std::string env_number="NA";
-    if (m_eqn_class == ArchesCore::DQMOM) {
+    if (m_eqn_class == DQMOM) {
       input_db->findBlock("env_number")->getAttribute("number", env_number);
     }
 
@@ -229,7 +237,8 @@ private:
       m_eqn_names.push_back(eqn_name);
 
       std::string rho_phi_name;
-      if ((m_eqn_class == ArchesCore::DQMOM) && ( db->findBlock("no_weight_factor") == nullptr )) {
+      if ((m_eqn_class == DQMOM) && ( input_db->findBlock("no_weight_factor") == nullptr )) {
+        m_has_unweighted_rep = false;
         std::string delimiter = env_number ;
         std::string name_1    = eqn_name.substr(0, eqn_name.find(delimiter));
         rho_phi_name = name_1 + postmultiplier_name + env_number;
@@ -237,36 +246,27 @@ private:
         rho_phi_name = premultiplier_name + eqn_name;
       }
 
-      if (db->findBlock("no_weight_factor") != nullptr){
+      if ( db->findBlock("no_weight_factor") != nullptr
+           && m_eqn_class == DQMOM ){
+
         rho_phi_name = eqn_name;//"NA";// for weights in DQMOM
         //Scaling Constant only for weight
-        if (m_eqn_class == ArchesCore::DQMOM) {
-          if ( db->findBlock("scaling") ){
+        if ( db->findBlock("scaling") ){
 
-            double scaling_constant;
-            db->findBlock("scaling")->getAttribute("value", scaling_constant);
-            //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
+          double scaling_constant;
+          db->findBlock("scaling")->getAttribute("value", scaling_constant);
 
-            Scaling_info scaling_w ;
-            scaling_w.unscaled_var = "w_" + env_number ;
-            scaling_w.constant    = scaling_constant;
-            m_scaling_info.insert(std::make_pair(eqn_name, scaling_w));
-          }
+          Scaling_info scaling_w ;
+          scaling_w.unscaled_var = "w_" + env_number ;
+          scaling_w.constant    = scaling_constant;
+          m_scaling_info.insert(std::make_pair(eqn_name, scaling_w));
+
         }
       }
 
       m_transported_eqn_names.push_back(rho_phi_name);
-      //Check for something other than density weighted:
 
-      //std::string eqn_class_str = "density_weighted";
-      //if ( db->findBlock("dqmom")){
-      //  eqn_class_str = "dqmom";
-      //} else if ( db->findBlock("volumetric")){
-      //  eqn_class_str = "volumetric";
-      //}
-      //m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class_str );
-
-      //Convection
+      // Convection
       if ( db->findBlock("convection")){
         std::string conv_scheme;
         db->findBlock("convection")->getAttribute("scheme", conv_scheme);
@@ -275,7 +275,7 @@ private:
         m_conv_scheme.push_back(NOCONV);
       }
 
-      //Diffusion
+      // Diffusion
       m_has_D = false;
       if ( db->findBlock("diffusion")){
         m_do_diff.push_back(true);
@@ -284,7 +284,7 @@ private:
         m_do_diff.push_back(false);
       }
 
-      //Clipping
+      // Clipping
       if ( db->findBlock("clip")){
         m_do_clip.push_back(true);
         double low; double high;
@@ -298,16 +298,7 @@ private:
         m_high_clip.push_back(999.9);
       }
 
-      //Scaling Constant
-      //if ( db->findBlock("scaling")){
-
-      //  double scaling_constant;
-      //  db->findBlock("scaling")->getAttribute("value", scaling_constant);
-      //  m_scaling_info.insert(std::make_pair(eqn_name, scaling_constant));
-
-      //}
-
-      //Initial Value
+      // Initial Value
       if ( db->findBlock("initialize") ){
         double value;
         db->findBlock("initialize")->getAttribute("value",value);
@@ -317,6 +308,7 @@ private:
         m_init_value.push_back(0.0);
       }
 
+      // Source Terms
       std::vector<SourceInfo> eqn_srcs;
       for ( ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src") ) {
 
@@ -341,10 +333,8 @@ private:
 
     }
 
-    // setup the boundary conditions for this eqn set
-
-
-    if (m_eqn_class == ArchesCore::DQMOM) {
+    // Setup the boundary conditions for this eqn set
+    if (m_eqn_class == DQMOM) {
       for ( auto i = m_transported_eqn_names.begin(); i != m_transported_eqn_names.end(); i++ ){
         m_eqn_names_BC.push_back(*i);
       }
@@ -354,21 +344,14 @@ private:
       }
     }
 
-
     m_boundary_functors->create_bcs( input_db, m_eqn_names_BC );
 
-    delete conv_helper;
-
-    using namespace ArchesCore;
-
-    ArchesCore::GridVarMap<T> var_map;
+    GridVarMap<T> var_map;
     var_map.problemSetup( input_db );
     m_eps_name = var_map.vol_frac_name;
     m_x_velocity_name = var_map.uvel_name;
     m_y_velocity_name = var_map.vvel_name;
     m_z_velocity_name = var_map.wvel_name;
-
-    //m_premultiplier_name = get_premultiplier_name(m_eqn_class);
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -391,7 +374,9 @@ private:
       }
     }
 
-  }
+    delete conv_helper;
+
+  } // End problemSetup
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT>
@@ -410,6 +395,9 @@ private:
       register_new_variable<FYT>( m_eqn_names[i]+"_y_flux" );
       register_new_variable<FZT>( m_eqn_names[i]+"_z_flux" );
     }
+    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
+      register_new_variable<T>( (i->second).unscaled_var);
+    }
   }
 
   //------------------------------------------------------------------------------------------------
@@ -420,12 +408,13 @@ private:
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+      //phi
       register_variable(  m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[ieqn] != "NA" )
-        //register_variable( m_premultiplier_name+m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      //rho*phi
+      register_variable(  m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
+      //all the other transport terms
       register_variable(  m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable(  m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable(  m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
@@ -433,9 +422,6 @@ private:
     }
 
     register_variable( m_eps_name, ArchesFieldContainer::REQUIRES, 1 , ArchesFieldContainer::NEWDW, variable_registry, m_task_name   );
-    //for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-    //  register_variable( i->first+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-    //}
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
@@ -496,7 +482,7 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
       register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
@@ -837,20 +823,20 @@ private:
     const int time_substep , const bool packed_tasks){
 
     for ( auto i = m_eqn_names_BC.begin(); i != m_eqn_names_BC.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
     }
 
     ArchesCore::FunctorDepList bc_dep;
     m_boundary_functors->get_bc_dependencies( m_eqn_names_BC, m_bcHelper, bc_dep );
     for ( auto i = bc_dep.begin(); i != bc_dep.end(); i++ ){
       register_variable( (*i).variable_name, ArchesFieldContainer::REQUIRES, (*i).n_ghosts , (*i).dw,
-                         variable_registry );
+                         variable_registry, m_task_name );
     }
 
     std::vector<std::string> bc_mod;
     m_boundary_functors->get_bc_modifies( m_eqn_names_BC, m_bcHelper, bc_mod );
     for ( auto i = bc_mod.begin(); i != bc_mod.end(); i++ ){
-      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry );
+      register_variable( *i, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
     }
 
   }

@@ -65,12 +65,14 @@ SRCS += \
         $(SRCDIR)/CubeRoot.cc          \
         $(SRCDIR)/Sparse.cc            \
         $(SRCDIR)/Short27.cc           \
+        $(SRCDIR)/Int130.cc            \
         $(SRCDIR)/TangentModulusTensor.cc  \
         $(SRCDIR)/Expon.cc  \
 	\
         Core/Geometry/BBox.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
+        Core/Geometry/PolyPlane.cc \
         Core/Geometry/Point.cc \
         Core/Geometry/Tensor.cc \
         Core/Geometry/Vector.cc \

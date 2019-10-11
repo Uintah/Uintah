@@ -167,9 +167,13 @@ JohnsonCookDamage::addComputesAndRequires(Task* task,
 
   task->requires( Task::OldDW, pDamageLabel,                     matls, gnone);
   task->requires( Task::OldDW, d_lb->pTemperatureLabel,          matls, gnone);      
+  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,        matls, gnone);
+
   task->requires( Task::NewDW, d_lb->pStressLabel_preReloc,      matls, gnone);      
   task->requires( Task::NewDW, pPlasticStrainRateLabel_preReloc, matls, gnone);
+
   task->computes( pDamageLabel_preReloc, matls );
+
 //  task->computes(TotalLocalizedParticleLabel);
 }
 
@@ -188,13 +192,18 @@ JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
   constParticleVariable<double>  pPlasticStrainRate;
   constParticleVariable<double>  pDamage_old;
   constParticleVariable<double>  pTemperature;
+  constParticleVariable<int>     pLocalized;
+
   ParticleVariable<double>       pDamage;
+  ParticleVariable<int>          pLocalizedNew;
   
   old_dw->get( pDamage_old,         pDamageLabel,                      pset);
-  old_dw->get( pTemperature,        d_lb->pTemperatureLabel,           pset);   
+  old_dw->get( pTemperature,        d_lb->pTemperatureLabel,           pset);
+
   new_dw->get( pStress,             d_lb->pStressLabel_preReloc,       pset);   
-  new_dw->get( pPlasticStrainRate,  pPlasticStrainRateLabel_preReloc,  pset);   
-  new_dw->allocateAndPut( pDamage,  pDamageLabel_preReloc,             pset);   
+  new_dw->get( pPlasticStrainRate,  pPlasticStrainRateLabel_preReloc,  pset);
+
+  new_dw->allocateAndPut( pDamage,  pDamageLabel_preReloc,             pset);
 
     // Get the time increment (delT)
   delt_vartype delT;
@@ -203,9 +212,10 @@ JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
   Matrix3 I; 
   I.Identity();
   
-  double Tr = matl->getRoomTemperature();
-  double Tm = matl->getMeltTemperature();
-  
+  const double Tr = matl->getRoomTemperature();
+  const double Tm = matl->getMeltTemperature();
+  const double invTempRange = 1.0/(Tm-Tr);
+
   //__________________________________
   //
   ParticleSubset::iterator iter = pset->begin();

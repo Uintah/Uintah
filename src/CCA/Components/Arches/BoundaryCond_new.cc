@@ -78,6 +78,42 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
               throw ProblemSetupException( "Error: When using Tabulated BCs, you must name the <Face> using the name attribute.", __FILE__, __LINE__);
             }
 
+          } else if ( type == "ScalarSwirl"){
+
+            // This was developed for DQMOM velocity components with swirl
+            // NOTE: this will use the "value" entry as the normal component of the velocity
+            swirlInfo my_info;
+            db_BCType->require("swirl_no", my_info.swirl_no);
+
+            std::string str_vec; // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
+            bool Luse_origin =   db_face->getAttribute("origin", str_vec);
+            if ( Luse_origin ){
+              std::stringstream ss;
+              ss << str_vec;
+              Vector origin;
+              ss >> origin[0] >> origin[1] >> origin[2];
+              db_BCType->getWithDefault("swirl_centroid", my_info.swirl_cent, origin);
+            } else {
+              db_BCType->require("swirl_centroid",my_info.swirl_cent);
+            }
+
+            //Must specify which coordinate this scalar represents because the var names are arbitrary
+            std::string coord;
+            db_BCType->require("swirl_coord", coord);
+            if ( coord == "Y") {
+              my_info.coord = 1;
+            } else if ( coord == "Z"){
+              my_info.coord = 2;
+            } else {
+              throw ProblemSetupException("Error: Coordindate value for scalar swirl must be Y or Z. X is assumed as the flow direction", __FILE__, __LINE__);
+            }
+
+            if ( face_name == "NA"){
+              ProblemSetupException("Error: Please specificy a face name when using Swirl condition on a scalar.", __FILE__, __LINE__ );
+            }
+
+            m_swirl_map.insert(std::make_pair(face_name, my_info));
+
           }
         }
       }

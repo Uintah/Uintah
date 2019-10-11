@@ -170,7 +170,7 @@
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
-      <checkpoint cycle = "2" timestepInterval = "30"/>
+      <checkpoint cycle = "1" timestepInterval = "30"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

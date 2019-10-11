@@ -113,7 +113,7 @@
       <save label = "abskg"   />
       <save label = "sigmaT4" />
       <save label = "VRFlux" />
-      <checkpoint cycle = "2" timestepInterval = "2"/>
+      <checkpoint cycle = "1" timestepInterval = "3"/>
   </DataArchiver>
 
   <!--__________________________________ -->
@@ -135,11 +135,11 @@
     <allowReflect>      true        </allowReflect>
 
     <Radiometer>
-      <VRViewAngle>       180         </VRViewAngle>
-      <VROrientation>     [-1,0,0]    </VROrientation>
-      <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
-      <VRLocationsMax>    [1,1,1]     </VRLocationsMax>
-      <nRadRays>          10          </nRadRays>
+      <viewAngle>       180         </viewAngle>
+      <orientation>     [-1,0,0]    </orientation>
+      <locationsMin>    [0,0,0]     </locationsMin>
+      <locationsMax>    [1,1,1]     </locationsMax>
+      <nRays>          10           </nRays>
     </Radiometer>
     
   </RMCRT>

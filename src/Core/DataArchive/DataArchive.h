@@ -280,12 +280,6 @@ public:
   // corresponding documentation.
   void setTimestepCacheSize(int new_size);
 
-  // This is added to allow simple geometric scaling of the entire domain
-  void setCellScale( Vector& s ){ d_cell_scale = s; }
-  // This is added so that particles can see if the domain has been scaled
-  // and change the particle locations appropriately.
-  Vector getCellScale(){ return d_cell_scale; }
-
   // This is a list of the last n timesteps accessed.  Data from
   // only the last timestep_cache_size timesteps is stored, unless
   // timestep_cache_size is less than or equal to zero then the size
@@ -474,7 +468,6 @@ private:
   FILE        * d_indexFile; // File pointer to XML index document.
 
   bool   d_simRestart;
-  Vector d_cell_scale; // Used for scaling the physical data size.
 
   std::vector<TimeData> d_timeData;
   std::vector<int>      d_ts_indices;

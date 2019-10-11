@@ -19,7 +19,7 @@
       <delt_min>             0.0     </delt_min>
       <delt_max>             1.0     </delt_max>
       <delt_init>            1.0e-4  </delt_init>
-      <max_Timesteps>        100      </max_Timesteps>
+      <max_Timesteps>        50      </max_Timesteps>
       <timestep_multiplier>  0.8     </timestep_multiplier>
     </Time>
 
@@ -171,7 +171,7 @@
       <save label="p.volume"/>
       <save label="p.velocity"/>
       <save label="TotalMomentum"/>
-      <checkpoint timestepInterval="3" cycle="2"/>
+      <checkpoint timestepInterval="7" cycle="1"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->

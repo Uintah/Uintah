@@ -814,7 +814,8 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 //---------------------------
 double
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend_varname,
-    MixingRxnModel::doubleMap inert_mixture_fractions )
+                                      MixingRxnModel::doubleMap inert_mixture_fractions, 
+                                      bool do_inverse )
 {
 
   double total_inert_f = 0.0;
@@ -836,6 +837,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
   tabValue = ND_interp->find_val( iv, varIndex );
   double table_value = tabValue[0];
 
+  if ( do_inverse ){ 
+    table_value = 1./table_value; 
+  }
+
   // for post look-up mixing
   for (MixingRxnModel::doubleMap::iterator inert_iter = inert_mixture_fractions.begin();
       inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
@@ -845,6 +850,10 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
     post_mixing( table_value, inert_f, depend_varname, inert_species_map_list );
 
+  }
+
+  if ( do_inverse ){ 
+    table_value = 1./table_value; 
   }
 
   return table_value;

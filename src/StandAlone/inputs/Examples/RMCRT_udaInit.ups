@@ -124,7 +124,6 @@
     <allowReflect>      true        </allowReflect>
     <ignore_BC_bulletproofing> false </ignore_BC_bulletproofing>
     <CCRays>          false         </CCRays>
-    <nRadRays>        10            </nRadRays>
     <sigmaScat>       1.0           </sigmaScat>
     <solveDivQ>       true          </solveDivQ>
     <applyFilter>     false         </applyFilter>

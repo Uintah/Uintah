@@ -1,9 +1,18 @@
 <config>
-<postProcessCmd_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/parametricStudies/comparisonUtils</postProcessCmd_path>
+<postProcessCmd_path></postProcessCmd_path>
 
-<symbolicLinks> 
-  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
-</symbolicLinks>
+<symbolicLinks></symbolicLinks>
+
+<test>
+  <name> speedTest1 </name>
+  <tst> speedTest1-ash.tst </tst>
+</test>
+
+<!--
+<test>
+  <name> example-ash </name>
+  <tst> Example-ash.tst </tst>
+</test>
 
 <test>
   <name>MMS_dt</name>
@@ -13,5 +22,5 @@
   <name>MMS_dx</name>
   <tst>dx.tst</tst>
 </test>
-
+-->
 </config>

@@ -64,8 +64,9 @@ TaskFactoryBase::~TaskFactoryBase()
 
 //--------------------------------------------------------------------------------------------------
 void
-TaskFactoryBase::register_task(std::string task_name,
-                               TaskInterface::TaskBuilder* builder ){
+TaskFactoryBase::register_task( std::string task_name,
+                                TaskInterface::TaskBuilder* builder,
+                                ProblemSpecP db ){
 
   m_task_init_order.push_back(task_name);
   ASSERT(builder != nullptr);
@@ -84,12 +85,20 @@ TaskFactoryBase::register_task(std::string task_name,
                         __FILE__, __LINE__ );
 
   }
+
+  // Now build the task:
+  TaskInterface* tsk = retrieve_task(task_name);
+  print_task_setup_info(tsk->get_task_name(), tsk->get_task_function());
+  tsk->problemSetup( db );
+  tsk->create_local_labels();
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void
 TaskFactoryBase::register_atomic_task(std::string task_name,
-                                      AtomicTaskInterface::AtomicTaskBuilder* builder ){
+                                      AtomicTaskInterface::AtomicTaskBuilder* builder,
+                                      ProblemSpecP db ){
 
   ASSERT(builder != nullptr);
 
@@ -106,6 +115,13 @@ TaskFactoryBase::register_atomic_task(std::string task_name,
                         __FILE__, __LINE__ );
 
   }
+
+  // Now build the task:
+  TaskInterface* tsk = retrieve_atomic_task(task_name);
+  print_task_setup_info(tsk->get_task_name(), tsk->get_task_function());
+  tsk->problemSetup( db );
+  tsk->create_local_labels();
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -140,7 +156,7 @@ TaskFactoryBase::retrieve_task( const std::string task_name, const bool ignore_m
       if ( ignore_missing_task ){
         return NULL;
       } else {
-        throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__);
+        throw InvalidValue("Error: Cannot find task named: "+task_name+" for factory: "+_factory_name,__FILE__,__LINE__);
       }
 
     }
@@ -304,8 +320,14 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 
   ArchesFieldContainer::VariableRegistry variable_registry;
 
+  std::string pack_string = "OFF";
+  if ( pack_tasks == true ){
+    pack_string = "ON";
+  }
+
   const std::string type_string = TaskInterface::get_task_type_string(type);
-  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling the following task group with mode: " << type_string << " for factory: " << _factory_name );
+  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling with mode " << type_string << " for factory " << _factory_name );
+  DOUT( dbg_arches_task, "                   Task packing is " << pack_string << std::endl );
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
@@ -358,6 +380,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       {
         if ( time_substep == 0 ) {
           if ( reinitialize ){
+            // Uncomment this code to fix all ghost cells.
             // const Uintah::PatchSet* const allPatches =
             //  sched->getLoadBalancer()->getPerProcessorPatchSet(level);
             // const Uintah::PatchSubset* const localPatches =
@@ -368,6 +391,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
             //                                Uintah::Task::ThisLevel,
             //                                matls->getSubset(0), Uintah::Task::NormalDomain,
             //                                ivar.ghost_type, ivar.nGhost );
+            // end uncomment
             DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
             tsk->modifies( ivar.label );   // was computed upstream
           } else {
@@ -378,6 +402,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
             tsk->computes( ivar.label );   //only compute on the zero time substep
           }
         } else {
+          // Uncomment this code to fix all ghost cells.
           // const Uintah::PatchSet* const allPatches =
           //   sched->getLoadBalancer()->getPerProcessorPatchSet(level);
           // const Uintah::PatchSubset* const localPatches =
@@ -388,6 +413,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
           //                                Uintah::Task::ThisLevel,
           //                                matls->getSubset(0), Uintah::Task::NormalDomain,
           //                                ivar.ghost_type, ivar.nGhost );
+          // end ucomment
           DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
           tsk->modifies( ivar.label );
       }}
@@ -415,6 +441,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       break;
     case ArchesFieldContainer::MODIFIES:
       {
+        // Uncomment this code to fix all ghost cells.
         // const Uintah::PatchSet* const allPatches =
         //     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
         // const Uintah::PatchSubset* const localPatches =
@@ -424,7 +451,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
         //                                 localPatches,
         //                                 Uintah::Task::ThisLevel,
         //                                 matls->getSubset(0), Uintah::Task::NormalDomain,
-        //                                 ivar.ghost_type, ivar.nGhost );\
+        //                                 ivar.ghost_type, ivar.nGhost );
+        // end uncomment
         DOUT( dbg_arches_task, "[TaskFactoryBase]      modifying: " << ivar.name );
         tsk->modifies( ivar.label );
       }

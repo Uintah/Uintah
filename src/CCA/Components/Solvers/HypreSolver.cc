@@ -1140,6 +1140,8 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches on this proc when scheduling
 
+    task->computes(hypre_solver_label);
+    
     LoadBalancer * lb = sched->getLoadBalancer();
 
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);

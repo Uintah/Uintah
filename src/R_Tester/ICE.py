@@ -57,10 +57,12 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", ["exactComparison"]),
+                   ("advectPeriodic",     "advect_periodic.ups",     8, "All", ["exactComparison"]),
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
                    ("impAdvect",          "impAdvect.ups",           8, "All", ["exactComparison"]),
+                   ("impAdvectPeriodic",  "impAdvect_periodic.ups",  8, "All", ["exactComparison"]),
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"])    

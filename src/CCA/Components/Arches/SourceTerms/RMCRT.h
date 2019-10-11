@@ -151,12 +151,20 @@ public:
   //
 private:
 
-  //
+  // These tasks are used to "fake" out the taskgraph createDetailedDependency() logic
+  // Before you can require something from the new_dw there must be a compute() for that
+  // variable.
   void restartInitializeHack( const ProcessorGroup*, 
                               const PatchSubset*,
                               const MaterialSubset*, 
-                              DataWarehouse*, 
-                              DataWarehouse*);
+                              DataWarehouse*,  
+                              DataWarehouse*){};
+                              
+  void restartInitializeHack2( const ProcessorGroup*, 
+                               const PatchSubset*,
+                               const MaterialSubset*, 
+                               DataWarehouse*, 
+                               DataWarehouse*){};
 
 
 
@@ -212,8 +220,9 @@ private:
 
   enum Algorithm{ dataOnion, 
                   coarseLevel, 
-                  singleLevel};
-
+                  singleLevel,
+                  radiometerOnly       // VRFlux is computed at radiometer locations
+                };
   int  _matl;
   int  _archesLevelIndex{-9};
   bool _all_rk{false};

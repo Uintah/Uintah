@@ -134,7 +134,8 @@ public:
 
   void assignMessageTags( unsigned int index );
 
-  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > & getCommInfo() { return m_comm_info; }
+  std::map< std::pair< std::string, std::string >,
+            MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > > & getCommInfo() { return m_comm_info; }
 
   void initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws, int dwmap[] );
 
@@ -385,7 +386,8 @@ private:
   ScrubCountTable m_scrub_count_table;
 
   // A mapper to keep track of point to point MPI calls.
-  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > m_comm_info;
+  std::map< std::pair< std::string, std::string >,
+            MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > > m_comm_info;
   
   // eliminate copy, assignment and move
   DetailedTasks(const DetailedTasks &)            = delete;

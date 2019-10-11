@@ -43,30 +43,31 @@ namespace Uintah{
 
 public:
 
-    KFEUpdate<T>( std::string task_name, int matl_index );
-    ~KFEUpdate<T>();
+    KFEUpdate<T>( std::string task_name, int matl_index, bool do_time_ave );
+    ~KFEUpdate<T>(){}
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels();
+    void create_local_labels(){}
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
 
       public:
 
-      Builder( std::string task_name, int matl_index ) :
-        m_task_name(task_name), m_matl_index(matl_index) {}
+      Builder( std::string task_name, int matl_index, bool do_time_ave ) :
+        m_task_name(task_name), m_matl_index(matl_index), m_do_time_ave(do_time_ave) {}
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( m_task_name, m_matl_index ); }
+      { return scinew KFEUpdate( m_task_name, m_matl_index, m_do_time_ave ); }
 
       private:
 
       std::string m_task_name;
       int m_matl_index;
+      bool m_do_time_ave;
 
     };
 
@@ -100,11 +101,10 @@ private:
 
     std::vector<std::string> _eqn_names;
     std::vector<std::string> m_transported_eqn_names;
-    //std::map<std::string, double> m_scaling_info;
 
     struct Scaling_info {
-      std::string unscaled_var; // unscaled value
-      double constant; // 
+      std::string unscaled_var;
+      double constant;
     };
     std::map<std::string, Scaling_info> m_scaling_info;
 
@@ -117,34 +117,23 @@ private:
     ArchesCore::DIR m_dir;
     std::string m_volFraction_name;
 
-    //std::string m_premultiplier_name;
+    const bool m_do_time_ave;
 
   };
 
   //Function definitions:
   //------------------------------------------------------------------------------------------------
   template <typename T>
-  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index ) :
-  TaskInterface( task_name, matl_index ){}
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  KFEUpdate<T>::~KFEUpdate()
-  {
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  void KFEUpdate<T>::create_local_labels(){
-    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-      register_new_variable<T>( (i->second).unscaled_var);
-
-    }
-  }
+  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, bool do_time_ave ) :
+  TaskInterface( task_name, matl_index ),
+  m_do_time_ave(do_time_ave)
+  {}
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
+
+    std::string eqn_grp_name = strip_class_name();
 
     m_volFraction_name = "volFraction";
 
@@ -155,7 +144,6 @@ private:
     m_eqn_class = ArchesCore::assign_eqn_class_enum( eqn_class );
     std::string premultiplier_name = get_premultiplier_name( m_eqn_class );
     std::string postmultiplier_name = get_postmultiplier_name( m_eqn_class );
-    //m_premultiplier_name = get_premultiplier_name( m_eqn_class );
 
     ProblemSpecP db_root = db->getRootNode();
     db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator")->getAttribute("order", _time_order);
@@ -206,12 +194,16 @@ private:
       _time_factor[2] = 1.0;
 
     } else {
+
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
+
     }
+
     std::string env_number="NA";
-    if (m_eqn_class == ArchesCore::DQMOM) {      
-      db->findBlock("env_number")->getAttribute("number", env_number);    
+    if (m_eqn_class == ArchesCore::DQMOM) {
+      db->findBlock("env_number")->getAttribute("number", env_number);
     }
+
     _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn");
 	       eqn_db.get_rep() != nullptr;
@@ -222,56 +214,49 @@ private:
       eqn_db->getAttribute("label", scalar_name);
       _eqn_names.push_back(scalar_name);
 
-    if (eqn_db->findBlock("no_weight_factor") == nullptr ){
-      std::string trans_variable;
-      if (m_eqn_class == ArchesCore::DQMOM) {
+      if (eqn_db->findBlock("no_weight_factor") == nullptr ){
+        std::string trans_variable;
+        if (m_eqn_class == ArchesCore::DQMOM) {
 
-        std::string delimiter = env_number ;
-        std::string name_1    = scalar_name.substr(0, scalar_name.find(delimiter));
-        trans_variable         = name_1 + postmultiplier_name + env_number;//
+          std::string delimiter = env_number ;
+          std::string name_1    = scalar_name.substr(0, scalar_name.find(delimiter));
+          trans_variable         = name_1 + postmultiplier_name + env_number;//
+
+        } else {
+
+          trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
+
+        }
+
+        m_transported_eqn_names.push_back(trans_variable);//
 
       } else {
+        // weight:  w is transported
+        m_transported_eqn_names.push_back(scalar_name);// for weights in DQMOM
 
-        trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
+        //Scaling Constant only for weight
+        if ( eqn_db->findBlock("scaling") ){
 
+          double scaling_constant;
+          eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
+          //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
+
+          Scaling_info scaling_w ;
+          scaling_w.unscaled_var = "w_" + env_number ;
+          scaling_w.constant    = scaling_constant;
+          m_scaling_info.insert(std::make_pair(scalar_name, scaling_w));
+
+        }
       }
-      //if ( eqn_db->findBlock("scaling") ){
-
-      //  double scaling_constant;
-      //  eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-
-      //  Scaling_info scaling_w ;
-      //  scaling_w.unscaled_var = trans_variable + "_unscaled" ;
-      //  scaling_w.constant     = scaling_constant;
-      //  m_scaling_info.insert(std::make_pair(trans_variable, scaling_w));
-      // }
-    
-      m_transported_eqn_names.push_back(trans_variable);//
-    } else {
-      // weight:  w is transported 
-          m_transported_eqn_names.push_back(scalar_name);// for weights in DQMOM
-      //Scaling Constant only for weight
-      if ( eqn_db->findBlock("scaling") ){
-
-        double scaling_constant;
-        eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-        //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
-
-        Scaling_info scaling_w ;
-        scaling_w.unscaled_var = "w_" + env_number ;
-        scaling_w.constant    = scaling_constant;
-        m_scaling_info.insert(std::make_pair(scalar_name, scaling_w));
-      }
-    }  
-
     }
 
     ArchesCore::VariableHelper<T> varhelp;
     m_dir = varhelp.dir;
 
     //special momentum case
+    // FIX: This is hacky
     if ( _eqn_names.size() == 0 ){
-      std::string which_mom = m_task_name.substr(0,5);
+      std::string which_mom =eqn_grp_name.substr(0,5);
       _eqn_names.push_back(which_mom);
       m_transported_eqn_names.push_back(which_mom);
     }
@@ -287,25 +272,20 @@ private:
     typedef std::vector<std::string> SV;
     int ieqn =0;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
       //std::string rhs_name = *i + "_rhs";
       std::string rhs_name = m_transported_eqn_names[ieqn] + "_RHS";
-      register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
-      register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( rhs_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( *i+"_x_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( *i+"_y_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
+      register_variable( *i+"_z_flux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
       ieqn += 1;
-      //auto iscal = m_scaling_info.find(*i);
-      //if ( iscal != m_scaling_info.end() ){
-        
-      //  register_variable( *i+"_unscaled", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
-      //}
     }
     register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
     }
   }
 
@@ -338,12 +318,7 @@ private:
       double ay = Dx.z() * Dx.x();
       double az = Dx.x() * Dx.y();
 
-#ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("kokkos_fe_update.out."+*i);
-      timer.start("work");
-#endif
-
-      if ( time_substep == 0 ){
+      if ( time_substep == 0  || !m_do_time_ave ){
 
         auto fe_update = [&](int i, int j, int k){
 
@@ -405,10 +380,6 @@ private:
         }
       }
 
-#ifdef DO_TIMINGS
-      timer.stop("work");
-#endif
-
     }
 
     // unscaling
@@ -440,10 +411,10 @@ private:
     const int time_substep , const bool packed_tasks){
 
     register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
-    
+
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
-      register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
     }
   }
 //--------------------------------------------------------------------------------------------------
@@ -453,19 +424,19 @@ private:
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
-  
+
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
     T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
-    
+
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());
       //Get the iterator
 
       if ( on_this_patch ){
         Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-        
+
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
             phi_unscaled(i,j,k) = phi(i,j,k) * (ieqn->second).constant*vol_fraction(i,j,k) ;
           });

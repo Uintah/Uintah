@@ -140,7 +140,7 @@
            </material>
 
            <contact>
-              <type>friction</type>
+              <type>friction_bard</type>
               <materials>[0,1,2]</materials>
               <mu> 0.5 </mu>
            </contact>

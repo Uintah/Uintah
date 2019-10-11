@@ -358,7 +358,7 @@
         <!--__________________________________-->
         <Sources>
           <src label="divQ" type="do_radiation">
-            <calc_frequency>    10      </calc_frequency>
+            <calc_frequency>    2      </calc_frequency>
             <abskt label="gas_abskg"/>
             <DORadiationModel type="linearSolve">
               <LinearSolver type="hypre">
@@ -368,6 +368,25 @@
                 <max_iter>  275       </max_iter>
               </LinearSolver>
             </DORadiationModel>
+          </src>
+          <!--       RMCRT radiation   -->
+          <src label="divQ_rmcrt" type="rmcrt_radiation">
+            <calc_frequency>    2       </calc_frequency>
+            <abskt label="gas_abskg"/>
+            <RMCRT type = "float">
+              <algorithm type="radiometerOnly"/> 
+              <randomSeed>        false       </randomSeed>
+              <Threshold>         0.05        </Threshold>
+              <sigmaScat>         0           </sigmaScat>
+
+              <Radiometer>
+                <viewAngle>       1               </viewAngle>         
+                <orientation>     [0,0,-1]        </orientation>       
+                <locationsMin>    [0.0, 1, 3.999] </locationsMin>      
+                <locationsMax>    [0.2, 3, 4.0]   </locationsMax>      
+                <nRays>          50               </nRays>            
+              </Radiometer>
+            </RMCRT>
           </src>
         </Sources>
       </TransportEqns>
@@ -435,24 +454,4 @@
       </ExplicitSolver>
     </ARCHES>
   </CFD>
-  <!--____________________________________________________________________-->
-  <DataAnalysis>
-    <Module name="radiometer">
-      <radiometerCalc_freq>    5   </radiometerCalc_freq>
-      <Radiometer type="double">
-        <temperature label="radiation_temperature"/>
-        <cellType label="cellType"/>
-        <abskg label="abskg"/>
-        <randomSeed>        false       </randomSeed>
-        <Threshold>         0.05        </Threshold>
-        <VRViewAngle>       2           </VRViewAngle>
-        <VROrientation>     [1,0,0]     </VROrientation>
-        <VRLocationsMin>    [0,  0, 2]   </VRLocationsMin>
-        <VRLocationsMax>    [0.2,4, 2.2] </VRLocationsMax>
-        <sigmaScat>         0           </sigmaScat>
-        <allowReflect>      false       </allowReflect>
-        <nRadRays>          20          </nRadRays>
-      </Radiometer>
-    </Module>
-  </DataAnalysis>
 </Uintah_specification>

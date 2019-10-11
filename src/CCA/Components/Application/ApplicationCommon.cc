@@ -410,11 +410,13 @@ ApplicationCommon::scheduleReduceSystemVars(const GridP& grid,
   // Check for a task computing the reduction variable, if found add
   // in a requires and activate the variable it will be tested.
   for (auto & var : m_appReductionVars) {
-    if( scheduler->getComputedVars().find( var.second->getLabel() ) !=
-        scheduler->getComputedVars().end() ) {
+    const VarLabel* label = var.second->getLabel();
+    
+    if( scheduler->getComputedVars().find( label ) != scheduler->getComputedVars().end() ) {
       activateReductionVariable(var.first, true);
-
-      task->requires(Task::NewDW, var.second->getLabel());
+      
+      task->requires(Task::NewDW, label);
+      task->computes(label);
     }
   }
 

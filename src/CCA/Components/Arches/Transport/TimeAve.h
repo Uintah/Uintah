@@ -1,4 +1,3 @@
-
 #ifndef Uintah_Component_Arches_TimeAve_h
 #define Uintah_Component_Arches_TimeAve_h
 
@@ -44,12 +43,12 @@ namespace Uintah{
 public:
 
     TimeAve<T>( std::string task_name, int matl_index );
-    ~TimeAve<T>();
+    ~TimeAve<T>(){}
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
 
-    void create_local_labels();
+    void create_local_labels(){}
 
     /** @brief Build instruction for this class **/
     class Builder : public TaskInterface::TaskBuilder {
@@ -104,7 +103,7 @@ private:
 
     struct Scaling_info {
       std::string unscaled_var; // unscaled value
-      double constant; // 
+      double constant; //
     };
     std::map<std::string, Scaling_info> m_scaling_info;
 
@@ -126,21 +125,6 @@ private:
   template <typename T>
   TimeAve<T>::TimeAve( std::string task_name, int matl_index ) :
   TaskInterface( task_name, matl_index ){}
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  TimeAve<T>::~TimeAve()
-  {
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T>
-  void TimeAve<T>::create_local_labels(){
-    for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-      register_new_variable<T>( (i->second).unscaled_var);
-
-    }
-  }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
@@ -208,8 +192,8 @@ private:
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);
     }
     std::string env_number="NA";
-    if (m_eqn_class == ArchesCore::DQMOM) {      
-      db->findBlock("env_number")->getAttribute("number", env_number);    
+    if (m_eqn_class == ArchesCore::DQMOM) {
+      db->findBlock("env_number")->getAttribute("number", env_number);
     }
     _eqn_names.clear();
     for (ProblemSpecP eqn_db = db->findBlock("eqn");
@@ -234,34 +218,23 @@ private:
         trans_variable = premultiplier_name + scalar_name + postmultiplier_name;//
 
       }
-      //if ( eqn_db->findBlock("scaling") ){
 
-      //  double scaling_constant;
-      //  eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-
-      //  Scaling_info scaling_w ;
-      //  scaling_w.unscaled_var = trans_variable + "_unscaled" ;
-      //  scaling_w.constant     = scaling_constant;
-      //  m_scaling_info.insert(std::make_pair(trans_variable, scaling_w));
-      // }
-    
       m_transported_eqn_names.push_back(trans_variable);//
     } else {
-      // weight:  w is transported 
+      // weight:  w is transported
           m_transported_eqn_names.push_back(scalar_name);// for weights in DQMOM
       //Scaling Constant only for weight
       if ( eqn_db->findBlock("scaling") ){
 
         double scaling_constant;
         eqn_db->findBlock("scaling")->getAttribute("value", scaling_constant);
-        //m_scaling_info.insert(std::make_pair(scalar_name, scaling_constant));
 
         Scaling_info scaling_w ;
         scaling_w.unscaled_var = "w_" + env_number ;
         scaling_w.constant    = scaling_constant;
         m_scaling_info.insert(std::make_pair(scalar_name, scaling_w));
       }
-    }  
+    }
 
     }
 
@@ -286,24 +259,20 @@ private:
     typedef std::vector<std::string> SV;
     int ieqn =0;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
       ieqn += 1;
     }
-    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
+    register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
 
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+      register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
     }
   }
 
   //------------------------------------------------------------------------------------------------
   template <typename T>
   void TimeAve<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-    //const double dt = tsk_info->get_dt();
-    //Vector DX = patch->dCell();
-    //const double V = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
@@ -315,11 +284,6 @@ private:
       T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
-
-#ifdef DO_TIMINGS
-      SpatialOps::TimeLogger timer("kokkos_time_av.out."+*i);
-      timer.start("work");
-#endif
 
       auto fe_update = [&](int i, int j, int k){
         phi(i,j,k) = _alpha[time_substep] * old_phi(i,j,k) + _beta[time_substep] * phi(i,j,k);
@@ -341,10 +305,6 @@ private:
         Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
         Uintah::parallel_for( range, fe_update );
       }
-
-#ifdef DO_TIMINGS
-      timer.stop("work");
-#endif
 
     }
 
@@ -377,7 +337,7 @@ private:
     const int time_substep , const bool packed_tasks){
 
     register_variable( m_volFraction_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name  );
-    
+
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
       register_variable((ieqn->second).unscaled_var, ArchesFieldContainer::MODIFIES, variable_registry, m_task_name );
       register_variable(ieqn->first, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -390,19 +350,19 @@ private:
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
-  
+
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
     T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
-    
+
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());
       //Get the iterator
 
       if ( on_this_patch ){
         Uintah::Iterator cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-        
+
           for ( cell_iter.reset(); !cell_iter.done(); cell_iter++ ){
             IntVector c = *cell_iter;
             phi_unscaled[c] = phi[c] * (ieqn->second).constant*vol_fraction[c] ;

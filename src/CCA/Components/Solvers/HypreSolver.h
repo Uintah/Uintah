@@ -29,6 +29,7 @@
 
 #include <CCA/Components/Solvers/SolverCommon.h>
 
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
 
@@ -157,8 +158,9 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*solver_p);
           break;
         default:
-          throw InternalError( "HypreSolver given a bad solver type!", 
-                               __FILE__, __LINE__ );
+          // FYI: This should never happen as the solver type is validated when the struct is initialized.
+          std::cout << " ERROR: ~hypre_solver_struct() has bad solver type: " << solver_type << "\n";
+          Parallel::exitAll( 1 );
         }
         delete solver_p;
         solver_p = 0;
@@ -185,8 +187,9 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*precond_solver_p);
           break;
         default:
-          throw InternalError("HypreSolver given a bad solver type!", 
-                              __FILE__, __LINE__);
+          // FYI: This should never happen as the solver type is validated when the struct is initialized.
+          std::cout << " ERROR: ~hypre_solver_struct() has bad precond solver type: " << precond_solver_type << "\n";
+          Parallel::exitAll( 1 );
         }
         delete precond_solver_p;
         precond_solver_p = 0;

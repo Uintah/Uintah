@@ -82,6 +82,7 @@ public:
   ,  long_type
   ,  long64_type
   ,  Short27   // for Fracture
+  ,  Int130 
   ,  Stencil4
   ,  Stencil7
   ,  IntVector

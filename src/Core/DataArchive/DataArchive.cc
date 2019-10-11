@@ -81,7 +81,6 @@ DataArchive::DataArchive( const string & filebase,
   timestep_cache_size(10),
   default_cache_size(10),
   d_filebase(filebase),
-  d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
   d_numProcessors(numProcessors),
   d_particlePositionName("p.x")
@@ -399,13 +398,6 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
   Timers::Simple timer;
   timer.start();
 
-  // The following variable along with d_cell_scale is necessary to allow the
-  // UdaScale module work.  Small domains are a problem for the SCIRun widgets
-  // so UdaScale allows the user increase the domain by setting the
-  // d_cell_scale. The next call to this function will use the new scaling.
-  // This can be removed if SCIRun is no longer used for visualization.
-  static Vector old_cell_scale(1.0,1.0,1.0);
-
   d_lock.lock();
 
   TimeData & timedata = getTimeData( index );
@@ -460,15 +452,9 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = nullptr */, boo
   // Check to see if the grid has already been reconstructed and that
   // the cell scaling has not changed. Cell scale check can be removed
   // if SCIRun is no longer used for visualization
-  if (timedata.d_grid != nullptr  &&  old_cell_scale == d_cell_scale) {
+  if (timedata.d_grid != nullptr) {
     d_lock.unlock();
     return timedata.d_grid;
-  }
-
-  // update the static variable old_cell_scale if the cell scale has changed.
-  // Can be removed if SCIRun is no longer used for visualization.
-  if( old_cell_scale != d_cell_scale ){
-    old_cell_scale = d_cell_scale;
   }
 
   if( ups && assignBCs ) { // 'ups' is non-null only for restarts.

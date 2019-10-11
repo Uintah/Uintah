@@ -25,7 +25,8 @@
 #include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/Materials/Contact/NullContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SingleVelContact.h>
-#include <CCA/Components/MPM/Materials/Contact/FrictionContact.h>
+#include <CCA/Components/MPM/Materials/Contact/FrictionContactBard.h>
+#include <CCA/Components/MPM/Materials/Contact/FrictionContactLR.h>
 #include <CCA/Components/MPM/Materials/Contact/NodalSVFContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/Contact/ApproachContact.h>
@@ -40,7 +41,8 @@ using namespace Uintah;
 
 Contact* ContactFactory::create(const ProcessorGroup* myworld,
                                 const ProblemSpecP& ps, MaterialManagerP &ss,
-                                MPMLabel* lb, MPMFlags* flag, bool &needNormals)
+                                MPMLabel* lb, MPMFlags* flag, bool &needNormals,
+                                bool &useLogisticRegression)
 {
 
    ProblemSpecP mpm_ps = 
@@ -54,6 +56,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
    
    needNormals=false;
+   useLogisticRegression=false;
 
    for( ProblemSpecP child = mpm_ps->findBlock( "contact" ); child != nullptr; child = child->findNextBlock( "contact" ) ) {
      
@@ -69,8 +72,12 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      else if (con_type == "nodal_svf") {
        contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
      }
-     else if (con_type == "friction") {
-       contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
+     else if (con_type == "friction_LR") {
+       contact_list->add(scinew FrictionContactLR(myworld,child,ss,lb,flag));
+       useLogisticRegression=true;
+     }
+     else if (con_type == "friction_bard") {
+       contact_list->add(scinew FrictionContactBard(myworld,child,ss,lb,flag));
        needNormals=true;
      }
      else if (con_type == "approach") {

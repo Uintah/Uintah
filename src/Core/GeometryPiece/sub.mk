@@ -52,9 +52,11 @@ SRCS += \
 	$(SRCDIR)/SphereShellPiece.cc            \
 	$(SRCDIR)/TorusGeometryPiece.cc          \
 	$(SRCDIR)/TriGeometryPiece.cc            \
+	$(SRCDIR)/LineSegGeometryPiece.cc        \
 	$(SRCDIR)/UniformGrid.cc                 \
 	$(SRCDIR)/UnionGeometryPiece.cc          \
-        $(SRCDIR)/EllipsoidGeometryPiece.cc      
+    $(SRCDIR)/EllipsoidGeometryPiece.cc      \
+    $(SRCDIR)/ConvexPolyhedronGeometryPiece.cc \
 
 #	$(SRCDIR)/GUVSphereShellPiece.cc         \
 

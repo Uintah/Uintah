@@ -19,10 +19,10 @@ And uses: 'git pull' to update code.
 
 To git the original files:
 
-env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git
-env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
-env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
-env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/SpatialOps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/ExprLib.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/TabProps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/RadProps.git
 
 To git *OLDER* files, do not use "--depth 1" on the clone... Then when you have the entire tree, use the
 following command to get a git version has number:

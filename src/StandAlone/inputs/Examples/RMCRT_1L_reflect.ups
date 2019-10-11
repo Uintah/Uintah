@@ -107,7 +107,7 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
-      <checkpoint cycle = "2" timestepInterval = "3"/>
+      <checkpoint cycle = "1" timestepInterval = "3"/>
   </DataArchiver>
   
   

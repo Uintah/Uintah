@@ -85,7 +85,7 @@
         <save label="vol_frac_CC"/>
         <save label="SteadyBurn.numPPC"/>
         <save label="sp_vol_CC"/>
-       <checkpoint cycle = "2" timestepInterval = "10"/>
+       <checkpoint cycle = "1" timestepInterval = "10"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->
