@@ -111,6 +111,7 @@
       <save label = "abskg"   />
       <save label = "sigmaT4" />
       <save label = "VRFlux" />
+      <save label = "VRIntensity"/>
       <checkpoint cycle = "1" timestepInterval = "2"/>
   </DataArchiver>
 
@@ -127,6 +128,7 @@
     <randomSeed>        false       </randomSeed>
     <Threshold>         0.05        </Threshold>
     <sigmaScat>         0           </sigmaScat>
+    <allowReflect>       false      </allowReflect>
 
     <Radiometer>
       <viewAngle>       3                   </viewAngle>
