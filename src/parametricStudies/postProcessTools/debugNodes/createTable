@@ -1,0 +1,65 @@
+#!/bin/csh -f
+#______________________________________________________________________
+# This script parses results from a parametric study and creates the table:
+#
+#                                   Kinetic Energy                     Wall Time
+#     Nodes     Runs:         #1           #2          #3         #1       #2        #3   
+#     ______________________________________________________________________________________ 
+#1   ash[186-187,189-190]  2.30058+07  2.30058+07  2.30058+07  286.141  287.54   285.191
+#2   ash[183,185-186,190]  2.30058+07  2.30058+07  2.30058+07  284.03   301.007  286.138
+#3   ash[183-184,187,190]  2.30058+07  2.30058+07  2.30058+07  287      285.454  280.157
+#
+#  See parametricStudies/test_config_files/Arches/speedTest1-ash-4node.tst
+#______________________________________________________________________
+
+
+set SCRIPT =`readlink -f "$0"`
+set myPath = `dirname $SCRIPT`
+
+# name of the directories to examine inside the parameteric study:        <<<< change this >>>>
+set these = (DO_tolerance_1e-6_8nodes.0 DO_tolerance_1e-6_8nodes.1 DO_tolerance_1e-6_8nodes.2) 
+
+/bin/rm ke.[0-9]* wallTime.[0-9]*
+
+@ c = 0
+set ke = ""    # kinetic energy
+set wt = ""    # wall time
+
+#__________________________________
+foreach X ( $these )
+  echo $X
+  
+  set results = $X/results
+  
+  # call scripts to parse quantities and nodes
+  cd $X
+  $myPath/parseOutput >& results
+  more results
+  
+  $myPath/parseJobFiles >& ../nodes
+  
+  cd ..
+  
+  echo $results
+  grep "kinetic" $results  | sort -n | tr -d '[:alpha:]:'  | awk '{print $2}'> ke.$c
+  grep "Timestep" $results | sort -n | tr -d '[:alpha:]:=' | awk '{print $5}' > wallTime.$c
+  
+  set ke = ($ke ke.$c)
+  set wt = ($wt wallTime.$c)
+  
+  @ c ++
+end
+
+echo $ke
+echo $wt
+
+paste -d "   " $ke > ke.All
+paste -d "   " $wt > wallTime.All
+
+printf "                                   Kinetic Energy                     Wall Time\n"            
+printf "     Nodes     Runs:         #1           #2          #3         #1       #2        #3   \n"
+printf "     ______________________________________________________________________________________ \n"
+
+paste -d " " nodes ke.All wallTime.All | column -t
+
+/bin/rm ke.[0-9]* wallTime.[0-9]*

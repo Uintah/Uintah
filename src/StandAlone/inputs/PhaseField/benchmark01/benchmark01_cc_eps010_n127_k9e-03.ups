@@ -1,0 +1,38 @@
+<Uintah_specification>
+  <Meta>
+    <title>benchmark01_cc_eps010_n127_k9e-03</title>
+  </Meta>
+  <SimulationComponent type="phasefield"/>
+  <PhaseField type="benchmark01">
+    <var>cc</var>
+    <delt>9.e-03</delt>
+    <epsilon>0.1</epsilon>
+    <verbosity>0</verbosity>
+  </PhaseField>
+  <Time>
+    <maxTime>220</maxTime>
+    <initTime>0.</initTime>
+    <delt_min>0.</delt_min>
+    <delt_max>1.</delt_max>
+    <timestep_multiplier>1.</timestep_multiplier>
+  </Time>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0.]</lower>
+        <upper>[6.28318530717959,6.28318530717959,1.]</upper> <!-- [2*pi,2*pi,1] -->
+        <resolution>[127,127,1]</resolution>
+        <patches>[4,4,1]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+  <DataArchiver>
+    <filebase>benchmark01_cc_eps010_n127_k9e-03.uda</filebase>
+    <outputInterval>1</outputInterval>
+    <checkpoint cycle="250" interval="1"/>
+    <save label="u"/>
+    <save label="u0"/>
+    <save label="energy"/>
+  </DataArchiver>
+</Uintah_specification>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>test</title>
+       <info>test</info>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>200.0 </maxTime>
+<!--
+       <maxTime>0.0003</maxTime>
+-->
+       <initTime>0.0</initTime>
+       <delt_min>0.000000004</delt_min>
+       <delt_max>0.04</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase>One2DGrain.uda</filebase>
+       <outputInterval>0.1</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.color"/>
+       <save label = "p.particleID"/>
+       <save label = "p.stress"/>
+       <save label = "p.externalforce"/>
+       <save label = "p.displacement"/>
+       <save label = "g.velocity_star"/>
+       <save label = "g.acceleration"/>
+       <save label = "KineticEnergy"/>
+<!--
+       <save label = "g.lscontactforce"/>
+       <save label = "g.mass"/>
+       <save label = "t.tracerID" />
+       <save label = "ls.linesegID" />
+       <save label = "ls.MidToEndVector" />
+       <save label = "BndyForce_xminus"/>
+       <save label = "BndyForce_yminus"/>
+       <save label = "BndyForce_yplus"/>
+       <save label = "BndyForce_zminus"/>
+       <save label = "BndyForce_zplus"/>
+-->
+       <checkpoint cycle = "2" interval = "20.0"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator> explicit  </time_integrator>
+       <interpolator>    fast_cpdi </interpolator>
+       <use_load_curves> true      </use_load_curves>
+       <XPIC2>           true      </XPIC2>
+       <withColor>       true      </withColor>
+       <artificial_damping_coeff> 1.0  </artificial_damping_coeff>
+<!--
+-->
+       <DoPressureStabilization>  false </DoPressureStabilization>
+       <boundary_traction_faces>  [xminus, zplus, yminus, yplus, zminus]
+                                             </boundary_traction_faces>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0.0,0.0,0.0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+
+        <material name="grain_0">
+           <density>1000.0</density>
+           <constitutive_model type="comp_mooney_rivlin"> 
+              <he_constant_1>200000.0</he_constant_1>
+              <he_constant_2>40000.0</he_constant_2>
+              <he_PR>.49</he_PR>
+            </constitutive_model>
+           <thermal_conductivity>1.0</thermal_conductivity>
+           <specific_heat>5</specific_heat>
+           <geom_object>
+             <line_segment>
+              <name>inputs/MPM/SingleGrainLineSegFile.pts</name>
+             </line_segment>
+             <res> [2,2,1] </res>
+             <velocity> [0.,0.,0.] </velocity>
+             <temperature> 300. </temperature>
+             <color>  3.0  </color>
+           </geom_object>
+        </material>
+
+        <contact>
+          <type>null</type>
+          <materials>[0,1]</materials>
+          <mu> 0.5 </mu>
+          <volume_constraint>0.0</volume_constraint>
+          <OneOrTwoStep>1</OneOrTwoStep>
+        </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "y-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "y+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "z-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "z+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+       </BoundaryConditions>
+       <Level>
+         <Box label="1">
+            <lower>[ 0.0010, 0.027, -.0005]</lower>
+            <upper>[ 0.0080, 0.036, 0.0005]</upper>
+            <resolution>[70,90,1]</resolution>
+            <patches>[1,1,1]</patches>
+            <extraCells>[1,1,1]</extraCells>
+         </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>
