@@ -215,6 +215,7 @@ namespace WasatchCore{
       // potentially STATE_N information.
       rhofTag.reset_context( Expr::STATE_NP1 );
       rhohTag.reset_context( Expr::STATE_NP1 );
+      heatLossTag.reset_context( Expr::STATE_NP1 );
 
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       const Expr::Tag rhoOldTag     ( densityTag .name(), Expr::STATE_N );
@@ -222,9 +223,24 @@ namespace WasatchCore{
       factory.register_expression( new PlcHolder::Builder(rhoOldTag     ), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
+      // putting these here just for debugging perposes
+      const Expr::Tag dRhoDhTag("drhodh", Expr::STATE_NONE);
+      const Expr::Tag dRhoDfTag("drhodf", Expr::STATE_NONE);
+      typedef Expr::ConstantExpr<SVolField>::Builder ConstExpr;
+      factory.register_expression( new ConstExpr(dRhoDhTag, 0));
+      factory.register_expression( new ConstExpr(dRhoDfTag, 0));
+      persistentFields.insert( dRhoDhTag.name() );
+      persistentFields.insert( dRhoDfTag.name() );
+      
+      factory.cleave_from_parents(factory.get_id(heatLossOldTag));
+
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
       densCalcID = factory.register_expression( scinew DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+    
+    gh.rootIDs.insert(densCalcID);
     }
+    
+    // factory.cleave_from_children(densCalcID);
     return densCalcID;
   }
 

@@ -336,7 +336,7 @@ namespace WasatchCore{
     }
 
     // for variable density flows:
-    if( hasConvection_ && flowTreatment_ == LOWMACH ){
+    if( flowTreatment_ == LOWMACH ){
       const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);
       infoNP1_[PRIMITIVE_VARIABLE]  = primVarNP1Tag_;
 
@@ -350,8 +350,11 @@ namespace WasatchCore{
       }
 
       if(isStrong_){
+        const Expr::ExpressionID primVarNP1ID = 
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag_, this->solnvar_np1_tag(), densityNP1Tag_ ) );
         factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder(primVarTag_) );
+
+        gc_[ADVANCE_SOLUTION]->rootIDs.insert(primVarNP1ID);
       }
 
       const Expr::Tag scalEOSTag (primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);

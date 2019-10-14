@@ -68,11 +68,11 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f"/>
+        <NameTag name="f" state="STATE_N"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="gamma"/>
+        <NameTag name="gamma" state="STATE_N"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
             
@@ -122,21 +122,26 @@
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f"/>        
+        <NameTag name="f" state="STATE_NP1"/>        
       </FieldExpression>                    
     </FieldClipping>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="-1.0" max="1.0">
-        <NameTag name="gamma"/>        
+        <NameTag name="gamma" state="STATE_NP1"/>        
       </FieldExpression>                    
     </FieldClipping>
-      
+
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="T"/>
     </ForceOnGraph>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="cp"/>
+    </ForceOnGraph>
+      
         
     <!-- Momentum transport equations -->
-    <!--MomentumEquations>
+    <MomentumEquations>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
          
@@ -157,7 +162,7 @@
            </Parameters>
 
       </Pressure>
-    </MomentumEquations-->
+    </MomentumEquations>
 
   </Wasatch>
 
@@ -186,7 +191,7 @@
     <save label="cp"/>
     <save label="rhoh_diffusivity"/>
     <save label="rhof"/>
-    <save label="rhoh_x_diff_flux"/>
+    <save label="rhoh_diffFlux_x"/>
     <save label="f_diffFlux_X"/>
     <save label="rhoh_rhs"/>
     <save label="rhof_rhs"/>

@@ -345,6 +345,8 @@ Builder::Builder( const Expr::Tag& rhoOldTag,
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
     rhoOldTag_   ( rhoOldTag             ),
     gammaOldTag_ ( gammaOldTag           ),
+    rhofTag_     ( rhofTag               ),
+    rhohTag_     ( rhohTag               ),
     densEval_    ( densEvaluator.clone() ),
     enthEval_    ( enthEvaluator.clone() )
 {}
