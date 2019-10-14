@@ -188,6 +188,29 @@ namespace WasatchCore{
     return Expr::Tag(someName + star + rhs, newContext);
   }
   
+    Expr::Tag TagNames::derivative_tag( const std::string depVar,
+                                      const std::string indepVar ) const
+  {
+    return Expr::Tag( "d_"+depVar+"_d_"+indepVar, Expr::STATE_NONE );
+  }
+
+  Expr::Tag TagNames::derivative_tag( const Expr::Tag depVarTag,
+                                      const Expr::Tag indepVarTag ) const
+  {
+    return derivative_tag(depVarTag.name(), indepVarTag.name());
+  }
+
+  Expr::Tag TagNames::derivative_tag( const std::string depVar,
+                                      const Expr::Tag   indepVarTag ) const
+  {
+    return derivative_tag(depVar, indepVarTag.name());
+  }
+
+  Expr::Tag TagNames::derivative_tag( const Expr::Tag   depVarTag,
+                                      const std::string indepVar ) const
+  {
+    return derivative_tag(depVarTag.name(), indepVar);
+  }
 
   //------------------------------------------------------------------
 
