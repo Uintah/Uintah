@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- 304 Stainless Steel -->
-<Uintah_Include>
-  <shear_modulus_model type="scg_shear">
-    <mu_0> 77.0e9 </mu_0> 
-    <A> 26.0e-12 </A>
-    <B> 0.45e-3 </B>
-  </shear_modulus_model>
-</Uintah_Include>

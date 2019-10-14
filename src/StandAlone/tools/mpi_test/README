@@ -1,8 +1,0 @@
-
-The mpi_test program is designed to give some level of confidence that
-MPI is working correctly across a cluster.  Additionally it can test
-the file system.
-
-
-At this point it is unclear what the async_mpi_test does... 
-
