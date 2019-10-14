@@ -60,6 +60,23 @@
         <NameInTable>Enthalpy</NameInTable>
         <NameTag name="h"/>
       </ExtractVariable>
+
+      <ExtractVariable>
+        <NameInTable>Conductivity</NameInTable>
+        <NameTag name="lambda"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="T"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Viscosity</NameInTable>
+        <NameTag name="viscosity"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>SpecificHeat</NameInTable>
+        <NameTag name="cp"/>
+      </ExtractVariable>
     </TabProps>
     
     <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
@@ -79,7 +96,8 @@
       <ExtractDensity>
         <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
-          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>    
+          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>
+          <MixtureFraction><NameTag name="f"/></MixtureFraction>     
           <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_DYNAMIC"/></DensityWeightedEnthalpy>
           <HeatLoss>                      <NameTag name="gamma"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
@@ -137,6 +155,7 @@
 
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="cp"/>
+      <NameTag name="divu"/>
     </ForceOnGraph>
       
         
@@ -148,20 +167,7 @@
       <Viscosity>
         <NameTag name="viscosity" />
       </Viscosity>
-      
-      <Pressure>
-        <Use3DLaplacian>   false</Use3DLaplacian>
-
-        <Parameters>
- 	 	 	 	 	 	 <skip>1</skip>
-            <solver>         cg      </solver>
-            <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-12  </tolerance>
-            <maxiterations>  1000   </maxiterations>
-            <relax_type>     2       </relax_type>
-           </Parameters>
-
-      </Pressure>
+     <DisablePressureSolve/>
     </MomentumEquations>
 
   </Wasatch>
@@ -191,7 +197,7 @@
     <save label="cp"/>
     <save label="rhoh_diffusivity"/>
     <save label="rhof"/>
-    <save label="rhoh_diffFlux_x"/>
+    <save label="h_diffFlux_X"/>
     <save label="f_diffFlux_X"/>
     <save label="rhoh_rhs"/>
     <save label="rhof_rhs"/>
