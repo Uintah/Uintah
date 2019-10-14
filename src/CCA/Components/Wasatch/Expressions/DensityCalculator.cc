@@ -258,6 +258,8 @@ evaluate()
   typename Expr::Expression<FieldT>::ValVec& result  = this->get_value_vec();
   FieldT& density = *result[0];
   FieldT& gamma   = *result[1];
+  FieldT& dRhodF  = *result[2];
+  FieldT& dRhodH  = *result[3];
 
   density <<= rhoOld_->field_ref();
   gamma   <<= gammaOld_->field_ref();
@@ -265,16 +267,18 @@ evaluate()
   const FieldT& rhof = rhof_->field_ref();
   const FieldT& rhoh = rhoh_->field_ref();
   
-  typename FieldT::const_iterator irhof = rhof.begin();
-  typename FieldT::const_iterator irhoh = rhoh.begin();
-  typename FieldT::iterator irho = density.begin();
-  typename FieldT::iterator igam = gamma.begin();
+  typename FieldT::const_iterator irhof = rhof   .begin();
+  typename FieldT::const_iterator irhoh = rhoh   .begin();
+  typename FieldT::iterator irho        = density.begin();
+  typename FieldT::iterator igam        = gamma  .begin();
+  typename FieldT::iterator idRhodF     = dRhodF .begin();
+  typename FieldT::iterator idRhodH     = dRhodH .begin();
   const typename FieldT::iterator irhoe = density.end();
 
   size_t nbad=0;
   DoubleVec soln(2), vals(2);
   double relError = 0.0;
-  for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh ){
+  for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh, ++idRhodF, ++idRhodH ){
     vals[0] = *irhof;
     vals[1] = *irhoh;
     soln[0] = *irhof / *irho; // mixture fraction
@@ -283,6 +287,14 @@ evaluate()
     if( !converged ) ++nbad;
     *irho = *irhof / soln[0]; // set solution for density
     *igam = soln[1];          // heat loss
+
+    *idRhodF = densEval_.derivative( soln, 0 );
+    const double dRhodGamma = densEval_.derivative( soln, 1 );
+    const double dHdGamma   = enthEval_.derivative( soln, 1 );
+    assert( dHdGamma != 0 );
+
+    // calculate d(rho)/d(h) using the chain rule
+    *idRhodH = dRhodGamma/dHdGamma;
   }
   if( nbad>0 ){
     std::cout << "\tConvergence failed at " << nbad << " of " << density.window_with_ghost().local_npts() << " points.\n";
@@ -334,15 +346,17 @@ calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
 
 template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
-Builder::Builder( const Expr::Tag& rhoOldTag,
-                  const Expr::Tag& rhoTag,
-                  const Expr::Tag& gammaOldTag,
+Builder::Builder( const Expr::Tag& rhoTag,
                   const Expr::Tag& gammaTag,
+                  const Expr::Tag& dRhodFTag,
+                  const Expr::Tag& dRhodHTag,
+                  const Expr::Tag& rhoOldTag,
+                  const Expr::Tag& gammaOldTag,
                   const Expr::Tag& rhofTag,
                   const Expr::Tag& rhohTag,
                   const InterpT& densEvaluator,
                   const InterpT& enthEvaluator )
-  : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
+  : ExpressionBuilder( tag_list(rhoTag,gammaTag, dRhodFTag, dRhodHTag) ),
     rhoOldTag_   ( rhoOldTag             ),
     gammaOldTag_ ( gammaOldTag           ),
     rhofTag_     ( rhofTag               ),

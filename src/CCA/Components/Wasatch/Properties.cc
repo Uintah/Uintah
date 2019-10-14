@@ -226,16 +226,15 @@ namespace WasatchCore{
       // putting these here just for debugging perposes
       const Expr::Tag dRhoDhTag("drhodh", Expr::STATE_NONE);
       const Expr::Tag dRhoDfTag("drhodf", Expr::STATE_NONE);
-      typedef Expr::ConstantExpr<SVolField>::Builder ConstExpr;
-      factory.register_expression( new ConstExpr(dRhoDhTag, 0));
-      factory.register_expression( new ConstExpr(dRhoDfTag, 0));
       persistentFields.insert( dRhoDhTag.name() );
       persistentFields.insert( dRhoDfTag.name() );
       
       factory.cleave_from_parents(factory.get_id(heatLossOldTag));
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+      densCalcID = factory.register_expression( scinew DensCalc(densityTag, heatLossTag, dRhoDfTag, dRhoDhTag,
+                                                                rhoOldTag, heatLossOldTag, rhofTag, rhohTag,
+                                                                *densInterp, *enthInterp ) );
     
     gh.rootIDs.insert(densCalcID);
     }
