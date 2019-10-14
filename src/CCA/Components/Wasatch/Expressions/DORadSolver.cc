@@ -327,7 +327,8 @@ namespace WasatchCore {
 //          const bool hasExtraCells = ( patch_->getExtraCells() != Uintah::IntVector(0,0,0) );
 
           // cell offset used to calculate local cell index with respect to patch.
-          const Uintah::IntVector patchCellOffset = patch_->getCellLowIndex(0);
+          const int numGhostCells = DEFAULT_NUMBER_OF_GHOSTS;
+          const Uintah::IntVector patchCellOffset = patch_->getExtraCellLowIndex(numGhostCells);
 
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
 
@@ -342,7 +343,9 @@ namespace WasatchCore {
             coefs.t = 0.0;  coefs.b = 0.0;
             coefs.p = 1.0;
 
-            SpatialOps::IntVec soIndex( bcPointIndex[0], bcPointIndex[1], bcPointIndex[2] );
+            SpatialOps::IntVec soIndex( bcPointIndex[0] - patchCellOffset[0], 
+                                        bcPointIndex[1] - patchCellOffset[1], 
+                                        bcPointIndex[2] - patchCellOffset[2] );
 
             const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
             const double pi = 3.141592653589793;
