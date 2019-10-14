@@ -1,0 +1,84 @@
+#! /bin/bash
+
+THELIB=SpatialOps
+
+source ../HelperBuildScripts/setupEnv.sh
+
+rm -rf CMakeCache.txt CMakeFiles *.cmake
+rm -rf ${INSTALL_HERE}/*
+
+echo "Start time: `date`"
+echo ""
+
+if test "$BUILD_CUDA" = "yes"; then
+  FLAGS="-DENABLE_THREADS=OFF -DENABLE_CUDA=ON
+         -DDISABLE_INTROSPECTION=ON
+         -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" 
+         -DCUDA_HOST_COMPILER=/opt/gcc/4.9.3/bin/g++"
+else
+  FLAGS="-DENABLE_THREADS=ON"
+fi
+
+cmake_cmd=\
+"
+  cmake 
+    $FLAGS 
+    -DENABLE_TESTS=OFF 
+    -DENABLE_EXAMPLES=OFF 
+  
+    -DBoost_USE_STATIC_LIBS=ON 
+  
+    -DDISABLE_INTROSPECTION=ON 
+  
+    -DNTHREADS=1 
+    -DBOOST_INCLUDEDIR=$BOOST_LOC/include  
+    -DBOOST_LIBRARYDIR=$BOOST_LOC/lib      
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} 
+    -DCMAKE_C_COMPILER=$CC 
+    -DCMAKE_CXX_COMPILER=$CXX 
+    -DCMAKE_CXX_FLAGS=\"-fPIC\" 
+    ../SpatialOps
+"
+
+echo "Running CMAKE command:"
+echo $cmake_cmd
+echo 
+
+eval $cmake_cmd
+
+if test $? == 0; then
+  echo ""
+  echo "Running Make..."
+  echo ""
+  make clean
+  make -j16
+
+  if test $? != 0; then
+    echo ""
+    echo "SpatialOps make failed...  Goodbye."
+    echo ""
+    exit -1
+  fi
+
+  make install
+
+  echo ""
+  echo "After compilation time: `date`"
+  echo ""
+  echo "SpatialOps: Updating installation permissions for ${INSTALL_HERE}..."
+
+  # Update permissions on the build_DATE directory only:
+  chmod    go+rX ${INSTALL_HERE}/../..
+
+  # Update permissions on the actual library directory and everything below it.
+  chmod -R go+rX ${INSTALL_HERE}/..
+else
+  echo ""
+  echo "SpatialOps CMAKE failed...  Goodbye."
+  echo ""
+  exit -1
+fi
+
+echo "End time: `date`"
+echo ""
+

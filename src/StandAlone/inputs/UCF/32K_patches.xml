@@ -1,0 +1,1261 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+<Level>
+<!-- total number of patches =32431 -->
+<!-- main box for cylinder-->
+   <Box label="box_1">
+      <lower>[0,0.3933910306845007,0.3933910306845007]</lower>          
+      <upper>[3.146226071641843,2.655389457120379,2.655389457120379]</upper> 
+      <resolution>[330,230,230]</resolution>  
+      <patches>[33,23,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                 
+                 
+<!-- y+direction  layer #1 for cylinder -->
+   <Box label="box_2">
+      <lower>[0,2.655389457120379,0.3933910306845007]</lower>          
+      <upper>[3.146226071641843,2.753737214791505,2.655389457120379]</upper> 
+      <resolution>[330,10,230]</resolution>  
+      <patches>[33,1,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cylinder -->
+   <Box label="box_3">
+      <lower>[0,0.2950432730133755,0.3933910306845007]</lower>          
+      <upper>[3.146226071641843,0.3933910306845007,2.655389457120379]</upper> 
+      <resolution>[330,10,230]</resolution>  
+      <patches>[33,1,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cylinder -->
+   <Box label="box_4">
+      <lower>[0,0.3933910306845007,2.655389457120379]</lower>          
+      <upper>[3.146226071641843,2.655389457120379,2.753737214791505]</upper> 
+      <resolution>[330,230,10]</resolution>  
+      <patches>[33,23,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cylinder -->
+   <Box label="box_5">
+      <lower>[0,0.3933910306845007,0.2950432730133755]</lower>          
+      <upper>[3.146226071641843,2.655389457120379,0.3933910306845007]</upper> 
+      <resolution>[330,230,10]</resolution>  
+      <patches>[33,23,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cylinder -->
+   <Box label="box_6">
+      <lower>[0,2.753737214791505,0.4917387883556258]</lower>          
+      <upper>[3.146226071641843,2.85208497246263,2.557041699449254]</upper> 
+      <resolution>[330,10,210]</resolution>  
+      <patches>[33,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cylinder -->
+   <Box label="box_7">
+      <lower>[0,0.1966955153422503,0.4917387883556258]</lower>          
+      <upper>[3.146226071641843,0.2950432730133755,2.557041699449254]</upper> 
+      <resolution>[330,10,210]</resolution>  
+      <patches>[33,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cylinder -->
+   <Box label="box_8">
+      <lower>[0,0.4917387883556258,2.753737214791505]</lower>          
+      <upper>[3.146226071641843,2.557041699449254,2.85208497246263]</upper> 
+      <resolution>[330,210,10]</resolution>  
+      <patches>[33,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cylinder -->
+   <Box label="box_9">
+      <lower>[0,0.4917387883556258,0.1966955153422503]</lower>          
+      <upper>[3.146226071641843,2.557041699449254,0.2950432730133755]</upper> 
+      <resolution>[330,210,10]</resolution>  
+      <patches>[33,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cylinder -->
+   <Box label="box_10">
+      <lower>[0,2.85208497246263,0.590086546026751]</lower>          
+      <upper>[3.146226071641843,2.950432730133755,2.458693941778129]</upper> 
+      <resolution>[330,10,190]</resolution>  
+      <patches>[33,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cylinder -->
+   <Box label="box_11">
+      <lower>[0,0.09834775767112514,0.590086546026751]</lower>          
+      <upper>[3.146226071641843,0.1966955153422503,2.458693941778129]</upper> 
+      <resolution>[330,10,190]</resolution>  
+      <patches>[33,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cylinder -->
+   <Box label="box_12">
+      <lower>[0,0.590086546026751,2.85208497246263]</lower>          
+      <upper>[3.146226071641843,2.458693941778129,2.950432730133755]</upper> 
+      <resolution>[330,190,10]</resolution>  
+      <patches>[33,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cylinder -->
+   <Box label="box_13">
+      <lower>[0,0.590086546026751,0.09834775767112514]</lower>          
+      <upper>[3.146226071641843,2.458693941778129,0.1966955153422503]</upper> 
+      <resolution>[330,190,10]</resolution>  
+      <patches>[33,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #4 for cylinder -->
+   <Box label="box_14">
+      <lower>[0,2.950432730133755,0.7867820613690013]</lower>          
+      <upper>[3.146226071641843,3.04878048780488,2.261998426435879]</upper> 
+      <resolution>[330,10,150]</resolution>  
+      <patches>[33,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #4 for cylinder -->
+   <Box label="box_15">
+      <lower>[0,0,0.7867820613690013]</lower>          
+      <upper>[3.146226071641843,0.09834775767112514,2.261998426435879]</upper> 
+      <resolution>[330,10,150]</resolution>  
+      <patches>[33,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #4 for cylinder -->
+   <Box label="box_16">
+      <lower>[0,0.7867820613690013,2.950432730133755]</lower>          
+      <upper>[3.146226071641843,2.261998426435879,3.04878048780488]</upper> 
+      <resolution>[330,150,10]</resolution>  
+      <patches>[33,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #4 for cylinder -->
+   <Box label="box_17">
+      <lower>[0,0.7867820613690013,0]</lower>          
+      <upper>[3.146226071641843,2.261998426435879,0.09834775767112514]</upper> 
+      <resolution>[330,150,10]</resolution>  
+      <patches>[33,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #1 -->
+   <Box label="box_18">
+      <lower>[3.146226071641843,0.3933910306845007,0.3933910306845007]</lower>          
+      <upper>[3.241566255630989,2.655389457120379,2.655389457120379]</upper> 
+      <resolution>[10,230,230]</resolution>  
+      <patches>[1,23,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #1 -->
+   <Box label="box_19">
+      <lower>[3.146226071641843,2.655389457120379,0.3933910306845007]</lower>          
+      <upper>[3.241566255630989,2.753737214791505,2.655389457120379]</upper> 
+      <resolution>[10,10,230]</resolution>  
+      <patches>[1,1,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #1 -->
+   <Box label="box_20">
+      <lower>[3.146226071641843,0.2950432730133755,0.3933910306845007]</lower>          
+      <upper>[3.241566255630989,0.3933910306845007,2.655389457120379]</upper> 
+      <resolution>[10,10,230]</resolution>  
+      <patches>[1,1,23]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #1 -->
+   <Box label="box_21">
+      <lower>[3.146226071641843,0.3933910306845007,2.655389457120379]</lower>          
+      <upper>[3.241566255630989,2.655389457120379,2.753737214791505]</upper> 
+      <resolution>[10,230,10]</resolution>  
+      <patches>[1,23,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #1 -->
+   <Box label="box_22">
+      <lower>[3.146226071641843,0.3933910306845007,0.2950432730133755]</lower>          
+      <upper>[3.241566255630989,2.655389457120379,0.3933910306845007]</upper> 
+      <resolution>[10,230,10]</resolution>  
+      <patches>[1,23,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #1 -->
+   <Box label="box_23">
+      <lower>[3.146226071641843,2.753737214791505,0.4917387883556258]</lower>          
+      <upper>[3.241566255630989,2.85208497246263,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #1 -->
+   <Box label="box_24">
+      <lower>[3.146226071641843,0.1966955153422503,0.4917387883556258]</lower>          
+      <upper>[3.241566255630989,0.2950432730133755,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #1 -->
+   <Box label="box_25">
+      <lower>[3.146226071641843,0.4917387883556258,2.753737214791505]</lower>          
+      <upper>[3.241566255630989,2.557041699449254,2.85208497246263]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #1 -->
+   <Box label="box_26">
+      <lower>[3.146226071641843,0.4917387883556258,0.1966955153422503]</lower>          
+      <upper>[3.241566255630989,2.557041699449254,0.2950432730133755]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #1 -->
+   <Box label="box_27">
+      <lower>[3.146226071641843,2.85208497246263,0.590086546026751]</lower>          
+      <upper>[3.241566255630989,2.950432730133755,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #1 -->
+   <Box label="box_28">
+      <lower>[3.146226071641843,0.09834775767112514,0.590086546026751]</lower>          
+      <upper>[3.241566255630989,0.1966955153422503,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #1 -->
+   <Box label="box_29">
+      <lower>[3.146226071641843,0.590086546026751,2.85208497246263]</lower>          
+      <upper>[3.241566255630989,2.458693941778129,2.950432730133755]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #1 -->
+   <Box label="box_30">
+      <lower>[3.146226071641843,0.590086546026751,0.09834775767112514]</lower>          
+      <upper>[3.241566255630989,2.458693941778129,0.1966955153422503]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #4 for cone slice #1 -->
+   <Box label="box_31">
+      <lower>[3.146226071641843,2.950432730133755,0.7867820613690013]</lower>          
+      <upper>[3.241566255630989,3.04878048780488,2.261998426435879]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #4 for cone slice #1 -->
+   <Box label="box_32">
+      <lower>[3.146226071641843,0,0.7867820613690013]</lower>          
+      <upper>[3.241566255630989,0.09834775767112514,2.261998426435879]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #4 for cone slice #1 -->
+   <Box label="box_33">
+      <lower>[3.146226071641843,0.7867820613690013,2.950432730133755]</lower>          
+      <upper>[3.241566255630989,2.261998426435879,3.04878048780488]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #4 for cone slice #1 -->
+   <Box label="box_34">
+      <lower>[3.146226071641843,0.7867820613690013,0]</lower>          
+      <upper>[3.241566255630989,2.261998426435879,0.09834775767112514]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #2 -->
+   <Box label="box_35">
+      <lower>[3.241566255630989,0.4917387883556258,0.4917387883556258]</lower>          
+      <upper>[3.336906439620136,2.557041699449254,2.557041699449254]</upper> 
+      <resolution>[10,210,210]</resolution>  
+      <patches>[1,21,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #2 -->
+   <Box label="box_36">
+      <lower>[3.241566255630989,2.557041699449254,0.4917387883556258]</lower>          
+      <upper>[3.336906439620136,2.65538945712038,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #2 -->
+   <Box label="box_37">
+      <lower>[3.241566255630989,0.3933910306845007,0.4917387883556258]</lower>          
+      <upper>[3.336906439620136,0.4917387883556258,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #2 -->
+   <Box label="box_38">
+      <lower>[3.241566255630989,0.4917387883556258,2.557041699449254]</lower>          
+      <upper>[3.336906439620136,2.557041699449254,2.65538945712038]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #2 -->
+   <Box label="box_39">
+      <lower>[3.241566255630989,0.4917387883556258,0.3933910306845007]</lower>          
+      <upper>[3.336906439620136,2.557041699449254,0.4917387883556258]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #2 -->
+   <Box label="box_40">
+      <lower>[3.241566255630989,2.65538945712038,0.4917387883556258]</lower>          
+      <upper>[3.336906439620136,2.753737214791505,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #2 -->
+   <Box label="box_41">
+      <lower>[3.241566255630989,0.2950432730133755,0.4917387883556258]</lower>          
+      <upper>[3.336906439620136,0.3933910306845007,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #2 -->
+   <Box label="box_42">
+      <lower>[3.241566255630989,0.4917387883556258,2.65538945712038]</lower>          
+      <upper>[3.336906439620136,2.557041699449254,2.753737214791505]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #2 -->
+   <Box label="box_43">
+      <lower>[3.241566255630989,0.4917387883556258,0.2950432730133755]</lower>          
+      <upper>[3.336906439620136,2.557041699449254,0.3933910306845007]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #2 -->
+   <Box label="box_44">
+      <lower>[3.241566255630989,2.753737214791505,0.590086546026751]</lower>          
+      <upper>[3.336906439620136,2.85208497246263,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #2 -->
+   <Box label="box_45">
+      <lower>[3.241566255630989,0.1966955153422503,0.590086546026751]</lower>          
+      <upper>[3.336906439620136,0.2950432730133755,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #2 -->
+   <Box label="box_46">
+      <lower>[3.241566255630989,0.590086546026751,2.753737214791505]</lower>          
+      <upper>[3.336906439620136,2.458693941778129,2.85208497246263]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #2 -->
+   <Box label="box_47">
+      <lower>[3.241566255630989,0.590086546026751,0.1966955153422503]</lower>          
+      <upper>[3.336906439620136,2.458693941778129,0.2950432730133755]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #4 for cone slice #2 -->
+   <Box label="box_48">
+      <lower>[3.241566255630989,2.85208497246263,0.7867820613690013]</lower>          
+      <upper>[3.336906439620136,2.950432730133755,2.261998426435879]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #4 for cone slice #2 -->
+   <Box label="box_49">
+      <lower>[3.241566255630989,0.09834775767112514,0.7867820613690013]</lower>          
+      <upper>[3.336906439620136,0.1966955153422503,2.261998426435879]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #4 for cone slice #2 -->
+   <Box label="box_50">
+      <lower>[3.241566255630989,0.7867820613690013,2.85208497246263]</lower>          
+      <upper>[3.336906439620136,2.261998426435879,2.950432730133755]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #4 for cone slice #2 -->
+   <Box label="box_51">
+      <lower>[3.241566255630989,0.7867820613690013,0.09834775767112514]</lower>          
+      <upper>[3.336906439620136,2.261998426435879,0.1966955153422503]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #5 for cone slice #2 -->
+   <Box label="box_52">
+      <lower>[3.241566255630989,2.950432730133755,0.9834775767112516]</lower>          
+      <upper>[3.336906439620136,3.04878048780488,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #5 for cone slice #2 -->
+   <Box label="box_53">
+      <lower>[3.241566255630989,0,0.9834775767112516]</lower>          
+      <upper>[3.336906439620136,0.09834775767112514,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #5 for cone slice #2 -->
+   <Box label="box_54">
+      <lower>[3.241566255630989,0.9834775767112516,2.950432730133755]</lower>          
+      <upper>[3.336906439620136,2.065302911093628,3.04878048780488]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #5 for cone slice #2 -->
+   <Box label="box_55">
+      <lower>[3.241566255630989,0.9834775767112516,0]</lower>          
+      <upper>[3.336906439620136,2.065302911093628,0.09834775767112514]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #3 -->
+   <Box label="box_56">
+      <lower>[3.336906439620136,0.4917387883556258,0.4917387883556258]</lower>          
+      <upper>[3.432246623609283,2.557041699449254,2.557041699449254]</upper> 
+      <resolution>[10,210,210]</resolution>  
+      <patches>[1,21,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #3 -->
+   <Box label="box_57">
+      <lower>[3.336906439620136,2.557041699449254,0.4917387883556258]</lower>          
+      <upper>[3.432246623609283,2.65538945712038,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #3 -->
+   <Box label="box_58">
+      <lower>[3.336906439620136,0.3933910306845007,0.4917387883556258]</lower>          
+      <upper>[3.432246623609283,0.4917387883556258,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #3 -->
+   <Box label="box_59">
+      <lower>[3.336906439620136,0.4917387883556258,2.557041699449254]</lower>          
+      <upper>[3.432246623609283,2.557041699449254,2.65538945712038]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #3 -->
+   <Box label="box_60">
+      <lower>[3.336906439620136,0.4917387883556258,0.3933910306845007]</lower>          
+      <upper>[3.432246623609283,2.557041699449254,0.4917387883556258]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #3 -->
+   <Box label="box_61">
+      <lower>[3.336906439620136,2.65538945712038,0.4917387883556258]</lower>          
+      <upper>[3.432246623609283,2.753737214791505,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #3 -->
+   <Box label="box_62">
+      <lower>[3.336906439620136,0.2950432730133755,0.4917387883556258]</lower>          
+      <upper>[3.432246623609283,0.3933910306845007,2.557041699449254]</upper> 
+      <resolution>[10,10,210]</resolution>  
+      <patches>[1,1,21]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #3 -->
+   <Box label="box_63">
+      <lower>[3.336906439620136,0.4917387883556258,2.65538945712038]</lower>          
+      <upper>[3.432246623609283,2.557041699449254,2.753737214791505]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #3 -->
+   <Box label="box_64">
+      <lower>[3.336906439620136,0.4917387883556258,0.2950432730133755]</lower>          
+      <upper>[3.432246623609283,2.557041699449254,0.3933910306845007]</upper> 
+      <resolution>[10,210,10]</resolution>  
+      <patches>[1,21,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #3 -->
+   <Box label="box_65">
+      <lower>[3.336906439620136,2.753737214791505,0.6884343036978762]</lower>          
+      <upper>[3.432246623609283,2.85208497246263,2.360346184107003]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #3 -->
+   <Box label="box_66">
+      <lower>[3.336906439620136,0.1966955153422503,0.6884343036978762]</lower>          
+      <upper>[3.432246623609283,0.2950432730133755,2.360346184107003]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #3 -->
+   <Box label="box_67">
+      <lower>[3.336906439620136,0.6884343036978762,2.753737214791505]</lower>          
+      <upper>[3.432246623609283,2.360346184107003,2.85208497246263]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #3 -->
+   <Box label="box_68">
+      <lower>[3.336906439620136,0.6884343036978762,0.1966955153422503]</lower>          
+      <upper>[3.432246623609283,2.360346184107003,0.2950432730133755]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #4 for cone slice #3 -->
+   <Box label="box_69">
+      <lower>[3.336906439620136,2.85208497246263,0.9834775767112516]</lower>          
+      <upper>[3.432246623609283,2.950432730133755,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #4 for cone slice #3 -->
+   <Box label="box_70">
+      <lower>[3.336906439620136,0.09834775767112514,0.9834775767112516]</lower>          
+      <upper>[3.432246623609283,0.1966955153422503,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #4 for cone slice #3 -->
+   <Box label="box_71">
+      <lower>[3.336906439620136,0.9834775767112516,2.85208497246263]</lower>          
+      <upper>[3.432246623609283,2.065302911093628,2.950432730133755]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #4 for cone slice #3 -->
+   <Box label="box_72">
+      <lower>[3.336906439620136,0.9834775767112516,0.09834775767112514]</lower>          
+      <upper>[3.432246623609283,2.065302911093628,0.1966955153422503]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #4 -->
+   <Box label="box_73">
+      <lower>[3.432246623609283,0.590086546026751,0.590086546026751]</lower>          
+      <upper>[3.52758680759843,2.458693941778129,2.458693941778129]</upper> 
+      <resolution>[10,190,190]</resolution>  
+      <patches>[1,19,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #4 -->
+   <Box label="box_74">
+      <lower>[3.432246623609283,2.458693941778129,0.590086546026751]</lower>          
+      <upper>[3.52758680759843,2.557041699449254,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #4 -->
+   <Box label="box_75">
+      <lower>[3.432246623609283,0.4917387883556259,0.590086546026751]</lower>          
+      <upper>[3.52758680759843,0.590086546026751,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #4 -->
+   <Box label="box_76">
+      <lower>[3.432246623609283,0.590086546026751,2.458693941778129]</lower>          
+      <upper>[3.52758680759843,2.458693941778129,2.557041699449254]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #4 -->
+   <Box label="box_77">
+      <lower>[3.432246623609283,0.590086546026751,0.4917387883556259]</lower>          
+      <upper>[3.52758680759843,2.458693941778129,0.590086546026751]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #4 -->
+   <Box label="box_78">
+      <lower>[3.432246623609283,2.557041699449254,0.590086546026751]</lower>          
+      <upper>[3.52758680759843,2.655389457120379,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #4 -->
+   <Box label="box_79">
+      <lower>[3.432246623609283,0.3933910306845007,0.590086546026751]</lower>          
+      <upper>[3.52758680759843,0.4917387883556259,2.458693941778129]</upper> 
+      <resolution>[10,10,190]</resolution>  
+      <patches>[1,1,19]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #4 -->
+   <Box label="box_80">
+      <lower>[3.432246623609283,0.590086546026751,2.557041699449254]</lower>          
+      <upper>[3.52758680759843,2.458693941778129,2.655389457120379]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #4 -->
+   <Box label="box_81">
+      <lower>[3.432246623609283,0.590086546026751,0.3933910306845007]</lower>          
+      <upper>[3.52758680759843,2.458693941778129,0.4917387883556259]</upper> 
+      <resolution>[10,190,10]</resolution>  
+      <patches>[1,19,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #4 -->
+   <Box label="box_82">
+      <lower>[3.432246623609283,2.655389457120379,0.6884343036978762]</lower>          
+      <upper>[3.52758680759843,2.753737214791505,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #4 -->
+   <Box label="box_83">
+      <lower>[3.432246623609283,0.2950432730133755,0.6884343036978762]</lower>          
+      <upper>[3.52758680759843,0.3933910306845007,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #4 -->
+   <Box label="box_84">
+      <lower>[3.432246623609283,0.6884343036978762,2.655389457120379]</lower>          
+      <upper>[3.52758680759843,2.360346184107004,2.753737214791505]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #4 -->
+   <Box label="box_85">
+      <lower>[3.432246623609283,0.6884343036978762,0.2950432730133755]</lower>          
+      <upper>[3.52758680759843,2.360346184107004,0.3933910306845007]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #5 -->
+   <Box label="box_86">
+      <lower>[3.52758680759843,0.6884343036978762,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,2.360346184107004]</upper> 
+      <resolution>[10,170,170]</resolution>  
+      <patches>[1,17,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #5 -->
+   <Box label="box_87">
+      <lower>[3.52758680759843,2.360346184107004,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,2.458693941778129,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #5 -->
+   <Box label="box_88">
+      <lower>[3.52758680759843,0.590086546026751,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,0.6884343036978762,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #5 -->
+   <Box label="box_89">
+      <lower>[3.52758680759843,0.6884343036978762,2.360346184107004]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,2.458693941778129]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #5 -->
+   <Box label="box_90">
+      <lower>[3.52758680759843,0.6884343036978762,0.590086546026751]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,0.6884343036978762]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #5 -->
+   <Box label="box_91">
+      <lower>[3.52758680759843,2.458693941778129,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,2.557041699449254,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #5 -->
+   <Box label="box_92">
+      <lower>[3.52758680759843,0.4917387883556258,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,0.590086546026751,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #5 -->
+   <Box label="box_93">
+      <lower>[3.52758680759843,0.6884343036978762,2.458693941778129]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,2.557041699449254]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #5 -->
+   <Box label="box_94">
+      <lower>[3.52758680759843,0.6884343036978762,0.4917387883556258]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,0.590086546026751]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #5 -->
+   <Box label="box_95">
+      <lower>[3.52758680759843,2.557041699449254,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,2.65538945712038,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #5 -->
+   <Box label="box_96">
+      <lower>[3.52758680759843,0.3933910306845007,0.6884343036978762]</lower>          
+      <upper>[3.622926991587576,0.4917387883556258,2.360346184107004]</upper> 
+      <resolution>[10,10,170]</resolution>  
+      <patches>[1,1,17]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #5 -->
+   <Box label="box_97">
+      <lower>[3.52758680759843,0.6884343036978762,2.557041699449254]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,2.65538945712038]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #5 -->
+   <Box label="box_98">
+      <lower>[3.52758680759843,0.6884343036978762,0.3933910306845007]</lower>          
+      <upper>[3.622926991587576,2.360346184107004,0.4917387883556258]</upper> 
+      <resolution>[10,170,10]</resolution>  
+      <patches>[1,17,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #6 -->
+   <Box label="box_99">
+      <lower>[3.622926991587576,0.7867820613690013,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,2.261998426435879,2.261998426435879]</upper> 
+      <resolution>[10,150,150]</resolution>  
+      <patches>[1,15,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #6 -->
+   <Box label="box_100">
+      <lower>[3.622926991587576,2.261998426435879,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,2.360346184107004,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #6 -->
+   <Box label="box_101">
+      <lower>[3.622926991587576,0.6884343036978762,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,0.7867820613690013,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #6 -->
+   <Box label="box_102">
+      <lower>[3.622926991587576,0.7867820613690013,2.261998426435879]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,2.360346184107004]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #6 -->
+   <Box label="box_103">
+      <lower>[3.622926991587576,0.7867820613690013,0.6884343036978762]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,0.7867820613690013]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #6 -->
+   <Box label="box_104">
+      <lower>[3.622926991587576,2.360346184107004,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,2.458693941778129,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #6 -->
+   <Box label="box_105">
+      <lower>[3.622926991587576,0.590086546026751,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,0.6884343036978762,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #6 -->
+   <Box label="box_106">
+      <lower>[3.622926991587576,0.7867820613690013,2.360346184107004]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,2.458693941778129]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #6 -->
+   <Box label="box_107">
+      <lower>[3.622926991587576,0.7867820613690013,0.590086546026751]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,0.6884343036978762]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #6 -->
+   <Box label="box_108">
+      <lower>[3.622926991587576,2.458693941778129,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,2.557041699449254,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #6 -->
+   <Box label="box_109">
+      <lower>[3.622926991587576,0.4917387883556258,0.7867820613690013]</lower>          
+      <upper>[3.718267175576723,0.590086546026751,2.261998426435878]</upper> 
+      <resolution>[10,10,150]</resolution>  
+      <patches>[1,1,15]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #6 -->
+   <Box label="box_110">
+      <lower>[3.622926991587576,0.7867820613690013,2.458693941778129]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,2.557041699449254]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #6 -->
+   <Box label="box_111">
+      <lower>[3.622926991587576,0.7867820613690013,0.4917387883556258]</lower>          
+      <upper>[3.718267175576723,2.261998426435878,0.590086546026751]</upper> 
+      <resolution>[10,150,10]</resolution>  
+      <patches>[1,15,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #7 -->
+   <Box label="box_112">
+      <lower>[3.718267175576723,0.8851298190401264,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,2.163650668764753]</upper> 
+      <resolution>[10,130,130]</resolution>  
+      <patches>[1,13,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #7 -->
+   <Box label="box_113">
+      <lower>[3.718267175576723,2.163650668764753,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,2.261998426435879,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #7 -->
+   <Box label="box_114">
+      <lower>[3.718267175576723,0.7867820613690013,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,0.8851298190401264,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #7 -->
+   <Box label="box_115">
+      <lower>[3.718267175576723,0.8851298190401264,2.163650668764753]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,2.261998426435879]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #7 -->
+   <Box label="box_116">
+      <lower>[3.718267175576723,0.8851298190401264,0.7867820613690013]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,0.8851298190401264]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #7 -->
+   <Box label="box_117">
+      <lower>[3.718267175576723,2.261998426435879,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,2.360346184107004,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #7 -->
+   <Box label="box_118">
+      <lower>[3.718267175576723,0.6884343036978762,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,0.7867820613690013,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #7 -->
+   <Box label="box_119">
+      <lower>[3.718267175576723,0.8851298190401264,2.261998426435879]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,2.360346184107004]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #7 -->
+   <Box label="box_120">
+      <lower>[3.718267175576723,0.8851298190401264,0.6884343036978762]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,0.7867820613690013]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #7 -->
+   <Box label="box_121">
+      <lower>[3.718267175576723,2.360346184107004,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,2.458693941778129,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #7 -->
+   <Box label="box_122">
+      <lower>[3.718267175576723,0.5900865460267509,0.8851298190401264]</lower>          
+      <upper>[3.81360735956587,0.6884343036978762,2.163650668764753]</upper> 
+      <resolution>[10,10,130]</resolution>  
+      <patches>[1,1,13]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #7 -->
+   <Box label="box_123">
+      <lower>[3.718267175576723,0.8851298190401264,2.360346184107004]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,2.458693941778129]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #7 -->
+   <Box label="box_124">
+      <lower>[3.718267175576723,0.8851298190401264,0.5900865460267509]</lower>          
+      <upper>[3.81360735956587,2.163650668764753,0.6884343036978762]</upper> 
+      <resolution>[10,130,10]</resolution>  
+      <patches>[1,13,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #8 -->
+   <Box label="box_125">
+      <lower>[3.81360735956587,0.9834775767112516,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,2.065302911093628]</upper> 
+      <resolution>[10,110,110]</resolution>  
+      <patches>[1,11,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #8 -->
+   <Box label="box_126">
+      <lower>[3.81360735956587,2.065302911093628,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,2.163650668764753,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #8 -->
+   <Box label="box_127">
+      <lower>[3.81360735956587,0.8851298190401264,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,0.9834775767112516,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #8 -->
+   <Box label="box_128">
+      <lower>[3.81360735956587,0.9834775767112516,2.065302911093628]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,2.163650668764753]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #8 -->
+   <Box label="box_129">
+      <lower>[3.81360735956587,0.9834775767112516,0.8851298190401264]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,0.9834775767112516]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #8 -->
+   <Box label="box_130">
+      <lower>[3.81360735956587,2.163650668764753,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,2.261998426435878,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #8 -->
+   <Box label="box_131">
+      <lower>[3.81360735956587,0.7867820613690013,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,0.8851298190401264,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #8 -->
+   <Box label="box_132">
+      <lower>[3.81360735956587,0.9834775767112516,2.163650668764753]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,2.261998426435878]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #8 -->
+   <Box label="box_133">
+      <lower>[3.81360735956587,0.9834775767112516,0.7867820613690013]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,0.8851298190401264]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #3 for cone slice #8 -->
+   <Box label="box_134">
+      <lower>[3.81360735956587,2.261998426435878,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,2.360346184107004,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #3 for cone slice #8 -->
+   <Box label="box_135">
+      <lower>[3.81360735956587,0.6884343036978761,0.9834775767112516]</lower>          
+      <upper>[3.908947543555017,0.7867820613690013,2.065302911093628]</upper> 
+      <resolution>[10,10,110]</resolution>  
+      <patches>[1,1,11]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #3 for cone slice #8 -->
+   <Box label="box_136">
+      <lower>[3.81360735956587,0.9834775767112516,2.261998426435878]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,2.360346184107004]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #3 for cone slice #8 -->
+   <Box label="box_137">
+      <lower>[3.81360735956587,0.9834775767112516,0.6884343036978761]</lower>          
+      <upper>[3.908947543555017,2.065302911093628,0.7867820613690013]</upper> 
+      <resolution>[10,110,10]</resolution>  
+      <patches>[1,11,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #9 -->
+   <Box label="box_138">
+      <lower>[3.908947543555017,1.081825334382377,1.081825334382377]</lower>          
+      <upper>[4.004287727544163,1.966955153422503,1.966955153422503]</upper> 
+      <resolution>[10,90,90]</resolution>  
+      <patches>[1,9,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #9 -->
+   <Box label="box_139">
+      <lower>[3.908947543555017,1.966955153422503,1.081825334382377]</lower>          
+      <upper>[4.004287727544163,2.065302911093629,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #9 -->
+   <Box label="box_140">
+      <lower>[3.908947543555017,0.9834775767112516,1.081825334382377]</lower>          
+      <upper>[4.004287727544163,1.081825334382377,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #9 -->
+   <Box label="box_141">
+      <lower>[3.908947543555017,1.081825334382377,1.966955153422503]</lower>          
+      <upper>[4.004287727544163,1.966955153422503,2.065302911093629]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #9 -->
+   <Box label="box_142">
+      <lower>[3.908947543555017,1.081825334382377,0.9834775767112516]</lower>          
+      <upper>[4.004287727544163,1.966955153422503,1.081825334382377]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #2 for cone slice #9 -->
+   <Box label="box_143">
+      <lower>[3.908947543555017,2.065302911093629,1.081825334382377]</lower>          
+      <upper>[4.004287727544163,2.163650668764753,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #2 for cone slice #9 -->
+   <Box label="box_144">
+      <lower>[3.908947543555017,0.8851298190401264,1.081825334382377]</lower>          
+      <upper>[4.004287727544163,0.9834775767112516,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #2 for cone slice #9 -->
+   <Box label="box_145">
+      <lower>[3.908947543555017,1.081825334382377,2.065302911093629]</lower>          
+      <upper>[4.004287727544163,1.966955153422503,2.163650668764753]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #2 for cone slice #9 -->
+   <Box label="box_146">
+      <lower>[3.908947543555017,1.081825334382377,0.8851298190401264]</lower>          
+      <upper>[4.004287727544163,1.966955153422503,0.9834775767112516]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- main box for cone slice #10 -->
+   <Box label="box_147">
+      <lower>[4.004287727544163,1.081825334382377,1.081825334382377]</lower>          
+      <upper>[4.09962791153331,1.966955153422503,1.966955153422503]</upper> 
+      <resolution>[10,90,90]</resolution>  
+      <patches>[1,9,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #10 -->
+   <Box label="box_148">
+      <lower>[4.004287727544163,1.966955153422503,1.081825334382377]</lower>          
+      <upper>[4.09962791153331,2.065302911093629,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #10 -->
+   <Box label="box_149">
+      <lower>[4.004287727544163,0.9834775767112516,1.081825334382377]</lower>          
+      <upper>[4.09962791153331,1.081825334382377,1.966955153422503]</upper> 
+      <resolution>[10,10,90]</resolution>  
+      <patches>[1,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #10 -->
+   <Box label="box_150">
+      <lower>[4.004287727544163,1.081825334382377,1.966955153422503]</lower>          
+      <upper>[4.09962791153331,1.966955153422503,2.065302911093629]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #10 -->
+   <Box label="box_151">
+      <lower>[4.004287727544163,1.081825334382377,0.9834775767112516]</lower>          
+      <upper>[4.09962791153331,1.966955153422503,1.081825334382377]</upper> 
+      <resolution>[10,90,10]</resolution>  
+      <patches>[1,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>
+
+
+
+
+<!-- main box for cone slice #10 -->
+   <Box label="box_147">
+      <lower>[4.09962791153331,1.081825334382377,1.081825334382377]</lower>          
+      <upper>[4.29030827951160,1.966955153422503,1.966955153422503]</upper> 
+      <resolution>[20,90,90]</resolution>  
+      <patches>[2,9,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y+direction  layer #1 for cone slice #10 -->
+   <Box label="box_148">
+      <lower>[4.09962791153331,1.966955153422503,1.081825334382377]</lower>          
+      <upper>[4.29030827951160,2.065302911093629,1.966955153422503]</upper> 
+      <resolution>[20,10,90]</resolution>  
+      <patches>[2,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- y-direction  layer #1 for cone slice #10 -->
+   <Box label="box_149">
+      <lower>[4.09962791153331,0.9834775767112516,1.081825334382377]</lower>          
+      <upper>[4.29030827951160,1.081825334382377,1.966955153422503]</upper> 
+      <resolution>[20,10,90]</resolution>  
+      <patches>[2,1,9]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z+direction  layer #1 for cone slice #10 -->
+   <Box label="box_150">
+      <lower>[4.09962791153331,1.081825334382377,1.966955153422503]</lower>          
+      <upper>[4.29030827951160,1.966955153422503,2.065302911093629]</upper> 
+      <resolution>[20,90,10]</resolution>  
+      <patches>[2,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>                                  
+<!-- z-direction  layer #1 for cone slice #10 -->
+   <Box label="box_151">
+      <lower>[4.09962791153331,1.081825334382377,0.9834775767112516]</lower>          
+      <upper>[4.29030827951160,1.966955153422503,1.081825334382377]</upper> 
+      <resolution>[20,90,10]</resolution>  
+      <patches>[2,9,1]</patches>           
+      <extraCells>[1,1,1]</extraCells>        
+   </Box>
+
+</Level>
+</Uintah_Include>

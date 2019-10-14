@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Copper -->
+<Uintah_Include>
+    <include href="MaterialData/Cu_BU/MaterialConstOFHCCopper.xml"/>
+    <constitutive_model type="elastic_plastic">
+      <include href="MaterialData/Cu_BU/IsotropicElasticOFHCCopper.xml"/>
+      <include href="MaterialData/VonMisesYield.xml"/>
+      <include href="MaterialData/DruckerStabilityCheck.xml"/>
+      <include href="MaterialData/Cu_BU/JohnsonCookPlasticOFHCCopper.xml"/>
+      <include href="MaterialData/Cu_BU/MieGruneisenEOSAnnCopper.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
+      <initial_material_temperature>  294.0 </initial_material_temperature>
+    </constitutive_model>
+    
+    <include href="MaterialData/Cu_BU/JohnsonCookDamageOFHCCopper.xml"/>
+</Uintah_Include>

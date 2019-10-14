@@ -1,0 +1,46 @@
+#! /bin/bash
+
+THELIB=ExprLib
+
+source ../HelperBuildScripts/setupEnv.sh
+
+rm -rf CMakeCache.txt CMakeFiles *.cmake
+rm -rf ${INSTALL_HERE}/*
+
+cmake_cmd=\
+"
+  cmake                                             
+    -DENABLE_TESTS=OFF
+    -DBUILD_GUI=OFF
+
+    -DSpatialOps_DIR=$INSTALL_BASE/$COMP/SpatialOps/share
+
+    -DENABLE_UINTAH=ON
+
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}
+    -DCMAKE_C_COMPILER=$CC
+    -DCMAKE_CXX_COMPILER=$CXX
+    -DCMAKE_CXX_FLAGS=\"-fPIC\"
+    ../ExprLib
+"
+
+echo ""
+echo "Running CMAKE command:"
+echo $cmake_cmd
+echo ""
+
+eval $cmake_cmd
+
+if test $? == 0; then
+  echo ""
+  echo "Running Make..."
+  echo ""
+  make clean
+  make -j4
+  make install
+
+  echo ""
+  echo "ExprLib: Updating installation permissions for ${INSTALL_HERE}..."
+  chmod -R go+rX ${INSTALL_HERE}/..
+fi
+

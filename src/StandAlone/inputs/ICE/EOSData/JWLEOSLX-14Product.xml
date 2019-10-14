@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWL">
+    <!-- PBX LX-14 Product Parameters
+         From: 
+         Tarver, C.M. Tao, W.C. Lee, C.G. Sideways Plate Push Test for Detonating Solid Explosives.
+         Propellants, Explosives, Pyrotechnics, 21, 1996, pp. 238-246.
+     -->
+     <A> 1668.9e9  </A>
+     <B> 59.69e9   </B>
+     <Cv> 1e6      </Cv>
+     <R1> 5.9      </R1>
+     <R2> 2.1      </R2>
+     <om> 0.45     </om>
+     <rho0> 1835   </rho0>
+  </EOS>
+</Uintah_Include>

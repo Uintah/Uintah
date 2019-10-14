@@ -1,0 +1,40 @@
+This directory contains several examples of simulations of direct ink write
+pads, along with some additional files to help set up those simulations,
+and others to look at the data.
+
+1.  makeDIWPad.cc is a small C++ code built for constructing CSG representations
+of DIW pads.  Compile and run instructions are given inside the source file.
+It is compile time configurable to generate full or quarter symmetric pads,
+and to prescribe the thread diameter, spacing, overlap, etc.  It generates
+outputs with some of the input information built into the file name.
+
+2.  Several examples of output from the makeDIWPad.cc code are given, such as
+DIWPad.NL10.TPL20.xml.  As the file name implies, that is 10 layers, 20 threads
+per layer.  Note that makeDIWPad includes at the top of the xml files that it
+generates, a comment section to indicate to the user what inputs were used
+in making that file.
+
+3. There are several corresponding examples of Uintah input files, such as
+dwInclude20x20.ups, these point to the xml files that contain the geometry.
+
+4.  These files use a prescribed piston displacement.  The piston velocity 
+prescription used in recent DIW pad simulations is pistonVelDW5_1700.txt.  This
+file is pointed from within the ups files.
+
+5.  To view the types of diagnostics that are available in laboratory 
+experiments, one needs to copy "process.csh" into a resultant Uintah Data
+Archive directory (uda).  Note that one might need to change the file name
+given in the first line of that file.  That file name, just a long number,
+refers to a particle that is simply present to track the displacement of
+the piston.  To use, simply do:
+
+> ./process.csh
+
+from within the uda, and this will generate a file called time_disp_force.dat.
+
+6.  One can use gnuplot to plot a force displacement curve, by simply running:
+
+> gnuplot inplotDIWPad
+
+from within the uda as well (after copying the inplotDIWPad file inside of the 
+uda).

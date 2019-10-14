@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <SpecificHeatModel type="Polynomial">
+    <!-- HMX Product Specific Heat Model -->
+    <Tmin>      250  </Tmin>  <!-- K -->
+    <MaxOrder>    7  </MaxOrder>
+    <coefficient> [-8.330700e14, 1.811170e14, -1.426913e13, 5.305770e11, -9.958630e9, 9.237480e7, -3.85805e5, 1476.8] </coefficient>
+  </SpecificHeatModel>
+</Uintah_Include>
+

@@ -1,0 +1,239 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Fiber Disk</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>24.6e3</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.0e-8</delt_min>
+       <delt_max>1.0</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>FiberTwelve.uda</filebase>
+       <outputInterval>5.0e2</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.displacement"/>
+       <save label = "p.stress"/>
+       <save label = "p.scalefactor"/>
+       <save label = "BndyForce_xminus"/>
+       <save label = "cz.separation"/>
+       <save label = "cz.force"/>
+<!--
+       <save label = "cz.failed"/>
+       <save label = "g.mass"/>
+       <save label = "g.velocity"/>
+       <save label = "p.color"/>
+       <save label = "g.acceleration"/>
+       <save label = "g.stressFS"/>
+       <save label = "cz.area"/>
+       <save label = "cz.norm"/>
+       <save label = "cz.disptop"/>
+       <save label = "cz.dispbottom"/>
+       <save label = "cz.CZID"/>
+-->
+<!--
+       <save label = "p.volume"/>
+       <save label = "p.externalforce"/>
+       <save label = "KineticEnergy"/>
+-->
+       <checkpoint cycle = "5" interval = "5.0e2"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>          explicit  </time_integrator>
+       <interpolator>             cpdi      </interpolator>
+       <cpdi_lcrit>               0.9       </cpdi_lcrit>
+       <withColor>                true      </withColor>
+       <use_load_curves>          false     </use_load_curves>
+       <DoExplicitHeatConduction> false     </DoExplicitHeatConduction>
+       <DoPressureStabilization>  true      </DoPressureStabilization>
+       <XPIC2>                    true      </XPIC2>
+       <artificial_damping_coeff> 1.0e-5    </artificial_damping_coeff>
+       <boundary_traction_faces>  [xminus]  </boundary_traction_faces>
+       <use_cohesive_zones>       true      </use_cohesive_zones>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="mat0">
+              <density>2800.0e3</density>
+              <constitutive_model type = "comp_neo_hook">
+                <bulk_modulus>       1.0e4 </bulk_modulus>
+                <shear_modulus>      5.0e3 </shear_modulus>
+              </constitutive_model>
+              <thermal_conductivity>1.0e-7</thermal_conductivity>
+              <specific_heat>5.0e-8</specific_heat>
+              <geom_object>
+                <box label = "rigid">
+                  <min>[ 1.000, 0.0,-0.005] </min>
+                  <max>[ 1.004, 0.1, 0.005] </max>
+                </box>
+                <res>[2,2,1]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>12</temperature>
+                <color>      0       </color>
+              </geom_object>
+              <geom_object>
+                <box label = "position_monitor">
+                  <min>[ 1.004,  0.05,  -0.005] </min>
+                  <max>[ 1.006,  0.052, 0.005] </max>
+                </box>
+                <res>[1,1,1]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>12</temperature>
+                <color>      0.2       </color>
+              </geom_object>
+           </material>
+
+           <material name="mat1">
+<!--
+              <density>965.0e3</density>
+-->
+<!-- C_K = sqrt(K/rho) = sqrt(1/2330.)=0.02 -->
+              <density>2330.0e3</density>
+              <constitutive_model type="visco_trans_iso_hyper">
+                 <bulk_modulus>1.e3</bulk_modulus>
+                 <c1>21.0</c1>
+                 <c2>0.14</c2>
+                 <c3>0.0</c3>
+                 <c4>0.0</c4>
+                 <c5>0.0</c5>
+                 <fiber_stretch>1000.0</fiber_stretch>
+                 <direction_of_symm>[1.0,0.0,0.0]</direction_of_symm>
+                 <failure_option> 0.0 </failure_option>
+                 <max_fiber_strain> 1.e9 </max_fiber_strain>
+                 <max_matrix_strain> 1.e9 </max_matrix_strain>
+                 <y1>5.e-0</y1>
+                 <y2>5.e-2</y2>
+                 <y3>5.e-2</y3>
+                 <y4>5.e-2</y4>
+                 <y5>5.e-2</y5>
+                 <y6>5.e-2</y6>
+                 <t1>0.0</t1>
+                 <t2>0.0</t2>
+                 <t3>0.0</t3>
+                 <t4>0.0</t4>
+                 <t5>0.0</t5>
+                 <t6>0.0</t6>
+              </constitutive_model>
+              <thermal_conductivity>1.0e-7</thermal_conductivity>
+              <specific_heat>5.0e-8</specific_heat>
+              <geom_object>
+                <difference>
+                 <box label = "fiber">
+                   <min>[ 0., 0.0, -.005] </min>
+                   <max>[ 1., 0.1, 0.005] </max>
+                 </box>
+                 <include href="disks_127_space.xml"/>
+                </difference>
+                <res>[2,2,1]</res>
+                <velocity>[0.0,0.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             1               </color>
+              </geom_object>
+           </material>
+
+           <material name="disk_matl">
+<!-- C_K = sqrt(K/rho) = sqrt(10./2330.)=0.066 -->
+              <density>2330.0e3</density>
+              <constitutive_model type = "comp_neo_hook">
+                <bulk_modulus>       1.0e4 </bulk_modulus>
+                <shear_modulus>      5.0e3 </shear_modulus>
+              </constitutive_model>
+              <thermal_conductivity>1.0e-7</thermal_conductivity>
+              <specific_heat>5.0e-8</specific_heat>
+              <geom_object>
+                <union label = "disks"/>
+                <res>[2,2,1]</res>
+                <velocity>[0.0,0.0,0.0]</velocity>
+                <temperature>12</temperature>
+                <color>      2       </color>
+              </geom_object>
+           </material>
+
+           <cohesive_zone>
+              <delta_n> 0.001  </delta_n>
+              <delta_t> 0.001  </delta_t>
+              <sig_max> 2.4e2 </sig_max>
+              <tau_max> 2.4e2 </tau_max>
+              <delta_n_fail> 2.0e5  </delta_n_fail>
+              <delta_t_fail> 2.0e5  </delta_t_fail>
+              <cz_filename>CZs_127_space_t001.txt</cz_filename>
+           </cohesive_zone>
+<!--
+-->
+
+           <contact>
+             <type>specified</type>
+             <filename>vel_prof_BU_slow.txt</filename>
+             <master_material>0</master_material>
+             <direction>[1,0,0]</direction>
+           </contact>
+           <contact>
+             <type>friction</type>
+             <materials>[1,2]</materials>
+             <mu>0</mu>
+             <separation_factor>0.7</separation_factor>
+             <OneOrTwoStep>2</OneOrTwoStep>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,-.004,-.0005]</lower>
+              <upper>[1.2,0.104,0.0005]</upper>
+              <resolution> [600,54,1]  </resolution>
+              <patches>    [24,1,1]    </patches>
+              <extraCells> [1,1,1]     </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    <DataAnalysis>
+       <Module name="particleExtract">
+        <material>mat0</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100000  </timeStop>
+        <colorThreshold>    0.1  </colorThreshold>
+        <Variables>
+          <analyze label="p.displacement"/>
+        </Variables>
+      </Module>
+    </DataAnalysis>
+</Uintah_specification>

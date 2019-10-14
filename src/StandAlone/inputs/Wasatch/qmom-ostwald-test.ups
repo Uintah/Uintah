@@ -1,0 +1,132 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test QMOM Implementation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>  
+
+  <Wasatch>  
+
+    <Density method="CONSTANT">
+      <Constant value="1" name="rho"/>
+    </Density>
+
+    <MomentInitialization>
+      <PopulationName>CACO3</PopulationName>
+      <Values>
+        2.0,
+        10.0,
+        52.0,
+        280.0,
+        1556.0,
+        8900.00,
+        52280.0,
+        314800.0
+      </Values>
+    </MomentInitialization>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="S"/>
+      <Constant>5</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="S"/>
+      <Constant>5</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="ceq"/>
+      <Constant> 1.0 </Constant>
+    </BasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="GrowthCoefficient"/>
+      <PrecipitationBulkDiffusionCoefficient Diff_Coef="1" Molec_Vol="1">
+        <Supersaturation>
+          <NameTag name="S"/>
+        </Supersaturation>
+        <EquilibriumConcentration>
+          <NameTag name="ceq"/>
+        </EquilibriumConcentration>
+        <SBar>
+          <NameTag name="SBar_CACO3"/>
+        </SBar>
+       </PrecipitationBulkDiffusionCoefficient>
+    </PrecipitationBasicExpression>        
+
+    <BasicExpression type="SVOL">
+      <TaskList> initialization </TaskList>
+      <Constant> 0.0 </Constant>
+      <NameTag name="SBar_CACO3"/>
+    </BasicExpression>
+
+    <MomentTransportEquation>
+      <PopulationName>CACO3</PopulationName>
+      <NumberOfEnvironments>3</NumberOfEnvironments>        
+      <GrowthExpression>
+        <GrowthModel> BULK_DIFFUSION </GrowthModel>
+        <GrowthCoefficientExpression>
+          <NameTag name="GrowthCoefficient"/>
+        </GrowthCoefficientExpression>  
+      </GrowthExpression>
+      
+      <OstwaldRipening>
+        <MolecularVolume> 1.0 </MolecularVolume>
+        <SurfaceEnergy> 1.0 </SurfaceEnergy>
+        <Temperature> 1.0 </Temperature>
+        <ConversionFactor> 1.0 </ConversionFactor>
+        <RCutoff> 0.001</RCutoff>
+        <TolmanLength> 1.0 </TolmanLength>
+      </OstwaldRipening>
+
+    </MomentTransportEquation>
+    
+  </Wasatch>
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>qmom-ostwald-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="m_CACO3_0"/>
+    <save label="m_CACO3_1"/>
+    <save label="m_CACO3_2"/>    
+    <save label="m_CACO3_3"/>    
+    <save label="w_CACO3_0"/>    
+    <save label="w_CACO3_1"/>    
+    <save label="a_CACO3_0"/>    
+    <save label="a_CACO3_1"/>    
+    <save label="m_CACO3_1_rhs"/>   
+    <save label="SBar_CACO3"/>     
+    <save label="GrowthCoefficient"/>
+    <save label="S"/>   
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

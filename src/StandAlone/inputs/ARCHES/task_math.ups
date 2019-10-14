@@ -1,0 +1,250 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches "2D" Periodic Box Almgren MMS </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <timestep_multiplier>0.1</timestep_multiplier>
+    <max_Timesteps>3</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>task_math.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="density"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="addResult"/>
+    <save label="subResult"/>
+    <save label="divResult"/>
+    <save label="multResult"/>
+    <save label="powResult"/>
+    <save label="addResultC"/>
+    <save label="subResultC"/>
+    <save label="divResultC1"/>
+    <save label="divResultC2"/>
+    <save label="multResultC"/>
+    <save label="powResultC"/>
+    <save label="expResult"/>
+    <checkpoint cycle="2" interval="0.0001"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,3.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <BoundaryConditions/>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <TransportEqns>
+        <Eqn label="one" type="CCscalar">
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <conv_scheme>central</conv_scheme>
+          <initialization type="constant">
+            <constant>1.0</constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="two" type="CCscalar">
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <conv_scheme>central</conv_scheme>
+          <initialization type="constant">
+            <constant>2.0</constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="three" type="CCscalar">
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <conv_scheme>central</conv_scheme>
+          <initialization type="constant">
+            <constant>3.0</constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="four" type="CCscalar">
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <conv_scheme>central</conv_scheme>
+          <initialization type="constant">
+            <constant>4.0</constant>
+          </initialization>
+        </Eqn>
+        <Eqn label="five" type="CCscalar">
+          <doDiff>false</doDiff>
+          <doConv>false</doConv>
+          <conv_scheme>central</conv_scheme>
+          <initialization type="constant">
+            <constant>5.0</constant>
+          </initialization>
+        </Eqn>
+      </TransportEqns>
+      <Utilities>
+        <utility type="variable_math" label="my_expression">
+          <grid type="CC"/>
+          <!-- variable to variable operations -->
+          <op label="addOp" type="ADD">
+            <!-- 1+2=3 -->
+            <dep>addResult</dep>
+            <ind1>one</ind1>
+            <ind2>two</ind2>
+            <new_variable/>
+          </op>
+          <op label="subOp" type="SUBTRACT">
+            <!-- 1-2=-1 -->
+            <dep>subResult</dep>
+            <ind1>one</ind1>
+            <ind2>two</ind2>
+            <new_variable/>
+          </op>
+          <op label="multOp" type="MULTIPLY">
+            <!-- 3*-1 = -3 -->
+            <dep>multResult</dep>
+            <ind1>subResult</ind1>
+            <ind2>addResult</ind2>
+            <new_variable/>
+          </op>
+          <op label="divOp" type="DIVIDE">
+            <!-- 1/3 = .33333 -->
+            <dep>divResult</dep>
+            <ind1>one</ind1>
+            <ind2>three</ind2>
+            <new_variable/>
+          </op>
+          <op label="powOp" type="POW">
+            <!-- 2^3 = 8 -->
+            <dep>powResult</dep>
+            <ind1>two</ind1>
+            <ind2>three</ind2>
+            <new_variable/>
+          </op>
+          <!-- variable to constant operations -->
+          <op label="addOpC" type="ADD">
+            <!-- 1+2=3 -->
+            <dep>addResultC</dep>
+            <ind1>one</ind1>
+            <constant>2.0</constant>
+            <new_variable/>
+          </op>
+          <op label="subOpC" type="SUBTRACT">
+            <!-- 1-2=-1 -->
+            <dep>subResultC</dep>
+            <ind1>one</ind1>
+            <constant>2.0</constant>
+            <new_variable/>
+          </op>
+          <op label="multOpC" type="MULTIPLY">
+            <!-- 3*-1 = -3 -->
+            <dep>multResultC</dep>
+            <ind1>subResult</ind1>
+            <constant>3.</constant>
+            <new_variable/>
+          </op>
+          <op label="divOpC1" type="DIVIDE_VARIABLE_CONST">
+            <!-- 1/3 = .33333 -->
+            <dep>divResultC1</dep>
+            <ind1>one</ind1>
+            <constant>3.</constant>
+            <new_variable/>
+          </op>
+          <op label="divOpC2" type="DIVIDE_CONST_VARIABLE">
+            <!-- 3/3 = 1. -->
+            <dep>divResultC2</dep>
+            <ind1>three</ind1>
+            <constant>3.</constant>
+            <new_variable/>
+          </op>
+          <op label="powOpC" type="POW">
+            <!-- 2^3 = 8 -->
+            <dep>powResultC</dep>
+            <ind1>two</ind1>
+            <constant>3.</constant>
+            <new_variable/>
+          </op>
+          <op label="expOp" type="EXP">
+            <!-- e^2 = 7.3890561 -->
+            <dep>expResult</dep>
+            <ind1>two</ind1>
+            <constant>1.0</constant>
+            <!-- constant here is a bit hacky since it doens't actually use it...need to fix -->
+            <new_variable/>
+          </op>
+          <exe_order>
+            <op label="addOp"/>
+            <op label="subOp"/>
+            <op label="multOp"/>
+            <op label="divOp"/>
+            <op label="powOp"/>
+            <op label="addOpC"/>
+            <op label="subOpC"/>
+            <op label="multOpC"/>
+            <op label="divOpC1"/>
+            <op label="divOpC2"/>
+            <op label="powOpC"/>
+            <op label="expOp"/>
+          </exe_order>
+        </utility>
+      </Utilities>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="molecular">
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="constant">
+            <const_u>1.00</const_u>
+            <const_v>11.0</const_v>
+            <const_w>0.10</const_w>
+          </initialization>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

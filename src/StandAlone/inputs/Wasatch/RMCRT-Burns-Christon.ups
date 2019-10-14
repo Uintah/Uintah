@@ -1,0 +1,134 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test TabProps interface for Wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+  
+  <!--__________________________________ -->
+  <calc_frequency>      5          </calc_frequency>
+  <RMCRT>
+    <randomSeed>        false      </randomSeed>
+    <nDivQRays>         3          </nDivQRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <solveBoundaryFlux> false      </solveBoundaryFlux>
+    <CCRays>            false      </CCRays>
+  </RMCRT>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    
+    <RMCRTBench benchmark="BurnsChriston"/>
+
+  </Wasatch>
+
+  <Time>
+    <maxTime>0.02</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>rmcrt-burns-christon.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.01"/>
+    <compression>gzip</compression>
+    <save label="AbsCoef"/>
+    <save label="Temperature"/>    
+    <save label="RadiationSource"/>            
+    <save label="CellType"/>
+    <save label="radiationVolq"/>                
+    <save label="sigmaT4"/>
+  </DataArchiver>
+
+  <Grid>
+  
+      <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="0" label="Temperature" var="Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="0" label="Temperature" var="Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType> 
+      </Face>               
+      <Face side="y+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="0" label="Temperature" var="Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="0" label="Temperature" var="Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+         <lower>      [-0.5,-0.5,-0.5]     </lower>         
+         <upper>      [0.5, 0.5, 0.5]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [2,2,2]     </patches> 
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

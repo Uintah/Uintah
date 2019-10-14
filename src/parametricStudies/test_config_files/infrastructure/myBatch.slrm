@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name = [jobName]
+#SBATCH --time     = [runTime]      # walltime
+#SBATCH --output   = [output]       # stdout and stderr
+#SBATCH --ntasks   = [mpiRanks]     # number of MPI tasks
+# additional information for allocated clusters
+#SBATCH --account  = [acct]         # account
+#SBATCH --partition= [partition]    # partition
+
+#
+# load appropriate modules
+module load mpich/3.2
+

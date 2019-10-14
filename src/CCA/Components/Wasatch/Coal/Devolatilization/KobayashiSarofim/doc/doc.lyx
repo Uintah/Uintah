@@ -1,0 +1,444 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Two-step model describes devolatilization process with two competitive Arrhenius
+ reaction (Arrhenius form)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+m_{\mathrm{v}}\begin{array}{c}
+\nearrow\\
+\searrow
+\end{array}\begin{array}{c}
+\alpha_{1}g_{1}+(1-\alpha_{1})c\\
+\alpha_{2}g_{2}+(1-\alpha_{2})c
+\end{array}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\alpha_{2}$
+\end_inset
+
+ are weights of release light gases in each rate 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "KobyashiOriginal"
+
+\end_inset
+
+, 
+\begin_inset Formula $c$
+\end_inset
+
+ is the produced char in devolatilization process, 
+\begin_inset Formula $g_{1}$
+\end_inset
+
+and 
+\begin_inset Formula $g_{2}$
+\end_inset
+
+ are the released volatiles.
+ In this formulation 
+\begin_inset Formula $g_{1}=g_{2}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The mass evolution of volatile in the coal particle phase is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}=-(r_{1}+r_{2})m_{\mathrm{v}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $m_{\mathrm{v}}$
+\end_inset
+
+ is the volatile mass.
+ Also
+\begin_inset Formula 
+\[
+\beta=\frac{r_{1}}{r_{1}+r_{2}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+g_{1}=g_{2}\in\mathrm{CO,\: H_{2},\, C_{2}H_{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where C
+\begin_inset Formula $_{2}$
+\end_inset
+
+H
+\begin_inset Formula $_{2}$
+\end_inset
+
+ represents tar in this formulation.
+ Two-step model produce light gases (into the gas phase) as well as char
+ that can be explained by following:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}=\left[\beta\alpha_{1}+(1-\beta)\alpha_{2}\right]\frac{\mathrm{d}g}{\mathrm{d}t}+\left[\beta(1-\alpha_{1})+(1-\beta)(1-\alpha_{2})\right]\frac{\mathrm{d}c}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}=\chi\frac{\mathrm{d}g}{\mathrm{d}t}+\Upsilon\frac{\mathrm{d}c}{\mathrm{d}t}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The devoatilization process can be described by following reaction:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathrm{C_{1}H_{\upsilon}O_{o}}\rightarrow\chi\left[a\mathrm{CO}+b\mathrm{H_{2}}+c\mathrm{C_{2}H_{2}}\right]+\Upsilon\mathrm{C_{(s)}}.\label{eq:dev-reaction-form}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+here 
+\begin_inset Formula $\upsilon$
+\end_inset
+
+ and 
+\begin_inset Formula $o$
+\end_inset
+
+ are calculated from coal's ultimate and proximate analysis.
+ There is general agreement on 
+\begin_inset Formula $\mathrm{CO}$
+\end_inset
+
+ and H
+\begin_inset Formula $_{2}$
+\end_inset
+
+ as the products for two-step model, but accounting for tar in the gas phase
+ is less well-established.
+ In this work, 
+\begin_inset Formula $\mathrm{C_{2}H_{2}}$
+\end_inset
+
+ represents tar in the gas phase.
+ Using elemental balance equation stoichiometric coefficients in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dev-reaction-form"
+
+\end_inset
+
+ are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+a=\frac{o}{\chi},\, b=\frac{\upsilon}{2\chi}-c,\, c=\frac{1-\Upsilon-o}{2\chi}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The species yield of of the model are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{CO}}}{\mathrm{d}t}=-a\frac{M_{\mathrm{w,CO}}}{M_{\mathrm{w,v}}}\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{H_{2}}}}{\mathrm{d}t}=-b\frac{M_{\mathrm{w,H_{2}}}}{M_{\mathrm{w,v}}}\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{C_{2}H_{2}}}}{\mathrm{d}t}=-c\frac{M_{\mathrm{w,C_{2}H_{2}}}}{M_{\mathrm{w,v}}}\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}m_{\mathrm{C_{(s)}}}}{\mathrm{d}t}=-\Upsilon\frac{M_{\mathrm{w,C(s)}}}{M_{\mathrm{w,v}}}\frac{\mathrm{d}m_{\mathrm{v}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The elemental coefficient 
+\begin_inset Formula $\upsilon$
+\end_inset
+
+ and 
+\begin_inset Formula $o$
+\end_inset
+
+ are changing through the time
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}\upsilon}{\mathrm{d}t}=-\frac{2}{M_{\mathrm{w,H_{2}}}}\frac{\mathrm{d}m_{\mathrm{H_{2}}}}{\mathrm{d}t}-\frac{2}{M_{\mathrm{w,C_{2}H_{2}}}}\frac{\mathrm{d}m_{\mathrm{C_{2}H_{2}}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}o}{\mathrm{d}t}=-\frac{1}{M_{\mathrm{w,CO}}}\frac{\mathrm{d}m_{\mathrm{CO}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}carbon}{\mathrm{d}t}=-\frac{1}{M_{\mathrm{w,CO}}}\frac{\mathrm{d}m_{\mathrm{CO}}}{\mathrm{d}t}-\frac{1}{M_{\mathrm{w,C_{2}H_{2}}}}\frac{\mathrm{d}m_{\mathrm{C_{2}H_{2}}}}{\mathrm{d}t}-\frac{1}{M_{\mathrm{w,C_{(s)}}}}\frac{\mathrm{d}m_{\mathrm{C_{(s)}}}}{\mathrm{d}t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this formulation, the elemental coefficient of carbon in volatile molecule
+ (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dev-reaction-form"
+
+\end_inset
+
+) is always one therefore the hydrogen and oxygen elemental coefficients
+ should change accordingly:
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}\upsilon^{'}}{\mathrm{d}t}=\left(\frac{\mathrm{d}\upsilon}{\mathrm{d}t}-\upsilon\frac{\mathrm{d}carbon}{\mathrm{d}t}\right)/\left(1-\frac{\mathrm{d}carbon}{\mathrm{d}t}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}o^{'}}{\mathrm{d}t}=\left(\frac{\mathrm{d}o}{\mathrm{d}t}-o\frac{\mathrm{d}carbon}{\mathrm{d}t}\right)/\left(1-\frac{\mathrm{d}carbon}{\mathrm{d}t}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

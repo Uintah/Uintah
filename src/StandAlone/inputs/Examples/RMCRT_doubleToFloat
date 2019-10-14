@@ -1,0 +1,75 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+# RMCRT_doubleToFloat:
+#    This script is transforms the RMCRT:double input files into RMCRT:float
+# Usage:  RMCRT_doubleToFloat  <ups file> < output file>
+#  
+# To find the xml path run the command:
+#
+# xmlstarlet el -v <xmlFile>
+#______________________________________________________________________
+
+if ($#argv != 2 ) then
+  echo ""
+  echo " ERROR"  
+  echo " Usage: $0 <ups file> < output file>"
+  echo ""
+  exit (-1)
+endif
+
+set ups  = $argv[1]
+set out  = $argv[2]
+
+set tmp = (`which xmlstarlet`)
+if ( $status ) then
+  echo ""
+  echo " ERROR: Could not find the xml editing program xmlstarlet.  Make sure that it's installed and in your path"
+  echo ""
+  exit(-1)
+endif
+
+if ( ! -e $ups ) then
+  echo ""
+  echo " ERROR: Could not find the ups file ($ups) to edit."
+  echo ""
+  exit(-1)
+endif
+
+
+#__________________________________
+#   RMCRT type = "double -> float
+set xmlpath = "Uintah_specification/RMCRT/@type"
+set value   = "float"
+xmlstarlet ed --ps --update "$xmlpath" --value "$value"  $ups > .tmp
+
+# bulletproofing:
+set me = `xmlstarlet sel --template --value-of "$xmlpath" .tmp`
+
+if ($me != $value ) then
+  echo ""
+  echo " ERROR there was a problem editing the xml file.  No changes have been made"
+  echo " $me  $value"
+  echo ""
+  exit(-1)  
+endif
+
+#__________________________________
+#  save label="abskg" ->  "abskgRMCRT"
+set xmlpath = 'Uintah_specification/DataArchiver/save[@label="abskg"]/@label'
+set value   = "abskgRMCRT"
+xmlstarlet ed --ps --update "$xmlpath" --value "$value"  .tmp >& $out
+
+# bulletproofing:
+set me = `xmlstarlet sel --template --value-of "$xmlpath" $ups`
+
+if ($me != $value) then
+  echo ""
+  echo " WARNING there was a problem editing the xml file, specifically the label $value was not found." 
+  echo " This may be OK."
+  echo " $me  $value"
+  echo ""
+  exit(-1)  
+endif
+
+/bin/rm -rf .tmp >& /dev/null

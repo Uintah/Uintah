@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - cm            -->
+<!--  temperature - Kelvin        -->
+<Uintah_Include>
+    <union>
+      <box label = "Left Grip">
+        <min> [-5.750, -1.250, -0.100]  </min>
+        <max> [-4.200,  1.250,  0.100]  </max>
+      </box>
+      <difference>
+        <intersection>
+          <cylinder label = "Top left fillet">
+            <bottom>	[-4.200,  1.250, -0.100] </bottom>
+            <top>	    [-4.200,  1.250,  0.100] </top>
+            <radius>	2.50  </radius>
+          </cylinder>
+          <cylinder label = "Bottom left fillet">
+            <bottom>  [-4.200, -1.250, -0.100] </bottom>
+            <top>     [-4.200, -1.250,  0.100] </top>
+            <radius>  2.50  </radius>
+          </cylinder>
+        </intersection>
+        <box label = "Square Off Left Grip">
+          <min> [-10.000, -1.250, -0.100] </min>
+          <max> [ -5.750,  1.250,  0.100] </max>
+        </box>
+      </difference>
+      <difference>
+        <difference>
+          <box label = "Left negative fillet blank">
+            <min> [ -2.565, -1.250, -0.100] </min>
+            <max> [ -1.650,  1.250,  0.100] </max>
+          </box>
+          <cylinder label = "Negative bottom left fillet">
+            <bottom>  [ -1.650, -1.700, -0.100]  </bottom>
+            <top>     [ -1.650, -1.700,  0.100]  </top>
+            <radius>	1.400 </radius>
+          </cylinder>
+        </difference> 
+        <cylinder label = "Negative top left fillet">
+          <bottom>  [ -1.650, 1.700, -0.100] </bottom>
+          <top>     [ -1.650, 1.700,  0.100] </top>
+          <radius>  1.400 </radius>
+        </cylinder>
+      </difference>
+      <box label = "Gauge">
+        <min>	[ -5.750, -0.300, -0.100]  </min>
+        <max>	[  5.750,  0.300,  0.100]  </max>
+      </box>
+      <box label = "Right Grip">
+        <min> [  4.200, -1.250, -0.100]  </min>
+        <max> [  5.750,  1.250,  0.100]  </max>
+      </box>
+      <difference>
+        <intersection>
+          <cylinder label = "Top right fillet">
+            <bottom>  [ 4.200,  1.250, -0.100]  </bottom>
+            <top>	    [ 4.200,  1.250,  0.100]  </top>
+            <radius>  2.500 </radius>
+          </cylinder>
+          <cylinder label = "Bottom right fillet">
+            <bottom>	[ 4.200, -1.250, -0.100]  </bottom>
+            <top>	    [ 4.200, -1.250,  0.100]  </top>
+            <radius>  2.500 </radius>
+          </cylinder>
+        </intersection>
+        <box label = "Square Off Right Grip">
+          <min> [  5.750, -1.250, -0.100] </min>
+          <max> [ 10.000,  1.250,  0.100] </max>
+        </box>
+      </difference>
+      <difference>
+        <difference>
+          <box label = "Right negative fillet blank">
+            <min> [ 1.650, -1.250, -0.100]  </min>
+            <max> [ 2.565,  1.250,  0.100]  </max>
+          </box>
+          <cylinder label = "Negative bottom right fillet">
+            <bottom>  [ 1.650,  -1.700, -0.100] </bottom>
+            <top>	    [ 1.650,  -1.700,  0.100] </top>
+            <radius>  1.400 </radius>
+          </cylinder>
+        </difference>
+        <cylinder label = "Negative top right fillet">
+          <bottom>		[ 1.650,  1.700, -0.100]  </bottom>
+          <top>		    [ 1.650,  1.700,  0.100]  </top>
+          <radius>		1.400	</radius>
+        </cylinder>
+      </difference>
+    </union>
+</Uintah_Include>

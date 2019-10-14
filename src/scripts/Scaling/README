@@ -1,0 +1,79 @@
+
+______________________________________________________________________
+
+To perform a scalability test copy the tarball "copyRenameThisDir.tar.gz" to the machine of interest and 
+untar it.  
+
+- Copy src/scripts/Scaling/extract* to new directory
+
+
+- Edit the files 
+
+ extractScalingData
+ extractSolverScalingData
+ generate.sh
+ runsus.sh
+ 
+ to suit your needs and the machine's batch scheduling system.  
+
+- Make a symbolic link or a copy of sus in the directory.
+
+- Replace the skel.example file and edit or add any fields that you'd like to vary.  See
+  generate.sh:modify_ups()
+
+To test your changes:
+  
+  - edit small/generate.sh and comment out qsub -N $JOB.
+  - run small/generate.sh
+  - examine the input files generated in 
+              small/inputs
+  - if the ups files are correct uncommment that line.
+  
+
+General advice:
+  - Start by running the small/  low node count cases first.
+    After the runs are complete run the script
+       postProcessRuns
+    and examine the scalability.  
+  - Proceed to the larger cases/ higher node counts after you've verifed the "machinery" is working correctly. 
+
+
+______________________________________________________________________
+  
+plotSpiderPlot.tar.gz  Matlab script and supporting scripts used to plot and print results.  Minor editing required.
+
+
+______________________________________________________________________
+
+Below is the directory structure created by copyRenameThisDir.tar.gz and a brief description of the scripts.
+
+Inputs:       Directory filled with ups files that were created by running "generate.sh."
+output:       Directory filled with output from sus.  One file for each node count.
+generate.sh:  Shell script that modifies the skeleton ups file for each node count defined.  It also  
+              submits that batch job to the scheduler.  Editing required.
+
+copyRenameThisDir
+|
+|-- cleanOutFiles                        # Cleans out all files from a scaling study.   BE CAREFUL.
+|-- extractScalingData                   # Extracts scaling data from the sus output file.  Minor editing required
+|-- extractSolverScalingData             #  (optional) Extracts solver scaling data from sus output file.  Minor editing required
+|-- large                                
+|   |-- generate.sh
+|   |-- inputs/
+|   `-- outputs/
+|-- medium
+|   |-- generate.sh
+|   |-- inputs/
+|   `-- outputs/
+|-- small
+|   |-- generate.sh
+|   |-- inputs/
+|   `-- outputs/
+|-- postProcessRuns                      # wrapper script that loops through all directories and runs the scaling scripts
+|-- README
+|-- runsus.sh                            # template batch script.  Editing required to meet users needs
+|-- skel.Example.ups                     # skeleton input file.
+|-- sus -> symbolic link or copy of sus
+`-- ups_includes                         # optional directory containing any included xml files required by the ups file.
+    |-- city_ice.xml
+    |-- city_mpm.xml

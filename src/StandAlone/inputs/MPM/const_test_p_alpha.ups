@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Constitutive Model Tester</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>.1</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>2.e-7</delt_min>
+       <delt_max>2.e-2</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>Const_test_P_alpha.uda</filebase>
+       <outputInterval>.01</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.alpha"/>
+       <save label = "p.mass"/>
+       <save label = "p.temperature"/>
+       <save label = "p.stress"/>
+       <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e9</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>12.e6</G>
+                 <K>32.e6</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "piston">
+                     <min>[0.0,0.0,.01]</min>
+                     <max>[0.01,0.01,.02]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,-3.e-2]</velocity>
+                  <temperature>300</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+              <density>14100.</density>
+                <constitutive_model type="p_alpha">
+                    <Ps>6.e9</Ps>
+                    <Pe>.46e9</Pe>
+                    <rhoS>16281.0</rhoS>
+                    <alpha0>1.1547</alpha0>
+                    <K0>35.2e9</K0>
+                    <Ks>241.25e9</Ks>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "box">
+                     <min>[0.0,0.0,0.0]</min>
+                     <max>[0.01,0.01,0.01]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>300</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>specified</type>
+             <filename>p_alpha.txt</filename>
+             <materials>[0,1]</materials>
+             <stop_time>999999.9 </stop_time>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+           <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "z+">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                   
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[.01,.01,0.03]</upper>
+              <resolution>[1,1,3]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

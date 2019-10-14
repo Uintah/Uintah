@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWLC">
+    <!-- Comp-B Parameters -->
+    <!-- From "Evaluation of Detonation Energy from EXPLO5 Computer Code -->
+    <!-- Results", Muhamed Suceska, PEP, 24, 280-285, 1999. -->
+
+    <!-- Using the 1.014 * the values in Pa gives better results for the -->
+    <!-- CJ pressure in the 1D LightTime.ups problem                     -->
+
+<!-- A-C Values in Mbar * 1e11
+    <A>4.96736e11</A>
+    <B>3.944e9</B>
+    <C>1.288e9</C>
+-->
+<!-- A-C Values in Pa
+    <A>5.02953e11</A>
+    <B>3.996258e9</B>
+    <C>1.305066e9</C>
+-->
+<!-- Pa *1.014 -->
+    <A>5.0999434e11</A>
+    <B>4.0522056e9</B>
+    <C>1.3233369e9</C>
+    <R1>4.06244</R1>
+    <R2>0.94846</R2>
+    <om>0.35</om>
+    <rho0>1717.0</rho0> <!-- kg/m^3 -->
+  </EOS>
+</Uintah_Include>

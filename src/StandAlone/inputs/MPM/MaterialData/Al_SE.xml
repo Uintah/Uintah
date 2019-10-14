@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Aluminum Specifications From Report-1GS -->
+<Uintah_Include>
+    <include href="MaterialData/MatConstAl_SE.xml"/>
+    <constitutive_model type="elastic_plastic">
+      <include href="MaterialData/IsoElasticAl_SE.xml"/>
+      <include href="MaterialData/VonMisesYield.xml"/>
+      <include href="MaterialData/SCGShear6061T6Al.xml"/>
+<!--
+      <include href="MaterialData/DruckerStabilityCheck.xml"/>
+      <include href="MaterialData/SCGPlasticAl_SE.xml"/>
+-->
+      <include href="MaterialData/JCPlastic6061T6Al.xml"/>
+      <include href="MaterialData/MieGrunEOSAl_SE.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
+      <initial_material_temperature>  300.0 </initial_material_temperature>
+    </constitutive_model>
+</Uintah_Include>

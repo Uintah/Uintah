@@ -1,0 +1,16 @@
+<config>
+
+<!--
+<test>
+  <name>raceTest_Unified_ICE</name>
+  <tst>raceTest_Unified.tst</tst>
+</test>
+-->
+
+<test>
+  <name>raceTest_Unified_ICE</name>
+  <tst>raceTest_Unified_cluster.tst</tst>
+</test>
+
+
+</config>

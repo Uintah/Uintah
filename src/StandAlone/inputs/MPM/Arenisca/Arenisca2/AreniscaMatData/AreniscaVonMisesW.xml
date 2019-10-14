@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Arenisca von Mises Tungsten -->
+<Uintah_Include>
+  <include href="MaterialData/MatConstW.xml"/>
+  <constitutive_model type="Arenisca">
+    <include href="AreniscaMatData/IsoElasticW.xml"/>
+    <include href="AreniscaMatData/VonMisesW.xml"/>
+    <include href="AreniscaMatData/PorosityNone.xml"/>
+    <subcycling_characteristic_number> 1 </subcycling_characteristic_number>
+  </constitutive_model>
+</Uintah_Include>

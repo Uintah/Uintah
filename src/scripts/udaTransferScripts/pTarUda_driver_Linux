@@ -1,0 +1,86 @@
+#_____________________________________________________________________.
+#      pTarUda_driver
+#   09/03/15
+# This is a makefile that does parallel tar/untar of the timesteps in a uda directory.
+# The orginal directories are not removed.
+#_____________________________________________________________________.
+
+SHELL = /bin/bash
+FILES      := $(shell cat $(PTAR_FILES_N))
+TAR_FILES  := $(wildcard *.tar)
+
+SRCS =   $(shell for i in $(FILES) ; do \
+              echo $$i ;\
+          done)
+
+DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
+
+all: $(STAMP_DIR)/stamp $(DESTS)
+
+
+clean:
+	@echo "Removing the list of tarred/untarred directories $(STAMP_DIR)"
+	/bin/rm -rf $(STAMP_DIR)
+
+$(STAMP_DIR)/stamp:
+	mkdir $@
+
+#__________________________________
+#   CHECKPOINTS
+#
+# $(@F):  directory name, excluding the path
+
+$(STAMP_DIR)/stamp/checkpoints/% :
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+	if test -a checkpoints/$(@F); then                                     \
+	  echo "  Working on: checkpoints/$(@F)"                               \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "create"; then                           \
+	    ${TAR} checkpoints/$(@F).tar.gz checkpoints/$(@F);                 \
+#                                                                             \
+	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	       echo "    Deleting original timestep (checkpoints/$(@F))";      \
+	       /bin/rm -rf checkpoints/$(@F);                                  \
+	    fi;                                                                \
+	  fi;                                                                  \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "extract"; then                          \
+	    ${TAR} checkpoints/$(@F);	                                    \
+	  fi;					                                    \
+	  echo "  Finished ${createExtract}: checkpoints/$(@F)";               \
+	  touch $(STAMP_DIR)/stamp/checkpoints/$(@F);                          \
+	else                                                                   \
+	 echo "   checkpoints/$(@F) Does not exist!";                          \
+	fi
+
+
+#__________________________________
+#  ALL OTHER DIRS
+#
+# $(@F):  directory name, excluding the path
+
+$(STAMP_DIR)/stamp/% :
+	if test -a $(@F); then                                                 \
+	   echo "  Working on: $(@F)";                                         \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "create"; then                           \
+	   ${TAR} $(@F).tar.gz $(@F);                                          \
+#                                                                             \
+	    if test "$$?" == "0" -a $(deleteOrgTimesteps) == "Y"; then         \
+	       echo "    Deleting original timestep ($(@F))";                  \
+	       /bin/rm -rf $(@F);                                              \
+	    fi;                                                                \
+	  fi;		                                                         \
+#                                                                             \
+#        __________________________________                                   \
+	  if test ${createExtract} == "extract"; then                          \
+	    ${TAR} $(@F);                                                      \
+	  fi;                                                                  \
+	  echo "  Finished ${createExtract}: $(@F)";                           \
+	  touch $(STAMP_DIR)/stamp/$(@F);                                      \
+	else                                                                   \
+	 echo "   $(@F) Does not exist!";                                      \
+	fi

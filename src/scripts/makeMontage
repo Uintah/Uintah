@@ -1,0 +1,44 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#
+# This script stitches 2 folders of images together
+# All of the images need to be the same size, so you 
+# should use ppm_to_mpg to resize and add labels.      
+#______________________________________________________________________
+
+unalias rm
+
+set tile_geom = "2x1"           # 1x2 is top bottom, 2x1 is side by side
+
+set dir1  = "04.13.17/movie"    #path to images that you want on the left half
+set dir2  = "04.17.17/movie"    #path to images that you want on the right half
+set fname = "combined" 
+set ext   = "png"               # extension on the image files
+
+# find the size of the image
+set img   = `find $dir1 -maxdepth 1 -name "*.$ext" | head -n 1`
+set size  = `identify -ping -format '%wx%h' $img`
+
+echo "Image size of $img : $size"
+
+#__________________________________
+# combine the images
+
+rm -rf $fname*
+
+foreach T ( $dir1/*.$ext )
+
+ set me = `basename $T`
+ 
+ if ( -e $dir1/$me && -e $dir2/$me ) then
+ 
+   set num = `basename $T .$ext`
+   echo "  combining $num images"
+
+   montage -tile $tile_geom \
+           -geometry $size  \
+           $dir1/$num.$ext \
+           $dir2/$num.$ext \
+           $fname$num.$ext
+  endif
+end

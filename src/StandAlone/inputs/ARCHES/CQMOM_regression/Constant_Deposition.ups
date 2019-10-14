@@ -1,0 +1,328 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Uintah_specification>
+  <Meta>
+    <title> CQMOM 2D Constant Deposistion Test </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <max_Timesteps> 20 </max_Timesteps>
+    <maxTime>         3.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.01     </delt_min>
+    <delt_max>        0.01        </delt_max>
+    <timestep_multiplier> 0.7     </timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <outputInitTimestep/>
+    <filebase> Constant_Deposition.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="m_00"/>
+    <save label="m_00_Fconv"/>
+    <save label="m_00_FconvX"/>
+    <save label="m_00_FconvY"/>
+    <save label="m_10"/>
+    <save label="m_01"/>
+    <save label="m_03"/>
+    <save label="m_30"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="partUVel_0"/>
+    <save label="partUVel_1"/>
+    <save label="partUVel_2"/>
+    <save label="partUVel_3"/>
+    <save label="partVVel_0"/>
+    <save label="partVVel_1"/>
+    <save label="partVVel_2"/>
+    <save label="partVVel_3"/>
+    <checkpoint cycle="2" interval="0.02"/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [2.0,0.5,.1]   </upper>
+        <resolution>  [80,20,2]</resolution>
+        <extraCells>  [1,1,0]   </extraCells>
+        <patches>     [1,1,1]   </patches>
+      </Box>
+      <periodic> [0,0,1] </periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-">
+        <BCType label="xmwall" var="WallBC">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_00" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_10" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_20" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_30" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_01" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_02" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_03" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_11" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_12" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_13" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face rectangle="x-" lower="0 0.2 0" upper="0 0.4 .2">
+        <BCType label="inletx" var="VelocityInlet">
+          <value> [0,0,0] </value>
+        </BCType>
+        <!-- transported moments -->
+        <BCType label="m_00" var="ForcedDirichlet">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_10" var="ForcedDirichlet">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_20" var="ForcedDirichlet">
+          <value> 1.0001 </value>
+        </BCType>
+        <BCType label="m_30" var="ForcedDirichlet">
+          <value> 1.0003 </value>
+        </BCType>
+        <BCType label="m_01" var="ForcedDirichlet">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_02" var="ForcedDirichlet">
+          <value> 1.0001 </value>
+        </BCType>
+        <BCType label="m_03" var="ForcedDirichlet">
+          <value> 1.0003 </value>
+        </BCType>
+        <BCType label="m_11" var="ForcedDirichlet">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_12" var="ForcedDirichlet">
+          <value> 1.0001 </value>
+        </BCType>
+        <BCType label="m_13" var="ForcedDirichlet">
+          <value> 1.0003 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType label="outletx" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <!-- transported moments -->
+        <BCType label="m_00" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_10" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_20" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_30" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_01" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_02" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_03" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_11" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_12" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_13" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType label="ymwall" var="WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_00" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_10" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_20" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_30" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_01" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_02" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_03" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_11" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_12" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_13" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType label="ypwall" var="WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_00" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_10" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_20" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_30" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_01" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_02" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_03" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_11" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_12" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_13" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>         [0.0,0,0]    </gravity>
+    <reference_point>       [-1,-1,-1]    </reference_point>
+    <viscosity>       0.000      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <Turbulence model="none"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+      </BoundaryConditions>
+      <TransportEqns>
+      </TransportEqns>
+      <!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-10  </tolerance>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  75      </maxiterations>
+            <skip>           1       </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+      <ParticleModels>
+        <model label="fStick" type="constant">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <constant> [0.25,0.25,0.25,0.25] </constant>
+        </model>
+      </ParticleModels>
+      <CQMOM partvel="true">
+        <!-- base information-->
+        <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
+        <QuadratureNodes> [2,2] </QuadratureNodes>
+        <CutOff> 1.0e-5 </CutOff>
+        <Adaptive> true </Adaptive>
+        <RestitutionCoefficient> 1.0 </RestitutionCoefficient>
+        <DepositionLabel> fStick </DepositionLabel>
+        <InternalCoordinate name="partUVel" type="uVel"/>
+        <InternalCoordinate name="partVVel" type="vVel"/>
+        <!--transport-->
+        <doDiff> false </doDiff>
+        <doConv> true  </doConv>
+        <conv_scheme> second </conv_scheme>
+        <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
+        <molecular_diffusivity> 0.0 </molecular_diffusivity>
+        <!-- moment eqns-->
+        <Moment>
+          <m> [0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [0,2] </m>
+        </Moment>
+        <Moment>
+          <m> [0,3] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,2] </m>
+        </Moment>
+        <Moment>
+          <m> [1,3] </m>
+        </Moment>
+      </CQMOM>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

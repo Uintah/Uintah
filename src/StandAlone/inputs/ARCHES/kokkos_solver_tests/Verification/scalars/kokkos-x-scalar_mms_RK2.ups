@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars -  mms time</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.02</delt_min>
+    <delt_max>0.02</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>50</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>kokkos-x-scalar_mms_RK2.uda</filebase>
+    <!--outputInterval>0.1</outputInterval-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="cc_phi_upwind"/>
+    <!--save label="cc_phi_vanleer"/>
+    <save label="cc_phi_superbee"/>
+    <save label="cc_phi_central"/>
+    <save label="cc_phi_f_central"/-->
+    <save label="phi_mms"/>
+    <save label="phi_mms_source_time"/>
+    <checkpoint cycle="2" interval=".3"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="2">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <PropertyModelsV2>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>1.0</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+        <model label="phi_x" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+      </PropertyModelsV2>
+      <SourceV2>
+          <src label = "phi_mms" type="MMS_scalar">
+          <!--wave type="sine_t">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine_t A="1.0" f="1.0" offset="0.0"/>
+          </wave-->
+          <!--wave type="t1">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <t1 f="5.0" />
+          </wave-->
+          <wave type="t3">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <t3 f="5.0" />
+          </wave>
+          <!--wave type="t2">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+          </wave-->
+          </src>
+      </SourceV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <!--diffusion_coef label="gamma"/-->
+          <eqn label="cc_phi_upwind">
+            <!--convection scheme="upwind"/-->
+            <!--src label="phi_mms_source"/-->
+            <src label="phi_mms_source_time"/>
+            <!--src label="phi_mms_source_diff"/-->
+            <!--diffusion/-->
+          </eqn>
+          <!--eqn label="cc_phi_vanleer">
+            <src label="phi_mms_source_time"/>
+          </eqn>
+          <eqn label="cc_phi_superbee">
+            <src label="phi_mms_source_time"/>
+          </eqn>
+          <eqn label="cc_phi_central">
+            <src label="phi_mms_source_time"/>
+          </eqn>
+          <eqn label="cc_phi_f_central">
+            <src label="phi_mms_source_time"/>
+          </eqn-->
+        </eqn_group>
+      </KScalarTransport>
+      <!--Initialization>
+        <task task_label="cc_phi_initialize" variable_label="cc_phi_upwind" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_sb_initialize" variable_label="cc_phi_superbee" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_vl_initialize" variable_label="cc_phi_vanleer" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_cen_initialize" variable_label="cc_phi_central" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+        <task task_label="cc_phi_f_cen_initialize" variable_label="cc_phi_f_central" type="wave">
+          <wave type="sine">
+            <grid type="CC"/>
+            <independent_variable label="gridX" type="CC"/>
+            <sine A="1.0" f="1.0" offset="0."/>
+          </wave>
+        </task>
+      </Initialization-->
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

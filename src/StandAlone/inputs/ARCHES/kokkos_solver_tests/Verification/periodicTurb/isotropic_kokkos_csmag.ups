@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches Decay of Isotropic Turbulence - kokkos solver - 32x32x32</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>     0.67   </maxTime>
+    <initTime>    0.0     </initTime>
+    <delt_min>    1e-2 </delt_min>
+    <delt_max>    1e-2     </delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>kokkos_iso_32.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <!--save label="x_mms"/>
+    <save label="y_mms"/>
+    <save label="x_mms_source"/-->
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="gamma"/>
+    <save label="pressure"/>
+    <save label="b_press"/>
+    <!--save label="viscosity_csigma"/-->
+    <!--checkpoint cycle="2" interval=".3"/-->
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.56548668,0.56548668,0.56548668]</upper>
+        <resolution>[32,32,32]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>1e-5</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <convection scheme="central"/>
+        <PressureSolver>
+          <normalize_pressure>true    </normalize_pressure>
+          <Parameters>  
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-12  </tolerance>
+            <maxiterations>    750     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <TurbulenceModels>
+       <model label="Csmag" type="constant_smagorinsky">
+        <Cs>0.2</Cs>
+       </model>
+      </TurbulenceModels>
+      <Initialization>
+        <task task_label="uVel-init" variable_label="uVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="FX"/>
+        </task>
+        <task task_label="vVel-init" variable_label="vVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="FY"/>
+        </task>
+        <task task_label="wVel-init" variable_label="wVel"  type="input_file">
+          <filename>../../../periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="FZ"/>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

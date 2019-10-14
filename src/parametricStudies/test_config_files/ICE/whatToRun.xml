@@ -1,0 +1,178 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<symbolicLinks>
+</symbolicLinks>
+
+
+
+<test>
+  <name>DNS_ReTau180</name>
+  <tst>delT_study.tst</tst>
+</test>
+
+<!--
+<test>
+  <name>Couette-Poiseuille_XY</name>
+  <tst>Couette-Poiseuille/XY.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_XY_periodic</name>
+  <tst>Couette-Poiseuille/XY_periodic.tst</tst>
+</test>
+
+
+<test>
+  <name>Couette-Poiseuille_YZ</name>
+  <tst>Couette-Poiseuille/YZ.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_YZ_periodic</name>
+  <tst>Couette-Poiseuille/YZ_periodic.tst</tst>
+</test>
+
+
+<test>
+  <name>Couette-Poiseuille_ZX</name>
+  <tst>Couette-Poiseuille/ZX.tst</tst>
+</test>
+
+
+<test>
+  <name>Couette-Poiseuille_ZX_periodic</name>
+  <tst>Couette-Poiseuille/ZX_periodic.tst</tst>
+</test>
+-->
+<!--__________________________________-->
+<!--
+<test>
+  <name>Couette-Poiseuille_delT_diffusion_knob</name>
+  <tst>Couette-Poiseuille/delT_diffusion_knob.tst</tst>
+</test>
+
+<test>
+  <name>Couette-Poiseuille_time</name>
+  <tst>Couette-Poiseuille/steadyState.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>
+  <name>Rayleigh_dx</name>
+  <tst>rayleigh_dx.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dz_SultanModified</name>
+  <tst>rayleigh_dz.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dy</name>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>
+  <name>advect_X_FO</name>
+  <tst>advectScalar1D_dx.tst</tst>
+</test>
+
+<test>
+  <name>advect_Y_FO</name>
+  <tst>advectScalar1D_dy.tst</tst>
+</test>
+
+<test>
+  <name>advect_Z_FO</name>
+  <tst>advectScalar1D_dz.tst</tst>
+</test>
+-->
+<!--__________________________________-->
+<!--
+<test>
+  <name>Rayleigh_dx</name>
+  <tst>rayleigh_dx.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dy</name>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+
+<test>
+  <name>Rayleigh_dz</name>
+  <tst>rayleigh_dz.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+
+<!--
+<test>
+  <name>CavityFlow_dx</name>
+  <tst>cavityFlow_dx.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_dy</name>
+  <tst>cavityFlow_dy.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_dz</name>
+  <tst>cavityFlow_dz.tst</tst>
+</test>
+
+<test>
+  <name>CavityFlow_Res</name>
+  <tst>cavityFlow_res.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>  
+  <name>Lodi_pulse</name>
+  <tst>Lodi.tst</tst>
+</test>
+-->
+
+<!--__________________________________-->
+<!--
+<test>
+  <name>Test1</name>
+  <tst>riemann_dx.tst</tst>
+  <otherFilesToCopy>test1.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test2</name>
+  <tst>test2_dx.tst</tst>
+  <otherFilesToCopy>test2.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test3</name>
+  <tst>test3_dx.tst</tst>
+  <otherFilesToCopy>test3.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>Test4</name>
+  <tst>test4_dx.tst</tst>
+  <otherFilesToCopy>test4.in</otherFilesToCopy>
+</test>
+
+<test>
+  <name>MMS</name>
+  <tst>mms_dx.tst</tst>
+</test>
+
+-->
+</config>

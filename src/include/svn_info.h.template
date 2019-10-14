@@ -1,0 +1,10 @@
+// This file will be updated via make and the real version placed in .../<bin>/include/svn_info.h.
+
+// Current svn revsion number for code.
+#define SVN_REVISION "UNKNOWN_REVISION"
+
+// the date of the svn revision
+#define SVN_DATE "UNKNOWN_DATE"
+
+// the svn URL:
+#define SVN_URL "UNKNOWN_URL"

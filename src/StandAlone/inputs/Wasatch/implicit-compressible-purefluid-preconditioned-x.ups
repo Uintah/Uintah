@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<Uintah_specification>
+  <Meta>
+    <title>Pure fluid, calorically perfect compressible flow in 1D, with the block-implicit method, with acoustic preconditioning</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>
+    <Density method="COMPRESSIBLE">
+      <NameTag name="density"/>
+    </Density>
+    <DualTime iterations="3000"
+              tolerance="1e-2"
+              blockimplicit="true"
+              lograte="100" 
+              localcflvnn="true" 
+              cfl="0.2" 
+              vnn="0.1" 
+              maxvalue="1.e6" 
+              minvalue="1.e-9" 
+              precondition="true"
+              doImplicitInviscid="true"/>
+
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="100.0" deviation="1.0" mean="0.0" baseline="273.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+    <!-- Set the molecular weight - needed both on initial condition and advance solution -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <!-- specify the viscosity -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>1.95e-5</Constant>
+    </BasicExpression>
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>    
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+  </Wasatch>
+  <Time>
+    <maxTime>1.e-3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.e-4</delt_min>
+    <delt_max>1.e-4</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>implicit-compressible-purefluid-preconditioned-x.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="Temperature"/>
+    <save label="u"/>
+    <save label="pressure"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.5,-0.5,0]</lower>
+        <upper>[0.5,0.5,1]</upper>
+        <resolution>[100,1,1]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

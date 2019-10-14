@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 1/31/01-->
+<Uintah_specification>
+
+<!--
+maple:~/Uintah/src/CCA/Components/MPM> svn diff SerialMPM.cc ConstitutiveModel/HypoElastic.cc
+Index: SerialMPM.cc
+===================================================================
+- SerialMPM.cc	(revision 53936)
++ SerialMPM.cc	(working copy)
+@@ -2847,7 +2847,13 @@
+     printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
+ 
+     Ghost::GhostType  gnone = Ghost::None;
++
+     Vector gravity = flags->d_gravity;
++    double time = d_materialManager->getElapsedSimTime();
++    if(time<2.0){
++      gravity = flags->d_gravity/2.0*time;
++    }
++
+     for(int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
+       MPMMaterial* mpm_matl = d_materialManager->getMaterial( "MPM",  m );
+       int dwi = mpm_matl->getDWIndex();
+Index: ConstitutiveModel/HypoElastic.cc
+===================================================================
+- ConstitutiveModel/HypoElastic.cc	(revision 53855)
++ ConstitutiveModel/HypoElastic.cc	(working copy)
+@@ -220,9 +220,13 @@
+       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
+        
+       // This is the (updated) Cauchy stress
+-      pstress_new[idx] = pstress[idx] + 
+-                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
++//      pstress_new[idx] = pstress[idx] + 
++//                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
+ 
++      double stressXX = 1.e6*(pDefGrad_new[idx](0,0)-1.);
++
++      pstress_new[idx] = Matrix3(stressXX,0.,0., 0.,0.,0., 0.,0.,0.); 
++  
+       // Compute the strain energy for all the particles
+       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+
+-->
+
+   <Meta>
+       <title>Example 1-D problem from GIMP paper</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>3.</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.e-4</delt_min>
+       <delt_max>1.e-4</delt_max>
+       <timestep_multiplier>0.2</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>gimpPaper.uda</filebase>
+        <outputInterval>1.0</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.mass"/>
+        <save label = "p.stress"/>
+        <save label = "p.volume"/>
+        <save label = "p.velocity"/>
+        <save label = "p.particleID"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <artificial_viscosity>true</artificial_viscosity>
+       <interpolator>gimp</interpolator>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[-800.0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+            <material name = "top crystal">
+                <density>1.0</density>
+              <constitutive_model type = "hypo_elastic"> 
+                 <G>1.e6</G>
+                 <K>1.e6</K>
+               </constitutive_model>
+                <thermal_conductivity>1.0e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <geom_object>
+                  <box label = "box">
+                     <min>[ 0.0, 0.0, 0.0]</min>
+                     <max>[50.0, 1.0, 1.0]</max>
+                  </box>
+
+                  <res>[2,1,1]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+              <type>null</type>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+         <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "y-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[ 0.0, 0.0, 0.0]</lower>
+              <upper>[60.0, 1.0, 1.0]</upper>
+              <resolution>[60,1,1]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>
+

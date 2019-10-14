@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061 T6 Aluminum Alloy -->
+<Uintah_Include>
+  <density>2700.0e3</density>
+  <thermal_conductivity>166.9e-7</thermal_conductivity>
+  <specific_heat>896.0e-8</specific_heat>
+  <room_temp>294.0</room_temp>
+  <melt_temp>933.47</melt_temp>
+</Uintah_Include>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--- ETP Cu -->
+<Uintah_Include>
+    <!-- damage_model type="hancock_mackenzie" -->
+    <initial_mean_scalar_damage>0.0001</initial_mean_scalar_damage>
+    <critical_scalar_damage>0.7</critical_scalar_damage>
+</Uintah_Include>

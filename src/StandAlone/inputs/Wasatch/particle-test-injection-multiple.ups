@@ -1,0 +1,201 @@
+<Uintah_specification>
+  <Meta>
+    <title>Particles Free Fall</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>
+    
+    <ParticleTransportEquations>
+      <ParticlesPerCell>0</ParticlesPerCell>
+      <ParticleDensity name="p.rho"/>
+      <ParticleMass name="p.m" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleMass>
+      <ParticleSize name="p.size" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleSize>
+      <ParticlePosition x="p.xw" y="p.yw" z="p.zw">
+        <Velocity>
+          <XVel name="p.u" state="STATE_DYNAMIC"/>
+          <YVel name="p.v" state="STATE_DYNAMIC"/>
+          <ZVel name="p.w" state="STATE_DYNAMIC"/>
+        </Velocity>
+      </ParticlePosition>
+      <ParticleMomentum x="p.u" y="p.v" z="p.w">
+        <Gravity direction="Z"/>
+        <GasProperties>
+          <GasViscosity name="viscosity"/>
+          <GasDensity name="density"/>
+          <GasVelocity>
+            <XVel name="u"/>
+            <YVel name="v"/>
+            <ZVel name="w"/>
+          </GasVelocity>
+        </GasProperties>
+      </ParticleMomentum>
+    </ParticleTransportEquations>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.size"/>
+      <RandomField low="0.01" high="0.02" seed="11"/>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.rho"/>
+      <Constant>1000</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.zw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.yw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.xw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.u"/>
+      <RandomField low="-3" high="3" seed="12"/>      
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.v"/>
+      	<RandomField low="-3" high="3" seed="45"/>      
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.w"/>
+      <RandomField low="-3" high="3" seed="56"/>            
+    </BasicExpression>
+    <!-- Set the initial condition expression for momentum -->
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="v"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="w"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>1e-5</Constant>
+    </BasicExpression>
+  </Wasatch>
+  <Time>
+    <maxTime>60</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps>1000</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>particle-test-injection-multiple-inlets.uda</filebase>
+    <outputTimestepInterval>100</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.1"/>
+    <save label="p.x"/>
+    <save label="p.xw_rhs"/>
+    <save label="p.yw_rhs"/>
+    <save label="p.zw_rhs"/>
+    <save label="p.re"/>
+    <save label="p.cd"/>
+    <save label="p.tau"/>
+    <save label="p.drag_x"/>
+    <save label="p.drag_y"/>
+    <save label="p.drag_z"/>
+    <save label="p.particleID"/>
+    <save label="p.u_rhs"/>
+    <save label="p.v_rhs"/>
+    <save label="p.w_rhs"/>
+    <save label="p.m"/>
+    <save label="p.u"/>
+    <save label="p.v"/>
+    <save label="p.w"/>
+    <save label="p.size"/>
+    <save label="p.xw"/>
+    <save label="p.yw"/>
+    <save label="p.zw"/>
+    <save label="density"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+    	<Face side="x-" type="Wall" name="xminus wall"/>
+			<Face circle="x-" origin="-1 0 0.5" radius="0.2" type="Wall" name="xminus particle inlet">
+				<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>5e3</ParticlesPerSecond>
+      	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="0.02"/>        
+        <BCType label="p.u" var="Dirichlet" value="3"/>                
+        <BCType label="p.v" var="Dirichlet" value="-2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="-1"/>
+        <BCType label="p.m" var="Dirichlet" value="0.1"/>                                                                
+			</Face>			    	
+			<Face side="x+" type="Wall"/>			
+			<Face side="y-" type="Wall"/>
+			<Face circle="y-" origin="0 -1 0.3" radius="0.2" type="Wall">
+				<ParticleBC>
+      		<Inlet>
+      			<ParticlesPerSecond>5e3</ParticlesPerSecond>
+      	</Inlet>
+      	</ParticleBC>
+      	<BCType label="p.size" var="Dirichlet" value="0.01"/>        
+        <BCType label="p.u" var="Dirichlet" value="-1"/>                
+        <BCType label="p.v" var="Dirichlet" value="2"/>                        
+        <BCType label="p.w" var="Dirichlet" value="0"/>
+        <BCType label="p.m" var="Dirichlet" value="0.1"/>                                                                
+			</Face>			
+			<Face side="y+" type="Wall"/>
+			<Face side="z-" type="Wall"/>
+			<Face side="z+" type="Wall"/>              
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[ -1, -1,-1]</lower>
+        <upper>[ 1, 1, 1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

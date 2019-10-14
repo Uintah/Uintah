@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Uintah_Include>
+  <Coal>
+    <Properties>
+      <diameter_distribution>[30e-6,60e-6,90e-6]</diameter_distribution><!-- [m] -->
+      <!--particle_weights>[0.45,0.45,0.1]</particle_weights--><!-- [mass fractions of each particle size] -->
+      <density>1250.0</density><!-- [kg/m^3] -->
+      <temperature>300.0</temperature><!-- initial particle temperature [K] -->
+      <ultimate_analysis>
+        <C>0.62532463</C>
+        <H>0.04519627</H>
+        <O>0.25501593</O>
+        <N>0.00695327</N>
+        <S>0.0071412</S>
+        <CHAR>0.0</CHAR>
+        <ASH>0.0603687</ASH>
+        <H2O>0.0</H2O>        
+      </ultimate_analysis>
+      <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - this was computed from No. Dakota Lignite -->
+      <raw_coal_enthalpy>-1.328e6</raw_coal_enthalpy><!-- raw coal enthalpy (at 298.15 K) [J/kg] -->
+      <char_enthalpy>0.0</char_enthalpy><!-- char enthalpy (at inlet conditions) [J/kg] -->
+      <ash_enthalpy>-1.504e7</ash_enthalpy><!-- ash enthalpy (at inlet conditions) [J/kg] -->
+      <FOWYDevol>
+        <v_hiT>0.8895</v_hiT>
+        <A>229086765276.777</A>
+        <Ta>1.991e4</Ta>
+        <Tbp_graphite>3e3</Tbp_graphite>
+        <T_mu>1100.0</T_mu>
+        <T_sigma>250.0</T_sigma>
+        <T_hardened_bond>1800.0</T_hardened_bond>
+        <sigma>-1.183e3</sigma>
+      </FOWYDevol>
+      <ShaddixChar>
+        <As> 344.0 </As>
+        <Es> 45.5e3 </Es>
+        <n> 0.18 </n>
+      </ShaddixChar>
+    </Properties>
+  </Coal>
+</Uintah_Include>
+
+
+

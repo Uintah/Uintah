@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Thannel Flow with an powerlaw initial flow field</title>
+   </Meta>
+
+   <SimulationComponent type="ice" />
+   <Solver type="hypre"/>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            5.0        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <max_delt_increase>  2           </max_delt_increase>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>      100           </max_Timesteps>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+    
+      <inletVelocity type="powerLawProfile">
+        <verticalDirection> 1           </verticalDirection>
+        <exponent>          0.21        </exponent>
+        <maxHeight>         0.05        </maxHeight>
+        <material>          atmosphere  </material>
+
+        <variance>
+          <C_mu>            0.0845      </C_mu>         
+          <frictionVel>     0.26        </frictionVel>  
+        </variance>
+
+      </inletVelocity>
+ <!--
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet"> 
+                            <value> 101325. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "powerLawProfile" >
+                            <value> [4.32,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Dirichlet"> 
+                            <value> 300.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Dirichlet">
+                              <value> 1.17929469273743 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101324. </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+-->
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0, 0.0,0]          </lower>
+              <upper>        [1, 0.5,0.005]     </upper>
+              <extraCells>   [0,1,1]             </extraCells>
+              <patches>      [1,1,1]             </patches>
+              <resolution>   [128,64,1]           </resolution>
+           </Box>
+
+           <periodic>        [1,0,0]             </periodic>
+       </Level>
+       
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>channelFlow_PowerLaw.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label="vel_CC"/>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="rho_CC"/>
+      <save label="temp_CC"/>
+      <checkpoint interval="0.75" cycle="2"/>
+   </DataArchiver>
+
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.000        </knob_for_speedSound>
+        </TimeStepControl>
+                                                                                
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+                                                                                
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+                                                                                
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-16  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           1       </skip>
+            <jump>           0       </jump>
+            <relax_type>      2      </relax_type>
+           </Parameters>
+        </ImplicitSolver>
+        
+        <customInitialization>             
+          <powerLawProfile>
+            <verticalDirection> 1           </verticalDirection>
+            <exponent>          0.21        </exponent>
+            <maxHeight>         0.05         </maxHeight>
+            <material>          atmosphere  </material>
+            <U_infinity>        [4.32, 0, 0]</U_infinity>
+        
+            <variance>
+              <C_mu>              0.0845    </C_mu>
+              <frictionVel>       0.26      </frictionVel>  
+            </variance>
+
+          </powerLawProfile>
+        </customInitialization>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                   </EOS>                   
+           <dynamic_viscosity>  1.e-3                 </dynamic_viscosity>     
+           <thermal_conductivity>0.0                  </thermal_conductivity>  
+           <specific_heat>      716.0                 </specific_heat>         
+           <gamma>              1.4                   </gamma>                 
+           <geom_object>
+              <box label="wholeDomain">
+                  <min>       [-1.0, -1.0,-1.0]       </min>
+                  <max>       [ 1.0,  1.0, 1.0]       </max>
+              </box>
+              <res>           [2,2,2]                  </res>
+              <velocity>      [0.,0.,0.]               </velocity>
+              <density>       1.1792946927374306000e+00</density>
+              <pressure>      101325.0                 </pressure>     
+              <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>       
+</Uintah_specification>

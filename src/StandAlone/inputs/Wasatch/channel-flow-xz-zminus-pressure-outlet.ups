@@ -1,0 +1,109 @@
+<Uintah_specification>
+
+  <Meta>
+    <title> Channel Flow with Pressure Outlet at z- </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.01</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+ 	
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+ 	 	 	 	 	 	 <skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-15  </tolerance>
+            <maxiterations>  200    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>100</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>channel-flow-xz-zminus-pressure-outlet.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom"/>
+    <save label="z-mom"/>
+    <save label="pressure"/>
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+				<DefaultMaterial>all</DefaultMaterial>
+				<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+				<Face side="z+" name="z+" type="Velocity">
+					<BCType label="w" var="Dirichlet" value="-1.0"/>
+				</Face>
+				<Face side="z-" name="z-" type="Outflow"/>
+				<Face side="x-" name="x-" type="Wall"/>
+				<Face side="x+" name="x+" type="Wall"/>
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[0, 0,  0]</lower>
+        <upper>[1, 0.01, 6]</upper>
+        <!-- extraCells>[1,1,0]</extraCells -->
+        <resolution>[10,2,30]</resolution>
+        <patches>[2,1,3]</patches>
+      </Box>
+      <periodic>[0,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

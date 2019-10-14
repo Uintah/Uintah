@@ -1,0 +1,14 @@
+"V1" "V2"
+"Sample" "Clay #072313-013"
+"Strain rate" "519/s"
+"Moisture content" "40.8% (water to soil weight ratio)"
+"Initial density" "1.30 g/cc (dry)"
+"All paticle pass through #10 seive." ""
+"Note, time is in unit of second; stresses are in unit of MPa." ""
+"sample is cylinder in 0.358 L x 0.500 D." ""
+"SHPB bar diameter is 3/4, made of steel, Young's modulus as 200 GPa, 
+Steel sleeve has ID 0.50 and OD 0.75, made of steel, same modulus and 0.29 Poisson's ratio.
+
+The data format is in the following collumn as:
+Time, Axial strain (incident), Axial strain (reflected), Axial strain (transmitted), Hoop strain (sleeve), Axial strain(computed), Axial stress (computed), mean stress (computed), Shear stress (computed).
+" ""

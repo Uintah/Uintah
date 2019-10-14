@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Test of 1D transport of kokkos-ized scalars - Pure convection </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>3</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>xy-scalar-kokkos-test.uda</filebase>
+    <!--outputInterval>0.1</outputInterval-->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <!--outputInitTimestep/-->
+    <!--<save label="phi_x_psi"/>-->
+    <!--<save label="phi_y_psi"/>-->
+    <!--<save label="phi_z_psi"/>-->
+    <save label="phi"/>
+    <save label="phi_mms"/>
+    <save label="gridX"/>
+    <checkpoint cycle="2" interval="1e-5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+        <periodic>[0,0,0]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x+" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="y+" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="z-" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0.</value>
+        </BCType>
+      </Face>
+      <Face side="z+" type="Inlet">
+        <BCType var="Custom" label="phi" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+          <value>0.</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <PropertyModelsV2>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>1.0</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>1.0</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>0.</value>
+        </model>
+      </PropertyModelsV2>
+      <SourceV2>
+        <src label="phi_mms" type="MMS_mom">
+          <variable type="CC"/>
+          <which_vel>p</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+        </src>
+      </SourceV2>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <eqn label="phi">
+            <!--convection scheme="upwind"/-->
+            <convection scheme="central"/>
+            <src label="phi_mms_source"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <Initialization>
+        <task task_label="cc_phi_initialize" variable_label="phi" type="almgren_mms">
+          <variable type="CC"/>
+          <which_vel>u</which_vel>
+          <coordinates x="gridX" y="gridY"/>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

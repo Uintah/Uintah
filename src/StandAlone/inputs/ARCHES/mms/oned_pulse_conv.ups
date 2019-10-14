@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Convection of a one-dimensional pulse of mixture fraction</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>200.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <timestep_multiplier>0.1</timestep_multiplier>
+    <max_Timesteps>10</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>pulse.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="density"/>
+    <save label="f"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[10.0,1.0,1.0]</upper>
+        <resolution>[32,3,3]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[14,1,1]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <BoundaryConditions/>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <TransportEqns>
+        <Eqn label="f" type="CCscalar">
+          <doConv>true</doConv>
+          <doDiff>false</doDiff>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="gaussian">
+            <direction>x</direction>
+            <amplitude>1.0</amplitude>
+            <center>5.</center>
+            <std>0.1</std>
+          </initialization>
+        </Eqn>
+      </TransportEqns>
+      <Properties>
+        <table label="a_user_generated_label" type="coldflow">
+          <stream_1 density="5.0" temperature="298"/>
+          <stream_0 density="1.0" temperature="298"/>
+          <mixture_fraction label="f"/>
+        </table>
+      </Properties>
+      <ExplicitSolver>
+        <PressureSolver>
+          <enforce_solvability/>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-12  </tolerance>
+            <maxiterations>    275     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <relax_type>2</relax_type>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="constant">
+            <const_u>1.0</const_u>
+            <const_v>0.0</const_v>
+            <const_w>0.0</const_w>
+          </initialization>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

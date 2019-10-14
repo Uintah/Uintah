@@ -1,0 +1,73 @@
+<Uintah_specification>
+
+  <Meta> <title>test</title> </Meta>
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+    <Density method="CONSTANT"> <Constant value="1.0" name="density"/> </Density>
+    <TimeIntegrator>FE</TimeIntegrator>
+    <DualTime iterations="100" tolerance="1e-4" ds="1.e0" blockimplicit="true"/>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="A"/>
+      <Constant>0.5</Constant>
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>A</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.e-2"/>
+    </TransportEquation>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="B"/>
+      <Constant>0.5</Constant>
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>B</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.e-3"/>
+    </TransportEquation>
+  </Wasatch>
+
+  <DataArchiver>
+    <filebase>implicit-2eqn-diffusion-x.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="A"/>
+    <save label="B"/>
+  </DataArchiver> 
+
+  <Time>
+    <maxTime>2.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.1</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x-" name="minus">
+        <BCType var="Dirichlet" label="A" value="0.0"/>
+        <BCType var="Dirichlet" label="B" value="1.0"/>
+      </Face>
+      <Face side="x+" name="plus">
+        <BCType var="Dirichlet" label="A" value="1.0"/>
+        <BCType var="Dirichlet" label="B" value="0.0"/>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="domain">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[64,1,1]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

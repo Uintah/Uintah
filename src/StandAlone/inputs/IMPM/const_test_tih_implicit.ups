@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Constitutive Model Tester</title>
+   </Meta>
+
+   <SimulationComponent type="impm" />
+
+   <Time>
+       <maxTime>1.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.e-2</delt_min>
+       <delt_max>1.e-2</delt_max>
+       <timestep_multiplier>1.0</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>const_test_tih_impm_y_dir.uda</filebase>
+       <outputInterval>0.01</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.mass"/>
+       <save label = "p.stress"/>
+       <save label = "p.stretch"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.particleID"/>
+        <save label = "BndyForce_yminus"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>implicit</time_integrator>
+        <dynamic>false</dynamic>
+        <solver>petsc</solver>
+        <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
+        <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
+        <boundary_traction_faces>[yminus]</boundary_traction_faces>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+                <density>1.0</density>
+               <constitutive_model type="trans_iso_hyper">
+                  <bulk_modulus>100.e5</bulk_modulus>
+                  <c1>2.1e3</c1>
+                  <c2>0</c2>
+                  <c3>0.14e3</c3>
+                  <c4>22</c4>
+                  <c5>100</c5>
+                  <fiber_stretch>2.0</fiber_stretch>
+                  <direction_of_symm>[0,1,0]</direction_of_symm>
+                    <max_fiber_strain>2.0</max_fiber_strain>
+                    <max_matrix_strain>2.0</max_matrix_strain>
+                    <failure_option>0</failure_option>
+                </constitutive_model>
+              <is_rigid>true</is_rigid>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "piston">
+                     <min>[0.0,0.01,.00]</min>
+                     <max>[0.01,0.02,0.01]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,4.e-3,0.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+                <density>1.0</density>
+                <constitutive_model type="trans_iso_hyper">
+                  <bulk_modulus>100.e5</bulk_modulus>
+                  <c1>2.1e3</c1>
+                  <c2>0</c2>
+                  <c3>0.14e3</c3>
+                  <c4>22</c4>
+                  <c5>100</c5>
+                  <fiber_stretch>2.0</fiber_stretch>
+                  <direction_of_symm>[0,1,0]</direction_of_symm>
+                    <max_fiber_strain>2.0</max_fiber_strain>
+                    <max_matrix_strain>2.0</max_matrix_strain>
+                    <failure_option>0</failure_option>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "box">
+                     <min>[0.0,0.0,0.0]</min>
+                     <max>[0.01,0.01,0.01]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,.0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>rigid</type>
+             <materials>[0,1]</materials>
+              <stop_time>10.0</stop_time>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+
+     <Grid>
+<BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+
+<!-- -->
+          <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+<!-- -->
+           <Face side = "y-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+
+<!-- -->
+          <Face side = "y+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+            </BCType>
+           </Face>
+<!-- -->
+           <Face side = "z-">
+            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+          <Face side = "z+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+           </BCType>
+           </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[0.02,0.03,0.02]</upper>
+               <resolution>[2,3,2]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+
+</Uintah_specification>
+
