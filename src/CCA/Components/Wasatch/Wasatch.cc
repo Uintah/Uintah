@@ -654,6 +654,7 @@ namespace WasatchCore{
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       adaptors_.push_back( parse_scalar_equation( transEqnParams,
+                                                  wasatchSpec_,
                                                   turbParams,
                                                   densityTag,
                                                   graphCategories_,

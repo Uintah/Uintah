@@ -185,8 +185,8 @@ namespace WasatchCore{
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
       const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), tagNames.unconvergedpts.context() );
-      const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
-      const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
+      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag, fTag);
+      const Expr::TagList theTagList( tag_list( densityTag, unconvPts, dRhoDfTag ) );
       
       // register placeholder for the old density
       const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
@@ -205,6 +205,7 @@ namespace WasatchCore{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      Expr::Tag fTag       = parse_nametag( modelParams->findBlock("MixtureFraction"               )->findBlock("NameTag") );
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy"       )->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss"                      )->findBlock("NameTag") );
 
@@ -223,9 +224,9 @@ namespace WasatchCore{
       factory.register_expression( new PlcHolder::Builder(rhoOldTag     ), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
-      // putting these here just for debugging perposes
-      const Expr::Tag dRhoDhTag("drhodh", Expr::STATE_NONE);
-      const Expr::Tag dRhoDfTag("drhodf", Expr::STATE_NONE);
+
+      const Expr::Tag dRhoDhTag = tagNames.derivative_tag(densityTag,tagNames.enthalpy);
+      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag,fTag);
       persistentFields.insert( dRhoDhTag.name() );
       persistentFields.insert( dRhoDfTag.name() );
       
@@ -428,6 +429,8 @@ namespace WasatchCore{
                           std::set<std::string>& persistentFields,
                           const bool weakForm)
   {
+    const TagNames& tagNames = TagNames::self();
+    
     Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
 
@@ -443,7 +446,7 @@ namespace WasatchCore{
     params->getAttribute("rho0",rho0);
     params->getAttribute("rho1",rho1);
 
-    const Expr::Tag drhodfTag( "drhod" + fTag.name(), Expr::STATE_NONE);
+    const Expr::Tag dRhoDfTag = tagNames.derivative_tag(rhoTag,fTag);
     // initial conditions for density
 
     {
@@ -451,7 +454,7 @@ namespace WasatchCore{
       typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
       
       const Expr::Tag icRhoTag( rhoTag.name(), Expr::STATE_NONE );
-      const Expr::TagList theTagList( tag_list( icRhoTag, drhodfTag ) );
+      const Expr::TagList theTagList( tag_list( icRhoTag, dRhoDfTag ) );
       
       gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(theTagList,fTag,rho0,rho1) ) );
     }
@@ -474,7 +477,7 @@ namespace WasatchCore{
       Expr::Tag fNP1Tag   ( fTag   .name(), Expr::STATE_NP1 );
       Expr::Tag rhofNP1Tag( rhofTag.name(), Expr::STATE_NP1 );
 
-      const Expr::TagList theTagList( tag_list( rhoNP1Tag, drhodfTag ));
+      const Expr::TagList theTagList( tag_list( rhoNP1Tag, dRhoDfTag ));
       Expr::ExpressionID id1;
       
       if (weakForm) {

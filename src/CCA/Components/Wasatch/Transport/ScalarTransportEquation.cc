@@ -358,7 +358,7 @@ namespace WasatchCore{
       }
 
       const Expr::Tag scalEOSTag (primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
-      const Expr::Tag dRhoDfTag("drhod" + primVarTag_.name(), Expr::STATE_NONE);
+      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag_,primVarTag_);
       factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_, srcTags, densityNP1Tag_, dRhoDfTag, isStrong_) );
 
       // register an expression for divu. divu is just a constant expression to which we add the

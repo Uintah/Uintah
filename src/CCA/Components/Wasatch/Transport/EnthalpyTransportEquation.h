@@ -30,14 +30,15 @@
 #ifndef ENTHALPYTRANSPORTEQUATION_H_
 #define ENTHALPYTRANSPORTEQUATION_H_
 
+#include <sci_defs/wasatch_defs.h>
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 
 namespace WasatchCore {
 
   /**
    *  \class  WasatchCore::EnthalpyTransportEquation
-   *  \date   November, 2013
-   *  \author "James C. Sutherland"
+   *  \date   November, 2018 (originally Nov. 2013)
+   *  \author "James C. Sutherland, Josh McConnell"
    *
    *  The enthalpy transport equation has the form:
    *  \f[
@@ -53,9 +54,9 @@ namespace WasatchCore {
    *  radiative heat flux.
    *
    *  If we assume:
-   *   - negligible viscous heating \f$(\tau:\nabla\vec{v} \approx 0)\f$
-   *   - constant pressure (to leading order): \f$\frac{Dp}{Dt}\approx0\f$
-   *   - all species have unity Lewis numbers, \f$Le_i=\frac{\lambda}{\rho c_p D_i}\f$
+   *   1. negligible viscous heating \f$(\tau:\nabla\vec{v} \approx 0)\f$
+   *   2. constant pressure (to leading order): \f$\frac{Dp}{Dt}\approx0\f$
+   *   3. all species have unity Lewis numbers, \f$Le_i=\frac{\lambda}{\rho c_p D_i}\f$
    *
    *  then the enthalpy transport equation can be written as
    *  \f[
@@ -74,6 +75,14 @@ namespace WasatchCore {
    *  \f[
    *    \left( \frac{\lambda}{c_p} + \frac{\mu_t}{Pr_t} \right)
    *  \f]
+   *
+   *  When species transport is enabled, we assume neither (2) nor (3) so that the equation
+   *  for enthalpy transport becomes
+   *  \f[
+   *  \frac{\partial \rho h}{\partial t} = \frac{Dp}{Dt} - \nabla\cdot(\rho h\vec{v})
+   *      - \nabla\cdot\vec{q}.
+   *  \f]
+   *
    */
   class EnthalpyTransportEquation : public ScalarTransportEquation<SVolField>
   {
@@ -82,6 +91,7 @@ namespace WasatchCore {
      *  \brief Construct an EnthalpyTransportEquation
      *  \param enthalpyName the name for enthalpy
      *  \param params the tag from the input file specifying the transport equation.
+     *  \param wasatchSpec the tag from the input file specifying wasatch
      *  \param gc
      *  \param densityTag a tag containing density for necessary cases. it will be empty where
      *         it is not needed.
@@ -90,6 +100,7 @@ namespace WasatchCore {
      */
     EnthalpyTransportEquation( const std::string enthalpyName,
                                Uintah::ProblemSpecP params,
+                               Uintah::ProblemSpecP wasatchSpec,
                                GraphCategories& gc,
                                const Expr::Tag densityTag,
                                const TurbulenceParameters& turbulenceParams,
@@ -97,10 +108,32 @@ namespace WasatchCore {
 
     ~EnthalpyTransportEquation();
 
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper,
+                                    GraphCategories& graphCat );
+
+    void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                            WasatchBCHelper& bcHelper );
+
+    void apply_boundary_conditions( const GraphHelper& graphHelper,
+                                    WasatchBCHelper& bcHelper );
+
   protected:
-    void setup_diffusive_flux( FieldTagInfo& );
+    void setup_diffusive_flux( FieldTagInfo& info );
+    void register_diffusive_flux_expressions( const Category cat,
+                                              FieldTagInfo& info,
+                                              Expr::Tag primVarTag,
+                                              const Expr::Context context,
+                                              const std::string suffix );
     void setup_source_terms( FieldTagInfo&, Expr::TagList& );
+
+    Expr::ExpressionID setup_rhs( FieldTagInfo&, const Expr::TagList& );
+
+    Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
+
+    Uintah::ProblemSpecP wasatchSpec_;
     const Expr::Tag diffCoeffTag_;
+
+    // #ifdef HAVE_POKITT stuff here
 
   };
 

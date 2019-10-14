@@ -199,7 +199,7 @@ namespace WasatchCore{
     Expr::Tag primVarInitTag_, primVarTag_, primVarNP1Tag_;
     Expr::Tag turbDiffTag_;
     bool isStrong_;
-    FieldTagInfo infoNP1_;  // needed to form predicted scalar quantities
+    FieldTagInfo infoInit_, infoNP1_;  // needed to form predicted scalar quantities
     std::set<std::string>& persistentFields_;
 
   };
