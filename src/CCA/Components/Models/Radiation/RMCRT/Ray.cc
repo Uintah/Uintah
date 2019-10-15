@@ -184,7 +184,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid );
+    d_radiometer->problemSetup( prob_spec, rmcrtps, grid );
   }
 
   //__________________________________

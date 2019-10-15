@@ -97,7 +97,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [41,41,41]  </resolution>    
+         <resolution> [50,50,50]  </resolution>    
          <patches>    [3,3,3]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>                                 
@@ -124,19 +124,75 @@
   <!--__________________________________-->
   <!-- Only compute VRFlux at the radiometer locations -->    
   <RMCRT type = "double">
-     <algorithm type="radiometerOnly"/> 
-    <randomSeed>        false       </randomSeed>
+    <algorithm type="radiometerOnly"/> 
+    <randomSeed>        false        </randomSeed>
     <Threshold>         0.05        </Threshold>
     <sigmaScat>         0           </sigmaScat>
     <allowReflect>       false      </allowReflect>
 
     <Radiometer>
       <viewAngle>       3                   </viewAngle>
-      <orientation>     [-1,0,0]            </orientation>
-      <locationsMin>    [0.999, 0.0, 0.5]   </locationsMin>
-      <locationsMax>    [1.0,   1.0, 0.52]  </locationsMax>
+      <orientation>     [1,1,1]             </orientation>
+      <locationsMin>    [0.0, 0.0,  0.0]    </locationsMin>
+      <locationsMax>    [0.02,0.02, 0.02]   </locationsMax>
       <nRays>          50                   </nRays>
     </Radiometer>
+    
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [1,1,-1]            </orientation>
+      <locationsMin>    [0.0, 0.0,  0.98]   </locationsMin>
+      <locationsMax>    [0.02,0.02, 1.0]    </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+    
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [1,-1,1]            </orientation>
+      <locationsMin>    [0.0,  0.98, 0.0]   </locationsMin>
+      <locationsMax>    [0.02, 1.0,  0.02]  </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [1,-1,-1]           </orientation>
+      <locationsMin>    [0.0,  0.98, 0.98]  </locationsMin>
+      <locationsMax>    [0.02, 1.0,  1.0]   </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+    
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [-1,1,1]            </orientation>
+      <locationsMin>    [0.98, 0.0,  0.0]   </locationsMin>
+      <locationsMax>    [1.0,  0.02, 0.02]  </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [-1,1,-1]           </orientation>
+      <locationsMin>    [0.98, 0.0,  0.98]  </locationsMin>
+      <locationsMax>    [1.0,  0.02, 1.0]   </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [-1,-1,1]           </orientation>
+      <locationsMin>    [0.98, 0.98, 0.0]   </locationsMin>
+      <locationsMax>    [1.0,  1.0,  0.02]  </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>       3                   </viewAngle>
+      <orientation>     [-1,-1,-1]          </orientation>
+      <locationsMin>    [0.98, 0.98, 0.98]  </locationsMin>
+      <locationsMax>    [1.0,  1.0,  1.0]   </locationsMax>
+      <nRays>          50                   </nRays>
+    </Radiometer> 
     
   </RMCRT>
 </Uintah_specification>

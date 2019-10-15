@@ -22,7 +22,7 @@
       <cellTypeCoarsenLogic   spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
 
-      <Radiometer             spec="OPTIONAL NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
+      <Radiometer             spec="MULTIPLE NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
         <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>                                             
         <orientation          spec="REQUIRED VECTOR"/>                                                         
         <locationsMin         spec="REQUIRED VECTOR  'positive'"/>                                             
