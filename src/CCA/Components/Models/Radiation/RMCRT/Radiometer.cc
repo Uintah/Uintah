@@ -96,19 +96,30 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
 
   for( ProblemSpecP rad_ps = rmcrt_ps->findBlock( "Radiometer" ); rad_ps != nullptr; rad_ps = rad_ps->findNextBlock( "Radiometer" ) ) {
 
-    Vector orient;
+    Vector notInitialized( DBL_MAX );
+    Vector unitNormalVec( notInitialized );
+    Vector normalVec( notInitialized );
+    
     double viewAngle;
-    int nRays;
-    Point start;
-    Point end;
+    int    nRays;
+    Point  start;
+    Point  end;
+    
     rad_ps->require( "viewAngle"    ,    viewAngle );   // view angle of the radiometer in degrees
-    rad_ps->require( "orientation"  ,    orient );      // Normal vector of the radiometer orientation (Cartesian)
     rad_ps->require( "nRays"  ,          nRays );       // number of rays per radiometer
     rad_ps->require( "locationsMin" ,    start );       // minimum extent of radiometer(s) in physical units
     rad_ps->require( "locationsMax" ,    end );         // maximum extent of radiometer(s) in physical units
+    
+    rad_ps->get( "unitNormalVector",  unitNormalVec );  // non-dimensional orientation of radiometer
+    rad_ps->get( "normalVector",      normalVec);       // radiometer orientation in cartesian coordinates
 
+    if( normalVec != notInitialized ){
+      unitNormalVec = normalVec/normalVec.length();
+    }
+    
     //__________________________________
     //  Warnings and bulletproofing
+
     BBox compDomain;
     grid->getSpatialRange(compDomain);
 
@@ -156,6 +167,18 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
       }
     }
 
+    //__________________________________
+    // 
+    if ( unitNormalVec == notInitialized && normalVec == notInitialized){
+      std::ostringstream warn;
+      warn << "\n ERROR:Radiometer::problemSetup: You must specify either: "
+           << "  <unitNormalVector> or <normalVector> \n"
+           << " to set the direction of the radiometer";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    //__________________________________
+    //
     if ( viewAngle > 360 ){
       std::ostringstream warn;
       warn << "ERROR:  VRViewAngle ("<< viewAngle <<") exceeds the maximum acceptable value of 360 degrees." << std::endl;
@@ -166,10 +189,11 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
       proc0cout << "    WARNING Number of radiometer rays:  ("<< nRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, viewAngle/40) ) <<"). Errors will exceed 1%. " << std::endl;
     }
 
-    // orient[0,1,2] represent the user specified vector normal of the radiometer.
+    //__________________________________
+    //    compute the rotation angles
     for(int d = 0; d<3; d++){
-      if(orient[d] == 0){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
-        orient[d] = 1e-16;      // to avoid divide by 0.
+      if( unitNormalVec[d] == 0 ){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
+        unitNormalVec[d] = 1e-16;      // to avoid divide by 0.
       }
     }
 
@@ -189,16 +213,16 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
     //  possible rotations can be accomplished using the other two.
     double phi_rotate = 0;
 
-    double theta_rotate = acos( orient[2] / orient.length() );
+    double theta_rotate = acos( unitNormalVec[2] / unitNormalVec.length() );
 
-    double xi_rotate  = acos( orient[0] / sqrt( orient[0]*orient[0] + orient[1]*orient[1] ) );
+    double xi_rotate  = acos( unitNormalVec[0] / sqrt( unitNormalVec[0]*unitNormalVec[0] + unitNormalVec[1]*unitNormalVec[1] ) );
 
     // The rotations must be adjusted if the x and y components of the normal vector
     // are in the 3rd or 4th quadrants due to the constraints on arccos
-    if (orient[0] < 0 && orient[1] < 0){       // quadrant 3
+    if ( unitNormalVec[0] < 0 && unitNormalVec[1] < 0 ){       // quadrant 3
       xi_rotate = (M_PI/2 + xi_rotate);
     }
-    if (orient[0] > 0 && orient[1] < 0){       // quadrant 4
+    if ( unitNormalVec[0] > 0 && unitNormalVec[1] < 0 ){       // quadrant 4
       xi_rotate = (2*M_PI - xi_rotate);
     }
 

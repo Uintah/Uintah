@@ -24,7 +24,8 @@
 
       <Radiometer             spec="MULTIPLE NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
         <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>                                             
-        <orientation          spec="REQUIRED VECTOR"/>                                                         
+        <normalVector         spec="OPTIONAL VECTOR"/>      
+        <unitNormalVector     spec="OPTIONAL VECTOR"/>                                                   
         <locationsMin         spec="REQUIRED VECTOR  'positive'"/>                                             
         <locationsMax         spec="REQUIRED VECTOR  'positive'"/>                                             
         <nRays                spec="REQUIRED INTEGER 'positive'"/>                                             

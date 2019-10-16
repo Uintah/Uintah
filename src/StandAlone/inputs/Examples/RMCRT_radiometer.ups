@@ -95,8 +95,8 @@
 
     <Level>
       <Box label = "0">                              
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
+         <lower>      [-0.5,-0.5,-0.5]  </lower>         
+         <upper>      [0.5, 0.5, 0.5]   </upper>         
          <resolution> [50,50,50]  </resolution>    
          <patches>    [3,3,3]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
@@ -130,69 +130,73 @@
     <sigmaScat>         0           </sigmaScat>
     <allowReflect>       false      </allowReflect>
 
+
+    <!-- unitNormalVector or normalVector are valid inputs -->
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [1,1,1]             </orientation>
-      <locationsMin>    [0.0, 0.0,  0.0]    </locationsMin>
-      <locationsMax>    [0.02,0.02, 0.02]   </locationsMax>
-      <nRays>          50                   </nRays>
+      <viewAngle>         3                          </viewAngle>
+      <unitNormalVector>  [0.57735,0.57735,0.57735]  </unitNormalVector>
+      <locationsMin>      [-0.5,-0.5,-0.5]           </locationsMin>
+      <locationsMax>      [-0.48,-0.48,-0.48]        </locationsMax>
+      <nRays>             50                         </nRays>
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>     3                  </viewAngle>
+      <normalVector>  [0.5,0.5,-0.5]     </normalVector>
+      <locationsMin>  [-0.5, -0.5, 0.48] </locationsMin>
+      <locationsMax>  [-0.48,-0.48,0.5]  </locationsMax>
+      <nRays>         50                 </nRays>
     </Radiometer>
     
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [1,1,-1]            </orientation>
-      <locationsMin>    [0.0, 0.0,  0.98]   </locationsMin>
-      <locationsMax>    [0.02,0.02, 1.0]    </locationsMax>
-      <nRays>          50                   </nRays>
+      <viewAngle>     3                  </viewAngle>
+      <normalVector>  [0.5,-0.5,0.5]     </normalVector>
+      <locationsMin>  [-0.5, 0.48,-0.5]  </locationsMin>
+      <locationsMax>  [-0.48,0.5, -0.48] </locationsMax>
+      <nRays>         50                 </nRays>
+
+    </Radiometer>
+
+    <Radiometer>
+      <viewAngle>     3                 </viewAngle>
+      <normalVector>  [0.5,-0.5,-0.5]   </normalVector>
+      <locationsMin>  [-0.5, 0.48,0.48] </locationsMin>
+      <locationsMax>  [-0.48,0.5, 0.5]  </locationsMax>
+      <nRays>         50                </nRays>
     </Radiometer>
     
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [1,-1,1]            </orientation>
-      <locationsMin>    [0.0,  0.98, 0.0]   </locationsMin>
-      <locationsMax>    [0.02, 1.0,  0.02]  </locationsMax>
-      <nRays>          50                   </nRays>
+      <viewAngle>     3                  </viewAngle>
+      <normalVector>  [-0.5,0.5,0.5]     </normalVector>
+      <locationsMin>  [0.48,-0.5, -0.5]  </locationsMin>
+      <locationsMax>  [0.5, -0.48,-0.48] </locationsMax>
+      <nRays>         50                 </nRays>
     </Radiometer>
 
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [1,-1,-1]           </orientation>
-      <locationsMin>    [0.0,  0.98, 0.98]  </locationsMin>
-      <locationsMax>    [0.02, 1.0,  1.0]   </locationsMax>
-      <nRays>          50                   </nRays>
-    </Radiometer>
-    
-    <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [-1,1,1]            </orientation>
-      <locationsMin>    [0.98, 0.0,  0.0]   </locationsMin>
-      <locationsMax>    [1.0,  0.02, 0.02]  </locationsMax>
-      <nRays>          50                   </nRays>
+      <viewAngle>     3                 </viewAngle>
+      <normalVector>  [-0.5,0.5,-0.5]   </normalVector>
+      <locationsMin>  [0.48,-0.5, 0.48] </locationsMin>
+      <locationsMax>  [0.5, -0.48,0.5]  </locationsMax>
+      <nRays>         50                </nRays>
+
     </Radiometer>
 
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [-1,1,-1]           </orientation>
-      <locationsMin>    [0.98, 0.0,  0.98]  </locationsMin>
-      <locationsMax>    [1.0,  0.02, 1.0]   </locationsMax>
-      <nRays>          50                   </nRays>
+      <viewAngle>     3                 </viewAngle>
+      <normalVector>  [-0.5,-0.5,0.5]   </normalVector>
+      <locationsMin>  [0.48,0.48,-0.5]  </locationsMin>
+      <locationsMax>  [0.5, 0.5, -0.48] </locationsMax>
+      <nRays>         50                </nRays>
     </Radiometer>
 
     <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [-1,-1,1]           </orientation>
-      <locationsMin>    [0.98, 0.98, 0.0]   </locationsMin>
-      <locationsMax>    [1.0,  1.0,  0.02]  </locationsMax>
-      <nRays>          50                   </nRays>
-    </Radiometer>
-
-    <Radiometer>
-      <viewAngle>       3                   </viewAngle>
-      <orientation>     [-1,-1,-1]          </orientation>
-      <locationsMin>    [0.98, 0.98, 0.98]  </locationsMin>
-      <locationsMax>    [1.0,  1.0,  1.0]   </locationsMax>
-      <nRays>          50                   </nRays>
-    </Radiometer> 
+      <viewAngle>         3                             </viewAngle>
+      <unitNormalVector>  [-0.57735,-0.57735,-0.57735]  </unitNormalVector>
+      <locationsMin>      [0.48,0.48,0.48]              </locationsMin>
+      <locationsMax>      [0.5,0.5,0.5]                 </locationsMax>
+      <nRays>             50                            </nRays>
+   </Radiometer> 
     
   </RMCRT>
 </Uintah_specification>
