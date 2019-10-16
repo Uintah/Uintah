@@ -78,6 +78,10 @@ Radiometer::~Radiometer()
 {
   VarLabel::destroy( d_VRFluxLabel );
   VarLabel::destroy( d_VRIntensityLabel );
+ 
+  for( auto iter  = d_radiometers.begin();iter != d_radiometers.end(); iter++){
+    delete *iter;
+  }
 }
 
 //______________________________________________________________________
