@@ -305,7 +305,6 @@ private:
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
       T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
-      //T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
       T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]+"_RHS");
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
