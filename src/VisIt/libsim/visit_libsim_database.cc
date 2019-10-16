@@ -793,12 +793,6 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           std::string statIndex = (nTaskGraphs == 1 ? "" :
                                    "/" + std::to_string(k));
 
-          // Add in the communication reduction runtime stats which go
-          // on to the local machine mesh (i.e. the rank).
-          addMapReductionStats( md, mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo(),
-                                "Processor/Machine/Communication/", statIndex,
-                                "Machine_" + sim->hostName + "/Local" );
-
           // Add in the communication runtime stats which go on to the
           // machine communication and communication meshes.
           std::string varName[2] = { "Processor/Machine/Communication/",
@@ -806,11 +800,52 @@ visit_handle visit_SimGetMetaData(void *cbdata)
           std::string meshName[2] = { "Machine_" + sim->hostName + "/Communication",
                                       "Communication_" + sim->hostName };
 
+	  // Add in the communication across each task pairs.
+	  for (auto& info: mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo()) {
+    
+	    std::pair< std::string, std::string > taskPair = info.first;
+    
+	    std::string taskPairName = taskPair.first + "|" + taskPair.second;
+
+	    // Add in the communication reduction runtime stats which go
+	    // on to the local machine mesh (i.e. the rank).
+	    addMapReductionStats( md, info.second,
+				  "Patch/Communication/" + taskPairName + "/", statIndex,
+				  "Patch_Mesh");
+
+	    // Add in the communication reduction runtime stats which go
+	    // on to the application mesh.
+	    addMapReductionStats( md, info.second,
+				  "Processor/Machine/Communication/" + taskPairName + "/", statIndex,
+				  "Machine_" + sim->hostName + "/Local" );
+
+	    for( unsigned int j=0; j<2; ++j )
+	    {
+	      addMapStats( md, info.second,
+			   varName[j] + taskPairName + "/", statIndex,
+			   meshName[j] + statIndex );
+	    }
+	  }
+
+	  // Add in the communication across all tasks.
+	  
+	  // Add in the communication reduction runtime stats which go
+          // on to the local machine mesh (i.e. the rank).
+          // addMapReductionStats( md, mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo(),
+          //                       "Patch/Communication/AllTasks/", statIndex,
+          //                       "Patch_Mesh");
+
+          // Add in the communication reduction runtime stats which go
+          // on to the application mesh.
+          // addMapReductionStats( md, mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo(),
+          //                       "Processor/Machine/Communication/AllTasks/", statIndex,
+          //                       "Machine_" + sim->hostName + "/Local" );
+
           for( unsigned int j=0; j<2; ++j )
           {
-            addMapStats( md, mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo(),
-                         varName[j], statIndex,
-                         meshName[j] + statIndex );
+            // addMapStats( md, mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo(),
+            //              varName[j] + "AllTasks/", statIndex,
+            //              meshName[j] + statIndex );
 
             const int nVars = 1;
             std::string vars[nVars] = { "CommID" };
@@ -1254,7 +1289,10 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       index = stoi( meshName.substr(found + 1) );
     }
     
-    MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info = scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+    std::pair< std::string, std::string > allTasks("All", "Tasks");
+    
+    MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info =
+      scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo()[allTasks];
     
     unsigned int nComms = comm_info.size();
     
@@ -1533,12 +1571,15 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
           index = stoi( meshName.substr(found + 1) );
         }
 
-        MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info = scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+	std::pair< std::string, std::string > allTasks("All", "Tasks");
+	
+	MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info =
+	  scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo()[allTasks];
       
         nValues = comm_info.size();
       }
       
-      // Some nodes may not hvae threads or be communicating.
+      // Some nodes may not have threads or be communicating.
       if( nValues == 0 )
         return VISIT_INVALID_HANDLE;
       
@@ -1978,9 +2019,13 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         varName = varName.substr(0, found);
       }
 
-      MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info = scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+      std::pair< std::string, std::string > allTasks("All", "Tasks");
       
-      unsigned int nValues = comm_info.size();
+      std::map< std::pair< std::string, std::string >,
+		MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > > &comm_info =
+	scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+      
+      unsigned int nValues = comm_info[allTasks].size();
 
       // Some nodes may not be communicating.
       if( nValues == 0 )
@@ -1990,39 +2035,41 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       
       if( varName.find("Processor/Communication/CommID") == 0 ) {
         for( unsigned int i=0; i<nValues; ++i)
-          values[i] = comm_info.getKey(i);
+          values[i] = comm_info[allTasks].getKey(i);
       }
       else if( varName.find("Processor/Communication/") == 0 ) {
 
-        std::string statName = varName;
-        size_t found = statName.find_last_of("/");
+	// Lop off the prefix
+	size_t found = std::string("Processor/Communication/").size();
+	std::string statName = varName.substr(found);
+
+	// Task pair name and the stat
+	found = statName.find("/");
+	std::string pairName = statName.substr(0, found);
         statName = statName.substr(found + 1);
 
-        unsigned int key = comm_info.getKey(0);
+	found = pairName.find("|");
+	std::string toTaskName   = pairName.substr(0, found);
+	std::string fromTaskName = pairName.substr(found + 1);
 
-        if( comm_info[key].exists(statName) )
-        {
-          for( unsigned int i=0; i<nValues; ++i) {
+	std::pair< std::string, std::string > taskPair( toTaskName, fromTaskName );
+	
+	for( unsigned int i=0; i<nValues; ++i) {
 
-            unsigned int key = comm_info.getKey(i);
+	  unsigned int key = comm_info[taskPair].getKey(i);
             
-            if( comm_info[key].exists(statName) )
-              values[i] = comm_info[key].getRankValue(statName);
-            else
-              values[i] = 0;
-          }
-        }
-        else
-        {
-          for( unsigned int i=0; i<nValues; ++i)
-            values[i] = 0;
-
-          std::stringstream msg;
-          msg << "Visit libsim - " << domain << "  "
-              << "Uintah Processor/Communication variable \"" << statName << "\"  "
-              << "does not exist.";
-
-          VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+	  if( comm_info[taskPair][key].exists(statName) )
+	    values[i] = comm_info[taskPair][key].getRankValue(statName);
+	  else {
+	    values[i] = 0;
+	    
+	    std::stringstream msg;
+	    msg << "Visit libsim - for domain " << domain << "  "
+		<< "Uintah Processor/Machine/Communication/" << pairName << "  " << key
+		<< " variable \"" << statName << "\"  " << "does not exist.";
+	    
+	    VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+	  }
         }
       }
       else
@@ -2176,7 +2223,11 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         std::string reductionType = statName.substr(found + 1);
         statName = statName.substr(0, found);
 
-        if( reductionType == "Average" )
+	if( reductionType == "Size" )
+          values[0] = unifiedScheduler->m_thread_info.size();
+        else if( reductionType == "Sum" )
+          values[0] = unifiedScheduler->m_thread_info.getSum( statName );
+        else if( reductionType == "Average" )
           values[0] = unifiedScheduler->m_thread_info.getAverage( statName );
         else if( reductionType == "Minimum" )
           values[0] = unifiedScheduler->m_thread_info.getMinimum( statName );
@@ -2234,9 +2285,13 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         varName = varName.substr(0, found);
       }
 
-      MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > &comm_info = scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+      std::pair< std::string, std::string > allTasks("All", "Tasks");
       
-      unsigned int nValues = comm_info.size();
+      std::map< std::pair< std::string, std::string >,
+		MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > > &comm_info =
+	scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+      
+      unsigned int nValues = comm_info[allTasks].size();
       double *values;
       
       // Some nodes may not be communicating.
@@ -2252,48 +2307,71 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         values = new double[ nValues ];
 
         for( unsigned int i=0; i<nValues; ++i)
-          values[i] = comm_info.getKey(i);
+          values[i] = comm_info[allTasks].getKey(i);
       }
-      // Reduction variable
-      else if( statName.find_last_of("/") != std::string::npos )
-      {
-        nValues = 1;    
-        values = new double[ nValues ];
 
-        size_t found = statName.find_last_of("/");
-        std::string reductionType = statName.substr(found + 1);
-        statName = statName.substr(0, found);
-
-        if( reductionType == "Average" )
-          values[0] = comm_info.getAverage( statName );
-        else if( reductionType == "Minimum" )
-          values[0] = comm_info.getMinimum( statName );
-        else if( reductionType == "Maximum" )
-          values[0] = comm_info.getMaximum( statName );
-        else if( reductionType == "StdDev" )
-          values[0] = comm_info.getStdDev( statName );
-      }
       else {
-        values = new double[ nValues ];
 
-        // Access is via keys only so get the first key
-        unsigned int key = comm_info.getKey(0);
+	// Lop off the prefix
+	found = std::string("Processor/Machine/Communication/").size();
+	statName = varName.substr(found);
 
-        for( unsigned int i=0; i<nValues; ++i) {
+	// Task pair name and the stat
+	found = statName.find("/");
+	std::string pairName = statName.substr(0, found);
+        statName = statName.substr(found + 1);
 
-          unsigned int key = comm_info.getKey(i);
-          
-          if( comm_info[key].exists(statName) )
-            values[i] = comm_info[key].getRankValue(statName);
-          else {
-            values[i] = 0;
-            
-            std::stringstream msg;
-            msg << "Visit libsim - for domain " << domain << "  "
-                << "Uintah Processor/Machine/Communication " << key
-                << " variable \"" << statName << "\"  " << "does not exist.";
-            
-            VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+	found = pairName.find("|");
+	std::string toTaskName   = pairName.substr(0, found);
+	std::string fromTaskName = pairName.substr(found + 1);
+
+	std::pair< std::string, std::string > taskPair( toTaskName, fromTaskName );
+
+	// Reduction variable
+	if( statName.find("/") != std::string::npos )
+	{
+	  nValues = 1;    
+	  values = new double[ nValues ];
+	  
+	  size_t found = statName.find_last_of("/");
+	  std::string reductionType = statName.substr(found + 1);
+	  statName = statName.substr(0, found);
+	  
+	  if( reductionType == "Size" )
+	    values[0] = comm_info[taskPair].size();
+	  else if( reductionType == "Sum" )
+	    values[0] = comm_info[taskPair].getSum( statName );
+	  else if( reductionType == "Average" )
+	    values[0] = comm_info[taskPair].getAverage( statName );
+	  else if( reductionType == "Minimum" )
+	    values[0] = comm_info[taskPair].getMinimum( statName );
+	  else if( reductionType == "Maximum" )
+	    values[0] = comm_info[taskPair].getMaximum( statName );
+	  else if( reductionType == "StdDev" )
+	    values[0] = comm_info[taskPair].getStdDev( statName );
+	}
+	else {
+	  values = new double[ nValues ];
+	  
+	  // Access is via keys only so get the first key
+	  // unsigned int key = comm_info[taskPair].getKey(0);
+	  
+	  for( unsigned int i=0; i<nValues; ++i) {
+	    
+	    unsigned int key = comm_info[taskPair].getKey(i);
+	    
+	    if( comm_info[taskPair][key].exists(statName) )
+	      values[i] = comm_info[taskPair][key].getRankValue(statName);
+	    else {
+	      values[i] = 0;
+	      
+	      std::stringstream msg;
+	      msg << "Visit libsim - for domain " << domain << "  "
+		  << "Uintah Processor/Machine/Communication/" << pairName << "  " << key
+		  << " variable \"" << statName << "\"  " << "does not exist.";
+	      
+	      VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+	    }
           }
         }
       }
@@ -2350,10 +2428,11 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       isMachineMeshVar = (hostName == sim->hostName);
     }
   }
-  else if( strncmp(varname, "Patch/Rank", 10) == 0 ||
-           strncmp(varname, "Patch/Node", 10) == 0 ||
-           strncmp(varname, "Patch/Bounds/Low",  16) == 0 ||
-           strncmp(varname, "Patch/Bounds/High", 17) == 0 )
+  else if( strncmp(varname, "Patch/Communication", 19) == 0 ||
+           strncmp(varname, "Patch/Rank",          10) == 0 ||
+           strncmp(varname, "Patch/Node",          10) == 0 ||
+           strncmp(varname, "Patch/Bounds/Low",    16) == 0 ||
+           strncmp(varname, "Patch/Bounds/High",   17) == 0 )
   {
     isInternalVar = true;
     varType = "Patch_Mesh";
@@ -2693,6 +2772,71 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
           for (int i=0; i<gd->num*gd->components; ++i)
             gd->data[i] = val;
         }
+      }
+
+      // Patch Task Pair Communication
+      else if( strncmp(varname, "Patch/Communication", 19) == 0 )
+      {
+	varName = std::string(varname);
+	
+        gd->num = 1;        // Using the simulation patch mesh
+        gd->components = 1;     
+        gd->data = new double[gd->num * gd->components];
+
+	SchedulerCommon *scheduler = dynamic_cast<SchedulerCommon*>
+	  (sim->simController->getSchedulerP().get_rep());
+
+	// There may be multiple communication matrices, the index will be last.
+	unsigned int index = 0;
+
+	if( scheduler->getNumTaskGraphs() > 1 ) {
+	  size_t found = varName.find_last_of("/");
+        
+	  index = stoi( varName.substr(found + 1) );
+	  varName = varName.substr(0, found);
+	}
+
+	std::map< std::pair< std::string, std::string >,
+		  MapInfoMapper< unsigned int, CommunicationStatsEnum, unsigned int > > &comm_info =
+	  scheduler->getTaskGraph(index)->getDetailedTasks()->getCommInfo();
+      
+	// Lop off the prefix
+	size_t found = std::string("Patch/Communication/").size();
+	std::string statName = varName.substr(found);
+
+	// Task pair name and the stat
+	found = statName.find("/");
+	std::string pairName = statName.substr(0, found);
+        statName = statName.substr(found + 1);
+
+	found = pairName.find("|");
+	std::string toTaskName   = pairName.substr(0, found);
+	std::string fromTaskName = pairName.substr(found + 1);
+
+	std::pair< std::string, std::string > taskPair( toTaskName, fromTaskName );
+
+	// Get the reduction
+	found = statName.find("/");
+	std::string reductionType = statName.substr(found + 1);
+	statName = statName.substr(0, found);
+
+        double val = 0;
+
+	if( reductionType == "Size" )
+	  val = comm_info[taskPair].size();
+	else if( reductionType == "Sum" )
+	  val = comm_info[taskPair].getSum( statName );
+	else if( reductionType == "Average" )
+	  val = comm_info[taskPair].getAverage( statName );
+	else if( reductionType == "Minimum" )
+	  val = comm_info[taskPair].getMinimum( statName );
+	else if( reductionType == "Maximum" )
+	  val = comm_info[taskPair].getMaximum( statName );
+	else if( reductionType == "StdDev" )
+	  val = comm_info[taskPair].getStdDev( statName );
+
+        for (int i=0; i<gd->num*gd->components; ++i)
+          gd->data[i] = val;
       }
       // Patch processor rank
       else if( strncmp(varname, "Patch/Rank", 10) == 0 )

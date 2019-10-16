@@ -1151,11 +1151,13 @@ public:
 
   virtual ~VectorInfoMapper() {};
 
+  virtual void calculateSum    ( bool val ) { m_calculate_sum     = val; }
   virtual void calculateAverage( bool val ) { m_calculate_average = val; }
   virtual void calculateMinimum( bool val ) { m_calculate_minimum = val; }
   virtual void calculateMaximum( bool val ) { m_calculate_maximum = val; }
   virtual void calculateStdDev ( bool val ) { m_calculate_std_dev = val; }
   
+  virtual bool calculateSum()     const { return m_calculate_sum; }
   virtual bool calculateAverage() const { return m_calculate_average; }
   virtual bool calculateMinimum() const { return m_calculate_minimum; }
   virtual bool calculateMaximum() const { return m_calculate_maximum; }
@@ -1168,6 +1170,7 @@ public:
   {
     m_vecInfoMapper.clear();
 
+    m_sum.clear();
     m_average.clear();
     m_minimum.clear();
     m_maximum.clear();
@@ -1206,11 +1209,43 @@ public:
     for( unsigned int i=0; i<m_vecInfoMapper.size(); ++i )
       m_vecInfoMapper[i].insert( key, name, units );
      
+    m_sum.push_back(0);
     m_average.push_back(0);
     m_minimum.push_back(double_int(0,-1));
     m_maximum.push_back(double_int(0,-1));
     m_std_dev.push_back(0);
   }
+
+  // Get sum over all entries
+  virtual double getSum( const E key )
+  {
+    if( m_vecInfoMapper.size() == 0 )
+      return 0;
+    
+    m_vecInfoMapper[0].validKey( key );
+
+    return m_sum[ m_vecInfoMapper[0].m_keys[key] ];
+  };
+
+  virtual double getSum( const unsigned int index )
+  {
+    if( m_vecInfoMapper.size() == 0 )
+      return 0;
+    
+    const E key = m_vecInfoMapper[0].getKey(index);
+
+    return getSum( key );
+  };
+
+  virtual double getSum( const std::string name )
+  {
+    if( m_vecInfoMapper.size() == 0 )
+      return 0;
+    
+    const E key = m_vecInfoMapper[0].getKey(name);
+
+    return getSum( key );
+  };
 
   // Get average over all entries
   virtual double getAverage( const E key )
@@ -1413,13 +1448,14 @@ public:
       return;
     }
 
+    m_sum.resize(nStats);
     m_average.resize(nStats);
     m_minimum.resize(nStats);
     m_maximum.resize(nStats);
     m_std_dev.resize(nStats);
 
     for (size_t i = 0; i < nStats; ++i) {
-      m_average[i] = 0;
+      m_sum[i] = 0;
     }
     
     if (m_vecInfoMapper.size() > 1) {
@@ -1440,8 +1476,8 @@ public:
             val = m_vecInfoMapper[j].m_values[i];
 
           // Sum across all entires.
-          if( m_calculate_average || m_calculate_std_dev )
-            m_average[i] += val;
+          if( m_calculate_sum || m_calculate_average || m_calculate_std_dev )
+            m_sum[i] += val;
 
           // Min across all entries.
           if( m_calculate_minimum ) {
@@ -1460,7 +1496,7 @@ public:
         if( m_calculate_average || m_calculate_std_dev )
         {
           // Calculate the average.
-          m_average[i] /= (m_vecInfoMapper.size() - int(m_skipFirst));
+          m_average[i] = m_sum[i] / (m_vecInfoMapper.size() - int(m_skipFirst));
           
           if( m_calculate_std_dev )
           {
@@ -1493,6 +1529,7 @@ public:
         else
           val = m_vecInfoMapper[0].m_values[i];
 
+        m_sum[i] = val;
         m_average[i] = val;
         m_minimum[i] = double_int(val, 0);
         m_maximum[i] = double_int(val, 0);
@@ -1528,6 +1565,10 @@ public:
              << "  " << std::left
              << std::setw(24) << "Description"
              << std::setw(18) << "Units";
+      if (m_calculate_sum) {
+        header << std::setw(5) << "Sum (" << std::setw(3)
+               << m_vecInfoMapper.size()<< std::setw(6) << ")";
+      }
       if (m_calculate_minimum) {
         header << std::setw(18) << "Minimum"
                << std::setw(12) << m_indexName;
@@ -1552,7 +1593,7 @@ public:
       std::ostringstream message;
       
       for (unsigned int i=0; i<nStats; ++i) {
-        if( getAverage(i) != 0.0 ||
+        if( getSum(i)     != 0.0 || getAverage(i) != 0.0 ||
             getMinimum(i) != 0.0 || getMaximum(i) != 0.0 )
         {
           if (message.str().size()) {
@@ -1562,6 +1603,10 @@ public:
           message << "  " << std::left << std::setw(24)
                   << m_vecInfoMapper[0].getName(i) << "[" << std::setw(15)
                   << m_vecInfoMapper[0].getUnits(i) << "]";
+          
+          if (m_calculate_sum) {
+            message << " : " << std::setw(11) << getSum(i);
+          }
           
           if (m_calculate_minimum) {
             message << " : " << std::setw(15) << getMinimum(i)
@@ -1645,14 +1690,16 @@ protected:
 
   std::vector< InfoMapper<E, T> > m_vecInfoMapper;
 
+  bool m_calculate_sum    {true};
   bool m_calculate_average{true};
   bool m_calculate_minimum{false};
   bool m_calculate_maximum{true};
   bool m_calculate_std_dev{false};
 
+  std::vector< double >     m_sum;      // Sum     over all entries
   std::vector< double >     m_average;  // Average over all entries
   std::vector< double_int > m_minimum;  // Minimum over all entries
-  std::vector< double_int > m_maximum;  // Maximum over all 
+  std::vector< double_int > m_maximum;  // Maximum over all entries
   std::vector< double >     m_std_dev;  // Standard deviation over all entries
 };
 
@@ -1668,11 +1715,13 @@ public:
 
   virtual ~MapInfoMapper() {};
 
+  virtual void calculateSum    ( bool val ) { m_calculate_sum     = val; }
   virtual void calculateAverage( bool val ) { m_calculate_average = val; }
   virtual void calculateMinimum( bool val ) { m_calculate_minimum = val; }
   virtual void calculateMaximum( bool val ) { m_calculate_maximum = val; }
   virtual void calculateStdDev ( bool val ) { m_calculate_std_dev = val; }
   
+  virtual bool calculateSum()     const { return m_calculate_sum; }
   virtual bool calculateAverage() const { return m_calculate_average; }
   virtual bool calculateMinimum() const { return m_calculate_minimum; }
   virtual bool calculateMaximum() const { return m_calculate_maximum; }
@@ -1702,6 +1751,7 @@ public:
     m_names.clear();
     m_units.clear();
     
+    m_sum.clear();
     m_average.clear();
     m_minimum.clear();
     m_maximum.clear();
@@ -1749,11 +1799,43 @@ public:
     m_names.push_back(name);
     m_units.push_back(units);
     
+    m_sum.push_back(0);
     m_average.push_back(0);
     m_minimum.push_back(double_int(0,-1));
     m_maximum.push_back(double_int(0,-1));
     m_std_dev.push_back(0);
   }
+
+  // Get sum over all entries
+  virtual double getSum( const E key )
+  {
+    if( m_mapInfoMapper.size() == 0 )
+      return 0;
+    
+    m_mapInfoMapper.begin()->second.validKey( key );
+
+    return m_sum[ m_mapInfoMapper.begin()->second.m_keys[key] ];
+  };
+
+  virtual double getSum( const unsigned int index )
+  {
+    if( m_mapInfoMapper.size() == 0 )
+      return 0;
+    
+    const E key = m_mapInfoMapper.begin()->second.getKey(index);
+
+    return getSum( key );
+  };
+
+  virtual double getSum( const std::string name )
+  {
+    if( m_mapInfoMapper.size() == 0 )
+      return 0;
+    
+    const E key = m_mapInfoMapper.begin()->second.getKey(name);
+
+    return getSum( key );
+  };
 
   // Get average over all entries
   virtual double getAverage( const E key )
@@ -1953,13 +2035,14 @@ public:
       return;
     }
 
+    m_sum.resize(nStats);
     m_average.resize(nStats);
     m_minimum.resize(nStats);
     m_maximum.resize(nStats);
     m_std_dev.resize(nStats);
 
     for (size_t i = 0; i < nStats; ++i) {
-      m_average[i] = 0;
+      m_sum[i] = 0;
     }
     
     if (m_mapInfoMapper.size() > 1) {
@@ -1980,8 +2063,8 @@ public:
             val = var.second.m_values[i];
 
           // Sum across all entires.
-          if( m_calculate_average || m_calculate_std_dev )
-            m_average[i] += val;
+          if( m_calculate_sum || m_calculate_average || m_calculate_std_dev )
+            m_sum[i] += val;
 
           // Min across all entries.
           if( m_calculate_minimum ) {
@@ -2000,7 +2083,7 @@ public:
         if( m_calculate_average || m_calculate_std_dev )
         {
           // Calculate the average.
-          m_average[i] /= (double) m_mapInfoMapper.size();
+          m_average[i] = m_sum[i] / (double) m_mapInfoMapper.size();
           
           if( m_calculate_std_dev )
           {
@@ -2034,6 +2117,7 @@ public:
         else
           val = m_mapInfoMapper.begin()->second.m_values[i];
 
+        m_sum    [i] = val;
         m_average[i] = val;
         m_minimum[i] = double_int(val, 0);
         m_maximum[i] = double_int(val, 0);
@@ -2069,6 +2153,10 @@ public:
              << "  " << std::left
              << std::setw(24) << "Description"
              << std::setw(18) << "Units";
+      if (m_calculate_sum) {
+        header << std::setw(5) << "Sum (" << std::setw(3)
+               << m_mapInfoMapper.size()<< std::setw(6) << ")";
+      }
       if (m_calculate_minimum) {
         header << std::setw(18) << "Minimum"
                << std::setw(12) << m_keyName;
@@ -2093,7 +2181,7 @@ public:
       std::ostringstream message;
       
       for (unsigned int i=0; i<nStats; ++i) {
-        if( getAverage(i) != 0.0 ||
+        if( getSum(i)     != 0.0 || getAverage(i) != 0.0 ||
             getMinimum(i) != 0.0 || getMaximum(i) != 0.0 )
         {
           if (message.str().size()) {
@@ -2103,6 +2191,10 @@ public:
           message << "  " << std::left << std::setw(24)
                   << m_mapInfoMapper.begin()->second.getName(i) << "[" << std::setw(15)
                   << m_mapInfoMapper.begin()->second.getUnits(i) << "]";
+          
+          if (m_calculate_sum) {
+            message << " : " << std::setw(11) << getSum(i);
+          }
           
           if (m_calculate_minimum) {
             message << " : " << std::setw(15) << getMinimum(i)
@@ -2190,11 +2282,13 @@ protected:
 
   std::map< KEY, InfoMapper<E, T> > m_mapInfoMapper;
 
+  bool m_calculate_sum    {true};
   bool m_calculate_average{true};
   bool m_calculate_minimum{false};
   bool m_calculate_maximum{true};
   bool m_calculate_std_dev{false};
 
+  std::vector< double >     m_sum;      // Sum over all entries
   std::vector< double >     m_average;  // Average over all entries
   std::vector< double_int > m_minimum;  // Minimum over all entries
   std::vector< double_int > m_maximum;  // Maximum over all 
