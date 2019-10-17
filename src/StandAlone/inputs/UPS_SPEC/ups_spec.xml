@@ -230,6 +230,22 @@
       <name                   spec="OPTIONAL STRING" /> 
     </line_segment>
 
+    <half_space               spec="OPTIONAL NO_DATA"
+                              attribute1="type REQUIRED STRING 'absolute, relative'" >
+      <planePoint             spec="REQUIRED VECTOR" need_applies_to="type absolute" />
+      <normal                 spec="REQUIRED VECTOR" need_applies_to="type absolute" />
+      <offset                 spec="REQUIRED VECTOR" need_applies_to="type relative" />                              
+    </half_space>
+    
+    <polyhedron               spec="OPTIONAL NO_DATA"
+                                attribute1="label  OPTIONAL STRING" >
+      <center                 spec="REQUIRED VECTOR"/>
+      <bounds                 spec="REQUIRED NO_DATA">      
+        <half_space           spec="MULTIPLE"/>
+      </bounds>
+    </polyhedron>
+
+
     <difference               spec="FORWARD_DECLARATION" />
     <union                    spec="FORWARD_DECLARATION" />
     <intersection             spec="FORWARD_DECLARATION" />
@@ -253,6 +269,7 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
       <smoothcyl              spec="MULTIPLE" />
+      <polyhedron             spec="MULTIPLE" />
     </union>
 
     <!-- FIXME: only can have 2 children, right? how to specify? -->
@@ -274,6 +291,7 @@
       <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
+      <polyhedron             spec="MULTIPLE" />
     </difference>
 
     <intersection             spec="OPTIONAL NO_DATA"
@@ -294,6 +312,7 @@
       <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
+      <polyhedron             spec="MULTIPLE" />
     </intersection>
 
     <geom_object              spec="REQUIRED NO_DATA"
@@ -315,6 +334,7 @@
       <line_segment           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
+      <polyhedron             spec="MULTIPLE" />
 
       <file                    spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
