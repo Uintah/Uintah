@@ -72,7 +72,6 @@ SRCS += \
         Core/Geometry/BBox.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
-        Core/Geometry/PolyPlane.cc \
         Core/Geometry/Point.cc \
         Core/Geometry/Tensor.cc \
         Core/Geometry/Vector.cc \
@@ -80,6 +79,9 @@ SRCS += \
         Core/Disclosure/TypeDescription.cc \
         Core/Disclosure/TypeUtils.cc 
 
+ifneq ($(HAVE_CUDA),yes)
+  SRCS += Core/Geometry/PolyPlane.cc
+endif
 
 PSELIBS := \
 	Core/Exceptions Core/Containers \

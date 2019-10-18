@@ -43,13 +43,16 @@
 #include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/GeometryPiece/LineSegGeometryPiece.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/GeometryPiece/ConvexPolyhedronGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/RWS.h>
+
+#if !defined( HAVE_CUDA )
+  #include <Core/GeometryPiece/ConvexPolyhedronGeometryPiece.h>
+#endif
 
 #include <iostream>
 #include <string>
@@ -323,9 +326,11 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
     else if ( go_type == NullGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew NullGeometryPiece(child);
     }
+#if !defined( HAVE_CUDA )
     else if ( go_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConvexPolyhedronGeometryPiece(child);
     }
+#endif
     else if (go_type == "res"         || go_type == "velocity" || 
              go_type == "temperature" || go_type == "comment"  ||
              go_type == "density"     || go_type == "pressure" ||

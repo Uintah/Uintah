@@ -55,8 +55,11 @@ SRCS += \
 	$(SRCDIR)/LineSegGeometryPiece.cc        \
 	$(SRCDIR)/UniformGrid.cc                 \
 	$(SRCDIR)/UnionGeometryPiece.cc          \
-    $(SRCDIR)/EllipsoidGeometryPiece.cc      \
-    $(SRCDIR)/ConvexPolyhedronGeometryPiece.cc \
+    $(SRCDIR)/EllipsoidGeometryPiece.cc
+
+ifneq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/ConvexPolyhedronGeometryPiece.cc
+endif
 
 #	$(SRCDIR)/GUVSphereShellPiece.cc         \
 
