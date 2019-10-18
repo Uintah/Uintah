@@ -45,8 +45,6 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
       db_task->getAttribute("variable_label", eqn_name );
       db_task->getAttribute("type", type );
 
-      bool mom_variable = is_mom_var(eqn_name);
-
       if ( type == "wave" ){
 
         std::string variable_type;
