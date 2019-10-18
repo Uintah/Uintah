@@ -3029,9 +3029,9 @@ void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& fac
   IntVector outsideCell(0,0,0);
   Vector Dx = patch->dCell();
 
-  int idim; //normal direction
-  int jdim; //1st tangential
-  int kdim; //2nd tangential
+  int idim=-99; //normal direction
+  int jdim=-99; //1st tangential
+  int kdim=-99; //2nd tangential
 
   double sign_v = -1.;
   double sign_w = 1.;

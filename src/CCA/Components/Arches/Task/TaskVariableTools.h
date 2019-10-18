@@ -2,7 +2,6 @@
 #define Uintah_Component_Arches_TaskVariableTools_h
 
 #include <CCA/Components/Arches/Task/FieldContainer.h>
-#include <CCA/Components/Arches/GridTools.h>
 
 //==================================================================================================
 
