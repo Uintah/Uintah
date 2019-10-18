@@ -240,13 +240,6 @@ namespace Uintah{
       //--------------------------------------------------------------------------------------------
       //UINTAH VARIABLE TASK ACCESS:
 
-      /** @brief Generic const grid variable getter **/
-      template <typename T, typename... Args>
-      inline T* get_const_field(Args... args)
-      {
-        throw InvalidValue("Error: attempting to get const variable with wrong function.", __FILE__, __LINE__);
-      }
-
       /** @brief Get a const uintah variable without DW spec. **/
       template <typename T>
       inline T* get_const_field( const std::string name ){
