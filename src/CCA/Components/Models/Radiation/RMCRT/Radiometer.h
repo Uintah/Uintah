@@ -104,12 +104,12 @@ namespace Uintah{
       Point  d_VRLocationsMax;
 
       struct VR_variables {
-        double thetaRot;
-        double phiRot;
-        double psiRot;
-        double deltaTheta;
+        double theta_rotate;
+        double phi_rotate;
+        double xi_rotate;
+        double theta_viewAngle;
         double range;
-        double sldAngl;
+        double solidAngle;
       };
 
       VR_variables d_VR;

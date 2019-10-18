@@ -143,6 +143,18 @@ namespace WasatchCore{
     template < typename T >
     const Expr::Tag make_star_rhs(T someTag,
                                   Expr::Context newContext=Expr::STATE_NONE) const;
+
+    Expr::Tag derivative_tag( const std::string depVar,
+                              const std::string indepVar ) const;
+
+    Expr::Tag derivative_tag( const Expr::Tag depVarTag,
+                              const Expr::Tag indepVarTag ) const;
+
+    Expr::Tag derivative_tag( const std::string depVar,
+                              const Expr::Tag   indepVarTag ) const;
+
+    Expr::Tag derivative_tag( const Expr::Tag   depVarTag,
+                              const std::string indepVar ) const;
   private:
     TagNames();
   };

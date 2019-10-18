@@ -35,7 +35,7 @@
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="u"/>
-       <Constant>1.0</Constant>
+       <Constant>0.0</Constant>
     </BasicExpression>
     
     <!-- Set up a tabular property evaluation to extract density for initialization-->
@@ -85,20 +85,20 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_N"/>
+        <NameTag name="f" state="STATE_NP1"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="gamma" state="STATE_N"/>
+        <NameTag name="gamma"  state="STATE_NP1"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
             
       <ExtractDensity>
         <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
-          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>
-          <MixtureFraction><NameTag name="f"/></MixtureFraction>     
-          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_DYNAMIC"/></DensityWeightedEnthalpy>
+          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_NP1"/></DensityWeightedMixtureFraction>  
+          <MixtureFraction><NameTag name="f"/></MixtureFraction>    
+          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_NP1"/></DensityWeightedEnthalpy>
           <HeatLoss>                      <NameTag name="gamma"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
@@ -127,12 +127,25 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
       <DiffusiveFlux direction="X" coefficient="1.0e-4"/>
+      
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
     </TransportEquation>
     <!-- Build an equation for the enthalpy -->
     <TransportEquation equation="enthalpy">
 
       <SolutionVariable>rhoh</SolutionVariable>
       <PrimitiveVariable>h</PrimitiveVariable>
+
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
       <ThermalConductivity><NameTag name="lambda"/></ThermalConductivity>
       <HeatCapacity><NameTag name="cp"/></HeatCapacity>
       
@@ -140,24 +153,18 @@
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NP1"/>        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="-1.0" max="1.0">
-        <NameTag name="gamma" state="STATE_NP1"/>        
+        <NameTag name="gamma"/>        
       </FieldExpression>                    
     </FieldClipping>
-
+      
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="T"/>
     </ForceOnGraph>
-
-    <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="cp"/>
-      <NameTag name="divu"/>
-    </ForceOnGraph>
-      
         
     <!-- Momentum transport equations -->
     <MomentumEquations>
@@ -167,7 +174,18 @@
       <Viscosity>
         <NameTag name="viscosity" />
       </Viscosity>
-     <DisablePressureSolve/>
+      
+      <Pressure>
+        <EnforceSolvability/>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  100   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
     </MomentumEquations>
 
   </Wasatch>
@@ -176,9 +194,9 @@
   <Time>
     <maxTime>5000.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.5</delt_min>
-    <delt_max>0.5</delt_max>
-    <max_Timesteps> 10000 </max_Timesteps>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+    <max_Timesteps> 1000 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -194,8 +212,12 @@
     <save label="h"/>
     <save label="gamma"/>
     <save label="lambda"/>
+    <save label="d_density_d_f"/>
+    <save label="d_density_d_enthalpy"/>
     <save label="cp"/>
     <save label="rhoh_diffusivity"/>
+    <save label="f_EOS_Coupling"/>
+    <save label="h_EOS_Coupling"/>
     <save label="rhof"/>
     <save label="h_diffFlux_X"/>
     <save label="f_diffFlux_X"/>
@@ -203,6 +225,8 @@
     <save label="rhof_rhs"/>
     <save label="rhoh"/>
     <save label="T"/>
+    <save label="u"/>
+    <save label="divu"/>
   </DataArchiver> 
 
   <Grid>

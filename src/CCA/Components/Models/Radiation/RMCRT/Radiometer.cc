@@ -40,7 +40,16 @@
 
 
 //______________________________________________________________________
+//  References:  
+//  1) I.L. Hunsaker, D.J. Glaze, J.N. Thornock, and P.J. Smith, 
+// "A New Model For Virtual Radiometers, Proceedings of the ASME 1012 International
+//  Heat Transfer Conference, HT2012-58093, 2012.
 //
+//  2) I.L. Hunsaker, D.J. Glaze, J.N. Thornock, and P.J. Smith, 
+//  "Virtual Raiometers for Parallel Architectures," Technical Report,
+//  http://hdl.handle.net/123456789/11198
+//______________________________________________________________________
+
 using namespace Uintah;
 
 extern Dout g_ray_dbg;
@@ -152,9 +161,6 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   }
 
   // orient[0,1,2] represent the user specified vector normal of the radiometer.
-  // These will be converted to rotations about the x,y, and z axes, respectively.
-  // Each rotation is counterclockwise when the observer is looking from the
-  // positive axis about which the rotation is occurring. d
   for(int d = 0; d<3; d++){
     if(orient[d] == 0){      // WARNING WARNING this conditional only works for integers, not doubles, and should be fixed.
       orient[d] = 1e-16;      // to avoid divide by 0.
@@ -162,36 +168,48 @@ Radiometer::problemSetup( const ProblemSpecP& prob_spec,
   }
 
   //__________________________________
-  //  CONSTANT VR VARIABLES
-  //  In spherical coordinates, the polar angle, theta_rot,
-  //  represents the counterclockwise rotation about the y axis,
-  //  The azimuthal angle represents the negative of the
-  //  counterclockwise rotation about the z axis.
   //  Convert the user specified radiometer vector normal into three axial
-  //  rotations about the x, y, and z axes.
-  d_VR.thetaRot = acos( orient[2] / orient.length() );
-  double psiRot = acos( orient[0] / sqrt( orient[0]*orient[0] + orient[1]*orient[1] ) );
+  //  rotations about the x, y, and z axes.  
+  //  Each rotation is counterclockwise when the observer is looking from the
+  //  positive axis about which the rotation is occurring. d
+  //  This follows eqs, 14-17 in reference 1.
+  //
+  //  counter-clockwise rotation:
+  // phi_rotate  :   x axis
+  // theta_rotate:   y axis
+  // xi_rotate   :   z axis
+
+  //  phi_rotate is always  0. There will never be a need for a rotation about the x axis. All
+  //  possible rotations can be accomplished using the other two.
+  d_VR.phi_rotate = 0;
+
+  d_VR.theta_rotate = acos( orient[2] / orient.length() );
+
+  double xi_rotate  = acos( orient[0] / sqrt( orient[0]*orient[0] + orient[1]*orient[1] ) );
+  
+
 
   // The calculated rotations must be adjusted if the x and y components of the normal vector
   // are in the 3rd or 4th quadrants due to the constraints on arccos
   if (orient[0] < 0 && orient[1] < 0){       // quadrant 3
-    psiRot = (M_PI/2 + psiRot);
+    xi_rotate = (M_PI/2 + xi_rotate);
   }
   if (orient[0] > 0 && orient[1] < 0){       // quadrant 4
-    psiRot = (2*M_PI - psiRot);
+    xi_rotate = (2*M_PI - xi_rotate);
   }
 
-  d_VR.psiRot = psiRot;
-  //  phiRot is always  0. There will never be a need for a rotation about the x axis. All
-  //  possible rotations can be accomplished using the other two.
-  d_VR.phiRot = 0;
+  d_VR.xi_rotate = xi_rotate;
+ 
+  proc0cout << "                xi_rotate: " << d_VR.phi_rotate << " theta_rotate: " << d_VR.theta_rotate << " xi_rotate: " << xi_rotate << std::endl;
 
-  double deltaTheta = viewAngle/360*M_PI;       // divides view angle by two and converts to radians
-  double range      = 1 - cos(deltaTheta);      // cos(0) to cos(deltaTheta) gives the range of possible vals
-  d_VR.sldAngl      = 2*M_PI*range;             // the solid angle that the radiometer can view
-  d_VR.deltaTheta   = deltaTheta;
-  d_VR.range        = range;
-  d_sigma_over_pi   = d_sigma/M_PI;
+
+  //__________________________________
+  //  
+  double theta_viewAngle = viewAngle/360*M_PI;       // divides view angle by two and converts to radians
+  double range           = 1 - cos(theta_viewAngle); // cos(0) to cos(theta_viewAngle) gives the range of possible vals
+  d_VR.solidAngle        = 2*M_PI*range;             // the solid angle that the radiometer can view
+  d_VR.theta_viewAngle   = theta_viewAngle;
+  d_VR.range             = range;
 
   //__________________________________
   // bulletproofing
@@ -444,14 +462,14 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       //  Compute VRFlux
-      VRFlux[c]    = (T) sumProjI * d_VR.sldAngl/d_VR_nRays;
+      VRFlux[c]    = (T) sumProjI * d_VR.solidAngle/d_VR_nRays;
       intensity[c] = (T) sumProjI/d_VR_nRays;
     }  // end VR cell iterator
   }  // is radiometer on this patch
 }
 
 //______________________________________________________________________
-//    Compute the Ray direction for Virtual Radiometer
+//    Compute the Ray direction
 //______________________________________________________________________
 void
 Radiometer::rayDirection_VR( MTRand& mTwister,
@@ -459,47 +477,52 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
                              const int iRay,
                              VR_variables& VR,
                              Vector& direction_vector,
-                             double& cosVRTheta)
+                             double& cosTheta_ray)
 {
   if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
 
   // to help code readability
-  double thetaRot   = VR.thetaRot;
-  double deltaTheta = VR.deltaTheta;
-  double psiRot     = VR.psiRot;
-  double phiRot     = VR.phiRot;
-  double range      = VR.range;
+  double theta_rotate    = VR.theta_rotate;
+  double theta_viewAngle = VR.theta_viewAngle;
+  double xi_rotate       = VR.xi_rotate;
+  double phi_rotate      = VR.phi_rotate;
+  double range           = VR.range;
+  double R1              = mTwister.randDblExc();
+  double R2              = mTwister.randDblExc();
+  
+  // Eq. 11, ref 1.
+  double phi_ray = 2 * M_PI * R1; //azimuthal angle. Range of 0 to 2pi
 
-  // Generate two uniformly-distributed-over-the-solid-angle random numbers
-  // Used in determining the ray direction
-  double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
+  // This guarantees that the polar angle of the ray is within the theta_viewAngle
+  // Eq. 12, ref 1.
+  double theta_ray = acos( cos(theta_viewAngle) + range * R2 );
+  cosTheta_ray     = cos(theta_ray);
 
-  // This guarantees that the polar angle of the ray is within the delta_theta
-  double VRTheta = acos( cos(deltaTheta) + range * mTwister.randDblExc());
-  cosVRTheta = cos(VRTheta);
+  // This is the pre-rotated direction vector of the ray in cartesian coordinates, eq. 18 ref 1.
+  double x = sin(theta_ray) * cos(phi_ray);
+  double y = sin(theta_ray) * sin(phi_ray);
+  double z = cosTheta_ray;
 
-  // Convert to Cartesian x,y, and z represent the pre-rotated direction vector of a ray
-  double x = sin(VRTheta)*cos(phi);
-  double y = sin(VRTheta)*sin(phi);
-  double z = cosVRTheta;
-
-  // ++++++++ Apply the rotational offsets ++++++
-  direction_vector[0] =                       // Why re-compute cos/sin(phiRot) when phiRot = 0? -Todd
-    x*cos(thetaRot)*cos(psiRot) +
-    y*(-cos(phiRot)*sin(psiRot) + sin(phiRot)*sin(thetaRot)*cos(psiRot)) +
-    z*( sin(phiRot)*sin(psiRot) + cos(phiRot)*sin(thetaRot)*cos(psiRot));
+  // Equation 13, ref 1.
+  direction_vector[0] = 
+    x * cos(theta_rotate) * cos(xi_rotate) +
+    y * (-cos(phi_rotate) * sin(xi_rotate) + sin(phi_rotate) * sin(theta_rotate) * cos(xi_rotate)) +
+    z * ( sin(phi_rotate) * sin(xi_rotate) + cos(phi_rotate) * sin(theta_rotate) * cos(xi_rotate));
 
   direction_vector[1] =
-    x*cos(thetaRot)*sin(psiRot) +
-    y *( cos(phiRot)*cos(psiRot) + sin(phiRot)*sin(thetaRot)*sin(psiRot)) +
-    z *(-sin(phiRot)*cos(psiRot) + cos(phiRot)*sin(thetaRot)*sin(psiRot));
+    x * cos(theta_rotate) * sin(xi_rotate) +
+    y * ( cos(phi_rotate) * cos(xi_rotate) + sin(phi_rotate) * sin(theta_rotate) * sin(xi_rotate)) +
+    z * (-sin(phi_rotate) * cos(xi_rotate) + cos(phi_rotate) * sin(theta_rotate) * sin(xi_rotate));
 
   direction_vector[2] =
-    x*(-sin(thetaRot)) +
-    y*sin(phiRot)*cos(thetaRot) +
-    z*cos(phiRot)*cos(thetaRot);
+    x * -sin(theta_rotate) +
+    y * sin(phi_rotate)*cos(theta_rotate) +
+    z * cos(phi_rotate)*cos(theta_rotate);
+    
+  //std::cout << " direction_vector: " << direction_vector << " x: " << x << " y: " << y << " z: " << z << std::endl;
+    
 }
 
 //______________________________________________________________________
