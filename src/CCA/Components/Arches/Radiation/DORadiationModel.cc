@@ -1169,63 +1169,76 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
 // for sweeping Discrete-Ordinates
 //-----------------------------------------------------------------//
 void
-DORadiationModel::computeIntensitySource( const Patch* patch, std::vector <constCCVariable<double> >&abskp,
-    std::vector <constCCVariable<double> > &pTemp,
-    std::vector< constCCVariable<double> > &abskg,
-                  constCCVariable<double>  &gTemp,
-    std::vector<     CCVariable<double> > &b_sourceArray,
-    std::vector<  constCCVariable<double> > &spectral_weights){
-
-
+DORadiationModel::computeIntensitySource( const Patch* patch, 
+                                          std::vector<constCCVariable<double> > &abskp,
+                                          std::vector<constCCVariable<double> > &pTemp,
+                                          std::vector<constCCVariable<double> > &abskg,
+                                                      constCCVariable<double>   &gTemp,
+                                          std::vector<     CCVariable<double> > &b_sourceArray,
+                                          std::vector<constCCVariable<double> > &spectral_weights)
+{
     //Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   for (unsigned int qn=0; qn < abskp.size(); qn++){
     if( _radiateAtGasTemp ){
+ 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        double sum=(_sigma/M_PI)*abskp[qn][*iter]*std::pow(gTemp[*iter],4.0);
-    for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
-        b_sourceArray[iStatic][*iter]+=sum*_grey_reference_weight[iStatic];
-    }
+        IntVector c = *iter;
+        double sum = (_sigma/M_PI) * abskp[qn][c] * std::pow(gTemp[c],4.0);
+    
+        for ( unsigned int n=0; n< b_sourceArray.size(); n++){
+          b_sourceArray[n][c] += sum * _grey_reference_weight[n];
+        }
 
-
-      //Uintah::parallel_for( range,[&](int i, int j, int k){
-              //double T2 =gTemp(i,j,k)*gTemp(i,j,k);
-              //b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskp[qn](i,j,k)*T2*T2;
-      //});
+//        Uintah::parallel_for( range,[&](int i, int j, int k){
+//          double T2 =gTemp(i,j,k)*gTemp(i,j,k);
+//          b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskp[qn](i,j,k)*T2*T2;
+//        });
       }
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        double sum=((_sigma/M_PI)*abskp[qn][*iter])*std::pow(pTemp[qn][*iter],4.0);
-          for (unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
-            b_sourceArray[iStatic][*iter]+=sum*_grey_reference_weight[iStatic];
-          }
-      //Uintah::parallel_for( range,[&](int i, int j, int k){
-              //double T2 =pTemp[qn](i,j,k)*pTemp[qn](i,j,k);
-              //b_sourceArray(i,j,k)+=((_sigma/M_PI)*abskp[qn](i,j,k))*T2*T2;
-//});
-    }
- }
-  
-}
+      
+        IntVector c = *iter;
+        double sum = ((_sigma/M_PI) * abskp[qn][c]) * std::pow(pTemp[qn][c],4.0);
+        
+        for (unsigned int n=0; n< b_sourceArray.size(); n++){
+          b_sourceArray[n][c] += sum * _grey_reference_weight[n];
+        }
+     
+//      Uintah::parallel_for( range,[&](int i, int j, int k){
+//        double T2 =pTemp[qn](i,j,k)*pTemp[qn](i,j,k);
+//        b_sourceArray(i,j,k)+=((_sigma/M_PI)*abskp[qn](i,j,k))*T2*T2;
+//      });
 
-    if (_LspectralSolve){
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-         const double T4=std::pow(gTemp[*iter],4.0);
-        for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){
-          b_sourceArray[iStatic][*iter]+=(_sigma/M_PI)*spectral_weights[iStatic][*iter]*abskg[iStatic][*iter]*T4;
-        }
       }
-    }else{
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        for ( unsigned int iStatic=0; iStatic< b_sourceArray.size(); iStatic++){ // 1 iteration for non-spectral cases
-          b_sourceArray[iStatic][*iter]+=(_sigma/M_PI)*abskg[iStatic][*iter]*std::pow(gTemp[*iter],4.0);
-        }
+    }  // if radiateAtGas
+  }  // abskp loop
+
+  //__________________________________
+  //
+  if (_LspectralSolve){
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      const double T4=std::pow(gTemp[c],4.0);
+      
+      for ( unsigned int n=0; n< b_sourceArray.size(); n++){
+        b_sourceArray[n][c] += (_sigma/M_PI) * spectral_weights[n][c] * abskg[n][c]*T4;
       }
     }
-      //Uintah::parallel_for( range,[&](int i, int j, int k){
-      //double T2 =gTemp(i,j,k)*gTemp(i,j,k);
-      //b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskg(i,j,k)*T2*T2;
-  //});
-//}
+  }else{
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      const double T4 = std::pow(gTemp[c],4.0);
+      
+      for ( unsigned int n=0; n< b_sourceArray.size(); n++){ // 1 iteration for non-spectral cases
+        b_sourceArray[n][c] += (_sigma/M_PI) * abskg[n][c] * T4;
+      }
+    }
+  }
+
+//  Uintah::parallel_for( range,[&](int i, int j, int k){
+//    double T2 =gTemp(i,j,k)*gTemp(i,j,k);
+//    b_sourceArray(i,j,k)+=(_sigma/M_PI)*abskg(i,j,k)*T2*T2;
+//  });
 
   return;
 }
