@@ -48,8 +48,8 @@
 
 #include <Kokkos_Random.hpp>
 
-#include <cmath>
 #include <iostream>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -105,7 +105,9 @@ public:
   //  Boundary condition related
   /** @brief Set boundary conditions */
 
-  void setBC_onOff( const bool onOff){ d_onOff_SetBCs = onOff; }
+  void setBC_onOff( const bool onOff){
+    d_onOff_SetBCs = onOff;
+  }
 
   void  sched_setBoundaryConditions( const LevelP& level,
                                      SchedulerP& sched,
@@ -138,7 +140,9 @@ public:
   void sched_ROI_Extents ( const LevelP& level,
                            SchedulerP& scheduler );
 
-  Radiometer* getRadiometer(){ return d_radiometer; }
+  Radiometer* getRadiometer(){
+    return d_radiometer;
+  }
 
   //__________________________________
   //  public variables
@@ -199,12 +203,16 @@ private:
   std::map <int,IntVector> d_dirIndexOrder;
   std::map <int,IntVector> d_dirSignSwap;
 
+  const VarLabel* m_timeStepLabel {nullptr};
+
   const VarLabel* d_mag_grad_abskgLabel;
   const VarLabel* d_mag_grad_sigmaT4Label;
   const VarLabel* d_flaggedCellsLabel;
   const VarLabel* d_ROI_LoCellLabel;
   const VarLabel* d_ROI_HiCellLabel;
   const VarLabel* d_PPTimerLabel;        // perPatch timer
+
+  ApplicationInterface* m_application{nullptr};
 
   // const VarLabel* d_divQFiltLabel;
   // const VarLabel* d_boundFluxFiltLabel;
