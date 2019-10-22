@@ -183,8 +183,8 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
 
     double sign;
 
-    if ( my_type == OUTLET ||
-         my_type == PRESSURE ){
+    if ( my_type == OUTLET_BC ||
+         my_type == PRESSURE_BC ){
       // Dirichlet
       // P = 0
       sign = -1.0;

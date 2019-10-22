@@ -7,7 +7,9 @@
 
 namespace Uintah{ namespace ArchesCore {
 
-  enum CFD_ROLE { UVELOCITY, VVELOCITY, WVELOCITY, CCUVELOCITY, CCVVELOCITY, CCWVELOCITY,PRESSURE, TEMPERATURE, ENTHALPY, DENSITY,
+  enum CFD_ROLE { UVELOCITY, VVELOCITY, WVELOCITY,
+                  CCUVELOCITY, CCVVELOCITY, CCWVELOCITY,
+                  PRESSURE, TEMPERATURE, ENTHALPY, DENSITY,
                   TOTAL_VISCOSITY };
 
   static inline CFD_ROLE role_string_to_enum( const std::string role ){

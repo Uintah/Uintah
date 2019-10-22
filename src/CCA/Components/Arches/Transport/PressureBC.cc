@@ -46,7 +46,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     IntVector iDir = patch->faceDirection( i_bc->second.face );
     BndTypeEnum my_type = i_bc->second.type;
 
-    if ( my_type == WALL || my_type == INLET  ){
+    if ( my_type == WALL_BC || my_type == INLET_BC  ){
 
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
         // enforce dp/dn = 0
@@ -54,7 +54,7 @@ void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
       });
 
-    } else if ( my_type == OUTLET || my_type == PRESSURE ) {
+    } else if ( my_type == OUTLET_BC || my_type == PRESSURE_BC ) {
 
       //enforce p = 0
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {

@@ -246,7 +246,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
         // Sweep through, for type == Inlet, then sweep through the specified cells
-        if ( i_bc->second.type == INLET ){
+        if ( i_bc->second.type == INLET_BC ){
 
           // Get the cell iterator - range of cellID:
           Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
@@ -302,7 +302,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
     // Sweep through, for type == Inlet, then sweep through the specified cells
 
-    if ( i_bc->second.type == INLET ){
+    if ( i_bc->second.type == INLET_BC ){
 
       // Get the cell iterator - range of cellID:
       Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());

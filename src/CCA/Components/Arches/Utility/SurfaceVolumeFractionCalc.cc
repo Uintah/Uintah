@@ -99,7 +99,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
         cell_type(i,j,k) = i_bc->second.type;
       });
 
-      if ( i_bc->second.type == WALL ){
+      if ( i_bc->second.type == WALL_BC ){
 
         //Get the iterator
         Uintah::ListOfCellsIterator& cell_iter  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
@@ -164,7 +164,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
             //PCELL
             cc_vf[c] = 0.0;
-            cell_type[c] = INTRUSION;
+            cell_type[c] = INTRUSION_BC;
 
           }
 
@@ -210,7 +210,7 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
   m_intrusion_map.insert(std::make_pair(pID, intrusions));
 
-  m_intrusion_lock.unlock(); 
+  m_intrusion_lock.unlock();
 
 }
 

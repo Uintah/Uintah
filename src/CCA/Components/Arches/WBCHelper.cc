@@ -72,13 +72,13 @@ BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
 // of supported boundary types
 BndTypeEnum select_bnd_type_enum( const std::string& bndTypeStr )
 {
-  if      ( bndTypeStr == "Wall"     )  return WALL;
-  else if ( bndTypeStr == "Inlet" )     return INLET;
-  else if ( bndTypeStr == "Outflow" )   return OUTLET;
-  else if ( bndTypeStr == "Pressure" )  return PRESSURE;
+  if      ( bndTypeStr == "Wall"     )  return WALL_BC;
+  else if ( bndTypeStr == "Inlet" )     return INLET_BC;
+  else if ( bndTypeStr == "Outflow" )   return OUTLET_BC;
+  else if ( bndTypeStr == "Pressure" )  return PRESSURE_BC;
   else if ( bndTypeStr == "None"
-            || bndTypeStr == "User"  )  return USER;
-  else                                  return INVALID;
+            || bndTypeStr == "User"  )  return USER_BC;
+  else                                  return INVALID_BC;
 }
 
 // Given a BndCondTypeEnum (DIRICHLET,...), this function returns a string
@@ -103,19 +103,19 @@ std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
 const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
 {
   switch (bndTypeEnum) {
-    case WALL:
+    case WALL_BC:
       return "Wall";
       break;
-    case INLET:
+    case INLET_BC:
       return "Inlet";
       break;
-    case OUTLET:
+    case OUTLET_BC:
       return "Outflow";
       break;
-    case PRESSURE:
+    case PRESSURE_BC:
       return "Pressure";
       break;
-    case USER:
+    case USER_BC:
       return "User";
       break;
     default:
@@ -392,7 +392,7 @@ void WBCHelper::add_boundary( const std::string&     bndName,
   // if this boundary is a wall AND no particle boundaries have been specified, then default
   // the particle boundary to a fully elastic wall.
   Uintah::BCGeomBase::ParticleBndSpec myPBndSpec = pBndSpec;
-  if (bndType == WALL && pBndSpec.bndType == Uintah::BCGeomBase::ParticleBndSpec::NOTSET) {
+  if (bndType == WALL_BC && pBndSpec.bndType == Uintah::BCGeomBase::ParticleBndSpec::NOTSET) {
     myPBndSpec.bndType = Uintah::BCGeomBase::ParticleBndSpec::WALL;
     myPBndSpec.wallType = Uintah::BCGeomBase::ParticleBndSpec::ELASTIC;
     myPBndSpec.restitutionCoef = 1.0;
