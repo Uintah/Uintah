@@ -29,9 +29,9 @@ void FaceVelocities::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
 
   m_int_scheme = ArchesCore::get_interpolant_from_string( "second" ); //default second order
   m_ghost_cells = 1; //default for 2nd order

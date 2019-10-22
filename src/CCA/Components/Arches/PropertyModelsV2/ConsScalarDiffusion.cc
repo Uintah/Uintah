@@ -14,7 +14,7 @@ ConsScalarDiffusion::~ConsScalarDiffusion(){}
 //--------------------------------------------------------------------------------------------------
 void ConsScalarDiffusion::problemSetup( ProblemSpecP& db ){
 
-  m_density_name        = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name        = parse_ups_for_role( DENSITY_ROLE, db, "density" );
   m_turb_viscosity_name = "turb_viscosity";
   m_gamma_name          = m_task_name;
   db->require("D_mol", m_Diffusivity);
@@ -93,4 +93,3 @@ void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   });
 
 }
-

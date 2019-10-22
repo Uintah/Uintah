@@ -18,21 +18,21 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocity" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc" );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc" );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc" );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, m_u_vel_name + "_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, m_v_vel_name + "_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, m_w_vel_name + "_cc" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
   Nghost_cells = 1;
 
   db->getWithDefault("Cs", m_Cs, 1.3);
 
-  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, default_viscosity_name );
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, default_viscosity_name );
 
   // ** HACK **
   if ( m_total_vis_name == "viscosityCTS" ){ m_using_production = true; }

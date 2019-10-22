@@ -23,16 +23,16 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc"  );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc"  );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc"  );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, m_u_vel_name + "_cc"  );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, m_v_vel_name + "_cc"  );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, m_w_vel_name + "_cc"  );
 
-  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, ArchesCore::default_viscosity_name );
 
   std::stringstream composite_name;
   composite_name << "strainMagnitudeLabel_" << m_task_name;

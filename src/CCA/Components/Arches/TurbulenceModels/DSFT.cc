@@ -19,14 +19,14 @@ DSFT::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
   // u, v , w velocities
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc" );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc" );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, m_u_vel_name + "_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, m_v_vel_name + "_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, m_w_vel_name + "_cc" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
   m_rhou_vel_name = default_uMom_name;
   m_rhov_vel_name = default_vMom_name;
@@ -214,7 +214,7 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   Beta13.initialize(0.0);
   Beta22.initialize(0.0);
   Beta23.initialize(0.0);
-  Beta33.initialize(0.0); 
+  Beta33.initialize(0.0);
 
   Uintah::parallel_for( range, [&](int i, int j, int k){
 

@@ -36,14 +36,14 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
-  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
+  m_density_name     = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );//m_v_vel_name + "_cc";
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, "CCUVelocity" );//;m_u_vel_name + "_cc";
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, "CCVVelocity" );//m_v_vel_name + "_cc";
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, "CCWVelocity" );;//m_w_vel_name + "_cc";
 
   std::stringstream composite_name;
   composite_name << "strainMagnitudeLabel_" << m_task_name;
@@ -57,7 +57,7 @@ SGSsigma::problemSetup( ProblemSpecP& db ){
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
   } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, "viscosityCTS" );
   }
 
   if (m_u_vel_name == "uVelocitySPBC") { // this is production code

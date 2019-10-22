@@ -52,9 +52,9 @@ MassFlowRate::~MassFlowRate(){
 void MassFlowRate::problemSetup( ProblemSpecP& db ){
 
   // Parse from UPS file
-  m_g_uVel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_g_vVel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_g_wVel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_g_uVel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_g_vVel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_g_wVel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
 
   m_volFraction_name = "volFraction";
   particleMethod_bool = check_for_particle_method( db, DQMOM_METHOD );

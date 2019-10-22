@@ -38,10 +38,10 @@ WallConstSmag::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
-  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocity" );
+  m_density_name     = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
   //Which turb model is going to supply the strain rate mag?
   std::string which_model = "NotSet";

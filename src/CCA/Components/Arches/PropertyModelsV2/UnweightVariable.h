@@ -216,10 +216,10 @@ void UnweightVariable<T>::problemSetup( ProblemSpecP& db ){
 
   m_Nghost_cells = 1;
 
-  m_rho_name = parse_ups_for_role( ArchesCore::DENSITY, db, "density" );
+  m_rho_name = parse_ups_for_role( ArchesCore::DENSITY_ROLE, db, "density" );
 
   if (m_eqn_class == ArchesCore::DENSITY_WEIGHTED) {
-    m_rho_name = parse_ups_for_role( ArchesCore::DENSITY, db, "density" );
+    m_rho_name = parse_ups_for_role( ArchesCore::DENSITY_ROLE, db, "density" );
   }else if (m_eqn_class == ArchesCore::DQMOM){
     db->findBlock("weight_factor")->getAttribute("label", m_rho_name);
   }

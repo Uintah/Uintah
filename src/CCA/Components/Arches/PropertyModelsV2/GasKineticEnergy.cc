@@ -17,9 +17,9 @@ GasKineticEnergy::~GasKineticEnergy(){
 void
 GasKineticEnergy::problemSetup( ProblemSpecP& db ){
 
-  m_u_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCUVELOCITY, db, "CCUVelocity" );
-  m_v_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCVVELOCITY, db, "CCVVelocity" );
-  m_w_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCWVELOCITY, db, "CCWVelocity" );
+  m_u_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCUVELOCITY_ROLE, db, "CCUVelocity" );
+  m_v_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCVVELOCITY_ROLE, db, "CCVVelocity" );
+  m_w_vel_name = parse_ups_for_role( Uintah::ArchesCore::CCWVELOCITY_ROLE, db, "CCWVelocity" );
   m_kinetic_energy = "gas_kinetic_energy";
   m_max_ke = 1e9 ;
 }
@@ -69,7 +69,7 @@ GasKineticEnergy::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 //--------------------------------------------------------------------------------------------------
 void
 GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  // cc gas velocities 
+  // cc gas velocities
   constCCVariable<double>& u = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
   constCCVariable<double>& v = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
   constCCVariable<double>& w = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
@@ -79,10 +79,10 @@ GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   double ke_p = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
-    ke(i,j,k) = 0.5*(u(i,j,k)*u(i,j,k) + v(i,j,k)*v(i,j,k) +w(i,j,k)*w(i,j,k)); 
+    ke(i,j,k) = 0.5*(u(i,j,k)*u(i,j,k) + v(i,j,k)*v(i,j,k) +w(i,j,k)*w(i,j,k));
     ke_p += ke(i,j,k);
   });
-  // check if ke is diverging in this patch 
+  // check if ke is diverging in this patch
   if ( ke_p > m_max_ke )
     throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);
 }

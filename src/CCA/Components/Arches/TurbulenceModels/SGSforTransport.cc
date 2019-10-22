@@ -34,10 +34,10 @@ namespace Uintah{
 
       using namespace Uintah::ArchesCore;
       // u, v , w velocities
-      m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-      m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-      m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
-      m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+      m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+      m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+      m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
+      m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
       m_rhou_vel_name = ArchesCore::default_uMom_name;
       m_rhov_vel_name = ArchesCore::default_vMom_name;

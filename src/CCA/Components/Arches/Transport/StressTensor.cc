@@ -26,10 +26,10 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
+    m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db );
 //
   /* It is going to use central scheme as default   */
   diff_scheme = "central";

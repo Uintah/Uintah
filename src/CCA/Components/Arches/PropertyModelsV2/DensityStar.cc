@@ -19,7 +19,7 @@ void
 DensityStar::problemSetup( ProblemSpecP& db ){
 
   using namespace ArchesCore;
-  m_label_density = parse_ups_for_role( DENSITY, db, "density" );
+  m_label_density = parse_ups_for_role( DENSITY_ROLE, db, "density" );
   m_label_densityStar = m_label_density + "_star" ;
 
 }

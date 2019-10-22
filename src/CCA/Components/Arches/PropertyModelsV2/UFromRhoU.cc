@@ -16,11 +16,11 @@ void UFromRhoU::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
   m_xmom = default_uMom_name;
   m_ymom = default_vMom_name;
   m_zmom = default_wMom_name;

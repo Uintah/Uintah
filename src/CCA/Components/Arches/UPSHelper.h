@@ -7,62 +7,69 @@
 
 namespace Uintah{ namespace ArchesCore {
 
-  enum CFD_ROLE { UVELOCITY, VVELOCITY, WVELOCITY,
-                  CCUVELOCITY, CCVVELOCITY, CCWVELOCITY,
-                  PRESSURE, TEMPERATURE, ENTHALPY, DENSITY,
-                  TOTAL_VISCOSITY };
+  enum CFD_ROLE { UVELOCITY_ROLE,
+                  VVELOCITY_ROLE,
+                  WVELOCITY_ROLE,
+                CCUVELOCITY_ROLE,
+                CCVVELOCITY_ROLE,
+                CCWVELOCITY_ROLE,
+                   PRESSURE_ROLE,
+                TEMPERATURE_ROLE,
+                   ENTHALPY_ROLE,
+                    DENSITY_ROLE,
+            TOTAL_VISCOSITY_ROLE };
 
   static inline CFD_ROLE role_string_to_enum( const std::string role ){
 
     if ( role == "uvelocity" ){
-      return UVELOCITY;
+      return UVELOCITY_ROLE;
     } else if ( role == "vvelocity" ){
-      return VVELOCITY;
+      return VVELOCITY_ROLE;
     } else if ( role == "wvelocity" ){
-      return WVELOCITY;
+      return WVELOCITY_ROLE;
     } else if ( role == "ccuvelocity" ){
-      return CCUVELOCITY;
+      return CCUVELOCITY_ROLE;
     } else if ( role == "ccvvelocity" ){
-      return CCVVELOCITY;
+      return CCVVELOCITY_ROLE;
     } else if ( role == "ccwvelocity" ){
-      return CCWVELOCITY;
+      return CCWVELOCITY_ROLE;
     } else if ( role == "pressure" ){
-      return PRESSURE;
+      return PRESSURE_ROLE;
     } else if ( role == "temperature" ){
-      return TEMPERATURE;
+      return TEMPERATURE_ROLE;
     } else if ( role == "enthalpy" ){
-      return ENTHALPY;
+      return ENTHALPY_ROLE;
     } else if ( role == "density" ){
-      return DENSITY;
+      return DENSITY_ROLE;
     } else if ( role == "total_viscosity" ){
-      return TOTAL_VISCOSITY;
+      return TOTAL_VISCOSITY_ROLE;
     } else {
       throw InvalidValue("Error: Cannot match role to CFD_ROLE enum. ", __FILE__, __LINE__ );
     }
   }
 
   static inline std::string role_enum_to_string( const CFD_ROLE role ){
-    if ( role == UVELOCITY ){
+    if ( role == UVELOCITY_ROLE ){
       return "uvelocity";
-    } else if ( role == VVELOCITY ){
+    } else if ( role == VVELOCITY_ROLE ){
       return "vvelocity";
-    } else if ( role == WVELOCITY ){
+    } else if ( role == WVELOCITY_ROLE ){
       return "wvelocity";
-    } else if ( role == CCUVELOCITY ){
+    } else if ( role == CCUVELOCITY_ROLE ){
       return "ccuvelocity";
-    } else if ( role == CCVVELOCITY ){
+    } else if ( role == CCVVELOCITY_ROLE ){
       return "ccvvelocity";
-    } else if ( role == CCWVELOCITY ){
+    } else if ( role == CCWVELOCITY_ROLE ){
       return "ccwvelocity";
-    } else if ( role == PRESSURE ){
+    } else if ( role == PRESSURE_ROLE ){
       return "pressure";
-    } else if ( role == TEMPERATURE ){
+    } else if ( role == TEMPERATURE_ROLE ){
       return "temperature";
-    } else if ( role == ENTHALPY ){
+    } else if ( role == ENTHALPY_ROLE ){
       return "enthalpy";
-    } else if ( role == DENSITY ){
+    } else if ( role == DENSITY_ROLE ){
       return "density";
-    } else if ( role == TOTAL_VISCOSITY ){
+    } else if ( role == TOTAL_VISCOSITY_ROLE ){
       return "total_viscosity";
     } else {
       throw InvalidValue("Error: Role enum type not recognized.", __FILE__, __LINE__ );

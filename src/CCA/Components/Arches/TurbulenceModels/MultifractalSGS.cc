@@ -66,9 +66,9 @@ namespace Uintah{
 
       Nghost_cells = 1;
 
-      m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-      m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-      m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+      m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+      m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+      m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
 
       m_cc_u_vel_name = m_u_vel_name + "_cc";
       m_cc_v_vel_name = m_v_vel_name + "_cc";
@@ -79,7 +79,7 @@ namespace Uintah{
       if (db->findBlock("use_my_name_viscosity")){
         db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
       } else{
-        m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
+        m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db );
       }
 
       const ProblemSpecP params_root = db->getRootNode();

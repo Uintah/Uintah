@@ -91,7 +91,7 @@ DSmaMMML<TT>::problemSetup( ProblemSpecP& db ){
   const ProblemSpecP params_root = db->getRootNode();
   //db->require("epsilon",m_epsilon);
 
-  std::string u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
+  std::string u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
 
   std::stringstream composite_name;
   composite_name << "strainMagnitude_" << m_turb_model_name;

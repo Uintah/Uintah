@@ -19,7 +19,7 @@ void
 DensityRK::problemSetup( ProblemSpecP& db ){
 
   using namespace ArchesCore;
-  m_label_density = parse_ups_for_role( DENSITY, db, "density" );
+  m_label_density = parse_ups_for_role( DENSITY_ROLE, db, "density" );
   m_label_densityRK = m_label_density + "_rk" ;
   ProblemSpecP db_root = db->getRootNode();
 

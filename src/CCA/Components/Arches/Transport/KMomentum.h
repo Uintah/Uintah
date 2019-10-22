@@ -228,7 +228,7 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name ));
 
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
@@ -252,7 +252,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -275,7 +275,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
@@ -315,7 +315,7 @@ private:
     m_sigmaz_name     = var_map.sigmaz_name;
 
     m_mu_name = var_map.mu_name;
-    m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
+    m_rho_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:

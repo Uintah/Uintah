@@ -18,19 +18,19 @@ DSFTv2::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
   // u, v , w velocities
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, "CCUVelocity" );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, "CCVVelocity" );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, "CCWVelocity" );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, "CCUVelocity" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, "CCVVelocity" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, "CCWVelocity" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
   m_rhou_vel_name = ArchesCore::default_uMom_name;
   m_rhov_vel_name = ArchesCore::default_vMom_name;
-  m_rhow_vel_name = ArchesCore::default_wMom_name; 
+  m_rhow_vel_name = ArchesCore::default_wMom_name;
 
   m_volFraction_name = "volFraction";
 

@@ -20,7 +20,7 @@ Drhodt::problemSetup( ProblemSpecP& db ){
 
   m_label_drhodt = "drhodt";
   using namespace ArchesCore;
-  m_label_density = parse_ups_for_role( DENSITY, db, "density" );
+  m_label_density = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
 }
 

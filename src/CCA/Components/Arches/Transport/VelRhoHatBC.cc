@@ -23,9 +23,9 @@ void VelRhoHatBC::problemSetup( ProblemSpecP& db ){
   m_xmom = default_uMom_name;
   m_ymom = default_vMom_name;
   m_zmom = default_wMom_name;
-  m_uVel = parse_ups_for_role( UVELOCITY, db, default_uVel_name );
-  m_vVel = parse_ups_for_role( VVELOCITY, db, default_vVel_name );
-  m_wVel = parse_ups_for_role( WVELOCITY, db, default_wVel_name );
+  m_uVel = parse_ups_for_role( UVELOCITY_ROLE, db, default_uVel_name );
+  m_vVel = parse_ups_for_role( VVELOCITY_ROLE, db, default_vVel_name );
+  m_wVel = parse_ups_for_role( WVELOCITY_ROLE, db, default_wVel_name );
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -95,7 +95,7 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   if (db->findBlock("use_my_name_viscosity")){
     db->findBlock("use_my_name_viscosity")->getAttribute("label",m_t_vis_name);
   } else{
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, "viscosityCTS" );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, "viscosityCTS" );
   }
 
   //m_t_vis_name_production = "viscosityCTS";
@@ -114,7 +114,7 @@ DSmaCs<TT>::problemSetup( ProblemSpecP& db ){
   Type_filter = get_filter_from_string( m_Type_filter_name );
   m_Filter.get_w(Type_filter);
 
-  m_density_name     = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name     = parse_ups_for_role( DENSITY_ROLE, db, "density" );
   m_volFraction_name = "volFraction";
   std::stringstream composite_name;
   composite_name << "strainMagnitude_" << m_turb_model_name;

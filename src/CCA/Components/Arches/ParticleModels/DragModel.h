@@ -154,11 +154,11 @@ namespace Uintah{
       throw InvalidValue("Error: direction in drag model not recognized.", __FILE__, __LINE__ );
     }
 
-    using namespace ArchesCore; 
+    using namespace ArchesCore;
 
-    _gas_u_velocity_name = ArchesCore::parse_ups_for_role( CCUVELOCITY, db, "uVelocity_cc");
-    _gas_v_velocity_name = ArchesCore::parse_ups_for_role( CCVVELOCITY, db, "vVelocity_cc");
-    _gas_w_velocity_name = ArchesCore::parse_ups_for_role( CCWVELOCITY, db, "wVelocity_cc");
+    _gas_u_velocity_name = ArchesCore::parse_ups_for_role( CCUVELOCITY_ROLE, db, "uVelocity_cc");
+    _gas_v_velocity_name = ArchesCore::parse_ups_for_role( CCVVELOCITY_ROLE, db, "vVelocity_cc");
+    _gas_w_velocity_name = ArchesCore::parse_ups_for_role( CCWVELOCITY_ROLE, db, "wVelocity_cc");
     _gas_density_name = "densityCP";
 
     const ProblemSpecP params_doot = db->getRootNode();

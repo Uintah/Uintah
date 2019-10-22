@@ -6,7 +6,7 @@ namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
 GravityA::GravityA( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) 
+TaskInterface( task_name, matl_index )
 {}
 
 //--------------------------------------------------------------------------------------------------
@@ -31,9 +31,9 @@ GravityA::problemSetup( ProblemSpecP& db ){
 
   db->findBlock("reference_density")->getAttribute("value", m_ref_density);
   using namespace ArchesCore;
-  m_density_label = parse_ups_for_role( DENSITY, db, "density" );
-  
- 
+  m_density_label = parse_ups_for_role( DENSITY_ROLE, db, "density" );
+
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];
     });
 
   } else if (m_gravity[1] != 0.0) {
@@ -88,7 +88,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];
     });
 
   } else if (m_gravity[2] != 0.0) {
@@ -96,7 +96,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];
     });
 
   }
@@ -147,7 +147,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - m_ref_density )*m_gravity[0];
     });
 
   } else if (m_gravity[1] != 0.0) {
@@ -155,7 +155,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - m_ref_density )*m_gravity[1];
     });
 
   } else if (m_gravity[2] != 0.0) {
@@ -163,7 +163,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - m_ref_density )*m_gravity[2];
     });
 
   }

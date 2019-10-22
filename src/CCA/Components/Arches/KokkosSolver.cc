@@ -218,15 +218,15 @@ KokkosSolver::computeTimestep( const LevelP     & level
   using namespace ArchesCore;
 
   std::vector<std::string> var_names;
-  std::string uname = parse_ups_for_role( UVELOCITY, m_arches_spec, ArchesCore::default_uVel_name );
+  std::string uname = parse_ups_for_role( UVELOCITY_ROLE, m_arches_spec, ArchesCore::default_uVel_name );
   var_names.push_back(uname);
-  std::string vname = parse_ups_for_role( VVELOCITY, m_arches_spec, ArchesCore::default_vVel_name );
+  std::string vname = parse_ups_for_role( VVELOCITY_ROLE, m_arches_spec, ArchesCore::default_vVel_name );
   var_names.push_back(vname);
-  std::string wname = parse_ups_for_role( WVELOCITY, m_arches_spec, ArchesCore::default_wVel_name );
+  std::string wname = parse_ups_for_role( WVELOCITY_ROLE, m_arches_spec, ArchesCore::default_wVel_name );
   var_names.push_back(wname);
-  std::string muname = parse_ups_for_role( TOTAL_VISCOSITY, m_arches_spec, "NotFound" );
+  std::string muname = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, m_arches_spec, "NotFound" );
   var_names.push_back(muname);
-  std::string rhoname = parse_ups_for_role( DENSITY, m_arches_spec, "NotFound" );
+  std::string rhoname = parse_ups_for_role( DENSITY_ROLE, m_arches_spec, "NotFound" );
   var_names.push_back(rhoname);
 
   bool found_all_vars = true;
@@ -277,7 +277,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
       throw ProblemSetupException("\n Error: Oops... please specify a delt_init in your input file.\n", __FILE__, __LINE__ );
     }
 
-    m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init ); 
+    m_arches_spec->getRootNode()->findBlock("Time")->require("delt_init", m_dt_init );
     proc0cout << " Note: Setting constant dt = " << m_dt_init << "\n" << std::endl;
 
     Task* tsk = scinew Task( "KokkosSolver::setTimeStep", this,
