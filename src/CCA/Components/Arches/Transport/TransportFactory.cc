@@ -246,10 +246,10 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_mom = db->findBlock("KMomentum");
 
-    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-    m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+    m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+    m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
     if ( !db_mom->findBlock("inviscid")) {
       std::string stress_name = "[StressTensor]";

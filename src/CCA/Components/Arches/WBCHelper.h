@@ -134,13 +134,13 @@ OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum );
 //****************************************************************************
 enum BndTypeEnum
 {
-  WALL,      ///< Stationary wall BC. Zero velocity (and momentum).
-  INLET,     ///< Inlet boundary condition
-  OUTLET,    ///< Outlet boundary condition
-  PRESSURE,  ///< Pressure boundary condition
-  USER,      ///< User specified
-  INTRUSION, ///< Intrusion - enum stored here for convenience
-  INVALID
+  WALL_BC,      ///< Stationary wall BC. Zero velocity (and momentum).
+  INLET_BC,     ///< Inlet boundary condition
+  OUTLET_BC,    ///< Outlet boundary condition
+  PRESSURE_BC,  ///< Pressure boundary condition
+  USER_BC,      ///< User specified
+  INTRUSION_BC, ///< Intrusion - enum stored here for convenience
+  INVALID_BC
 };
 
 BndTypeEnum       select_bnd_type_enum( const std::string& bcTypeStr );

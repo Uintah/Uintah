@@ -93,9 +93,9 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskRestartInitFunctionPointers()
 void MassFlowRate::problemSetup( ProblemSpecP& db ){
 
   // Parse from UPS file
-  m_g_uVel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_g_vVel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_g_wVel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_g_uVel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_g_vVel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_g_wVel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
 
   m_volFraction_name = "volFraction";
   particleMethod_bool = check_for_particle_method( db, DQMOM_METHOD );
@@ -290,7 +290,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
         // Sweep through, for type == Inlet, then sweep through the specified cells
-        if ( i_bc->second.type == INLET ){
+        if ( i_bc->second.type == INLET_BC ){
 
           // Get the cell iterator - range of cellID:
           Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
@@ -346,7 +346,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
     // Sweep through, for type == Inlet, then sweep through the specified cells
 
-    if ( i_bc->second.type == INLET ){
+    if ( i_bc->second.type == INLET_BC ){
 
       // Get the cell iterator - range of cellID:
       Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());

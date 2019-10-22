@@ -57,9 +57,9 @@ void VelRhoHatBC::problemSetup( ProblemSpecP& db ){
   m_xmom = default_uMom_name;
   m_ymom = default_vMom_name;
   m_zmom = default_wMom_name;
-  m_uVel = parse_ups_for_role( UVELOCITY, db, default_uVel_name );
-  m_vVel = parse_ups_for_role( VVELOCITY, db, default_vVel_name );
-  m_wVel = parse_ups_for_role( WVELOCITY, db, default_wVel_name );
+  m_uVel = parse_ups_for_role( UVELOCITY_ROLE, db, default_uVel_name );
+  m_vVel = parse_ups_for_role( VVELOCITY_ROLE, db, default_vVel_name );
+  m_wVel = parse_ups_for_role( WVELOCITY_ROLE, db, default_wVel_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -141,15 +141,15 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
     int sign = iDir[0] + iDir[1] + iDir[2];
     int bc_sign = 0;
 
-    if ( my_type == OUTLET ){
+    if ( my_type == OUTLET_BC ){
       bc_sign = 1.;
-    } else if ( my_type == PRESSURE){
+    } else if ( my_type == PRESSURE_BC ){
       bc_sign = -1.;
     }
   
     sign = bc_sign * sign;
 
-    if ( my_type == OUTLET || my_type == PRESSURE ){
+    if ( my_type == OUTLET_BC || my_type == PRESSURE_BC ){
       if ( face == Patch::xminus || face == Patch::xplus ){
         set_mom_bc(execObj, xmom, old_uVel, iDir, possmall , sign, cell_iter);
       }else if ( face == Patch::yminus || face == Patch::yplus ){

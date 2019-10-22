@@ -98,7 +98,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
   m_denRefArrayLabel = VarLabel::create( "denRefArray", CCVariable<double>::getTypeDescription() );
   //resolve some common labels:
 
-  std::string density_name = parse_ups_for_role( DENSITY, db, "densityCP");
+  std::string density_name = parse_ups_for_role( DENSITY_ROLE, db, "densityCP");
   m_densityLabel = VarLabel::find(density_name);
   if ( m_densityLabel == NULL ){
     throw InvalidValue("Error: Cannot resolve density label.",__FILE__,__LINE__);

@@ -6,7 +6,7 @@ namespace Uintah{
 
 //--------------------------------------------------------------------------------------------------
 GravityA::GravityA( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) 
+TaskInterface( task_name, matl_index )
 {}
 
 //--------------------------------------------------------------------------------------------------
@@ -69,9 +69,9 @@ GravityA::problemSetup( ProblemSpecP& db ){
 
   db->findBlock("reference_density")->getAttribute("value", m_ref_density);
   using namespace ArchesCore;
-  m_density_label = parse_ups_for_role( DENSITY, db, "density" );
-  
- 
+  m_density_label = parse_ups_for_role( DENSITY_ROLE, db, "density" );
+
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     parallel_initialize(execObj,0.0,gx);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;
     });
 
   } else if (m_gravity[1] != 0.0) {
@@ -130,7 +130,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     parallel_initialize(execObj,0.0,gy);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;
     });
 
   } else if (m_gravity[2] != 0.0) {
@@ -139,7 +139,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     parallel_initialize(execObj,0.0,gz);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;
     });
 
   }
@@ -190,7 +190,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>(m_gx_label);
     parallel_initialize(execObj,0.0,gx);
     Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
-      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;    
+      gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;
     });
 
   } else if (m_gravity[1] != 0.0) {
@@ -199,7 +199,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     parallel_initialize(execObj,0.0,gy);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;    
+      gy(i,j,k) = (0.5*(density(i,j,k) + density(i,j-1,k)) - ref_density )*aGravity;
     });
 
   } else if (m_gravity[2] != 0.0) {
@@ -208,7 +208,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     parallel_initialize(execObj,0.0,gz);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;    
+      gz(i,j,k) = (0.5*(density(i,j,k) + density(i,j,k-1)) - ref_density )*aGravity;
     });
 
   }
