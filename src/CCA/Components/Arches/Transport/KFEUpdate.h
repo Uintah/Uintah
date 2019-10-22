@@ -364,7 +364,6 @@ private:
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
       auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]);
-      //T& rhs = tsk_info->get_uintah_field_add<T>(*ieqn+"_rhs");
       auto rhs = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]+"_RHS");
 
 /////////////////////////// PORTABILITY FUNCTIONALITY MISSING//////////////////////////////

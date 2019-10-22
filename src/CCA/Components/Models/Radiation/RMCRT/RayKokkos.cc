@@ -24,7 +24,10 @@
 
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/RayKokkos.h>
+#include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Schedulers/DetailedTask.h>
+
+#include <CCA/Ports/ApplicationInterface.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -51,9 +54,9 @@
 #endif
 
 #include <fstream>
-#include <iostream>
-#include <string>
 #include <vector>
+#include <string>
+#include <iostream>
 
 //__________________________________
 // To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM both here and in src/Core/Math/MersenneTwister.h
@@ -99,6 +102,7 @@ bool isDbgCell( const int i, const int j, const int k )
   return false;
 }
 
+
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -117,6 +121,9 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
 //  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
 //  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
+
+  // Time Step
+  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -161,6 +168,8 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
+  VarLabel::destroy( m_timeStepLabel );
+
   VarLabel::destroy( d_mag_grad_abskgLabel );
   VarLabel::destroy( d_mag_grad_sigmaT4Label );
   VarLabel::destroy( d_flaggedCellsLabel );
@@ -202,17 +211,15 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
-  proc0cout << "__________________________________ " << endl;
-
 #ifdef UINTAH_ENABLE_KOKKOS
-  proc0cout << "  RMCRT: Using the Kokkos-based implementation of RMCRT." << endl;
+  proc0cout << "  - Using the Kokkos-based implementation of RMCRT.\n";
 #endif
 
   if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
-    proc0cout << "  RMCRT: Using Latin Hyper Cube method for selecting ray directions.";
+    proc0cout << "  - Using Latin Hyper Cube method for selecting ray directions.\n";
   } else{
-    proc0cout << "  RMCRT: Using traditional Monte-Carlo method for selecting ray directions.";
+    proc0cout << "  - Using traditional Monte-Carlo method for selecting ray directions.\n";
   }
 
   //__________________________________
@@ -220,13 +227,13 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid );
+    d_radiometer->problemSetup( prob_spec, rmcrtps, grid );
   }
 
   //__________________________________
   //  Warnings and bulletproofing
 #ifndef RAY_SCATTER
-  proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
+  proc0cout<< "    - sigmaScat: " << d_sigmaScat << endl;
   if (d_sigmaScat>0) {
     std::ostringstream warn;
     warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << endl;
@@ -237,22 +244,22 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
 #endif
 
 #ifdef RAY_SCATTER
-  proc0cout<< endl << "  RMCRT: Ray scattering is enabled." << endl;
+  proc0cout<< "  - Ray scattering is enabled." << endl;
   if(d_sigmaScat<1e-99){
-    proc0cout << "  WARNING:  You are running a non-scattering case, and you have the following in your configure line..." << endl;
-    proc0cout << "                    --enable-ray-scatter" << endl;
-    proc0cout << "            This will run slower than necessary." << endl;
-    proc0cout << "            You can remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "    WARNING:  You are running a non-scattering case but the following is in your configure line...\n"
+              << "                    --enable-ray-scatter"
+              << "            This will run slower than necessary."
+              << "            You can remove --enable-ray-scatter from the configure line, re-configure and re-compile" << endl;
   }
 #endif
 
   if( d_nDivQRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    proc0cout << "                  For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+    proc0cout << "    WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    proc0cout << "              For higher accuracy specify nDivQRays greater than 2." << endl;
   }
 
-  if( d_nFluxRays == 1 ){
-    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+  if( d_nFluxRays == 1 && d_whichAlgo != radiometerOnly){
+    proc0cout << "    WARNING: You have specified only 1 ray to compute radiative fluxes on the boundaries." << endl;
   }
 
 
@@ -286,9 +293,8 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  Data Onion
     } else if (type == "dataOnion" ) {
 
-      d_algorithm = dataOnion;
-
       isMultilevel = true;
+      d_algorithm  = dataOnion;
 
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
       alg_ps->get( "haloLength",         d_haloLength );
@@ -317,9 +323,8 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  Data Onion Slim (
     } else if (type == "dataOnionSlim" ) {
 
-      d_algorithm = dataOnionSlim;
-
       isMultilevel = true;
+      d_algorithm  = dataOnionSlim;
 
       alg_ps->getWithDefault( "haloCells",   d_haloCells,  IntVector(10,10,10) );
       alg_ps->get( "haloLength",         d_haloLength );
@@ -332,9 +337,8 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
 
-      d_algorithm = coarseLevel;
-
       isMultilevel = true;
+      d_algorithm  = coarseLevel;
 
       d_ROI_algo   = entireDomain;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation );
@@ -462,6 +466,9 @@ Ray::sched_rayTrace( const LevelP        & level
                    ,       bool            modifies_divQ
                    )
 {
+  // Get the application so to record stats.
+  m_application = sched->getApplication();
+  
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
   
@@ -469,12 +476,9 @@ Ray::sched_rayTrace( const LevelP        & level
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace<double, UintahSpaces::CPU, UintahSpaces::HostSpace>,
-        modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
-  }
-  else {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace<float,  UintahSpaces::CPU, UintahSpaces::HostSpace>,
-        modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<double, UintahSpaces::CPU, UintahSpaces::HostSpace>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace<float,  UintahSpaces::CPU, UintahSpaces::HostSpace>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
   }
 
   // Allow use of up to 4 GPU streams per patch
@@ -482,7 +486,7 @@ Ray::sched_rayTrace( const LevelP        & level
     tsk->usesDevice(true, 4);
   }
 
-  printSchedule(level,g_ray_dbg,"Ray::sched_rayTrace");
+  printSchedule(level, g_ray_dbg, taskname);
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.
@@ -529,19 +533,6 @@ Ray::sched_rayTrace( const LevelP        & level
     tsk->computes( d_divQLabel );
     tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
-  }
-
-
-  //__________________________________
-  // Radiometer
-  if ( d_radiometer ){
-    const VarLabel* VRFluxLabel = d_radiometer->getRadiometerLabel();
-    if (!(Uintah::Parallel::usingDevice())) {
-      // needed for carry Forward                       CUDA HACK
-      tsk->requires(Task::OldDW, VRFluxLabel, d_gn, 0);
-    }
-
-    tsk->modifies( VRFluxLabel );
   }
 
 #ifdef USE_TIMER 
@@ -877,7 +868,18 @@ Ray::rayTrace( const PatchSubset* patches,
 //    //__________________________________
 //    //
 //    timer.stop();
-//
+//    
+//#ifdef ADD_PERFORMANCE_STATS
+//    // Add in the patch stat, recording for each patch.
+//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
+//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
+//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+//    // For each stat recorded increment the count so to get a per patch value.
+//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
+//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
+//#endif
+//    
 //    if (patch->getGridIndex() == 0) {
 //      cout << endl
 //           << " RMCRT REPORT: Patch 0" << endl
@@ -909,18 +911,21 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                              ,       bool            modifies_divQ
                              )
 {
-
+  // Get the application so to record stats.
+  m_application = sched->getApplication();
+  
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
   if (L_indx != maxLevels) {     // only schedule on the finest level
     return;
   }
-  
-  string taskname = "Ray::rayTrace_dataOnion";
+
+  string taskname = "";
 
   Task::WhichDW NotUsed = Task::None;
 
+  taskname = "Ray::rayTrace_dataOnion";
   auto taskDependencies = [&](Task* task) {
 
     if (Parallel::usingDevice()) {
@@ -2012,6 +2017,17 @@ Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
       //__________________________________
       //
       timer.stop();
+    
+#ifdef ADD_PERFORMANCE_STATS
+    // Add in the patch stat, recording for each patch.
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+    // For each stat recorded increment the count so to get a per patch value.
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
+#endif
 
       if (finePatch->getGridIndex() == levelPatchID) {
         cout << endl
@@ -2201,7 +2217,6 @@ Ray::sched_setBoundaryConditions( const LevelP        & level
                                 , const bool            backoutTemp
                                 )
 {
-
   string taskname = "Ray::setBoundaryConditions";
 
   Task* tsk = nullptr;
@@ -2228,10 +2243,10 @@ Ray::sched_setBoundaryConditions( const LevelP        & level
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
+  m_application = sched->getApplication();
+  
   // Running with VisIt so add in the variables that the user can
   // modify.
-  ApplicationInterface* m_application = sched->getApplication();
-  
   if( m_application && m_application->getVisIt() && !initialized ) {
     // variable 1 - Must start with the component name and have NO
     // spaces in the var name

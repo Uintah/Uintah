@@ -150,7 +150,7 @@ namespace Uintah {
         double distance2;
         std::tie(norm2, distance2) = plane2.getDirectionAndDistance();
         double n1Dotn2 = Dot(norm1,norm2);
-        if (abs(1.0-n1Dotn2) > PolyPlane::NEAR_ZERO) {
+        if (std::abs(1.0-n1Dotn2) > PolyPlane::NEAR_ZERO) {
           Vector n1Crossn2 = Cross(norm1,norm2);
           for (size_t third = second + 1; third < numPlanes; ++third) {
             const PolyPlane & plane3 = m_boundaryPlanes[third];
@@ -159,7 +159,7 @@ namespace Uintah {
             std::tie(norm3, distance3) = plane3.getDirectionAndDistance();
             Vector n2Crossn3 = Cross(norm2,norm3);
             double denom = Dot(norm1, n2Crossn3);
-            if (abs(denom) > PolyPlane::NEAR_ZERO) {
+            if (std::abs(denom) > PolyPlane::NEAR_ZERO) {
               Vector n3Crossn1 = Cross(norm3,norm1);
               Vector vertex = (-distance1*n2Crossn3 - distance2*n3Crossn1 - distance3*n1Crossn2)/denom;
               // Check to see if it's actually a vertex
@@ -233,7 +233,7 @@ namespace Uintah {
             std::tie(intersectionExists,resultPoint)
                   = plane3.intersectWithLine(edge12Direction,pointOnEdge12);
 
-            bool pointIsInside = false;
+//            bool pointIsInside = false;
             // --- Debug spew
             if (intersectionExists) {
               debugInsideOut << "\n      Line " << first << "-" << second
@@ -246,14 +246,14 @@ namespace Uintah {
             } // Temporary loop to output for debugging.
             // --- Debug spew
 
-            if (intersectionExists) {
-              bool pointInterior = inside(resultPoint);
-              if (pointInterior) {
-                size_t  numVertices    = m_vertices.size();
-                size_t  currentVertex  = 0;
-                bool    isUnique  = true;
-              }
-            }
+//            if (intersectionExists) {
+//              bool pointInterior = inside(resultPoint);
+//              if (pointInterior) {
+//                size_t  numVertices    = m_vertices.size();
+//                size_t  currentVertex  = 0;
+//                bool    isUnique  = true;
+//              }
+//            }
 
             if ((intersectionExists) && inside(resultPoint)) {
 

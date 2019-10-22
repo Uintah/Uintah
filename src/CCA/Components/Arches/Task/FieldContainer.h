@@ -240,7 +240,7 @@ namespace Uintah{
       //--------------------------------------------------------------------------------------------
       //UINTAH VARIABLE TASK ACCESS:
 
-      /** @brief Get a modifiable uintah variable **/
+      /** @brief Get a const uintah variable without DW spec. **/
       template <typename T>
       inline T* get_const_field( const std::string name ){
 
@@ -266,7 +266,7 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a modifiable uintah variable with specified DW **/
+      /** @brief Get a const uintah variable with specified DW **/
       template <typename T>
       inline T* get_const_field( const std::string name, WHICH_DW which_dw ){
 
@@ -475,11 +475,13 @@ namespace Uintah{
       DataWarehouse* getOldDW(){
         return _old_dw;
       }
+
       const Patch* getPatch(){
-           return _patch;
+        return _patch;
       }
+
       int getMaterialIndex(){
-          return m_matl_index;
+        return m_matl_index;
       }
 
       /** @brief From the vector of VariableInformation, return a single set of information based
