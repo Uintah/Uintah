@@ -160,6 +160,13 @@ template<class T> class Array3Window : public RefCounted {
         return data ? (data->getPointer()) : 0;
       }
 
+      //if A is on device, using &A(i,j,k) on host segfaults because it first tries to access the element and the get the address.
+      //Hence new method to calculate the address of an element, without actually accessing it.
+      inline T* getAddress(int i, int j, int k){
+    	  IntVector size = data->size();
+    	  return data->getPointer() + (i-offset.x()) + (j-offset.y())*size[0] + (k-offset.z())*size[0]*size[1];
+      }
+
       ///////////////////////////////////////////////////////////////////////
       // Return const pointer to the data
       // (**WARNING**not complete implementation)

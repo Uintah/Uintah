@@ -4048,7 +4048,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "z-mom_RHS")          ||
          (varName == "z-mom_x_flux")       ||
          (varName == "z-mom_y_flux")       ||
-         (varName == "z-mom_z_flux")
+         (varName == "z-mom_z_flux")	   ||
+		 (varName == "hypre_solver_label")
        )
     {
       hack_foundAComputes = true;

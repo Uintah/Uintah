@@ -51,6 +51,7 @@
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/Timers/Timers.hpp>
 #include <iomanip>
+#include <Core/Parallel/Portability.h>
 
 // hypre includes
 #include <_hypre_struct_mv.h>
@@ -171,6 +172,7 @@ namespace Uintah {
 
     //---------------------------------------------------------------------------------------------
     //   Create and populate a Hypre struct vector,
+    template <typename ExecSpace, typename MemSpace>
     HYPRE_StructVector
     createPopulateHypreVector(   const timeStep_vartype   timeStep
                                , const bool               recompute
@@ -180,7 +182,7 @@ namespace Uintah {
                                , const PatchSubset      * patches
                                , const int                matl
                                , const VarLabel         * Q_label
-                               , DataWarehouse          * Q_dw
+                               , OnDemandDataWarehouse  * Q_dw
                                , HYPRE_StructVector     * HQ)
     {
       //__________________________________
@@ -204,53 +206,33 @@ namespace Uintah {
           msg<< "HypreSolver:createPopulateHypreVector ("<< Q_label->getName() <<")\n";
           printTask( patches, patch, cout_doing, msg.str() );
 
-          typename GridVarType::const_double_type Q;
-          Q_dw->get( Q, Q_label, matl, patch, Ghost::None, 0);
+          //Q type should be "typename GridVarType::const_double_type" on host and KokkosView3 based on const_double_type on device;
+          auto Q = Q_dw->getConstGridVariable<typename GridVarType::const_double_type, double, MemSpace> (Q_label, matl, patch, Ghost::None, 0);
 
           // find box range
           IntVector lo;
           IntVector hi;
           getPatchExtents( patch, lo, hi );
 
-          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          double *d_values;
-          int row_size = abs(hi.x()-lo.x())*sizeof(double);
-          cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
-#else
-          double *d_values;
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          //-----------------  end of hypre-cuda  -----------------
-
           //__________________________________
           // Feed Q variable to Hypre
+          //DS 10/22/2019: Change HYPRE_StructVectorSetBoxValues code in the future if needed. Use similar logic to HYPRE_StructMatrixSetBoxValues
+          //existing invokes cuda kernel inside HYPRE_StructVectorSetBoxValues Ny*Nz into times. Copying entire patch into the buffer and then
+          //calling HYPRE_StructVectorSetBoxValues will lead to only 2 kernel calls - 1 parallel_for to copy values into the buffer and
+          //1 kernel call by HYPRE_StructVectorSetBoxValues. Although new method needs extra buffer and no cache reuse, it still should be faster than existing code
           for(int z=lo.z(); z<hi.z(); z++){
             for(int y=lo.y(); y<hi.y(); y++){
 
               IntVector l(lo.x(), y, z);
               IntVector h(hi.x()-1, y, z);
 
-              const double* values = &Q[l];
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
-#else
-              d_values = const_cast<double*>(values);
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              //-----------------  end of hypre-cuda  -----------------
+              double * values = const_cast<double*>(Q.getAddress(lo.x(), y, z));	//getAddress is new method to portably get address of device memory on CPU. using &Q(i,j,k) gives segfault
 
               HYPRE_StructVectorSetBoxValues( *HQ,
                                              l.get_pointer(), h.get_pointer(),
-                                             d_values);
+                                             values);
             }
           }
-
-          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          cudaErrorCheck(cudaFree(d_values));
-#endif
-          //-----------------  end of hypre-cuda  -----------------
 
         }  // label exist?
       }  // patch loop
@@ -263,15 +245,37 @@ namespace Uintah {
     }
 
     //---------------------------------------------------------------------------------------------
-
-    void solve( const ProcessorGroup * pg
-              , const PatchSubset    * patches
-              , const MaterialSubset * matls
-              ,       DataWarehouse  * old_dw
-              ,       DataWarehouse  * new_dw
+    template <typename ExecSpace, typename MemSpace>
+    void solve( const PatchSubset    		 			  * patches
+              , const MaterialSubset 		 			  * matls
+              ,       OnDemandDataWarehouse  			  * old_dw
+              ,       OnDemandDataWarehouse  			  * new_dw
+			  ,       UintahParams   					  & uintahParams
+			  , 	  ExecutionObject<ExecSpace, MemSpace>&  execObj
               ,       Handle<HypreStencil7<GridVarType>>
               )
     {
+      const ProcessorGroup * pg = uintahParams.getProcessorGroup();
+
+      if(pg->myRank()==0){
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+    	  bool hypre_cuda = true;
+#else
+    	  bool hypre_cuda = false;
+#endif
+    	  if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
+    		  if(hypre_cuda == false){
+    			  printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
+    			  exit(1);
+    		  }
+    	  }
+    	  else{
+    		  if(hypre_cuda == true){
+				  printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
+				  exit(1);
+			  }
+    	  }
+      }
       //__________________________________
       //   timers
       m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
@@ -341,9 +345,9 @@ namespace Uintah {
 
       //std::cout << "      HypreSolve  timestep: " << timeStep << " recompute: " << recompute << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
 
-      DataWarehouse* A_dw     = new_dw->getOtherDataWarehouse( m_which_A_dw );
-      DataWarehouse* b_dw     = new_dw->getOtherDataWarehouse( m_which_b_dw );
-      DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse( m_which_guess_dw );
+      OnDemandDataWarehouse* A_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_A_dw ));
+      OnDemandDataWarehouse* b_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_b_dw ));
+      OnDemandDataWarehouse* guess_dw = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_guess_dw ));
 
       ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
@@ -442,35 +446,34 @@ namespace Uintah {
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
 
-            //__________________________________
-            // Get A matrix from the DW
-            typename GridVarType::symmetric_matrix_type AStencil4;
-            typename GridVarType::matrix_type A;
-
-            if ( m_params->getUseStencil4() ){
-              A_dw->get( AStencil4, m_A_label, matl, patch, Ghost::None, 0);
-            } else {
-              A_dw->get( A, m_A_label, matl, patch, Ghost::None, 0);
-            }
-
             IntVector l;
             IntVector h;
             getPatchExtents( patch, l, h );
 
+            //-------------DS: 04262019: Added to run hypre task using hypre-cuda and used Uintah::parallel_for to copy values portably.----------------
+            //existing invokes cuda kernel inside HYPRE_StructMatrixSetBoxValues Ny*Nz into times. Copying entire patch into the buffer and then
+            //calling HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel calls - 1 parallel_for to copy values into the buffer and
+            //1 kernel call by HYPRE_StructMatrixSetBoxValues. Although new method needs extra buffer and no cache reuse, it still should be faster than existing code
+            IntVector hh(h.x()-1, h.y()-1, h.z()-1);
+            Uintah::BlockRange range( l, h );
+            int stencil_point = ( m_params->getSymmetric()) ? 4 : 7;
+            unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
+            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny;	//ensure starting point is 0 while indexing d_values
+            unsigned long row_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
+
+            double *d_values;
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))	//shift it to constructor ??
+            cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
+#else
+            d_values = (double *)malloc(row_size);
+#endif
+            //-----------------  end of hypre-cuda  -----------------
+
             //__________________________________
             // Feed it to Hypre
+            int stencil_indices[] = {0,1,2,3,4,5,6};
+
             if( m_params->getSymmetric()){
-
-              double* values = scinew double[(h.x()-l.x())*4];
-              int stencil_indices[] = {0,1,2,3};
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-              double *d_values;
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              int row_size = abs(h.x()-l.x())*sizeof(double)*4;
-              cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              //-----------------  end of hypre-cuda  -----------------
 
               // use stencil4 as coefficient matrix. NOTE: This should be templated
               // on the stencil type. This workaround is to get things moving
@@ -479,133 +482,51 @@ namespace Uintah {
               // if you want to use stencil4. You must also provide a matrix of type
               // stencil4 otherwise this will crash.
               if ( m_params->getUseStencil4()) {
-
-                for(int z=l.z();z<h.z();z++){
-                  for(int y=l.y();y<h.y();y++){
-
-                    const Stencil4* AA = &AStencil4[IntVector(l.x(), y, z)];
-                    double* p = values;
-
-                    for(int x=l.x();x<h.x();x++){
-                      *p++ = AA->p;
-                      *p++ = AA->w;
-                      *p++ = AA->s;
-                      *p++ = AA->b;
-                      AA++;
-                    }
-
-                    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                    cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
-#else
-                    d_values = values;
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                    //-----------------  end of hypre-cuda  -----------------
-
-                    IntVector ll(l.x(), y, z);
-                    IntVector hh(h.x()-1, y, z);
-                    HYPRE_StructMatrixSetBoxValues(*HA,
-                                                   ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, d_values);
-
-                  } // y loop
-                }  // z loop
-
+            	auto AStencil4 = (A_dw->getConstGridVariable<typename GridVarType::symmetric_matrix_type, Stencil4, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+				Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+					int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+					d_values[id + 0] = AStencil4(i, j, k).p;
+					d_values[id + 1] = AStencil4(i, j, k).w;
+					d_values[id + 2] = AStencil4(i, j, k).s;
+					d_values[id + 3] = AStencil4(i, j, k).b;
+				});
               } else { // use stencil7
-
-                for(int z=l.z();z<h.z();z++){
-                  for(int y=l.y();y<h.y();y++){
-
-                    const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                    double* p = values;
-
-                    for(int x=l.x();x<h.x();x++){
-                      *p++ = AA->p;
-                      *p++ = AA->w;
-                      *p++ = AA->s;
-                      *p++ = AA->b;
-                      AA++;
-                    }
-
-                    //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                    cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
-#else
-                    d_values = values;
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                    //-----------------  end of hypre-cuda  -----------------
-
-                    IntVector ll(l.x(), y, z);
-                    IntVector hh(h.x()-1, y, z);
-                    HYPRE_StructMatrixSetBoxValues(*HA,
-                                                   ll.get_pointer(), hh.get_pointer(),
-                                                   4, stencil_indices, d_values);
-
-                  } // y loop
-                }  // z loop
+            	auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+  				Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+  					int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+  					d_values[id + 0] = A(i, j, k).p;
+  					d_values[id + 1] = A(i, j, k).w;
+  					d_values[id + 2] = A(i, j, k).s;
+  					d_values[id + 3] = A(i, j, k).b;
+  				});
               }
-              delete[] values;
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              cudaErrorCheck(cudaFree(d_values));
-#endif
-              //-----------------  end of hypre-cuda  -----------------
-
-            } else {
-              double* values = scinew double[(h.x()-l.x())*7];
-              int stencil_indices[] = {0,1,2,3,4,5,6};
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-              double *d_values;
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              int row_size = abs(h.x()-l.x())*sizeof(double)*7;
-              cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              //-----------------  end of hypre-cuda  -----------------
-
-              for(int z=l.z();z<h.z();z++){
-                for(int y=l.y();y<h.y();y++){
-
-                  const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                  double* p = values;
-
-                  for(int x=l.x();x<h.x();x++){
-                    *p++ = AA->p;
-                    *p++ = AA->e;
-                    *p++ = AA->w;
-                    *p++ = AA->n;
-                    *p++ = AA->s;
-                    *p++ = AA->t;
-                    *p++ = AA->b;
-                    AA++;
-                  }
-
-                  //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                  cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
-#else
-                  d_values = values;
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-                  //-----------------  end of hypre-cuda  -----------------
-
-                  IntVector ll(l.x(), y, z);
-                  IntVector hh(h.x()-1, y, z);
-                  HYPRE_StructMatrixSetBoxValues(*HA,
-                                                 ll.get_pointer(), hh.get_pointer(),
-                                                 7, stencil_indices,
-                                                 d_values);
-                }  // y loop
-              } // z loop
-              delete[] values;
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              cudaErrorCheck(cudaFree(d_values));
-#endif
-              //-----------------  end of hypre-cuda  -----------------
-
             }
+            else {
+              auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+              Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+				int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+				d_values[id + 0] = A(i, j, k).p;
+				d_values[id + 1] = A(i, j, k).e;
+				d_values[id + 2] = A(i, j, k).w;
+				d_values[id + 3] = A(i, j, k).n;
+				d_values[id + 4] = A(i, j, k).s;
+				d_values[id + 5] = A(i, j, k).t;
+				d_values[id + 6] = A(i, j, k).b;
+			  });
+            }
+            HYPRE_StructMatrixSetBoxValues(*HA,
+                                           l.get_pointer(), hh.get_pointer(),
+										   stencil_point, stencil_indices,
+                                           d_values);
+
+            //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))	//shift it to destructor ??
+            cudaErrorCheck(cudaFree(d_values));
+#else
+            free(d_values);
+#endif
+            //-----------------  end of hypre-cuda  -----------------
+
           }
           if (timeStep == 1 || recompute || do_setup){
             HYPRE_StructMatrixAssemble(*HA);
@@ -615,12 +536,12 @@ namespace Uintah {
         //__________________________________
         // Create the RHS
         HYPRE_StructVector HB;
-        HB = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
+        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
 
         //__________________________________
         // Create the solution vector
         HYPRE_StructVector HX;
-        HX = createPopulateHypreVector(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
+        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
 
         hypre_EndTiming( m_tMatVecSetup );
 
@@ -874,6 +795,14 @@ namespace Uintah {
 
           CellIterator iter(l, h);
 
+#define PORTABLE_X1
+          //Making X portable is not working at the moment. Xnew on device does return correct values (verified by printing).
+          //But scheduler does not bring Xnew back to host memory. Hence use CPU datawarehouse to get Xnew.
+          //"#if defined(HYPRE_USING_CUDA)..." to check whether execution space is GPU and manually copying Xnew values to CPU.
+          //if execution space is CPU, then assigning simple pointer copy works.
+          //PORTABLE_X used to turn the portable code for Xnew on and off.
+
+#ifndef PORTABLE_X
           typename GridVarType::double_type Xnew;
           if( m_modifies_X ){
             new_dw->getModifiable(Xnew, m_X_label, matl, patch);
@@ -893,7 +822,7 @@ namespace Uintah {
           for(int z=l.z();z<h.z();z++){
             for(int y=l.y();y<h.y();y++){
 
-              double* values = &Xnew[IntVector(l.x(), y, z)];
+              double* values = Xnew.getAddress(l.x(), y, z);
               IntVector ll(l.x(), y, z);
               IntVector hh(h.x()-1, y, z);
 
@@ -921,7 +850,29 @@ namespace Uintah {
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
           cudaErrorCheck(cudaFree(d_values));
 #endif
-          //-----------------  end of hypre-cuda  -----------------
+#endif
+
+#ifdef PORTABLE_X
+          auto Xnew = new_dw->getGridVariable<typename GridVarType::double_type, double, MemSpace> (m_X_label, matl, patch, Ghost::None, 0, m_modifies_X);
+          Uintah::BlockRange range( l, h );
+          // Get the solution back from hypre
+          for(int z=l.z();z<h.z();z++){
+            for(int y=l.y();y<h.y();y++){
+
+              double* values = Xnew.getAddress(l.x(), y, z);
+              IntVector ll(l.x(), y, z);
+              IntVector hh(h.x()-1, y, z);
+
+              HYPRE_StructVectorGetBoxValues(HX,
+                  ll.get_pointer(), hh.get_pointer(),
+				  values);
+            }
+          }
+//		  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+//			printf("%d %d %d %f\n", i, j, k, Xnew(i, j, k));
+//		  });
+
+#endif
 
         }
         //__________________________________
@@ -1349,6 +1300,33 @@ namespace Uintah {
 
   //---------------------------------------------------------------------------------------------
 
+  template<typename GridVarType, typename functor>
+  void HypreSolver2::createPortableHypreSolverTasks( const LevelP           & level
+												  ,       SchedulerP       & sched
+												  , const PatchSet		   * patches
+												  , const MaterialSet      * matls
+												  , const VarLabel         * A_label
+												  ,       Task::WhichDW      which_A_dw
+												  , const VarLabel         * x_label
+												  ,       bool               modifies_X
+												  , const VarLabel         * b_label
+												  ,       Task::WhichDW      which_b_dw
+												  , const VarLabel         * guess_label
+												  ,       Task::WhichDW      which_guess_dw
+												  ,       bool               isFirstSolve /* = true */
+												  ,		  functor TaskDependencies
+												  )
+  {
+      HypreStencil7<GridVarType>* that = scinew HypreStencil7<GridVarType>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
+      Handle<HypreStencil7<GridVarType> > handle = that;
+      create_portable_tasks(TaskDependencies, that,
+							"Hypre:Matrix solve (SFCX)",
+							&HypreStencil7<GridVarType>::template solve<UINTAH_CPU_TAG>,
+							&HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
+							&HypreStencil7<GridVarType>::template solve<KOKKOS_CUDA_TAG>,
+							sched, patches, matls, TASKGRAPH::DEFAULT, handle);
+  }
+
   void
   HypreSolver2::scheduleSolve( const LevelP           & level
                              ,       SchedulerP       & sched
@@ -1364,9 +1342,56 @@ namespace Uintah {
                              ,       bool               isFirstSolve /* = true */
                              )
   {
+	//__________________________________
+	//  Computes and requires
+	auto TaskDependencies = [&](Task* task) {
+
+		// Matrix A
+		task->requires(which_A_dw, A_label, Ghost::None, 0);
+
+		// Solution X
+		if(modifies_X){
+		  task->modifies( x_label );
+		} else {
+		  task->computes( x_label );
+		}
+
+		// Initial Guess
+		if(guess_label){
+		  task->requires(which_guess_dw, guess_label, Ghost::None, 0);
+		}
+
+		// RHS  B
+		task->requires(which_b_dw, b_label, Ghost::None, 0);
+
+		// timestep
+		// it could come from old_dw or parentOldDw
+		Task::WhichDW old_dw = m_params->getWhichOldDW();
+		task->requires( old_dw, m_timeStepLabel );
+
+		// solve struct
+		if (isFirstSolve) {
+		  task->requires( Task::OldDW, hypre_solver_label);
+		  task->computes( hypre_solver_label);
+		}  else {
+		  task->requires( Task::NewDW, hypre_solver_label);
+		}
+
+		sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
+
+		task->setType(Task::Hypre);
+
+		if( m_params->getRecomputeTimeStepOnFailure() ){
+		  task->computes( VarLabel::find(abortTimeStep_name) );
+		  task->computes( VarLabel::find(recomputeTimeStep_name) );
+		}
+	};
+
+	LoadBalancer * lb = sched->getLoadBalancer();
+	const PatchSet* patches = lb->getPerProcessorPatchSet(level);
+
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
 
-    Task* task;
     // The extra handle arg ensures that the stencil7 object will get freed
     // when the task gets freed.  The downside is that the refcount gets
     // tweaked everytime solve is called.
@@ -1399,91 +1424,25 @@ namespace Uintah {
     }
 
     switch(domtype){
-    case TypeDescription::SFCXVariable:
-      {
-        HypreStencil7<SFCXTypes>* that = scinew HypreStencil7<SFCXTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCXTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCX)", that, &HypreStencil7<SFCXTypes>::solve, handle);
-      }
-      break;
-    case TypeDescription::SFCYVariable:
-      {
-        HypreStencil7<SFCYTypes>* that = scinew HypreStencil7<SFCYTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCYTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCY)", that, &HypreStencil7<SFCYTypes>::solve, handle);
-      }
-      break;
-    case TypeDescription::SFCZVariable:
-      {
-        HypreStencil7<SFCZTypes>* that = scinew HypreStencil7<SFCZTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<SFCZTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCZ)", that, &HypreStencil7<SFCZTypes>::solve, handle);
-      }
-      break;
-    case TypeDescription::CCVariable:
-      {
-        HypreStencil7<CCTypes>* that = scinew HypreStencil7<CCTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<CCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (CC)", that, &HypreStencil7<CCTypes>::solve, handle);
-      }
-      break;
-    case TypeDescription::NCVariable:
-      {
-        HypreStencil7<NCTypes>* that = scinew HypreStencil7<NCTypes>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-        Handle<HypreStencil7<NCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (NC)", that, &HypreStencil7<NCTypes>::solve, handle);
-      }
-      break;
-    default:
-      throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
+		case TypeDescription::SFCXVariable:
+			 createPortableHypreSolverTasks<SFCXTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+			 break;
+		case TypeDescription::SFCYVariable:
+			 createPortableHypreSolverTasks<SFCYTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+			 break;
+		case TypeDescription::SFCZVariable:
+			 createPortableHypreSolverTasks<SFCZTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+			 break;
+		case TypeDescription::CCVariable:
+			 createPortableHypreSolverTasks<CCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+			 break;
+		case TypeDescription::NCVariable:
+			 createPortableHypreSolverTasks<NCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+			 break;
+		default:
+			 throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
 
-    //__________________________________
-    //  Computes and requires
-
-    // Matrix A
-    task->requires(which_A_dw, A_label, Ghost::None, 0);
-
-    // Solution X
-    if(modifies_X){
-      task->modifies( x_label );
-    } else {
-      task->computes( x_label );
-    }
-
-    // Initial Guess
-    if(guess_label){
-      task->requires(which_guess_dw, guess_label, Ghost::None, 0);
-    }
-
-    // RHS  B
-    task->requires(which_b_dw, b_label, Ghost::None, 0);
-
-    // timestep
-    // it could come from old_dw or parentOldDw
-    Task::WhichDW old_dw = m_params->getWhichOldDW();
-    task->requires( old_dw, m_timeStepLabel );
-
-    // solve struct
-    if (isFirstSolve) {
-      task->requires( Task::OldDW, hypre_solver_label);
-      task->computes( hypre_solver_label);
-    }  else {
-      task->requires( Task::NewDW, hypre_solver_label);
-    }
-
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
-
-    task->setType(Task::Hypre);
-
-    if( m_params->getRecomputeTimeStepOnFailure() ){
-      task->computes( VarLabel::find(abortTimeStep_name) );
-      task->computes( VarLabel::find(recomputeTimeStep_name) );
-    }
-    
-    LoadBalancer * lb = sched->getLoadBalancer();
-
-    sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
   //---------------------------------------------------------------------------------------------

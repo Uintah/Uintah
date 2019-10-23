@@ -282,6 +282,23 @@ namespace Uintah {
                                       Task::WhichDW      which_guess_dw_in,
                                       bool               isFirstSolve_in = true );
 
+    template<typename GridVarType, typename functor>
+    void createPortableHypreSolverTasks( const LevelP           & level
+									  ,       SchedulerP       & sched
+									  , const PatchSet		   * patches
+									  , const MaterialSet      * matls
+									  , const VarLabel         * A_label
+									  ,       Task::WhichDW      which_A_dw
+									  , const VarLabel         * x_label
+									  ,       bool               modifies_X
+									  , const VarLabel         * b_label
+									  ,       Task::WhichDW      which_b_dw
+									  , const VarLabel         * guess_label
+									  ,       Task::WhichDW      which_guess_dw
+									  ,       bool               isFirstSolve /* = true */
+									  ,		  functor 			 TaskDependencies
+									  );
+
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
                                      const MaterialSet * matls );
