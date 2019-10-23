@@ -124,27 +124,27 @@ public:
                std::vector<std::string> required_label_names,
                ArchesLabel* labels,
                const ProcessorGroup* my_world )
-        : _name(name),
-          _labels(labels),
-          _my_world(my_world),
-          _required_label_names(required_label_names)
+        : m_name(name),
+          m_labels(labels),
+          m_my_world(my_world),
+          m_required_label_names(required_label_names)
         {}
 
       ~Builder(){}
 
       RMCRT_Radiation* build()
       {
-        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type );
+        return scinew RMCRT_Radiation( m_name, m_labels, m_MAlab, m_required_label_names, m_my_world, m_type );
       }
 
     private:
 
-      std::string         _name;
-      std::string         _type{"rmcrt_radiation"};
-      ArchesLabel*        _labels{nullptr};
-      MPMArchesLabel*     _MAlab{nullptr};
-      const ProcessorGroup* _my_world;
-      std::vector<std::string> _required_label_names;
+      std::string         m_name;
+      std::string         m_type{"rmcrt_radiation"};
+      ArchesLabel*        m_labels{nullptr};
+      MPMArchesLabel*     m_MAlab{nullptr};
+      const ProcessorGroup* m_my_world;
+      std::vector<std::string> m_required_label_names;
   }; // class Builder
 
   //______________________________________________________________________
@@ -223,49 +223,49 @@ private:
                   singleLevel,
                   radiometerOnly       // VRFlux is computed at radiometer locations
                 };
-  int  _matl;
-  int  _archesLevelIndex{-9};
-  bool _all_rk{false};
+  int  m_matl;
+  int  m_archesLevelIndex{-9};
+  bool m_all_rk{false};
 
-  int  _whichAlgo{singleLevel};
+  int  m_whichAlgo{singleLevel};
 
-  Ray                  * _RMCRT{nullptr};
-  ArchesLabel          * _labels{nullptr};
-  MPMArchesLabel       * _MAlab{nullptr};
-  BoundaryCondition    * _boundaryCondition{nullptr};
+  Ray                  * m_RMCRT{nullptr};
+  ArchesLabel          * m_labels{nullptr};
+  MPMArchesLabel       * m_MAlab{nullptr};
+  BoundaryCondition    * m_boundaryCondition{nullptr};
   Properties           * d_props{nullptr};
-  const ProcessorGroup * _my_world;
-  MaterialManagerP       _materialManager;
-  ProblemSpecP           _ps;              // needed for extraSetup()
+  const ProcessorGroup * m_my_world;
+  MaterialManagerP       m_materialManager;
+  ProblemSpecP           m_ps;              // needed for extraSetup()
 
-  std::string  _abskt_label_name;
-  std::string  _T_label_name;
+  std::string  m_abskt_label_name;
+  std::string  m_T_label_name;
 
-  const VarLabel * _abskgLabel{nullptr};
-  const VarLabel * _absktLabel{nullptr};
-  const VarLabel * _tempLabel{nullptr};
-  const VarLabel * _radFluxE_Label{nullptr};
-  const VarLabel * _radFluxW_Label{nullptr};
-  const VarLabel * _radFluxN_Label{nullptr};
-  const VarLabel * _radFluxS_Label{nullptr};
-  const VarLabel * _radFluxT_Label{nullptr};
-  const VarLabel * _radFluxB_Label{nullptr};
+  const VarLabel * m_abskgLabel{nullptr};
+  const VarLabel * m_absktLabel{nullptr};
+  const VarLabel * m_tempLabel{nullptr};
+  const VarLabel * m_radFluxE_Label{nullptr};
+  const VarLabel * m_radFluxW_Label{nullptr};
+  const VarLabel * m_radFluxN_Label{nullptr};
+  const VarLabel * m_radFluxS_Label{nullptr};
+  const VarLabel * m_radFluxT_Label{nullptr};
+  const VarLabel * m_radFluxB_Label{nullptr};
 
 #if 0
   // variables needed for particles
-  bool _radiateAtGasTemp{true};  // this flag is arbitrary for no particles
+  bool m_radiateAtGasTemp{true};  // this flag is arbitrary for no particles
 
-  std::vector<std::string>       _temperature_name_vector;
-  std::vector<std::string>       _absk_name_vector;
-  std::vector< const VarLabel*>  _absk_label_vector;
-  std::vector< const VarLabel*>  _temperature_label_vector;
+  std::vector<std::string>       m_temperature_name_vector;
+  std::vector<std::string>       m_absk_name_vector;
+  std::vector< const VarLabel*>  m_absk_label_vector;
+  std::vector< const VarLabel*>  m_temperature_label_vector;
 
-  int _nQn_part{0} ;  // number of quadrature nodes in DQMOM
+  int m_nQn_part{0} ;  // number of quadrature nodes in DQMOM
 #endif
-  Ghost::GhostType _gn{Ghost::None};
-  Ghost::GhostType _gac{Ghost::AroundCells};
+  Ghost::GhostType m_gn{Ghost::None};
+  Ghost::GhostType m_gac{Ghost::AroundCells};
   
-  TypeDescription::Type _FLT_DBL{TypeDescription::double_type};        // Is RMCRT algorithm using doubles or floats for communicated variables
+  TypeDescription::Type m_FLT_DBL{TypeDescription::double_type};        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT
 
