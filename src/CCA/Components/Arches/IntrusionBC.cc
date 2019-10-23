@@ -301,6 +301,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           if ( my_dir == "x-" || my_dir == "X-"){
 
             intrusion.directions[0] = 1;
+            intrusion.mass_flow_rate *= -1;
 
           } else if ( my_dir == "x+" || my_dir == "X+"){
 
@@ -309,6 +310,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           } else if ( my_dir == "y-" || my_dir == "Y-"){
 
             intrusion.directions[2] = 1;
+            intrusion.mass_flow_rate *= -1;
 
           } else if ( my_dir == "y+" || my_dir == "Y+"){
 
@@ -317,6 +319,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           } else if ( my_dir == "z-" || my_dir == "Z-"){
 
             intrusion.directions[4] = 1;
+            intrusion.mass_flow_rate *= -1; 
 
           } else if ( my_dir == "z+" || my_dir == "Z+"){
 
@@ -485,6 +488,23 @@ Vector IntrusionBC::getMaxVelocity(){
       Vector vel = iIntrusion->second.velocity_inlet_generator->get_max_velocity();
       double curr_mag = std::sqrt( vel.x()*vel.x() + vel.y()*vel.y() + vel.z()*vel.z() );
 
+      //These are needed because a patch
+      // may "own" an inlet intrusion
+      // but doesn't have any cells that actually
+      // need to be set for the intrusion inlet. Thus
+      // the density doesn't get computed correctly
+      // along with the associated properties.
+      if ( std::isinf(curr_mag) ){
+        vel[0] = 0.; //just zero it out
+        vel[1] = 0.;
+        vel[2] = 0.;
+      }
+      if ( std::isnan(curr_mag) ){
+        vel[0] = 0.; //just zero it out
+        vel[1] = 0.;
+        vel[2] = 0.;
+      }
+
       if ( curr_mag > max_mag ){
         max_vel = vel;
       }
@@ -524,9 +544,14 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
 
-      if ( !iIntrusion->second.bc_cell_iterator.empty() && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
+      bool compute_properties = false;
+      if ( !iIntrusion->second.bc_cell_iterator.empty() || !iIntrusion->second.interior_cell_iterator.empty() ){
+        compute_properties = true;
+      }
 
-          MixingRxnModel* mixingTable = _table_lookup->get_table();
+      if ( compute_properties && iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){
+
+        MixingRxnModel* mixingTable = _table_lookup->get_table();
         StringVec iv_var_names = mixingTable->getAllIndepVars();
 
         BCIterator::iterator iBC_iter = (iIntrusion->second.interior_cell_iterator).find(patchID);
@@ -682,7 +707,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
         if ( found_valid_density ){
           iIntrusion->second.density = flat_density;
         }
-      }
+
+      } // has interior or bc iterator
 
     }
   }
@@ -1224,8 +1250,8 @@ IntrusionBC::addMomRHS( const Patch*  patch,
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                usrc[cp] += area * ( (rho[cp] + rho[c] )/2. * u[cp]
-                                   + i_rho * i_vel[v_indx] )/2.*(u[cp]+i_vel[v_indx])/2.;
+                usrc[c] -= area * ( (rho[cp] + rho[c] )/2. * u[c]
+                                   + i_rho * i_vel[v_indx] )/2.*(u[c]+i_vel[v_indx])/2.;
               }
               if ( directions[1] != 0 ){
                 IntVector cp = c + IntVector(1,0,0);
@@ -1250,8 +1276,8 @@ IntrusionBC::addMomRHS( const Patch*  patch,
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                vsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * v[cp]
-                                   + i_rho * i_vel[v_indx] )/2.*(v[cp]+i_vel[v_indx])/2.;
+                vsrc[c] -= area * ( (rho[cp] + rho[c] )/2. * v[c]
+                                   + i_rho * i_vel[v_indx] )/2.*(v[c]+i_vel[v_indx])/2.;
               }
               if ( directions[3] != 0 ){
                 IntVector cp = c + IntVector(0,1,0);
@@ -1275,8 +1301,8 @@ IntrusionBC::addMomRHS( const Patch*  patch,
                 if ( !patch->containsCell(cp) ){
                   throw InvalidValue("Error: For intrusion inlets, your intrusion inlet is lining up too close to a patch boundary (Arches limitation). Try adjusting your patch layout slightly.", __FILE__, __LINE__);
                 }
-                wsrc[cp] += area * ( (rho[cp] + rho[c] )/2. * w[cp]
-                                   + i_rho * i_vel[v_indx] )/2.*(w[cp]+i_vel[v_indx])/2.;
+                wsrc[c] -= area * ( (rho[cp] + rho[c] )/2. * w[c]
+                                   + i_rho * i_vel[v_indx] )/2.*(w[c]+i_vel[v_indx])/2.;
               }
               if ( directions[5] != 0 ){
                 IntVector cp = c + IntVector(0,0,1);
@@ -1713,10 +1739,11 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
 
         //Buffer the search region by one cell so as not to miss inlets on patch boundaries.
         GeometryPieceP piece = i_intrusion->second.geometry[i];
+        Box geometry_box  = piece->getBoundingBox();
         Point low((*ipatches)->cellPosition((*ipatches)->getCellLowIndex()-IntVector(1,1,1)));
         Point high((*ipatches)->cellPosition((*ipatches)->getCellHighIndex()+IntVector(1,1,1)));
-        Box geometry_box(low, high);
-        Box intersect_box = geometry_box.intersect( patch_box );
+        Box buffered_patch_box(low, high);
+        Box intersect_box = geometry_box.intersect( buffered_patch_box );
 
         if ( !(intersect_box.degenerate()) ) {
           patch_geom_intersection = true;
