@@ -62,7 +62,7 @@ public:
 
 private:
 
-    std::vector<std::string> _gas_part_name;
+    std::vector<std::string> m_absk_names;
     std::string m_abskt_name = "undefined";
 
   };

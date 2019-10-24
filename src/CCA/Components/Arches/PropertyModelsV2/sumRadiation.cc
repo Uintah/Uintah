@@ -1,8 +1,12 @@
 #include <CCA/Components/Arches/PropertyModelsV2/sumRadiation.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
+#include <Core/Util/DOUT.hpp>
 #include <ostream>
 #include <cmath>
+
 namespace Uintah{
+
+Dout dbg_sumRad("Arches_sumRad", "Arches::PropertyModelsV2::sumRadiation", "outputs what abskt is comprised of", false);
 
 //--------------------------------------------------------------------------------------------------
 void
@@ -16,26 +20,34 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
 
     std::string type;
     db_model->getAttribute("type", type);
+    
     if ( type == "gasRadProperties" ){
+      
       igasPhase++;
       std::string fieldName;
       db_model->getAttribute("label",fieldName);
-      _gas_part_name.push_back(fieldName);
-    } else if ( type == "partRadProperties" ) {
+      m_absk_names.push_back(fieldName);
+    } 
+    else if ( type == "partRadProperties" ) {
+      
       std::string fieldName;
       db_model->getAttribute("label",fieldName);
-      _gas_part_name.push_back(fieldName);
+      m_absk_names.push_back(fieldName);
       //foundPart=true;
-    } else if ( type == "spectralProperties" ){
+    } 
+    else if ( type == "spectralProperties" ){
+      
       igasPhase++;
       std::string soot_name;
       db_model->get("sootVolumeFrac",soot_name);
+      
       if (soot_name==""){
         proc0cout << " WARNING:: NO SOOT FOUND FOR RADIATION  \n";
       }else{
-        _gas_part_name.push_back("absksoot"); // only needed for spectral radiation because of grey soot and colorful gas
+        m_absk_names.push_back("absksoot"); // only needed for spectral radiation because of grey soot and colorful gas
       }
     }
+    
     if (igasPhase > 1){
       throw ProblemSetupException("Multiple gas phase radiation property models found! Arches doesn't know which one it should use.",__FILE__, __LINE__);
     }
@@ -62,7 +74,8 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
       
       if ( db_abskt ){
         db_abskt->getAttribute("label", my_abskt_name);
-      }else{
+      }
+      else{
         throw ProblemSetupException("Absorption coefficient not specified.",__FILE__, __LINE__);
       }
       
@@ -78,12 +91,28 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
 
         db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
         if (scatteringOn){
-          _gas_part_name.push_back("scatkt");
+          m_absk_names.push_back("scatkt");
         }
-      //------------------------------------------------//
       } 
     }
   }
+
+  //__________________________________
+  //  output the variables that abskt is comprised
+  if( dbg_sumRad.active() ){
+    proc0cout << "__________________________________\n";
+    proc0cout << " sumRadiation:\n";
+    proc0cout << "  abskt name(" << m_abskt_name << ") = ";
+    
+    size_t n = m_absk_names.size();
+    
+    for (size_t i=0; i<n; i++){
+      std::string c ( (i+1 == n) ? "\n" : " + " );    // "+" or "\n"
+      proc0cout << m_absk_names[i] << c;
+    }
+    proc0cout << "__________________________________\n";
+  }
+  
 }
 
 
@@ -95,45 +124,52 @@ sumRadiation::create_local_labels(){
 
 //--------------------------------------------------------------------------------------------------
 void
-sumRadiation::register_initialize( VIVec& variable_registry , const bool pack_tasks){
-  register_variable( m_abskt_name, ArchesFieldContainer::COMPUTES, variable_registry );
+sumRadiation::register_initialize( VIVec& variable_registry , 
+                                   const bool pack_tasks){
+
+  register_variable( m_abskt_name,  ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable("volFraction" , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::NEWDW,variable_registry);
-  for (unsigned int i=0; i<_gas_part_name.size(); i++){
-      register_variable(_gas_part_name[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
+  
+  for (unsigned int i=0; i<m_absk_names.size(); i++){
+    register_variable(m_absk_names[i] , Uintah::ArchesFieldContainer::REQUIRES, variable_registry);
   }
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-sumRadiation::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+sumRadiation::initialize( const Patch* patch, 
+                          ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& abskt = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
+  CCVariable<double>&       abskt =  *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   abskt.initialize( 1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
-  const double abs_frac = 1./(double)_gas_part_name.size();
+  const double abs_frac = 1./(double)m_absk_names.size();
 
-  for (unsigned int i=0; i<_gas_part_name.size(); i++){
+  for (unsigned int i=0; i<m_absk_names.size(); i++){
 
-    constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(_gas_part_name[i]);
+    constCCVariable<double>&  abskf = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_absk_names[i]);
 
     Uintah::parallel_for( range,
       [&](int i, int j, int k){
-
-      abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ?
-      abskt(i,j,k)+abskf(i,j,k) - abs_frac
-      : 1.0; }
-
-    );
-  }
-
-  if (_gas_part_name.size()==0){
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
+     
+      if (volFrac(i,j,k) > 1e-16){
+        abskt(i,j,k) = abskt(i,j,k) + abskf(i,j,k) - abs_frac;          // Dimensionally this is inconsistent.  --Todd
+      } else {
+        abskt(i,j,k) = 1.0;
+      }
+      
     });
-  }
+    
+    if (m_absk_names.size()==0){
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        abskt(i,j,k)=(volFrac(i,j,k) > 1e-16) ? 0.0  : 1.0;
+      });
+    }
+    
+  }  // loop over names
 }
 
 //--------------------------------------------------------------------------------------------------
