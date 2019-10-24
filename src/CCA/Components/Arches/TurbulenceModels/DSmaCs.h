@@ -248,21 +248,17 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   FieldTool< TT > c_field_tool(tsk_info);
 
-  TT* ML;
-  TT* MM;
-  TT* IsI;
-
-  ML = c_field_tool.get("ML");
-  MM = c_field_tool.get("MM");
-  IsI = c_field_tool.get(m_IsI_name);
+  TT& ML = c_field_tool.get("ML");
+  TT& MM = c_field_tool.get("MM");
+  TT& IsI = c_field_tool.get(m_IsI_name);
 
   CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
   CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 
-  m_Filter.applyFilter<TT>((*MM),filterMM,range,vol_fraction);
-  m_Filter.applyFilter<TT>((*ML),filterML,range,vol_fraction);
+  m_Filter.applyFilter<TT>(MM,filterMM,range,vol_fraction);
+  m_Filter.applyFilter<TT>(ML,filterML,range,vol_fraction);
 
   const double m_MM_lower_value = 1.0e-14;
   const double m_ML_lower_value = 1.0e-14;
@@ -283,7 +279,7 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
     Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
-    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*(*IsI)(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*IsI(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
     mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
 
   });

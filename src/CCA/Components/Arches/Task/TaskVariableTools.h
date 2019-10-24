@@ -267,7 +267,7 @@ namespace Uintah {
   struct FieldTool
   {
     FieldTool(ArchesTaskInfoManager* tsk_info){
-      throw InvalidValue("Error: I should not be in this constctor.",__FILE__,__LINE__);
+      throw InvalidValue("Error: I should not be in this constructor.",__FILE__,__LINE__);
     }
 
     T* get( const std::string name ) {
@@ -280,9 +280,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    CCVariable<double>* get( const std::string name ){
+    CCVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_field<CCVariable<double> >( name );
+      return *(field_container->get_field<CCVariable<double> >( name ));
     }
 
     private:
@@ -294,9 +294,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    constCCVariable<double>* get( const std::string name ){
+    constCCVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_const_field<constCCVariable<double> >( name );
+      return *(field_container->get_const_field<constCCVariable<double> >( name ));
     }
 
     private:
@@ -308,9 +308,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    SFCXVariable<double>* get( const std::string name ){
+    SFCXVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_field<SFCXVariable<double> >( name );
+      return *(field_container->get_field<SFCXVariable<double> >( name ));
     }
 
     private:
@@ -322,9 +322,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    constSFCXVariable<double>* get( const std::string name ){
+    constSFCXVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_const_field<constSFCXVariable<double> >( name );
+      return *(field_container->get_const_field<constSFCXVariable<double> >( name ));
     }
 
     private:
@@ -336,9 +336,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    SFCYVariable<double>* get( const std::string name ){
+    SFCYVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_field<SFCYVariable<double> >( name );
+      return *(field_container->get_field<SFCYVariable<double> >( name ));
     }
 
     private:
@@ -350,9 +350,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    constSFCYVariable<double>* get( const std::string name ){
+    constSFCYVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_const_field<constSFCYVariable<double> >( name );
+      return *(field_container->get_const_field<constSFCYVariable<double> >( name ));
     }
 
     private:
@@ -364,9 +364,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    SFCZVariable<double>* get( const std::string name ){
+    SFCZVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_field<SFCZVariable<double> >( name );
+      return *(field_container->get_field<SFCZVariable<double> >( name ));
     }
 
     private:
@@ -378,9 +378,9 @@ namespace Uintah {
   {
     FieldTool(ArchesTaskInfoManager* tsk_info):m_tsk_info(tsk_info){}
 
-    constSFCZVariable<double>* get( const std::string name ){
+    constSFCZVariable<double>& get( const std::string name ){
       ArchesFieldContainer* field_container = m_tsk_info->getFieldContainer();
-      return field_container->get_const_field<constSFCZVariable<double> >( name );
+      return *(field_container->get_const_field<constSFCZVariable<double> >( name ));
     }
 
     private:
