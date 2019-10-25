@@ -113,10 +113,13 @@ namespace Uintah{
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
       std::string _particle_calculator_type;
       const VarLabel* _temperature_label; 
+      
       std::string _temperature_name;
       std::vector< std::string > _abskp_name_vector;
       std::vector< std::string > _complexIndexReal_name;   // particle absorption coefficient
       std::string _abskp_name;
+      std::string _scatkt_name        {"scatkt"}; 
+      std::string _asymmetryParam_name{"asymmetryParam"};
 
       int _nQn_part ;                                // number of quadrature nodes in DQMOM
       std::vector<std::string>  _temperature_name_v;          // DQMOM Temperature name
@@ -128,9 +131,7 @@ namespace Uintah{
 
       bool  _isCoal ;
       bool  _scatteringOn ;
-      std::string _scatkt_name; 
 
-      std::string _asymmetryParam_name;
 
       std::vector < std::string > _composition_names;
 
