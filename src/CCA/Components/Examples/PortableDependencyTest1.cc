@@ -40,32 +40,37 @@ void PortableDependencyTest1::problemSetup( const ProblemSpecP & params
 	m_materialManager->registerSimpleMaterial(mymat_);
 }
 
+int cid=0, mid=0, rid=0;
+
 template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleComputeTask(const LevelP& level, SchedulerP& sched){
+	std::string name = "PortableDependencyTest1::computeTask" + to_string(cid++);
 	auto TaskDependencies = [&](Task* task) {
 		task->computes(phi_label, nullptr, Uintah::Task::NormalDomain);
 	};
-	create_portable_tasks(TaskDependencies, this, "PortableDependencyTest1::computeTask",
+	create_portable_tasks(TaskDependencies, this, name.data(),
 			&PortableDependencyTest1::computeTask<ExecSpace, MemSpace>,
 			sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
 template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleModifyTask( const LevelP& level, SchedulerP& sched){
+	std::string name = "PortableDependencyTest1::modifyTask" + to_string(mid++);
 	auto TaskDependencies = [&](Task* task) {
 		task->modifies(phi_label);
 	};
-	create_portable_tasks(TaskDependencies, this, "PortableDependencyTest1::modifyTask",
+	create_portable_tasks(TaskDependencies, this, name.data(),
 			&PortableDependencyTest1::modifyTask<ExecSpace, MemSpace>,
 			sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
 template <typename ExecSpace, typename MemSpace>
 void PortableDependencyTest1::scheduleRequireTask( const LevelP& level, SchedulerP& sched){
+	std::string name = "PortableDependencyTest1::requireTask" + to_string(rid++);
 	auto TaskDependencies = [&](Task* task) {
 		task->requires(Task::NewDW, phi_label, Ghost::None, 0);
 	};
-	create_portable_tasks(TaskDependencies, this, "PortableDependencyTest1::requireTask",
+	create_portable_tasks(TaskDependencies, this, name.data(),
 			&PortableDependencyTest1::requireTask<ExecSpace, MemSpace>,
 			sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }

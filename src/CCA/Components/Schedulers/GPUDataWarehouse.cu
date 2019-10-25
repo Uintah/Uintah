@@ -2920,6 +2920,36 @@ GPUDataWarehouse::compareAndSwapSetValidOnGPU(char const* const label, const int
 
 //______________________________________________________________________
 __host__ bool
+GPUDataWarehouse::compareAndSwapSetInvalidOnGPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  varLock->lock();
+  bool settingValid = false;
+  while (!settingValid) {
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+    if (it != varPointers->end()) {
+      atomicDataStatus *status = &(it->second.var->atomicStatusInGpuMemory);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID) != VALID) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+    	varLock->unlock();
+    	return false;
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+//______________________________________________________________________
+__host__ bool
 GPUDataWarehouse::compareAndSwapSetValidOnGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size)
 {
   varLock->lock();
@@ -3038,6 +3068,36 @@ GPUDataWarehouse::compareAndSwapSetValidOnCPU(char const* const label, const int
       varLock->unlock();
       printf("ERROR\nGPUDataWarehouse::compareAndSwapSetValidOnCPU() - Unknown variable %s on GPUDataWarehouse\n", label);
       exit(-1);
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+//______________________________________________________________________
+__host__ bool
+GPUDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  varLock->lock();
+  bool settingValid = false;
+  while (!settingValid) {
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+    if (it != varPointers->end()) {
+      atomicDataStatus *status = &(it->second.var->atomicStatusInHostMemory);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID) != VALID) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+    	varLock->unlock();
+    	return false;
     }
   }
   varLock->unlock();

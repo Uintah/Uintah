@@ -1958,6 +1958,15 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                                        make_int3(low.x(), low.y(), low.z()),
                                        make_int3(host_size.x(), host_size.y(), host_size.z()));
 
+      //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+      //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+      //TODO: check is it needed for all type of variables?
+      //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+      //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+      if(curDependency->m_dep_type == Task::Modifies){
+      	gpudw->compareAndSwapSetInvalidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
+      }
+
       bool correctSize = false;
       bool allocating = false;
       bool allocated = false;
@@ -4457,6 +4466,15 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
           }
         }
       }
+  	  //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+	  //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+	  //TODO: check if it is needed for other type of variables.
+      //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+      //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+	  if(dependantVar->m_dep_type == Task::Modifies){
+	    gpudw->compareAndSwapSetInvalidOnGPU(dependantVar->m_var->getName().c_str(), patchID, matlID, levelID);
+	  }
+
     }
   }
 }
