@@ -575,7 +575,7 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
       // Now that we've done internal ghost cell copies, we can mark the staging vars as being valid.
       // TODO: Sync required?  We shouldn't mark data as valid until it has copied.
-      markDeviceRequiresDataAsValid(dtask);
+      markDeviceRequiresAndModifiesDataAsValid(dtask);
 
       copyAllGpuToGpuDependences(dtask);
       // TODO: Mark destination staging vars as valid.
@@ -1236,8 +1236,8 @@ UnifiedScheduler::runTasks( int thread_id )
         m_detailed_tasks->addDeviceValidateRequiresCopies(readyTask);
 
       } else if (gpuValidateRequiresCopies) {
-        //Mark all requires vars this task is responsible for copying in as valid.
-        markDeviceRequiresDataAsValid(readyTask);
+        //Mark all requires and modifies vars this task is responsible for copying in as valid.
+    	  markDeviceRequiresAndModifiesDataAsValid(readyTask);
         m_detailed_tasks->addDevicePerformGhostCopies(readyTask);
       } else if (gpuPerformGhostCopies) {
         //make sure all staging vars are valid before copying ghost cells in
@@ -2666,7 +2666,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           }
 
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
-          if (it->second.m_dep->m_dep_type == Task::Requires) {
+          if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
             if (!device_ptr) {
               gpu_stats << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
                   << "For " << label_cstr
@@ -3376,10 +3376,10 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
+UnifiedScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask )
 {
 
-  // This marks any Requires variable as valid that wasn't in the GPU but is now in the GPU.
+  // This marks any Requires and Modifies variable as valid that wasn't in the GPU but is now in the GPU.
   // If they were already in the GPU due to being computes from a previous time step, it was already
   // marked as valid.  So there is no need to do anything extra for them.
   // If they weren't in the GPU yet, this task or another task copied it in.
@@ -3399,12 +3399,12 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
     int whichGPU = it->second.m_whichGPU;
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
-    if (it->second.m_dep->m_dep_type == Task::Requires) {
+    if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
           cerrLock.lock();
           {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
+            gpu_stats << myRankThread() << " markDeviceRequiresAndModifiesDataAsValid() -"
                 << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID << std::endl;
           }
           cerrLock.unlock();
@@ -3414,7 +3414,7 @@ UnifiedScheduler::markDeviceRequiresDataAsValid( DetailedTask * dtask )
         if (gpu_stats.active()) {
           cerrLock.lock();
           {
-            gpu_stats << myRankThread() << " markDeviceRequiresDataAsValid() -"
+            gpu_stats << myRankThread() << " markDeviceRequiresAndModifiesDataAsValid() -"
                 << " Marking GPU memory as valid for " << it->second.m_dep->m_var->getName().c_str() << " patch " << it->first.m_patchID
                 << " offset(" << it->second.m_offset.x() << ", " << it->second.m_offset.y() << ", " << it->second.m_offset.z()
                 << ") size (" << it->second.m_sizeVector.x() << ", " << it->second.m_sizeVector.y() << ", " << it->second.m_sizeVector.z() << ")" << std::endl;

@@ -409,7 +409,7 @@
                                                 esmpm,
                                                 esmpm2,
                                                 unifiedschedulertest, poisson1,
-                                                poisson2, poisson3, poisson4, portabledependencytest, benchmark,
+                                                poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
                                                 smpmice,switcher,wave,
                                                 solvertest, solvertest2, heat,
@@ -423,7 +423,7 @@
                                   
         <subcomponent             spec="MULTIPLE NO_DATA"
                                     attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                     poisson1, poisson2, poisson3, poisson4, portabledependencytest, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
+                                                                     poisson1, poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
           <SwitchCriteria           spec="OPTIONAL NO_DATA"  attribute1="type REQUIRED STRING 'steadyBurn, DDT1, Timestep, simpleBurn'" >
@@ -1184,6 +1184,14 @@
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </Poisson>
+
+  <!-- portabledependencytest1        -->
+  <portabledependencytest1                    spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+    <maxresidual              spec="REQUIRED DOUBLE" />
+    <task                     spec="REQUIRED STRING" />
+    <exespace                 spec="REQUIRED STRING" />
+  </portabledependencytest1>
 
   <PhaseField spec="OPTIONAL NO_DATA"
         attribute1="type REQUIRED STRING 'pure_metal, heat, benchmark01, benchmark02, benchmark03, benchmark04'">

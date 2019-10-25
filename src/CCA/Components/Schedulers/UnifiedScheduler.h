@@ -201,7 +201,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void prepareGhostCellsIntoTaskDW( DetailedTask * dtask );
 
-    void markDeviceRequiresDataAsValid( DetailedTask * dtask );
+    void markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask );
 
     void markDeviceGhostsAsValid( DetailedTask * dtask );
 

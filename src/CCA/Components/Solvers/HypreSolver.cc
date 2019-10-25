@@ -795,64 +795,6 @@ namespace Uintah {
 
           CellIterator iter(l, h);
 
-#define PORTABLE_X1
-          //Making X portable is not working at the moment. Xnew on device does return correct values (verified by printing).
-          //But scheduler does not bring Xnew back to host memory. Hence use CPU datawarehouse to get Xnew.
-          //"#if defined(HYPRE_USING_CUDA)..." to check whether execution space is GPU and manually copying Xnew values to CPU.
-          //if execution space is CPU, then assigning simple pointer copy works.
-          //PORTABLE_X used to turn the portable code for Xnew on and off.
-
-#ifndef PORTABLE_X
-          typename GridVarType::double_type Xnew;
-          if( m_modifies_X ){
-            new_dw->getModifiable(Xnew, m_X_label, matl, patch);
-          }else{
-            new_dw->allocateAndPut(Xnew, m_X_label, matl, patch);
-          }
-
-          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-          double *d_values;
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          int row_size = abs(h.x()-l.x())*sizeof(double);
-          cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          //-----------------  end of hypre-cuda  -----------------
-
-          // Get the solution back from hypre
-          for(int z=l.z();z<h.z();z++){
-            for(int y=l.y();y<h.y();y++){
-
-              double* values = Xnew.getAddress(l.x(), y, z);
-              IntVector ll(l.x(), y, z);
-              IntVector hh(h.x()-1, y, z);
-
-              //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              //cudaErrorCheck(cudaMemcpy(d_values, values, row_size, cudaMemcpyHostToDevice));
-              // do nothing
-#else
-              d_values = values;
-#endif //defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              //-----------------  end of hypre-cuda  -----------------
-
-              HYPRE_StructVectorGetBoxValues(HX,
-                  ll.get_pointer(), hh.get_pointer(),
-                  d_values);
-
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-              cudaErrorCheck(cudaMemcpy(values, d_values, row_size, cudaMemcpyDeviceToHost));
-#endif
-
-            }
-          }
-
-          //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-          cudaErrorCheck(cudaFree(d_values));
-#endif
-#endif
-
-#ifdef PORTABLE_X
           auto Xnew = new_dw->getGridVariable<typename GridVarType::double_type, double, MemSpace> (m_X_label, matl, patch, Ghost::None, 0, m_modifies_X);
           Uintah::BlockRange range( l, h );
           // Get the solution back from hypre
@@ -868,12 +810,6 @@ namespace Uintah {
 				  values);
             }
           }
-//		  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-//			printf("%d %d %d %f\n", i, j, k, Xnew(i, j, k));
-//		  });
-
-#endif
-
         }
         //__________________________________
         // clean up
@@ -980,6 +916,12 @@ namespace Uintah {
         HYPRE_StructPFMGSetNumPostRelax(precond_solver,  m_params->npost);
         HYPRE_StructPFMGSetSkipRelax   (precond_solver,  m_params->skip);
         HYPRE_StructPFMGSetLogging     (precond_solver,  0);
+
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+        //DS 10252019: added levels to be solved on GPU. coarser level will be executed on CPU, which is faster. 12 is determined by experiments.
+        //Can be modified later or added into ups file.
+        HYPRE_StructPFMGSetDeviceLevel(precond_solver, 12);
+#endif
 
         precond = HYPRE_StructPFMGSolve;
         pcsetup = HYPRE_StructPFMGSetup;
