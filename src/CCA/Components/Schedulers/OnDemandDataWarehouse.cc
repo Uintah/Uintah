@@ -102,12 +102,12 @@ namespace {
   struct delsetDB_tag{};
   struct task_access_tag{};
 
-  using  varDB_monitor = Uintah::CrowdMonitor<varDB_tag>;
-  using  levelDB_monitor = Uintah::CrowdMonitor<levelDB_tag>;
-  using  psetDB_monitor = Uintah::CrowdMonitor<psetDB_tag>;
-  using  addsetDB_monitor = Uintah::CrowdMonitor<addsetDB_tag>;
-  using  delsetDB_monitor = Uintah::CrowdMonitor<delsetDB_tag>;
-  using  task_access_monitor = Uintah::CrowdMonitor<task_access_tag>;
+  using  varDB_monitor         = Uintah::CrowdMonitor<varDB_tag>;
+  using  levelDB_monitor       = Uintah::CrowdMonitor<levelDB_tag>;
+  using  psetDB_monitor        = Uintah::CrowdMonitor<psetDB_tag>;
+  using  addsetDB_monitor      = Uintah::CrowdMonitor<addsetDB_tag>;
+  using  delsetDB_monitor      = Uintah::CrowdMonitor<delsetDB_tag>;
+  using  task_access_monitor   = Uintah::CrowdMonitor<task_access_tag>;
 
   Dout  g_foreign_dbg(    "ForeignVariables"   , "OnDemandDataWarehouse", "report when foreign variable is added to DW" , false );
   Dout  g_dw_get_put_dbg( "OnDemandDW"         , "OnDemandDataWarehouse", "report general dbg info for OnDemandDW"      , false );
@@ -1925,6 +1925,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
     }
     // allocate the memory
     var.allocate(lowIndex, highIndex);
+
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
     m_var_DB.put(label, matlIndex, patch, var.clone(), d_scheduler->copyTimestep(), true);
@@ -3138,6 +3139,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     std::vector<ValidNeighbors> validNeighbors;
     getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
     for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+
       GridVariableBase* srcvar = var.cloneType();
       GridVariableBase* tmp = iter->validNeighbor;
       srcvar->copyPointer(*tmp);

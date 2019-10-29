@@ -217,8 +217,8 @@ public:
 
   virtual bool haveParticleSubset(       int         matlIndex
                                  , const Patch     * patch
-                                 ,       IntVector   low   = IntVector(0, 0, 0)
-                                 ,       IntVector   high  = IntVector(0, 0, 0)
+                                 ,       IntVector   low  = IntVector(0, 0, 0)
+                                 ,       IntVector   high = IntVector(0, 0, 0)
                                  ,       bool        exact = false
                                  );
 
@@ -462,13 +462,13 @@ public:
                            );
 
   template <typename ExecSpace, typename MemSpace>
-          void transferFrom(       DataWarehouse                             * from
-                           , const VarLabel                                  * label
-                           , const PatchSubset                               * patches
-                           , const MaterialSubset                            * matls
+          void transferFrom(       DataWarehouse                        * from
+                           , const VarLabel                             * label
+                           , const PatchSubset                          * patches
+                           , const MaterialSubset                       * matls
                            ,       ExecutionObject<ExecSpace, MemSpace> & execObj
-                           ,       bool                                        replace
-                           , const PatchSubset                               * newPatches
+                           ,       bool                                   replace
+                           , const PatchSubset                          * newPatches
                            );
 
 

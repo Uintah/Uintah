@@ -141,11 +141,11 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     }
   }
 
-
   // Start loading up the UintahParams object
   UintahParams uintahParams;
   uintahParams.setProcessorGroup(pg);
   uintahParams.setCallBackEvent(event);
+
 #ifdef HAVE_CUDA
   // Load in streams whether this is a CPU task or GPU task.
   // GPU tasks need streams.  CPU tasks can also use streams (for D2H copies or transferFrom calls)
@@ -163,7 +163,6 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     // we want to design tasks so each task runs on only once device, instead of a one to many relationship.
     //for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
     //  const unsigned int currentDevice = *deviceNums_it;
-    //const unsigned int currentDevice = *deviceNums_it;
       int currentDevice = 0;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
@@ -445,6 +444,7 @@ DetailedTask::checkExternalDepCount()
 
 
     unsigned int amountTaskNameExpectedToRun = Uintah::Parallel::getAmountTaskNameExpectedToRun();
+
     if (amountTaskNameExpectedToRun > 0) {
       std::string task_to_debug_name = Uintah::Parallel::getTaskNameToTime();
       std::string current_task = this->getTask()->getName();
@@ -453,6 +453,7 @@ DetailedTask::checkExternalDepCount()
         m_task_group->atomic_task_to_debug_size.fetch_add(1);
       }
     }
+
     if (m_externally_ready.load(std::memory_order_acquire) == false) {
       m_task_group->m_mpi_completed_tasks.push(this);
       m_task_group->m_atomic_mpi_completed_tasks_size.fetch_add(1);

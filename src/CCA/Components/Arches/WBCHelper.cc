@@ -904,16 +904,16 @@ void WBCHelper::delete_area_labels(){
 void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* matls ){
+    IntVector lo;
+    IntVector hi;
+    level->findInteriorCellIndexRange(lo,hi);
+
   auto TaskDependencies = [&](Task* tsk) {
 
     for ( auto iter = m_area_labels.begin(); iter != m_area_labels.end(); iter++ ){
       tsk->computes( iter->second );
     }
    };
-
-    IntVector lo;
-    IntVector hi;
-    level->findInteriorCellIndexRange(lo,hi);
 
     create_portable_tasks(TaskDependencies, this,
                           "WBCHelper::computeBCAreaHelper",
@@ -923,12 +923,11 @@ void WBCHelper::sched_computeBCAreaHelper( SchedulerP& sched,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT, lo, hi);
 }
 
-template <typename ExecSpace, typename MemSpace> void
-WBCHelper::computeBCAreaHelper( 
-                          const PatchSubset* patches,
+template <typename ExecSpace, typename MemSpace>
+void WBCHelper::computeBCAreaHelper( const PatchSubset* patches,
                           const MaterialSubset*,
-                          OnDemandDataWarehouse        * old_dw,
-                          OnDemandDataWarehouse        * new_dw,
+                          OnDemandDataWarehouse* old_dw,
+                          OnDemandDataWarehouse* new_dw,
                           UintahParams& uintahParams,
                           ExecutionObject<ExecSpace, MemSpace>& execObj ,
                           const IntVector lo,

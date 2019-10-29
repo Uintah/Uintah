@@ -259,8 +259,7 @@ public:
                    int matlIndex, const Patch*) = 0;
   virtual void put(PerPatchBase&, const VarLabel*,
                    int matlIndex, const Patch*, bool replace = false) = 0;
-
-
+     
   // this is so we can get reduction information for regridding
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
 

@@ -233,7 +233,6 @@ namespace Uintah {
                                              values);
             }
           }
-
         }  // label exist?
       }  // patch loop
 
@@ -246,12 +245,12 @@ namespace Uintah {
 
     //---------------------------------------------------------------------------------------------
     template <typename ExecSpace, typename MemSpace>
-    void solve( const PatchSubset    		 			  * patches
-              , const MaterialSubset 		 			  * matls
-              ,       OnDemandDataWarehouse  			  * old_dw
-              ,       OnDemandDataWarehouse  			  * new_dw
-			  ,       UintahParams   					  & uintahParams
-			  , 	  ExecutionObject<ExecSpace, MemSpace>&  execObj
+    void solve( const PatchSubset                          * patches
+              , const MaterialSubset                       * matls
+              ,       OnDemandDataWarehouse                * old_dw
+              ,       OnDemandDataWarehouse                * new_dw
+              ,       UintahParams                         & uintahParams
+              ,       ExecutionObject<ExecSpace, MemSpace> & execObj
               ,       Handle<HypreStencil7<GridVarType>>
               )
     {
@@ -259,23 +258,24 @@ namespace Uintah {
 
       if(pg->myRank()==0){
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-    	  bool hypre_cuda = true;
+        bool hypre_cuda = true;
 #else
-    	  bool hypre_cuda = false;
+        bool hypre_cuda = false;
 #endif
-    	  if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
-    		  if(hypre_cuda == false){
-    			  printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
-    			  exit(1);
-    		  }
-    	  }
-    	  else{
-    		  if(hypre_cuda == true){
-				  printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
-				  exit(1);
-			  }
-    	  }
+        if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
+          if(hypre_cuda == false){
+            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
+            exit(1);
+          }
+        }
+        else{
+          if(hypre_cuda == true){
+            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
+            exit(1);
+          }
+        }
       }
+
       //__________________________________
       //   timers
       m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
@@ -458,7 +458,7 @@ namespace Uintah {
             Uintah::BlockRange range( l, h );
             int stencil_point = ( m_params->getSymmetric()) ? 4 : 7;
             unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
-            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny;	//ensure starting point is 0 while indexing d_values
+            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_values
             unsigned long row_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
 
             double *d_values;
@@ -482,41 +482,49 @@ namespace Uintah {
               // if you want to use stencil4. You must also provide a matrix of type
               // stencil4 otherwise this will crash.
               if ( m_params->getUseStencil4()) {
-            	auto AStencil4 = (A_dw->getConstGridVariable<typename GridVarType::symmetric_matrix_type, Stencil4, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
-				Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-					int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-					d_values[id + 0] = AStencil4(i, j, k).p;
-					d_values[id + 1] = AStencil4(i, j, k).w;
-					d_values[id + 2] = AStencil4(i, j, k).s;
-					d_values[id + 3] = AStencil4(i, j, k).b;
-				});
+
+                auto AStencil4 = (A_dw->getConstGridVariable<typename GridVarType::symmetric_matrix_type, Stencil4, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+
+                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+                  int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                  d_values[id + 0] = AStencil4(i, j, k).p;
+                  d_values[id + 1] = AStencil4(i, j, k).w;
+                  d_values[id + 2] = AStencil4(i, j, k).s;
+                  d_values[id + 3] = AStencil4(i, j, k).b;
+                });
+
               } else { // use stencil7
-            	auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
-  				Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-  					int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-  					d_values[id + 0] = A(i, j, k).p;
-  					d_values[id + 1] = A(i, j, k).w;
-  					d_values[id + 2] = A(i, j, k).s;
-  					d_values[id + 3] = A(i, j, k).b;
-  				});
+
+                auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+
+                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+                  int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                  d_values[id + 0] = A(i, j, k).p;
+                  d_values[id + 1] = A(i, j, k).w;
+                  d_values[id + 2] = A(i, j, k).s;
+                  d_values[id + 3] = A(i, j, k).b;
+                });
+
               }
-            }
-            else {
+            } else { // if( m_params->getSymmetric())
+
               auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
+
               Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
-				int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-				d_values[id + 0] = A(i, j, k).p;
-				d_values[id + 1] = A(i, j, k).e;
-				d_values[id + 2] = A(i, j, k).w;
-				d_values[id + 3] = A(i, j, k).n;
-				d_values[id + 4] = A(i, j, k).s;
-				d_values[id + 5] = A(i, j, k).t;
-				d_values[id + 6] = A(i, j, k).b;
-			  });
+                int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
+                d_values[id + 0] = A(i, j, k).p;
+                d_values[id + 1] = A(i, j, k).e;
+                d_values[id + 2] = A(i, j, k).w;
+                d_values[id + 3] = A(i, j, k).n;
+                d_values[id + 4] = A(i, j, k).s;
+                d_values[id + 5] = A(i, j, k).t;
+                d_values[id + 6] = A(i, j, k).b;
+              });
             }
+
             HYPRE_StructMatrixSetBoxValues(*HA,
                                            l.get_pointer(), hh.get_pointer(),
-										   stencil_point, stencil_indices,
+                                           stencil_point, stencil_indices,
                                            d_values);
 
             //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
@@ -796,7 +804,9 @@ namespace Uintah {
           CellIterator iter(l, h);
 
           auto Xnew = new_dw->getGridVariable<typename GridVarType::double_type, double, MemSpace> (m_X_label, matl, patch, Ghost::None, 0, m_modifies_X);
+
           Uintah::BlockRange range( l, h );
+
           // Get the solution back from hypre
           for(int z=l.z();z<h.z();z++){
             for(int y=l.y();y<h.y();y++){
@@ -807,7 +817,7 @@ namespace Uintah {
 
               HYPRE_StructVectorGetBoxValues(HX,
                   ll.get_pointer(), hh.get_pointer(),
-				  values);
+                  values);
             }
           }
         }
@@ -1243,30 +1253,31 @@ namespace Uintah {
   //---------------------------------------------------------------------------------------------
 
   template<typename GridVarType, typename functor>
-  void HypreSolver2::createPortableHypreSolverTasks( const LevelP           & level
-												  ,       SchedulerP       & sched
-												  , const PatchSet		   * patches
-												  , const MaterialSet      * matls
-												  , const VarLabel         * A_label
-												  ,       Task::WhichDW      which_A_dw
-												  , const VarLabel         * x_label
-												  ,       bool               modifies_X
-												  , const VarLabel         * b_label
-												  ,       Task::WhichDW      which_b_dw
-												  , const VarLabel         * guess_label
-												  ,       Task::WhichDW      which_guess_dw
-												  ,       bool               isFirstSolve /* = true */
-												  ,		  functor TaskDependencies
-												  )
+  void HypreSolver2::createPortableHypreSolverTasks( const LevelP        & level
+                                                   ,       SchedulerP    & sched
+                                                   , const PatchSet      * patches
+                                                   , const MaterialSet   * matls
+                                                   , const VarLabel      * A_label
+                                                   ,       Task::WhichDW   which_A_dw
+                                                   , const VarLabel      * x_label
+                                                   ,       bool            modifies_X
+                                                   , const VarLabel      * b_label
+                                                   ,       Task::WhichDW   which_b_dw
+                                                   , const VarLabel      * guess_label
+                                                   ,       Task::WhichDW   which_guess_dw
+                                                   ,       bool            isFirstSolve /* = true */
+                                                   ,       functor         TaskDependencies
+                                                   )
   {
-      HypreStencil7<GridVarType>* that = scinew HypreStencil7<GridVarType>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
-      Handle<HypreStencil7<GridVarType> > handle = that;
-      create_portable_tasks(TaskDependencies, that,
-							"Hypre:Matrix solve (SFCX)",
-							&HypreStencil7<GridVarType>::template solve<UINTAH_CPU_TAG>,
-							&HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
-							&HypreStencil7<GridVarType>::template solve<KOKKOS_CUDA_TAG>,
-							sched, patches, matls, TASKGRAPH::DEFAULT, handle);
+    HypreStencil7<GridVarType>* that = scinew HypreStencil7<GridVarType>(level.get_rep(), matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, m_params, isFirstSolve);
+    Handle<HypreStencil7<GridVarType> > handle = that;
+
+    create_portable_tasks(TaskDependencies, that,
+                          "Hypre:Matrix solve (SFCX)",
+                          &HypreStencil7<GridVarType>::template solve<UINTAH_CPU_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_CUDA_TAG>,
+                          sched, patches, matls, TASKGRAPH::DEFAULT, handle);
   }
 
   void
@@ -1284,53 +1295,53 @@ namespace Uintah {
                              ,       bool               isFirstSolve /* = true */
                              )
   {
-	//__________________________________
-	//  Computes and requires
-	auto TaskDependencies = [&](Task* task) {
+    //__________________________________
+    //  Computes and requires
+    auto TaskDependencies = [&](Task* task) {
 
-		// Matrix A
-		task->requires(which_A_dw, A_label, Ghost::None, 0);
+      // Matrix A
+      task->requires(which_A_dw, A_label, Ghost::None, 0);
 
-		// Solution X
-		if(modifies_X){
-		  task->modifies( x_label );
-		} else {
-		  task->computes( x_label );
-		}
+      // Solution X
+      if(modifies_X){
+        task->modifies( x_label );
+      } else {
+        task->computes( x_label );
+      }
 
-		// Initial Guess
-		if(guess_label){
-		  task->requires(which_guess_dw, guess_label, Ghost::None, 0);
-		}
+      // Initial Guess
+      if(guess_label){
+        task->requires(which_guess_dw, guess_label, Ghost::None, 0);
+      }
 
-		// RHS  B
-		task->requires(which_b_dw, b_label, Ghost::None, 0);
+      // RHS  B
+      task->requires(which_b_dw, b_label, Ghost::None, 0);
 
-		// timestep
-		// it could come from old_dw or parentOldDw
-		Task::WhichDW old_dw = m_params->getWhichOldDW();
-		task->requires( old_dw, m_timeStepLabel );
+      // timestep
+      // it could come from old_dw or parentOldDw
+      Task::WhichDW old_dw = m_params->getWhichOldDW();
+      task->requires( old_dw, m_timeStepLabel );
 
-		// solve struct
-		if (isFirstSolve) {
-		  task->requires( Task::OldDW, hypre_solver_label);
-		  task->computes( hypre_solver_label);
-		}  else {
-		  task->requires( Task::NewDW, hypre_solver_label);
-		}
+      // solve struct
+      if (isFirstSolve) {
+        task->requires( Task::OldDW, hypre_solver_label);
+        task->computes( hypre_solver_label);
+      }  else {
+        task->requires( Task::NewDW, hypre_solver_label);
+      }
 
-		sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
+      sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
 
-		task->setType(Task::Hypre);
+      task->setType(Task::Hypre);
 
-		if( m_params->getRecomputeTimeStepOnFailure() ){
-		  task->computes( VarLabel::find(abortTimeStep_name) );
-		  task->computes( VarLabel::find(recomputeTimeStep_name) );
-		}
-	};
+      if( m_params->getRecomputeTimeStepOnFailure() ){
+        task->computes( VarLabel::find(abortTimeStep_name) );
+        task->computes( VarLabel::find(recomputeTimeStep_name) );
+      }
+    };
 
-	LoadBalancer * lb = sched->getLoadBalancer();
-	const PatchSet* patches = lb->getPerProcessorPatchSet(level);
+    LoadBalancer * lb = sched->getLoadBalancer();
+    const PatchSet* patches = lb->getPerProcessorPatchSet(level);
 
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
 
@@ -1366,23 +1377,23 @@ namespace Uintah {
     }
 
     switch(domtype){
-		case TypeDescription::SFCXVariable:
-			 createPortableHypreSolverTasks<SFCXTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
-			 break;
-		case TypeDescription::SFCYVariable:
-			 createPortableHypreSolverTasks<SFCYTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
-			 break;
-		case TypeDescription::SFCZVariable:
-			 createPortableHypreSolverTasks<SFCZTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
-			 break;
-		case TypeDescription::CCVariable:
-			 createPortableHypreSolverTasks<CCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
-			 break;
-		case TypeDescription::NCVariable:
-			 createPortableHypreSolverTasks<NCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
-			 break;
-		default:
-			 throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
+    case TypeDescription::SFCXVariable:
+      createPortableHypreSolverTasks<SFCXTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+      break;
+    case TypeDescription::SFCYVariable:
+      createPortableHypreSolverTasks<SFCYTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+      break;
+    case TypeDescription::SFCZVariable:
+      createPortableHypreSolverTasks<SFCZTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+      break;
+    case TypeDescription::CCVariable:
+      createPortableHypreSolverTasks<CCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+      break;
+    case TypeDescription::NCVariable:
+      createPortableHypreSolverTasks<NCTypes>(level, sched, patches, matls, A_label, which_A_dw, x_label, modifies_X, b_label, which_b_dw, guess_label, which_guess_dw, isFirstSolve, TaskDependencies);
+      break;
+    default:
+      throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
     }
 
   }
