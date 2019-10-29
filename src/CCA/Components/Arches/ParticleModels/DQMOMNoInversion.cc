@@ -155,7 +155,7 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
     for ( auto j = models.begin(); j != models.end(); j++ ){
 
-      constCCVariable<double>& model = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(*j);
+      constCCVariable<double>& model = tsk_info->new_get_uintah_field<constCCVariable<double> >(*j);
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&]( int i, int j, int k){

@@ -259,7 +259,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   const double filter2  = filter*filter;
   const double fhat     = 3.; //Mystery value for tilde(bar(delta))
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
 
 
   int nG = 0;

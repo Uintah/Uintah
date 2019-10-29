@@ -173,7 +173,7 @@ template <typename T, typename IT>
 void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   IT& int_var = tsk_info->new_get_uintah_field<IT>(m_inter_var_name);
-  T& var = tsk_info->get_const_uintah_field_add<T >(m_var_name);
+  T& var = tsk_info->new_get_uintah_field<T >(m_var_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];

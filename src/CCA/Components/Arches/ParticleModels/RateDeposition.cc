@@ -179,21 +179,21 @@ RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
     const std::string RateDepositionY_name = get_env_name(e, _RateDepositionY_base_name);
     const std::string RateDepositionZ_name = get_env_name(e, _RateDepositionZ_base_name);
 
-    SFCXVariable<double>& FluxPx   =         *(tsk_info->get_uintah_field<SFCXVariable<double> >(FluxPx_name));
-    SFCYVariable<double>& FluxPy   =         *(tsk_info->get_uintah_field<SFCYVariable<double> >(FluxPy_name));
-    SFCZVariable<double>& FluxPz   =         *(tsk_info->get_uintah_field<SFCZVariable<double> >(FluxPz_name));
+    SFCXVariable<double>& FluxPx   =         tsk_info->new_get_uintah_field<SFCXVariable<double> >(FluxPx_name);
+    SFCYVariable<double>& FluxPy   =         tsk_info->new_get_uintah_field<SFCYVariable<double> >(FluxPy_name);
+    SFCZVariable<double>& FluxPz   =         tsk_info->new_get_uintah_field<SFCZVariable<double> >(FluxPz_name);
 
-    SFCXVariable<double>& ProbParticleX  =   *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbParticleX_name) );
-    SFCYVariable<double>& ProbParticleY  =   *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbParticleY_name) );
-    SFCZVariable<double>& ProbParticleZ  =   *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbParticleZ_name) );
+    SFCXVariable<double>& ProbParticleX  =   tsk_info->new_get_uintah_field<SFCXVariable<double> >(ProbParticleX_name);
+    SFCYVariable<double>& ProbParticleY  =   tsk_info->new_get_uintah_field<SFCYVariable<double> >(ProbParticleY_name);
+    SFCZVariable<double>& ProbParticleZ  =   tsk_info->new_get_uintah_field<SFCZVariable<double> >(ProbParticleZ_name);
 
-    SFCXVariable<double>& ProbDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(ProbDepositionX_name) );
-    SFCYVariable<double>& ProbDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(ProbDepositionY_name) );
-    SFCZVariable<double>& ProbDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(ProbDepositionZ_name) );
+    SFCXVariable<double>& ProbDepositionX   =  tsk_info->new_get_uintah_field<SFCXVariable<double> >(ProbDepositionX_name);
+    SFCYVariable<double>& ProbDepositionY   =  tsk_info->new_get_uintah_field<SFCYVariable<double> >(ProbDepositionY_name);
+    SFCZVariable<double>& ProbDepositionZ   =  tsk_info->new_get_uintah_field<SFCZVariable<double> >(ProbDepositionZ_name);
 
-    SFCXVariable<double>& RateDepositionX   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >( RateDepositionX_name) );
-    SFCYVariable<double>& RateDepositionY   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >( RateDepositionY_name) );
-    SFCZVariable<double>& RateDepositionZ   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name) );
+    SFCXVariable<double>& RateDepositionX   =  tsk_info->new_get_uintah_field<SFCXVariable<double> >( RateDepositionX_name);
+    SFCYVariable<double>& RateDepositionY   =  tsk_info->new_get_uintah_field<SFCYVariable<double> >( RateDepositionY_name);
+    SFCZVariable<double>& RateDepositionZ   =  tsk_info->new_get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name);
 
     RateDepositionX.initialize(0.0);
     RateDepositionY.initialize(0.0);
@@ -212,9 +212,9 @@ RateDeposition::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
     FluxPz.initialize(0.0) ;
 
   }
-  SFCXVariable<double>& ProbSurfaceX =  *(tsk_info->get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name) );
-  SFCYVariable<double>& ProbSurfaceY =  *(tsk_info->get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name) );
-  SFCZVariable<double>& ProbSurfaceZ =  *(tsk_info->get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name) );
+  SFCXVariable<double>& ProbSurfaceX =  tsk_info->new_get_uintah_field<SFCXVariable<double> >(_ProbSurfaceX_name);
+  SFCYVariable<double>& ProbSurfaceY =  tsk_info->new_get_uintah_field<SFCYVariable<double> >(_ProbSurfaceY_name);
+  SFCZVariable<double>& ProbSurfaceZ =  tsk_info->new_get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name);
   ProbSurfaceX.initialize(0.0) ;
   ProbSurfaceY.initialize(0.0) ;
   ProbSurfaceZ.initialize(0.0) ;
@@ -430,7 +430,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCZVariable<double>&  Norm_out_Z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("surf_out_normZ");
 
   // constant gas temperature
-  constCCVariable<double>& WallTemperature = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("temperature");
+  constCCVariable<double>& WallTemperature = tsk_info->new_get_uintah_field<constCCVariable<double> >("temperature");
 
   //Compute the probability of sticking for each face using the wall temperature.
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -507,9 +507,9 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constCCVariable<double>&  rho                    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( rho_name);
     constCCVariable<double>&  diameter               = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( diameter_name);
 
-    constCCVariable<double>& xvel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( xvel_name);
-    constCCVariable<double>& yvel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( yvel_name);
-    constCCVariable<double>& zvel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( zvel_name);
+    constCCVariable<double>& xvel = tsk_info->new_get_uintah_field<constCCVariable<double> >( xvel_name);
+    constCCVariable<double>& yvel = tsk_info->new_get_uintah_field<constCCVariable<double> >( yvel_name);
+    constCCVariable<double>& zvel = tsk_info->new_get_uintah_field<constCCVariable<double> >( zvel_name);
 
     //Compute the probability of sticking for each particle using particle temperature.
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getExtraCellHighIndex() );

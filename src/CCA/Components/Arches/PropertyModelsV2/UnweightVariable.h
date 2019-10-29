@@ -272,7 +272,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
     T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-    CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
+    CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]);
 
     if ( m_eqn_class != ArchesCore::DQMOM ){
       // rho * phi
@@ -346,7 +346,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-  constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double>>(m_rho_name);
   const IntVector vDir(helper.ioff, helper.joff, helper.koff);
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -394,7 +394,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
             T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-            CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]);
+            CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]);
 
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
@@ -418,7 +418,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // rho_phi = phi/pho
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
           T&  var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);// rho*phi
-          CT& un_var = tsk_info->get_const_uintah_field_add<CT>(m_un_eqn_names[ieqn]); // phi
+          CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]); // phi
 
           if ( dot == -1 ){
 
@@ -451,7 +451,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
           T&  un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
-          CT& var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+          CT& var = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
 
           if ( dot == -1 ){
 
@@ -522,7 +522,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   ArchesCore::VariableHelper<T> helper;
 
   //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>>(m_rho_name);
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double>>(m_rho_name);
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];

@@ -432,7 +432,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps     = *( tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -505,10 +505,10 @@ private:
 
       T& phi = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn] );
       T& rhs = tsk_info->new_get_uintah_field<T>( m_transported_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
+      CT& old_phi = tsk_info->new_get_uintah_field<CT>( m_eqn_names[ieqn] );
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ieqn] );
+        CT& old_rho_phi = tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ieqn] );
         T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn] );
         rho_phi.copyData(old_rho_phi);
       }
@@ -573,10 +573,10 @@ private:
     double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
-    CFXT& u = tsk_info->get_const_uintah_field_add<CFXT>(m_x_velocity_name);
-    CFYT& v = tsk_info->get_const_uintah_field_add<CFYT>(m_y_velocity_name);
-    CFZT& w = tsk_info->get_const_uintah_field_add<CFZT>(m_z_velocity_name);
-    CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
+    CFXT& u = tsk_info->new_get_uintah_field<CFXT>(m_x_velocity_name);
+    CFYT& v = tsk_info->new_get_uintah_field<CFYT>(m_y_velocity_name);
+    CFZT& w = tsk_info->new_get_uintah_field<CFZT>(m_z_velocity_name);
+    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
 
 
     const int istart = 0;
@@ -781,9 +781,9 @@ private:
       //Diffusion:
       if ( m_do_diff[ieqn] ) {
 
-        CFXT& x_dflux = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
-        CFYT& y_dflux = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
-        CFZT& z_dflux = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
+        CFXT& x_dflux = tsk_info->new_get_uintah_field<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
+        CFYT& y_dflux = tsk_info->new_get_uintah_field<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
+        CFZT& z_dflux = tsk_info->new_get_uintah_field<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
 
         GET_EXTRACELL_BUFFERED_PATCH_RANGE(0,0);
 

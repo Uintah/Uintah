@@ -73,7 +73,7 @@ void ConstantStateProperties::register_timestep_init( VIVec& variable_registry ,
 void ConstantStateProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    constCCVariable<double>& old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( i->first );
+    constCCVariable<double>& old_var = tsk_info->new_get_uintah_field<constCCVariable<double> >( i->first );
     CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
 
     var.copyData(old_var);

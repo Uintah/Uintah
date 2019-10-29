@@ -421,7 +421,7 @@ private:
       if ( op_iter->second.ind1_is_temp ){
         ind_ptr = &temp_var;
       } else {
-        ind_ptr = tsk_info->get_uintah_field<T>(op_iter->second.ind1);
+        ind_ptr = &(tsk_info->new_get_uintah_field<T>(op_iter->second.ind1));
       }
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -429,7 +429,7 @@ private:
       if ( op_iter->second.create_temp_variable ) {
         dep_ptr = &temp_var;
       } else {
-        dep_ptr = tsk_info->get_uintah_field<T>(op_iter->second.dep);
+        dep_ptr = &(tsk_info->new_get_uintah_field<T>(op_iter->second.dep));
       }
 
       if ( op_iter->second.use_constant ){

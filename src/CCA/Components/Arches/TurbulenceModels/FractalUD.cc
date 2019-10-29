@@ -162,24 +162,24 @@ namespace Uintah{
 
       // CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
       //mu_sgc.initialize(0.0);
-      SFCXVariable<double>& uD_ctr          = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uD_ctr"));
-      SFCXVariable<double>& ucell_XvelD     = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_XvelD"));
-      SFCXVariable<double>& ucell_YvelD     = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_YvelD"));
-      SFCXVariable<double>& ucell_ZvelD     = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_ZvelD"));
+      SFCXVariable<double>& uD_ctr = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uD_ctr");
+      SFCXVariable<double>& ucell_XvelD = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_XvelD");
+      SFCXVariable<double>& ucell_YvelD = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_YvelD");
+      SFCXVariable<double>& ucell_ZvelD = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ZvelD");
 
-      SFCYVariable<double>& vD_ctr          = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vD_ctr"));
-      SFCYVariable<double>& vcell_XvelD     = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_XvelD"));
-      SFCYVariable<double>& vcell_YvelD     = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_YvelD"));
-      SFCYVariable<double>& vcell_ZvelD     = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_ZvelD"));
+      SFCYVariable<double>& vD_ctr = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vD_ctr");
+      SFCYVariable<double>& vcell_XvelD = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_XvelD");
+      SFCYVariable<double>& vcell_YvelD = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_YvelD");
+      SFCYVariable<double>& vcell_ZvelD = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ZvelD");
 
-      SFCZVariable<double>& wD_ctr          = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wD_ctr"));
-      SFCZVariable<double>& wcell_XvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_XvelD"));
-      SFCZVariable<double>& wcell_YvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_YvelD"));
-      SFCZVariable<double>& wcell_ZvelD     = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_ZvelD"));
+      SFCZVariable<double>& wD_ctr = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wD_ctr");
+      SFCZVariable<double>& wcell_XvelD = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_XvelD");
+      SFCZVariable<double>& wcell_YvelD = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_YvelD");
+      SFCZVariable<double>& wcell_ZvelD = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_ZvelD");
       //U2D
-      // SFCXVariable<double>& u2D_ctr    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("u2D_ctr"));
+      // SFCXVariable<double>& u2D_ctr = tsk_info->new_get_uintah_field<SFCXVariable<double> >("u2D_ctr");
       // SFCYVariable<double>& v2D_ctr   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("v2D_ctr"));
-      // SFCZVariable<double>& w2D_ctr    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("w2D_ctr"));
+      // SFCZVariable<double>& w2D_ctr = tsk_info->new_get_uintah_field<SFCZVariable<double> >("w2D_ctr");
       uD_ctr.initialize(0.0);
       ucell_XvelD.initialize(0.0);
       ucell_YvelD.initialize(0.0);
@@ -193,17 +193,17 @@ namespace Uintah{
       wcell_YvelD.initialize(0.0);
       wcell_ZvelD.initialize(0.0);
       //
-      SFCXVariable<double>& uustress    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uustress"));
-      SFCXVariable<double>& uvstress   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >("uvstress"));
-      SFCXVariable<double>& uwstress    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uwstress"));
+      SFCXVariable<double>& uustress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uustress");
+      SFCXVariable<double>& uvstress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uvstress");
+      SFCXVariable<double>& uwstress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uwstress");
       //
-      SFCYVariable<double>& vustress    = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vustress"));
-      SFCYVariable<double>& vvstress   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("vvstress"));
-      SFCYVariable<double>& vwstress    = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vwstress"));
+      SFCYVariable<double>& vustress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vustress");
+      SFCYVariable<double>& vvstress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vvstress");
+      SFCYVariable<double>& vwstress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vwstress");
       //
-      SFCZVariable<double>& wustress    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wustress"));
-      SFCZVariable<double>& wvstress   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >("wvstress"));
-      SFCZVariable<double>& wwstress    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wwstress"));
+      SFCZVariable<double>& wustress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wustress");
+      SFCZVariable<double>& wvstress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wvstress");
+      SFCZVariable<double>& wwstress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wwstress");
       uustress.initialize(0.0);
       uvstress.initialize(0.0);
       uwstress.initialize(0.0);
@@ -258,50 +258,50 @@ namespace Uintah{
   void
     FractalUD::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-      constSFCXVariable<double>& uFaceX =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Ux_face_name);
-      constSFCXVariable<double>& uFaceY =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Uy_face_name);
-      constSFCXVariable<double>& uFaceZ =tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(Uz_face_name);
-      constSFCYVariable<double>& vFaceX =tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(Vx_face_name);
-      constSFCYVariable<double>& vFaceY =tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(Vy_face_name);
-      constSFCYVariable<double>& vFaceZ =tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(Vz_face_name);
-      constSFCZVariable<double>& wFaceX =tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(Wx_face_name);
-      constSFCZVariable<double>& wFaceY =tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(Wy_face_name);
-      constSFCZVariable<double>& wFaceZ =tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(Wz_face_name);
-      constSFCXVariable<double>& U_ctr = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> > (m_u_vel_name);
-      constSFCYVariable<double>& V_ctr = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> > (m_v_vel_name);
-      constSFCZVariable<double>& W_ctr = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> > (m_w_vel_name);
+      constSFCXVariable<double>& uFaceX = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Ux_face_name);
+      constSFCXVariable<double>& uFaceY = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uy_face_name);
+      constSFCXVariable<double>& uFaceZ = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uz_face_name);
+      constSFCYVariable<double>& vFaceX = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vx_face_name);
+      constSFCYVariable<double>& vFaceY = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vy_face_name);
+      constSFCYVariable<double>& vFaceZ = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vz_face_name);
+      constSFCZVariable<double>& wFaceX = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wx_face_name);
+      constSFCZVariable<double>& wFaceY = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wy_face_name);
+      constSFCZVariable<double>& wFaceZ = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wz_face_name);
+      constSFCXVariable<double>& U_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> > (m_u_vel_name);
+      constSFCYVariable<double>& V_ctr = tsk_info->new_get_uintah_field<constSFCYVariable<double> > (m_v_vel_name);
+      constSFCZVariable<double>& W_ctr = tsk_info->new_get_uintah_field<constSFCZVariable<double> > (m_w_vel_name);
 
       // UD
-      SFCXVariable<double>& uD_ctr          = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_VelDelta_names[0]);
-      SFCXVariable<double>& ucell_XvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_XvelD");
-      SFCXVariable<double>& ucell_YvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_YvelD");
-      SFCXVariable<double>& ucell_ZvelD     = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_ZvelD");
+      SFCXVariable<double>& uD_ctr          = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_VelDelta_names[0]);
+      SFCXVariable<double>& ucell_XvelD     = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_XvelD");
+      SFCXVariable<double>& ucell_YvelD     = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_YvelD");
+      SFCXVariable<double>& ucell_ZvelD     = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ZvelD");
 
-      SFCYVariable<double>& vD_ctr          = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vD_ctr");
-      SFCYVariable<double>& vcell_XvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_XvelD");
-      SFCYVariable<double>& vcell_YvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_YvelD");
-      SFCYVariable<double>& vcell_ZvelD     = tsk_info->get_uintah_field_add<SFCYVariable<double> >("vcell_ZvelD");
+      SFCYVariable<double>& vD_ctr          = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vD_ctr");
+      SFCYVariable<double>& vcell_XvelD     = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_XvelD");
+      SFCYVariable<double>& vcell_YvelD     = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_YvelD");
+      SFCYVariable<double>& vcell_ZvelD     = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ZvelD");
 
-      SFCZVariable<double>& wD_ctr          = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wD_ctr");
-      SFCZVariable<double>& wcell_XvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_XvelD");
-      SFCZVariable<double>& wcell_YvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_YvelD");
-      SFCZVariable<double>& wcell_ZvelD     = tsk_info->get_uintah_field_add<SFCZVariable<double> >("wcell_ZvelD");
+      SFCZVariable<double>& wD_ctr          = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wD_ctr");
+      SFCZVariable<double>& wcell_XvelD     = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_XvelD");
+      SFCZVariable<double>& wcell_YvelD     = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_YvelD");
+      SFCZVariable<double>& wcell_ZvelD     = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_ZvelD");
       //U2D
-      SFCXVariable<double>& u2D_ctr         = tsk_info->get_uintah_field_add<SFCXVariable<double> >("u2D_ctr");
-      SFCYVariable<double>& v2D_ctr         = tsk_info->get_uintah_field_add<SFCYVariable<double> >("v2D_ctr");
-      SFCZVariable<double>& w2D_ctr         = tsk_info->get_uintah_field_add<SFCZVariable<double> >("w2D_ctr");
+      SFCXVariable<double>& u2D_ctr         = tsk_info->new_get_uintah_field<SFCXVariable<double> >("u2D_ctr");
+      SFCYVariable<double>& v2D_ctr         = tsk_info->new_get_uintah_field<SFCYVariable<double> >("v2D_ctr");
+      SFCZVariable<double>& w2D_ctr         = tsk_info->new_get_uintah_field<SFCZVariable<double> >("w2D_ctr");
       //
-      SFCXVariable<double>& uustress    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uustress"));
-      SFCXVariable<double>& uvstress   =  *(tsk_info->get_uintah_field<SFCXVariable<double> >("uvstress"));
-      SFCXVariable<double>& uwstress    = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uwstress"));
+      SFCXVariable<double>& uustress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uustress");
+      SFCXVariable<double>& uvstress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uvstress");
+      SFCXVariable<double>& uwstress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("uwstress");
       //
-      SFCYVariable<double>& vustress    = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vustress"));
-      SFCYVariable<double>& vvstress   =  *(tsk_info->get_uintah_field<SFCYVariable<double> >("vvstress"));
-      SFCYVariable<double>& vwstress    = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vwstress"));
+      SFCYVariable<double>& vustress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vustress");
+      SFCYVariable<double>& vvstress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vvstress");
+      SFCYVariable<double>& vwstress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vwstress");
       //
-      SFCZVariable<double>& wustress    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wustress"));
-      SFCZVariable<double>& wvstress   =  *(tsk_info->get_uintah_field<SFCZVariable<double> >("wvstress"));
-      SFCZVariable<double>& wwstress    = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wwstress"));
+      SFCZVariable<double>& wustress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wustress");
+      SFCZVariable<double>& wvstress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wvstress");
+      SFCZVariable<double>& wwstress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wwstress");
 
       std::vector<double>  dum   ={4.6296296296297682e-03,1.8518518518518452e-02,4.6296296296296207e-03,1.8518518518518462e-02,
         7.4074074074074112e-02,1.8518518518518504e-02,4.6296296296296502e-03,1.8518518518518507e-02,

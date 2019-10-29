@@ -229,25 +229,25 @@ void
 SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& cc_vol_frac = tsk_info->new_get_uintah_field<CCVariable<double> >("volFraction");
-  constCCVariable<double>& cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
+  constCCVariable<double>& cc_vol_frac_old = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
 
   cc_vol_frac.copyData(cc_vol_frac_old);
 
   CCVariable<int>& cellType = tsk_info->new_get_uintah_field<CCVariable<int> >("cellType");
-  constCCVariable<int>& cellType_old = tsk_info->get_const_uintah_field_add<constCCVariable<int> >("cellType");
+  constCCVariable<int>& cellType_old = tsk_info->new_get_uintah_field<constCCVariable<int> >("cellType");
 
   cellType.copyData(cellType_old);
 
   SFCXVariable<double>& fx_vol_frac = tsk_info->new_get_uintah_field<SFCXVariable<double> >("volFractionX");
-  constSFCXVariable<double>& fx_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("volFractionX");
+  constSFCXVariable<double>& fx_vol_frac_old = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("volFractionX");
   fx_vol_frac.copyData(fx_vol_frac_old);
 
   SFCYVariable<double>& fy_vol_frac = tsk_info->new_get_uintah_field<SFCYVariable<double> >("volFractionY");
-  constSFCYVariable<double>& fy_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("volFractionY");
+  constSFCYVariable<double>& fy_vol_frac_old = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("volFractionY");
   fy_vol_frac.copyData(fy_vol_frac_old);
 
   SFCZVariable<double>& fz_vol_frac = tsk_info->new_get_uintah_field<SFCZVariable<double> >("volFractionZ");
-  constSFCZVariable<double>& fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("volFractionZ");
+  constSFCZVariable<double>& fz_vol_frac_old = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("volFractionZ");
   fz_vol_frac.copyData(fz_vol_frac_old);
 
 }

@@ -167,10 +167,10 @@ namespace Uintah{
         db_FOWY->require("Ta", _Ta);
         db_FOWY->require("A", _A);
         db_FOWY->require("v_hiT", _v_hiT);
-        db_FOWY->require("Tbp_graphite", _Tbp_graphite); // 
-        db_FOWY->require("T_mu", _T_mu); // 
-        db_FOWY->require("T_sigma", _T_sigma); // 
-        db_FOWY->require("T_hardened_bond", _T_hardened_bond); // 
+        db_FOWY->require("Tbp_graphite", _Tbp_graphite); //
+        db_FOWY->require("T_mu", _T_mu); //
+        db_FOWY->require("T_sigma", _T_sigma); //
+        db_FOWY->require("T_hardened_bond", _T_hardened_bond); //
         db_FOWY->require("sigma", _sigma);
 
       } else {
@@ -301,9 +301,9 @@ namespace Uintah{
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
       const std::string vinf_name = get_name(ienv, _base_vinf_name);
 
-      T& devolRate    = *(tsk_info->get_uintah_field<T>(name));
+      T& devolRate    = tsk_info->new_get_uintah_field<T>(name);
       T& gasDevolRate = tsk_info->new_get_uintah_field<T>(gas_name);
-      T& vInf         = *(tsk_info->get_uintah_field<T>(vinf_name));
+      T& vInf         = tsk_info->new_get_uintah_field<T>(vinf_name);
 
       const std::string raw_coal_name = get_name( ienv, _base_raw_coal_name );
       const std::string char_mass_name = get_name( ienv, _base_char_mass_name);
@@ -311,11 +311,11 @@ namespace Uintah{
       const std::string particle_size_name = get_name( ienv, _base_particle_size_name );
       const std::string w_name = get_name( ienv, "w" );
 
-      CT& rawCoal  = *(tsk_info->get_const_uintah_field<CT>(raw_coal_name));
+      CT& rawCoal  = tsk_info->new_get_uintah_field<CT>(raw_coal_name);
       CT& charMass = tsk_info->new_get_uintah_field<CT>(char_mass_name);
       CT& partTemp = tsk_info->new_get_uintah_field<CT>(particle_temp_name);
       CT& partSize = tsk_info->new_get_uintah_field<CT>(particle_size_name);
-      CT& weight   = *(tsk_info->get_const_uintah_field<CT>(w_name));
+      CT& weight   = tsk_info->new_get_uintah_field<CT>(w_name);
 
       //Alex wasn't using the birth term yet. This needs to be fixed.
       // ITptr birth;

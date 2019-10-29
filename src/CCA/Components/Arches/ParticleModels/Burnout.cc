@@ -111,7 +111,7 @@ Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   numerator_sum.initialize(0.0);
   denominator_sum.initialize(0.0);
   CCVariable<double>& burnout = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
-  constCCVariable<double>& vol_frac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vol_fraction_name);
+  constCCVariable<double>& vol_frac = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_vol_fraction_name);
 
   for ( int qn = 0; qn < _Nenv; qn++ ){
     const double rc_scaling_constant = m_rc_scaling_constants[qn];
@@ -119,7 +119,7 @@ Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const double char_scaling_constant = m_char_scaling_constants[qn];
     constCCVariable<double>& weight   = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_weight_names[qn]);
     constCCVariable<double>& rcmass   = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_rc_names[qn]);
-    constCCVariable<double>& charmass = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_char_names[qn]);
+    constCCVariable<double>& charmass = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_char_names[qn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       numerator_sum(i,j,k) += vol_frac(i,j,k)*weight_scaling_constant*(rc_scaling_constant*rcmass(i,j,k) +
                                                                    char_scaling_constant*charmass(i,j,k));

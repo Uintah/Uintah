@@ -61,7 +61,7 @@ BurnsChriston::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   Point midPt( (m_max - m_min)/2. + m_min);
 
   CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskg_name);
-  CCVariable<double>& radT  = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
+  CCVariable<double>& radT  = tsk_info->new_get_uintah_field<CCVariable<double> >("temperature");
   constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridX");
   constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridY");
   constCCVariable<double>& z = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridZ");
@@ -118,7 +118,7 @@ void BurnsChriston::restart_initialize( const Patch* patch, ArchesTaskInfoManage
   Point midPt( (m_max - m_min)/2. + m_min);
 
   CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskg_name);
-  CCVariable<double>& radT  = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
+  CCVariable<double>& radT  = tsk_info->new_get_uintah_field<CCVariable<double> >("temperature");
   constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridX");
   constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridY");
   constCCVariable<double>& z = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridZ");

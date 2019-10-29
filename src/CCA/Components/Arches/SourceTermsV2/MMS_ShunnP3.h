@@ -308,8 +308,8 @@ void MMS_ShunnP3<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* 
   T& drhodt_mms   = tsk_info->get_uintah_field_add<T>(m_MMS_drhodt_label);
   T& continuity_mms   = tsk_info->get_uintah_field_add<T>(m_MMS_continuity_label);
 
-  constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
-  constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
+  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
+  constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   if ( m_which_vel == "u" ){

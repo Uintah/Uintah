@@ -418,7 +418,7 @@ private:
       T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn] );
       T& rhs = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
+      CT& old_phi = tsk_info->new_get_uintah_field<CT>( m_eqn_names[ieqn] );
       CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
 
       phi.copyData(old_phi);
@@ -474,14 +474,14 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CT& eps     = *( tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT& phi     = *(tsk_info->get_const_uintah_field<CT>(m_eqn_names[ieqn]));
-      T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_RHS"));
+      CT& phi = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]+"_RHS");
 
       //Convection:
       FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
@@ -510,9 +510,9 @@ private:
 
         Uintah::BlockRange convection_range(low_patch_range, high_patch_range);
 
-        CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
-        CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
-        CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
+        CT& u_fx = tsk_info->new_get_uintah_field<CT>(m_x_velocity_name);
+        CT& v_fy = tsk_info->new_get_uintah_field<CT>(m_y_velocity_name);
+        CT& w_fz = tsk_info->new_get_uintah_field<CT>(m_z_velocity_name);
 
         // switch between difference convection schemes:
         switch (m_conv_scheme[ieqn]){

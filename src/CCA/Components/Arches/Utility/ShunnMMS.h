@@ -135,7 +135,7 @@ private:
   void ShunnMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& f_mms = tsk_info->new_get_uintah_field<T>(m_var_name);
-    constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
+    constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
     const double time_d = 0.0;
@@ -146,7 +146,7 @@ private:
 
     if ( m_which_vel == "u" ){
     // for velocity
-      constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+      constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
       Uintah::parallel_for( range, [&](int i, int j, int k){
         //const double z2 = std::cosh (m_w0 * std::exp (-m_k2 * time_d) * x(i,j,k)); // x at face
         //const double phi_f = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);

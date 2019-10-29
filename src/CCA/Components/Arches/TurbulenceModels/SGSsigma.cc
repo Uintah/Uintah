@@ -203,23 +203,23 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2 = filter*filter;
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  //constCCVariable<double>& Cs_dynamic = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("CsLabel");
-  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
+  //constCCVariable<double>& Cs_dynamic = tsk_info->new_get_uintah_field<constCCVariable<double> >("CsLabel");
+  constCCVariable<double>& CCuVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  //constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
-  //constCCVariable<double>& Density_sigma = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
+  //constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
+  //constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
   //constCCVariable<Vector>& CCVelocity =    tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >("CCVelocity");
 
   CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
   CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
   CCVariable<double>& IsI = tsk_info->new_get_uintah_field< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
   //CCVariable<double>& viscosity_new = tsk_info->new_get_uintah_field<CCVariable<double> >("viscosityCTS");
   //CCVariable<double>&  TurbViscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("turb_viscosity");
   //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);

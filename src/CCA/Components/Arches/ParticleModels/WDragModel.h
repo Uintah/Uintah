@@ -247,9 +247,9 @@ private:
   T& gas_source = tsk_info->new_get_uintah_field<T>(m_gasSource_name);
 
   // gas variables
-  CT& CCuVel = tsk_info->get_const_uintah_field_add<CT>( m_cc_u_vel_name );
-  CT& CCvVel = tsk_info->get_const_uintah_field_add<CT>( m_cc_v_vel_name );
-  CT& CCwVel = tsk_info->get_const_uintah_field_add<CT>( m_cc_w_vel_name );
+  CT& CCuVel = tsk_info->new_get_uintah_field<CT>( m_cc_u_vel_name );
+  CT& CCvVel = tsk_info->new_get_uintah_field<CT>( m_cc_v_vel_name );
+  CT& CCwVel = tsk_info->new_get_uintah_field<CT>( m_cc_w_vel_name );
   CT& den    = tsk_info->get_const_uintah_field_add<CT>( m_density_gas_name );
   CT& volFraction  = tsk_info->get_const_uintah_field_add<CT>( m_volFraction_name );
 
@@ -257,7 +257,7 @@ private:
   CT& up    = tsk_info->get_const_uintah_field_add< CT >( m_up_name );
   CT& vp    = tsk_info->get_const_uintah_field_add< CT >( m_vp_name );
   CT& wp    = tsk_info->get_const_uintah_field_add< CT >( m_wp_name );
-  CT& rho_p = tsk_info->get_const_uintah_field_add< CT >( m_particle_density_name );
+  CT& rho_p = tsk_info->new_get_uintah_field< CT >( m_particle_density_name );
   CT& l_p   = tsk_info->get_const_uintah_field_add< CT >( m_length_name );
 
   // DQMOM valiables
@@ -266,7 +266,7 @@ private:
   CT& RHS_weight   = tsk_info->get_const_uintah_field_add<CT>(m_w_qn_name + "_RHS");
   CT& Vel          = tsk_info->get_const_uintah_field_add<CT>(m_vel_dir_name );
   CT& pVel         = tsk_info->get_const_uintah_field_add<CT>(m_pvel_dir_name );
-  CT& weight_p_vel = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name);//
+  CT& weight_p_vel = tsk_info->new_get_uintah_field<CT>(m_wvelp_name);//
   CT& RHS_source   = tsk_info->get_const_uintah_field_add<CT>(m_wvelp_name + "_RHS");
 
   // NOTE: This is a temp placeholder for the birth model.

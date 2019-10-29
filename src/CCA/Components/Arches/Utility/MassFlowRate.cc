@@ -208,8 +208,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 // -----------------------------------------------------------------------------
 void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
+  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
 
   DataWarehouse* new_dw = tsk_info->getNewDW();
 
@@ -235,7 +235,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
       // Coal phase
-      constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[qn]  ));
+      constCCVariable<double>& wqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_w_names[qn]  );
       constCCVariable<double>& RCqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_RC_names[qn] );
       constCCVariable<double>& CHqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_CH_names[qn] );
 

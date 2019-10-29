@@ -306,11 +306,11 @@ private:
 
       T& phi = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ceqn]);
       T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ceqn]+"_RHS");
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      CT& old_phi = tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
-      CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
-      CFYT& y_flux = tsk_info->get_const_uintah_field_add<CFYT>(*ieqn+"_y_flux");
-      CFZT& z_flux = tsk_info->get_const_uintah_field_add<CFZT>(*ieqn+"_z_flux");
+      CFXT& x_flux = tsk_info->new_get_uintah_field<CFXT>(*ieqn+"_x_flux");
+      CFYT& y_flux = tsk_info->new_get_uintah_field<CFYT>(*ieqn+"_y_flux");
+      CFZT& z_flux = tsk_info->new_get_uintah_field<CFZT>(*ieqn+"_z_flux");
 
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
@@ -388,7 +388,7 @@ private:
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
       //const double scaling_constant = ieqn->second;
-      constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+      constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
 
       T& phi = tsk_info->new_get_uintah_field<T>(varname);
       T& phi_unscaled = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
@@ -422,11 +422,11 @@ private:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
 
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
+    CT& phi = tsk_info->new_get_uintah_field<CT>(ieqn->first);
     T& phi_unscaled = tsk_info->new_get_uintah_field<T>((ieqn->second).unscaled_var);
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){

@@ -120,8 +120,8 @@ private:
   void AlmgrenMMS<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     T& var = tsk_info->new_get_uintah_field<T>( m_var_name );
-    constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
-    constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
+    constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
+    constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 

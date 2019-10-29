@@ -118,9 +118,9 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
-    CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
+    CCVariable<double>&      rho   = tsk_info->new_get_uintah_field<CCVariable<double> >( rho_name );
     constCCVariable<double>& cchar = tsk_info->new_get_uintah_field<constCCVariable<double> >( char_name );
-    constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
+    constCCVariable<double>& rc    = tsk_info->new_get_uintah_field<constCCVariable<double> >( rc_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -213,9 +213,9 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
-    CCVariable<double>&      rho   = *(tsk_info->get_uintah_field<CCVariable<double> >( rho_name ));
+    CCVariable<double>&      rho   = tsk_info->new_get_uintah_field<CCVariable<double> >( rho_name );
     constCCVariable<double>& cchar = tsk_info->new_get_uintah_field<constCCVariable<double> >( char_name );
-    constCCVariable<double>& rc    = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( rc_name ));
+    constCCVariable<double>& rc    = tsk_info->new_get_uintah_field<constCCVariable<double> >( rc_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){

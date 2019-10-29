@@ -110,7 +110,7 @@ MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& s_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_label);
   CCVariable<double>& s_diff_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label);
   CCVariable<double>& s_t_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_t_label);
-  constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
+  constCCVariable<double>& X = tsk_info->new_get_uintah_field<constCCVariable<double > >( ind_var_name );
 
   double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   //  Vector Dx = patch->dCell();
@@ -185,7 +185,7 @@ MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   s_diff_mms.initialize(0.0);
   s_t_mms.initialize(0.0);
 
-  constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
+  constCCVariable<double>& X = tsk_info->new_get_uintah_field<constCCVariable<double > >( ind_var_name );
 
   double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();

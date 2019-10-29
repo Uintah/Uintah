@@ -120,7 +120,7 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
 void
 DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& old_rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
+  constCCVariable<double>& old_rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
   CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_density );
   CCVariable<double>& rhoRK = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_densityRK );
 

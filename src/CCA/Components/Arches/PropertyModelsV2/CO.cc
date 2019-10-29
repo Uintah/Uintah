@@ -133,9 +133,9 @@ void CO::register_timestep_init( VIVec& variable_registry , const bool packed_ta
 void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& CO          = tsk_info->get_uintah_field_add<CCVariable<double>>( m_CO_model_name );
-  constCCVariable<double>& CO_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_CO_model_name );
+  constCCVariable<double>& CO_old = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_CO_model_name );
   CCVariable<double>& defect      = tsk_info->get_uintah_field_add<CCVariable<double>>( m_defect_name );
-  constCCVariable<double>& defect_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( m_defect_name );
+  constCCVariable<double>& defect_old = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_defect_name );
   CCVariable<double>& CO_diff     = tsk_info->get_uintah_field_add<CCVariable<double>>(m_CO_diff_name);
   CCVariable<double>& CO_conv     = tsk_info->get_uintah_field_add<CCVariable<double>>(m_CO_conv_name);
   CCVariable<double>& rate        = tsk_info->get_uintah_field_add<CCVariable<double>>(m_rate_name);
@@ -250,7 +250,7 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& H2O_old         = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_H2O_table_name, AFC::OLDDW );
   constCCVariable<double>& O2_old          = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_O2_table_name, AFC::OLDDW );
   constCCVariable<double>& invMW_old       = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_MW_table_name, AFC::OLDDW );
-  constCCVariable<double>& temperature_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_temperature_table_name, AFC::OLDDW );
+  constCCVariable<double>& temperature_old = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_temperature_table_name, AFC::OLDDW );
   constCCVariable<double>& mu_t            = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_turb_visc, AFC::OLDDW );
   constCCVariable<double>& volFraction     = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_vol_frac, AFC::OLDDW );
   constCCVariable<Vector>& areaFraction    = tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >( m_area_frac, AFC::OLDDW );

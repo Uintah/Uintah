@@ -192,8 +192,8 @@ void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_
   T& s_diff_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_diff_label);
   // T& s_t_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_t_label);
 
-  constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
-  constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
+  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
+  constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
 
 //  double time_d      = _materialManager->getElapsedTime();
 //  int   time_substep = tsk_info->get_time_substep();

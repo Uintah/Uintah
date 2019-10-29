@@ -49,10 +49,10 @@ SampleTask::register_initialize(
 void
 SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  //CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
+  //CCVariable<double>& field = tsk_info->new_get_uintah_field<CCVariable<double> >( "a_sample_field" );
   //CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >( "a_result_field" );
 
-  //constCCVariable<double>& field = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("a_sample_field");
+  //constCCVariable<double>& field = tsk_info->new_get_uintah_field<constCCVariable<double> >("a_sample_field");
   CCVariable<double>& field  = tsk_info->get_uintah_field_add<CCVariable<double> >("a_sample_field");
   CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >("a_result_field");
 

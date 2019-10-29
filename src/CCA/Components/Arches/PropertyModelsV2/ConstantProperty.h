@@ -251,7 +251,7 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     T& property = tsk_info->new_get_uintah_field<T>( m_task_name );
-    CT& old_property = tsk_info->get_const_uintah_field_add<CT>( m_task_name );
+    CT& old_property = tsk_info->new_get_uintah_field<CT>( m_task_name );
 
     property.copyData(old_property);
 

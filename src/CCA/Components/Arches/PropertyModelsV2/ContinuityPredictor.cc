@@ -90,9 +90,9 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 void
 ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(ArchesCore::default_uMom_name);
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
+  constSFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(ArchesCore::default_uMom_name);
+  constSFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
+  constSFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
 
   constCCVariable<double>& drho_dt = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_drhodt );
   CCVariable<double>& Balance = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_balance );

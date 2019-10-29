@@ -52,8 +52,8 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   SFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<SFCXVariable<double> >( m_xmom );
   SFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<SFCYVariable<double> >( m_ymom );
   SFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<SFCZVariable<double> >( m_zmom );
-  constCCVariable<double>& p = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_press);
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
+  constCCVariable<double>& p = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_press);
+  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_eps_name);
 
   SFCXVariable<double>& uhat = tsk_info->new_get_uintah_field<SFCXVariable<double> >( "uHat" );
   SFCYVariable<double>& vhat = tsk_info->new_get_uintah_field<SFCYVariable<double> >( "vHat" );

@@ -102,12 +102,12 @@ GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& vcellY = tsk_info->new_get_uintah_field<CCVariable<double>>( "vcellY" );
   CCVariable<double>& wcellZ = tsk_info->new_get_uintah_field<CCVariable<double>>( "wcellZ" );
 
-  constCCVariable<double>& old_gridX = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridX" );
-  constCCVariable<double>& old_gridY = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridY" );
-  constCCVariable<double>& old_gridZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridZ" );
-  constCCVariable<double>& old_ucellX = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "ucellX" );
-  constCCVariable<double>& old_vcellY = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "vcellY" );
-  constCCVariable<double>& old_wcellZ = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "wcellZ" );
+  constCCVariable<double>& old_gridX = tsk_info->new_get_uintah_field<constCCVariable<double>>( "gridX" );
+  constCCVariable<double>& old_gridY = tsk_info->new_get_uintah_field<constCCVariable<double>>( "gridY" );
+  constCCVariable<double>& old_gridZ = tsk_info->new_get_uintah_field<constCCVariable<double>>( "gridZ" );
+  constCCVariable<double>& old_ucellX = tsk_info->new_get_uintah_field<constCCVariable<double>>( "ucellX" );
+  constCCVariable<double>& old_vcellY = tsk_info->new_get_uintah_field<constCCVariable<double>>( "vcellY" );
+  constCCVariable<double>& old_wcellZ = tsk_info->new_get_uintah_field<constCCVariable<double>>( "wcellZ" );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   Uintah::parallel_for( range, [&](int i, int j, int k){

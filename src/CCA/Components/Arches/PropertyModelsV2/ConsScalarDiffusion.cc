@@ -45,7 +45,7 @@ void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager*
 
   CCVariable<double>& gamma = tsk_info->new_get_uintah_field<CCVariable<double> >(m_gamma_name);
   //constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);
-  //constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+  //constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
 
   gamma.initialize(0.0);
 
@@ -83,7 +83,7 @@ void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   CCVariable<double>& gamma = tsk_info->new_get_uintah_field<CCVariable<double> >(m_gamma_name);
   constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);
-  constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
 
   gamma.initialize(0.0);
 

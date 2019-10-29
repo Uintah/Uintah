@@ -98,13 +98,13 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 //--------------------------------------------------------------------------------------------------
 void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
   constCCVariable<double>&     D  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_t_vis_name);
-  constSFCXVariable<double>& eps_x = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_eps_x_name);
-  constSFCYVariable<double>& eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_eps_y_name);
-  constSFCZVariable<double>& eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_eps_z_name);
+  constSFCXVariable<double>& eps_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_eps_x_name);
+  constSFCYVariable<double>& eps_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_eps_y_name);
+  constSFCZVariable<double>& eps_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_eps_z_name);
 
   CCVariable<double>& sigma11 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
   CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);

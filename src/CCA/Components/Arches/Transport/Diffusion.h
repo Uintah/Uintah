@@ -201,7 +201,7 @@ private:
   template <typename T>
   void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
+    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
 
     Vector Dx = patch->dCell();
 
@@ -213,7 +213,7 @@ private:
         FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_dflux");
         FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_dflux");
 
-        CT& phi = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
+        CT& phi = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
 
         x_flux.initialize(0.0);
         y_flux.initialize(0.0);

@@ -192,8 +192,8 @@ CoalTemperature::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_i
     const std::string temperature_name  = get_env_name( ienv, m_task_name );
     const std::string temperatureold_name  = get_env_name( ienv, m_task_name );
 
-    CCVariable<double>& temperature   = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
-    constCCVariable<double>& temperature_old   = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( temperatureold_name ));
+    CCVariable<double>& temperature   = tsk_info->new_get_uintah_field<CCVariable<double> >( temperature_name );
+    constCCVariable<double>& temperature_old   = tsk_info->new_get_uintah_field<constCCVariable<double> >( temperatureold_name );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       temperature(i,j,k) = temperature_old(i,j,k);
@@ -238,7 +238,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>& gas_temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(gas_temperature_name);
-  constCCVariable<double>& vol_frac        = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
+  constCCVariable<double>& vol_frac        = tsk_info->new_get_uintah_field<constCCVariable<double> >(_vol_fraction_name);
 
   const double dt = tsk_info->get_dt() * _time_factor[tsk_info->get_time_substep()];
 
@@ -250,17 +250,18 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string enthalpy_name    = get_env_name( ix, _enthalpy_base_name );
     const std::string rc_name          = get_env_name( ix, _rawcoal_base_name );
 
-    CCVariable<double>& temperature         = *(tsk_info->get_uintah_field<CCVariable<double> >(temperature_name));
-    CCVariable<double>& dTdt                = *(tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name));
-    constCCVariable<double>& rcmass         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name));
-    constCCVariable<double>& charmass       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name));
-    constCCVariable<double>& enthalpy       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
+    CCVariable<double>& temperature         = tsk_info->new_get_uintah_field<CCVariable<double> >(temperature_name);
+    CCVariable<double>& dTdt                = tsk_info->new_get_uintah_field<CCVariable<double> >(dTdt_name);
+    constCCVariable<double>& rcmass         = tsk_info->new_get_uintah_field<constCCVariable<double> >(rc_name);
+    constCCVariable<double>& charmass       = tsk_info->new_get_uintah_field<constCCVariable<double> >(char_name);
+    constCCVariable<double>& enthalpy       = tsk_info->new_get_uintah_field<constCCVariable<double> >(enthalpy_name);
     constCCVariable<double>& temperatureold = tsk_info->new_get_uintah_field<constCCVariable<double> >(temperature_name);
 
     constCCVariable<double>* vdiameter = nullptr;
     if ( !_const_size ) {
       const std::string diameter_name = get_env_name( ix, _diameter_base_name );
-      vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
+      constCCVariable<double>& this_diameter = tsk_info->new_get_uintah_field<constCCVariable<double> >(diameter_name);
+      vdiameter = &this_diameter;
     }
     constCCVariable<double>& diameter = *(vdiameter);
 

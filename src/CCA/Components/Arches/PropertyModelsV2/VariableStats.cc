@@ -601,10 +601,10 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   //Single variables
   for ( int i = 0; i < N; i++ ){
 
-    CCVariable<double>& sum              = *(tsk_info->get_uintah_field<CCVariable<double> >( _ave_sum_names[i] ));
-    constCCVariable<double>& var         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _base_var_names[i] ));
-    constCCVariable<double>& old_sum     = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _ave_sum_names[i] ));
-    CCVariable<double>& sqr_sum          = *(tsk_info->get_uintah_field<CCVariable<double> >( _sqr_variable_names[i] ));
+    CCVariable<double>& sum = tsk_info->new_get_uintah_field<CCVariable<double> >( _ave_sum_names[i] );
+    constCCVariable<double>& var = tsk_info->new_get_uintah_field<constCCVariable<double> >( _base_var_names[i] );
+    constCCVariable<double>& old_sum = tsk_info->new_get_uintah_field<constCCVariable<double> >( _ave_sum_names[i] );
+    CCVariable<double>& sqr_sum = tsk_info->new_get_uintah_field<CCVariable<double> >( _sqr_variable_names[i] );
     constCCVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constCCVariable<double> >( _sqr_variable_names[i] );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
@@ -627,10 +627,10 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
     N = _ave_x_flux_sum_names.size();
     for ( int iname = 0; iname < N; iname++ ){
 
-      SFCXVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCXVariable<double> >( _ave_x_flux_sum_names[iname] ));
-      constSFCXVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( _ave_x_flux_sum_names[iname] ));
+      SFCXVariable<double>&          sum = tsk_info->new_get_uintah_field<SFCXVariable<double> >( _ave_x_flux_sum_names[iname] );
+      constSFCXVariable<double>& old_sum = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( _ave_x_flux_sum_names[iname] );
 
-      SFCXVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCXVariable<double> >( _x_flux_sqr_sum_names[iname] ));
+      SFCXVariable<double>& sqr_sum = tsk_info->new_get_uintah_field<SFCXVariable<double> >( _x_flux_sqr_sum_names[iname] );
       constSFCXVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( _x_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
@@ -665,10 +665,10 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
     N = _ave_y_flux_sum_names.size();
     for ( int iname = 0; iname < N; iname++ ){
 
-      SFCYVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCYVariable<double> >( _ave_y_flux_sum_names[iname] ));
-      constSFCYVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( _ave_y_flux_sum_names[iname] ));
+      SFCYVariable<double>&          sum = tsk_info->new_get_uintah_field<SFCYVariable<double> >( _ave_y_flux_sum_names[iname] );
+      constSFCYVariable<double>& old_sum = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( _ave_y_flux_sum_names[iname] );
 
-      SFCYVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCYVariable<double> >( _y_flux_sqr_sum_names[iname] ));
+      SFCYVariable<double>& sqr_sum = tsk_info->new_get_uintah_field<SFCYVariable<double> >( _y_flux_sqr_sum_names[iname] );
       constSFCYVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( _y_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
@@ -702,10 +702,10 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
     N = _ave_z_flux_sum_names.size();
     for ( int iname = 0; iname < N; iname++ ){
 
-      SFCZVariable<double>&          sum  = *(tsk_info->get_uintah_field<SFCZVariable<double> >( _ave_z_flux_sum_names[iname] ));
-      constSFCZVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( _ave_z_flux_sum_names[iname] ));
+      SFCZVariable<double>&          sum = tsk_info->new_get_uintah_field<SFCZVariable<double> >( _ave_z_flux_sum_names[iname] );
+      constSFCZVariable<double>& old_sum = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( _ave_z_flux_sum_names[iname] );
 
-      SFCZVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCZVariable<double> >( _z_flux_sqr_sum_names[iname] ));
+      SFCZVariable<double>& sqr_sum = tsk_info->new_get_uintah_field<SFCZVariable<double> >( _z_flux_sqr_sum_names[iname] );
       constSFCZVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( _z_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
