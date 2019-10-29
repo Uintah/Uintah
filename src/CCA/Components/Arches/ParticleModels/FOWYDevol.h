@@ -312,9 +312,9 @@ namespace Uintah{
       const std::string w_name = get_name( ienv, "w" );
 
       CT& rawCoal  = *(tsk_info->get_const_uintah_field<CT>(raw_coal_name));
-      CT& charMass = *(tsk_info->get_const_uintah_field<CT>(char_mass_name));
-      CT& partTemp = *(tsk_info->get_const_uintah_field<CT>(particle_temp_name));
-      CT& partSize = *(tsk_info->get_const_uintah_field<CT>(particle_size_name));
+      CT& charMass = tsk_info->new_get_uintah_field<CT>(char_mass_name);
+      CT& partTemp = tsk_info->new_get_uintah_field<CT>(particle_temp_name);
+      CT& partSize = tsk_info->new_get_uintah_field<CT>(particle_size_name);
       CT& weight   = *(tsk_info->get_const_uintah_field<CT>(w_name));
 
       //Alex wasn't using the birth term yet. This needs to be fixed.

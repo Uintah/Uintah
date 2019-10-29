@@ -163,8 +163,8 @@ gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskg_name));
   abskg.initialize(0.0); 
 
-  constCCVariable<double>& temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_temperature_name));
-  constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
+  constCCVariable<double>& temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name);
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
 
   std::vector<std::string> part_sp = _calc->get_sp(); 
   std::vector<constCCVariable<double>  > species(0); 

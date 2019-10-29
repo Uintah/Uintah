@@ -61,9 +61,9 @@ cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
   CCVariable<double>& radT  = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
-  constCCVariable<double>& x = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridX"));
-  constCCVariable<double>& y = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridY"));
-  constCCVariable<double>& z = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridZ"));
+  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridX");
+  constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridY");
+  constCCVariable<double>& z = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridZ");
 
   abskg.initialize(1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
@@ -111,9 +111,9 @@ void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bo
 void cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
-  constCCVariable<double>& old_abskg = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_abskg_name));
+  constCCVariable<double>& old_abskg = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_abskg_name);
   CCVariable<double>& temp = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
-  constCCVariable<double>& old_temp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("temperature"));
+  constCCVariable<double>& old_temp = tsk_info->new_get_uintah_field<constCCVariable<double> >("temperature");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   Uintah::parallel_for( range, [&](int i, int j, int k){

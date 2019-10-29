@@ -825,7 +825,7 @@ template <typename ES, typename MS>
     typedef typename VariableHelper<T>::ConstType CT;
     T& var = *( tsk_info->get_uintah_field<T>(var_name));
     const IntVector iDir = patch->faceDirection( bnd->face );
-    CT& sec_var = *( tsk_info->get_const_uintah_field<CT>(m_sec_var_name));
+    CT& sec_var = tsk_info->new_get_uintah_field<CT>(m_sec_var_name);
 
     parallel_for(bndIter.get_ref_to_iterator(),bndIter.size(), [&] (int i,int j,int k) {
           int im=i - iDir[0];
@@ -1286,7 +1286,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
                    "  Functor name: " << spec->functorName << std::endl;
             throw InvalidValue( msg.str(), __FILE__, __LINE__);
           }
-          
+
         }
       }
     }

@@ -284,10 +284,10 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    IT& rhoG = *(tsk_info->get_const_uintah_field<IT>(_gas_density_name));
-    IT& velU = *(tsk_info->get_const_uintah_field<IT>(_gas_u_velocity_name));
-    IT& velV = *(tsk_info->get_const_uintah_field<IT>(_gas_v_velocity_name));
-    IT& velW = *(tsk_info->get_const_uintah_field<IT>(_gas_w_velocity_name));
+    IT& rhoG = tsk_info->new_get_uintah_field<IT>(_gas_density_name);
+    IT& velU = tsk_info->new_get_uintah_field<IT>(_gas_u_velocity_name);
+    IT& velV = tsk_info->new_get_uintah_field<IT>(_gas_v_velocity_name);
+    IT& velW = tsk_info->new_get_uintah_field<IT>(_gas_w_velocity_name);
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
 

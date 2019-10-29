@@ -237,7 +237,7 @@ void
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   const std::string gas_temperature_name   = _gas_temperature_name;
-  constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));
+  constCCVariable<double>& gas_temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(gas_temperature_name);
   constCCVariable<double>& vol_frac        = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
 
   const double dt = tsk_info->get_dt() * _time_factor[tsk_info->get_time_substep()];
@@ -255,7 +255,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constCCVariable<double>& rcmass         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name));
     constCCVariable<double>& charmass       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name));
     constCCVariable<double>& enthalpy       = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
-    constCCVariable<double>& temperatureold = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name));
+    constCCVariable<double>& temperatureold = tsk_info->new_get_uintah_field<constCCVariable<double> >(temperature_name);
 
     constCCVariable<double>* vdiameter = nullptr;
     if ( !_const_size ) {

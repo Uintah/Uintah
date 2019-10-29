@@ -236,12 +236,12 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
       // Coal phase
       constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[qn]  ));
-      constCCVariable<double>& RCqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_RC_names[qn] ));
-      constCCVariable<double>& CHqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_CH_names[qn] ));
+      constCCVariable<double>& RCqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_RC_names[qn] );
+      constCCVariable<double>& CHqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_CH_names[qn] );
 
-      constCCVariable<double>& uvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] ));
-      constCCVariable<double>& vvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] ));
-      constCCVariable<double>& wvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] ));
+      constCCVariable<double>& uvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] );
+      constCCVariable<double>& vvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] );
+      constCCVariable<double>& wvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] );
 
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 

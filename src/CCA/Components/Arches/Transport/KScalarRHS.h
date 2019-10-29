@@ -432,7 +432,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps     = *( tsk_info->get_const_uintah_field<CT>(m_eps_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -803,7 +803,7 @@ private:
       for (typename VS::iterator isrc = m_source_info[ieqn].begin();
         isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        CT& src = tsk_info->new_get_uintah_field<CT>((*isrc).name);
         double weight = (*isrc).weight;
         Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 

@@ -196,7 +196,7 @@ namespace Uintah{
     typedef typename ArchesCore::VariableHelper<IT>::ConstType CIT;
     typedef typename ArchesCore::VariableHelper<DT>::ConstType CDT;
 
-    CIT& rhoG = *(tsk_info->get_const_uintah_field<CIT>(m_gas_density_name));
+    CIT& rhoG = tsk_info->new_get_uintah_field<CIT>(m_gas_density_name);
 
     for ( int ienv = 0; ienv < m_N; ienv++ ){
 
@@ -204,7 +204,7 @@ namespace Uintah{
       DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
 
       const std::string density_name = get_name( ienv, m_base_density_name );
-      CDT& rhoP = *(tsk_info->get_const_uintah_field<CDT>(density_name));
+      CDT& rhoP = tsk_info->new_get_uintah_field<CDT>(density_name);
 
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

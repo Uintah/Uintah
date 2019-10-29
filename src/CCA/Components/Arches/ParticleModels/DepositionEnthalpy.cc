@@ -174,7 +174,7 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   ash_enthalpy_src.initialize(0.0);
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;
-  constCCVariable<double>& gasT = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _gasT_name ));
+  constCCVariable<double>& gasT = tsk_info->new_get_uintah_field<constCCVariable<double> >( _gasT_name );
 
   for( int i = 0; i < _Nenv; i++ ){
 
@@ -190,9 +190,9 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     constSFCYVariable<double>& dep_y = *vdep_y;
     constSFCZVariable<double>* vdep_z = tsk_info->get_const_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
     constSFCZVariable<double>& dep_z = *vdep_z;
-    constCCVariable<double>& dp = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( diameter_name ));
-    constCCVariable<double>& pT = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( temperature_name ));
-    constCCVariable<double>& rhop = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( density_name ));
+    constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
+    constCCVariable<double>& pT = tsk_info->new_get_uintah_field<constCCVariable<double> >( temperature_name );
+    constCCVariable<double>& rhop = tsk_info->new_get_uintah_field<constCCVariable<double> >( density_name );
 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 

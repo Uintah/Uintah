@@ -66,7 +66,7 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
   GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1)
   GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1)
 
-  constCCVariable<double>& vol_fraction = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"));
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
 
   SFCXVariable<double>& n_in_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_in_normX"));
   SFCYVariable<double>& n_in_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_in_normY"));
@@ -145,16 +145,16 @@ SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
   SFCXVariable<double>& n_in_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_in_normX"));
   SFCYVariable<double>& n_in_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_in_normY"));
   SFCZVariable<double>& n_in_z = *(tsk_info->get_uintah_field<SFCZVariable<double> >("surf_in_normZ"));
-  constSFCXVariable<double>& old_n_in_x = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("surf_in_normX"));
-  constSFCYVariable<double>& old_n_in_y = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("surf_in_normY"));
-  constSFCZVariable<double>& old_n_in_z = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("surf_in_normZ"));
+  constSFCXVariable<double>& old_n_in_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("surf_in_normX");
+  constSFCYVariable<double>& old_n_in_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("surf_in_normY");
+  constSFCZVariable<double>& old_n_in_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("surf_in_normZ");
 
   SFCXVariable<double>& n_out_x = *(tsk_info->get_uintah_field<SFCXVariable<double> >("surf_out_normX"));
   SFCYVariable<double>& n_out_y = *(tsk_info->get_uintah_field<SFCYVariable<double> >("surf_out_normY"));
   SFCZVariable<double>& n_out_z = *(tsk_info->get_uintah_field<SFCZVariable<double> >("surf_out_normZ"));
-  constSFCXVariable<double>& old_n_out_x = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("surf_out_normX"));
-  constSFCYVariable<double>& old_n_out_y = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("surf_out_normY"));
-  constSFCZVariable<double>& old_n_out_z = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("surf_out_normZ"));
+  constSFCXVariable<double>& old_n_out_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("surf_out_normX");
+  constSFCYVariable<double>& old_n_out_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("surf_out_normY");
+  constSFCZVariable<double>& old_n_out_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("surf_out_normZ");
 
   Uintah::BlockRange full_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   Uintah::parallel_for(full_range, [&](int i, int j, int k){

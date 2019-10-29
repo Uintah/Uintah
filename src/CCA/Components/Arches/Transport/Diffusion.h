@@ -219,7 +219,7 @@ private:
         y_flux.initialize(0.0);
         z_flux.initialize(0.0);
 
-        CT& D = *(tsk_info->get_const_uintah_field<CT>(m_D_name));
+        CT& D = tsk_info->new_get_uintah_field<CT>(m_D_name);
 
         // x - Direction
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);

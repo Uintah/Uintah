@@ -225,15 +225,15 @@ namespace Uintah{
       double LegthScales=pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
       double ratio_threshold = 2.0;
 
-      constSFCXVariable<double>& ucell_xvel_face = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(Ux_face_name));
-      constSFCXVariable<double>& ucell_yvel_face = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(Uy_face_name));
-      constSFCXVariable<double>& ucell_zvel_face = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >(Uz_face_name));
-      constSFCYVariable<double>& vcell_xvel_face = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(Vx_face_name));
-      constSFCYVariable<double>& vcell_yvel_face = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(Vy_face_name));
-      constSFCYVariable<double>& vcell_zvel_face = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >(Vz_face_name));
-      constSFCZVariable<double>& wcell_xvel_face = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(Wx_face_name));
-      constSFCZVariable<double>& wcell_yvel_face = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(Wy_face_name));
-      constSFCZVariable<double>& wcell_zvel_face = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >(Wz_face_name));
+      constSFCXVariable<double>& ucell_xvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Ux_face_name);
+      constSFCXVariable<double>& ucell_yvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uy_face_name);
+      constSFCXVariable<double>& ucell_zvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uz_face_name);
+      constSFCYVariable<double>& vcell_xvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vx_face_name);
+      constSFCYVariable<double>& vcell_yvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vy_face_name);
+      constSFCYVariable<double>& vcell_zvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vz_face_name);
+      constSFCZVariable<double>& wcell_xvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wx_face_name);
+      constSFCZVariable<double>& wcell_yvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wy_face_name);
+      constSFCZVariable<double>& wcell_zvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wz_face_name);
       constSFCXVariable<double>& U_ctr =  *(tsk_info->get_const_uintah_field<constSFCXVariable<double> > (m_u_vel_name));
       constSFCYVariable<double>& V_ctr =  *(tsk_info->get_const_uintah_field<constSFCYVariable<double> > (m_v_vel_name));
       constSFCZVariable<double>& W_ctr =  *(tsk_info->get_const_uintah_field<constSFCZVariable<double> > (m_w_vel_name));

@@ -411,7 +411,7 @@ namespace Uintah{
 
     //gas values
     CT& gasT  = *(tsk_info->get_const_uintah_field<CT>(_gas_temp_name));
-    CT& gasCP = *(tsk_info->get_const_uintah_field<CT>(_gas_cp_name));
+    CT& gasCP = tsk_info->new_get_uintah_field<CT>(_gas_cp_name);
     CT& rhoG  = *(tsk_info->get_const_uintah_field<CT>(_gas_density_name));
     CT& velU  = *(tsk_info->get_const_uintah_field<CT>(_gas_u_velocity_name));
     CT& velV  = *(tsk_info->get_const_uintah_field<CT>(_gas_v_velocity_name));
@@ -464,7 +464,7 @@ namespace Uintah{
       CT& charMass    = *(tsk_info->get_const_uintah_field<CT>(char_mass_name));
       CT& partTemp    = *(tsk_info->get_const_uintah_field<CT>(particle_temp_name));
       CT& partSize    = *(tsk_info->get_const_uintah_field<CT>(particle_size_name));
-      CT& charOxiTemp = *(tsk_info->get_const_uintah_field<CT>(char_oxi_temp_name));
+      CT& charOxiTemp = tsk_info->new_get_uintah_field<CT>(char_oxi_temp_name);
       CT& surfRate    = *(tsk_info->get_const_uintah_field<CT>(surf_rate_name));
       CT& charGas     = *(tsk_info->get_const_uintah_field<CT>(char_gas_name));
       CT& devolGas    = *(tsk_info->get_const_uintah_field<CT>(devol_gas_name));

@@ -131,15 +131,15 @@ namespace Uintah{
       double densitygas=1.0;//kg/m3
       double cellvol=Dx.x()*Dx.y()*Dx.z();
       // Subgrid stress
-      constSFCXVariable<double>& ucell_xSgsStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_xSgsStress"));
-      constSFCXVariable<double>& ucell_ySgsStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_ySgsStress"));
-      constSFCXVariable<double>& ucell_zSgsStress = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("ucell_zSgsStress"));
-      constSFCYVariable<double>& vcell_xSgsStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_xSgsStress"));
-      constSFCYVariable<double>& vcell_ySgsStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_ySgsStress"));
-      constSFCYVariable<double>& vcell_zSgsStress = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vcell_zSgsStress"));
-      constSFCZVariable<double>& wcell_xSgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_xSgsStress"));
-      constSFCZVariable<double>& wcell_ySgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_ySgsStress"));
-      constSFCZVariable<double>& wcell_zSgsStress = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wcell_zSgsStress"));
+      constSFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_xSgsStress");
+      constSFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_ySgsStress");
+      constSFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_zSgsStress");
+      constSFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_xSgsStress");
+      constSFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_ySgsStress");
+      constSFCYVariable<double>& vcell_zSgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_zSgsStress");
+      constSFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_xSgsStress");
+      constSFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_ySgsStress");
+      constSFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_zSgsStress");
       SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
       SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
       SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");

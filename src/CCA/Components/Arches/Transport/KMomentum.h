@@ -474,7 +474,7 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps     = *( tsk_info->get_const_uintah_field<CT>(m_eps_name));
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -565,9 +565,9 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        constCCVariable<double>& sigma1 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmax_name));
-        constCCVariable<double>& sigma2 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmay_name));
-        constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
+        constCCVariable<double>& sigma1 = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_sigmax_name);
+        constCCVariable<double>& sigma2 = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_sigmay_name);
+        constCCVariable<double>& sigma3 = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_sigmaz_name);
 
         auto stressTensor = [&] (int i, int j, int k){
           double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
@@ -597,7 +597,7 @@ private:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        CT& src = tsk_info->new_get_uintah_field<CT>((*isrc).name);
         double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){

@@ -140,7 +140,7 @@ WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   constCCVariable<double>& IsI = tsk_info->get_const_uintah_field_add< constCCVariable<double> >(m_IsI_name);
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
   CCVariable<double>& sigma12 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[0]);

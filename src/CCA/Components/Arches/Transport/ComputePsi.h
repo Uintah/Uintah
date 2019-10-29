@@ -326,17 +326,17 @@ private:
   template <typename T>
   void ComputePsi<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
 
-    ConstXFaceT& u = *(tsk_info->get_const_uintah_field<ConstXFaceT>(m_u_vel_name));
-    ConstYFaceT& v = *(tsk_info->get_const_uintah_field<ConstYFaceT>(m_v_vel_name));
-    ConstZFaceT& w = *(tsk_info->get_const_uintah_field<ConstZFaceT>(m_w_vel_name));
+    ConstXFaceT& u = tsk_info->new_get_uintah_field<ConstXFaceT>(m_u_vel_name);
+    ConstYFaceT& v = tsk_info->new_get_uintah_field<ConstYFaceT>(m_v_vel_name);
+    ConstZFaceT& w = tsk_info->new_get_uintah_field<ConstZFaceT>(m_w_vel_name);
 
     for ( auto i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
       std::map<std::string, LIMITER>::iterator ilim = _name_to_limiter_map.find(*i);
       LIMITER my_limiter = ilim->second;
-      CT& phi = *(tsk_info->get_const_uintah_field<CT>(*i));
+      CT& phi = tsk_info->new_get_uintah_field<CT>(*i);
 
       int nGhosts = -1; //not using a temp field but rather the DW (ie, if nGhost < 0 then DW var)
       if ( tsk_info->packed_tasks() ){

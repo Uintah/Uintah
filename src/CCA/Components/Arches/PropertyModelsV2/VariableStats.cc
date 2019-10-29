@@ -605,7 +605,7 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
     constCCVariable<double>& var         = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _base_var_names[i] ));
     constCCVariable<double>& old_sum     = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _ave_sum_names[i] ));
     CCVariable<double>& sqr_sum          = *(tsk_info->get_uintah_field<CCVariable<double> >( _sqr_variable_names[i] ));
-    constCCVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _sqr_variable_names[i] ));
+    constCCVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constCCVariable<double> >( _sqr_variable_names[i] );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -618,10 +618,10 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   if ( !_no_flux ){
 
     //Fluxes
-    constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" ));
-    constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" ));
-    constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
-    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _rho_name ));
+    constSFCXVariable<double>& u = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" );
+    constSFCYVariable<double>& v = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" );
+    constSFCZVariable<double>& w = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" );
+    constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( _rho_name );
 
     //X FLUX
     N = _ave_x_flux_sum_names.size();
@@ -631,11 +631,11 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       constSFCXVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( _ave_x_flux_sum_names[iname] ));
 
       SFCXVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCXVariable<double> >( _x_flux_sqr_sum_names[iname] ));
-      constSFCXVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( _x_flux_sqr_sum_names[iname] ));
+      constSFCXVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( _x_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
 
-        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        constCCVariable<double>& phi = tsk_info->new_get_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi );
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fx_patch_range, high_fx_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
@@ -669,11 +669,11 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       constSFCYVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( _ave_y_flux_sum_names[iname] ));
 
       SFCYVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCYVariable<double> >( _y_flux_sqr_sum_names[iname] ));
-      constSFCYVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( _y_flux_sqr_sum_names[iname] ));
+      constSFCYVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( _y_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
 
-        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        constCCVariable<double>& phi = tsk_info->new_get_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi );
         GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fy_patch_range, high_fy_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){
@@ -706,11 +706,11 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       constSFCZVariable<double>& old_sum  = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( _ave_z_flux_sum_names[iname] ));
 
       SFCZVariable<double>& sqr_sum     = *(tsk_info->get_uintah_field<SFCZVariable<double> >( _z_flux_sqr_sum_names[iname] ));
-      constSFCZVariable<double>& old_sqr_sum = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( _z_flux_sqr_sum_names[iname] ));
+      constSFCZVariable<double>& old_sqr_sum = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( _z_flux_sqr_sum_names[iname] );
 
       if ( _flux_sum_info[iname].do_phi ){
 
-        constCCVariable<double>& phi = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi ));
+        constCCVariable<double>& phi = tsk_info->new_get_uintah_field<constCCVariable<double> >( _flux_sum_info[iname].phi );
         GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0,1);
         Uintah::BlockRange range(low_fz_patch_range, high_fz_patch_range);
         Uintah::parallel_for(range, [&](int i, int j, int k){

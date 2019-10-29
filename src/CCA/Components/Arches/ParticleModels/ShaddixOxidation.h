@@ -354,7 +354,7 @@ namespace Uintah{
     CT& O2    = *(tsk_info->get_const_uintah_field<CT>(_gas_o2_name));
     CT& N2    = *(tsk_info->get_const_uintah_field<CT>(_gas_n2_name));
     CT& gasT  = *(tsk_info->get_const_uintah_field<CT>(_gas_temp_name));
-    CT& gasMW = *(tsk_info->get_const_uintah_field<CT>(_gas_mw_mix_name));
+    CT& gasMW = tsk_info->new_get_uintah_field<CT>(_gas_mw_mix_name);
     CT& rhoG  = *(tsk_info->get_const_uintah_field<CT>(_gas_density_name));
 
     T& gasTotalRate = *(tsk_info->get_uintah_field<T>(_gas_var_name));
@@ -375,7 +375,7 @@ namespace Uintah{
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
       const std::string particle_size_name = get_name( ienv, _base_particle_size_name );
       const std::string w_name = get_name( ienv, "w" );
-      CT& partSize = *(tsk_info->get_const_uintah_field<CT>(particle_size_name));
+      CT& partSize = tsk_info->new_get_uintah_field<CT>(particle_size_name);
       CT& weight   = *(tsk_info->get_const_uintah_field<CT>(w_name));
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -424,7 +424,7 @@ namespace Uintah{
       CT& charMass     = *(tsk_info->get_const_uintah_field<CT>(char_mass_name));
       CT& partTemp     = *(tsk_info->get_const_uintah_field<CT>(particle_temp_name));
       CT& partSize     = *(tsk_info->get_const_uintah_field<CT>(particle_size_name));
-      CT& charProdRate = *(tsk_info->get_const_uintah_field<CT>(particle_char_prod_name));
+      CT& charProdRate = tsk_info->new_get_uintah_field<CT>(particle_char_prod_name);
       CT& weight       = *(tsk_info->get_const_uintah_field<CT>(w_name));
 
       //CT* birthPtr;

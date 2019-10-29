@@ -115,12 +115,12 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
   CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( "densityCP" ));
-  constCCVariable<double>& eps = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( "volFraction" ));
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( "densityCP" );
+  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double > >( "volFraction" );
 
-  constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" ));
-  constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" ));
-  constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
+  constSFCXVariable<double>& u = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" );
+  constSFCYVariable<double>& v = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" );
+  constSFCZVariable<double>& w = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" );
 
   //---work---
   const double dt = tsk_info->get_dt();

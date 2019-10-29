@@ -94,7 +94,7 @@ ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
 
-  constCCVariable<double>& drho_dt = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_label_drhodt ));
+  constCCVariable<double>& drho_dt = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_drhodt );
   CCVariable<double>& Balance = *(tsk_info->get_uintah_field<CCVariable<double> >( m_label_balance ));
   Balance.initialize(0.0);
   Vector DX = patch->dCell();
