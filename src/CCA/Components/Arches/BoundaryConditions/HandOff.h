@@ -129,7 +129,7 @@ private:
   template <typename T>
   void HandOff<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& var = *(tsk_info->get_uintah_field<T>( m_task_name ));
+    T& var = tsk_info->new_get_uintah_field<T>( m_task_name );
     var.initialize(0.0);
 
     ArchesCore::VariableHelper<T> helper;
@@ -221,7 +221,7 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    T& var = *(tsk_info->get_uintah_field<T>(m_task_name));
+    T& var = tsk_info->new_get_uintah_field<T>(m_task_name);
     CT& old_var = tsk_info->new_get_uintah_field<CT>(m_task_name);
 
     var.copyData(old_var);
@@ -252,7 +252,7 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     CT& default_var = tsk_info->new_get_uintah_field<CT>(m_default_label);
-    T& var = *(tsk_info->get_uintah_field<T>(m_task_name));
+    T& var = tsk_info->new_get_uintah_field<T>(m_task_name);
 
     const BndMapT& bc_info = m_bcHelper->get_boundary_information();
     Vector DX = patch->dCell();

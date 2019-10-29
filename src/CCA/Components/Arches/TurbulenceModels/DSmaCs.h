@@ -160,14 +160,14 @@ DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 template<typename TT> void
 DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   if (m_create_labels_IsI_t_viscosity) {
-    CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-    CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
+    CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+    CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
     mu_sgc.initialize(0.0);
     mu_turb.initialize(0.0);
   }
-  CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
-  CCVariable<double>& filterMM = *(tsk_info->get_uintah_field<CCVariable<double> >("filterMM"));
-  CCVariable<double>& filterML = *(tsk_info->get_uintah_field<CCVariable<double> >("filterML"));
+  CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
+  CCVariable<double>& filterMM = tsk_info->new_get_uintah_field<CCVariable<double> >("filterMM");
+  CCVariable<double>& filterML = tsk_info->new_get_uintah_field<CCVariable<double> >("filterML");
   Cs.initialize(0.0);
   filterMM.initialize(0.0);
   filterML.initialize(0.0);
@@ -183,8 +183,8 @@ DSmaCs<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableIn
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  //CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  //CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  //CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+  //CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -226,9 +226,9 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 template<typename TT> void
 DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
   constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
   Cs.initialize(0.0);

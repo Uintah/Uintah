@@ -251,7 +251,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
-    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -261,7 +261,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   i = _sqr_variable_names.begin();
   for (;i!=_sqr_variable_names.end();i++){
-    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -271,7 +271,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   i = _ave_x_flux_sum_names.begin();
   for (;i!=_ave_x_flux_sum_names.end();i++){
-    SFCXVariable<double>& var = *(tsk_info->get_uintah_field<SFCXVariable<double> >( *i ));
+    SFCXVariable<double>& var = tsk_info->new_get_uintah_field<SFCXVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -281,7 +281,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   i = _ave_y_flux_sum_names.begin();
   for (;i!=_ave_y_flux_sum_names.end();i++){
-    SFCYVariable<double>& var = *(tsk_info->get_uintah_field<SFCYVariable<double> >( *i ));
+    SFCYVariable<double>& var = tsk_info->new_get_uintah_field<SFCYVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -291,7 +291,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   i = _ave_z_flux_sum_names.begin();
   for (;i!=_ave_z_flux_sum_names.end();i++){
-    SFCZVariable<double>& var = *(tsk_info->get_uintah_field<SFCZVariable<double> >( *i ));
+    SFCZVariable<double>& var = tsk_info->new_get_uintah_field<SFCZVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -300,7 +300,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   }
   i = _x_flux_sqr_sum_names.begin();
   for (;i!=_x_flux_sqr_sum_names.end();i++){
-    SFCXVariable<double>& var = *(tsk_info->get_uintah_field<SFCXVariable<double> >( *i ));
+    SFCXVariable<double>& var = tsk_info->new_get_uintah_field<SFCXVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -309,7 +309,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   }
   i = _y_flux_sqr_sum_names.begin();
   for (;i!=_y_flux_sqr_sum_names.end();i++){
-    SFCYVariable<double>& var = *(tsk_info->get_uintah_field<SFCYVariable<double> >( *i ));
+    SFCYVariable<double>& var = tsk_info->new_get_uintah_field<SFCYVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -318,7 +318,7 @@ void VariableStats::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   }
   i = _z_flux_sqr_sum_names.begin();
   for (;i!=_z_flux_sqr_sum_names.end();i++){
-    SFCZVariable<double>& var = *(tsk_info->get_uintah_field<SFCZVariable<double> >( *i ));
+    SFCZVariable<double>& var = tsk_info->new_get_uintah_field<SFCZVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -344,7 +344,7 @@ void VariableStats::restart_initialize( const Patch* patch, ArchesTaskInfoManage
   typedef std::vector<std::string> StrVec;
 
   for ( StrVec::iterator i = _new_variables.begin(); i != _new_variables.end(); i++ ){
-    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -418,7 +418,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   auto i = _ave_sum_names.begin();
   for (;i!=_ave_sum_names.end();i++){
-    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -428,7 +428,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   i = _sqr_variable_names.begin();
   for (;i!=_sqr_variable_names.end();i++){
-    CCVariable<double>& var = *(tsk_info->get_uintah_field<CCVariable<double> >( *i ));
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -438,7 +438,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   i = _ave_x_flux_sum_names.begin();
   for (;i!=_ave_x_flux_sum_names.end();i++){
-    SFCXVariable<double>& var = *(tsk_info->get_uintah_field<SFCXVariable<double> >( *i ));
+    SFCXVariable<double>& var = tsk_info->new_get_uintah_field<SFCXVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -448,7 +448,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   i = _ave_y_flux_sum_names.begin();
   for (;i!=_ave_y_flux_sum_names.end();i++){
-    SFCYVariable<double>& var = *(tsk_info->get_uintah_field<SFCYVariable<double> >( *i ));
+    SFCYVariable<double>& var = tsk_info->new_get_uintah_field<SFCYVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -458,7 +458,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   i = _ave_z_flux_sum_names.begin();
   for (;i!=_ave_z_flux_sum_names.end();i++){
-    SFCZVariable<double>& var = *(tsk_info->get_uintah_field<SFCZVariable<double> >( *i ));
+    SFCZVariable<double>& var = tsk_info->new_get_uintah_field<SFCZVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -467,7 +467,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   }
   i = _x_flux_sqr_sum_names.begin();
   for (;i!=_x_flux_sqr_sum_names.end();i++){
-    SFCXVariable<double>& var = *(tsk_info->get_uintah_field<SFCXVariable<double> >( *i ));
+    SFCXVariable<double>& var = tsk_info->new_get_uintah_field<SFCXVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -476,7 +476,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   }
   i = _y_flux_sqr_sum_names.begin();
   for (;i!=_y_flux_sqr_sum_names.end();i++){
-    SFCYVariable<double>& var = *(tsk_info->get_uintah_field<SFCYVariable<double> >( *i ));
+    SFCYVariable<double>& var = tsk_info->new_get_uintah_field<SFCYVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -485,7 +485,7 @@ void VariableStats::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   }
   i = _z_flux_sqr_sum_names.begin();
   for (;i!=_z_flux_sqr_sum_names.end();i++){
-    SFCZVariable<double>& var = *(tsk_info->get_uintah_field<SFCZVariable<double> >( *i ));
+    SFCZVariable<double>& var = tsk_info->new_get_uintah_field<SFCZVariable<double> >( *i );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){

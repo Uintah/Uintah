@@ -65,12 +65,12 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
 
-  CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));
-  CCVariable<double>& sigma12 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]));
-  CCVariable<double>& sigma13 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]));
-  CCVariable<double>& sigma22 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]));
-  CCVariable<double>& sigma23 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]));
-  CCVariable<double>& sigma33 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]));
+  CCVariable<double>& sigma11 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   sigma11.initialize(0.0);
   sigma12.initialize(0.0);

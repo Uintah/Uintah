@@ -137,7 +137,7 @@ private:
     for ( int ienv = 0; ienv < _N; ienv++ ){
 
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -181,7 +181,7 @@ private:
     for ( int ienv = 0; ienv < _N; ienv++ ){
 
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
 
       CIT& temperature = tsk_info->new_get_uintah_field<CIT>(_temperature_var_name);
       CIT& conc = tsk_info->new_get_uintah_field<CIT>(_conc_var_name);

@@ -187,10 +187,10 @@ void MMS_mom<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 template <typename T>
 void MMS_mom<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  T& f_mms = *(tsk_info->get_uintah_field<T>(m_MMS_label));
-  T& s_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_label));
-  T& s_diff_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_diff_label));
-  // T& s_t_mms = *(tsk_info->get_uintah_field<T>(m_MMS_source_t_label));
+  T& f_mms = tsk_info->new_get_uintah_field<T>(m_MMS_label);
+  T& s_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_label);
+  T& s_diff_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_diff_label);
+  // T& s_t_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_t_label);
 
   constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
   constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);

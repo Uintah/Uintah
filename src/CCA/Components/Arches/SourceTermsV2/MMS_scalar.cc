@@ -106,10 +106,10 @@ MMS_scalar::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 void
 MMS_scalar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& f_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_label));
-  CCVariable<double>& s_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_label));
-  CCVariable<double>& s_diff_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label));
-  CCVariable<double>& s_t_mms = *(tsk_info->get_uintah_field<CCVariable<double> >(m_MMS_source_t_label));
+  CCVariable<double>& f_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_label);
+  CCVariable<double>& s_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_label);
+  CCVariable<double>& s_diff_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label);
+  CCVariable<double>& s_t_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_t_label);
   constCCVariable<double>& X  = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( ind_var_name ));
 
   double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();

@@ -64,9 +64,9 @@ WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableI
 void
 WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
-  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
-  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& flux_x = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_x);
+  CCVariable<double>& flux_y = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_y);
+  CCVariable<double>& flux_z = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_z);
   CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
   CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(m_task_name));
   CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));
@@ -102,9 +102,9 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 void
 WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& flux_x = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_x));
-  CCVariable<double>& flux_y = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_y));
-  CCVariable<double>& flux_z = *(tsk_info->get_uintah_field<CCVariable<double> >(_flux_z));
+  CCVariable<double>& flux_x = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_x);
+  CCVariable<double>& flux_y = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_y);
+  CCVariable<double>& flux_z = tsk_info->new_get_uintah_field<CCVariable<double> >(_flux_z);
   CCVariable<double>& power  = *(tsk_info->get_uintah_field<CCVariable<double> >(_net_power));
   CCVariable<double>& total  = *(tsk_info->get_uintah_field<CCVariable<double> >(m_task_name));
   CCVariable<double>& area   = *(tsk_info->get_uintah_field<CCVariable<double> >(_area));

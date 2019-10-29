@@ -95,8 +95,8 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
 
@@ -140,7 +140,7 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
 
   CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
+  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
   CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);

@@ -202,7 +202,7 @@ private:
   template <typename T>
   void ShunnMMSP3<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& f_mms = *(tsk_info->get_uintah_field<T>(m_var_name));
+    T& f_mms = tsk_info->new_get_uintah_field<T>(m_var_name);
     constCCVariable<double>& x = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_x_name);
     constCCVariable<double>& y = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_y_name);
 

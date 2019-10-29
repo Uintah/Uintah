@@ -199,9 +199,9 @@ namespace Uintah{
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
-      DT& gas_model_value = *(tsk_info->get_uintah_field<DT>(gas_name));
+      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -230,9 +230,9 @@ namespace Uintah{
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = *(tsk_info->get_uintah_field<DT>(name));
+      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
-      DT& gas_model_value = *(tsk_info->get_uintah_field<DT>(gas_name));
+      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -301,7 +301,7 @@ namespace Uintah{
       const std::string w_name = get_name( ienv, "w" );
 
       DT& model_value     = *(tsk_info->get_uintah_field<DT>(name));
-      DT& gas_model_value = *(tsk_info->get_uintah_field<DT>(gas_name));
+      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
       IT& partVelU        = *(tsk_info->get_const_uintah_field<IT>(u_vel_name));
       IT& partVelV        = *(tsk_info->get_const_uintah_field<IT>(v_vel_name));
       IT& partVelW        = *(tsk_info->get_const_uintah_field<IT>(w_vel_name));

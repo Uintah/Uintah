@@ -59,7 +59,7 @@ cloudBenchmark::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info 
 
   Point midPt( (m_max - m_min)/2. + m_min);
 
-  CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
+  CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskg_name);
   CCVariable<double>& radT  = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
   constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridX");
   constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridY");
@@ -110,9 +110,9 @@ void cloudBenchmark::register_timestep_init( VIVec& variable_registry , const bo
 
 void cloudBenchmark::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& abskg = *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskg_name));
+  CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskg_name);
   constCCVariable<double>& old_abskg = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_abskg_name);
-  CCVariable<double>& temp = *(tsk_info->get_uintah_field<CCVariable<double> >("temperature"));
+  CCVariable<double>& temp = tsk_info->new_get_uintah_field<CCVariable<double> >("temperature");
   constCCVariable<double>& old_temp = tsk_info->new_get_uintah_field<constCCVariable<double> >("temperature");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());

@@ -77,23 +77,23 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 //--------------------------------------------------------------------------------------------------
 void FaceVelocities::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
-  SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
-  SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
-  SFCXVariable<double>& ucell_zvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_zvel"));
+  SFCXVariable<double>& ucell_xvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xvel");
+  SFCXVariable<double>& ucell_yvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_yvel");
+  SFCXVariable<double>& ucell_zvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zvel");
   ucell_xvel.initialize(0.0);
   ucell_yvel.initialize(0.0);
   ucell_zvel.initialize(0.0);
 
-  SFCYVariable<double>& vcell_xvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_xvel"));
-  SFCYVariable<double>& vcell_yvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_yvel"));
-  SFCYVariable<double>& vcell_zvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_zvel"));
+  SFCYVariable<double>& vcell_xvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xvel");
+  SFCYVariable<double>& vcell_yvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_yvel");
+  SFCYVariable<double>& vcell_zvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_zvel");
   vcell_xvel.initialize(0.0);
   vcell_yvel.initialize(0.0);
   vcell_zvel.initialize(0.0);
 
-  SFCZVariable<double>& wcell_xvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xvel"));
-  SFCZVariable<double>& wcell_yvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_yvel"));
-  SFCZVariable<double>& wcell_zvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zvel"));
+  SFCZVariable<double>& wcell_xvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_xvel");
+  SFCZVariable<double>& wcell_yvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_yvel");
+  SFCZVariable<double>& wcell_zvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_zvel");
   wcell_xvel.initialize(0.0);
   wcell_yvel.initialize(0.0);
   wcell_zvel.initialize(0.0);
@@ -117,17 +117,17 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  SFCXVariable<double>& ucell_xvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_xvel"));
-  SFCXVariable<double>& ucell_yvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_yvel"));
-  SFCXVariable<double>& ucell_zvel = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_zvel"));
+  SFCXVariable<double>& ucell_xvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xvel");
+  SFCXVariable<double>& ucell_yvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_yvel");
+  SFCXVariable<double>& ucell_zvel = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zvel");
 
-  SFCYVariable<double>& vcell_xvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_xvel"));
-  SFCYVariable<double>& vcell_yvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_yvel"));
-  SFCYVariable<double>& vcell_zvel = *(tsk_info->get_uintah_field<SFCYVariable<double> >("vcell_zvel"));
+  SFCYVariable<double>& vcell_xvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xvel");
+  SFCYVariable<double>& vcell_yvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_yvel");
+  SFCYVariable<double>& vcell_zvel = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_zvel");
 
-  SFCZVariable<double>& wcell_xvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_xvel"));
-  SFCZVariable<double>& wcell_yvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_yvel"));
-  SFCZVariable<double>& wcell_zvel = *(tsk_info->get_uintah_field<SFCZVariable<double> >("wcell_zvel"));
+  SFCZVariable<double>& wcell_xvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_xvel");
+  SFCZVariable<double>& wcell_yvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_yvel");
+  SFCZVariable<double>& wcell_zvel = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_zvel");
 
   // initialize all velocities
   ucell_xvel.initialize(0.0);

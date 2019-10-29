@@ -63,7 +63,7 @@ void
 OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
-  CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));
+  CCVariable<double>& Twall = tsk_info->new_get_uintah_field<CCVariable<double> >("Twall");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( Twall, 300.0 );
 
 }
@@ -81,7 +81,7 @@ OneDWallHT::register_timestep_init( std::vector<ArchesFieldContainer::VariableIn
 void
 OneDWallHT::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >("Twall"));
+  CCVariable<double>& Twall = tsk_info->new_get_uintah_field<CCVariable<double> >("Twall");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( Twall, 300.0 );
 
 }
@@ -105,7 +105,7 @@ OneDWallHT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 void
 OneDWallHT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& Twall = *(tsk_info->get_uintah_field<CCVariable<double> >( "Twall"));
+  CCVariable<double>& Twall = tsk_info->new_get_uintah_field<CCVariable<double> >( "Twall");
   constCCVariable<double>& rad_q = tsk_info->new_get_uintah_field<constCCVariable<double > >( _incident_hf_label );
   constCCVariable<double>& emissivity = tsk_info->new_get_uintah_field<constCCVariable<double > >( _emissivity_label );
   constCCVariable<double>& Tsh = tsk_info->new_get_uintah_field<constCCVariable<double > >( _Tshell_label );

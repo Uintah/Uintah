@@ -57,7 +57,7 @@ Burnout::register_initialize( std::vector<ArchesFieldContainer::VariableInformat
 void
 Burnout::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
+  CCVariable<double>& burnout = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     burnout(i,j,k) = 0.0;
@@ -77,7 +77,7 @@ Burnout::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfor
 void
 Burnout::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& burnout = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
+  CCVariable<double>& burnout = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     burnout(i,j,k) = 0.0;

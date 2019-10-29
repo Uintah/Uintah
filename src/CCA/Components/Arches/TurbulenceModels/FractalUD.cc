@@ -160,7 +160,7 @@ namespace Uintah{
   void
     FractalUD::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-      // CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
+      // CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
       //mu_sgc.initialize(0.0);
       SFCXVariable<double>& uD_ctr          = *(tsk_info->get_uintah_field<SFCXVariable<double> >("uD_ctr"));
       SFCXVariable<double>& ucell_XvelD     = *(tsk_info->get_uintah_field<SFCXVariable<double> >("ucell_XvelD"));

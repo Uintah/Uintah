@@ -155,8 +155,8 @@ CoalTemperature::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
     const std::string temperature_name = get_env_name( ienv, m_task_name );
     const std::string dTdt_name = get_env_name( ienv, _dTdt_base_name );
-    CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >( temperature_name ));
-    CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >( dTdt_name ));
+    CCVariable<double>& temperature = tsk_info->new_get_uintah_field<CCVariable<double> >( temperature_name );
+    CCVariable<double>& dTdt = tsk_info->new_get_uintah_field<CCVariable<double> >( dTdt_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){

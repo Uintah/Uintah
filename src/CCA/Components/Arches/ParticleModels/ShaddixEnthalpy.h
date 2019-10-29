@@ -315,7 +315,7 @@ namespace Uintah{
       const std::string qrad_name = get_name(ienv, _base_qrad_name);
 
       T& heatRate    = *(tsk_info->get_uintah_field<T>(name));
-      T& gasHeatRate = *(tsk_info->get_uintah_field<T>(gas_name));
+      T& gasHeatRate = tsk_info->new_get_uintah_field<T>(gas_name);
       T& qConv       = *(tsk_info->get_uintah_field<T>(qconv_name));
       T& qRad        = *(tsk_info->get_uintah_field<T>(qrad_name));
 
@@ -330,7 +330,7 @@ namespace Uintah{
       });
     }
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>(_gas_var_name));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -422,7 +422,7 @@ namespace Uintah{
     }
     CT& volQ = *volQPtr;
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>( _gas_var_name ));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>( _gas_var_name );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -436,7 +436,7 @@ namespace Uintah{
       const std::string qrad_name = get_name(ienv, _base_qrad_name);
 
       T& heatRate    = *(tsk_info->get_uintah_field<T>(name));
-      T& gasHeatRate = *(tsk_info->get_uintah_field<T>(gas_name));
+      T& gasHeatRate = tsk_info->new_get_uintah_field<T>(gas_name);
       T& qConv       = *(tsk_info->get_uintah_field<T>(qconv_name));
       T& qRad        = *(tsk_info->get_uintah_field<T>(qrad_name));
 

@@ -265,7 +265,7 @@ namespace Uintah{
       const std::string pO2_surf_name = get_name(ienv, _base_pO2_surface_name);
 
       T& charOxRate    = *(tsk_info->get_uintah_field<T>(name));
-      T& gasCharOxRate = *(tsk_info->get_uintah_field<T>(gas_name));
+      T& gasCharOxRate = tsk_info->new_get_uintah_field<T>(gas_name);
       T& partTRate     = *(tsk_info->get_uintah_field<T>(temp_rate_name));
       T& surfRate      = *(tsk_info->get_uintah_field<T>(surf_rate_name));
       T& pO2Surf       = *(tsk_info->get_uintah_field<T>(pO2_surf_name));
@@ -280,7 +280,7 @@ namespace Uintah{
       });
     }
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>( _gas_var_name ));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>( _gas_var_name );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0;
@@ -357,7 +357,7 @@ namespace Uintah{
     CT& gasMW = tsk_info->new_get_uintah_field<CT>(_gas_mw_mix_name);
     CT& rhoG  = *(tsk_info->get_const_uintah_field<CT>(_gas_density_name));
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>(_gas_var_name));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
     Uintah::BlockRange ecrange(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( ecrange, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -408,7 +408,7 @@ namespace Uintah{
       const std::string pO2_surf_name = get_name(ienv, _base_pO2_surface_name);
 
       T& charOxRate    = *(tsk_info->get_uintah_field<T>(name));
-      T& gasCharOxRate = *(tsk_info->get_uintah_field<T>(gas_name));
+      T& gasCharOxRate = tsk_info->new_get_uintah_field<T>(gas_name);
       T& partTRate     = *(tsk_info->get_uintah_field<T>(temp_rate_name));
       T& surfRate      = *(tsk_info->get_uintah_field<T>(surf_rate_name));
       T& pO2Surf       = *(tsk_info->get_uintah_field<T>(pO2_surf_name));

@@ -45,7 +45,7 @@ GasKineticEnergy::register_initialize( std::vector<ArchesFieldContainer::Variabl
 void
 GasKineticEnergy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& ke = *(tsk_info->get_uintah_field<CCVariable<double> >( m_kinetic_energy ));
+  CCVariable<double>& ke = tsk_info->new_get_uintah_field<CCVariable<double> >( m_kinetic_energy );
   ke.initialize(0.0);
 
 }
@@ -74,7 +74,7 @@ GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constCCVariable<double>& v = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
   constCCVariable<double>& w = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name);
 
-  CCVariable<double>& ke = *(tsk_info->get_uintah_field<CCVariable<double> >( m_kinetic_energy ));
+  CCVariable<double>& ke = tsk_info->new_get_uintah_field<CCVariable<double> >( m_kinetic_energy );
   ke.initialize(0.0);
   double ke_p = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

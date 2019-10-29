@@ -484,9 +484,9 @@ private:
       T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_RHS"));
 
       //Convection:
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);

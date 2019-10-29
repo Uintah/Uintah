@@ -218,9 +218,9 @@ namespace Uintah{
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
       const std::string vinf_name = get_name(ienv, _base_vinf_name);
 
-      T& devolRate = *(tsk_info->get_uintah_field<T>(name));
-      T& gasDevolRate = *(tsk_info->get_uintah_field<T>(gas_name));
-      T& vInf = *(tsk_info->get_uintah_field<T>(vinf_name));
+      T& devolRate = tsk_info->new_get_uintah_field<T>(name);
+      T& gasDevolRate = tsk_info->new_get_uintah_field<T>(gas_name);
+      T& vInf = tsk_info->new_get_uintah_field<T>(vinf_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -230,7 +230,7 @@ namespace Uintah{
       });
     }
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>(_gas_var_name));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -287,7 +287,7 @@ namespace Uintah{
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-    T& gasTotalRate = *(tsk_info->get_uintah_field<T>(_gas_var_name));
+    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -302,7 +302,7 @@ namespace Uintah{
       const std::string vinf_name = get_name(ienv, _base_vinf_name);
 
       T& devolRate    = *(tsk_info->get_uintah_field<T>(name));
-      T& gasDevolRate = *(tsk_info->get_uintah_field<T>(gas_name));
+      T& gasDevolRate = tsk_info->new_get_uintah_field<T>(gas_name);
       T& vInf         = *(tsk_info->get_uintah_field<T>(vinf_name));
 
       const std::string raw_coal_name = get_name( ienv, _base_raw_coal_name );

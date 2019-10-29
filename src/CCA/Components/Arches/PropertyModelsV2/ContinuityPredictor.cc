@@ -52,7 +52,7 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 void
 ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& Balance = *(tsk_info->get_uintah_field<CCVariable<double> >( m_label_balance ));
+  CCVariable<double>& Balance = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_balance );
   Balance.initialize(0.0);
 
 }
@@ -95,7 +95,7 @@ ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(ArchesCore::default_wMom_name);
 
   constCCVariable<double>& drho_dt = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_drhodt );
-  CCVariable<double>& Balance = *(tsk_info->get_uintah_field<CCVariable<double> >( m_label_balance ));
+  CCVariable<double>& Balance = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_balance );
   Balance.initialize(0.0);
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();

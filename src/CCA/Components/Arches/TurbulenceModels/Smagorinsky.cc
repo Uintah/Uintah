@@ -142,7 +142,7 @@ Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_total_vis_name);
 
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
