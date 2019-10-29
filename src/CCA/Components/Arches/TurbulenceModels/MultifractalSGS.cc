@@ -234,9 +234,9 @@ namespace Uintah{
       constSFCZVariable<double>& wcell_xvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wx_face_name);
       constSFCZVariable<double>& wcell_yvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wy_face_name);
       constSFCZVariable<double>& wcell_zvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wz_face_name);
-      constSFCXVariable<double>& U_ctr =  *(tsk_info->get_const_uintah_field<constSFCXVariable<double> > (m_u_vel_name));
-      constSFCYVariable<double>& V_ctr =  *(tsk_info->get_const_uintah_field<constSFCYVariable<double> > (m_v_vel_name));
-      constSFCZVariable<double>& W_ctr =  *(tsk_info->get_const_uintah_field<constSFCZVariable<double> > (m_w_vel_name));
+      constSFCXVariable<double>& U_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
+      constSFCYVariable<double>& V_ctr = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
+      constSFCZVariable<double>& W_ctr = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
 
       // UD
       constSFCXVariable<double>& uD_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("uD_ctr");

@@ -1,7 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/spectralProperties.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 
-using namespace Uintah; 
+using namespace Uintah;
 
 //---------------------------------------------------------------------------
 ////Method: Constructor
@@ -9,8 +9,8 @@ using namespace Uintah;
 spectralProperties::spectralProperties( std::string task_name, int matl_index ) : TaskInterface( task_name, matl_index)
 {
 }
-  
-  
+
+
 //---------------------------------------------------------------------------
 //Method: Destructor
 //---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
   helper.add_lookup_species("mixture_molecular_weight");
   _part_sp.push_back("CO2"); // must be in order of CO2 -> H2O -> mixture_molec_weight
   _part_sp.push_back("H2O");
-  _part_sp.push_back("mixture_molecular_weight"); 
+  _part_sp.push_back("mixture_molecular_weight");
 
   db->get("sootVolumeFrac",_soot_name);
     _LsootOn=true;
@@ -43,9 +43,9 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
     _C_o=36.0*M_PI*cn*ck/(std::pow(cn*cn-ck*ck+2.0,2.)+4.*cn*cn*ck*ck);
   }
 
-  
+
   db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
-  _temperature_name = "temperature"; 
+  _temperature_name = "temperature";
 
   std::string _abskg_name_base="abskg";
   std::string _weight_name_base="abswg";
@@ -68,7 +68,7 @@ void spectralProperties::problemSetup(  Uintah::ProblemSpecP& db )
 void
 spectralProperties::create_local_labels(){
 
-  for (int i=0; i< _nbands  ; i++){ 
+  for (int i=0; i< _nbands  ; i++){
     register_new_variable<CCVariable<double> >(_abskg_name_vector[i]);
     register_new_variable<CCVariable<double> >(_abswg_name_vector[i]);
   }
@@ -144,9 +144,9 @@ spectralProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Va
 
     for ( std::vector<std::string>::iterator iter = _part_sp.begin(); iter != _part_sp.end(); iter++){
       const VarLabel* label = VarLabel::find(*iter);
-      if ( label != 0 ){ 
+      if ( label != 0 ){
         register_variable(*iter , ArchesFieldContainer::REQUIRES,0,ArchesFieldContainer::LATEST,variable_registry, time_substep );
-      } else { 
+      } else {
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
@@ -165,24 +165,24 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  std::vector< CCVariable<double> > abskg(_nbands  ); 
-  std::vector< CCVariable<double> > abswg(_nbands  ); 
+  std::vector< CCVariable<double> > abskg(_nbands  );
+  std::vector< CCVariable<double> > abswg(_nbands  );
   for (int i=0; i< _nbands  ; i++){
 
     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abskg_name_vector[i],abskg[i]);
     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >(_abswg_name_vector[i],abswg[i]);
 
-    abskg[i].initialize(0.0); 
-    abswg[i].initialize(0.0); 
+    abskg[i].initialize(0.0);
+    abswg[i].initialize(0.0);
   }
 
 
   constCCVariable<double>& temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name);
   //constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
 
-  std::vector<constCCVariable<double>  > species(0); 
+  std::vector<constCCVariable<double>  > species(0);
   for ( std::vector<std::string>::iterator iter = _part_sp.begin(); iter != _part_sp.end(); iter++){
-    species.push_back(*(tsk_info->get_const_uintah_field<constCCVariable<double> >(*iter)));
+    species.push_back(tsk_info->new_get_uintah_field<constCCVariable<double> >(*iter));
   }
 
   const int n_coeff=5;
@@ -193,9 +193,9 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
                  /// absorption coefficients and weights computed from Bordbar et al. 2014
                  const double CO2= species[0](i,j,k) /std::max( species[2](i,j,k),1e-10) /44.01+1e-20; // species[2] is 1/MW_mixture
                  const double H2O= species[1](i,j,k) /std::max( species[2](i,j,k),1e-10) /18.02+1e-20; // add 1e-20 to prevent NaN for streams with neither CO2 or H2O.
-                                 
+
                  const double m = std::max(std::min(H2O/CO2,4.0),0.01); // prevent extrapolation from data fit
-                 const double T_r = std::min(std::max(temperature(i,j,k),500.0),2400.0)/T_normalize; 
+                 const double T_r = std::min(std::max(temperature(i,j,k),500.0),2400.0)/T_normalize;
 
                  std::vector<std::vector<double> > b_vec(_nbands-1,std::vector<double>(n_coeff,0.0)); // minus 1 for transparent band
 
@@ -206,22 +206,22 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
                       b_vec[jj][ii]+=wecel_C_coeff[kk][jj][ii]*m_k;
                      }
                    }
-                 m_k*=m; 
+                 m_k*=m;
                  }
 
                  double T_r_k=1.0; //T_r^k
                  m_k=1.0;
                  for (int kk=0; kk < n_coeff;  kk++){
                    for (int ii=0; ii< _nbands-1 ; ii++){
-                     
+
                      abswg[ii](i,j,k)+=b_vec[ii][kk]*T_r_k;
                      abskg[ii](i,j,k)+=wecel_d_coeff[ii][kk]*m_k*(H2O+CO2); // table was built assuming H2O + CO2 = 1.0
                    }
-                   T_r_k*=T_r; 
-                   m_k*=m; 
+                   T_r_k*=T_r;
+                   m_k*=m;
                  }
 
-             double weight_sum=0.0; 
+             double weight_sum=0.0;
              for (int ii=0; ii< _nbands-1 ; ii++){
                weight_sum+=abswg[ii](i,j,k);
             }
@@ -230,8 +230,8 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
    });
 
    if (_LsootOn){
-     
-     CCVariable<double>  absksoot; 
+
+     CCVariable<double>  absksoot;
      tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("absksoot",absksoot);
 
      constCCVariable<double>& soot_vf = tsk_info->new_get_uintah_field<constCCVariable<double> >(_soot_name);
@@ -250,6 +250,3 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       });
    }
 }
-
-
-

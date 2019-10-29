@@ -76,9 +76,9 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-      SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
+      SFCXVariable<double>& FractalXSrc= tsk_info->new_get_uintah_field<SFCXVariable<double> >("FractalXSrc");
+      SFCYVariable<double>& FractalYSrc= tsk_info->new_get_uintah_field<SFCYVariable<double> >("FractalYSrc");
+      SFCZVariable<double>& FractalZSrc= tsk_info->new_get_uintah_field<SFCZVariable<double> >("FractalZSrc");
 
       FractalXSrc.initialize(0.0);
       FractalYSrc.initialize(0.0);
@@ -97,12 +97,6 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-      // Unused - creating a compiler warning
-      // SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      // SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      // SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
-
     }
 
   //--------------------------------------------------------------------------------------------------
@@ -140,9 +134,9 @@ namespace Uintah{
       constSFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_xSgsStress");
       constSFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_ySgsStress");
       constSFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_zSgsStress");
-      SFCXVariable<double>&  FractalXSrc= tsk_info->get_uintah_field_add<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>&  FractalYSrc= tsk_info->get_uintah_field_add<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>&  FractalZSrc= tsk_info->get_uintah_field_add<SFCZVariable<double> >("FractalZSrc");
+      SFCXVariable<double>& FractalXSrc= tsk_info->new_get_uintah_field<SFCXVariable<double> >("FractalXSrc");
+      SFCYVariable<double>& FractalYSrc= tsk_info->new_get_uintah_field<SFCYVariable<double> >("FractalYSrc");
+      SFCZVariable<double>& FractalZSrc= tsk_info->new_get_uintah_field<SFCZVariable<double> >("FractalZSrc");
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 

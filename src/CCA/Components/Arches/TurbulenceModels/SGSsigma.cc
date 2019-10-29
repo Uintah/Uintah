@@ -211,18 +211,11 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   constCCVariable<double>& CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_v_vel_name);
   constCCVariable<double>& CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  //constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
-  //constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
-  //constCCVariable<Vector>& CCVelocity = tsk_info->new_get_uintah_field<constCCVariable<Vector> >("CCVelocity");
-
   CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
   CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
   CCVariable<double>& IsI = tsk_info->new_get_uintah_field< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
-  //CCVariable<double>& viscosity_new = tsk_info->new_get_uintah_field<CCVariable<double> >("viscosityCTS");
-  //CCVariable<double>&  TurbViscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("turb_viscosity");
-  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
 
   double VelgUx, VelgUy, VelgUz, VelgVx, VelgVy, VelgVz, VelgWx, VelgWy, VelgWz;
   double G11,G12,G13,G21,G22,G23,G31,G32,G33;

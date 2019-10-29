@@ -127,8 +127,7 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   if ( m_use_exact_guess ){
 
-    constCCVariable<double>& f =
-        *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_f_name ));
+    constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_f_name );
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -164,8 +163,7 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     //adding extra mass sources
     for (auto i = m_mass_sources.begin(); i != m_mass_sources.end(); i++ ){
 
-      constCCVariable<double>& src =
-        *(tsk_info->get_const_uintah_field<constCCVariable<double> >( *i ));
+      constCCVariable<double>& src = tsk_info->new_get_uintah_field<constCCVariable<double> >( *i );
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
         rho_guess(i,j,k) = rho_guess(i,j,k) + dt * src(i,j,k);

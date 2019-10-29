@@ -657,7 +657,7 @@ CharOxidationps<T>::eval( const Patch                 * patch
   std::vector< CT* > species;
 
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    CT* species_p = tsk_info->get_const_uintah_field< CT >( _species_names[ns] );
+    CT* species_p = &(tsk_info->new_get_uintah_field< CT >( _species_names[ns] ));
     species.push_back( species_p );
   }
 

@@ -252,12 +252,9 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string RateDepositionZ = get_env_name(n, _ratedepz_name);
     const std::string diameter_name  = get_env_name(n, _diameter_base_name );
     const std::string density_name  = get_env_name(n, _density_base_name );
-    constSFCXVariable<double>* vdep_x = tsk_info->get_const_uintah_field<constSFCXVariable<double> >(RateDepositionX);
-    constSFCXVariable<double>& dep_x = *vdep_x;
-    constSFCYVariable<double>* vdep_y = tsk_info->get_const_uintah_field<constSFCYVariable<double> >(RateDepositionY);
-    constSFCYVariable<double>& dep_y = *vdep_y;
-    constSFCZVariable<double>* vdep_z = tsk_info->get_const_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
-    constSFCZVariable<double>& dep_z = *vdep_z;
+    constSFCXVariable<double>& dep_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(RateDepositionX);
+    constSFCYVariable<double>& dep_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(RateDepositionY);
+    constSFCZVariable<double>& dep_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
     constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
     constCCVariable<double>& rhop = tsk_info->new_get_uintah_field<constCCVariable<double> >( density_name );
 

@@ -562,8 +562,7 @@ template <typename ES, typename MS>
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     T& var = tsk_info->new_get_uintah_field<T>(var_name);
-    constCCVariable<double> rho =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+    constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -634,11 +633,9 @@ template <typename ES, typename MS>
 
     T& var = tsk_info->new_get_uintah_field<T>(var_name);
 
-    constCCVariable<double> x =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_x_name));
+    constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
 
-    constCCVariable<double> y =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_y_name));
+    constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -768,8 +765,7 @@ template <typename ES, typename MS>
 
     T& var = tsk_info->new_get_uintah_field<T>(var_name);
 
-    constCCVariable<double> x =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_x_name));
+    constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
 
     VariableHelper<T> var_help;
     //IntVector iDir = patch->faceDirection( bnd->face );
@@ -966,8 +962,7 @@ template <typename ES, typename MS>
     VariableHelper<T> var_help;
     //typedef typename VariableHelper<T>::ConstType CT;
     T& var = tsk_info->new_get_uintah_field<T>(var_name);
-    constCCVariable<double>& rho =
-      *( tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
+    constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name) ;
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 

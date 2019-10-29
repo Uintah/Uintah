@@ -172,8 +172,7 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   ash_enthalpy_flux.initialize(0.0);
   CCVariable<double>& ash_enthalpy_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_enthalpy_src);
   ash_enthalpy_src.initialize(0.0);
-  constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
-  constCCVariable<int>& celltype = *vcelltype;
+  constCCVariable<int>& celltype = tsk_info->new_get_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<double>& gasT = tsk_info->new_get_uintah_field<constCCVariable<double> >( _gasT_name );
 
   for( int i = 0; i < _Nenv; i++ ){
@@ -184,12 +183,9 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string diameter_name  = get_env_name( i, _diameter_base_name );
     const std::string temperature_name  = get_env_name( i, _temperature_base_name );
     const std::string density_name  = get_env_name( i, _density_base_name );
-    constSFCXVariable<double>* vdep_x = tsk_info->get_const_uintah_field<constSFCXVariable<double> >(RateDepositionX);
-    constSFCXVariable<double>& dep_x = *vdep_x;
-    constSFCYVariable<double>* vdep_y = tsk_info->get_const_uintah_field<constSFCYVariable<double> >(RateDepositionY);
-    constSFCYVariable<double>& dep_y = *vdep_y;
-    constSFCZVariable<double>* vdep_z = tsk_info->get_const_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
-    constSFCZVariable<double>& dep_z = *vdep_z;
+    constSFCXVariable<double>& dep_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(RateDepositionX);
+    constSFCYVariable<double>& dep_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(RateDepositionY);
+    constSFCZVariable<double>& dep_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
     constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
     constCCVariable<double>& pT = tsk_info->new_get_uintah_field<constCCVariable<double> >( temperature_name );
     constCCVariable<double>& rhop = tsk_info->new_get_uintah_field<constCCVariable<double> >( density_name );

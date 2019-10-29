@@ -422,12 +422,12 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   SFCZVariable<double>& ProbSurfaceZ = tsk_info->new_get_uintah_field<SFCZVariable<double> >(_ProbSurfaceZ_name);
 
   // constant surface normals
-  constSFCXVariable<double>&  Norm_in_X  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("surf_in_normX");
-  constSFCYVariable<double>&  Norm_in_Y  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("surf_in_normY");
-  constSFCZVariable<double>&  Norm_in_Z  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("surf_in_normZ");
-  constSFCXVariable<double>&  Norm_out_X = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("surf_out_normX");
-  constSFCYVariable<double>&  Norm_out_Y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("surf_out_normY");
-  constSFCZVariable<double>&  Norm_out_Z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("surf_out_normZ");
+  constSFCXVariable<double>& Norm_in_X = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("surf_in_normX");
+  constSFCYVariable<double>& Norm_in_Y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("surf_in_normY");
+  constSFCZVariable<double>& Norm_in_Z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("surf_in_normZ");
+  constSFCXVariable<double>& Norm_out_X = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("surf_out_normX");
+  constSFCYVariable<double>& Norm_out_Y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("surf_out_normY");
+  constSFCZVariable<double>& Norm_out_Z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("surf_out_normZ");
 
   // constant gas temperature
   constCCVariable<double>& WallTemperature = tsk_info->new_get_uintah_field<constCCVariable<double> >("temperature");
@@ -501,11 +501,11 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     SFCYVariable<double>& RateDepositionY = tsk_info->new_get_uintah_field<SFCYVariable<double> >( RateDepositionY_name);
     SFCZVariable<double>& RateDepositionZ = tsk_info->new_get_uintah_field<SFCZVariable<double> >( RateDepositionZ_name);
 
-    constCCVariable<double>&  MaxParticleTemperature = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( MaxParticleTemperature_name);
-    constCCVariable<double>&  ParticleTemperature    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( ParticleTemperature_name);
-    constCCVariable<double>&  weight                 = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name);
-    constCCVariable<double>&  rho                    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( rho_name);
-    constCCVariable<double>&  diameter               = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( diameter_name);
+    constCCVariable<double>&  MaxParticleTemperature = tsk_info->new_get_uintah_field<constCCVariable<double> >( MaxParticleTemperature_name);
+    constCCVariable<double>&  ParticleTemperature = tsk_info->new_get_uintah_field<constCCVariable<double> >( ParticleTemperature_name);
+    constCCVariable<double>&  weight = tsk_info->new_get_uintah_field<constCCVariable<double> >( weight_name);
+    constCCVariable<double>&  rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( rho_name);
+    constCCVariable<double>&  diameter = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name);
 
     constCCVariable<double>& xvel = tsk_info->new_get_uintah_field<constCCVariable<double> >( xvel_name);
     constCCVariable<double>& yvel = tsk_info->new_get_uintah_field<constCCVariable<double> >( yvel_name);

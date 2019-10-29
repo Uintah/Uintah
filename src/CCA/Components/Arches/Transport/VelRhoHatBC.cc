@@ -77,7 +77,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     if ( face == Patch::xminus || face == Patch::xplus ){
       var     = &xmom;
-      constSFCXVariable<double>* old_var = tsk_info->get_const_uintah_field<constSFCXVariable<double> >( m_uVel );
+      constSFCXVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( m_uVel );
 
       if ( my_type == OUTLET_BC ){
         bc_sign = 1.;
@@ -102,7 +102,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           int jpp = j_f + iDir[1];
           int kpp = k_f + iDir[2];
 
-          if ( sign * (*old_var)(i_f,j_f,k_f) > possmall ){
+          if ( sign * old_var(i_f,j_f,k_f) > possmall ){
             // du/dx = 0
             (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
           } else {
@@ -118,7 +118,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     }  else if ( face == Patch::yminus || face == Patch::yplus ){
       var = &ymom;
-      constSFCYVariable<double>* old_var = tsk_info->get_const_uintah_field<constSFCYVariable<double> >( m_vVel );
+      constSFCYVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( m_vVel );
 
 
       if ( my_type == OUTLET_BC ){
@@ -144,7 +144,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           int jpp = j_f + iDir[1];
           int kpp = k_f + iDir[2];
 
-          if ( sign * (*old_var)(i_f,j_f,k_f) > possmall ){
+          if ( sign * old_var(i_f,j_f,k_f) > possmall ){
             // du/dx = 0
             (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
           } else {
@@ -160,7 +160,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     } else {
 
       var = &zmom;
-      constSFCZVariable<double>* old_var = tsk_info->get_const_uintah_field<constSFCZVariable<double> >( m_wVel );
+      constSFCZVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( m_wVel );
 
       if ( my_type == OUTLET_BC ){
         bc_sign = 1.;
@@ -185,7 +185,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
           int jpp = j_f + iDir[1];
           int kpp = k_f + iDir[2];
 
-          if ( sign * (*old_var)(i_f,j_f,k_f) > possmall ){
+          if ( sign * old_var(i_f,j_f,k_f) > possmall ){
             // du/dx = 0
             (*var)(i_f,j_f,k_f)= (*var)(im,jm,km);
           } else {

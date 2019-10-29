@@ -140,7 +140,7 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double> f = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
+  constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_mixfrac_label );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -180,8 +180,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
 void ColdFlowProperties::get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& f =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_mixfrac_label );
+  constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_mixfrac_label );
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 

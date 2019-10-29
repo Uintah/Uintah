@@ -584,29 +584,13 @@ private:
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       CT* rho_phi_ptr = nullptr;
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[ieqn] != "NA" )
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] )
-        //rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_premultiplier_name+m_eqn_names[ieqn]);
-        rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_transported_eqn_names[ieqn]);
-
+      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
+        rho_phi_ptr = &(tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ieqn]));
+      }
       CT& rho_phi = *rho_phi_ptr;
       CT& phi = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
       T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
 
-      //Timers::Simple timer;
-      //Timers::Simple timer2;
-
-      //timer.start();
-      //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-        //rhs[*iter] = 0.;
-      //}
-      //timer.stop();
-      //std::cout << "rhs init Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
-
-      //timer.reset(false);
-
-      //timer.start();
       Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
         rhs(i,j,k) = 0;
@@ -619,9 +603,6 @@ private:
         FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
         FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
         FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-        //IntVector low  = patch->getCellLowIndex();
-        //IntVector high = patch->getExtraCellHighIndex();
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -723,13 +704,9 @@ private:
 
           UpwindConvection scheme;
 
-          //timer.reset(false);
-          //timer.start();
           CONVECTION_x(range_cl_to_ech_x);
           CONVECTION_y(range_cl_to_ech_y);
           CONVECTION_z(range_cl_to_ech_z);
-          //timer.stop();
-          //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
         } else if ( m_conv_scheme[ieqn] == CENTRAL ){
 

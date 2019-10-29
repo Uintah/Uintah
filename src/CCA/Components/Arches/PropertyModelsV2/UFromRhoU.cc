@@ -118,8 +118,8 @@ void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>&    rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_density_name );
-  constCCVariable<double>&    eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_eps_name );
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_density_name );
+  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_eps_name );
   constSFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( m_xmom );
   constSFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( m_ymom );
   constSFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( m_zmom );

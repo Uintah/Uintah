@@ -418,7 +418,7 @@ namespace Uintah{
     CT& velW = tsk_info->new_get_uintah_field<CT>(_gas_w_velocity_name);
     CT* volQPtr = NULL;
     if ( d_radiation ){
-      volQPtr = tsk_info->get_const_uintah_field<CT>(_volq_name);
+      volQPtr = &(tsk_info->new_get_uintah_field<CT>(_volq_name));
     }
     CT& volQ = *volQPtr;
 
@@ -457,7 +457,7 @@ namespace Uintah{
 
       CT* absKpPtr = NULL;
       if ( d_radiation ){
-        absKpPtr = tsk_info->get_const_uintah_field<CT>(abskp_name);
+        absKpPtr = &(tsk_info->new_get_uintah_field<CT>(abskp_name));
       }
       CT& absKp = *absKpPtr;
       CT& rawCoal = tsk_info->new_get_uintah_field<CT>(raw_coal_name);
