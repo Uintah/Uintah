@@ -202,9 +202,9 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     A.s = 0.0;
     A.t = 0.0;
     A.b = 0.0;
-    b(i,j,k)=0.0;
-    x(i,j,k)=0.0;
-    guess(i,j,k)=0.0;
+    b(i,j,k) = 0.0;
+    x(i,j,k) = 0.0;
+    guess(i,j,k) = 0.0;
 
   });
 

@@ -1529,50 +1529,50 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int iEnd=_plusX[cdirecn] ? idxHi.x() : -idxLo.x();
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-    KokkosView3<const int, Kokkos::HostSpace>    kv_cellType    = cellType.getKokkosView() ;
-    KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc    = emissSrc.getKokkosView();
-    KokkosView3<const double, Kokkos::HostSpace> kv_abskt       = abskt.getKokkosView() ;
-    KokkosView3<double, Kokkos::HostSpace>       kv_intensity   = intensity.getKokkosView() ;
+    KokkosView3<const int, Kokkos::HostSpace>    kv_cellType  = cellType.getKokkosView() ;
+    KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc  = emissSrc.getKokkosView();
+    KokkosView3<const double, Kokkos::HostSpace> kv_abskt     = abskt.getKokkosView() ;
+    KokkosView3<double, Kokkos::HostSpace>       kv_intensity = intensity.getKokkosView() ;
 
-    const int zdir=ziter[cdirecn];
-    const int ydir=yiter[cdirecn];
-    const int xdir=xiter[cdirecn];
+    const int zdir = ziter[cdirecn];
+    const int ydir = yiter[cdirecn];
+    const int xdir = xiter[cdirecn];
     ExecutionObject<UintahSpaces::CPU,UintahSpaces::HostSpace> execObj;
-    int n_thread_partitions =4; // 4 appears to optimium on a 4 core machine.......... meaning 1-22 threads per patch.
+    int n_thread_partitions = 4; // 4 appears to optimium on a 4 core machine.......... meaning 1-22 threads per patch.
     if (_LspectralSolve){
-       KokkosView3<const double, Kokkos::HostSpace>    kv_abskg_array =  abskg_array[iband].getKokkosView();
-       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-       Uintah::sweeping_parallel_for(execObj, range,      [&](int i, int j, int k) {
-             int km=k-zdir;
-             int jm=j-ydir; 
-             int im=i-xdir;
-             kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi  +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + (kv_abskg_array(i,j,k)  + kv_abskt(i,j,k))*vol);
-             kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=ffield) ? kv_emissSrc(i,j,k)  : kv_intensity(i,j,k);
-           },_plusX[cdirecn] ,_plusY[cdirecn] , _plusZ[cdirecn], n_thread_partitions);
+      KokkosView3<const double, Kokkos::HostSpace> kv_abskg_array =  abskg_array[iband].getKokkosView();
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+      Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
+        int km=k-zdir;
+        int jm=j-ydir; 
+        int im=i-xdir;
+        kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + (kv_abskg_array(i,j,k)  + kv_abskt(i,j,k))*vol);
+        kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
+      }, _plusX[cdirecn], _plusY[cdirecn], _plusZ[cdirecn], n_thread_partitions);
     }else{
-       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-       Uintah::sweeping_parallel_for(execObj, range,      [&](int i, int j, int k) {
-             int km=k-zdir;
-             int jm=j-ydir; 
-             int im=i-xdir;
-             kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi  +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + kv_abskt(i,j,k)*vol);
-             kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=ffield) ? kv_emissSrc(i,j,k)  : kv_intensity(i,j,k);
-           },_plusX[cdirecn] ,_plusY[cdirecn] , _plusZ[cdirecn], n_thread_partitions);
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+      Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
+        int km=k-zdir;
+        int jm=j-ydir; 
+        int im=i-xdir;
+        kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi  +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + kv_abskt(i,j,k)*vol);
+        kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
+      }, _plusX[cdirecn], _plusY[cdirecn], _plusZ[cdirecn], n_thread_partitions);
     }
 #else
-   //--------------------------------------------------------//
-    //definition of abskt -> abskg_soot + abskg + sum(abskp_i) + scatkt
-    //definition of abskt(spectral)-> abskg_soot +  sum(abskp_i) + scatkt
-   
-    //definition of abskg ->  abskg + abskg_soot 
-    //definition of abskg_i(spectral)-> abskg_i  
-   //--------------------------------------------------------//
     int i ;
     int im;
     int j;
     int jm;
     int k ;
     int km;
+    //--------------------------------------------------------//
+    // definition of abskt -> abskg_soot + abskg + sum(abskp_i) + scatkt
+    // definition of abskt(spectral)-> abskg_soot +  sum(abskp_i) + scatkt
+    //
+    // definition of abskg ->  abskg + abskg_soot 
+    // definition of abskg_i(spectral)-> abskg_i  
+    //--------------------------------------------------------//
     if (_LspectralSolve){
       for ( k = kstart ;  kDir*k<=kEnd  ; k=k+ziter[cdirecn]){
         km=k-ziter[cdirecn];

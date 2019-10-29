@@ -222,6 +222,7 @@ private:
         auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
         auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
         auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+
         parallel_initialize(execObj, 0.0, x_flux,y_flux,z_flux);
       }
     }

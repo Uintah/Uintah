@@ -727,13 +727,13 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
   // gas variables (ConstCCVariables)
-  auto CCuVel         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_u_vel_name);
-  auto CCvVel         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_v_vel_name);
-  auto CCwVel         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_w_vel_name);
-  auto volFraction    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_volFraction_name);
-  auto den            = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_density_gas_name);
-  auto temperature    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_gas_temperature_label);
-  auto MWmix          = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_MW_name);// in kmol/kg_mix
+  auto CCuVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_u_vel_name);
+  auto CCvVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_v_vel_name);
+  auto CCwVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_cc_w_vel_name);
+  auto volFraction = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_volFraction_name);
+  auto den         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_density_gas_name);
+  auto temperature = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_gas_temperature_label);
+  auto MWmix       = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_MW_name);// in kmol/kg_mix
 
   const double dt = tsk_info->get_dt();
 
@@ -741,6 +741,7 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
   auto species = createContainer<CT, const double, max_species_count, MemSpace>(species_count);
+
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
     tsk_info->get_const_uintah_field< CT, const double, MemSpace>(species[ns], _species_names[ns], _patch, m_matl_index, _time_substep);
   }
@@ -748,11 +749,11 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   // CT& number_density = tsk_info->get_const_uintah_field_add< CT >( number_density_name ); // total number density - unused
 
   // model variables (CCVariables)
-  auto char_rate           = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_modelLabel);
-  auto gas_char_rate       = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_gasLabel);
-  auto particle_temp_rate  = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_particletemp);
-  auto particle_Size_rate  = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_particleSize);
-  auto surface_rate        = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_surfacerate);
+  auto char_rate          = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_modelLabel);
+  auto gas_char_rate      = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_gasLabel);
+  auto particle_temp_rate = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_particletemp);
+  auto particle_Size_rate = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_particleSize);
+  auto surface_rate       = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_surfacerate);
 
   // reaction rate
   auto reaction_rate     = createContainer<T, double, max_reactions_count, MemSpace>(reactions_count);
@@ -797,14 +798,14 @@ CharOxidationps<T>::eval( const Patch                                     * patc
                            length_birth, m_length_birth_qn_name, _patch, m_matl_index, _time_substep);
   }
 
-  auto weight_p_diam       = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_particle_length_qn);
+  auto weight_p_diam = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_particle_length_qn);
 
-  auto RC_RHS_source       = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_RC_RHS);
-  auto RHS_source          = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_ic_RHS);
-  auto RHS_weight          = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_w_RHS);
-  auto RHS_length          = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_length_RHS);
+  auto RC_RHS_source = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_RC_RHS);
+  auto RHS_source    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_ic_RHS);
+  auto RHS_weight    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_w_RHS);
+  auto RHS_length    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_length_RHS);
 
-  auto surfAreaF           = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_surfAreaF_name);
+  auto surfAreaF     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_surfAreaF_name);
 
   // Class data members are a problem!  They need to be both
   // 1) local in scope so they can be captured by value (for CUDA)
@@ -905,6 +906,7 @@ CharOxidationps<T>::eval( const Patch                                     * patc
       for ( int r = 0; r < reactions_count; r++ ) {
         rh_l_new[r] = old_reaction_rate[r](i,j,k); // [kg/m^3/s]
       }
+
       for ( int r = 0; r < reactions_count; r++ ) { // check this
         oxid_mass_frac[r] = species[local_oxidizer_indices[r]](i,j,k); // [mass fraction]
       }
@@ -914,7 +916,9 @@ CharOxidationps<T>::eval( const Patch                                     * patc
       }
 
       const double CO2onCO = 1. / ( 200. * exp( -9000. / ( local_R_cal * p_T ) ) * 44.0 / 28.0 ); // [ kg CO / kg CO2] => [kmoles CO / kmoles CO2] => [kmoles CO2 / kmoles CO]
+
       for ( int r = 0; r < reactions_count; r++ ) {
+
         if ( local_use_co2co_l[r] ) {
           phi_l[r]  = ( CO2onCO + 1 ) / ( CO2onCO + 0.5 );
           hrxn_l[r] = ( CO2onCO * local_HF_CO2 + local_HF_CO ) / ( 1 + CO2onCO );
@@ -957,6 +961,7 @@ CharOxidationps<T>::eval( const Patch                                     * patc
             sum_x   = sum_x;
           }
         }
+
         D_oxid_mix_l[r] = sum_x / sum_x_D * sqrt( CUBE( gas_T / local_T0 ) );
         Sh[r]             = 2.0 + 0.6 * sqrt( Re_p ) * cbrt( local_dynamic_visc / ( gas_rho * D_oxid_mix_l[r] ) ); // Sherwood number [-]
         co_r[r]           = cg * ( oxid_mass_frac[r] * MW / local_MW_l[r] ); // oxidizer concentration, [kmoles/m^3]

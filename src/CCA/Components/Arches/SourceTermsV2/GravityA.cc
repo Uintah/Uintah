@@ -112,11 +112,10 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   auto density  = tsk_info->get_const_uintah_field_add<constCCVariable<double >, const double, MemSpace>( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
+  const double ref_density = m_ref_density;
 
-
-  const double ref_density= m_ref_density;
   if (m_gravity[0] != 0.0) {
-    double aGravity=m_gravity[0]; // acceleration due to gravity
+    double aGravity = m_gravity[0]; // acceleration due to gravity
     auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>(m_gx_label);
     parallel_initialize(execObj,0.0,gx);
 
@@ -125,7 +124,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     });
 
   } else if (m_gravity[1] != 0.0) {
-    double aGravity=m_gravity[1]; // acceleration due to gravity
+    double aGravity = m_gravity[1]; // acceleration due to gravity
     auto gy = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>(m_gy_label);
     parallel_initialize(execObj,0.0,gy);
 
@@ -134,7 +133,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     });
 
   } else if (m_gravity[2] != 0.0) {
-    double aGravity=m_gravity[2]; // acceleration due to gravity
+    double aGravity = m_gravity[2]; // acceleration due to gravity
     auto gz = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>(m_gz_label);
     parallel_initialize(execObj,0.0,gz);
 
@@ -184,17 +183,19 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
   auto density  = tsk_info->get_const_uintah_field_add<constCCVariable<double >, const double, MemSpace>( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  const double ref_density= m_ref_density;
+  const double ref_density = m_ref_density;
+
   if (m_gravity[0] != 0.0) {
-    double aGravity=m_gravity[0]; // acceleration due to gravity
+    double aGravity = m_gravity[0]; // acceleration due to gravity
     auto gx = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>(m_gx_label);
     parallel_initialize(execObj,0.0,gx);
+
     Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
       gx(i,j,k) = (0.5*(density(i,j,k) + density(i-1,j,k)) - ref_density )*aGravity;
     });
 
   } else if (m_gravity[1] != 0.0) {
-    double aGravity=m_gravity[1]; // acceleration due to gravity
+    double aGravity = m_gravity[1]; // acceleration due to gravity
     auto gy = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>(m_gy_label);
     parallel_initialize(execObj,0.0,gy);
 
@@ -203,7 +204,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
     });
 
   } else if (m_gravity[2] != 0.0) {
-    double aGravity=m_gravity[2]; // acceleration due to gravity
+    double aGravity = m_gravity[2]; // acceleration due to gravity
     auto gz = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>(m_gz_label);
     parallel_initialize(execObj,0.0,gz);
 

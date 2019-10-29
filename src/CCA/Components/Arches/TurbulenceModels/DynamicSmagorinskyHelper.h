@@ -107,13 +107,14 @@ namespace Uintah { namespace ArchesCore {
             //Face +
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
+
             int i=c[0];
             int j=c[1];
             int k=c[2];
             int im=i-f_dir[0];
             int jm=j-f_dir[1];
             int km=k-f_dir[2];
-           
+
             if ( vol_fraction(i,j,k) > 1e-10 ){
               var(im,jm,km) = vel(im,jm,km)*(rho(im,jm,km)+rho(i,j,k))/2.;
               var(i,j,k) = vel(im,jm,km);
@@ -123,6 +124,7 @@ namespace Uintah { namespace ArchesCore {
               // Face -
           for( CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done(); iter++) {
             IntVector c = *iter;
+
             int i=c[0];
             int j=c[1];
             int k=c[2];

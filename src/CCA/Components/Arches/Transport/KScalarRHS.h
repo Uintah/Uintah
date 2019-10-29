@@ -210,6 +210,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir );
   }
 }
+
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
@@ -547,8 +548,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
   template <typename ExecSpace, typename MemSpace>
   void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    auto eps =
-    tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eps_name);
+    auto eps = tsk_info->get_const_uintah_field_add<CT,const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();

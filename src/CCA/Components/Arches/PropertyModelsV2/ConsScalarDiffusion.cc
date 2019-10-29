@@ -127,8 +127,10 @@ void ConsScalarDiffusion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   auto  density = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double , MemSpace>(m_density_name);
 
   parallel_initialize(execObj, 0.0, gamma);
+
   const double  PrNo= m_Pr;
   const double molecular_diffusivity =m_Diffusivity;
+
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
    gamma(i,j,k) = density(i,j,k)*molecular_diffusivity + mu_t(i,j,k)/PrNo;

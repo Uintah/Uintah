@@ -156,8 +156,7 @@ TableLookup::sched_setDependBCs( const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace> void
-TableLookup::setDependBCs( 
-                           const PatchSubset* patches,
+TableLookup::setDependBCs( const PatchSubset* patches,
                            const MaterialSubset* matls,
                            OnDemandDataWarehouse* old_dw,
                            OnDemandDataWarehouse* new_dw,

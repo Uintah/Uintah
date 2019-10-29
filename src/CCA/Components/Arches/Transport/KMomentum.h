@@ -518,9 +518,9 @@ private:
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 
       Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
-        phi(i,j,k) = 0.0;
-        rhs(i,j,k) = 0.0;
-        u(i,j,k)   = scalar_init_value; // initial value for velocity, phi (rho_u) is computed in UnweightVariable task
+        phi(i,j,k)    = 0.0;
+        rhs(i,j,k)    = 0.0;
+        u(i,j,k)      = scalar_init_value; // initial value for velocity, phi (rho_u) is computed in UnweightVariable task
         x_flux(i,j,k) = 0.0;
         y_flux(i,j,k) = 0.0;
         z_flux(i,j,k) = 0.0;
