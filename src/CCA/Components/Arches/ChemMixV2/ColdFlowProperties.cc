@@ -64,7 +64,7 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
     var.initialize(0.0);
   }
 
@@ -86,8 +86,8 @@ void ColdFlowProperties::register_timestep_init( VIVec& variable_registry , cons
 void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    constCCVariable<double>& old_var = tsk_info->new_get_uintah_field<constCCVariable<double> >( i->first );
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    constCCVariable<double>& old_var = tsk_info->get_field<constCCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
 
     var.copyData(old_var);
   }
@@ -140,7 +140,7 @@ void ColdFlowProperties::register_compute_bcs( VIVec& variable_registry, const i
 
 void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_mixfrac_label );
+  constCCVariable<double>& f = tsk_info->get_field<constCCVariable<double> >( m_mixfrac_label );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -156,7 +156,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
     for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-      CCVariable<double>& prop = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+      CCVariable<double>& prop = tsk_info->get_field<CCVariable<double> >( i->first );
       const SpeciesInfo info = i->second;
 
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
@@ -180,11 +180,11 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
 void ColdFlowProperties::get_properties( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_mixfrac_label );
+  constCCVariable<double>& f = tsk_info->get_field<constCCVariable<double> >( m_mixfrac_label );
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-    CCVariable<double>& prop = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    CCVariable<double>& prop = tsk_info->get_field<CCVariable<double> >( i->first );
     const SpeciesInfo info = i->second;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );

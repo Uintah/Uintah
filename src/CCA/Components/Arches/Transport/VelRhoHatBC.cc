@@ -48,9 +48,9 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 
 void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  SFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<SFCXVariable<double> >( m_xmom );
-  SFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<SFCYVariable<double> >( m_ymom );
-  SFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<SFCZVariable<double> >( m_zmom );
+  SFCXVariable<double>& xmom = tsk_info->get_field<SFCXVariable<double> >( m_xmom );
+  SFCYVariable<double>& ymom = tsk_info->get_field<SFCYVariable<double> >( m_ymom );
+  SFCZVariable<double>& zmom = tsk_info->get_field<SFCZVariable<double> >( m_zmom );
 
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
@@ -77,7 +77,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     if ( face == Patch::xminus || face == Patch::xplus ){
       var     = &xmom;
-      constSFCXVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( m_uVel );
+      constSFCXVariable<double>& old_var = tsk_info->get_field<constSFCXVariable<double> >( m_uVel );
 
       if ( my_type == OUTLET_BC ){
         bc_sign = 1.;
@@ -118,7 +118,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     }  else if ( face == Patch::yminus || face == Patch::yplus ){
       var = &ymom;
-      constSFCYVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( m_vVel );
+      constSFCYVariable<double>& old_var = tsk_info->get_field<constSFCYVariable<double> >( m_vVel );
 
 
       if ( my_type == OUTLET_BC ){
@@ -160,7 +160,7 @@ void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     } else {
 
       var = &zmom;
-      constSFCZVariable<double>& old_var = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( m_wVel );
+      constSFCZVariable<double>& old_var = tsk_info->get_field<constSFCZVariable<double> >( m_wVel );
 
       if ( my_type == OUTLET_BC ){
         bc_sign = 1.;

@@ -314,10 +314,10 @@ namespace Uintah{
       const std::string qconv_name = get_name(ienv, _base_qconv_name);
       const std::string qrad_name = get_name(ienv, _base_qrad_name);
 
-      T& heatRate = tsk_info->new_get_uintah_field<T>(name);
-      T& gasHeatRate = tsk_info->new_get_uintah_field<T>(gas_name);
-      T& qConv = tsk_info->new_get_uintah_field<T>(qconv_name);
-      T& qRad = tsk_info->new_get_uintah_field<T>(qrad_name);
+      T& heatRate = tsk_info->get_field<T>(name);
+      T& gasHeatRate = tsk_info->get_field<T>(gas_name);
+      T& qConv = tsk_info->get_field<T>(qconv_name);
+      T& qRad = tsk_info->get_field<T>(qrad_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -330,7 +330,7 @@ namespace Uintah{
       });
     }
 
-    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
+    T& gasTotalRate = tsk_info->get_field<T>(_gas_var_name);
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -410,19 +410,19 @@ namespace Uintah{
     const double dt = tsk_info->get_dt();
 
     //gas values
-    CT& gasT = tsk_info->new_get_uintah_field<CT>(_gas_temp_name);
-    CT& gasCP = tsk_info->new_get_uintah_field<CT>(_gas_cp_name);
-    CT& rhoG = tsk_info->new_get_uintah_field<CT>(_gas_density_name);
-    CT& velU = tsk_info->new_get_uintah_field<CT>(_gas_u_velocity_name);
-    CT& velV = tsk_info->new_get_uintah_field<CT>(_gas_v_velocity_name);
-    CT& velW = tsk_info->new_get_uintah_field<CT>(_gas_w_velocity_name);
+    CT& gasT = tsk_info->get_field<CT>(_gas_temp_name);
+    CT& gasCP = tsk_info->get_field<CT>(_gas_cp_name);
+    CT& rhoG = tsk_info->get_field<CT>(_gas_density_name);
+    CT& velU = tsk_info->get_field<CT>(_gas_u_velocity_name);
+    CT& velV = tsk_info->get_field<CT>(_gas_v_velocity_name);
+    CT& velW = tsk_info->get_field<CT>(_gas_w_velocity_name);
     CT* volQPtr = NULL;
     if ( d_radiation ){
-      volQPtr = &(tsk_info->new_get_uintah_field<CT>(_volq_name));
+      volQPtr = &(tsk_info->get_field<CT>(_volq_name));
     }
     CT& volQ = *volQPtr;
 
-    T& gasTotalRate = tsk_info->new_get_uintah_field<T>( _gas_var_name );
+    T& gasTotalRate = tsk_info->get_field<T>( _gas_var_name );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -435,10 +435,10 @@ namespace Uintah{
       const std::string qconv_name = get_name(ienv, _base_qconv_name);
       const std::string qrad_name = get_name(ienv, _base_qrad_name);
 
-      T& heatRate = tsk_info->new_get_uintah_field<T>(name);
-      T& gasHeatRate = tsk_info->new_get_uintah_field<T>(gas_name);
-      T& qConv = tsk_info->new_get_uintah_field<T>(qconv_name);
-      T& qRad = tsk_info->new_get_uintah_field<T>(qrad_name);
+      T& heatRate = tsk_info->get_field<T>(name);
+      T& gasHeatRate = tsk_info->get_field<T>(gas_name);
+      T& qConv = tsk_info->get_field<T>(qconv_name);
+      T& qRad = tsk_info->get_field<T>(qrad_name);
 
       //paritcle variables rqd
       const std::string raw_coal_name = get_name( ienv, _base_raw_coal_name );
@@ -457,21 +457,21 @@ namespace Uintah{
 
       CT* absKpPtr = NULL;
       if ( d_radiation ){
-        absKpPtr = &(tsk_info->new_get_uintah_field<CT>(abskp_name));
+        absKpPtr = &(tsk_info->get_field<CT>(abskp_name));
       }
       CT& absKp = *absKpPtr;
-      CT& rawCoal = tsk_info->new_get_uintah_field<CT>(raw_coal_name);
-      CT& charMass = tsk_info->new_get_uintah_field<CT>(char_mass_name);
-      CT& partTemp = tsk_info->new_get_uintah_field<CT>(particle_temp_name);
-      CT& partSize = tsk_info->new_get_uintah_field<CT>(particle_size_name);
-      CT& charOxiTemp = tsk_info->new_get_uintah_field<CT>(char_oxi_temp_name);
-      CT& surfRate = tsk_info->new_get_uintah_field<CT>(surf_rate_name);
-      CT& charGas = tsk_info->new_get_uintah_field<CT>(char_gas_name);
-      CT& devolGas = tsk_info->new_get_uintah_field<CT>(devol_gas_name);
-      CT& weight = tsk_info->new_get_uintah_field<CT>(w_name);
-      CT& partVelU = tsk_info->new_get_uintah_field<CT>(u_velocity_name);
-      CT& partVelV = tsk_info->new_get_uintah_field<CT>(v_velocity_name);
-      CT& partVelW = tsk_info->new_get_uintah_field<CT>(w_velocity_name);
+      CT& rawCoal = tsk_info->get_field<CT>(raw_coal_name);
+      CT& charMass = tsk_info->get_field<CT>(char_mass_name);
+      CT& partTemp = tsk_info->get_field<CT>(particle_temp_name);
+      CT& partSize = tsk_info->get_field<CT>(particle_size_name);
+      CT& charOxiTemp = tsk_info->get_field<CT>(char_oxi_temp_name);
+      CT& surfRate = tsk_info->get_field<CT>(surf_rate_name);
+      CT& charGas = tsk_info->get_field<CT>(char_gas_name);
+      CT& devolGas = tsk_info->get_field<CT>(devol_gas_name);
+      CT& weight = tsk_info->get_field<CT>(w_name);
+      CT& partVelU = tsk_info->get_field<CT>(u_velocity_name);
+      CT& partVelV = tsk_info->get_field<CT>(v_velocity_name);
+      CT& partVelW = tsk_info->get_field<CT>(w_velocity_name);
 
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

@@ -94,7 +94,7 @@ private:
   template <typename T>
   void TemplatedSampleTask<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& field = tsk_info->new_get_uintah_field<T>( "templated_variable" );
+    T& field = tsk_info->get_field<T>( "templated_variable" );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       field(i,j,k) = 3.2;
@@ -114,7 +114,7 @@ private:
   template <typename T>
   void TemplatedSampleTask<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& field = tsk_info->new_get_uintah_field<T>( "templated_variable" );
+    T& field = tsk_info->get_field<T>( "templated_variable" );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       field(i,j,k) = 23.4;

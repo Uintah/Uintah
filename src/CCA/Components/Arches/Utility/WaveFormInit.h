@@ -132,8 +132,8 @@ private:
   template <typename T, typename CT>
   void WaveFormInit<T, CT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& dep_field = tsk_info->new_get_uintah_field<T>( _var_name );
-    CT& ind_field = tsk_info->new_get_uintah_field<CT>( _ind_var_name );
+    T& dep_field = tsk_info->get_field<T>( _var_name );
+    CT& ind_field = tsk_info->get_field<CT>( _ind_var_name );
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
 
     ArchesCore::oneDInterp<T,CT> interpolator;

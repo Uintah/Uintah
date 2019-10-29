@@ -305,18 +305,18 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 void
 partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 {
-  CCVariable<double>& abskp = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name);
+  CCVariable<double>& abskp = tsk_info->get_field<CCVariable<double> >(_abskp_name);
   abskp.initialize(0.0);
 
   for (int i=0; i< _nQn_part ; i++){
-    CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[i]);
+    CCVariable<double>& abskpQuad = tsk_info->get_field<CCVariable<double> >(_abskp_name_vector[i]);
     abskpQuad.initialize(0.0);
   }
 
   if (_scatteringOn ){
-    CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
+    CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
     scatkt.initialize(0.0);
-    CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+    CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
     asymm.initialize(0.0);
   }
 }
@@ -370,18 +370,18 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
 void
 partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 {
-  CCVariable<double>& abskp = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name);
+  CCVariable<double>& abskp = tsk_info->get_field<CCVariable<double> >(_abskp_name);
   abskp.initialize(0.0);
 
   if (_scatteringOn){
-    CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-    CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+    CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+    CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
     scatkt.initialize(0.0);
     asymm.initialize(0.0);
   }
 
-  constCCVariable<double>& vol_fraction= tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
+  constCCVariable<double>& vol_fraction= tsk_info->get_field<constCCVariable<double> >("volFraction");
 
   std::vector<constCCVariable<double> > RC_mass(_nQn_part);
   std::vector<constCCVariable<double> > Char_mass(_nQn_part);
@@ -390,13 +390,13 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   std::vector<constCCVariable<double> > sizeQuad(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
-    weightQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double> >(_weight_name_v[ix]);
-    temperatureQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name_v[ix]);
-    sizeQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double> >(_size_name_v[ix]);
+    weightQuad[ix] = tsk_info->get_field<constCCVariable<double> >(_weight_name_v[ix]);
+    temperatureQuad[ix] = tsk_info->get_field<constCCVariable<double> >(_temperature_name_v[ix]);
+    sizeQuad[ix] = tsk_info->get_field<constCCVariable<double> >(_size_name_v[ix]);
 
     if (_isCoal){
-      RC_mass[ix]  =tsk_info->new_get_uintah_field<constCCVariable<double> >(_RC_name_v[ix]);
-      Char_mass[ix]=tsk_info->new_get_uintah_field<constCCVariable<double> >(_Char_name_v[ix]);
+      RC_mass[ix]  =tsk_info->get_field<constCCVariable<double> >(_RC_name_v[ix]);
+      Char_mass[ix]=tsk_info->get_field<constCCVariable<double> >(_Char_name_v[ix]);
     }
   }
 
@@ -405,7 +405,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   //______________________________________________________________________
   //
   for (int ix=0; ix< _nQn_part ; ix++){
-    CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+    CCVariable<double>& abskpQuad = tsk_info->get_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
     abskpQuad.initialize(0.0);
 
     //__________________________________
@@ -432,8 +432,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       //______________
       //
       if (_scatteringOn){
-        CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+        CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
@@ -454,8 +454,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       //______________
       //
       if (_scatteringOn){
-        CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+        CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
@@ -472,8 +472,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
         enum DependentVariables{ abs_coef, sca_coef};
         std::vector<constCCVariable<double> > IV(_nIVs);
 
-        IV[en_size]=  tsk_info->new_get_uintah_field<constCCVariable<double> >(_size_name_v[ix]);
-        IV[en_temp]=  tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name_v[ix]);
+        IV[en_size]=  tsk_info->get_field<constCCVariable<double> >(_size_name_v[ix]);
+        IV[en_temp]=  tsk_info->get_field<constCCVariable<double> >(_temperature_name_v[ix]);
 
         std::vector<CCVariable<double> > abs_scat_coeff(_nDVs);
         IntVector domLo = patch->getCellLowIndex();
@@ -495,8 +495,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       //______________
       //
       if (_scatteringOn){
-        CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+        CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
@@ -512,7 +512,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
 #ifdef HAVE_RADPROPS
   if(_particle_calculator_type == "coal" &&  _p_planck_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
-        CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+        CCVariable<double>& abskpQuad = tsk_info->get_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
@@ -527,8 +527,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       //______________
       //
       if (_scatteringOn){
-        CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+        CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           std::vector<double> total_mass(_nQn_part);
@@ -550,7 +550,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
     //
     }else if(_particle_calculator_type == "coal" &&  _p_ros_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
-        CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+        CCVariable<double>& abskpQuad = tsk_info->get_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
@@ -565,8 +565,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
       //______________
       //
       if (_scatteringOn){
-        CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
-        CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
+        CCVariable<double>& scatkt = tsk_info->get_field<CCVariable<double> >(_scatkt_name);
+        CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
           std::vector<double> total_mass(_nQn_part);

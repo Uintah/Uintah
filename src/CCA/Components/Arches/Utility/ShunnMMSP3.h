@@ -202,15 +202,15 @@ private:
   template <typename T>
   void ShunnMMSP3<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& f_mms = tsk_info->new_get_uintah_field<T>(m_var_name);
-    constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
-    constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
+    T& f_mms = tsk_info->get_field<T>(m_var_name);
+    constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
+    constCCVariable<double>& y = tsk_info->get_field<constCCVariable<double> >(m_y_name);
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
     const double time_d = 0.0;
 
     if ( m_which_vel == "u" ){
-      constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
+      constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
     // for velocity
       const int ioff = m_ijk_off[0];
       const int joff = m_ijk_off[1];

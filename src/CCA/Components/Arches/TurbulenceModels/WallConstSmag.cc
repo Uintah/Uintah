@@ -134,18 +134,18 @@ WallConstSmag::register_timestep_eval( std::vector<AFC::VariableInformation>&
 void
 WallConstSmag::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
 
-  constCCVariable<double>& IsI = tsk_info->new_get_uintah_field< constCCVariable<double> >(m_IsI_name);
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& IsI = tsk_info->get_field< constCCVariable<double> >(m_IsI_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& eps = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
-  CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma13 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma23 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
 
 
   const Vector Dx = patch->dCell();

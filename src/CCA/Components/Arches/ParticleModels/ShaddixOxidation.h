@@ -264,11 +264,11 @@ namespace Uintah{
       const std::string surf_rate_name = get_name(ienv, _base_surface_rate_name);
       const std::string pO2_surf_name = get_name(ienv, _base_pO2_surface_name);
 
-      T& charOxRate    = tsk_info->new_get_uintah_field<T>(name);
-      T& gasCharOxRate = tsk_info->new_get_uintah_field<T>(gas_name);
-      T& partTRate     = tsk_info->new_get_uintah_field<T>(temp_rate_name);
-      T& surfRate      = tsk_info->new_get_uintah_field<T>(surf_rate_name);
-      T& pO2Surf       = tsk_info->new_get_uintah_field<T>(pO2_surf_name);
+      T& charOxRate    = tsk_info->get_field<T>(name);
+      T& gasCharOxRate = tsk_info->get_field<T>(gas_name);
+      T& partTRate     = tsk_info->get_field<T>(temp_rate_name);
+      T& surfRate      = tsk_info->get_field<T>(surf_rate_name);
+      T& pO2Surf       = tsk_info->get_field<T>(pO2_surf_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -280,7 +280,7 @@ namespace Uintah{
       });
     }
 
-    T& gasTotalRate = tsk_info->new_get_uintah_field<T>( _gas_var_name );
+    T& gasTotalRate = tsk_info->get_field<T>( _gas_var_name );
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0;
@@ -349,15 +349,15 @@ namespace Uintah{
     const double dt = tsk_info->get_dt();
 
     //gas values
-    CT& CO2 = tsk_info->new_get_uintah_field<CT>(_gas_co2_name);
-    CT& H2O = tsk_info->new_get_uintah_field<CT>(_gas_h20_name);
-    CT& O2 = tsk_info->new_get_uintah_field<CT>(_gas_o2_name);
-    CT& N2 = tsk_info->new_get_uintah_field<CT>(_gas_n2_name);
-    CT& gasT = tsk_info->new_get_uintah_field<CT>(_gas_temp_name);
-    CT& gasMW = tsk_info->new_get_uintah_field<CT>(_gas_mw_mix_name);
-    CT& rhoG = tsk_info->new_get_uintah_field<CT>(_gas_density_name);
+    CT& CO2 = tsk_info->get_field<CT>(_gas_co2_name);
+    CT& H2O = tsk_info->get_field<CT>(_gas_h20_name);
+    CT& O2 = tsk_info->get_field<CT>(_gas_o2_name);
+    CT& N2 = tsk_info->get_field<CT>(_gas_n2_name);
+    CT& gasT = tsk_info->get_field<CT>(_gas_temp_name);
+    CT& gasMW = tsk_info->get_field<CT>(_gas_mw_mix_name);
+    CT& rhoG = tsk_info->get_field<CT>(_gas_density_name);
 
-    T& gasTotalRate = tsk_info->new_get_uintah_field<T>(_gas_var_name);
+    T& gasTotalRate = tsk_info->get_field<T>(_gas_var_name);
     Uintah::BlockRange ecrange(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( ecrange, [&](int i, int j, int k){
       gasTotalRate(i,j,k) = 0.0;
@@ -375,8 +375,8 @@ namespace Uintah{
     for ( int ienv = 0; ienv < _Nenv; ienv++ ){
       const std::string particle_size_name = get_name( ienv, _base_particle_size_name );
       const std::string w_name = get_name( ienv, "w" );
-      CT& partSize = tsk_info->new_get_uintah_field<CT>(particle_size_name);
-      CT& weight = tsk_info->new_get_uintah_field<CT>(w_name);
+      CT& partSize = tsk_info->get_field<CT>(particle_size_name);
+      CT& weight = tsk_info->get_field<CT>(w_name);
 
       Uintah::parallel_for( range, [&](int i, int j, int k){
         areaSum = areaSum + weight(i,j,k) * partSize(i,j,k) * partSize(i,j,k);
@@ -407,11 +407,11 @@ namespace Uintah{
       const std::string surf_rate_name = get_name(ienv, _base_surface_rate_name);
       const std::string pO2_surf_name = get_name(ienv, _base_pO2_surface_name);
 
-      T& charOxRate    = tsk_info->new_get_uintah_field<T>(name);
-      T& gasCharOxRate = tsk_info->new_get_uintah_field<T>(gas_name);
-      T& partTRate     = tsk_info->new_get_uintah_field<T>(temp_rate_name);
-      T& surfRate      = tsk_info->new_get_uintah_field<T>(surf_rate_name);
-      T& pO2Surf       = tsk_info->new_get_uintah_field<T>(pO2_surf_name);
+      T& charOxRate    = tsk_info->get_field<T>(name);
+      T& gasCharOxRate = tsk_info->get_field<T>(gas_name);
+      T& partTRate     = tsk_info->get_field<T>(temp_rate_name);
+      T& surfRate      = tsk_info->get_field<T>(surf_rate_name);
+      T& pO2Surf       = tsk_info->get_field<T>(pO2_surf_name);
 
       const std::string raw_coal_name = get_name( ienv, _base_raw_coal_name );
       const std::string char_mass_name = get_name( ienv, _base_char_mass_name);
@@ -420,12 +420,12 @@ namespace Uintah{
       const std::string particle_char_prod_name = get_name( ienv, _base_particle_char_prod_name );
       const std::string w_name = get_name( ienv, "w" );
 
-      CT& rawCoal      = tsk_info->new_get_uintah_field<CT>(raw_coal_name);
-      CT& charMass     = tsk_info->new_get_uintah_field<CT>(char_mass_name);
-      CT& partTemp     = tsk_info->new_get_uintah_field<CT>(particle_temp_name);
-      CT& partSize     = tsk_info->new_get_uintah_field<CT>(particle_size_name);
-      CT& charProdRate = tsk_info->new_get_uintah_field<CT>(particle_char_prod_name);
-      CT& weight       = tsk_info->new_get_uintah_field<CT>(w_name);
+      CT& rawCoal      = tsk_info->get_field<CT>(raw_coal_name);
+      CT& charMass     = tsk_info->get_field<CT>(char_mass_name);
+      CT& partTemp     = tsk_info->get_field<CT>(particle_temp_name);
+      CT& partSize     = tsk_info->get_field<CT>(particle_size_name);
+      CT& charProdRate = tsk_info->get_field<CT>(particle_char_prod_name);
+      CT& weight       = tsk_info->get_field<CT>(w_name);
 
       //CT* birthPtr;
       //if ( _base_birth_name != "none" ) {

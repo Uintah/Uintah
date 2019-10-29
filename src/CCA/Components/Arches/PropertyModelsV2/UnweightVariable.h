@@ -255,7 +255,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
   //NOTE: In the case of DQMOM, rho = weight, otherwise it is density
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double>>(m_rho_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double>>(m_rho_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
@@ -270,8 +270,8 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-    T& var = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);
-    CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]);
+    T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+    CT& un_var = tsk_info->get_field<CT>(m_un_eqn_names[ieqn]);
 
     if ( m_eqn_class != ArchesCore::DQMOM ){
       // rho * phi
@@ -293,7 +293,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
-    T& var = tsk_info->new_get_uintah_field<T>(ieqn->first);
+    T& var = tsk_info->get_field<T>(ieqn->first);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       var(i,j,k) /= info.constant;
     });
@@ -345,7 +345,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double>>(m_rho_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double>>(m_rho_name);
   const IntVector vDir(helper.ioff, helper.joff, helper.koff);
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -370,10 +370,10 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           // DQMOM : BCs are Ic_qni, then we need to compute Ic
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
-            CT&  var = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
-            T& un_var = tsk_info->new_get_uintah_field<T>(m_un_eqn_names[ieqn]);
+            CT&  var = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+            T& un_var = tsk_info->get_field<T>(m_un_eqn_names[ieqn]);
             constCCVariable<double>& vol_fraction =
-            tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+            tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               un_var(i,j,k) = var(i,j,k)/(rho(i,j,k)+ SMALL)*vol_fraction(i,j,k);
@@ -383,7 +383,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           // unscaling only DQMOM
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
-            T& un_var = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
+            T& un_var = tsk_info->get_field<T>(info.unscaled_var);
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               un_var(i,j,k) *= info.constant;
             });
@@ -392,8 +392,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         } else { //if ( m_eqn_class == ArchesCore::DENSITY_WEIGHTED ){
 
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
-            T& var = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);
-            CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]);
+            T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+            CT& un_var = tsk_info->get_field<CT>(m_un_eqn_names[ieqn]);
 
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
@@ -416,8 +416,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // phi variable that are transported in staggered position
         // rho_phi = phi/pho
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
-          T& var = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);// rho*phi
-          CT& un_var = tsk_info->new_get_uintah_field<CT>(m_un_eqn_names[ieqn]); // phi
+          T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);// rho*phi
+          CT& un_var = tsk_info->get_field<CT>(m_un_eqn_names[ieqn]); // phi
 
           if ( dot == -1 ){
 
@@ -449,8 +449,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // only works if var is mom
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-          T& un_var = tsk_info->new_get_uintah_field<T>(m_un_eqn_names[ieqn]);
-          CT& var = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
+          T& un_var = tsk_info->get_field<T>(m_un_eqn_names[ieqn]);
+          CT& var = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
 
           if ( dot == -1 ){
 
@@ -521,7 +521,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   ArchesCore::VariableHelper<T> helper;
 
   //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double>>(m_rho_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double>>(m_rho_name);
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];
@@ -535,8 +535,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    T& un_var = tsk_info->new_get_uintah_field<T>(m_un_eqn_names[ieqn]);
-    T& var = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);
+    T& un_var = tsk_info->get_field<T>(m_un_eqn_names[ieqn]);
+    T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
@@ -548,7 +548,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
-    T& un_var = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
+    T& un_var = tsk_info->get_field<T>(info.unscaled_var);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
@@ -557,8 +557,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   // clipping
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
-    T& var = tsk_info->new_get_uintah_field<T>(info.var);
-    T& rho_var = tsk_info->new_get_uintah_field<T>(ieqn->first);
+    T& var = tsk_info->get_field<T>(info.var);
+    T& rho_var = tsk_info->get_field<T>(ieqn->first);
     Uintah::parallel_for( range, [&](int i, int j, int k){
     if ( var(i,j,k) > info.high ) {
 

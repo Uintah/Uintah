@@ -105,10 +105,10 @@ DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation
 void
 DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& filterRho = tsk_info->new_get_uintah_field< CCVariable<double> >("Filterrho");
-  SFCXVariable<double>& filterRhoU = tsk_info->new_get_uintah_field< SFCXVariable<double> >("Filterrhou");
-  SFCYVariable<double>& filterRhoV = tsk_info->new_get_uintah_field< SFCYVariable<double> >("Filterrhov");
-  SFCZVariable<double>& filterRhoW = tsk_info->new_get_uintah_field< SFCZVariable<double> >("Filterrhow");
+  CCVariable<double>& filterRho = tsk_info->get_field< CCVariable<double> >("Filterrho");
+  SFCXVariable<double>& filterRhoU = tsk_info->get_field< SFCXVariable<double> >("Filterrhou");
+  SFCYVariable<double>& filterRhoV = tsk_info->get_field< SFCYVariable<double> >("Filterrhov");
+  SFCZVariable<double>& filterRhoW = tsk_info->get_field< SFCZVariable<double> >("Filterrhow");
   filterRho.initialize(0.0);
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
@@ -175,32 +175,32 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 void
 DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
-  constCCVariable<double>& CCuVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
 
   const Vector Dx = patch->dCell();
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  CCVariable<double>& IsI = tsk_info->new_get_uintah_field< CCVariable<double> >( m_IsI_name );
-  CCVariable<double>& s11 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s11" );
-  CCVariable<double>& s12 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s12" );
-  CCVariable<double>& s13 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s13" );
-  CCVariable<double>& s22 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s22" );
-  CCVariable<double>& s23 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s23" );
-  CCVariable<double>& s33 = tsk_info->new_get_uintah_field< CCVariable<double> >( "s33" );
+  CCVariable<double>& IsI = tsk_info->get_field< CCVariable<double> >( m_IsI_name );
+  CCVariable<double>& s11 = tsk_info->get_field< CCVariable<double> >( "s11" );
+  CCVariable<double>& s12 = tsk_info->get_field< CCVariable<double> >( "s12" );
+  CCVariable<double>& s13 = tsk_info->get_field< CCVariable<double> >( "s13" );
+  CCVariable<double>& s22 = tsk_info->get_field< CCVariable<double> >( "s22" );
+  CCVariable<double>& s23 = tsk_info->get_field< CCVariable<double> >( "s23" );
+  CCVariable<double>& s33 = tsk_info->get_field< CCVariable<double> >( "s33" );
 
-  CCVariable<double>& Beta11 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta11" );
-  CCVariable<double>& Beta12 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta12" );
-  CCVariable<double>& Beta13 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta13" );
-  CCVariable<double>& Beta22 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta22" );
-  CCVariable<double>& Beta23 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta23" );
-  CCVariable<double>& Beta33 = tsk_info->new_get_uintah_field< CCVariable<double> >( "Beta33" );
+  CCVariable<double>& Beta11 = tsk_info->get_field< CCVariable<double> >( "Beta11" );
+  CCVariable<double>& Beta12 = tsk_info->get_field< CCVariable<double> >( "Beta12" );
+  CCVariable<double>& Beta13 = tsk_info->get_field< CCVariable<double> >( "Beta13" );
+  CCVariable<double>& Beta22 = tsk_info->get_field< CCVariable<double> >( "Beta22" );
+  CCVariable<double>& Beta23 = tsk_info->get_field< CCVariable<double> >( "Beta23" );
+  CCVariable<double>& Beta33 = tsk_info->get_field< CCVariable<double> >( "Beta33" );
 
   IsI.initialize(0.0);
   s11.initialize(0.0);
@@ -309,14 +309,14 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   bcfilter.apply_zero_neumann(patch,Beta23,vol_fraction);
 
   // Filter rho
-  CCVariable<double>& filterRho = tsk_info->new_get_uintah_field< CCVariable<double> >("Filterrho");
+  CCVariable<double>& filterRho = tsk_info->get_field< CCVariable<double> >("Filterrho");
   filterRho.initialize(0.0);
 
 
   // this need to be fixed (??)
   //filterRho.copy(ref_rho);
 
-  CCVariable<double>& rhoBC = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoBC");
+  CCVariable<double>& rhoBC = tsk_info->get_field< CCVariable<double> >("rhoBC");
 
   rhoBC.initialize(0.0);
   Uintah::parallel_for(range, [&](int i, int j, int k){
@@ -328,9 +328,9 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   //m_Filter.applyFilter(rho,filterRho,range,vol_fraction);
 
   // filter rho*ux...
-  SFCXVariable<double>& filterRhoU = tsk_info->new_get_uintah_field< SFCXVariable<double> >("Filterrhou");
-  SFCYVariable<double>& filterRhoV = tsk_info->new_get_uintah_field< SFCYVariable<double> >("Filterrhov");
-  SFCZVariable<double>& filterRhoW = tsk_info->new_get_uintah_field< SFCZVariable<double> >("Filterrhow");
+  SFCXVariable<double>& filterRhoU = tsk_info->get_field< SFCXVariable<double> >("Filterrhou");
+  SFCYVariable<double>& filterRhoV = tsk_info->get_field< SFCYVariable<double> >("Filterrhov");
+  SFCZVariable<double>& filterRhoW = tsk_info->get_field< SFCZVariable<double> >("Filterrhow");
   filterRhoU.initialize(0.0);
   filterRhoV.initialize(0.0);
   filterRhoW.initialize(0.0);
@@ -371,15 +371,15 @@ DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   bcfilter.apply_BC_filter_rho(patch,filterRho,rhoBC,vol_fraction);
 
   // Compute rhouiuj at cc
-  CCVariable<double>& rhoUU = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoUU");
-  CCVariable<double>& rhoVV = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoVV");
-  CCVariable<double>& rhoWW = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoWW");
-  CCVariable<double>& rhoUV = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoUV");
-  CCVariable<double>& rhoUW = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoUW");
-  CCVariable<double>& rhoVW = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoVW");
-  CCVariable<double>& rhoU = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoU");
-  CCVariable<double>& rhoV = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoV");
-  CCVariable<double>& rhoW = tsk_info->new_get_uintah_field< CCVariable<double> >("rhoW");
+  CCVariable<double>& rhoUU = tsk_info->get_field< CCVariable<double> >("rhoUU");
+  CCVariable<double>& rhoVV = tsk_info->get_field< CCVariable<double> >("rhoVV");
+  CCVariable<double>& rhoWW = tsk_info->get_field< CCVariable<double> >("rhoWW");
+  CCVariable<double>& rhoUV = tsk_info->get_field< CCVariable<double> >("rhoUV");
+  CCVariable<double>& rhoUW = tsk_info->get_field< CCVariable<double> >("rhoUW");
+  CCVariable<double>& rhoVW = tsk_info->get_field< CCVariable<double> >("rhoVW");
+  CCVariable<double>& rhoU = tsk_info->get_field< CCVariable<double> >("rhoU");
+  CCVariable<double>& rhoV = tsk_info->get_field< CCVariable<double> >("rhoV");
+  CCVariable<double>& rhoW = tsk_info->get_field< CCVariable<double> >("rhoW");
 
   rhoUU.initialize(0.0);
   rhoVV.initialize(0.0);

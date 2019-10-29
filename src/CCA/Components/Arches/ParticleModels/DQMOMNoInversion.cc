@@ -88,7 +88,7 @@ void DQMOMNoInversion::register_initialize(
 void DQMOMNoInversion::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( *i );
     var.initialize(0.0);
   }
 
@@ -113,7 +113,7 @@ void DQMOMNoInversion::timestep_init( const Patch* patch, ArchesTaskInfoManager*
 
     //Just allocating the memory here. The source is initialized in the eval function.
     // but we have to do something with var to avoid the compiler warning.
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >(*i);
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >(*i);
     var.initialize(0.0);
 
   }
@@ -147,7 +147,7 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   for  ( auto i = m_ic_qn_srcnames.begin(); i != m_ic_qn_srcnames.end(); i++ ){
 
     std::vector<std::string> models = m_ic_model_map[*i];
-    CCVariable<double>& src = tsk_info->new_get_uintah_field<CCVariable<double> >( *i );
+    CCVariable<double>& src = tsk_info->get_field<CCVariable<double> >( *i );
 
     //Must initialize here to deal with higher-order timestepping (otherwise the values add up over the
     //sub-steps)
@@ -155,7 +155,7 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
     for ( auto j = models.begin(); j != models.end(); j++ ){
 
-      constCCVariable<double>& model = tsk_info->new_get_uintah_field<constCCVariable<double> >(*j);
+      constCCVariable<double>& model = tsk_info->get_field<constCCVariable<double> >(*j);
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&]( int i, int j, int k){

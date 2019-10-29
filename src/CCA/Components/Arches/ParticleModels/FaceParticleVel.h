@@ -167,17 +167,17 @@ private:
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    FXT& up_f = tsk_info->new_get_uintah_field<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->new_get_uintah_field<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->new_get_uintah_field<FZT>(wp_face_i);
+    FXT& up_f = tsk_info->get_field<FXT>(up_face_i);
+    FYT& vp_f = tsk_info->get_field<FYT>(vp_face_i);
+    FZT& wp_f = tsk_info->get_field<FZT>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    CT& up = tsk_info->new_get_uintah_field<CT>(up_i);
-    CT& vp = tsk_info->new_get_uintah_field<CT>(vp_i);
-    CT& wp = tsk_info->new_get_uintah_field<CT>(wp_i);
+    CT& up = tsk_info->get_field<CT>(up_i);
+    CT& vp = tsk_info->get_field<CT>(vp_i);
+    CT& wp = tsk_info->get_field<CT>(wp_i);
 
     ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
     ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );
@@ -249,17 +249,17 @@ private:
     std::string up_face_i = ArchesCore::append_env(up_face,ienv);
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
-    FXT& up_f = tsk_info->new_get_uintah_field<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->new_get_uintah_field<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->new_get_uintah_field<FZT>(wp_face_i);
+    FXT& up_f = tsk_info->get_field<FXT>(up_face_i);
+    FYT& vp_f = tsk_info->get_field<FYT>(vp_face_i);
+    FZT& wp_f = tsk_info->get_field<FZT>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    CT& up = tsk_info->new_get_uintah_field<CT>(up_i);
-    CT& vp = tsk_info->new_get_uintah_field<CT>(vp_i);
-    CT& wp = tsk_info->new_get_uintah_field<CT>(wp_i);
+    CT& up = tsk_info->get_field<CT>(up_i);
+    CT& vp = tsk_info->get_field<CT>(vp_i);
+    CT& wp = tsk_info->get_field<CT>(wp_i);
 
     ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
     ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );

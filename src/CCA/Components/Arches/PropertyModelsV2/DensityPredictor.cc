@@ -61,7 +61,7 @@ void
 DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
-  CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >("new_densityGuess");
+  CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
 
 }
@@ -79,7 +79,7 @@ DensityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::Vari
 void
 DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >("new_densityGuess");
+  CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
 
 }
@@ -113,21 +113,21 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 void
 DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& rho_guess = tsk_info->new_get_uintah_field<CCVariable<double> >( "new_densityGuess");
-  CCVariable<double>& rho_guess_a = tsk_info->new_get_uintah_field<CCVariable<double> >( "densityGuess");
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( "densityCP" );
-  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double > >( "volFraction" );
+  CCVariable<double>& rho_guess = tsk_info->get_field<CCVariable<double> >( "new_densityGuess");
+  CCVariable<double>& rho_guess_a = tsk_info->get_field<CCVariable<double> >( "densityGuess");
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >( "densityCP" );
+  constCCVariable<double>& eps = tsk_info->get_field<constCCVariable<double > >( "volFraction" );
 
-  constSFCXVariable<double>& u = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" );
-  constSFCYVariable<double>& v = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" );
-  constSFCZVariable<double>& w = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" );
+  constSFCXVariable<double>& u = tsk_info->get_field<constSFCXVariable<double> >( "uVelocitySPBC" );
+  constSFCYVariable<double>& v = tsk_info->get_field<constSFCYVariable<double> >( "vVelocitySPBC" );
+  constSFCZVariable<double>& w = tsk_info->get_field<constSFCZVariable<double> >( "wVelocitySPBC" );
 
   //---work---
   const double dt = tsk_info->get_dt();
 
   if ( m_use_exact_guess ){
 
-    constCCVariable<double>& f = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_f_name );
+    constCCVariable<double>& f = tsk_info->get_field<constCCVariable<double> >( m_f_name );
 
     Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -163,7 +163,7 @@ DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     //adding extra mass sources
     for (auto i = m_mass_sources.begin(); i != m_mass_sources.end(); i++ ){
 
-      constCCVariable<double>& src = tsk_info->new_get_uintah_field<constCCVariable<double> >( *i );
+      constCCVariable<double>& src = tsk_info->get_field<constCCVariable<double> >( *i );
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
         rho_guess(i,j,k) = rho_guess(i,j,k) + dt * src(i,j,k);

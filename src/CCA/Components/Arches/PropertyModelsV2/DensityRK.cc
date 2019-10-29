@@ -97,7 +97,7 @@ DensityRK::register_initialize( std::vector<ArchesFieldContainer::VariableInform
 void
 DensityRK::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& rhoRK = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_densityRK );
+  CCVariable<double>& rhoRK = tsk_info->get_field<CCVariable<double> >( m_label_densityRK );
   rhoRK.initialize(0.0);
 
 }
@@ -120,9 +120,9 @@ DensityRK::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
 void
 DensityRK::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& old_rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
-  CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_density );
-  CCVariable<double>& rhoRK = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_densityRK );
+  constCCVariable<double>& old_rho = tsk_info->get_field<constCCVariable<double> >( m_label_density,ArchesFieldContainer::OLDDW);
+  CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >( m_label_density );
+  CCVariable<double>& rhoRK = tsk_info->get_field<CCVariable<double> >( m_label_densityRK );
 
   const int time_substep = tsk_info->get_time_substep();
 

@@ -163,11 +163,11 @@ namespace Uintah{
     for ( int ei = 0; ei < _N; ei++ ){
 
       std::string name = ArchesCore::append_env( _base_var_name, ei );
-      T& model_value = tsk_info->new_get_uintah_field<T>(name);
+      T& model_value = tsk_info->get_field<T>(name);
       model_value.initialize(_const[ei]);
 
       name = ArchesCore::append_qn_env( _base_var_name, ei );
-      T& model_qn_value = tsk_info->new_get_uintah_field<T>(name);
+      T& model_qn_value = tsk_info->get_field<T>(name);
       model_qn_value.initialize(_const[ei]);
 
     }

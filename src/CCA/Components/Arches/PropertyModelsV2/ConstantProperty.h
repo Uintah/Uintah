@@ -141,7 +141,7 @@ private:
   template <typename T>
   void ConstantProperty<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& property = tsk_info->new_get_uintah_field<T>( m_task_name );
+    T& property = tsk_info->get_field<T>( m_task_name );
     property.initialize(0.0);
 
     if ( m_has_regions ){
@@ -194,7 +194,7 @@ private:
   template <typename T>
   void ConstantProperty<T>::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& property = tsk_info->new_get_uintah_field<T>( m_task_name );
+    T& property = tsk_info->get_field<T>( m_task_name );
     property.initialize(0.0);
 
     if ( m_has_regions ){
@@ -250,8 +250,8 @@ private:
   void ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    T& property = tsk_info->new_get_uintah_field<T>( m_task_name );
-    CT& old_property = tsk_info->new_get_uintah_field<CT>( m_task_name );
+    T& property = tsk_info->get_field<T>( m_task_name );
+    CT& old_property = tsk_info->get_field<CT>( m_task_name );
 
     property.copyData(old_property);
 

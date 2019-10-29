@@ -281,8 +281,8 @@ private:
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      T& phi = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ceqn]);
-      CT& old_phi = tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
+      T& phi = tsk_info->get_field<T>(m_transported_eqn_names[ceqn]);
+      CT& old_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
 
       auto fe_update = [&](int i, int j, int k){
@@ -315,10 +315,10 @@ private:
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
       //const double scaling_constant = ieqn->second;
-      constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+      constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
-      T& phi = tsk_info->new_get_uintah_field<T>(varname);
-      T& phi_unscaled = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
+      T& phi = tsk_info->get_field<T>(varname);
+      T& phi_unscaled = tsk_info->get_field<T>(info.unscaled_var);
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -349,12 +349,12 @@ private:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    CT& phi = tsk_info->new_get_uintah_field<CT>(ieqn->first);
-    T& phi_unscaled = tsk_info->new_get_uintah_field<T>((ieqn->second).unscaled_var);
+    CT& phi = tsk_info->get_field<CT>(ieqn->first);
+    T& phi_unscaled = tsk_info->get_field<T>((ieqn->second).unscaled_var);
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());

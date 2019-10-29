@@ -124,12 +124,12 @@ SGSsigma::register_initialize(
 void
 SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
-  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
-  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
 
-  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
+  //CCVariable<double>& sigOper = tsk_info->get_field<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -152,7 +152,7 @@ SGSsigma::register_timestep_init(
 void
 SGSsigma::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
-  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
+  //CCVariable<double>& sigOper = tsk_info->get_field<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -203,19 +203,19 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2 = filter*filter;
 
-  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
-  //constCCVariable<double>& Cs_dynamic = tsk_info->new_get_uintah_field<constCCVariable<double> >("CsLabel");
-  constCCVariable<double>& CCuVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_cc_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  //constCCVariable<double>& Cs_dynamic = tsk_info->get_field<constCCVariable<double> >("CsLabel");
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
-  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
-  CCVariable<double>& IsI = tsk_info->new_get_uintah_field< CCVariable<double> >(m_IsI_name);
-  constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& IsI = tsk_info->get_field< CCVariable<double> >(m_IsI_name);
+  constCCVariable<double>& Density_sigma = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
   double VelgUx, VelgUy, VelgUz, VelgVx, VelgVy, VelgVz, VelgWx, VelgWy, VelgWz;
   double G11,G12,G13,G21,G22,G23,G31,G32,G33;

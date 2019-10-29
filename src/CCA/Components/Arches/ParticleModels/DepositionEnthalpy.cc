@@ -87,8 +87,8 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
 void
 DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
-  CCVariable<double>& ash_enthalpy_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_enthalpy_src);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_field<CCVariable<double> >(m_task_name);
+  CCVariable<double>& ash_enthalpy_src = tsk_info->get_field<CCVariable<double> >(_ash_enthalpy_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     ash_enthalpy_flux(i,j,k)=0.0;
@@ -168,12 +168,12 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_field<CCVariable<double> >(m_task_name);
   ash_enthalpy_flux.initialize(0.0);
-  CCVariable<double>& ash_enthalpy_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_enthalpy_src);
+  CCVariable<double>& ash_enthalpy_src = tsk_info->get_field<CCVariable<double> >(_ash_enthalpy_src);
   ash_enthalpy_src.initialize(0.0);
-  constCCVariable<int>& celltype = tsk_info->new_get_uintah_field<constCCVariable<int> >(_cellType_name);
-  constCCVariable<double>& gasT = tsk_info->new_get_uintah_field<constCCVariable<double> >( _gasT_name );
+  constCCVariable<int>& celltype = tsk_info->get_field<constCCVariable<int> >(_cellType_name);
+  constCCVariable<double>& gasT = tsk_info->get_field<constCCVariable<double> >( _gasT_name );
 
   for( int i = 0; i < _Nenv; i++ ){
 
@@ -183,12 +183,12 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const std::string diameter_name  = get_env_name( i, _diameter_base_name );
     const std::string temperature_name  = get_env_name( i, _temperature_base_name );
     const std::string density_name  = get_env_name( i, _density_base_name );
-    constSFCXVariable<double>& dep_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(RateDepositionX);
-    constSFCYVariable<double>& dep_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(RateDepositionY);
-    constSFCZVariable<double>& dep_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
-    constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
-    constCCVariable<double>& pT = tsk_info->new_get_uintah_field<constCCVariable<double> >( temperature_name );
-    constCCVariable<double>& rhop = tsk_info->new_get_uintah_field<constCCVariable<double> >( density_name );
+    constSFCXVariable<double>& dep_x = tsk_info->get_field<constSFCXVariable<double> >(RateDepositionX);
+    constSFCYVariable<double>& dep_y = tsk_info->get_field<constSFCYVariable<double> >(RateDepositionY);
+    constSFCZVariable<double>& dep_z = tsk_info->get_field<constSFCZVariable<double> >(RateDepositionZ);
+    constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
+    constCCVariable<double>& pT = tsk_info->get_field<constCCVariable<double> >( temperature_name );
+    constCCVariable<double>& rhop = tsk_info->get_field<constCCVariable<double> >( density_name );
 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 

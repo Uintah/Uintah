@@ -199,9 +199,9 @@ namespace Uintah{
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
+      DT& model_value = tsk_info->get_field<DT>(name);
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
-      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
+      DT& gas_model_value = tsk_info->get_field<DT>(gas_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -230,9 +230,9 @@ namespace Uintah{
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
       const std::string name = get_name(ienv, _base_var_name);
-      DT& model_value = tsk_info->new_get_uintah_field<DT>(name);
+      DT& model_value = tsk_info->get_field<DT>(name);
       const std::string gas_name = get_name(ienv, _base_gas_var_name);
-      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
+      DT& gas_model_value = tsk_info->get_field<DT>(gas_name);
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -284,10 +284,10 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT,DT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    IT& rhoG = tsk_info->new_get_uintah_field<IT>(_gas_density_name);
-    IT& velU = tsk_info->new_get_uintah_field<IT>(_gas_u_velocity_name);
-    IT& velV = tsk_info->new_get_uintah_field<IT>(_gas_v_velocity_name);
-    IT& velW = tsk_info->new_get_uintah_field<IT>(_gas_w_velocity_name);
+    IT& rhoG = tsk_info->get_field<IT>(_gas_density_name);
+    IT& velU = tsk_info->get_field<IT>(_gas_u_velocity_name);
+    IT& velV = tsk_info->get_field<IT>(_gas_v_velocity_name);
+    IT& velW = tsk_info->get_field<IT>(_gas_w_velocity_name);
 
     for ( int ienv = 0; ienv < _N; ienv++ ){
 
@@ -300,14 +300,14 @@ namespace Uintah{
       const std::string diameter_name = get_name( ienv, _base_diameter_name );
       const std::string w_name = get_name( ienv, "w" );
 
-      DT& model_value     = tsk_info->new_get_uintah_field<DT>(name);
-      DT& gas_model_value = tsk_info->new_get_uintah_field<DT>(gas_name);
-      IT& partVelU        = tsk_info->new_get_uintah_field<IT>(u_vel_name);
-      IT& partVelV        = tsk_info->new_get_uintah_field<IT>(v_vel_name);
-      IT& partVelW        = tsk_info->new_get_uintah_field<IT>(w_vel_name);
-      IT& density         = tsk_info->new_get_uintah_field<IT>(density_name);
-      IT& diameter        = tsk_info->new_get_uintah_field<IT>(diameter_name);
-      IT& weight          = tsk_info->new_get_uintah_field<IT>(w_name);
+      DT& model_value     = tsk_info->get_field<DT>(name);
+      DT& gas_model_value = tsk_info->get_field<DT>(gas_name);
+      IT& partVelU        = tsk_info->get_field<IT>(u_vel_name);
+      IT& partVelV        = tsk_info->get_field<IT>(v_vel_name);
+      IT& partVelW        = tsk_info->get_field<IT>(w_vel_name);
+      IT& density         = tsk_info->get_field<IT>(density_name);
+      IT& diameter        = tsk_info->get_field<IT>(diameter_name);
+      IT& weight          = tsk_info->get_field<IT>(w_name);
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){

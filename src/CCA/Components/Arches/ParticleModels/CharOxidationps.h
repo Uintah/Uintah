@@ -522,11 +522,11 @@ CharOxidationps<T>::initialize( const Patch* patch
 {
 
   // model variables
-  T& char_rate          = tsk_info->new_get_uintah_field< T >( m_modelLabel );
-  T& gas_char_rate      = tsk_info->new_get_uintah_field< T >( m_gasLabel );
-  T& particle_temp_rate = tsk_info->new_get_uintah_field< T >( m_particletemp );
-  T& particle_Size_rate = tsk_info->new_get_uintah_field< T >( m_particleSize );
-  T& surface_rate       = tsk_info->new_get_uintah_field< T >( m_surfacerate );
+  T& char_rate          = tsk_info->get_field< T >( m_modelLabel );
+  T& gas_char_rate      = tsk_info->get_field< T >( m_gasLabel );
+  T& particle_temp_rate = tsk_info->get_field< T >( m_particletemp );
+  T& particle_Size_rate = tsk_info->get_field< T >( m_particleSize );
+  T& surface_rate       = tsk_info->get_field< T >( m_surfacerate );
 
   char_rate.initialize         ( 0.0 );
   gas_char_rate.initialize     ( 0.0 );
@@ -536,7 +536,7 @@ CharOxidationps<T>::initialize( const Patch* patch
 
 
   for ( int r = 0; r < _NUM_reactions; r++ ) {
-   T& reaction_rate = tsk_info->new_get_uintah_field< T >( m_reaction_rate_names[r] );
+   T& reaction_rate = tsk_info->get_field< T >( m_reaction_rate_names[r] );
    reaction_rate.initialize( 0.0 );
   }
 
@@ -638,14 +638,14 @@ CharOxidationps<T>::eval( const Patch                 * patch
                         )
 {
   // gas variables
-  constCCVariable<double>& CCuVel = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_cc_u_vel_name );
-  constCCVariable<double>& CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_cc_v_vel_name );
-  constCCVariable<double>& CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_cc_w_vel_name );
-  constCCVariable<double>& volFraction  = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_volFraction_name );
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double>>( m_cc_u_vel_name );
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double>>( m_cc_v_vel_name );
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double>>( m_cc_w_vel_name );
+  constCCVariable<double>& volFraction  = tsk_info->get_field<constCCVariable<double>>( m_volFraction_name );
 
-  constCCVariable<double>& den         = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_density_gas_name );
-  constCCVariable<double>& temperature = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_gas_temperature_label );
-  constCCVariable<double>& MWmix       = tsk_info->new_get_uintah_field<constCCVariable<double>>( m_MW_name ); // in kmol/kg_mix
+  constCCVariable<double>& den         = tsk_info->get_field<constCCVariable<double>>( m_density_gas_name );
+  constCCVariable<double>& temperature = tsk_info->get_field<constCCVariable<double>>( m_gas_temperature_label );
+  constCCVariable<double>& MWmix       = tsk_info->get_field<constCCVariable<double>>( m_MW_name ); // in kmol/kg_mix
 
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
@@ -657,13 +657,13 @@ CharOxidationps<T>::eval( const Patch                 * patch
   std::vector< CT* > species;
 
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    CT* species_p = &(tsk_info->new_get_uintah_field< CT >( _species_names[ns] ));
+    CT* species_p = &(tsk_info->get_field< CT >( _species_names[ns] ));
     species.push_back( species_p );
   }
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  // CT& number_density = tsk_info->new_get_uintah_field< CT >( number_density_name ); // total number density - unused
+  // CT& number_density = tsk_info->get_field< CT >( number_density_name ); // total number density - unused
 
   InversionBase* invf;
 
@@ -681,35 +681,35 @@ CharOxidationps<T>::eval( const Patch                 * patch
   std::vector< CT* > old_reaction_rate;
 
     // model variables
-  T& char_rate          = tsk_info->new_get_uintah_field< T >( m_modelLabel );
-  T& gas_char_rate      = tsk_info->new_get_uintah_field< T >( m_gasLabel );
-  T& particle_temp_rate = tsk_info->new_get_uintah_field< T >( m_particletemp );
-  T& particle_Size_rate = tsk_info->new_get_uintah_field< T >( m_particleSize );
-  T& surface_rate       = tsk_info->new_get_uintah_field< T >( m_surfacerate );
+  T& char_rate          = tsk_info->get_field< T >( m_modelLabel );
+  T& gas_char_rate      = tsk_info->get_field< T >( m_gasLabel );
+  T& particle_temp_rate = tsk_info->get_field< T >( m_particletemp );
+  T& particle_Size_rate = tsk_info->get_field< T >( m_particleSize );
+  T& surface_rate       = tsk_info->get_field< T >( m_surfacerate );
 
     // reaction rate
   for ( int r = 0; r < _NUM_reactions; r++ ) {
 
-    T*  reaction_rate_p     = &(tsk_info->new_get_uintah_field< T >( m_reaction_rate_names[r] ));
-    CT* old_reaction_rate_p = &(tsk_info->new_get_uintah_field< CT >( m_reaction_rate_names[r] ));
+    T*  reaction_rate_p     = &(tsk_info->get_field< T >( m_reaction_rate_names[r] ));
+    CT* old_reaction_rate_p = &(tsk_info->get_field< CT >( m_reaction_rate_names[r] ));
 
     reaction_rate.push_back    ( reaction_rate_p );
     old_reaction_rate.push_back( old_reaction_rate_p );
   }
 
   // from devol model
-  CT& devolRC = tsk_info->new_get_uintah_field< CT >( m_devolRC );
+  CT& devolRC = tsk_info->get_field< CT >( m_devolRC );
 
   // particle variables from other models
-  CT& particle_temperature = tsk_info->new_get_uintah_field< CT >( m_particle_temperature );
-  CT& length               = tsk_info->new_get_uintah_field< CT >( m_particle_length );
-  CT& particle_density     = tsk_info->new_get_uintah_field< CT >( m_particle_density );
-  CT& rawcoal_mass         = tsk_info->new_get_uintah_field< CT >( m_rcmass );
-  CT& char_mass            = tsk_info->new_get_uintah_field< CT >( m_char_name );
-  CT& weight               = tsk_info->new_get_uintah_field< CT >( m_weight_name );
-  CT& up                   = tsk_info->new_get_uintah_field< CT >( m_up_name );
-  CT& vp                   = tsk_info->new_get_uintah_field< CT >( m_vp_name );
-  CT& wp                   = tsk_info->new_get_uintah_field< CT >( m_wp_name );
+  CT& particle_temperature = tsk_info->get_field< CT >( m_particle_temperature );
+  CT& length               = tsk_info->get_field< CT >( m_particle_length );
+  CT& particle_density     = tsk_info->get_field< CT >( m_particle_density );
+  CT& rawcoal_mass         = tsk_info->get_field< CT >( m_rcmass );
+  CT& char_mass            = tsk_info->get_field< CT >( m_char_name );
+  CT& weight               = tsk_info->get_field< CT >( m_weight_name );
+  CT& up                   = tsk_info->get_field< CT >( m_up_name );
+  CT& vp                   = tsk_info->get_field< CT >( m_vp_name );
+  CT& wp                   = tsk_info->get_field< CT >( m_wp_name );
 
   // birth terms
   CT* rawcoal_birth_ptr = nullptr;
@@ -717,28 +717,28 @@ CharOxidationps<T>::eval( const Patch                 * patch
   CT* length_birth_ptr  = nullptr;
 
   if (m_add_rawcoal_birth) {
-    rawcoal_birth_ptr = &(tsk_info->new_get_uintah_field< CT >(m_rawcoal_birth_qn_name));
+    rawcoal_birth_ptr = &(tsk_info->get_field< CT >(m_rawcoal_birth_qn_name));
   }
 
   if (m_add_char_birth) {
-    char_birth_ptr   = &(tsk_info->new_get_uintah_field< CT >(m_char_birth_qn_name));
+    char_birth_ptr   = &(tsk_info->get_field< CT >(m_char_birth_qn_name));
   }
 
   if (m_add_length_birth) {
-    length_birth_ptr = &(tsk_info->new_get_uintah_field< CT >(m_length_birth_qn_name));
+    length_birth_ptr = &(tsk_info->get_field< CT >(m_length_birth_qn_name));
   }
 
   CT& rawcoal_birth = *rawcoal_birth_ptr;
   CT& char_birth    = *char_birth_ptr;
   CT& length_birth  = *length_birth_ptr;
 
-  CT& weight_p_diam = tsk_info->new_get_uintah_field< CT >( m_particle_length_qn ); //check
-  CT& RC_RHS_source = tsk_info->new_get_uintah_field< CT >( m_RC_RHS );
-  CT& RHS_source    = tsk_info->new_get_uintah_field< CT >( m_ic_RHS );
-  CT& RHS_weight    = tsk_info->new_get_uintah_field< CT >( m_w_RHS );
-  CT& RHS_length    = tsk_info->new_get_uintah_field< CT >( m_length_RHS );
+  CT& weight_p_diam = tsk_info->get_field< CT >( m_particle_length_qn ); //check
+  CT& RC_RHS_source = tsk_info->get_field< CT >( m_RC_RHS );
+  CT& RHS_source    = tsk_info->get_field< CT >( m_ic_RHS );
+  CT& RHS_weight    = tsk_info->get_field< CT >( m_w_RHS );
+  CT& RHS_length    = tsk_info->get_field< CT >( m_length_RHS );
 
-  CT& surfAreaF = tsk_info->new_get_uintah_field< CT >( m_surfAreaF_name );
+  CT& surfAreaF = tsk_info->get_field< CT >( m_surfAreaF_name );
 
   Uintah::BlockRange range_E(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range_E, [&](int i, int j, int k){

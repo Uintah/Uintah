@@ -71,12 +71,12 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 void
 GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double > >( m_density_label );
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
 
   if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_gx_label);
+    SFCXVariable<double>& gx = tsk_info->get_field<SFCXVariable<double> >(m_gx_label);
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -84,7 +84,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_gy_label);
+    SFCYVariable<double>& gy = tsk_info->get_field<SFCYVariable<double> >(m_gy_label);
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -92,7 +92,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_gz_label);
+    SFCZVariable<double>& gz = tsk_info->get_field<SFCZVariable<double> >(m_gz_label);
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -138,12 +138,12 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 void
 GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double > >( m_density_label );
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double > >( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
 
   if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_gx_label);
+    SFCXVariable<double>& gx = tsk_info->get_field<SFCXVariable<double> >(m_gx_label);
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -151,7 +151,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_gy_label);
+    SFCYVariable<double>& gy = tsk_info->get_field<SFCYVariable<double> >(m_gy_label);
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -159,7 +159,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_gz_label);
+    SFCZVariable<double>& gz = tsk_info->get_field<SFCZVariable<double> >(m_gz_label);
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){

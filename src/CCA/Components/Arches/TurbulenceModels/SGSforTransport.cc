@@ -76,9 +76,9 @@ namespace Uintah{
   //--------------------------------------------------------------------------------------------------
   void
     SGSforTransport::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-      SFCXVariable<double>& FractalXSrc= tsk_info->new_get_uintah_field<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>& FractalYSrc= tsk_info->new_get_uintah_field<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>& FractalZSrc= tsk_info->new_get_uintah_field<SFCZVariable<double> >("FractalZSrc");
+      SFCXVariable<double>& FractalXSrc= tsk_info->get_field<SFCXVariable<double> >("FractalXSrc");
+      SFCYVariable<double>& FractalYSrc= tsk_info->get_field<SFCYVariable<double> >("FractalYSrc");
+      SFCZVariable<double>& FractalZSrc= tsk_info->get_field<SFCZVariable<double> >("FractalZSrc");
 
       FractalXSrc.initialize(0.0);
       FractalYSrc.initialize(0.0);
@@ -125,18 +125,18 @@ namespace Uintah{
       double densitygas=1.0;//kg/m3
       double cellvol=Dx.x()*Dx.y()*Dx.z();
       // Subgrid stress
-      constSFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_xSgsStress");
-      constSFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_ySgsStress");
-      constSFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_zSgsStress");
-      constSFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_xSgsStress");
-      constSFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_ySgsStress");
-      constSFCYVariable<double>& vcell_zSgsStress = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_zSgsStress");
-      constSFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_xSgsStress");
-      constSFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_ySgsStress");
-      constSFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_zSgsStress");
-      SFCXVariable<double>& FractalXSrc= tsk_info->new_get_uintah_field<SFCXVariable<double> >("FractalXSrc");
-      SFCYVariable<double>& FractalYSrc= tsk_info->new_get_uintah_field<SFCYVariable<double> >("FractalYSrc");
-      SFCZVariable<double>& FractalZSrc= tsk_info->new_get_uintah_field<SFCZVariable<double> >("FractalZSrc");
+      constSFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<constSFCXVariable<double> >("ucell_xSgsStress");
+      constSFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<constSFCXVariable<double> >("ucell_ySgsStress");
+      constSFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<constSFCXVariable<double> >("ucell_zSgsStress");
+      constSFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<constSFCYVariable<double> >("vcell_xSgsStress");
+      constSFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<constSFCYVariable<double> >("vcell_ySgsStress");
+      constSFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<constSFCYVariable<double> >("vcell_zSgsStress");
+      constSFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<constSFCZVariable<double> >("wcell_xSgsStress");
+      constSFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<constSFCZVariable<double> >("wcell_ySgsStress");
+      constSFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<constSFCZVariable<double> >("wcell_zSgsStress");
+      SFCXVariable<double>& FractalXSrc= tsk_info->get_field<SFCXVariable<double> >("FractalXSrc");
+      SFCYVariable<double>& FractalYSrc= tsk_info->get_field<SFCYVariable<double> >("FractalYSrc");
+      SFCZVariable<double>& FractalZSrc= tsk_info->get_field<SFCZVariable<double> >("FractalZSrc");
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 

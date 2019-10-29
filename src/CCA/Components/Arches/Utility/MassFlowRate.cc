@@ -208,8 +208,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 // -----------------------------------------------------------------------------
 void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
-  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >("density");
+  constCCVariable<double>& eps = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
   DataWarehouse* new_dw = tsk_info->getNewDW();
 
@@ -226,22 +226,22 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   double m_dot_coal = 0.0;
 
   // Gas phase
-  constSFCXVariable<double>& uvel_g = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_g_uVel_name);
-  constSFCYVariable<double>& vvel_g = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_g_vVel_name);
-  constSFCZVariable<double>& wvel_g = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_g_wVel_name);
+  constSFCXVariable<double>& uvel_g = tsk_info->get_field<constSFCXVariable<double> >(m_g_uVel_name);
+  constSFCYVariable<double>& vvel_g = tsk_info->get_field<constSFCYVariable<double> >(m_g_vVel_name);
+  constSFCZVariable<double>& wvel_g = tsk_info->get_field<constSFCZVariable<double> >(m_g_wVel_name);
 
   if(particleMethod_bool){
 
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
       // Coal phase
-      constCCVariable<double>& wqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_w_names[qn]  );
-      constCCVariable<double>& RCqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_RC_names[qn] );
-      constCCVariable<double>& CHqn = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_CH_names[qn] );
+      constCCVariable<double>& wqn = tsk_info->get_field<constCCVariable<double> >( m_w_names[qn]  );
+      constCCVariable<double>& RCqn = tsk_info->get_field<constCCVariable<double> >( m_RC_names[qn] );
+      constCCVariable<double>& CHqn = tsk_info->get_field<constCCVariable<double> >( m_CH_names[qn] );
 
-      constCCVariable<double>& uvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] );
-      constCCVariable<double>& vvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] );
-      constCCVariable<double>& wvel_p = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] );
+      constCCVariable<double>& uvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_uVel_names[qn] );
+      constCCVariable<double>& vvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_vVel_names[qn] );
+      constCCVariable<double>& wvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_wVel_names[qn] );
 
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 

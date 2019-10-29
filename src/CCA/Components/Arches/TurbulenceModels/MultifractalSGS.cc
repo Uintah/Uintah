@@ -134,23 +134,23 @@ namespace Uintah{
   void
     MultifractalSGS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
       // Subgrid stress
-      SFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress");
-      SFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress");
-      SFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress");
+      SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_xSgsStress");
+      SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_ySgsStress");
+      SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_zSgsStress");
       ucell_xSgsStress.initialize(0.0);
       ucell_ySgsStress.initialize(0.0);
       ucell_zSgsStress.initialize(0.0);
 
-      SFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress");
-      SFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress");
-      SFCYVariable<double>& vcell_zSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress");
+      SFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_xSgsStress");
+      SFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_ySgsStress");
+      SFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_zSgsStress");
       vcell_xSgsStress.initialize(0.0);
       vcell_ySgsStress.initialize(0.0);
       vcell_zSgsStress.initialize(0.0);
 
-      SFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress");
-      SFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress");
-      SFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress");
+      SFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_xSgsStress");
+      SFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_ySgsStress");
+      SFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_zSgsStress");
       wcell_xSgsStress.initialize(0.0);
       wcell_ySgsStress.initialize(0.0);
       wcell_zSgsStress.initialize(0.0);
@@ -174,15 +174,15 @@ namespace Uintah{
     MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
       // Unused - creating a compiler warning
-      // SFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress");
-      // SFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress");
-      // SFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress");
-      // SFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress");
-      // SFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress");
-      // SFCYVariable<double>& vcell_zSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress");
-      // SFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress");
-      // SFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress");
-      // SFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress");
+      // SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_xSgsStress");
+      // SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_ySgsStress");
+      // SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_zSgsStress");
+      // SFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_xSgsStress");
+      // SFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_ySgsStress");
+      // SFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_zSgsStress");
+      // SFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_xSgsStress");
+      // SFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_ySgsStress");
+      // SFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_zSgsStress");
 
     }
 
@@ -225,52 +225,52 @@ namespace Uintah{
       double LegthScales=pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
       double ratio_threshold = 2.0;
 
-      constSFCXVariable<double>& ucell_xvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Ux_face_name);
-      constSFCXVariable<double>& ucell_yvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uy_face_name);
-      constSFCXVariable<double>& ucell_zvel_face = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(Uz_face_name);
-      constSFCYVariable<double>& vcell_xvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vx_face_name);
-      constSFCYVariable<double>& vcell_yvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vy_face_name);
-      constSFCYVariable<double>& vcell_zvel_face = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(Vz_face_name);
-      constSFCZVariable<double>& wcell_xvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wx_face_name);
-      constSFCZVariable<double>& wcell_yvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wy_face_name);
-      constSFCZVariable<double>& wcell_zvel_face = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(Wz_face_name);
-      constSFCXVariable<double>& U_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
-      constSFCYVariable<double>& V_ctr = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
-      constSFCZVariable<double>& W_ctr = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
+      constSFCXVariable<double>& ucell_xvel_face = tsk_info->get_field<constSFCXVariable<double> >(Ux_face_name);
+      constSFCXVariable<double>& ucell_yvel_face = tsk_info->get_field<constSFCXVariable<double> >(Uy_face_name);
+      constSFCXVariable<double>& ucell_zvel_face = tsk_info->get_field<constSFCXVariable<double> >(Uz_face_name);
+      constSFCYVariable<double>& vcell_xvel_face = tsk_info->get_field<constSFCYVariable<double> >(Vx_face_name);
+      constSFCYVariable<double>& vcell_yvel_face = tsk_info->get_field<constSFCYVariable<double> >(Vy_face_name);
+      constSFCYVariable<double>& vcell_zvel_face = tsk_info->get_field<constSFCYVariable<double> >(Vz_face_name);
+      constSFCZVariable<double>& wcell_xvel_face = tsk_info->get_field<constSFCZVariable<double> >(Wx_face_name);
+      constSFCZVariable<double>& wcell_yvel_face = tsk_info->get_field<constSFCZVariable<double> >(Wy_face_name);
+      constSFCZVariable<double>& wcell_zvel_face = tsk_info->get_field<constSFCZVariable<double> >(Wz_face_name);
+      constSFCXVariable<double>& U_ctr = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+      constSFCYVariable<double>& V_ctr = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+      constSFCZVariable<double>& W_ctr = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
       // UD
-      constSFCXVariable<double>& uD_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("uD_ctr");
-      constSFCXVariable<double>& ucell_XvelD = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_XvelD");
-      constSFCXVariable<double>& ucell_YvelD = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_YvelD");
-      constSFCXVariable<double>& ucell_ZvelD = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("ucell_ZvelD");
+      constSFCXVariable<double>& uD_ctr = tsk_info->get_field<constSFCXVariable<double> >("uD_ctr");
+      constSFCXVariable<double>& ucell_XvelD = tsk_info->get_field<constSFCXVariable<double> >("ucell_XvelD");
+      constSFCXVariable<double>& ucell_YvelD = tsk_info->get_field<constSFCXVariable<double> >("ucell_YvelD");
+      constSFCXVariable<double>& ucell_ZvelD = tsk_info->get_field<constSFCXVariable<double> >("ucell_ZvelD");
 
-      constSFCYVariable<double>& vD_ctr = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vD_ctr");
-      constSFCYVariable<double>& vcell_XvelD = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_XvelD");
-      constSFCYVariable<double>& vcell_YvelD = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_YvelD");
-      constSFCYVariable<double>& vcell_ZvelD = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("vcell_ZvelD");
+      constSFCYVariable<double>& vD_ctr = tsk_info->get_field<constSFCYVariable<double> >("vD_ctr");
+      constSFCYVariable<double>& vcell_XvelD = tsk_info->get_field<constSFCYVariable<double> >("vcell_XvelD");
+      constSFCYVariable<double>& vcell_YvelD = tsk_info->get_field<constSFCYVariable<double> >("vcell_YvelD");
+      constSFCYVariable<double>& vcell_ZvelD = tsk_info->get_field<constSFCYVariable<double> >("vcell_ZvelD");
 
-      constSFCZVariable<double>& wD_ctr = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wD_ctr");
-      constSFCZVariable<double>& wcell_XvelD = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_XvelD");
-      constSFCZVariable<double>& wcell_YvelD = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_YvelD");
-      constSFCZVariable<double>& wcell_ZvelD = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("wcell_ZvelD");
+      constSFCZVariable<double>& wD_ctr = tsk_info->get_field<constSFCZVariable<double> >("wD_ctr");
+      constSFCZVariable<double>& wcell_XvelD = tsk_info->get_field<constSFCZVariable<double> >("wcell_XvelD");
+      constSFCZVariable<double>& wcell_YvelD = tsk_info->get_field<constSFCZVariable<double> >("wcell_YvelD");
+      constSFCZVariable<double>& wcell_ZvelD = tsk_info->get_field<constSFCZVariable<double> >("wcell_ZvelD");
       //U2D
-      constSFCXVariable<double>& u2D_ctr = tsk_info->new_get_uintah_field<constSFCXVariable<double> >("u2D_ctr");
-      constSFCYVariable<double>& v2D_ctr = tsk_info->new_get_uintah_field<constSFCYVariable<double> >("v2D_ctr");
-      constSFCZVariable<double>& w2D_ctr = tsk_info->new_get_uintah_field<constSFCZVariable<double> >("w2D_ctr");
+      constSFCXVariable<double>& u2D_ctr = tsk_info->get_field<constSFCXVariable<double> >("u2D_ctr");
+      constSFCYVariable<double>& v2D_ctr = tsk_info->get_field<constSFCYVariable<double> >("v2D_ctr");
+      constSFCZVariable<double>& w2D_ctr = tsk_info->get_field<constSFCZVariable<double> >("w2D_ctr");
 
-      SFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress");
-      SFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress");
-      SFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress");
+      SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_xSgsStress");
+      SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_ySgsStress");
+      SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_zSgsStress");
 
-      SFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress");
-      SFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress");
-      SFCYVariable<double>& vcell_zSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_zSgsStress");
+      SFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_xSgsStress");
+      SFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_ySgsStress");
+      SFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_zSgsStress");
 
-      SFCZVariable<double>& wcell_xSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_xSgsStress");
-      SFCZVariable<double>& wcell_ySgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_ySgsStress");
-      SFCZVariable<double>& wcell_zSgsStress = tsk_info->new_get_uintah_field<SFCZVariable<double> >("wcell_zSgsStress");
+      SFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_xSgsStress");
+      SFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_ySgsStress");
+      SFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_zSgsStress");
 
-      constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
+      constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >("density");
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 

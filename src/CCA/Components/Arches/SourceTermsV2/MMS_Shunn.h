@@ -238,26 +238,26 @@ void MMS_Shunn<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 template <typename T>
 void MMS_Shunn<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  T& u_mms = tsk_info->new_get_uintah_field<T>(m_MMS_label);
-  T& rho_u_mms = tsk_info->new_get_uintah_field<T>(m_rho_u_label);
-  CCVariable<double>& phi_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_scalar_label);
-  CCVariable<double>& rho_phi_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_rho_scalar_label);
-  CCVariable<double>& rho_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_rho_label);
-  T& rho_face_mms = tsk_info->new_get_uintah_field<T>(m_MMS_rho_face_label);
+  T& u_mms = tsk_info->get_field<T>(m_MMS_label);
+  T& rho_u_mms = tsk_info->get_field<T>(m_rho_u_label);
+  CCVariable<double>& phi_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_scalar_label);
+  CCVariable<double>& rho_phi_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_rho_scalar_label);
+  CCVariable<double>& rho_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_rho_label);
+  T& rho_face_mms = tsk_info->get_field<T>(m_MMS_rho_face_label);
 
-  CCVariable<double>& phi_source_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_scalar_label);
-  CCVariable<double>& drhodt_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_drhodt_label);
+  CCVariable<double>& phi_source_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_source_scalar_label);
+  CCVariable<double>& drhodt_mms = tsk_info->get_field<CCVariable<double> >(m_MMS_drhodt_label);
 
   
-  //T& s_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_label);// convection source term u
-  //T& s_diff_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_diff_label);// diffusion source term u
-  //T& s_t_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_t_label);// time source term u
+  //T& s_mms = tsk_info->get_field<T>(m_MMS_source_label);// convection source term u
+  //T& s_diff_mms = tsk_info->get_field<T>(m_MMS_source_diff_label);// diffusion source term u
+  //T& s_t_mms = tsk_info->get_field<T>(m_MMS_source_t_label);// time source term u
   
 
-  constCCVariable<double>& x_f = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_face_name);
-  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
+  constCCVariable<double>& x_f = tsk_info->get_field<constCCVariable<double> >(m_x_face_name);
+  constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
   
-  //constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
+  //constCCVariable<double>& y = tsk_info->get_field<constCCVariable<double> >(m_y_name);
 
   double time_d      = tsk_info->get_time(); //_materialManager->getElapsedSimTime();
   int   time_substep = tsk_info->get_time_substep();

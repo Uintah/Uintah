@@ -93,15 +93,15 @@ void
 spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for (int i=0; i< _nbands  ; i++){
-    CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >( _abskg_name_vector[i]);
-    CCVariable<double>& abswg = tsk_info->new_get_uintah_field<CCVariable<double> >( _abswg_name_vector[i]);
+    CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >( _abskg_name_vector[i]);
+    CCVariable<double>& abswg = tsk_info->get_field<CCVariable<double> >( _abswg_name_vector[i]);
 
     abskg.initialize(0.0);
     abswg.initialize(0.0);
   }
 
   if (_LsootOn){
-    CCVariable<double>& absksoot = tsk_info->new_get_uintah_field<CCVariable<double> >( "absksoot");
+    CCVariable<double>& absksoot = tsk_info->get_field<CCVariable<double> >( "absksoot");
     absksoot.initialize(0.0);
   }
 }
@@ -177,12 +177,12 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   }
 
 
-  constCCVariable<double>& temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name);
-  //constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
+  constCCVariable<double>& temperature = tsk_info->get_field<constCCVariable<double> >(_temperature_name);
+  //constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >("volFraction");
 
   std::vector<constCCVariable<double>  > species(0);
   for ( std::vector<std::string>::iterator iter = _part_sp.begin(); iter != _part_sp.end(); iter++){
-    species.push_back(tsk_info->new_get_uintah_field<constCCVariable<double> >(*iter));
+    species.push_back(tsk_info->get_field<constCCVariable<double> >(*iter));
   }
 
   const int n_coeff=5;
@@ -234,7 +234,7 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
      CCVariable<double>  absksoot;
      tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("absksoot",absksoot);
 
-     constCCVariable<double>& soot_vf = tsk_info->new_get_uintah_field<constCCVariable<double> >(_soot_name);
+     constCCVariable<double>& soot_vf = tsk_info->get_field<constCCVariable<double> >(_soot_name);
      Uintah::parallel_for( range,  [&](int i, int j, int k){
              double k_soot= 3.72*soot_vf(i,j,k)*_C_o*temperature(i,j,k)/_C_2; //m^-1
              absksoot(i,j,k)=k_soot; //grey approximation for soot and soot is in thermal equilibrium with gas;

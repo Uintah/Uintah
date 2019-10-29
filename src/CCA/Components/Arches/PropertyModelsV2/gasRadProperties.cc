@@ -107,7 +107,7 @@ gasRadProperties::register_initialize( VIVec& variable_registry , const bool pac
 void
 gasRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >( _abskg_name);
+  CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >( _abskg_name);
 
   _calc->initialize_abskg( patch,abskg  );
 
@@ -160,16 +160,16 @@ void
 gasRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskg_name);
+  CCVariable<double>& abskg = tsk_info->get_field<CCVariable<double> >(_abskg_name);
   abskg.initialize(0.0);
 
-  constCCVariable<double>& temperature = tsk_info->new_get_uintah_field<constCCVariable<double> >(_temperature_name);
-  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
+  constCCVariable<double>& temperature = tsk_info->get_field<constCCVariable<double> >(_temperature_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >("volFraction");
 
   std::vector<std::string> part_sp = _calc->get_sp();
   std::vector<constCCVariable<double>  > species(0);
   for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-    species.push_back(tsk_info->new_get_uintah_field<constCCVariable<double> >(*iter));
+    species.push_back(tsk_info->get_field<constCCVariable<double> >(*iter));
   }
 
   _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg );

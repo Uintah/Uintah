@@ -259,7 +259,7 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   const double filter2  = filter*filter;
   const double fhat     = 3.; //Mystery value for tilde(bar(delta))
-  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
 
   int nG = 0;
@@ -299,12 +299,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   TZ& filterRhoW = z_field_tool.get("Filterrhow");
 
   // Filter Beta
-  CCVariable<double>& filterBeta11 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta11");
-  CCVariable<double>& filterBeta12 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta12");
-  CCVariable<double>& filterBeta13 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta13");
-  CCVariable<double>& filterBeta22 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta22");
-  CCVariable<double>& filterBeta23 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta23");
-  CCVariable<double>& filterBeta33 = tsk_info->new_get_uintah_field< CCVariable<double> >("filterbeta33");
+  CCVariable<double>& filterBeta11 = tsk_info->get_field< CCVariable<double> >("filterbeta11");
+  CCVariable<double>& filterBeta12 = tsk_info->get_field< CCVariable<double> >("filterbeta12");
+  CCVariable<double>& filterBeta13 = tsk_info->get_field< CCVariable<double> >("filterbeta13");
+  CCVariable<double>& filterBeta22 = tsk_info->get_field< CCVariable<double> >("filterbeta22");
+  CCVariable<double>& filterBeta23 = tsk_info->get_field< CCVariable<double> >("filterbeta23");
+  CCVariable<double>& filterBeta33 = tsk_info->get_field< CCVariable<double> >("filterbeta33");
 
   filterBeta11.initialize(0.0);
   filterBeta12.initialize(0.0);
@@ -321,13 +321,13 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_Filter.applyFilter<TT>(Beta23,filterBeta23,vol_fraction,range1);
   // Filter IsI and sij then compute alpha
 
-  CCVariable<double>& filterIsI = tsk_info->new_get_uintah_field< CCVariable<double> >("filterIsI");
-  CCVariable<double>& filters11 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters11");
-  CCVariable<double>& filters12 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters12");
-  CCVariable<double>& filters13 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters13");
-  CCVariable<double>& filters22 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters22");
-  CCVariable<double>& filters23 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters23");
-  CCVariable<double>& filters33 = tsk_info->new_get_uintah_field< CCVariable<double> >("filters33");
+  CCVariable<double>& filterIsI = tsk_info->get_field< CCVariable<double> >("filterIsI");
+  CCVariable<double>& filters11 = tsk_info->get_field< CCVariable<double> >("filters11");
+  CCVariable<double>& filters12 = tsk_info->get_field< CCVariable<double> >("filters12");
+  CCVariable<double>& filters13 = tsk_info->get_field< CCVariable<double> >("filters13");
+  CCVariable<double>& filters22 = tsk_info->get_field< CCVariable<double> >("filters22");
+  CCVariable<double>& filters23 = tsk_info->get_field< CCVariable<double> >("filters23");
+  CCVariable<double>& filters33 = tsk_info->get_field< CCVariable<double> >("filters33");
 
   filterIsI.initialize(0.0);
   filters11.initialize(0.0);
@@ -434,12 +434,12 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   });
 
-  CCVariable<double>& alpha11 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha11");
-  CCVariable<double>& alpha12 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha12");
-  CCVariable<double>& alpha13 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha13");
-  CCVariable<double>& alpha22 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha22");
-  CCVariable<double>& alpha23 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha23");
-  CCVariable<double>& alpha33 = tsk_info->new_get_uintah_field< CCVariable<double> >("alpha33");
+  CCVariable<double>& alpha11 = tsk_info->get_field< CCVariable<double> >("alpha11");
+  CCVariable<double>& alpha12 = tsk_info->get_field< CCVariable<double> >("alpha12");
+  CCVariable<double>& alpha13 = tsk_info->get_field< CCVariable<double> >("alpha13");
+  CCVariable<double>& alpha22 = tsk_info->get_field< CCVariable<double> >("alpha22");
+  CCVariable<double>& alpha23 = tsk_info->get_field< CCVariable<double> >("alpha23");
+  CCVariable<double>& alpha33 = tsk_info->get_field< CCVariable<double> >("alpha33");
 
   alpha11.initialize(0.0);
   alpha12.initialize(0.0);
@@ -470,15 +470,15 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   TT& rhoV = c_field_tool.get("rhoV");
   TT& rhoW = c_field_tool.get("rhoW");
 
-  CCVariable<double>& filter_rhoUU = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoUU");
-  CCVariable<double>& filter_rhoVV = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoVV");
-  CCVariable<double>& filter_rhoWW = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoWW");
-  CCVariable<double>& filter_rhoUV = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoUV");
-  CCVariable<double>& filter_rhoUW = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoUW");
-  CCVariable<double>& filter_rhoVW = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoVW");
-  CCVariable<double>& filter_rhoU = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoU");
-  CCVariable<double>& filter_rhoV = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoV");
-  CCVariable<double>& filter_rhoW = tsk_info->new_get_uintah_field< CCVariable<double> >("filterrhoW");
+  CCVariable<double>& filter_rhoUU = tsk_info->get_field< CCVariable<double> >("filterrhoUU");
+  CCVariable<double>& filter_rhoVV = tsk_info->get_field< CCVariable<double> >("filterrhoVV");
+  CCVariable<double>& filter_rhoWW = tsk_info->get_field< CCVariable<double> >("filterrhoWW");
+  CCVariable<double>& filter_rhoUV = tsk_info->get_field< CCVariable<double> >("filterrhoUV");
+  CCVariable<double>& filter_rhoUW = tsk_info->get_field< CCVariable<double> >("filterrhoUW");
+  CCVariable<double>& filter_rhoVW = tsk_info->get_field< CCVariable<double> >("filterrhoVW");
+  CCVariable<double>& filter_rhoU = tsk_info->get_field< CCVariable<double> >("filterrhoU");
+  CCVariable<double>& filter_rhoV = tsk_info->get_field< CCVariable<double> >("filterrhoV");
+  CCVariable<double>& filter_rhoW = tsk_info->get_field< CCVariable<double> >("filterrhoW");
 
   filter_rhoUU.initialize(0.0);
   filter_rhoVV.initialize(0.0);
@@ -501,8 +501,8 @@ DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_Filter.applyFilter<TT>(rhoU,filter_rhoU,vol_fraction,range1);
 
 
-  CCVariable<double>& ML = tsk_info->new_get_uintah_field< CCVariable<double> >("ML");
-  CCVariable<double>& MM = tsk_info->new_get_uintah_field< CCVariable<double> >("MM");
+  CCVariable<double>& ML = tsk_info->get_field< CCVariable<double> >("ML");
+  CCVariable<double>& MM = tsk_info->get_field< CCVariable<double> >("MM");
   ML.initialize(0.0);
   MM.initialize(0.0);
 

@@ -105,8 +105,8 @@ PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 void
 PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& num_den = tsk_info->new_get_uintah_field<CCVariable<double> >( m_number_density_name );
-  CCVariable<double>& AreaSumF = tsk_info->new_get_uintah_field< CCVariable<double> >( m_area_sum_name );
+  CCVariable<double>& num_den = tsk_info->get_field<CCVariable<double> >( m_number_density_name );
+  CCVariable<double>& AreaSumF = tsk_info->get_field< CCVariable<double> >( m_area_sum_name );
 
   AreaSumF.initialize(0.0);
   num_den.initialize(0.0);
@@ -117,9 +117,9 @@ PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskIn
     const std::string weight_name = ArchesCore::append_env( "w", ienv);
     const std::string length_name = ArchesCore::append_env( m_length_root, ienv);
 
-    constCCVariable<double>& weight = tsk_info->new_get_uintah_field<constCCVariable<double> >( weight_name );
+    constCCVariable<double>& weight = tsk_info->get_field<constCCVariable<double> >( weight_name );
 
-    constCCVariable<double>& length = tsk_info->new_get_uintah_field< constCCVariable<double> >(length_name);
+    constCCVariable<double>& length = tsk_info->get_field< constCCVariable<double> >(length_name);
 
     Uintah::parallel_for(range,  [&]( int i,  int j, int k){
       AreaSumF(i,j,k) += weight(i,j,k)*length(i,j,k)*length(i,j,k); // [#/m]
@@ -133,10 +133,10 @@ PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskIn
     const std::string length_name    = ArchesCore::append_env( m_length_root, ienv);
     const std::string surfAreaF_name = ArchesCore::append_env( m_surfAreaF_root, ienv);
 
-    constCCVariable<double>& weight = tsk_info->new_get_uintah_field<constCCVariable<double> >( weight_name );
-    constCCVariable<double>& length = tsk_info->new_get_uintah_field< constCCVariable<double> >(length_name);
+    constCCVariable<double>& weight = tsk_info->get_field<constCCVariable<double> >( weight_name );
+    constCCVariable<double>& length = tsk_info->get_field< constCCVariable<double> >(length_name);
 
-    CCVariable<double>& surfaceAreaFraction = tsk_info->new_get_uintah_field<CCVariable<double> >( surfAreaF_name );
+    CCVariable<double>& surfaceAreaFraction = tsk_info->get_field<CCVariable<double> >( surfAreaF_name );
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
      surfaceAreaFraction(i,j,k) =  weight(i,j,k)*length(i,j,k)*length(i,j,k)/AreaSumF(i,j,k);

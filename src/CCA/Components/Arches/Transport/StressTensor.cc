@@ -65,12 +65,12 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
 
-  CCVariable<double>& sigma11 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma13 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]);
-  CCVariable<double>& sigma22 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]);
-  CCVariable<double>& sigma23 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]);
-  CCVariable<double>& sigma33 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   sigma11.initialize(0.0);
   sigma12.initialize(0.0);
@@ -98,20 +98,20 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 //--------------------------------------------------------------------------------------------------
 void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
-  constCCVariable<double>& D  = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_t_vis_name);
-  constSFCXVariable<double>& eps_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_eps_x_name);
-  constSFCYVariable<double>& eps_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_eps_y_name);
-  constSFCZVariable<double>& eps_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_eps_z_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& D  = tsk_info->get_field<constCCVariable<double> >(m_t_vis_name);
+  constSFCXVariable<double>& eps_x = tsk_info->get_field<constSFCXVariable<double> >(m_eps_x_name);
+  constSFCYVariable<double>& eps_y = tsk_info->get_field<constSFCYVariable<double> >(m_eps_y_name);
+  constSFCZVariable<double>& eps_z = tsk_info->get_field<constSFCZVariable<double> >(m_eps_z_name);
 
-  CCVariable<double>& sigma11 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma13 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]);
-  CCVariable<double>& sigma22 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]);
-  CCVariable<double>& sigma23 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]);
-  CCVariable<double>& sigma33 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   // initialize all velocities
   sigma11.initialize(0.0);

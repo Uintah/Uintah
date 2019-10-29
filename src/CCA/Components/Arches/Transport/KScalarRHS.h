@@ -432,7 +432,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
+    CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -440,30 +440,30 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
-      T& phi = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
+      T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
 
       rhs.initialize(0.0);
       phi.initialize(scalar_init_value);
 
-      FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);
       z_flux.initialize(0.0);
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        T& rho_phi = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]);
+        T& rho_phi = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]);
         rho_phi.initialize(0.0);
       }
 
     } //eqn loop
 
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-      T& phi_unscaled = tsk_info->new_get_uintah_field<T>((i->second).unscaled_var);
-      T& phi = tsk_info->new_get_uintah_field<T>(i->first);
+      T& phi_unscaled = tsk_info->get_field<T>((i->second).unscaled_var);
+      T& phi = tsk_info->get_field<T>(i->first);
       Scaling_info info = i->second;
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -503,19 +503,19 @@ private:
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      T& phi = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn] );
-      T& rhs = tsk_info->new_get_uintah_field<T>( m_transported_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->new_get_uintah_field<CT>( m_eqn_names[ieqn] );
+      T& phi = tsk_info->get_field<T>( m_eqn_names[ieqn] );
+      T& rhs = tsk_info->get_field<T>( m_transported_eqn_names[ieqn]+"_RHS" );
+      CT& old_phi = tsk_info->get_field<CT>( m_eqn_names[ieqn] );
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        CT& old_rho_phi = tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ieqn] );
-        T& rho_phi = tsk_info->new_get_uintah_field<T>( m_transported_eqn_names[ieqn] );
+        CT& old_rho_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ieqn] );
+        T& rho_phi = tsk_info->get_field<T>( m_transported_eqn_names[ieqn] );
         rho_phi.copyData(old_rho_phi);
       }
 
-      FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       phi.copyData(old_phi);
       rhs.initialize(0.0);
@@ -573,10 +573,10 @@ private:
     double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
-    CFXT& u = tsk_info->new_get_uintah_field<CFXT>(m_x_velocity_name);
-    CFYT& v = tsk_info->new_get_uintah_field<CFYT>(m_y_velocity_name);
-    CFZT& w = tsk_info->new_get_uintah_field<CFZT>(m_z_velocity_name);
-    CT& eps = tsk_info->new_get_uintah_field<CT>(m_eps_name);
+    CFXT& u = tsk_info->get_field<CFXT>(m_x_velocity_name);
+    CFYT& v = tsk_info->get_field<CFYT>(m_y_velocity_name);
+    CFZT& w = tsk_info->get_field<CFZT>(m_z_velocity_name);
+    CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
 
     const int istart = 0;
@@ -585,11 +585,11 @@ private:
 
       CT* rho_phi_ptr = nullptr;
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
-        rho_phi_ptr = &(tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ieqn]));
+        rho_phi_ptr = &(tsk_info->get_field<CT>(m_transported_eqn_names[ieqn]));
       }
       CT& rho_phi = *rho_phi_ptr;
-      CT& phi = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
-      T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
+      CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
 
       Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
@@ -600,9 +600,9 @@ private:
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-        FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-        FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+        FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+        FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+        FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -758,9 +758,9 @@ private:
       //Diffusion:
       if ( m_do_diff[ieqn] ) {
 
-        CFXT& x_dflux = tsk_info->new_get_uintah_field<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
-        CFYT& y_dflux = tsk_info->new_get_uintah_field<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
-        CFZT& z_dflux = tsk_info->new_get_uintah_field<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
+        CFXT& x_dflux = tsk_info->get_field<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
+        CFYT& y_dflux = tsk_info->get_field<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
+        CFZT& z_dflux = tsk_info->get_field<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
 
         GET_EXTRACELL_BUFFERED_PATCH_RANGE(0,0);
 
@@ -780,7 +780,7 @@ private:
       for (typename VS::iterator isrc = m_source_info[ieqn].begin();
         isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = tsk_info->new_get_uintah_field<CT>((*isrc).name);
+        CT& src = tsk_info->get_field<CT>((*isrc).name);
         double weight = (*isrc).weight;
         Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 

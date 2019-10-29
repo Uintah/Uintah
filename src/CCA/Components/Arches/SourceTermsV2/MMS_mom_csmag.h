@@ -192,10 +192,10 @@ template <typename T>
 void MMS_mom_csmag<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   // These aren't used and are creating a compiler warning. 
-  // T& f_mms = tsk_info->new_get_uintah_field<T>(m_MMS_label);
-  // T& s_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_label);
-  // T& s_diff_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_diff_label);
-  // T& s_t_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_t_label);
+  // T& f_mms = tsk_info->get_field<T>(m_MMS_label);
+  // T& s_mms = tsk_info->get_field<T>(m_MMS_source_label);
+  // T& s_diff_mms = tsk_info->get_field<T>(m_MMS_source_diff_label);
+  // T& s_t_mms = tsk_info->get_field<T>(m_MMS_source_t_label);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -226,13 +226,13 @@ void MMS_mom_csmag<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 template <typename T>
 void MMS_mom_csmag<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  T& f_mms = tsk_info->new_get_uintah_field<T>(m_MMS_label);
-  T& s_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_label);
-  T& s_diff_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_diff_label);
- // T& s_t_mms = tsk_info->new_get_uintah_field<T>(m_MMS_source_t_label);
+  T& f_mms = tsk_info->get_field<T>(m_MMS_label);
+  T& s_mms = tsk_info->get_field<T>(m_MMS_source_label);
+  T& s_diff_mms = tsk_info->get_field<T>(m_MMS_source_diff_label);
+ // T& s_t_mms = tsk_info->get_field<T>(m_MMS_source_t_label);
 
-  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_x_name);
-  constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_y_name);
+  constCCVariable<double>& x = tsk_info->get_field<constCCVariable<double> >(m_x_name);
+  constCCVariable<double>& y = tsk_info->get_field<constCCVariable<double> >(m_y_name);
 
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);

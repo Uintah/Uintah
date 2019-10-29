@@ -45,7 +45,7 @@ Drhodt::register_initialize( std::vector<ArchesFieldContainer::VariableInformati
 void
 Drhodt::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& drhodt = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_drhodt );
+  CCVariable<double>& drhodt = tsk_info->get_field<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
 
 }
@@ -65,10 +65,10 @@ Drhodt::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInform
 void
 Drhodt::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_density );
-  constCCVariable<double>& old_rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >( m_label_density );
+  constCCVariable<double>& old_rho = tsk_info->get_field<constCCVariable<double> >( m_label_density, ArchesFieldContainer::OLDDW);
 
-  CCVariable<double>& drhodt = tsk_info->new_get_uintah_field<CCVariable<double> >( m_label_drhodt );
+  CCVariable<double>& drhodt = tsk_info->get_field<CCVariable<double> >( m_label_drhodt );
   drhodt.initialize(0.0);
   const double dt = tsk_info->get_dt();
   //Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );

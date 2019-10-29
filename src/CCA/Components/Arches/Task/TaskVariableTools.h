@@ -92,7 +92,7 @@ namespace Uintah {
       /** @brief Return a CONST grid variable **/
       template <typename T, typename... Args>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value, T&>::type
-      new_get_uintah_field( const std::string name, Args... args ){
+      get_field( const std::string name, Args... args ){
 
         return *( _field_container->get_const_field<T>(name, args...) );
 
@@ -101,7 +101,7 @@ namespace Uintah {
       /** @brief Return a NON-CONST grid variable **/
       template <typename T, typename... Args>
       typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value, T&>::type
-      new_get_uintah_field( const std::string name, Args... args ){
+      get_field( const std::string name, Args... args ){
 
         return  *(_field_container->get_field<T>(name, args...));
 

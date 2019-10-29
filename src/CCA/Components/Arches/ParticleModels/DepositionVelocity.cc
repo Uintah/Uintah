@@ -134,8 +134,8 @@ DepositionVelocity::register_initialize( std::vector<ArchesFieldContainer::Varia
 void
 DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& deposit_velocity = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
-  CCVariable<double>& ash_mass_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_mass_src);
+  CCVariable<double>& deposit_velocity = tsk_info->get_field<CCVariable<double> >(m_task_name);
+  CCVariable<double>& ash_mass_src = tsk_info->get_field<CCVariable<double> >(_ash_mass_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     ash_mass_src(i,j,k)=0.0;
@@ -144,8 +144,8 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for ( int n = 0; n < _Nenv; n++ ){
     const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
     const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
-    CCVariable<double>& d_vol_ave_num = tsk_info->new_get_uintah_field<CCVariable<double> >(d_vol_ave_num_s);
-    CCVariable<double>& d_vol_ave_den = tsk_info->new_get_uintah_field<CCVariable<double> >(d_vol_ave_den_s);
+    CCVariable<double>& d_vol_ave_num = tsk_info->get_field<CCVariable<double> >(d_vol_ave_num_s);
+    CCVariable<double>& d_vol_ave_den = tsk_info->get_field<CCVariable<double> >(d_vol_ave_den_s);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       d_vol_ave_num(i,j,k)=0.0;
       d_vol_ave_den(i,j,k)=0.0;
@@ -229,34 +229,34 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& deposit_velocity = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
+  CCVariable<double>& deposit_velocity = tsk_info->get_field<CCVariable<double> >(m_task_name);
   deposit_velocity.initialize(0.0);
-  CCVariable<double>& ash_mass_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_mass_src);
+  CCVariable<double>& ash_mass_src = tsk_info->get_field<CCVariable<double> >(_ash_mass_src);
   ash_mass_src.initialize(0.0);
-  constCCVariable<double>& deposit_velocity_old = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_task_name);
-  constCCVariable<int>& celltype = tsk_info->new_get_uintah_field<constCCVariable<int> >(_cellType_name);
+  constCCVariable<double>& deposit_velocity_old = tsk_info->get_field<constCCVariable<double> >(m_task_name);
+  constCCVariable<int>& celltype = tsk_info->get_field<constCCVariable<int> >(_cellType_name);
 
   for( int n = 0; n < _Nenv; n++ ){
 
     const std::string d_vol_ave_num_s = ArchesCore::append_env("d_vol_ave_num",n);
     const std::string d_vol_ave_den_s = ArchesCore::append_env("d_vol_ave_den",n);
-    CCVariable<double>& d_vol_ave_num = tsk_info->new_get_uintah_field<CCVariable<double> >(d_vol_ave_num_s);
+    CCVariable<double>& d_vol_ave_num = tsk_info->get_field<CCVariable<double> >(d_vol_ave_num_s);
     d_vol_ave_num.initialize(0.0);
-    CCVariable<double>& d_vol_ave_den = tsk_info->new_get_uintah_field<CCVariable<double> >(d_vol_ave_den_s);
+    CCVariable<double>& d_vol_ave_den = tsk_info->get_field<CCVariable<double> >(d_vol_ave_den_s);
     d_vol_ave_den.initialize(0.0);
-    constCCVariable<double>& d_vol_ave_num_old = tsk_info->new_get_uintah_field<constCCVariable<double> >(d_vol_ave_num_s);
-    constCCVariable<double>& d_vol_ave_den_old = tsk_info->new_get_uintah_field<constCCVariable<double> >(d_vol_ave_den_s);
+    constCCVariable<double>& d_vol_ave_num_old = tsk_info->get_field<constCCVariable<double> >(d_vol_ave_num_s);
+    constCCVariable<double>& d_vol_ave_den_old = tsk_info->get_field<constCCVariable<double> >(d_vol_ave_den_s);
 
     const std::string RateDepositionX = get_env_name(n, _ratedepx_name);
     const std::string RateDepositionY = get_env_name(n, _ratedepy_name);
     const std::string RateDepositionZ = get_env_name(n, _ratedepz_name);
     const std::string diameter_name  = get_env_name(n, _diameter_base_name );
     const std::string density_name  = get_env_name(n, _density_base_name );
-    constSFCXVariable<double>& dep_x = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(RateDepositionX);
-    constSFCYVariable<double>& dep_y = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(RateDepositionY);
-    constSFCZVariable<double>& dep_z = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(RateDepositionZ);
-    constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
-    constCCVariable<double>& rhop = tsk_info->new_get_uintah_field<constCCVariable<double> >( density_name );
+    constSFCXVariable<double>& dep_x = tsk_info->get_field<constSFCXVariable<double> >(RateDepositionX);
+    constSFCYVariable<double>& dep_y = tsk_info->get_field<constSFCYVariable<double> >(RateDepositionY);
+    constSFCZVariable<double>& dep_z = tsk_info->get_field<constSFCZVariable<double> >(RateDepositionZ);
+    constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
+    constCCVariable<double>& rhop = tsk_info->get_field<constCCVariable<double> >( density_name );
 
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
 
