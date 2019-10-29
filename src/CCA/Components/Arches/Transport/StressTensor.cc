@@ -132,32 +132,44 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
-    double dudx = 0.0;
     double dudy = 0.0;
     double dudz = 0.0;
     double dvdx = 0.0;
-    double dvdy = 0.0;
     double dvdz = 0.0;
     double dwdx = 0.0;
     double dwdy = 0.0;
-    double dwdz = 0.0;
-    double mu12 = 0.0;
-    double mu13 = 0.0;
-    double mu23 = 0.0;
 
-    mu12  = 0.5*(D(i-1,j,k)+D(i,j,k)); // First interpolation at j
-    mu12 += 0.5*(D(i-1,j-1,k)+D(i,j-1,k));// Second interpolation at j-1
-    mu12 *= 0.5;
-    mu13  = 0.5*(D(i-1,j,k-1)+D(i,j,k-1));//First interpolation at k-1
-    mu13 += 0.5*(D(i-1,j,k)+D(i,j,k));//Second interpolation at k
-    mu13 *= 0.5;
-    mu23  = 0.5*(D(i,j,k)+D(i,j,k-1));// First interpolation at j
-    mu23 += 0.5*(D(i,j-1,k)+D(i,j-1,k-1));// Second interpolation at j-1
-    mu23 *= 0.5;
+    const double mu12  = 0.5 * ( 0.5 * (D(i-1,j,k)+D(i,j,k))
+                               + 0.5 * (D(i-1,j-1,k)+D(i,j-1,k)) );
+    const double mu13  = 0.5 * ( 0.5 * (D(i-1,j,k-1)+D(i,j,k-1))
+                               + 0.5 * (D(i-1,j,k)+D(i,j,k)) );
+    const double mu23  = 0.5 * ( 0.5 * ( D(i,j,k)+D(i,j,k-1))
+                               + 0.5 * (D(i,j-1,k)+D(i,j-1,k-1)) );
 
-    dVeldDir( uVel, eps_x, Dx, dudx, dudy, dudz, i, j, k );
-    dVeldDir( vVel, eps_y, Dx, dvdx, dvdy, dvdz, i, j, k );
-    dVeldDir( wVel, eps_z, Dx, dwdx, dwdy, dwdz, i, j, k );
+    {
+      STENCIL3_1D(1);
+      dudy = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.y();
+    }
+    {
+      STENCIL3_1D(2);
+      dudz = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.z();\
+    }
+    {\
+      STENCIL3_1D(0);\
+      dvdx = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.x();\
+    }\
+    {\
+      STENCIL3_1D(2);\
+      dvdz = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.z();
+    }
+    {\
+      STENCIL3_1D(0);\
+      dwdx = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.x();\
+    }\
+    {\
+      STENCIL3_1D(1);\
+      dwdy = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.y();\
+    }\
 
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
     sigma13(i,j,k) =  mu13 * (dudz + dwdx );
