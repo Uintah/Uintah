@@ -75,6 +75,7 @@ namespace WasatchCore {
     else if ( bndTypeStr == "Velocity" )  return VELOCITY;
     else if ( bndTypeStr == "Open"     )  return OPEN;
     else if ( bndTypeStr == "Outflow"  )  return OUTFLOW;
+    else if ( bndTypeStr == "Symmetry"  ) return SYMMETRY;
     else if ( bndTypeStr == "None"
               || bndTypeStr == "User"  )  return USER;
     else                                  return INVALID;
@@ -113,6 +114,9 @@ namespace WasatchCore {
         break;
       case OUTFLOW:
         return "Outflow";
+        break;
+      case SYMMETRY:
+        return "Symmetry";
         break;
       case USER:
         return "User";

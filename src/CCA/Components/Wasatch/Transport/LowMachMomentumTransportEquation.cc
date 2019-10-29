@@ -241,6 +241,11 @@ namespace WasatchCore{
     Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
+    
+    // create an old variable
+    OldVariable& oldVar = OldVariable::self();
+    oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, this->rhsTag_);
+
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
                                                     ( (enablePressureSolve || factory.have_entry( this->pressureTag_ )) ? this->pressureTag_ : Expr::Tag()),
@@ -436,6 +441,39 @@ namespace WasatchCore{
 
           // Set the pressure to Dirichlet 0 (atmospheric conditions)
           BndCondSpec pressureBCSpec = {this->pressureTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          break;
+        }
+        case SYMMETRY:
+        {
+          if( isNormal ){
+            BndCondSpec momBCSpec = {this->solnVarName_, "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            BndCondSpec velBCSpec = {this->thisVelTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, momBCSpec);
+            bcHelper.add_boundary_condition(bndName, velBCSpec);
+            
+            BndCondSpec rhsFullBCSpec = {this->rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+            
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),"none", 0.0, DIRICHLET,FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
+          else {
+            
+            BndCondSpec momBCSpec = {this->solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            BndCondSpec velBCSpec = {this->thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, momBCSpec);
+            bcHelper.add_boundary_condition(bndName, velBCSpec);
+
+            BndCondSpec rhsFullBCSpec = {this->rhs_name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),"none", 0.0, NEUMANN,FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
+          
+          // Set the pressure to Neumann 0
+          BndCondSpec pressureBCSpec = {this->pressureTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           break;
         }
