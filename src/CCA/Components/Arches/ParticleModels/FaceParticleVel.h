@@ -167,9 +167,9 @@ private:
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    FXT& up_f = tsk_info->get_uintah_field_add<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->get_uintah_field_add<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->get_uintah_field_add<FZT>(wp_face_i);
+    FXT& up_f = tsk_info->new_get_uintah_field<FXT>(up_face_i);
+    FYT& vp_f = tsk_info->new_get_uintah_field<FYT>(vp_face_i);
+    FZT& wp_f = tsk_info->new_get_uintah_field<FZT>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
@@ -249,9 +249,9 @@ private:
     std::string up_face_i = ArchesCore::append_env(up_face,ienv);
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
-    FXT& up_f = tsk_info->get_uintah_field_add<FXT>(up_face_i);
-    FYT& vp_f = tsk_info->get_uintah_field_add<FYT>(vp_face_i);
-    FZT& wp_f = tsk_info->get_uintah_field_add<FZT>(wp_face_i);
+    FXT& up_f = tsk_info->new_get_uintah_field<FXT>(up_face_i);
+    FYT& vp_f = tsk_info->new_get_uintah_field<FYT>(vp_face_i);
+    FZT& wp_f = tsk_info->new_get_uintah_field<FZT>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);

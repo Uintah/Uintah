@@ -161,9 +161,9 @@ private:
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
       if ( m_do_diff[ieqn] ){
-        FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_dflux");
-        FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_dflux");
-        FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_dflux");
+        FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_dflux");
+        FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_dflux");
+        FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_dflux");
 
         x_flux.initialize(0.0);
         y_flux.initialize(0.0);
@@ -209,9 +209,9 @@ private:
 
       if ( m_do_diff[ieqn] ){
 
-        FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_dflux");
-        FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_dflux");
-        FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_dflux");
+        FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_dflux");
+        FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_dflux");
+        FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_dflux");
 
         CT& phi = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
 

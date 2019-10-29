@@ -35,12 +35,12 @@ GridInfo::register_initialize( std::vector<AFC::VariableInformation>& variable_r
 void
 GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridX" );
-  CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridY" );
-  CCVariable<double>& gridZ = tsk_info->get_uintah_field_add<CCVariable<double> >( "gridZ" );
-  CCVariable<double>& ucellX = tsk_info->get_uintah_field_add<CCVariable<double> >( "ucellX" );
-  CCVariable<double>& vcellY = tsk_info->get_uintah_field_add<CCVariable<double> >( "vcellY" );
-  CCVariable<double>& wcellZ = tsk_info->get_uintah_field_add<CCVariable<double> >( "wcellZ" );
+  CCVariable<double>& gridX = tsk_info->new_get_uintah_field<CCVariable<double> >( "gridX" );
+  CCVariable<double>& gridY = tsk_info->new_get_uintah_field<CCVariable<double> >( "gridY" );
+  CCVariable<double>& gridZ = tsk_info->new_get_uintah_field<CCVariable<double> >( "gridZ" );
+  CCVariable<double>& ucellX = tsk_info->new_get_uintah_field<CCVariable<double> >( "ucellX" );
+  CCVariable<double>& vcellY = tsk_info->new_get_uintah_field<CCVariable<double> >( "vcellY" );
+  CCVariable<double>& wcellZ = tsk_info->new_get_uintah_field<CCVariable<double> >( "wcellZ" );
 
   Vector Dx = patch->dCell();
   const double dx = Dx.x();
@@ -95,12 +95,12 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
 void
 GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& gridX = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridX" );
-  CCVariable<double>& gridY = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridY" );
-  CCVariable<double>& gridZ = tsk_info->get_uintah_field_add<CCVariable<double>>( "gridZ" );
-  CCVariable<double>& ucellX = tsk_info->get_uintah_field_add<CCVariable<double>>( "ucellX" );
-  CCVariable<double>& vcellY = tsk_info->get_uintah_field_add<CCVariable<double>>( "vcellY" );
-  CCVariable<double>& wcellZ = tsk_info->get_uintah_field_add<CCVariable<double>>( "wcellZ" );
+  CCVariable<double>& gridX = tsk_info->new_get_uintah_field<CCVariable<double>>( "gridX" );
+  CCVariable<double>& gridY = tsk_info->new_get_uintah_field<CCVariable<double>>( "gridY" );
+  CCVariable<double>& gridZ = tsk_info->new_get_uintah_field<CCVariable<double>>( "gridZ" );
+  CCVariable<double>& ucellX = tsk_info->new_get_uintah_field<CCVariable<double>>( "ucellX" );
+  CCVariable<double>& vcellY = tsk_info->new_get_uintah_field<CCVariable<double>>( "vcellY" );
+  CCVariable<double>& wcellZ = tsk_info->new_get_uintah_field<CCVariable<double>>( "wcellZ" );
 
   constCCVariable<double>& old_gridX = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridX" );
   constCCVariable<double>& old_gridY = tsk_info->get_const_uintah_field_add<constCCVariable<double>>( "gridY" );

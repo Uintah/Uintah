@@ -111,9 +111,9 @@ void CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   constCCVariable<double>& old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_v_vel_name_cc);
   constCCVariable<double>& old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name_cc);
 
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  CCVariable<double>& u_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_w_vel_name_cc);
 
   u_cc.copy(old_u_cc);
   v_cc.copy(old_v_cc);
@@ -149,9 +149,9 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
   constSFCXVariable<double>& u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  CCVariable<double>& u_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_w_vel_name_cc);
 
   u_cc.initialize(0.0);
   v_cc.initialize(0.0);

@@ -53,7 +53,7 @@ void ConstantStateProperties::register_initialize( VIVec& variable_registry , co
 void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
     var.initialize(i->second);
   }
 
@@ -74,7 +74,7 @@ void ConstantStateProperties::timestep_init( const Patch* patch, ArchesTaskInfoM
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     constCCVariable<double>& old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( i->first );
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
 
     var.copyData(old_var);
   }
@@ -94,7 +94,7 @@ void ConstantStateProperties::register_restart_initialize( VIVec& variable_regis
 void ConstantStateProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
     var.initialize(i->second);
   }
 

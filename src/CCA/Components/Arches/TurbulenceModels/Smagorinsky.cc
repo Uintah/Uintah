@@ -80,7 +80,7 @@ Smagorinsky::register_initialize(
 void
 Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_total_vis_name);
   mu_sgc.initialize(0.0);
 
 }
@@ -103,7 +103,7 @@ void
 Smagorinsky::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   if ( !m_using_production ){
-    CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
+    CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_total_vis_name);
     mu_sgc.initialize(0.0);
   }
 

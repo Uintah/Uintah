@@ -524,8 +524,8 @@ CharOxidationps<T>::initialize( const Patch* patch
   // model variables
   T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
   T& gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel );
-  T& particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp );
-  T& particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize );
+  T& particle_temp_rate = tsk_info->new_get_uintah_field< T >( m_particletemp );
+  T& particle_Size_rate = tsk_info->new_get_uintah_field< T >( m_particleSize );
   T& surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate );
 
   char_rate.initialize         ( 0.0 );
@@ -536,7 +536,7 @@ CharOxidationps<T>::initialize( const Patch* patch
 
 
   for ( int r = 0; r < _NUM_reactions; r++ ) {
-   T& reaction_rate = tsk_info->get_uintah_field_add< T >( m_reaction_rate_names[r] );
+   T& reaction_rate = tsk_info->new_get_uintah_field< T >( m_reaction_rate_names[r] );
    reaction_rate.initialize( 0.0 );
   }
 
@@ -683,8 +683,8 @@ CharOxidationps<T>::eval( const Patch                 * patch
     // model variables
   T& char_rate          = tsk_info->get_uintah_field_add< T >( m_modelLabel );
   T& gas_char_rate      = tsk_info->get_uintah_field_add< T >( m_gasLabel );
-  T& particle_temp_rate = tsk_info->get_uintah_field_add< T >( m_particletemp );
-  T& particle_Size_rate = tsk_info->get_uintah_field_add< T >( m_particleSize );
+  T& particle_temp_rate = tsk_info->new_get_uintah_field< T >( m_particletemp );
+  T& particle_Size_rate = tsk_info->new_get_uintah_field< T >( m_particleSize );
   T& surface_rate       = tsk_info->get_uintah_field_add< T >( m_surfacerate );
 
     // reaction rate

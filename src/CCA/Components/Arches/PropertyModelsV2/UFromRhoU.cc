@@ -83,9 +83,9 @@ void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
   constSFCYVariable<double>& old_v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& old_w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
 
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  SFCXVariable<double>& u = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.copy(old_u);
   v.copy(old_v);
@@ -123,9 +123,9 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >( m_xmom );
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >( m_ymom );
   constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >( m_zmom );
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  SFCXVariable<double>& u = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.initialize(0.0);
   v.initialize(0.0);

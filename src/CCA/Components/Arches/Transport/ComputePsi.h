@@ -285,9 +285,9 @@ private:
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
-      XFaceT& psi_x = tsk_info->get_uintah_field_add<XFaceT>(*i+"_x_psi");
-      YFaceT& psi_y = tsk_info->get_uintah_field_add<YFaceT>(*i+"_y_psi");
-      ZFaceT& psi_z = tsk_info->get_uintah_field_add<ZFaceT>(*i+"_z_psi");
+      XFaceT& psi_x = tsk_info->new_get_uintah_field<XFaceT>(*i+"_x_psi");
+      YFaceT& psi_y = tsk_info->new_get_uintah_field<YFaceT>(*i+"_y_psi");
+      ZFaceT& psi_z = tsk_info->new_get_uintah_field<ZFaceT>(*i+"_z_psi");
 
       psi_x.initialize(0.0);
       psi_y.initialize(0.0);
@@ -343,9 +343,9 @@ private:
         nGhosts = 1;
       }
 
-      XFaceT& psi_x = tsk_info->get_uintah_field_add<XFaceT>(*i+"_x_psi", nGhosts);
-      YFaceT& psi_y = tsk_info->get_uintah_field_add<YFaceT>(*i+"_y_psi", nGhosts);
-      ZFaceT& psi_z = tsk_info->get_uintah_field_add<ZFaceT>(*i+"_z_psi", nGhosts);
+      XFaceT& psi_x = tsk_info->new_get_uintah_field<XFaceT>(*i+"_x_psi", nGhosts);
+      YFaceT& psi_y = tsk_info->new_get_uintah_field<YFaceT>(*i+"_y_psi", nGhosts);
+      ZFaceT& psi_z = tsk_info->new_get_uintah_field<ZFaceT>(*i+"_z_psi", nGhosts);
 
       psi_x.initialize(1.0);
       psi_y.initialize(1.0);

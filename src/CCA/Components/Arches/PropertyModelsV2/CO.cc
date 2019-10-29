@@ -100,8 +100,8 @@ void
 CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& CO      = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
-  CCVariable<double>& CO_diff = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );
-  CCVariable<double>& CO_conv = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_conv_name );
+  CCVariable<double>& CO_diff = tsk_info->new_get_uintah_field<CCVariable<double> >( m_CO_diff_name );
+  CCVariable<double>& CO_conv = tsk_info->new_get_uintah_field<CCVariable<double> >( m_CO_conv_name );
   CCVariable<double>& d       = tsk_info->get_uintah_field_add<CCVariable<double> >( m_defect_name );
   CCVariable<double>& rate    = tsk_info->get_uintah_field_add<CCVariable<double> >( m_rate_name );
 
@@ -260,7 +260,7 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& y_new    = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& d_new    = tsk_info->get_uintah_field_add<CCVariable<double> >( m_defect_name );
-  CCVariable<double>& rate_new = tsk_info->get_uintah_field_add<CCVariable<double> >( m_rate_name );
+  CCVariable<double>& rate_new = tsk_info->new_get_uintah_field<CCVariable<double> >( m_rate_name );
   CCVariable<double>& y_diff   = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_diff_name );
   CCVariable<double>& y_conv   = tsk_info->get_uintah_field_add<CCVariable<double> >( m_CO_conv_name );
 

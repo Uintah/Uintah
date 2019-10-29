@@ -106,12 +106,12 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   constSFCYVariable<double>& eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_eps_y_name);
   constSFCZVariable<double>& eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_eps_z_name);
 
-  CCVariable<double>& sigma11 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma12 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma13 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[2]);
-  CCVariable<double>& sigma22 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[3]);
-  CCVariable<double>& sigma23 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[4]);
-  CCVariable<double>& sigma33 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   // initialize all velocities
   sigma11.initialize(0.0);

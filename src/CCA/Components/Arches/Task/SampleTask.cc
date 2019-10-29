@@ -54,7 +54,7 @@ SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   //constCCVariable<double>& field = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("a_sample_field");
   CCVariable<double>& field  = tsk_info->get_uintah_field_add<CCVariable<double> >("a_sample_field");
-  CCVariable<double>& result = tsk_info->get_uintah_field_add<CCVariable<double> >("a_result_field");
+  CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >("a_result_field");
 
   //traditional functor:
   struct mySpecialOper{
@@ -110,13 +110,13 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
   CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );
-  CCVariable<double>& density = tsk_info->get_uintah_field_add<CCVariable<double> >( "density" );
+  CCVariable<double>& density = tsk_info->new_get_uintah_field<CCVariable<double> >( "density" );
 
   //Three ways to get variables:
   // Note that there are 'const' versions of these access calls to tsk_info as well. Just use a
   // tsk_info->get_const_*
   // By reference
-  //CCVariable<double>& A_ref = tsk_info->get_uintah_field_add<CCVariable<double> >("A");
+  //CCVariable<double>& A_ref = tsk_info->new_get_uintah_field<CCVariable<double> >("A");
   // Pointer
   //CCVariable<double>* A_ptr = tsk_info->get_uintah_field<CCVariable<double> >("A");
   // Traditional Uintah Style

@@ -252,8 +252,8 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   TT& MM = c_field_tool.get("MM");
   TT& IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
+  CCVariable<double>& filterML = tsk_info->new_get_uintah_field< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->new_get_uintah_field< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

@@ -1103,9 +1103,9 @@ template <typename ES, typename MS>
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    T& var = tsk_info->get_uintah_field_add<T>(var_name);
+    T& var = tsk_info->new_get_uintah_field<T>(var_name);
 
-    T& rhs = tsk_info->get_uintah_field_add<T>(m_phi_name+"_rhs");
+    T& rhs = tsk_info->new_get_uintah_field<T>(m_phi_name+"_rhs");
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 

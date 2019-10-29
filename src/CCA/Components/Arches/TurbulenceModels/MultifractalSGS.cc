@@ -258,9 +258,9 @@ namespace Uintah{
       constSFCYVariable<double>& v2D_ctr            = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("v2D_ctr"));
       constSFCZVariable<double>& w2D_ctr            = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("w2D_ctr"));
 
-      SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_xSgsStress");
-      SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_ySgsStress");
-      SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_uintah_field_add<SFCXVariable<double> >("ucell_zSgsStress");
+      SFCXVariable<double>& ucell_xSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_xSgsStress");
+      SFCXVariable<double>& ucell_ySgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_ySgsStress");
+      SFCXVariable<double>& ucell_zSgsStress = tsk_info->new_get_uintah_field<SFCXVariable<double> >("ucell_zSgsStress");
 
       SFCYVariable<double>& vcell_xSgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_xSgsStress");
       SFCYVariable<double>& vcell_ySgsStress = tsk_info->new_get_uintah_field<SFCYVariable<double> >("vcell_ySgsStress");

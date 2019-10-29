@@ -87,8 +87,8 @@ DepositionEnthalpy::register_initialize( std::vector<ArchesFieldContainer::Varia
 void
 DepositionEnthalpy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
-  CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
+  CCVariable<double>& ash_enthalpy_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_enthalpy_src);
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){
     ash_enthalpy_flux(i,j,k)=0.0;
@@ -168,9 +168,9 @@ DepositionEnthalpy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
-  CCVariable<double>& ash_enthalpy_flux = tsk_info->get_uintah_field_add<CCVariable<double> >(m_task_name);
+  CCVariable<double>& ash_enthalpy_flux = tsk_info->new_get_uintah_field<CCVariable<double> >(m_task_name);
   ash_enthalpy_flux.initialize(0.0);
-  CCVariable<double>& ash_enthalpy_src = tsk_info->get_uintah_field_add<CCVariable<double> >(_ash_enthalpy_src);
+  CCVariable<double>& ash_enthalpy_src = tsk_info->new_get_uintah_field<CCVariable<double> >(_ash_enthalpy_src);
   ash_enthalpy_src.initialize(0.0);
   constCCVariable<int>* vcelltype = tsk_info->get_const_uintah_field<constCCVariable<int> >(_cellType_name);
   constCCVariable<int>& celltype = *vcelltype;

@@ -49,15 +49,15 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
-  SFCXVariable<double>& xmom = tsk_info->get_uintah_field_add<SFCXVariable<double> >( m_xmom );
-  SFCYVariable<double>& ymom = tsk_info->get_uintah_field_add<SFCYVariable<double> >( m_ymom );
-  SFCZVariable<double>& zmom = tsk_info->get_uintah_field_add<SFCZVariable<double> >( m_zmom );
+  SFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<SFCXVariable<double> >( m_xmom );
+  SFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<SFCYVariable<double> >( m_ymom );
+  SFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<SFCZVariable<double> >( m_zmom );
   constCCVariable<double>& p = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_press);
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
-  SFCXVariable<double>& uhat = tsk_info->get_uintah_field_add<SFCXVariable<double> >( "uHat" );
-  SFCYVariable<double>& vhat = tsk_info->get_uintah_field_add<SFCYVariable<double> >( "vHat" );
-  SFCZVariable<double>& what = tsk_info->get_uintah_field_add<SFCZVariable<double> >( "wHat" );
+  SFCXVariable<double>& uhat = tsk_info->new_get_uintah_field<SFCXVariable<double> >( "uHat" );
+  SFCYVariable<double>& vhat = tsk_info->new_get_uintah_field<SFCYVariable<double> >( "vHat" );
+  SFCZVariable<double>& what = tsk_info->new_get_uintah_field<SFCZVariable<double> >( "wHat" );
 
   uhat.copyData(xmom);
   vhat.copyData(ymom);

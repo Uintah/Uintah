@@ -304,8 +304,8 @@ private:
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      T& phi = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]);
-      T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ceqn]+"_RHS");
+      T& phi = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ceqn]);
+      T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ceqn]+"_RHS");
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
       ceqn +=1;
       CFXT& x_flux = tsk_info->get_const_uintah_field_add<CFXT>(*ieqn+"_x_flux");
@@ -390,8 +390,8 @@ private:
       //const double scaling_constant = ieqn->second;
       constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
-      T& phi = tsk_info->get_uintah_field_add<T>(varname);
-      T& phi_unscaled = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
+      T& phi = tsk_info->new_get_uintah_field<T>(varname);
+      T& phi_unscaled = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -427,7 +427,7 @@ private:
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     CT& phi = tsk_info->get_const_uintah_field_add<CT>(ieqn->first);
-    T& phi_unscaled = tsk_info->get_uintah_field_add<T>((ieqn->second).unscaled_var);
+    T& phi_unscaled = tsk_info->new_get_uintah_field<T>((ieqn->second).unscaled_var);
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());

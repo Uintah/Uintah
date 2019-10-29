@@ -194,7 +194,7 @@ private:
   void WDragModel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   T& model      = tsk_info->get_uintah_field_add<T>(m_model_name);
-  T& gas_source = tsk_info->get_uintah_field_add<T>(m_gasSource_name);
+  T& gas_source = tsk_info->new_get_uintah_field<T>(m_gasSource_name);
 
   model.initialize( 0.0 );
   gas_source.initialize( 0.0 );
@@ -244,7 +244,7 @@ private:
   const double vol = Dx.x()* Dx.y()* Dx.z();
 
   T& model      = tsk_info->get_uintah_field_add<T>(m_model_name);
-  T& gas_source = tsk_info->get_uintah_field_add<T>(m_gasSource_name);
+  T& gas_source = tsk_info->new_get_uintah_field<T>(m_gasSource_name);
 
   // gas variables
   CT& CCuVel = tsk_info->get_const_uintah_field_add<CT>( m_cc_u_vel_name );

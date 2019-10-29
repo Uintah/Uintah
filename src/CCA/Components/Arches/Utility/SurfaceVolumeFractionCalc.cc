@@ -68,11 +68,11 @@ SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoManager
 
   typedef CCVariable<double> T;
 
-  T& cc_vf = tsk_info->get_uintah_field_add<T>("volFraction");
-  SFCXVariable<double>& fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double> >("volFractionX");
-  SFCYVariable<double>& fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double> >("volFractionY");
-  SFCZVariable<double>& fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double> >("volFractionZ");
-  CCVariable<int>& cell_type = tsk_info->get_uintah_field_add<CCVariable<int> >("cellType");
+  T& cc_vf = tsk_info->new_get_uintah_field<T>("volFraction");
+  SFCXVariable<double>& fx_vf = tsk_info->new_get_uintah_field<SFCXVariable<double> >("volFractionX");
+  SFCYVariable<double>& fy_vf = tsk_info->new_get_uintah_field<SFCYVariable<double> >("volFractionY");
+  SFCZVariable<double>& fz_vf = tsk_info->new_get_uintah_field<SFCZVariable<double> >("volFractionZ");
+  CCVariable<int>& cell_type = tsk_info->new_get_uintah_field<CCVariable<int> >("cellType");
 
   cc_vf.initialize(1.0);
   fx_vf.initialize(1.0);
@@ -228,25 +228,25 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 void
 SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double> >("volFraction");
+  CCVariable<double>& cc_vol_frac = tsk_info->new_get_uintah_field<CCVariable<double> >("volFraction");
   constCCVariable<double>& cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   cc_vol_frac.copyData(cc_vol_frac_old);
 
-  CCVariable<int>& cellType = tsk_info->get_uintah_field_add<CCVariable<int> >("cellType");
+  CCVariable<int>& cellType = tsk_info->new_get_uintah_field<CCVariable<int> >("cellType");
   constCCVariable<int>& cellType_old = tsk_info->get_const_uintah_field_add<constCCVariable<int> >("cellType");
 
   cellType.copyData(cellType_old);
 
-  SFCXVariable<double>& fx_vol_frac = tsk_info->get_uintah_field_add<SFCXVariable<double> >("volFractionX");
+  SFCXVariable<double>& fx_vol_frac = tsk_info->new_get_uintah_field<SFCXVariable<double> >("volFractionX");
   constSFCXVariable<double>& fx_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >("volFractionX");
   fx_vol_frac.copyData(fx_vol_frac_old);
 
-  SFCYVariable<double>& fy_vol_frac = tsk_info->get_uintah_field_add<SFCYVariable<double> >("volFractionY");
+  SFCYVariable<double>& fy_vol_frac = tsk_info->new_get_uintah_field<SFCYVariable<double> >("volFractionY");
   constSFCYVariable<double>& fy_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >("volFractionY");
   fy_vol_frac.copyData(fy_vol_frac_old);
 
-  SFCZVariable<double>& fz_vol_frac = tsk_info->get_uintah_field_add<SFCZVariable<double> >("volFractionZ");
+  SFCZVariable<double>& fz_vol_frac = tsk_info->new_get_uintah_field<SFCZVariable<double> >("volFractionZ");
   constSFCZVariable<double>& fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >("volFractionZ");
   fz_vol_frac.copyData(fz_vol_frac_old);
 

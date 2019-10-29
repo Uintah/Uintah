@@ -238,12 +238,12 @@ void MMS_Shunn<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 template <typename T>
 void MMS_Shunn<T>::compute_source( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  T& u_mms = tsk_info->get_uintah_field_add<T>(m_MMS_label);
-  T& rho_u_mms = tsk_info->get_uintah_field_add<T>(m_rho_u_label);
+  T& u_mms = tsk_info->new_get_uintah_field<T>(m_MMS_label);
+  T& rho_u_mms = tsk_info->new_get_uintah_field<T>(m_rho_u_label);
   CCVariable<double>& phi_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_scalar_label);
   CCVariable<double>& rho_phi_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_rho_scalar_label);
   CCVariable<double>& rho_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_rho_label);
-  T& rho_face_mms = tsk_info->get_uintah_field_add<T>(m_MMS_rho_face_label);
+  T& rho_face_mms = tsk_info->new_get_uintah_field<T>(m_MMS_rho_face_label);
 
   CCVariable<double>& phi_source_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_scalar_label);
   CCVariable<double>& drhodt_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_drhodt_label);

@@ -76,7 +76,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
+    SFCXVariable<double>& gx = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_gx_label);
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -84,7 +84,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
+    SFCYVariable<double>& gy = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_gy_label);
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -92,7 +92,7 @@ GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
+    SFCZVariable<double>& gz = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_gz_label);
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -143,7 +143,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   if (m_gravity[0] != 0.0) {
-    SFCXVariable<double>& gx = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_gx_label);
+    SFCXVariable<double>& gx = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_gx_label);
     gx.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -151,7 +151,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[1] != 0.0) {
-    SFCYVariable<double>& gy = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_gy_label);
+    SFCYVariable<double>& gy = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_gy_label);
     gy.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -159,7 +159,7 @@ GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     });
 
   } else if (m_gravity[2] != 0.0) {
-    SFCZVariable<double>& gz = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_gz_label);
+    SFCZVariable<double>& gz = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_gz_label);
     gz.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){

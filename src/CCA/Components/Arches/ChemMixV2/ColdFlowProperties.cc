@@ -64,7 +64,7 @@ void ColdFlowProperties::register_initialize( VIVec& variable_registry , const b
 void ColdFlowProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
     var.initialize(0.0);
   }
 
@@ -87,7 +87,7 @@ void ColdFlowProperties::timestep_init( const Patch* patch, ArchesTaskInfoManage
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
     constCCVariable<double>& old_var = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( i->first );
-    CCVariable<double>& var = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
 
     var.copyData(old_var);
   }
@@ -156,7 +156,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
     for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-      CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+      CCVariable<double>& prop = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
       const SpeciesInfo info = i->second;
 
       parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
@@ -185,7 +185,7 @@ void ColdFlowProperties::get_properties( const Patch* patch, ArchesTaskInfoManag
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 
-    CCVariable<double>& prop = tsk_info->get_uintah_field_add<CCVariable<double> >( i->first );
+    CCVariable<double>& prop = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
     const SpeciesInfo info = i->second;
 
     Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );

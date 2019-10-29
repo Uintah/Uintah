@@ -132,10 +132,10 @@ PressureEqn::initialize( const Patch* patch, ATIM* tsk_info ){
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
 
-  CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
-  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
-  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
+  CCVariable<Stencil7>& Apress = tsk_info->new_get_uintah_field<CCVariable<Stencil7> >("A_press");
+  CCVariable<double>& b = tsk_info->new_get_uintah_field<CCVariable<double> >("b_press");
+  CCVariable<double>& x = tsk_info->new_get_uintah_field<CCVariable<double> >(m_pressure_name);
+  CCVariable<double>& guess = tsk_info->new_get_uintah_field<CCVariable<double> >("guess_press");
 
   b.initialize(0.0);
   x.initialize(0.0);
@@ -225,10 +225,10 @@ PressureEqn::register_timestep_init(
 //--------------------------------------------------------------------------------------------------
 void
 PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
-  CCVariable<Stencil7>& Apress = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
+  CCVariable<Stencil7>& Apress = tsk_info->new_get_uintah_field<CCVariable<Stencil7> >("A_press");
   constCCVariable<Stencil7>& old_Apress = tsk_info->get_const_uintah_field_add<constCCVariable<Stencil7> >("A_press");
-  CCVariable<double>& x = tsk_info->get_uintah_field_add<CCVariable<double> >(m_pressure_name);
-  CCVariable<double>& guess = tsk_info->get_uintah_field_add<CCVariable<double> >("guess_press");
+  CCVariable<double>& x = tsk_info->new_get_uintah_field<CCVariable<double> >(m_pressure_name);
+  CCVariable<double>& guess = tsk_info->new_get_uintah_field<CCVariable<double> >("guess_press");
   Apress.copyData( old_Apress );
   x.initialize(0.0);
   guess.initialize(0.0);
@@ -260,7 +260,7 @@ PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   const double area_TB = DX.x()*DX.y();
   const double V       = DX.x()*DX.y()*DX.z();
 
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
+  CCVariable<double>& b = tsk_info->new_get_uintah_field<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
   constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(ArchesCore::default_uMom_name);
   constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(ArchesCore::default_vMom_name);
@@ -299,8 +299,8 @@ void
 PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
-  CCVariable<Stencil7>& A = tsk_info->get_uintah_field_add<CCVariable<Stencil7> >("A_press");
-  CCVariable<double>& b = tsk_info->get_uintah_field_add<CCVariable<double> >("b_press");
+  CCVariable<Stencil7>& A = tsk_info->new_get_uintah_field<CCVariable<Stencil7> >("A_press");
+  CCVariable<double>& b = tsk_info->new_get_uintah_field<CCVariable<double> >("b_press");
   constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_eps_name);
 
   //Now take care of intrusions:

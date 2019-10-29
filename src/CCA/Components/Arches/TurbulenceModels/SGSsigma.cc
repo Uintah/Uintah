@@ -129,7 +129,7 @@ SGSsigma::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
 
-  //CCVariable<double>& sigOper =  tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigOper);
+  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -152,7 +152,7 @@ SGSsigma::register_timestep_init(
 void
 SGSsigma::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
-  //CCVariable<double>& sigOper =  tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigOper);
+  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
   //Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
 
   //Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -215,14 +215,14 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
   //constCCVariable<double>& Density_sigma = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
   //constCCVariable<Vector>& CCVelocity =    tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >("CCVelocity");
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
   CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
-  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
+  CCVariable<double>& IsI = tsk_info->new_get_uintah_field< CCVariable<double> >(m_IsI_name);
   constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
   constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
-  //CCVariable<double>& viscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("viscosityCTS");
+  //CCVariable<double>& viscosity_new = tsk_info->new_get_uintah_field<CCVariable<double> >("viscosityCTS");
   //CCVariable<double>&  TurbViscosity_new = tsk_info->get_uintah_field_add<CCVariable<double> >("turb_viscosity");
-  //CCVariable<double>& sigOper = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigOper);
+  //CCVariable<double>& sigOper = tsk_info->new_get_uintah_field<CCVariable<double> >(m_sigOper);
 
   double VelgUx, VelgUy, VelgUz, VelgVx, VelgVy, VelgVz, VelgWx, VelgWy, VelgWz;
   double G11,G12,G13,G21,G22,G23,G31,G32,G33;

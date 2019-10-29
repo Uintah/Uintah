@@ -372,7 +372,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           // DQMOM : BCs are Ic_qni, then we need to compute Ic
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
             CT&  var = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
-            T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
+            T& un_var = tsk_info->new_get_uintah_field<T>(m_un_eqn_names[ieqn]);
             constCCVariable<double>& vol_fraction =
             tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
 
@@ -536,8 +536,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    T& un_var = tsk_info->get_uintah_field_add<T>(m_un_eqn_names[ieqn]);
-    T& var = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+    T& un_var = tsk_info->new_get_uintah_field<T>(m_un_eqn_names[ieqn]);
+    T& var = tsk_info->new_get_uintah_field<T>(m_eqn_names[ieqn]);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
@@ -549,7 +549,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
-    T& un_var = tsk_info->get_uintah_field_add<T>(info.unscaled_var);
+    T& un_var = tsk_info->new_get_uintah_field<T>(info.unscaled_var);
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
@@ -558,8 +558,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   // clipping
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
-    T& var = tsk_info->get_uintah_field_add<T>(info.var);
-    T& rho_var = tsk_info->get_uintah_field_add<T>(ieqn->first);
+    T& var = tsk_info->new_get_uintah_field<T>(info.var);
+    T& rho_var = tsk_info->new_get_uintah_field<T>(ieqn->first);
     Uintah::parallel_for( range, [&](int i, int j, int k){
     if ( var(i,j,k) > info.high ) {
 

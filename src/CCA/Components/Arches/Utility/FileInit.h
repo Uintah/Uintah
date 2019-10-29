@@ -114,7 +114,7 @@ private:
   template <typename T>
   void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    T& phi = tsk_info->get_uintah_field_add<T>(m_var_name);
+    T& phi = tsk_info->new_get_uintah_field<T>(m_var_name);
 
     phi.initialize(0.0);
 

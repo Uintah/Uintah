@@ -380,9 +380,9 @@ private:
       T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
       T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
       T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_RHS");
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      FXT& x_flux = tsk_info->new_get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->new_get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->new_get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       phi.initialize(0.0);
       rhs.initialize(0.0);
@@ -416,8 +416,8 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
       T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
-      T& phi =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
-      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_RHS" );
+      T& phi = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn] );
+      T& rhs = tsk_info->new_get_uintah_field<T>( m_eqn_names[ieqn]+"_RHS" );
       CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
       CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
 

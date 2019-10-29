@@ -106,11 +106,11 @@ void
 Burnout::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-  CCVariable<double>& numerator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >(m_numerator_name);
-  CCVariable<double>& denominator_sum = tsk_info->get_uintah_field_add< CCVariable<double> >(m_denominator_name);
+  CCVariable<double>& numerator_sum = tsk_info->new_get_uintah_field< CCVariable<double> >(m_numerator_name);
+  CCVariable<double>& denominator_sum = tsk_info->new_get_uintah_field< CCVariable<double> >(m_denominator_name);
   numerator_sum.initialize(0.0);
   denominator_sum.initialize(0.0);
-  CCVariable<double>& burnout = tsk_info->get_uintah_field_add<CCVariable<double> >( m_task_name );
+  CCVariable<double>& burnout = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
   constCCVariable<double>& vol_frac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vol_fraction_name);
 
   for ( int qn = 0; qn < _Nenv; qn++ ){

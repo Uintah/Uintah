@@ -151,7 +151,7 @@ void VarInterpolation<T,IT>::register_initialize(
 template <typename T, typename IT>
 void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
+  IT& int_var = tsk_info->new_get_uintah_field<IT>(m_inter_var_name);
   int_var.initialize(0.0);
 
 }
@@ -172,7 +172,7 @@ void VarInterpolation<T,IT>::register_timestep_eval(
 template <typename T, typename IT>
 void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  IT& int_var = tsk_info->get_uintah_field_add<IT>(m_inter_var_name);
+  IT& int_var = tsk_info->new_get_uintah_field<IT>(m_inter_var_name);
   T& var = tsk_info->get_const_uintah_field_add<T >(m_var_name);
 
   const int ioff = m_ijk_off[0];

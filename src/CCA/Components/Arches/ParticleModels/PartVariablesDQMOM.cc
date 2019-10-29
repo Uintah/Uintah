@@ -106,7 +106,7 @@ void
 PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
-  CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >( m_area_sum_name );
+  CCVariable<double>& AreaSumF = tsk_info->new_get_uintah_field< CCVariable<double> >( m_area_sum_name );
 
   AreaSumF.initialize(0.0);
   num_den.initialize(0.0);
