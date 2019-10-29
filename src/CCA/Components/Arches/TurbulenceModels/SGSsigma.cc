@@ -213,7 +213,7 @@ SGSsigma::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info){
 
   //constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
   //constCCVariable<double>& Density_sigma = tsk_info->new_get_uintah_field<constCCVariable<double> >("density");
-  //constCCVariable<Vector>& CCVelocity =    tsk_info->get_const_uintah_field_add<constCCVariable<Vector> >("CCVelocity");
+  //constCCVariable<Vector>& CCVelocity = tsk_info->new_get_uintah_field<constCCVariable<Vector> >("CCVelocity");
 
   CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
   CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);

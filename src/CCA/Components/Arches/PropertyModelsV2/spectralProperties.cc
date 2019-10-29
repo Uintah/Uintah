@@ -93,15 +93,15 @@ void
 spectralProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   for (int i=0; i< _nbands  ; i++){
-    CCVariable<double>& abskg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abskg_name_vector[i]);
-    CCVariable<double>& abswg     = tsk_info->get_uintah_field_add<CCVariable<double> >( _abswg_name_vector[i]);
+    CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >( _abskg_name_vector[i]);
+    CCVariable<double>& abswg = tsk_info->new_get_uintah_field<CCVariable<double> >( _abswg_name_vector[i]);
 
     abskg.initialize(0.0);
     abswg.initialize(0.0);
   }
 
   if (_LsootOn){
-    CCVariable<double>& absksoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( "absksoot");
+    CCVariable<double>& absksoot = tsk_info->new_get_uintah_field<CCVariable<double> >( "absksoot");
     absksoot.initialize(0.0);
   }
 }

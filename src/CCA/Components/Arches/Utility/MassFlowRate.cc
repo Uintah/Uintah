@@ -226,9 +226,9 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   double m_dot_coal = 0.0;
 
   // Gas phase
-  constSFCXVariable<double>& uvel_g  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_g_uVel_name);
-  constSFCYVariable<double>& vvel_g  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_g_vVel_name);
-  constSFCZVariable<double>& wvel_g  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_g_wVel_name);
+  constSFCXVariable<double>& uvel_g = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_g_uVel_name);
+  constSFCYVariable<double>& vvel_g = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_g_vVel_name);
+  constSFCZVariable<double>& wvel_g = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_g_wVel_name);
 
   if(particleMethod_bool){
 

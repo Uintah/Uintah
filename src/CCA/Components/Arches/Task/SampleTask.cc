@@ -53,7 +53,7 @@ SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   //CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >( "a_result_field" );
 
   //constCCVariable<double>& field = tsk_info->new_get_uintah_field<constCCVariable<double> >("a_sample_field");
-  CCVariable<double>& field  = tsk_info->get_uintah_field_add<CCVariable<double> >("a_sample_field");
+  CCVariable<double>& field = tsk_info->new_get_uintah_field<CCVariable<double> >("a_sample_field");
   CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >("a_result_field");
 
   //traditional functor:
@@ -108,8 +108,8 @@ SampleTask::register_timestep_eval(
 void
 SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
-  CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );
+  CCVariable<double>& field = tsk_info->new_get_uintah_field<CCVariable<double> >( "a_sample_field" );
+  CCVariable<double>& result = tsk_info->new_get_uintah_field<CCVariable<double> >( "a_result_field" );
   CCVariable<double>& density = tsk_info->new_get_uintah_field<CCVariable<double> >( "density" );
 
   //Three ways to get variables:

@@ -455,7 +455,7 @@ private:
       z_flux.initialize(0.0);
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        T& rho_phi  = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]);
+        T& rho_phi = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]);
         rho_phi.initialize(0.0);
       }
 
@@ -509,7 +509,7 @@ private:
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
         CT& old_rho_phi = tsk_info->new_get_uintah_field<CT>(m_transported_eqn_names[ieqn] );
-        T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn] );
+        T& rho_phi = tsk_info->new_get_uintah_field<T>( m_transported_eqn_names[ieqn] );
         rho_phi.copyData(old_rho_phi);
       }
 
@@ -591,8 +591,8 @@ private:
         rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_transported_eqn_names[ieqn]);
 
       CT& rho_phi = *rho_phi_ptr;
-      CT& phi     = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
-      T& rhs      = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]+"_RHS");
+      CT& phi = tsk_info->new_get_uintah_field<CT>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->new_get_uintah_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
 
       //Timers::Simple timer;
       //Timers::Simple timer2;

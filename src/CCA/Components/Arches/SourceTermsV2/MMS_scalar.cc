@@ -175,10 +175,10 @@ MMS_scalar::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
 void
 MMS_scalar::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& f_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_label);
-  CCVariable<double>& s_mms      = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_label);
+  CCVariable<double>& f_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_label);
+  CCVariable<double>& s_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_label);
   CCVariable<double>& s_diff_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_diff_label);
-  CCVariable<double>& s_t_mms    = tsk_info->get_uintah_field_add<CCVariable<double> >(m_MMS_source_t_label);
+  CCVariable<double>& s_t_mms = tsk_info->new_get_uintah_field<CCVariable<double> >(m_MMS_source_t_label);
 
   f_mms.initialize(0.0);
   s_mms.initialize(0.0);
