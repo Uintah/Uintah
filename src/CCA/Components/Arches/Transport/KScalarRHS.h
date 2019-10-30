@@ -741,19 +741,6 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       auto phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
       auto rhs = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
 
-      //Timers::Simple timer;
-      //Timers::Simple timer2;
-
-      //timer.start();
-      //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-        //rhs[*iter] = 0.;
-      //}
-      //timer.stop();
-      //std::cout << "rhs init Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
-
-      //timer.reset(false);
-
-      //timer.start();
       Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       Uintah::parallel_for(execObj,range_t,  KOKKOS_LAMBDA ( int i,  int j, int k){
         rhs(i,j,k) = 0;
@@ -766,9 +753,6 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
         auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
         auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
         auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
-
-        //IntVector low  = patch->getCellLowIndex();
-        //IntVector high = patch->getExtraCellHighIndex();
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -863,13 +847,9 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
         if ( m_conv_scheme[ieqn] == UPWIND ){
 
-          //timer.reset(false);
-          //timer.start();
           doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_x,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
           doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_y,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
           doConvection<ExecSpace, MemSpace, UpwindConvection>(execObj,range_cl_to_ech_z,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
-          //timer.stop();
-          //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
         } else if ( m_conv_scheme[ieqn] == CENTRAL ){
 

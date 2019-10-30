@@ -142,7 +142,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
   auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
   auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
-  auto   D  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
+  auto D  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
   auto eps_x = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
   auto eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
   auto eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);

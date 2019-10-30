@@ -241,8 +241,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 template <typename ExecSpace, typename MemSpace>
 void ColdFlowProperties::get_properties( ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto f =
-    tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
+  auto f = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>( m_mixfrac_label );
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
 

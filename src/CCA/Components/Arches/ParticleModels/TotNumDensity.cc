@@ -100,8 +100,7 @@ void TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
 
     const std::string weight_name = ArchesCore::append_env( "w", ienv);
-    constCCVariable<double>& weight =
-      tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
+    constCCVariable<double>& weight = tsk_info->new_get_uintah_field<constCCVariable<double> >( weight_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -139,8 +138,7 @@ void TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, E
 
 
     const std::string weight_name = ArchesCore::append_env( "w", ienv);
-    constCCVariable<double>& weight =
-      tsk_info->get_const_uintah_field_add<constCCVariable<double> >( weight_name );
+    constCCVariable<double>& weight = tsk_info->new_get_uintah_field<constCCVariable<double> >( weight_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
