@@ -370,7 +370,7 @@ private:
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        T& dep = *(tsk_info->get_uintah_field<T>(iter->second.dep));
+        T& dep = tsk_info->new_get_uintah_field<T>(iter->second.dep);
         Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
         Uintah::parallel_for( range, [&](int i, int j, int k){
 
@@ -406,7 +406,7 @@ private:
     for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
       if ( iter->second.create_new_variable ){
 
-        T& dep = *(tsk_info->get_uintah_field<T>(iter->second.dep));
+        T& dep = tsk_info->new_get_uintah_field<T>(iter->second.dep);
         Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
         Uintah::parallel_for( range, [&](int i, int j, int k){
 
@@ -484,7 +484,7 @@ private:
       if ( op_iter->second.ind1_is_temp ){
         ind_ptr = &temp_var;
       } else {
-        ind_ptr = tsk_info->get_uintah_field<T>(op_iter->second.ind1);
+        ind_ptr = &(tsk_info->new_get_uintah_field<T>(op_iter->second.ind1));
       }
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -492,7 +492,7 @@ private:
       if ( op_iter->second.create_temp_variable ) {
         dep_ptr = &temp_var;
       } else {
-        dep_ptr = tsk_info->get_uintah_field<T>(op_iter->second.dep);
+        dep_ptr = &(tsk_info->new_get_uintah_field<T>(op_iter->second.dep));
       }
 
       if ( op_iter->second.use_constant ){
@@ -594,7 +594,7 @@ private:
 
       } else {
 
-        T& ind2 = *(tsk_info->get_uintah_field<T>(op_iter->second.ind2));
+        T& ind2 = tsk_info->new_get_uintah_field<T>(op_iter->second.ind2);
 
         switch ( op_iter->second.expression_type ){
           case ADD:

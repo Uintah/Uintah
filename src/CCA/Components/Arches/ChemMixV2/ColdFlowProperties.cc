@@ -214,6 +214,7 @@ void ColdFlowProperties::compute_bcs( const Patch* patch, ArchesTaskInfoManager*
 
       auto prop = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( i->first );
       const SpeciesInfo info = i->second;
+
       const bool volumetric = info.volumetric;
       const double stream_1 = info.stream_1;
       const double stream_2 = info.stream_2;

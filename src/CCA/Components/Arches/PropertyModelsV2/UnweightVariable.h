@@ -447,6 +447,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
             Scaling_info info = ieqn->second;
             const double ScalingConst = info.constant;
             auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
+
             parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               un_var(i,j,k) *= ScalingConst;
             });

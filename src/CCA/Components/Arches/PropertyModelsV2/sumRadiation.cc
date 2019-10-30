@@ -180,7 +180,7 @@ sumRadiation::initialize( const Patch* patch,
                           ArchesTaskInfoManager* tsk_info,
                           ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>&       abskt =  *(tsk_info->get_uintah_field<CCVariable<double> >(m_abskt_name));
+  CCVariable<double>&       abskt =  tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskt_name);
   constCCVariable<double>&  volFrac = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("volFraction");
 
   abskt.initialize( 1.0);

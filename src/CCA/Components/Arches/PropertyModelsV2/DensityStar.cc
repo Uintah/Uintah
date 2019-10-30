@@ -89,6 +89,7 @@ void DensityStar::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
   auto rhoStar = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>( m_label_densityStar );
   parallel_initialize(execObj,0.0,rhoStar);
+
 }
 
 //--------------------------------------------------------------------------------------------------

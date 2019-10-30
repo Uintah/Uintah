@@ -143,8 +143,8 @@ void PartVariablesDQMOM::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
 void
 PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& num_den  = tsk_info->get_uintah_field_add<CCVariable<double> >( m_number_density_name );
-  CCVariable<double>& AreaSumF = tsk_info->get_uintah_field_add< CCVariable<double> >( m_area_sum_name );
+  CCVariable<double>& num_den = tsk_info->new_get_uintah_field<CCVariable<double> >( m_number_density_name );
+  CCVariable<double>& AreaSumF = tsk_info->new_get_uintah_field< CCVariable<double> >( m_area_sum_name );
 
   AreaSumF.initialize(0.0);
   num_den.initialize(0.0);
@@ -178,8 +178,7 @@ PartVariablesDQMOM::computeSurfaceAreaFraction( const Patch* patch, ArchesTaskIn
     constCCVariable<double>& length =
       tsk_info->get_const_uintah_field_add< constCCVariable<double> >(length_name);
 
-    CCVariable<double>& surfaceAreaFraction
-      = tsk_info->get_uintah_field_add<CCVariable<double> >( surfAreaF_name );
+    CCVariable<double>& surfaceAreaFraction = tsk_info->new_get_uintah_field<CCVariable<double> >( surfAreaF_name );
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
      surfaceAreaFraction(i,j,k) =  weight(i,j,k)*length(i,j,k)*length(i,j,k)/AreaSumF(i,j,k);

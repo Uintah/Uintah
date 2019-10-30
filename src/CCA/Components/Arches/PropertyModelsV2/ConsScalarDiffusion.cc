@@ -83,8 +83,8 @@ void ConsScalarDiffusion::initialize( const Patch* patch, ArchesTaskInfoManager*
 
 
   auto gamma = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_gamma_name);
-  //constCCVariable<double>& mu_t    = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_turb_viscosity_name);
-  //constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+  //constCCVariable<double>& mu_t = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_turb_viscosity_name);
+  //constCCVariable<double>& density = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
 
   parallel_initialize(execObj,0.0,gamma);
 

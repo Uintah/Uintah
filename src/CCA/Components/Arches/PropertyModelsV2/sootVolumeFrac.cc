@@ -92,7 +92,7 @@ sootVolumeFrac::register_initialize( VIVec& variable_registry , const bool pack_
 
 template <typename ExecSpace, typename MemSpace>
 void sootVolumeFrac::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
+  CCVariable<double>& fvSoot = tsk_info->new_get_uintah_field<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 }
 
@@ -120,11 +120,11 @@ sootVolumeFrac::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
 template <typename ExecSpace, typename MemSpace>
 void sootVolumeFrac::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& fvSoot     = tsk_info->get_uintah_field_add<CCVariable<double> >( _fvSoot);
+  CCVariable<double>& fvSoot = tsk_info->new_get_uintah_field<CCVariable<double> >( _fvSoot);
   fvSoot.initialize(0.0);
 
-  constCCVariable<double>& gas_density= tsk_info->get_const_uintah_field_add<constCCVariable<double> >( _den_label_name);
-  constCCVariable<double>& Ysoot= tsk_info->get_const_uintah_field_add<constCCVariable<double> >( _Ys_label_name);
+  constCCVariable<double>& gas_density = tsk_info->new_get_uintah_field<constCCVariable<double> >( _den_label_name);
+  constCCVariable<double>& Ysoot = tsk_info->new_get_uintah_field<constCCVariable<double> >( _Ys_label_name);
 
 
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());

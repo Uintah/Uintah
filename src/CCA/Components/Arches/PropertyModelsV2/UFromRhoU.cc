@@ -123,13 +123,13 @@ template <typename ExecSpace, typename MemSpace>
 void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
-  constSFCXVariable<double>& old_u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& old_v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& old_w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& old_u = tsk_info->new_get_uintah_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& old_v = tsk_info->new_get_uintah_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& old_w = tsk_info->new_get_uintah_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  SFCXVariable<double>& u = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.copy(old_u);
   v.copy(old_v);
@@ -165,12 +165,12 @@ void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* t
 
   constCCVariable<double>&    rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_density_name );
   constCCVariable<double>&    eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_eps_name );
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >( m_xmom );
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >( m_ymom );
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >( m_zmom );
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& xmom = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( m_xmom );
+  constSFCYVariable<double>& ymom = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( m_ymom );
+  constSFCZVariable<double>& zmom = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( m_zmom );
+  SFCXVariable<double>& u = tsk_info->new_get_uintah_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->new_get_uintah_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->new_get_uintah_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.initialize(0.0);
   v.initialize(0.0);

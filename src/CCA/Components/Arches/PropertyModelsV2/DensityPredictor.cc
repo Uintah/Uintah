@@ -102,7 +102,7 @@ DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::Variabl
 template <typename ExecSpace, typename MemSpace>
 void DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
+  CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >("new_densityGuess");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
 
 }
@@ -120,7 +120,7 @@ DensityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::Vari
 template <typename ExecSpace, typename MemSpace> void
 DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rho = *(tsk_info->get_uintah_field<CCVariable<double> >("new_densityGuess"));
+  CCVariable<double>& rho = tsk_info->new_get_uintah_field<CCVariable<double> >("new_densityGuess");
   KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
 
 }
@@ -154,14 +154,14 @@ DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 template <typename ExecSpace, typename MemSpace>
 void DensityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& rho_guess = *(tsk_info->get_uintah_field<CCVariable<double> >( "new_densityGuess"));
-  CCVariable<double>& rho_guess_a = *(tsk_info->get_uintah_field<CCVariable<double> >( "densityGuess"));
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( "densityCP" ));
-  constCCVariable<double>& eps = *(tsk_info->get_const_uintah_field<constCCVariable<double > >( "volFraction" ));
+  CCVariable<double>& rho_guess = tsk_info->new_get_uintah_field<CCVariable<double> >( "new_densityGuess");
+  CCVariable<double>& rho_guess_a = tsk_info->new_get_uintah_field<CCVariable<double> >( "densityGuess");
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >( "densityCP" );
+  constCCVariable<double>& eps = tsk_info->new_get_uintah_field<constCCVariable<double > >( "volFraction" );
 
-  constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" ));
-  constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" ));
-  constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" ));
+  constSFCXVariable<double>& u = tsk_info->new_get_uintah_field<constSFCXVariable<double> >( "uVelocitySPBC" );
+  constSFCYVariable<double>& v = tsk_info->new_get_uintah_field<constSFCYVariable<double> >( "vVelocitySPBC" );
+  constSFCZVariable<double>& w = tsk_info->new_get_uintah_field<constSFCZVariable<double> >( "wVelocitySPBC" );
 
   //---work---
   const double dt = tsk_info->get_dt();

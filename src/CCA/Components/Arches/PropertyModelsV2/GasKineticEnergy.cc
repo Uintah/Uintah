@@ -83,7 +83,7 @@ GasKineticEnergy::register_initialize( std::vector<ArchesFieldContainer::Variabl
 template <typename ExecSpace, typename MemSpace>
 void GasKineticEnergy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& ke = *(tsk_info->get_uintah_field<CCVariable<double> >( m_kinetic_energy ));
+  CCVariable<double>& ke = tsk_info->new_get_uintah_field<CCVariable<double> >( m_kinetic_energy );
   ke.initialize(0.0);
 
 }

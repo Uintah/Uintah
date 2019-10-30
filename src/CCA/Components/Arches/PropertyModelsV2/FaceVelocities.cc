@@ -128,15 +128,11 @@ void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_
   auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
   auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
-  parallel_initialize(execObj,0.0,ucell_xvel
-                               ,ucell_yvel
-                               ,ucell_zvel
-                               ,vcell_xvel
-                               ,vcell_yvel
-                               ,vcell_zvel
-                               ,wcell_xvel
-                               ,wcell_yvel
-                               ,wcell_zvel);
+  parallel_initialize( execObj, 0.0
+                     , ucell_xvel, ucell_yvel, ucell_zvel
+                     , vcell_xvel, vcell_yvel, vcell_zvel
+                     , wcell_xvel, wcell_yvel, wcell_zvel
+                     );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -169,15 +165,11 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
   auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
-  parallel_initialize(execObj,0.0,ucell_xvel 
-                               ,ucell_yvel
-                               ,ucell_zvel
-                               ,vcell_xvel
-                               ,vcell_yvel
-                               ,vcell_zvel
-                               ,wcell_xvel
-                               ,wcell_yvel
-                               ,wcell_zvel);
+  parallel_initialize( execObj, 0.0
+                     , ucell_xvel, ucell_yvel, ucell_zvel
+                     , vcell_xvel, vcell_yvel, vcell_zvel
+                     , wcell_xvel, wcell_yvel, wcell_zvel
+                     );
 
   // bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   // bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;

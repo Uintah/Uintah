@@ -107,13 +107,13 @@ namespace Uintah {
 
       }
 
-      /** @brief Return a UINTAH field **/
-      template <typename T>
-      inline T*
-      get_uintah_field( const std::string name )
-      {
-        return _field_container->get_field<T>( name );
-      }
+      // /** @brief Return a UINTAH field **/
+      // template <typename T>
+      // inline T*
+      // get_uintah_field( const std::string name )
+      // {
+      //   return _field_container->get_field<T>( name );
+      // }
 
       template <typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void >::type

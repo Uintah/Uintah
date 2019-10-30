@@ -137,6 +137,7 @@ void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_total_vis_name);
   auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_turb_viscosity_name);
   auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>, double, MemSpace>(m_IsI_name);
+
   parallel_initialize(execObj,0.0, mu_sgc, mu_turb, IsI);
 
 }

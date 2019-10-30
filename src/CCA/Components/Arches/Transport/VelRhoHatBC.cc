@@ -83,6 +83,7 @@ void VelRhoHatBC::register_timestep_eval( std::vector<AFC::VariableInformation>&
 // wrapper templated function to deal with different types
 template <typename ExecSpace, typename MemSpace, typename grid_T, typename Cgrid_T>
 void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecSpace, MemSpace> &execObj,grid_T& var, const Cgrid_T& old_var, IntVector& iDir,  const double &possmall , const int sign, ListOfCellsIterator& cell_iter){
+
      int move_to_face_value = ( (iDir[0]+iDir[1]+iDir[2]) < 1 ) ? 1 : 0;
 
      IntVector move_to_face(std::abs(iDir[0])*move_to_face_value,

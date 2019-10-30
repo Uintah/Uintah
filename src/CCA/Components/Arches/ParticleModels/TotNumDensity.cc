@@ -93,7 +93,7 @@ TotNumDensity::register_initialize(
 template <typename ExecSpace, typename MemSpace>
 void TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
+  CCVariable<double>& num_den = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
   num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){
@@ -132,7 +132,7 @@ TotNumDensity::register_timestep_eval(
 template <typename ExecSpace, typename MemSpace>
 void TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& num_den = *(tsk_info->get_uintah_field<CCVariable<double> >( m_task_name ));
+  CCVariable<double>& num_den = tsk_info->new_get_uintah_field<CCVariable<double> >( m_task_name );
   num_den.initialize(0.0);
 
   for ( int ienv = 0; ienv < _Nenv; ienv++ ){

@@ -359,18 +359,18 @@ template <typename ExecSpace, typename MemSpace>
 void
 partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
-  CCVariable<double>& abskp = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name));
+  CCVariable<double>& abskp = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name);
   abskp.initialize(0.0);
   
   for (int i=0; i< _nQn_part ; i++){
-    CCVariable<double>& abskpQuad = *(tsk_info->get_uintah_field<CCVariable<double> >(_abskp_name_vector[i]));
+    CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[i]);
     abskpQuad.initialize(0.0);
   }
   
   if (_scatteringOn ){
-    CCVariable<double>& scatkt = *(tsk_info->get_uintah_field<CCVariable<double> >(_scatkt_name));
+    CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
     scatkt.initialize(0.0);
-    CCVariable<double>& asymm = *(tsk_info->get_uintah_field<CCVariable<double> >(_asymmetryParam_name));
+    CCVariable<double>& asymm = tsk_info->new_get_uintah_field<CCVariable<double> >(_asymmetryParam_name);
     asymm.initialize(0.0);
   }
 }

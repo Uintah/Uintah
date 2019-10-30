@@ -223,14 +223,14 @@ template <typename ExecSpace, typename MemSpace>
 void DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   if (m_create_labels_IsI_t_viscosity) {
-    CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-    CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
+    CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+    CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
     mu_sgc.initialize(0.0);
     mu_turb.initialize(0.0);
   }
-  CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
-  CCVariable<double>& filterMM = *(tsk_info->get_uintah_field<CCVariable<double> >("filterMM"));
-  CCVariable<double>& filterML = *(tsk_info->get_uintah_field<CCVariable<double> >("filterML"));
+  CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
+  CCVariable<double>& filterMM = tsk_info->new_get_uintah_field<CCVariable<double> >("filterMM");
+  CCVariable<double>& filterML = tsk_info->new_get_uintah_field<CCVariable<double> >("filterML");
   Cs.initialize(0.0);
   filterMM.initialize(0.0);
   filterML.initialize(0.0);
@@ -247,8 +247,8 @@ DSmaCs<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableIn
 template<typename TT> 
 template <typename ExecSpace, typename MemSpace> void
 DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  //CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  //CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
+  //CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+  //CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -291,11 +291,11 @@ template<typename TT>
 template <typename ExecSpace, typename MemSpace>
 void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_t_vis_name));
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  CCVariable<double>& Cs = *(tsk_info->get_uintah_field<CCVariable<double> >(m_Cs_name));
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  CCVariable<double>& mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& Cs = tsk_info->new_get_uintah_field<CCVariable<double> >(m_Cs_name);
+  constCCVariable<double>& rho = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_volFraction_name);
   Cs.initialize(0.0);
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
@@ -317,8 +317,8 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   TT& MM = c_field_tool.get("MM");
   TT& IsI = c_field_tool.get(m_IsI_name);
 
-  CCVariable<double>& filterML = tsk_info->get_uintah_field_add< CCVariable<double> >("filterML");
-  CCVariable<double>& filterMM = tsk_info->get_uintah_field_add< CCVariable<double> >("filterMM");
+  CCVariable<double>& filterML = tsk_info->new_get_uintah_field< CCVariable<double> >("filterML");
+  CCVariable<double>& filterMM = tsk_info->new_get_uintah_field< CCVariable<double> >("filterMM");
   filterML.initialize(0.0);
   filterMM.initialize(0.0);
 

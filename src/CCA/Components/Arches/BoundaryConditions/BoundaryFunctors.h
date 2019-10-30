@@ -874,7 +874,7 @@ template <typename ExecSpace, typename MemSpace>
     // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc
 
     //typedef typename VariableHelper<T>::ConstType CT;
-    //T& var = *( tsk_info->get_uintah_field<T>(var_name));
+    //T& var = tsk_info->new_get_uintah_field<T>(var_name);
 
     //constCCVariable<double>& old_var =
     //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
@@ -1293,7 +1293,7 @@ void BCFunctors<T>::apply_bc( std::vector<std::string> varnames, WBCHelper* bc_h
                    "  Functor name: " << spec->functorName << std::endl;
             throw InvalidValue( msg.str(), __FILE__, __LINE__);
           }
-          
+
         }
       }
     }
