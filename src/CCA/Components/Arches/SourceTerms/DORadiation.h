@@ -132,7 +132,7 @@ void checkReductionVars( const ProcessorGroup * pg,
                                DataWarehouse  * old_dw,
                                DataWarehouse  * new_dw );
   
-//---End of Functiosn relevant to sweeps ----//
+//---End of Functions relevant to sweeps ----//
   class Builder
     : public SourceTermBase::Builder { 
 
@@ -143,7 +143,7 @@ void checkReductionVars( const ProcessorGroup * pg,
                : _name(name), _labels(labels), 
                  _my_world(my_world), _required_label_names(required_label_names)
       {
-          _type = "do_radiation"; 
+        _type = "do_radiation"; 
       }
 
       ~Builder(){}
@@ -168,16 +168,16 @@ private:
   int _nDir;
   int _nphase;
   int _nstage;
-  int _nsteps_calc_freq;  /// number of radiation solves to resolve the radiation time-scale
+  int _nsteps_calc_freq;                // number of radiation solves to resolve the radiation time-scale
 
   bool _multiBox; 
-  bool _dynamicSolveFrequency{false};  /// turns on the radiation profiler, tool to identifying if radiation is being resolved
+  bool _dynamicSolveFrequency{false};  // turns on the radiation profiler, tool to identifying if radiation is being resolved
 
-  std::vector<std::vector<double> > _xyzPatch_boundary;/// all patch boundaries (approximate), needed for multi-box weeps, 
+  std::vector<std::vector<double> > _xyzPatch_boundary;     // all patch boundaries (approximate), needed for multi-box weeps, 
 
   std::vector< std::vector < std::vector < bool > > > _doesPatchExist;
-  std::vector<const PatchSubset*> _RelevantPatchesXpYpZp;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
-  std::vector<const PatchSubset*> _RelevantPatchesXpYpZm;   /// only need four sets...
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZp;   // Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSubset*> _RelevantPatchesXpYpZm;   // only need four sets...
   std::vector<const PatchSubset*> _RelevantPatchesXpYmZp;  
   std::vector<const PatchSubset*> _RelevantPatchesXpYmZm;  
   std::vector<const PatchSubset*> _RelevantPatchesXmYpZp;  
@@ -185,8 +185,8 @@ private:
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZp;  
   std::vector<const PatchSubset*> _RelevantPatchesXmYmZm;  
 
-  std::vector<const PatchSet*> _RelevantPatchesXpYpZp2;   /// Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
-  std::vector<const PatchSet*> _RelevantPatchesXpYpZm2;   /// only need four sets...
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZp2;     // Some redundancy here, since XpYpZp = XmYmZm [ end : start ]
+  std::vector<const PatchSet*> _RelevantPatchesXpYpZm2;     // only need four sets...
   std::vector<const PatchSet*> _RelevantPatchesXpYmZp2;  
   std::vector<const PatchSet*> _RelevantPatchesXpYmZm2;  
   std::vector<const PatchSet*> _RelevantPatchesXmYpZp2;  

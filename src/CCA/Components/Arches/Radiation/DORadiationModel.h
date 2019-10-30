@@ -96,20 +96,23 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
-                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
+                                  int wall_type, 
+                                  int matlIndex, 
+                                  DataWarehouse* new_dw, 
+                                  DataWarehouse* old_dw,
                                   bool old_DW_isMissingIntensities);
 
       void intensitysolveSweepOptimized(const Patch* patch,
-                               int matlIndex,
-                               DataWarehouse* new_dw, 
-                               DataWarehouse* old_dw,
-                               int cdirecn);
+                                        int matlIndex,
+                                        DataWarehouse* new_dw, 
+                                        DataWarehouse* old_dw,
+                                        int cdirecn);
 
       void intensitysolveSweepOptimizedOLD(const Patch* patch,
-                               int matlIndex,
-                               DataWarehouse* new_dw, 
-                               DataWarehouse* old_dw,
-                               int cdirecn);
+                                           int matlIndex,
+                                           DataWarehouse* new_dw, 
+                                           DataWarehouse* old_dw,
+                                           int cdirecn);
 
 
       void getDOSource(const Patch* patch,
@@ -124,16 +127,17 @@ public:
                           DataWarehouse* old_dw);
 
       void setIntensityBC(const Patch* patch,
-                                  int matlIndex,  
-                                  CCVariable<double>& intensity,
-                                  constCCVariable<double>& radTemp,
-                                  constCCVariable<int>& cellType,
-                                  int iSpectralBand=0);
+                          int matlIndex,  
+                          CCVariable<double>& intensity,
+                          constCCVariable<double>& radTemp,
+                          constCCVariable<int>& cellType,
+                          int iSpectralBand=0);
 
       void  setIntensityBC2Orig(const Patch* patch,
                                 int matlIndex,  
                                 DataWarehouse* new_dw, 
-                                DataWarehouse* old_dw, int ix);
+                                DataWarehouse* old_dw, 
+                                int ix);
 
       int getIntOrdinates();
 
@@ -228,12 +232,12 @@ private:
       OffsetArray1<double> oeta;
       OffsetArray1<double> wt;
 
-      std::vector < bool >  _plusX;
-      std::vector < bool >  _plusY;
-      std::vector < bool >  _plusZ;
-      std::vector < int >  xiter;
-      std::vector < int >  yiter;
-      std::vector < int >  ziter;
+      std::vector<bool>  _plusX;
+      std::vector<bool>  _plusY;
+      std::vector<bool>  _plusZ;
+      std::vector<int>  xiter;
+      std::vector<int>  yiter;
+      std::vector<int>  ziter;
 
       OffsetArray1<double> rgamma;
       OffsetArray1<double> sd15;
