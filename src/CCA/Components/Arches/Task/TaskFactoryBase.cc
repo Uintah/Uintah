@@ -326,8 +326,8 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   }
 
   const std::string type_string = TaskInterface::get_task_type_string(type);
-  DOUT( dbg_arches_task, "[TaskFactoryBase]  Scheduling with mode " << type_string << " for factory " << _factory_name );
-  DOUT( dbg_arches_task, "                   Task packing is " << pack_string << std::endl );
+  DOUT( dbg_arches_task, "\n[TaskFactoryBase]  Scheduling with mode " << type_string << " for factory " << _factory_name );
+  DOUT( dbg_arches_task, "                   Task packing is " << pack_string );
 
   for ( auto i_task = arches_tasks.begin(); i_task != arches_tasks.end(); i_task++ ){
 
