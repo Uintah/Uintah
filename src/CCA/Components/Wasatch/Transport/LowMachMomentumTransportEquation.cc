@@ -242,10 +242,6 @@ namespace WasatchCore{
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
     
-    // create an old variable
-    OldVariable& oldVar = OldVariable::self();
-    oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, this->rhsTag_);
-
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
                                                     ( (enablePressureSolve || factory.have_entry( this->pressureTag_ )) ? this->pressureTag_ : Expr::Tag()),
