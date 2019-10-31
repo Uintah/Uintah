@@ -152,9 +152,9 @@ void cloudBenchmark::restart_initialize( const Patch* patch, ArchesTaskInfoManag
 
   CCVariable<double>& abskg = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskg_name);
   CCVariable<double>& radT  = tsk_info->new_get_uintah_field<CCVariable<double> >("temperature");
-  constCCVariable<double>& x = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridX"));
-  constCCVariable<double>& y = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridY"));
-  constCCVariable<double>& z = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridZ"));
+  constCCVariable<double>& x = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridX");
+  constCCVariable<double>& y = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridY");
+  constCCVariable<double>& z = tsk_info->new_get_uintah_field<constCCVariable<double> >("gridZ");
 
   abskg.initialize(1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
