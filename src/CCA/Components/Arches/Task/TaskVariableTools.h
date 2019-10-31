@@ -107,14 +107,6 @@ namespace Uintah {
 
       }
 
-      // /** @brief Return a UINTAH field **/
-      // template <typename T>
-      // inline T*
-      // get_uintah_field( const std::string name )
-      // {
-      //   return _field_container->get_field<T>( name );
-      // }
-
       template <typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void >::type
       get_uintah_field(       FIELD_TYPE  & field
@@ -278,26 +270,6 @@ namespace Uintah {
         }
       }
 #endif
-
-      // /** @brief Return a CONST UINTAH field specifying the DW **/
-      // template <typename T>
-      // inline T*
-      // get_const_uintah_field( const std::string                    name
-      //                       ,       ArchesFieldContainer::WHICH_DW which_dw
-      //                       )
-      // {
-      //   return _field_container->get_const_field<T>( name, which_dw );
-      // }
-      //
-      // /** @brief Return a CONST UINTAH field specifying the DW **/
-      // template <typename T>
-      // inline T&
-      // get_const_uintah_field_add( const std::string                    name
-      //                           ,       ArchesFieldContainer::WHICH_DW which_dw
-      //                           )
-      // {
-      //   return *(_field_container->get_const_field<T>( name, which_dw ));
-      // }
 
       template <typename T, typename ElemType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type

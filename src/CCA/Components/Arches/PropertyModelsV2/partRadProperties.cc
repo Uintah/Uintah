@@ -94,10 +94,10 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
   //------------ check to see if scattering is turned on --//
   ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ;
   for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
-  
+
     std::string radiation_model;
     db_src->getAttribute("type", radiation_model);
-  
+
     if (radiation_model == "do_radiation"){
       db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ;
       break;
@@ -110,17 +110,17 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
   //-------------------------------------------------------//
 
   db->require( "subModel", _particle_calculator_type);
-  
+
   if (_particle_calculator_type=="tabulated"){
     std::string table_directory;
     db->require("TablePath",table_directory);
     _nIVs = 2;                                       // two independent variables, radius and tempreature
     _nDVs = _scatteringOn ? 2 : 1;                   // two independent variables, radius and tempreature
     db->getWithDefault("const_asymmFact",_constAsymmFact,0.0);
-   
+
     std::string which_model = "none";
     db->require("model_type", which_model);
-   
+
     _p_planck_abskp = false;
     _p_ros_abskp    = false;
     std::string prefix;
@@ -128,18 +128,18 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     if ( which_model == "planck" ){
       _p_planck_abskp = true;
       prefix="planck";
-    } 
+    }
     else if ( which_model == "rossland" ){
       _p_ros_abskp = true;
       prefix="ross";
-    } 
+    }
     else {
       throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
     }
 
     std::vector<std::string> dep_vars;
     dep_vars.push_back(prefix+"_abs"); // must push_back _abs first or fields will be mismatched downstream
-    
+
     if (_scatteringOn){
       dep_vars.push_back(prefix+"_scat");
     }
@@ -200,19 +200,19 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
     if ( which_model == "planck" ){
       _p_planck_abskp = true;
-    } 
+    }
     else if ( which_model == "rossland" ){
       _p_ros_abskp = true;
-    } 
+    }
     else {
       throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
     }
 
     _3Dpart_radprops = scinew RadProps::ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
-    
+
     //--------------- Get initial ash mass -----------//
     ProblemSpecP db_part_ps = db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
-    
+
     double density;
     db_part_ps->require( "density", density );
 
@@ -222,7 +222,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
     double ash_massfrac;
     db_part_ps->findBlock("ultimate_analysis")->require("ASH", ash_massfrac);
 
-    _ash_mass_v = std::vector<double>(_nQn_part); 
+    _ash_mass_v = std::vector<double>(_nQn_part);
     for (int i=0; i< _nQn_part ; i++ ){
      _ash_mass_v[i] = pow(particle_sizes[i], 3.0)/6*M_PI*density*ash_massfrac;
     }
@@ -237,25 +237,25 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 #ifdef HAVE_RADPROPS
     double realCIF;
     double imagCIF;
-    
+
     db->require("complex_ir_real",realCIF);
     db->require("complex_ir_imag",imagCIF);
     db->getWithDefault("const_asymmFact",_constAsymmFact,0.0);
-    
+
     std::complex<double>  CIF(realCIF, imagCIF );
     _part_radprops = scinew RadProps::ParticleRadCoeffs(CIF,1e-6,3e-4,10);
-    
+
     std::string which_model = "none";
     db->require("model_type", which_model);             // redundant with the code above
     _p_planck_abskp = false;
     _p_ros_abskp = false;
-    
+
     if ( which_model == "planck" ){
       _p_planck_abskp = true;
-    } 
+    }
     else if ( which_model == "rossland" ){
       _p_ros_abskp = true;
-    } 
+    }
     else {
       throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
     }
@@ -273,10 +273,10 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
   if ( doing_dqmom ){
     _nQn_part = ArchesCore::get_num_env( db, ArchesCore::DQMOM_METHOD );
-  } 
+  }
   else if ( doing_cqmom ){
     _nQn_part = ArchesCore::get_num_env( db, ArchesCore::CQMOM_METHOD );
-  } 
+  }
   else {
     throw ProblemSetupException("Error: This particle radiation property method only supports DQMOM/CQMOM.",__FILE__,__LINE__);
   }
@@ -300,7 +300,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
   }
 
   //__________________________________
-  //  Define abskp names 
+  //  Define abskp names
   db->getAttribute("label",_abskp_name);
   _abskp_name_vector = std::vector<std::string> (_nQn_part);
 
@@ -320,7 +320,7 @@ partRadProperties::create_local_labels(){
   for (int i=0; i< _nQn_part ; i++){
     register_new_variable<CCVariable<double> >(_abskp_name_vector[i]);
   }
-  
+
   if (_scatteringOn ){
     register_new_variable<CCVariable<double> >(_scatkt_name);
     register_new_variable<CCVariable<double> >(_asymmetryParam_name);
@@ -340,7 +340,7 @@ partRadProperties::register_initialize( VIVec& variable_registry , const bool pa
 {
 
   const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability
-  
+
   register_variable( _abskp_name , computes, variable_registry);
 
   for (int i=0; i< _nQn_part ; i++){
@@ -361,12 +361,12 @@ partRadProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
 {
   CCVariable<double>& abskp = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name);
   abskp.initialize(0.0);
-  
+
   for (int i=0; i< _nQn_part ; i++){
     CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[i]);
     abskpQuad.initialize(0.0);
   }
-  
+
   if (_scatteringOn ){
     CCVariable<double>& scatkt = tsk_info->new_get_uintah_field<CCVariable<double> >(_scatkt_name);
     scatkt.initialize(0.0);
@@ -388,16 +388,16 @@ void partRadProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager
 //______________________________________________________________________
 //
 void
-partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, 
-                                          const int time_substep , 
+partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+                                          const int time_substep ,
                                           const bool packed_tasks)
 {
 
   const auto computes = Uintah::ArchesFieldContainer::COMPUTES;   // for readability;
   const auto requires = Uintah::ArchesFieldContainer::REQUIRES;
-  
+
   register_variable( _abskp_name , computes, variable_registry, time_substep);
-  
+
   for (int i=0; i< _nQn_part ; i++){
     register_variable( _abskp_name_vector[i] ,  computes, variable_registry, time_substep);
     register_variable( _temperature_name_v[i] , requires, variable_registry, time_substep);
@@ -409,7 +409,7 @@ partRadProperties::register_timestep_eval( std::vector<ArchesFieldContainer::Var
       register_variable( _Char_name_v[i] , requires, variable_registry, time_substep);
     }
   }
-  
+
   if (_scatteringOn ){
     register_variable( _scatkt_name ,         computes, variable_registry, time_substep);
     register_variable( _asymmetryParam_name , computes , variable_registry, time_substep);
@@ -449,9 +449,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto temperatureQuad = createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
-    weightQuad[ix]       = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
-    temperatureQuad[ix]  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
-    sizeQuad[ix]         = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
+    weightQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
+    temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
+    sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
     
     if (_isCoal){
       RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_RC_name_v[ix]  );
@@ -492,7 +492,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       });
 #ifdef HAVE_RADPROPS
     //__________________________________
-    //  
+    //
     }else if(_particle_calculator_type == "constantCIF" &&  _p_planck_abskp ){
 
       Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
@@ -500,9 +500,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp[0](i,j,k)     += abskpQuad[ix](i,j,k);
       });
-      
+
       //______________
-      //    
+      //
       if (_scatteringOn){
         Uintah::parallel_for(execObj, range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
@@ -513,15 +513,15 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     //__________________________________
     //
     }else if(_particle_calculator_type == "constantCIF" &&  _p_ros_abskp ){
-    
+
       Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
         double particle_absorption=_part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*portable_absorption_modifier;
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp[0](i,j,k)     += abskpQuad[ix](i,j,k);
       });
-        
+
       //______________
-      //  
+      //
       if (_scatteringOn){
         Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
@@ -533,7 +533,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     //__________________________________
     //
     }else if(_particle_calculator_type == "tabulated"  ){
-    
+
         enum independentVariables{ en_size, en_temp};
         enum DependentVariables{ abs_coef, sca_coef};
         auto IV =  createContainer<constCCVariable<double>, const double, IND_VAR_SIZE , MemSpace>(_nIVs);
@@ -570,7 +570,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       for (int ix=0; ix<_nQn_part; ix++){
         auto abskpQuad = tsk_info->get_uintah_field_add <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
-        
+
         Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
             double total_mass          = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal         = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
@@ -579,7 +579,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
             abskp[0](i,j,k)           += abskpQuad(i,j,k);
         });
       }
-      
+
       //______________
       //
       if (_scatteringOn){
@@ -600,12 +600,12 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
         });
       }
     //__________________________________
-    //  
+    //
     }else if(_particle_calculator_type == "coal" &&  _p_ros_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
-        CCVariable<double>& abskpQuad = tsk_info->get_uintah_field_add <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+        CCVariable<double>& abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
-        
+
         Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
           double total_mass          = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
           double complexReal         =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
@@ -614,7 +614,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
           abskp[0](i,j,k)           += abskpQuad(i,j,k);
          });
       }
-      
+
       //______________
       //
       if (_scatteringOn){

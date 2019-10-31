@@ -85,7 +85,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
-        $(SRCDIR)/linSolver.cc          \
+        $(SRCDIR)/linSolver.cc                 \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
@@ -95,6 +95,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/WBCHelper.cc                 \
         $(SRCDIR)/GridTools.cc                 \
         $(SRCDIR)/HandoffHelper.cc             \
+        $(SRCDIR)/UPSHelper.cc                 \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
 PSELIBS := \
