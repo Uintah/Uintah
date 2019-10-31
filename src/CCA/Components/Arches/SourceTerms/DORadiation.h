@@ -216,7 +216,11 @@ private:
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   RadPropertyCalculator* _prop_calculator; 
-  const ProcessorGroup* _my_world;
+  const ProcessorGroup*  _my_world;
+  
+  const MaterialSet* m_matls{nullptr};                    ///< Arches material set
+  int m_matIdx{-9};                                       ///< Arches material index
+  
 
   std::vector<const VarLabel*> _species_varlabels; 
   std::vector<const VarLabel*> _size_varlabels; 
@@ -252,6 +256,12 @@ private:
   std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
 
   ApplicationInterface* m_arches{nullptr};
+  //__________________________________
+  //
+  int intensityIndx(const int dir,
+                    const int iband);
+  
+  
 }; // end DORadiation
 } // end namespace Uintah
 #endif

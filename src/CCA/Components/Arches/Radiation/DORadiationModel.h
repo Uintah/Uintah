@@ -139,13 +139,21 @@ public:
                                 DataWarehouse* old_dw, 
                                 int ix);
 
-      int getIntOrdinates();
+      // returns the total number of directions, sn*(sn+2)
+      int getIntOrdinates(){
+        return d_totalOrds;
+      }
 
-      bool reflectionsBool();
+      bool reflectionsBool(){
+        return reflectionsTurnedOn;
+      }
 
       bool needIntensitiesBool();
 
-      bool ScatteringOnBool();
+      // Model scattering physics of particles?
+      bool ScatteringOnBool(){
+        return _scatteringOn;
+      };
 
       void setLabels( const VarLabel* abskg ,
                       const VarLabel* abskt,

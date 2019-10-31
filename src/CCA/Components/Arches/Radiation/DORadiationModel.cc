@@ -80,7 +80,8 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlab,
-                                   const ProcessorGroup* myworld,bool sweepMethod ):
+                                   const ProcessorGroup* myworld,
+                                   bool sweepMethod ):
                                    d_lab(label),
                                    d_MAlab(MAlab),
                                    d_myworld(myworld),
@@ -364,12 +365,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   for (int iband=0; iband<d_nbands; iband++){
     for( int ix=0;  ix<d_totalOrds ;ix++){
 
-      ostringstream my_stringstream_object;
-      //my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << "_"<< iband ;
-      my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix << "_"<< setw(2)<< iband ;
-      //my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix  ;
-
-      _IntensityLabels.push_back(  VarLabel::create(my_stringstream_object.str(),  CC_double));
+      ostringstream labelName;
+      labelName << "Intensity" << setfill('0') << setw(4)<<  ix << "_"<< setw(2)<< iband ;
+      _IntensityLabels.push_back(  VarLabel::create(labelName.str(),  CC_double));
 
       if(needIntensitiesBool()== false){
         break;  // gets labels for all intensities, otherwise only create 1 label
@@ -382,9 +380,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   if (_scatteringOn && _sweepMethod){
     for (int iband=0; iband<d_nbands; iband++){
       for( int ix=0;  ix< d_totalOrds;ix++){
-        ostringstream my_stringstream_object;
-        my_stringstream_object << "scatSrc_absSrc" << setfill('0') << setw(4)<<  ix <<"_"<<iband ;
-        _emiss_plus_scat_source_label.push_back(  VarLabel::create(my_stringstream_object.str(),CC_double));
+        ostringstream labelName;
+        labelName << "scatSrc_absSrc" << setfill('0') << setw(4)<<  ix <<"_"<<iband ;
+        _emiss_plus_scat_source_label.push_back(  VarLabel::create(labelName.str(),CC_double));
       }
     }
   }
@@ -464,18 +462,18 @@ DORadiationModel::computeOrdinatesOPL()
   yiter = vector<int> (d_totalOrds,-1);
   ziter = vector<int> (d_totalOrds,-1);
 
-  for (int direcn = 1; direcn <=d_totalOrds; direcn++){
-    if (omu[direcn] > 0) {
-      _plusX[direcn-1] = true;
-      xiter[direcn-1]  = 1;
+  for (int i = 1; i <=d_totalOrds; i++){
+    if (omu[i] > 0) {
+      _plusX[i-1] = true;
+      xiter[i-1]  = 1;
     }
-    if (oeta[direcn] > 0){
-      _plusY[direcn-1] = true;
-      yiter[direcn-1]  = 1;
+    if (oeta[i] > 0){
+      _plusY[i-1] = true;
+      yiter[i-1]  = 1;
     }
-    if (oxi[direcn] > 0) {
-      _plusZ[direcn-1] = true;
-      ziter[direcn-1]  = 1;
+    if (oxi[i] > 0) {
+      _plusZ[i-1] = true;
+      ziter[i-1]  = 1;
     }
   }
 
@@ -760,7 +758,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars,
                                  CCVariable<double>& divQ,
-                                 int wall_type, int matlIndex,
+                                 int wall_type, 
+                                 int matlIndex,
                                  DataWarehouse* new_dw,
                                  DataWarehouse* old_dw,
                                  bool old_DW_isMissingIntensities)
@@ -900,13 +899,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
     computeIntensitySource(patch,abskp,partTemp,abskgas,constvars->temperature,Emission_source,spectral_weights);
 
-    for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+    for (int dir = 1; dir <=d_totalOrds; dir++){
       if(_usePreviousIntensity  && !old_DW_isMissingIntensities){
-        old_dw->get(constvars->cenint,_IntensityLabels[direcn-1], matlIndex , patch,Ghost::None, 0  );
-        new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
+        old_dw->get(constvars->cenint,_IntensityLabels[dir-1],       matlIndex, patch,Ghost::None, 0  );
+        new_dw->getModifiable(vars->cenint,_IntensityLabels[dir-1] , matlIndex, patch );
       }
       else if ( _scatteringOn){
-        new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
+        new_dw->getModifiable(vars->cenint,_IntensityLabels[dir-1] , matlIndex, patch );
       }
       if(old_DW_isMissingIntensities){
         old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
@@ -923,24 +922,24 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       ap.initialize(0.0);
 
       bool plusX, plusY, plusZ;
-      plusX = (omu[direcn]  > 0.0)? 1 : 0;
-      plusY = (oeta[direcn] > 0.0)? 1 : 0;
-      plusZ = (oxi[direcn]  > 0.0)? 1 : 0;
+      plusX = (omu[dir]  > 0.0)? 1 : 0;
+      plusY = (oeta[dir] > 0.0)? 1 : 0;
+      plusZ = (oxi[dir]  > 0.0)? 1 : 0;
 
       d_linearSolver->gridSetup(plusX, plusY, plusZ);
 
       if(_scatteringOn){
         if(old_DW_isMissingIntensities){
-          computeScatteringIntensities(direcn,scatkt, IntensitiesRestart,scatIntensitySource, asymmetryParam, patch);
+          computeScatteringIntensities(dir,scatkt, IntensitiesRestart,scatIntensitySource, asymmetryParam, patch);
         }else{
-          computeScatteringIntensities(direcn,scatkt, Intensities,       scatIntensitySource, asymmetryParam, patch);
+          computeScatteringIntensities(dir,scatkt, Intensities,       scatIntensitySource, asymmetryParam, patch);
         }
       }
 
       // old construction of the A-matrix using fortran
       //fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield,
                       //cellinfo->sew, cellinfo->sns, cellinfo->stb,
-                      //vars->ESRCG, direcn, oxi, omu,oeta, wt,
+                      //vars->ESRCG, dir, oxi, omu,oeta, wt,
                       //constvars->temperature, constvars->ABSKT,
                       //su, aw, as, ab, ap,
                       //plusX, plusY, plusZ, fraction, bands, //fraction set to 1.0
@@ -949,7 +948,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       //radiationFlux_old[4] , radiationFlux_old[5],scatIntensitySource); //  this term needed for scattering
 
      // new (2-2017) construction of A-matrix and b-matrix
-      computeAMatrix  doMakeMatrixA( omu[direcn], oeta[direcn], oxi[direcn],
+      computeAMatrix  doMakeMatrixA( omu[dir], oeta[dir], oxi[dir],
                                      areaEW, areaNS, areaTB, volume, ffield,
                                      constvars->cellType,
                                      constvars->temperature,
@@ -972,7 +971,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       d_linearSolver->setMatrix( pg ,patch, vars, constvars, plusX, plusY, plusZ,
                                  su, ab, as, aw, ap, d_print_all_info );
 
-      bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
+      bool converged =  d_linearSolver->radLinearSolve( dir, d_print_all_info );
 
       if(_usePreviousIntensity){
         vars->cenint.initialize(0.0); // Extra cells of intensity solution are not set when using non-zero initial guess.  Reset field to initialize extra cells
@@ -986,8 +985,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
 
 
-      //fort_rdomvolq( idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);
-      //fort_rdomflux( idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
+      //fort_rdomvolq( idxLo, idxHi, dir, wt, vars->cenint, vars->volq);
+      //fort_rdomflux( idxLo, idxHi, dir, oxi, omu, oeta, wt, vars->cenint,
                      //plusX, plusY, plusZ,
                      //vars->qfluxe, vars->qfluxw,
                      //vars->qfluxn, vars->qfluxs,
@@ -996,19 +995,15 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      //
                      //
 
-
-
-      compute4Flux<CCVariable<double>, double> doFlux(wt[direcn] * abs(omu[direcn]) * d_xfluxAdjust,
-                                                      wt[direcn] * abs(oeta[direcn])* d_yfluxAdjust,
-                                                      wt[direcn] * abs(oxi[direcn]) * d_zfluxAdjust,
-                                                      wt[direcn],  vars->cenint,
+      compute4Flux<CCVariable<double>, double> doFlux(wt[dir] * abs(omu[dir]) * d_xfluxAdjust,
+                                                      wt[dir] * abs(oeta[dir])* d_yfluxAdjust,
+                                                      wt[dir] * abs(oxi[dir]) * d_zfluxAdjust,
+                                                      wt[dir],  vars->cenint,
                                                       plusX ? vars->qfluxe :  vars->qfluxw,
                                                       plusY ? vars->qfluxn :  vars->qfluxs,
                                                       plusZ ? vars->qfluxt :  vars->qfluxb,
                                                       vars->volq);
-
       Uintah::parallel_for( range, doFlux );
-
     }  // ordinate loop
 
     if(_scatteringOn){
@@ -1033,15 +1028,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   proc0cout << "Total Radiation Solve Time: " << timer().seconds() << " seconds\n";
 
 }
-//______________________________________________________________________
-// returns the total number of directions, sn*(sn+2)
-int
-DORadiationModel::getIntOrdinates(){ return d_totalOrds;}
 
-//______________________________________________________________________
-// Do the walls reflect? (should only be off if emissivity of walls = 1.0)
-bool
-DORadiationModel::reflectionsBool(){ return reflectionsTurnedOn; }
 
 //______________________________________________________________________
 // Do the Intensities need to be saved from the previous solve?
@@ -1051,10 +1038,6 @@ DORadiationModel::reflectionsBool(){ return reflectionsTurnedOn; }
 bool
 DORadiationModel::needIntensitiesBool(){ return _usePreviousIntensity || _scatteringOn || _sweepMethod; }
 
-//______________________________________________________________________
-// Model scattering physics of particles?
-bool
-DORadiationModel::ScatteringOnBool(){ return _scatteringOn; }
 
 //______________________________________________________________________
 //
@@ -1797,25 +1780,25 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   //__________________________________
   //
   for (int iband=0; iband<d_nbands; iband++){
-    for (int direcn = 1; direcn <=d_totalOrds; direcn++){
+    for (int dir = 1; dir <=d_totalOrds; dir++){
 
       constCCVariable <double > intensity;
-      new_dw->get(intensity,_IntensityLabels[direcn-1+iband*d_totalOrds] , matlIndex, patch, Ghost::None,0 );   // this should be a requires,  type restriction
+      new_dw->get(intensity,_IntensityLabels[dir-1+iband*d_totalOrds] , matlIndex, patch, Ghost::None,0 );   // this should be a requires,  type restriction
 
-      compute4Flux<constCCVariable<double>, const double> doFlux( wt[direcn] * abs(omu[direcn]) * d_xfluxAdjust,
-                                                                  wt[direcn] * abs(oeta[direcn])* d_yfluxAdjust,
-                                                                  wt[direcn] * abs(oxi[direcn]) * d_zfluxAdjust,
-                                                                  wt[direcn],  intensity,
-                                                                  _plusX[direcn-1]==1 ? fluxE :  fluxW,
-                                                                  _plusY[direcn-1]==1 ? fluxN :  fluxS,
-                                                                  _plusZ[direcn-1]==1 ? fluxT :  fluxB,
+      compute4Flux<constCCVariable<double>, const double> doFlux( wt[dir] * abs(omu[dir]) * d_xfluxAdjust,
+                                                                  wt[dir] * abs(oeta[dir])* d_yfluxAdjust,
+                                                                  wt[dir] * abs(oxi[dir]) * d_zfluxAdjust,
+                                                                  wt[dir],  intensity,
+                                                                  _plusX[dir-1]==1 ? fluxE :  fluxW,
+                                                                  _plusY[dir-1]==1 ? fluxN :  fluxS,
+                                                                  _plusZ[dir-1]==1 ? fluxT :  fluxB,
                                                                   volQ);
 
       Uintah::parallel_for( range, doFlux );
 
       if(_LspectralSolve){
         Uintah::parallel_for( range, [&](int i, int j, int k){
-          spectral_volQ[iband](i,j,k) += intensity(i,j,k) * wt[direcn];
+          spectral_volQ[iband](i,j,k) += intensity(i,j,k) * wt[dir];
         });
       }
     }
