@@ -95,7 +95,7 @@ void doSweepAdvanced(  const ProcessorGroup* pc,
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw ,
-                         const int ix, int intensity_iter );
+                         int intensity_iter );
 
 // computes fluxes and divQ and volQ, by integrating intensities over the solid angle
 void computeFluxDivQ( const ProcessorGroup* pc, 

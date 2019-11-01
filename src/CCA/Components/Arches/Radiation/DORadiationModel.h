@@ -31,18 +31,18 @@
 CLASS
     DORadiationModel
        Sets up the DORadiationModel
-       
+
 GENERAL INFORMATION
     DORadiationModel.h - Declaration of DORadiationModel class
 
-    Author:Gautham Krishnamoorthy (gautham@crsim.utah.edu) 
+    Author:Gautham Krishnamoorthy (gautham@crsim.utah.edu)
            Rajesh Rawat (rawat@crsim.utah.edu)
-    
+
     Creation Date : 06-18-2002
 
     C-SAFE
-    
-    
+
+
 ***************************************************************************/
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
@@ -57,7 +57,7 @@ GENERAL INFORMATION
 namespace Uintah {
 
   class ApplicationInterface;
-  
+
   class ArchesLabel;
   class MPMArchesLabel;
 
@@ -86,79 +86,73 @@ public:
 
       virtual void boundarycondition(const ProcessorGroup* pc,
                                      const Patch* patch,
-                                     CellInformation* cellinfo, 
+                                     CellInformation* cellinfo,
                                      ArchesVariables* vars,
-                                     ArchesConstVariables* constvars);
+                                     ArchesConstVariables* constvars){};
 
       virtual void intensitysolve(const ProcessorGroup* pc,
                                   const Patch* patch,
-                                  CellInformation* cellinfo, 
+                                  CellInformation* cellinfo,
                                   ArchesVariables* vars,
-                                  ArchesConstVariables* constvars, 
+                                  ArchesConstVariables* constvars,
                                   CCVariable<double>& divQ,
-                                  int wall_type, 
-                                  int matlIndex, 
-                                  DataWarehouse* new_dw, 
+                                  int wall_type,
+                                  int matlIndex,
+                                  DataWarehouse* new_dw,
                                   DataWarehouse* old_dw,
                                   bool old_DW_isMissingIntensities);
 
       void intensitysolveSweepOptimized(const Patch* patch,
                                         int matlIndex,
-                                        DataWarehouse* new_dw, 
+                                        DataWarehouse* new_dw,
                                         DataWarehouse* old_dw,
                                         int cdirecn);
 
-      void intensitysolveSweepOptimizedOLD(const Patch* patch,
-                                           int matlIndex,
-                                           DataWarehouse* new_dw, 
-                                           DataWarehouse* old_dw,
-                                           int cdirecn);
-
-
       void getDOSource(const Patch* patch,
-                       int matlIndex,                    
-                       DataWarehouse* new_dw,            
-                       DataWarehouse* old_dw);           
+                       int matlIndex,
+                       DataWarehouse* new_dw,
+                       DataWarehouse* old_dw);
 
 
       void computeFluxDiv(const Patch* patch,
-                          int matlIndex,  
-                          DataWarehouse* new_dw, 
+                          int matlIndex,
+                          DataWarehouse* new_dw,
                           DataWarehouse* old_dw);
 
       void setIntensityBC(const Patch* patch,
-                          int matlIndex,  
+                          int matlIndex,
                           CCVariable<double>& intensity,
                           constCCVariable<double>& radTemp,
                           constCCVariable<int>& cellType,
                           int iSpectralBand=0);
 
       void  setIntensityBC2Orig(const Patch* patch,
-                                int matlIndex,  
-                                DataWarehouse* new_dw, 
-                                DataWarehouse* old_dw, 
+                                int matlIndex,
+                                DataWarehouse* new_dw,
+                                DataWarehouse* old_dw,
                                 int ix);
 
       // returns the total number of directions, sn*(sn+2)
       int getIntOrdinates(){
-        return d_totalOrds;
+        return m_totalOrds;
       }
 
       bool reflectionsBool(){
-        return reflectionsTurnedOn;
+        return m_doReflections;
       }
 
       bool needIntensitiesBool();
 
       // Model scattering physics of particles?
       bool ScatteringOnBool(){
-        return _scatteringOn;
+        return m_doScattering;
       };
 
       void setLabels( const VarLabel* abskg ,
                       const VarLabel* abskt,
                       const VarLabel* T_label,
                       const VarLabel* cellType,
+
     std::vector<const VarLabel* > radIntSource,
                       const VarLabel*  FluxE,
                       const VarLabel*  FluxW,
@@ -181,16 +175,16 @@ public:
       }
 
       inline int get_nQn_part(){
-        return _nQn_part;
+        return m_nQn_part;
       }
       inline int xDir( int ix){
-        return   _plusX[ix];
+        return   m_plusX[ix];
       }
       inline int yDir( int ix){
-        return  _plusY[ix] ;
+        return  m_plusY[ix] ;
       }
       inline int zDir( int ix){
-        return  _plusZ[ix] ;
+        return  m_plusZ[ix] ;
       }
 
       std::vector<std::string> gasAbsorptionNames(){
@@ -208,7 +202,7 @@ public:
       }
 
       inline int spectralBands(){
-        return d_nbands;
+        return m_nbands;
       }
 
       inline bool spectralSootOn(){
@@ -217,86 +211,104 @@ public:
 
 private:
 
-      std::vector<double> _grey_reference_weight;
-      double _nphase; // optical length
-      double _solve_start;
-      double d_opl; // optical length
-      const ArchesLabel*    d_lab;
-      const MPMArchesLabel* d_MAlab;
+      //__________________________________
+      //  Variables
+      enum initGuess{ NONE, ZERO, OLD_INTENSITY};
+
       const ProcessorGroup* d_myworld;
-      const PatchSet* d_perproc_patches;
+      const Ghost::GhostType m_gn = Ghost::None;
       
-      int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
-      std::string d_quadratureSet;                // Name of Method used to determine intensity directions
-
-      void computeOrdinatesOPL();
-      int d_lambda;
-      const int ffield;
-
+      std::vector<double> _grey_reference_weight;
+      double _nphase;                               // optical length
       std::vector< std::vector < std::vector < Ghost::GhostType > > > _gv;
-   
+
+      std::string m_quadratureSet;                 // Name of Method used to determine intensity directions
+      
+      const int m_lambda{1};                       //WARNING: HARDCODED.
+      const int m_ffield;
+
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
       OffsetArray1<double> oeta;
       OffsetArray1<double> wt;
 
-      std::vector<bool>  _plusX;
-      std::vector<bool>  _plusY;
-      std::vector<bool>  _plusZ;
-      std::vector<int>  xiter;
-      std::vector<int>  yiter;
-      std::vector<int>  ziter;
+      std::vector<bool>  m_plusX;     // What are these?
+      std::vector<bool>  m_plusY;
+      std::vector<bool>  m_plusZ;
+      
+      std::vector<int>  m_xiter;
+      std::vector<int>  m_yiter;
+      std::vector<int>  m_ziter;
 
-      OffsetArray1<double> rgamma;
-      OffsetArray1<double> sd15;
-      OffsetArray1<double> sd;
-      OffsetArray1<double> sd7;
-      OffsetArray1<double> sd3;
-
-      OffsetArray1<double> srcbm;
-      OffsetArray1<double> srcpone;
-      OffsetArray1<double> qfluxbbm;
-
-      double d_xfluxAdjust;
-      double d_yfluxAdjust;
-      double d_zfluxAdjust;
-
-      bool d_print_all_info; 
-      bool reflectionsTurnedOn;
-      bool _scatteringOn;
-      bool _usePreviousIntensity;
-      bool _zeroInitialGuess;
-      bool _radiateAtGasTemp; // this flag is arbitrary for no particles
+      double m_xfluxAdjust;
+      double m_yfluxAdjust;
+      double m_zfluxAdjust;
+      
+      // switches and flags
+      bool _LspectralSolve      {false};
+      bool _LspectralSootOn     {false};
+      bool m_print_all_info     {false};
+      bool m_radiateAtGasTemp   {true};                 // this flag is arbitrary for no particles
+      bool m_doReflections      {false};
+      bool m_doScattering       {false};
+      initGuess m_initialGuess  {NONE};
       int _sweepMethod;
-      int d_nbands{1};
-      bool _LspectralSolve;
-      bool _LspectralSootOn;
+      
+      // looping limits and physical constants
+      int m_nbands{1};
+      int m_nQn_part;      
+      int m_sn;
+      int m_totalOrds;                                  // totalOrdinates = sn*(sn+2)
+      const double _sigma{5.67e-8};                     //  w / m^2 k^4
 
-      const VarLabel* _scatktLabel;
-      const VarLabel* _asymmetryLabel;
-      const VarLabel*  _abskt_label;
-      const VarLabel*  _T_label;
-      const VarLabel*  _cellTypeLabel;
-      const VarLabel* _fluxE;
-      const VarLabel* _fluxW;
-      const VarLabel* _fluxN;
-      const VarLabel* _fluxS;
-      const VarLabel* _fluxT;
-      const VarLabel* _fluxB;
-      const VarLabel* _volQ;
-      const VarLabel* _divQ;
+
+      std::vector< std::vector<double>> m_cosineTheta;
+      std::vector<double>  m_solidAngleWeight;
       Timers::Simple _timer;
+      
+      // A pointer to the application so to get a handle to the performanance stats.
+      ApplicationInterface* m_application{nullptr};
+      
+      //__________________________________
+      //  VarLabels
+      const VarLabel* _abskt_label;
+      const VarLabel* _asymmetry_label;
+      const VarLabel* _cellType_label;
+      const VarLabel* _divQ_label;
+      const VarLabel* _fluxB_label;
+      const VarLabel* _fluxE_label;
+      const VarLabel* _fluxN_label;
+      const VarLabel* _fluxS_label;
+      const VarLabel* _fluxT_label;
+      const VarLabel* _fluxW_label;
+      const VarLabel* _scatkt_label;
+      const VarLabel* _T_label;
+      const VarLabel* _volQ_label;
 
-      std::vector< const VarLabel*> _IntensityLabels;
+      std::vector< const VarLabel*> _abskg_label_vector;
+      std::vector< const VarLabel*> _abskp_label_vector;
+      std::vector< const VarLabel*> _abswg_label_vector;
       std::vector< const VarLabel*> _emiss_plus_scat_source_label; // for sweeps, needed because Intensities fields are solved in parallel
-
-      std::vector< std::vector< const VarLabel*> > _patchIntensityLabels; 
+      std::vector< const VarLabel*> _IntensityLabels;
       std::vector< const VarLabel*> _radiationFluxLabels;
+      std::vector< const VarLabel*> _radIntSource;
+      std::vector< const VarLabel*> _temperature_label_vector;
+      std::vector< std::vector< const VarLabel*> > _patchIntensityLabels;
 
-      std::vector< std::vector < double > > cosineTheta;
-      std::vector < double >  solidAngleWeight;
+      //__________________________________
+      // VarLabel names
+      std::vector<std::string> _abskg_name_vector;
+      std::vector<std::string> _abswg_name_vector;
 
-      template<class TYPE> 
+      // variables needed for particles
+      std::vector<std::string> _temperature_name_vector;
+      std::vector<std::string> _abskp_name_vector;
+
+      //__________________________________
+      //  methods
+      void computeOrdinatesOPL();
+      
+      template<class TYPE>
       void computeScatteringIntensities(int direction,
                                         constCCVariable<double> &scatkt,
                                         std::vector< TYPE > &Intensities,
@@ -313,28 +325,7 @@ private:
                                    std::vector <CCVariable<double> >&b_sourceArray,
                                    std::vector <constCCVariable<double> >&spectral_weights);
 
-      std::vector<const VarLabel*>  _radIntSource;
-      std::vector<std::string> _radIntSource_names;
-
-
-      std::vector<std::string> _abskg_name_vector;
-      std::vector<std::string> _abswg_name_vector;
-
-      std::vector< const VarLabel*> _abskg_label_vector;
-      std::vector< const VarLabel*> _abswg_label_vector;
-
-      // variables needed for particles
-      std::vector<std::string> _temperature_name_vector;
-      std::vector<std::string> _abskp_name_vector;
-
-      std::vector< const VarLabel*> _abskp_label_vector;
-      std::vector< const VarLabel*> _temperature_label_vector;
-      int _nQn_part ;                                // number of quadrature nodes in DQMOM
-      double _sigma;
-
-      // A pointer to the application so to get a handle to the
-      // performanance stats.
-      ApplicationInterface* m_application{nullptr};
+      
 
 }; // end class RadiationModel
 

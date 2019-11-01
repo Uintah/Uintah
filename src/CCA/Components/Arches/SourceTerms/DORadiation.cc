@@ -172,13 +172,13 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   for (int iband=0; iband<d_nbands; iband++){
-    for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+    for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
       ostringstream labelName;
-      //labelName << "Intensity" << setfill('0') << setw(4)<<  ix ;
-      labelName << "Intensity" << setfill('0') << setw(4)<<  ix << "_"<< setw(2)<< iband;
+      //labelName << "Intensity" << setfill('0') << setw(4)<<  ord ;
+      labelName << "Intensity" << setfill('0') << setw(4)<<  ord << "_"<< setw(2)<< iband;
       _IntensityLabels.push_back(  VarLabel::find(labelName.str()));
       
-      const int indx = ix + iband * _DO_model->getIntOrdinates();
+      const int indx = ord + iband * _DO_model->getIntOrdinates();
       _extra_local_labels.push_back(_IntensityLabels[indx]);
       
       if(_DO_model->needIntensitiesBool()==false){
@@ -358,9 +358,9 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 
     if (_DO_model->ScatteringOnBool()){
       for (int iband=0; iband<d_nbands; iband++){
-        for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+        for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
           ostringstream labelName;
-          labelName << "scatSrc_absSrc" << setfill('0') << setw(4)<<  ix <<"_"<<iband ;
+          labelName << "scatSrc_absSrc" << setfill('0') << setw(4)<<  ord <<"_"<<iband ;
           _emiss_plus_scat_source_label.push_back(  VarLabel::find(labelName.str()));
         }
       }
@@ -685,9 +685,9 @@ DORadiation::computeSource( const ProcessorGroup  * pc,
       if ( timeSubStep == 0 ) {
 
         if(_DO_model->needIntensitiesBool()){
-          for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+          for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
             CCVariable<double> cenint;
-            new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , m_matIdx, patch );
+            new_dw->allocateAndPut(cenint,_IntensityLabels[ord] , m_matIdx, patch );
           }
         }
 
@@ -870,7 +870,6 @@ DORadiation::doSweepAdvanced( const ProcessorGroup * pc,
                               const MaterialSubset * matls,
                                     DataWarehouse  * old_dw,
                                     DataWarehouse  * new_dw,
-                              const int ixx_orig,
                                     int intensity_iter )
 {
   // This version relies on FULL spatial scheduling to reduce work, to see
@@ -1121,16 +1120,16 @@ if (timeSubStep==0){
     //--------------------------------------------------------------------//
     sched->addTask(tsk1, level->eachPatch(), m_matls, Radiation_TG);
 
-    for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+    for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
       std::stringstream tasknamec;
-      tasknamec << "DORadiation::sweeping_initialize_" <<ix;
-      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC,ix);
+      tasknamec << "DORadiation::sweeping_initialize_" <<ord;
+      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC,ord);
       
       tskc->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
       tskc->requires( Task::NewDW,_T_label, gn, 0 );
 
       for (int iband=0; iband<d_nbands; iband++){
-        const int idx = intensityIndx( ix, iband);
+        const int idx = intensityIndx( ord, iband);
         tskc->computes( _IntensityLabels[idx]);
       }
       sched->addTask(tskc, level->eachPatch(), m_matls, Radiation_TG);
@@ -1168,7 +1167,7 @@ if (timeSubStep==0){
           std::stringstream taskname2;
           taskname2 << "DORadiation::doSweepAdvanced_" <<istage<< "_"<<intensity_iter;
           
-          Task* tsk2 = scinew Task(taskname2.str(), this, &DORadiation::doSweepAdvanced, istage,intensity_iter);
+          Task* tsk2 = scinew Task(taskname2.str(), this, &DORadiation::doSweepAdvanced,intensity_iter);
 
           tsk2->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
           tsk2->requires( Task::OldDW,_abskt_label,             gn, 0 );
@@ -1264,8 +1263,8 @@ if (timeSubStep==0){
     Task* tsk3 = scinew Task(taskname3, this, &DORadiation::computeFluxDivQ);
 
     for (int iband=0; iband<d_nbands; iband++){
-      for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
-        const int idx = intensityIndx(ix, iband);
+      for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
+        const int idx = intensityIndx(ord, iband);
         tsk3->requires( Task::NewDW, _IntensityLabels[idx], gn, 0 );
       }
     }
@@ -1350,18 +1349,19 @@ DORadiation::setIntensityBC( const ProcessorGroup * pc,
                              const MaterialSubset * matls,
                                    DataWarehouse  * old_dw,
                                    DataWarehouse  * new_dw,
-                                   int ix )
+                                   int ord )
 {   
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
     for (int iband=0; iband<d_nbands; iband++){
-      const int indx = ix + iband * _DO_model->getIntOrdinates();
+      const int indx = intensityIndx( ord, iband);
+      
       CCVariable <double > intensity;
-      new_dw->allocateAndPut(intensity, _IntensityLabels[indx] , m_matIdx, patch,_gv[_DO_model->xDir(ix)][_DO_model->yDir(ix) ][_DO_model->zDir(ix)  ],1); // not supported long term (avoids copy)
+      new_dw->allocateAndPut(intensity, _IntensityLabels[indx] , m_matIdx, patch,_gv[_DO_model->xDir(ord)][_DO_model->yDir(ord) ][_DO_model->zDir(ord)  ],1); // not supported long term (avoids copy)
       intensity.initialize(0.0);
     }
-    _DO_model->setIntensityBC2Orig( patch, m_matIdx, new_dw, old_dw, ix);
+    _DO_model->setIntensityBC2Orig( patch, m_matIdx, new_dw, old_dw, ord);
 
   }
 }
@@ -1378,8 +1378,9 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup * pc,
 {
   if (_DO_model->ScatteringOnBool() || (!_sweepMethod) ){
     for (int iband=0; iband<d_nbands; iband++){
-      for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
-        const int indx = ix + iband * _DO_model->getIntOrdinates();
+      for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
+        const int indx = intensityIndx( ord, iband);
+        
         
         new_dw->transferFrom(old_dw,_IntensityLabels[indx],  patches, matls);
         if (_DO_model->needIntensitiesBool()==false){ // this is always true for scattering
@@ -1457,8 +1458,8 @@ DORadiation::checkReductionVars( const ProcessorGroup * pg,
 //      utilities
 //______________________________________________________________________
 int
-DORadiation::intensityIndx(const int dir,
+DORadiation::intensityIndx(const int ord,
                            const int iband)
 {
-  return (dir + iband * _DO_model->getIntOrdinates() );
+  return (ord + iband * _DO_model->getIntOrdinates() );
 }
