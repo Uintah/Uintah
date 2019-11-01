@@ -109,28 +109,28 @@ public:
                                         int cdirecn);
 
       void getDOSource(const Patch* patch,
-                       int matlIndex,
+                       const int matlIndex,
                        DataWarehouse* new_dw,
                        DataWarehouse* old_dw);
 
 
       void computeFluxDiv(const Patch* patch,
-                          int matlIndex,
+                          const int matlIndex,
                           DataWarehouse* new_dw,
                           DataWarehouse* old_dw);
 
       void setIntensityBC(const Patch* patch,
-                          int matlIndex,
+                          const int matlIndex,
                           CCVariable<double>& intensity,
                           constCCVariable<double>& radTemp,
                           constCCVariable<int>& cellType,
-                          int iSpectralBand=0);
+                          const int iSpectralBand=0);
 
       void  setIntensityBC2Orig(const Patch* patch,
-                                int matlIndex,
+                                const int matlIndex,
                                 DataWarehouse* new_dw,
                                 DataWarehouse* old_dw,
-                                int ix);
+                                const int ix);
 
       // returns the total number of directions, sn*(sn+2)
       int getIntOrdinates(){
@@ -227,11 +227,12 @@ private:
       const int m_lambda{1};                       //WARNING: HARDCODED.
       const int m_ffield;
 
-      OffsetArray1<double> oxi;
-      OffsetArray1<double> omu;
-      OffsetArray1<double> oeta;
-      OffsetArray1<double> wt;
 
+      std::vector<double> m_omu;
+      std::vector<double> m_oeta;
+      std::vector<double> m_oxi;
+      std::vector<double> m_wt;
+  
       std::vector<bool>  m_plusX;     // What are these?
       std::vector<bool>  m_plusY;
       std::vector<bool>  m_plusZ;
@@ -291,7 +292,7 @@ private:
       std::vector< const VarLabel*> _emiss_plus_scat_source_label; // for sweeps, needed because Intensities fields are solved in parallel
       std::vector< const VarLabel*> _IntensityLabels;
       std::vector< const VarLabel*> _radiationFluxLabels;
-      std::vector< const VarLabel*> _radIntSource;
+      std::vector< const VarLabel*> _emissSrc_label;
       std::vector< const VarLabel*> _temperature_label_vector;
       std::vector< std::vector< const VarLabel*> > _patchIntensityLabels;
 
@@ -324,6 +325,9 @@ private:
                                    constCCVariable<double>  &gTemp,
                                    std::vector <CCVariable<double> >&b_sourceArray,
                                    std::vector <constCCVariable<double> >&spectral_weights);
+                                   
+    int intensityIndx(const int ord,
+                      const int iband);
 
       
 
