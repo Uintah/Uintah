@@ -106,11 +106,11 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
 
   typedef CCVariable<double> T;
 
-  auto cc_vf = tsk_info->get_uintah_field_add<T, double, MemSpace>("volFraction");
-  auto fx_vf = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("volFractionX");
-  auto fy_vf = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("volFractionY");
-  auto fz_vf = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("volFractionZ");
-  auto cell_type = tsk_info->get_uintah_field_add<CCVariable<int>, int, MemSpace>("cellType");
+  auto cc_vf = tsk_info->new_get_uintah_field<T, double, MemSpace>("volFraction");
+  auto fx_vf = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("volFractionX");
+  auto fy_vf = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("volFractionY");
+  auto fz_vf = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("volFractionZ");
+  auto cell_type = tsk_info->new_get_uintah_field<CCVariable<int>, int, MemSpace>("cellType");
 
   parallel_initialize(execObj,1.0, cc_vf,fx_vf,fy_vf,fz_vf);
   parallel_initialize(execObj,-1, cell_type);
@@ -260,20 +260,20 @@ SurfaceVolumeFractionCalc::register_timestep_init( ArchesVIVector& variable_regi
 template <typename ExecSpace, typename MemSpace> void
 SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto cc_vol_frac = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>("volFraction");
-  auto cc_vol_frac_old = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>("volFraction");
+  auto cc_vol_frac = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("volFraction");
+  auto cc_vol_frac_old = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>("volFraction");
 
-  auto cellType = tsk_info->get_uintah_field_add<CCVariable<int>, int, MemSpace>("cellType");
-  auto cellType_old = tsk_info->get_const_uintah_field_add<constCCVariable<int>, const int, MemSpace>("cellType");
+  auto cellType = tsk_info->new_get_uintah_field<CCVariable<int>, int, MemSpace>("cellType");
+  auto cellType_old = tsk_info->new_get_uintah_field<constCCVariable<int>, const int, MemSpace>("cellType");
 
-  auto fx_vol_frac = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("volFractionX");
-  auto fx_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>("volFractionX");
+  auto fx_vol_frac = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("volFractionX");
+  auto fx_vol_frac_old = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>("volFractionX");
 
-  auto fy_vol_frac = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("volFractionY");
-  auto fy_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>("volFractionY");
+  auto fy_vol_frac = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("volFractionY");
+  auto fy_vol_frac_old = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>("volFractionY");
 
-  auto fz_vol_frac = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("volFractionZ");
-  auto fz_vol_frac_old = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>("volFractionZ");
+  auto fz_vol_frac = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("volFractionZ");
+  auto fz_vol_frac_old = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>("volFractionZ");
   
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   parallel_for( execObj, range, KOKKOS_LAMBDA (int i,int j,int k){

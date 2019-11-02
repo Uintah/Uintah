@@ -116,17 +116,17 @@ void FaceVelocities::register_initialize( AVarInfo& variable_registry , const bo
 template <typename ExecSpace, typename MemSpace>
 void FaceVelocities::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto ucell_xvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
-  auto ucell_yvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
-  auto ucell_zvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
+  auto ucell_xvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
+  auto ucell_yvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
+  auto ucell_zvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
 
-  auto vcell_xvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
-  auto vcell_yvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
-  auto vcell_zvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
+  auto vcell_xvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
+  auto vcell_yvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
+  auto vcell_zvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
 
-  auto wcell_xvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
-  auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
-  auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
+  auto wcell_xvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
+  auto wcell_yvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
+  auto wcell_zvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
   parallel_initialize( execObj, 0.0
                      , ucell_xvel, ucell_yvel, ucell_zvel
@@ -149,21 +149,21 @@ void FaceVelocities::register_timestep_eval( VIVec& variable_registry, const int
 template <typename ExecSpace, typename MemSpace>
 void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
 
-  auto ucell_xvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
-  auto ucell_yvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
-  auto ucell_zvel = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
+  auto ucell_xvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_xvel");
+  auto ucell_yvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_yvel");
+  auto ucell_zvel = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>("ucell_zvel");
 
-  auto vcell_xvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
-  auto vcell_yvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
-  auto vcell_zvel = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
+  auto vcell_xvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_xvel");
+  auto vcell_yvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_yvel");
+  auto vcell_zvel = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>("vcell_zvel");
 
-  auto wcell_xvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
-  auto wcell_yvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
-  auto wcell_zvel = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
+  auto wcell_xvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_xvel");
+  auto wcell_yvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_yvel");
+  auto wcell_zvel = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>("wcell_zvel");
 
   parallel_initialize( execObj, 0.0
                      , ucell_xvel, ucell_yvel, ucell_zvel

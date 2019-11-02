@@ -727,14 +727,14 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT; // check comment from other char model
 
   // gas variables (ConstCCVariables)
-  auto CCuVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_cc_u_vel_name );
-  auto CCvVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_cc_v_vel_name );
-  auto CCwVel      = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_cc_w_vel_name );
-  auto volFraction = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_volFraction_name );
+  auto CCuVel      = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_cc_u_vel_name );
+  auto CCvVel      = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_cc_v_vel_name );
+  auto CCwVel      = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_cc_w_vel_name );
+  auto volFraction = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_volFraction_name );
 
-  auto den         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_density_gas_name );
-  auto temperature = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_gas_temperature_label );
-  auto MWmix       = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_MW_name );// in kmol/kg_mix
+  auto den         = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_density_gas_name );
+  auto temperature = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_gas_temperature_label );
+  auto MWmix       = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_MW_name );// in kmol/kg_mix
 
   const double dt = tsk_info->get_dt();
 
@@ -744,17 +744,17 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   auto species = createContainer<CT, const double, max_species_count, MemSpace>(species_count);
 
   for ( int ns = 0; ns < _NUM_species; ns++ ) {
-    tsk_info->get_const_uintah_field< CT, const double, MemSpace>(species[ns], _species_names[ns], _patch, m_matl_index, _time_substep);
+    species[ns] = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(_species_names[ns]);
   }
 
   // CT& number_density = tsk_info->new_get_uintah_field< CT >( number_density_name ); // total number density - unused
 
   // model variables (CCVariables)
-  auto char_rate          = tsk_info->get_uintah_field_add<T, double, MemSpace>( m_modelLabel );
-  auto gas_char_rate      = tsk_info->get_uintah_field_add<T, double, MemSpace>( m_gasLabel );
-  auto particle_temp_rate = tsk_info->get_uintah_field_add<T, double, MemSpace>( m_particletemp );
-  auto particle_Size_rate = tsk_info->get_uintah_field_add<T, double, MemSpace>( m_particleSize );
-  auto surface_rate       = tsk_info->get_uintah_field_add<T, double, MemSpace>( m_surfacerate );
+  auto char_rate          = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_modelLabel );
+  auto gas_char_rate      = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_gasLabel );
+  auto particle_temp_rate = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_particletemp );
+  auto particle_Size_rate = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_particleSize );
+  auto surface_rate       = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_surfacerate );
 
   // reaction rate
   auto reaction_rate     = createContainer<T, double, max_reactions_count, MemSpace>(reactions_count);
@@ -763,23 +763,22 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   for ( int r = 0; r < _NUM_reactions; r++ ) {
     tsk_info->get_unmanaged_uintah_field< T, double, MemSpace>(
                            reaction_rate[r], m_reaction_rate_names[r], _patch, m_matl_index, _new_dw_time_substep);
-    tsk_info->get_const_uintah_field< CT, const double, MemSpace>(
-                           old_reaction_rate[r], m_reaction_rate_names[r], _patch, m_matl_index, _time_substep);
+    old_reaction_rate[r] =  tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_reaction_rate_names[r]);
   }
 
   // from devol model
-  auto devolRC = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_devolRC );
+  auto devolRC = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_devolRC );
 
   // particle variables from other models
-  auto particle_temperature = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_particle_temperature );
-  auto length               = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_particle_length );
-  auto particle_density     = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_particle_density );
-  auto rawcoal_mass         = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_rcmass );
-  auto char_mass            = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_char_name );
-  auto weight               = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_weight_name );
-  auto up                   = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_up_name );
-  auto vp                   = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_vp_name );
-  auto wp                   = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_wp_name );
+  auto particle_temperature = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_particle_temperature );
+  auto length               = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_particle_length );
+  auto particle_density     = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_particle_density );
+  auto rawcoal_mass         = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_rcmass );
+  auto char_mass            = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_char_name );
+  auto weight               = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_weight_name );
+  auto up                   = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_up_name );
+  auto vp                   = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_vp_name );
+  auto wp                   = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_wp_name );
 
   // birth terms
   auto rawcoal_birth = tsk_info->get_empty_const_uintah_field_add<CT, const double, MemSpace>();
@@ -788,25 +787,22 @@ CharOxidationps<T>::eval( const Patch                                     * patc
 
 
   if (m_add_rawcoal_birth) {
-    tsk_info->get_const_uintah_field< CT, const double, MemSpace>(
-                           rawcoal_birth, m_rawcoal_birth_qn_name, _patch, m_matl_index, _time_substep);
+    rawcoal_birth = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_rawcoal_birth_qn_name);
   }
   if (m_add_char_birth) {
-    tsk_info->get_const_uintah_field< CT, const double, MemSpace>(
-                           char_birth, m_char_birth_qn_name, _patch, m_matl_index, _time_substep);
+    char_birth = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_char_birth_qn_name);
   }
   if (m_add_length_birth) {
-    tsk_info->get_const_uintah_field< CT, const double, MemSpace>(
-                           length_birth, m_length_birth_qn_name, _patch, m_matl_index, _time_substep);
+    length_birth = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_length_birth_qn_name);
   }
 
-  auto weight_p_diam = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_particle_length_qn );
-  auto RC_RHS_source = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_RC_RHS );
-  auto RHS_source    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_ic_RHS );
-  auto RHS_weight    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_w_RHS );
-  auto RHS_length    = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_length_RHS );
+  auto weight_p_diam = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_particle_length_qn );
+  auto RC_RHS_source = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_RC_RHS );
+  auto RHS_source    = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_ic_RHS );
+  auto RHS_weight    = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_w_RHS );
+  auto RHS_length    = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_length_RHS );
 
-  auto surfAreaF = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>( m_surfAreaF_name );
+  auto surfAreaF = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_surfAreaF_name );
 
   // Class data members are a problem!  They need to be both
   // 1) local in scope so they can be captured by value (for CUDA)

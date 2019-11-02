@@ -134,9 +134,9 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 template <typename ExecSpace, typename MemSpace>
 void WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_total_vis_name);
-  auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_turb_viscosity_name);
-  auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>, double, MemSpace>(m_IsI_name);
+  auto mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_total_vis_name);
+  auto mu_turb = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_turb_viscosity_name);
+  auto IsI = tsk_info->new_get_uintah_field< CCVariable<double>, double, MemSpace>(m_IsI_name);
 
   parallel_initialize(execObj,0.0, mu_sgc, mu_turb, IsI);
 
@@ -170,19 +170,19 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 template <typename ExecSpace, typename MemSpace>
 void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
 
-  auto CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_cc_u_vel_name);
-  auto CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_cc_v_vel_name);
-  auto CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_cc_w_vel_name);
+  auto CCuVel = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_cc_u_vel_name);
+  auto CCvVel = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_cc_v_vel_name);
+  auto CCwVel = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_cc_w_vel_name);
 
-  auto mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_total_vis_name);
-  auto mu_turb = tsk_info->get_uintah_field_add<CCVariable<double> ,double, MemSpace>(m_turb_viscosity_name);
-  auto IsI = tsk_info->get_uintah_field_add< CCVariable<double>, double, MemSpace>(m_IsI_name);
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_density_name);
-  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+  auto mu_sgc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_total_vis_name);
+  auto mu_turb = tsk_info->new_get_uintah_field<CCVariable<double> ,double, MemSpace>(m_turb_viscosity_name);
+  auto IsI = tsk_info->new_get_uintah_field< CCVariable<double>, double, MemSpace>(m_IsI_name);
+  auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
+  auto vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
   parallel_initialize(execObj,0.0,IsI,mu_sgc);
   const Vector Dx = patch->dCell();

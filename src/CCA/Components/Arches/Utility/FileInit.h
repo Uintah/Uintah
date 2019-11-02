@@ -169,7 +169,7 @@ private:
   template <typename ExecSpace, typename MemSpace>
   void FileInit<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_var_name);
+    auto phi = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_var_name);
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){

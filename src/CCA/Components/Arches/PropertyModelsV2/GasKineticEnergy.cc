@@ -108,11 +108,11 @@ GasKineticEnergy::register_timestep_eval( std::vector<ArchesFieldContainer::Vari
 template <typename ExecSpace, typename MemSpace>
 void GasKineticEnergy::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
   // cc gas velocities
-  auto u = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
-  auto v = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
-  auto w = tsk_info->get_const_uintah_field_add<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  auto u = tsk_info->new_get_uintah_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  auto v = tsk_info->new_get_uintah_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
+  auto w = tsk_info->new_get_uintah_field<constCCVariable<double>,const double, MemSpace >(m_w_vel_name);
 
-  auto ke = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
+  auto ke = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
   parallel_initialize(execObj,0.0,ke);
   double ke_p = 0;
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

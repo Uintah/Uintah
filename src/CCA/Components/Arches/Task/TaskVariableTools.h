@@ -92,20 +92,96 @@ namespace Uintah {
       /** @brief Return a CONST grid variable **/
       template <typename T, typename... Args>
       typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value, T&>::type
-      new_get_uintah_field( const std::string name, Args... args ){
-
+      new_get_uintah_field( const std::string name, Args... args )
+      {
         return *( _field_container->get_const_field<T>(name, args...) );
-
       }
+
+      /** @brief Return a CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace, typename... Args>
+      typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, UintahSpaces::HostSpace>::value, T>::type
+      new_get_uintah_field( const std::string name, Args... args )
+      {
+        return *( _field_container->get_const_field<T>(name, args...) );
+      }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+      /** @brief Return a CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace, typename... Args>
+      typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::HostSpace>::value, KokkosView3<PODType, Kokkos::HostSpace>>::type
+      new_get_uintah_field( const std::string name, Args... args )
+      {
+        return (*( _field_container->get_const_field<T>(name, args...) )).getKokkosView();
+      }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+      /** @brief Return a CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace>
+      typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::CudaSpace>::value, KokkosView3<PODType, Kokkos::CudaSpace>>::type
+      new_get_uintah_field( const std::string name )
+      {
+        int which_dw = _field_container->get_variable_information( name, true ).uintah_task_dw;
+
+        if ( which_dw == ArchesFieldContainer::OLDDW || ( which_dw == ArchesFieldContainer::LATEST && _tsk_info.time_substep == 0 ) ) {
+          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+        } else {
+          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+        }
+      }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+      /** @brief Return a CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace>
+      typename std::enable_if<std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::CudaSpace>::value, KokkosView3<PODType, Kokkos::CudaSpace>>::type
+      new_get_uintah_field( const std::string                    name
+                          ,       ArchesFieldContainer::WHICH_DW which_dw
+                          )
+      {
+        if ( which_dw == ArchesFieldContainer::OLDDW || ( which_dw == ArchesFieldContainer::LATEST && _tsk_info.time_substep == 0 ) ) {
+          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+        } else {
+          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+        }
+      }
+#endif
 
       /** @brief Return a NON-CONST grid variable **/
       template <typename T, typename... Args>
       typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value, T&>::type
-      new_get_uintah_field( const std::string name, Args... args ){
-
+      new_get_uintah_field( const std::string name, Args... args )
+      {
         return  *(_field_container->get_field<T>(name, args...));
-
       }
+
+      /** @brief Return a NON-CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace, typename... Args>
+      typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, UintahSpaces::HostSpace>::value, T>::type
+      new_get_uintah_field( const std::string name, Args... args )
+      {
+        return  *(_field_container->get_field<T>(name, args...));
+      }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+      /** @brief Return a NON-CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace, typename... Args>
+      typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::HostSpace>::value, KokkosView3<PODType, Kokkos::HostSpace>>::type
+      new_get_uintah_field( const std::string name, Args... args )
+      {
+        return (*( _field_container->get_field<T>(name, args...))).getKokkosView();
+      }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+      /** @brief Return a NON-CONST grid variable **/
+      template <typename T, typename PODType, typename MemSpace>
+      typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::CudaSpace>::value, KokkosView3<PODType, Kokkos::CudaSpace>>::type
+      new_get_uintah_field( const std::string name )
+      {
+        return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), 0 );
+      }
+#endif
 
       template <typename T, typename elemType, typename MemSpace, typename FIELD_TYPE>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, void >::type

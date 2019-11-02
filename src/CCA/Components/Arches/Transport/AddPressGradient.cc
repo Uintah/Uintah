@@ -85,15 +85,15 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   const double dt = tsk_info->get_dt();
   Vector DX = patch->dCell();
-  auto xmom = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>( m_xmom );
-  auto ymom = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>( m_ymom );
-  auto zmom = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>( m_zmom );
-  auto p = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_press);
-  auto eps = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_eps_name);
+  auto xmom = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>( m_xmom );
+  auto ymom = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>( m_ymom );
+  auto zmom = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>( m_zmom );
+  auto p = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_press);
+  auto eps = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
 
-  auto uhat = tsk_info->get_uintah_field_add<SFCXVariable<double>, double, MemSpace>( "uHat" );
-  auto vhat = tsk_info->get_uintah_field_add<SFCYVariable<double>, double, MemSpace>( "vHat" );
-  auto what = tsk_info->get_uintah_field_add<SFCZVariable<double>, double, MemSpace>( "wHat" );
+  auto uhat = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>( "uHat" );
+  auto vhat = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>( "vHat" );
+  auto what = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>( "wHat" );
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){

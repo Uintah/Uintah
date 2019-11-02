@@ -219,9 +219,9 @@ private:
     for (int ieqn = 0; ieqn < int(m_eqn_names.size()); ieqn++ ){
 
       if ( m_do_diff[ieqn] ){
-        auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
-        auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
-        auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
         parallel_initialize(execObj, 0.0, x_flux,y_flux,z_flux);
       }
@@ -258,7 +258,7 @@ private:
   template <typename ExecSpace, typename MemSpace>
   void Diffusion<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    auto eps = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eps_name);
+    auto eps = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eps_name);
 
     Vector Dx = patch->dCell();
 
@@ -266,15 +266,15 @@ private:
 
       if ( m_do_diff[ieqn] ){
 
-        auto x_flux = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
-        auto y_flux = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
-        auto z_flux = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
-        auto phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+        auto phi = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
 
         parallel_initialize(execObj,0.0, x_flux,y_flux,z_flux);
 
-        auto D = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_D_name);
+        auto D = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_D_name);
 
          //x - Direction
         GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(1,0);

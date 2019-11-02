@@ -363,17 +363,17 @@ private:
     int ceqn = 0;
     for ( SV::iterator ieqn = _eqn_names.begin(); ieqn != _eqn_names.end(); ieqn++){
 
-      auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]);
-      auto rhs = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_transported_eqn_names[ceqn]+"_RHS");
+      auto phi = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ceqn]);
+      auto rhs = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ceqn]+"_RHS");
 
 /////////////////////////// PORTABILITY FUNCTIONALITY MISSING//////////////////////////////
-      auto old_phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);  
+      auto old_phi = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_transported_eqn_names[ceqn], ArchesFieldContainer::OLDDW);
 ///////////////////////////////////////////////////////////////////////////////////////////
 
       ceqn +=1;
-      auto x_flux = tsk_info->get_const_uintah_field_add<CFXT, const double, MemSpace>(*ieqn+"_x_flux");
-      auto y_flux = tsk_info->get_const_uintah_field_add<CFYT, const double, MemSpace>(*ieqn+"_y_flux");
-      auto z_flux = tsk_info->get_const_uintah_field_add<CFZT, const double, MemSpace>(*ieqn+"_z_flux");
+      auto x_flux = tsk_info->new_get_uintah_field<CFXT, const double, MemSpace>(*ieqn+"_x_flux");
+      auto y_flux = tsk_info->new_get_uintah_field<CFYT, const double, MemSpace>(*ieqn+"_y_flux");
+      auto z_flux = tsk_info->new_get_uintah_field<CFZT, const double, MemSpace>(*ieqn+"_z_flux");
 
       Vector Dx = patch->dCell();
       double ax = Dx.y() * Dx.z();
@@ -447,10 +447,10 @@ private:
       std::string varname = ieqn->first;
       Scaling_info info = ieqn->second;
       const double ScalingConstant = info.constant;
-      auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+      auto vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
-      auto phi = tsk_info->get_uintah_field_add<T, double, MemSpace>(varname);
-      auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
+      auto phi = tsk_info->new_get_uintah_field<T, double, MemSpace>(varname);
+      auto phi_unscaled = tsk_info->new_get_uintah_field<T, double, MemSpace>(info.unscaled_var);
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -483,12 +483,12 @@ private:
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+  auto vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
 
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    auto phi = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(ieqn->first);
-    auto phi_unscaled = tsk_info->get_uintah_field_add<T, double, MemSpace>((ieqn->second).unscaled_var);
+    auto phi = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(ieqn->first);
+    auto phi_unscaled = tsk_info->new_get_uintah_field<T, double, MemSpace>((ieqn->second).unscaled_var);
 
     for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
       const bool on_this_patch = i_bc->second.has_patch(patch->getID());

@@ -226,17 +226,17 @@ private:
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    auto up_f = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(up_face_i);
-    auto vp_f = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(vp_face_i);
-    auto wp_f = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(wp_face_i);
+    auto up_f = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(up_face_i);
+    auto vp_f = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(vp_face_i);
+    auto wp_f = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    auto up = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(up_i);
-    auto vp = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(vp_i);
-    auto wp = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(wp_i);
+    auto up = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(up_i);
+    auto vp = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(vp_i);
+    auto wp = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(wp_i);
 
     ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
     ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
@@ -292,17 +292,17 @@ private:
     std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
     std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    auto up_f = tsk_info->get_uintah_field_add<FXT, double, MemSpace>(up_face_i);
-    auto vp_f = tsk_info->get_uintah_field_add<FYT, double, MemSpace>(vp_face_i);
-    auto wp_f = tsk_info->get_uintah_field_add<FZT, double, MemSpace>(wp_face_i);
+    auto up_f = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(up_face_i);
+    auto vp_f = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(vp_face_i);
+    auto wp_f = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(wp_face_i);
 
     std::string up_i = ArchesCore::append_env(up_root,ienv);
     std::string vp_i = ArchesCore::append_env(vp_root,ienv);
     std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    auto up = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(up_i);
-    auto vp = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(vp_i);
-    auto wp = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(wp_i);
+    auto up = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(up_i);
+    auto vp = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(vp_i);
+    auto wp = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(wp_i);
 
     ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
     ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);

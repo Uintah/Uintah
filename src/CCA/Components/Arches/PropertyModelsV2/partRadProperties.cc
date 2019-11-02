@@ -440,7 +440,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, MemSpace>(asymm[0],_asymmetryParam_name,patch->getID(),m_matl_index,TSS);
   }
 
-  auto vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>("volFraction");
+  auto vol_fraction = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>("volFraction");
 
   auto RC_mass         = createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
   auto Char_mass       = createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
@@ -449,13 +449,13 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto temperatureQuad = createContainer<constCCVariable<double>, const double, MAX_DQMOM_ENV, MemSpace>(_nQn_part);
 
   for (int ix=0; ix< _nQn_part ; ix++){
-    weightQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
-    temperatureQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
-    sizeQuad[ix] = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
+    weightQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
+    temperatureQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
+    sizeQuad[ix] = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
     
     if (_isCoal){
-      RC_mass[ix]  =tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_RC_name_v[ix]  );
-      Char_mass[ix]=tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_Char_name_v[ix]);
+      RC_mass[ix]  =tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_RC_name_v[ix]  );
+      Char_mass[ix]=tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_Char_name_v[ix]);
     }
   }
 
@@ -538,8 +538,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
         enum DependentVariables{ abs_coef, sca_coef};
         auto IV =  createContainer<constCCVariable<double>, const double, IND_VAR_SIZE , MemSpace>(_nIVs);
 
-        IV[en_size]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
-        IV[en_temp]=  tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
+        IV[en_size]=  tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
+        IV[en_temp]=  tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
 
         parallel_initialize(execObj,0.0,abs_scat_coeff);
 
@@ -568,7 +568,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
 #ifdef HAVE_RADPROPS
   if(_particle_calculator_type == "coal" &&  _p_planck_abskp ){
       for (int ix=0; ix<_nQn_part; ix++){
-        auto abskpQuad = tsk_info->get_uintah_field_add <CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
+        auto abskpQuad = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
 
         Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {

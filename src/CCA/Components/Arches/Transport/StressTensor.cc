@@ -105,12 +105,12 @@ template <typename ExecSpace, typename MemSpace>
 void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
-  auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
-  auto sigma12 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
-  auto sigma13 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
-  auto sigma22 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
-  auto sigma23 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
-  auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
+  auto sigma11 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
+  auto sigma12 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
+  auto sigma13 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
+  auto sigma22 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
+  auto sigma23 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
+  auto sigma33 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
 
   parallel_initialize(execObj,0.0,sigma11
                                ,sigma12
@@ -139,20 +139,20 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 template <typename ExecSpace, typename MemSpace>
 void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
-  auto D  = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
-  auto eps_x = tsk_info->get_const_uintah_field_add<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
-  auto eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
-  auto eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);
+  auto uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto D  = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_t_vis_name);
+  auto eps_x = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(m_eps_x_name);
+  auto eps_y = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(m_eps_y_name);
+  auto eps_z = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(m_eps_z_name);
 
-  auto sigma11 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
-  auto sigma12 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
-  auto sigma13 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
-  auto sigma22 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
-  auto sigma23 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
-  auto sigma33 = tsk_info->get_uintah_field_add<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
+  auto sigma11 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[0]);
+  auto sigma12 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[1]);
+  auto sigma13 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[2]);
+  auto sigma22 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[3]);
+  auto sigma23 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
+  auto sigma33 = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
 
   // initialize all velocities
   parallel_initialize(execObj,0.0, sigma11, sigma12, sigma13, sigma22, sigma23,sigma33);

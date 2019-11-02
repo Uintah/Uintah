@@ -317,7 +317,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
   //NOTE: In the case of DQMOM, rho = weight, otherwise it is density
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_rho_name);
+  auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_rho_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
@@ -332,8 +332,8 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
-    auto un_var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_un_eqn_names[ieqn]);
+    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+    auto un_var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_un_eqn_names[ieqn]);
 
     if ( m_eqn_class != ArchesCore::DQMOM ){
       // rho * phi
@@ -355,7 +355,7 @@ void UnweightVariable<T>::initialize( const Patch* patch, ArchesTaskInfoManager*
   //int eqn =0;
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     const double ScalingConst = ieqn->second.constant;
-    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
+    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(ieqn->first);
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       var(i,j,k) /= ScalingConst;
     });
@@ -407,7 +407,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
   ArchesCore::VariableHelper<T> helper;
   typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
 
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_rho_name);
+  auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_rho_name);
   const IntVector vDir(helper.ioff, helper.joff, helper.koff);
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
@@ -432,10 +432,10 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
 
           // DQMOM : BCs are Ic_qni, then we need to compute Ic
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
-            auto var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
-            auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_un_eqn_names[ieqn]);
+            auto var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+            auto un_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_un_eqn_names[ieqn]);
             auto vol_fraction =
-            tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+            tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
             parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               un_var(i,j,k) = var(i,j,k)/(rho(i,j,k)+ SMALL)*vol_fraction(i,j,k);
@@ -446,7 +446,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             const double ScalingConst = info.constant;
-            auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
+            auto un_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(info.unscaled_var);
 
             parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               un_var(i,j,k) *= ScalingConst;
@@ -456,8 +456,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         } else { //if ( m_eqn_class == ArchesCore::DENSITY_WEIGHTED ){
 
           for (int ieqn = istart; ieqn < iend; ieqn++ ){
-            auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
-            auto un_var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_un_eqn_names[ieqn]);
+            auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+            auto un_var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_un_eqn_names[ieqn]);
 
             parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
               const int ip=i - iDir[0];
@@ -480,8 +480,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // phi variable that are transported in staggered position
         // rho_phi = phi/pho
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
-          auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);// rho*phi
-          auto un_var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_un_eqn_names[ieqn]); // phi
+          auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);// rho*phi
+          auto un_var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_un_eqn_names[ieqn]); // phi
 
           if ( dot == -1 ){
 
@@ -513,8 +513,8 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
         // only works if var is mom
         for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-          auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_un_eqn_names[ieqn]);
-          auto var = tsk_info->get_const_uintah_field_add<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+          auto un_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_un_eqn_names[ieqn]);
+          auto var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
 
           if ( dot == -1 ){
 
@@ -586,7 +586,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   ArchesCore::VariableHelper<T> helper;
 
   //typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  auto rho = tsk_info->get_const_uintah_field_add<constCCVariable<double>, const double, MemSpace>(m_rho_name);
+  auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_rho_name);
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];
   const int koff = m_ijk_off[2];
@@ -600,8 +600,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-    auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_un_eqn_names[ieqn]);
-    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(m_eqn_names[ieqn]);
+    auto un_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_un_eqn_names[ieqn]);
+    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);
     Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
@@ -613,7 +613,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
     const double ScalingConst = info.constant;
-    auto un_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.unscaled_var);
+    auto un_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(info.unscaled_var);
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       un_var(i,j,k) *= ScalingConst;
     });
@@ -622,8 +622,8 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   // clipping
   for ( auto ieqn = m_clipping_info.begin(); ieqn != m_clipping_info.end(); ieqn++ ){
     Clipping_info info = ieqn->second;
-    auto var = tsk_info->get_uintah_field_add<T, double, MemSpace>(info.var);
-    auto rho_var = tsk_info->get_uintah_field_add<T, double, MemSpace>(ieqn->first);
+    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(info.var);
+    auto rho_var = tsk_info->new_get_uintah_field<T, double, MemSpace>(ieqn->first);
     const double cHigh =info.high;
     const double cLow =info.low;
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
