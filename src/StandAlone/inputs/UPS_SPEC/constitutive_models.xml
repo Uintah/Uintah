@@ -31,6 +31,7 @@
                                                                              program_burn,
                                                                              jwlpp_mpm, 
                                                                              p_alpha, 
+                                                                             clay_curve_fit, 
                                                                              nonlocal_drucker_prager,
                                                                              Arenisca, 
                                                                              Arenisca3, 
@@ -189,6 +190,7 @@
     <K0                            spec="OPTIONAL DOUBLE" />
     <Ks                            spec="OPTIONAL DOUBLE" />
     <Ku                            spec="OPTIONAL DOUBLE" />
+    <minimum_porosity              spec="OPTIONAL DOUBLE" />
     <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
