@@ -151,6 +151,7 @@ namespace WasatchCore {
     OPEN,     ///< OPEN boundary condition. a bit complicated to explain but namely mimics a boundary open to the atmosphere.
     OUTFLOW,  ///< OUTFLOW boundary condition. encourages the flow to exit and reduces reflections.
     SYMMETRY, ///< SYNMETRY boundary condition. Zero gradients. Normal velocity components = 0.
+    INTERIOR, ///< INTERIOR boundary condition. Used for Scalars ONLY! Will not apply any BCs on momentum etc... 
     USER,     ///< User specified bc. The user can specify BCs on any quantity they desire, as long as Wasatch calls apply_boundary_condition on that quantity.
     INVALID
   };
