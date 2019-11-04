@@ -1354,14 +1354,9 @@ DORadiation::setIntensityBC( const ProcessorGroup * pc,
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
-    for (int iband=0; iband<d_nbands; iband++){
-      const int indx = intensityIndx( ord, iband);
-      
-      CCVariable <double > intensity;
-      new_dw->allocateAndPut(intensity, _IntensityLabels[indx] , m_matIdx, patch,_gv[_DO_model->xDir(ord)][_DO_model->yDir(ord) ][_DO_model->zDir(ord)  ],1); // not supported long term (avoids copy)
-      intensity.initialize(0.0);
-    }
-    _DO_model->setIntensityBC2Orig( patch, m_matIdx, new_dw, old_dw, ord);
+    Ghost::GhostType ghostType = _gv[_DO_model->xDir(ord)][_DO_model->yDir(ord)][_DO_model->zDir(ord)];
+    
+    _DO_model->setIntensityBC( patch, m_matIdx, new_dw, old_dw, ghostType, ord );
 
   }
 }

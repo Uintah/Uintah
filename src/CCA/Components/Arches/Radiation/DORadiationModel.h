@@ -119,18 +119,12 @@ public:
                           DataWarehouse* new_dw,
                           DataWarehouse* old_dw);
 
-      void setIntensityBC(const Patch* patch,
-                          const int matlIndex,
-                          CCVariable<double>& intensity,
-                          constCCVariable<double>& radTemp,
-                          constCCVariable<int>& cellType,
-                          const int iSpectralBand=0);
-
-      void  setIntensityBC2Orig(const Patch* patch,
-                                const int matlIndex,
-                                DataWarehouse* new_dw,
-                                DataWarehouse* old_dw,
-                                const int ix);
+      void  setIntensityBC(const Patch* patch,
+                           const int matlIndex,
+                           DataWarehouse* new_dw,
+                           DataWarehouse* old_dw,
+                           const Ghost::GhostType me,
+                           const int ord);
 
       // returns the total number of directions, sn*(sn+2)
       int getIntOrdinates(){

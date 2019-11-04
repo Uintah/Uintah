@@ -1607,55 +1607,45 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
 void
 DORadiationModel::setIntensityBC(const Patch* patch,
                                  const int matlIndex,
-                                 CCVariable<double>     & intensity,
-                                 constCCVariable<double>& radTemp,
-                                 constCCVariable<int>   & cellType,
-                                 const int iSpectralBand)
+                                 DataWarehouse* new_dw,
+                                 DataWarehouse* old_dw,
+                                 const Ghost::GhostType ghostType,
+                                 const int ord)
 {
-  //-------------- Compute Intensity on boundarys------------//
-  // loop over computational domain faces
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
 
-  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
-    Patch::FaceType face = *iter;
-
-    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-
-    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
-      IntVector c = *iter;
-      if (cellType[c] != m_ffield ){
-        intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0)*_grey_reference_weight[iSpectralBand]; // No reflections here!  Needs to be developed for reflections!
-      }
-    }
-  }
-  return;
-}
-//______________________________________________________________________
-//
-void
-DORadiationModel::setIntensityBC2Orig(const Patch* patch,
-                                      const int matlIndex,
-                                      DataWarehouse* new_dw,
-                                      DataWarehouse* old_dw,
-                                      const int ord)
-{
   constCCVariable<double> radTemp;
-  new_dw->get(radTemp,_T_label, matlIndex , patch, m_gn, 0  );
+  constCCVariable<int>    cellType;
+  new_dw->get(radTemp,  _T_label,        matlIndex , patch, m_gn, 0  );
+  old_dw->get(cellType, _cellType_label, matlIndex , patch, m_gn, 0  );
 
-  constCCVariable<int> cellType;
-  old_dw->get(cellType,_cellType_label, matlIndex , patch, m_gn, 0  );
-
+  //__________________________________
+  //  Loop over spectral bands
   for (int iband=0; iband<m_nbands; iband++){
     
     const int idx = intensityIndx(ord,iband);
     CCVariable <double > intensity;
-    new_dw->getModifiable(intensity,_IntensityLabels[idx] , matlIndex, patch);   // change to computes when making it its own task
+    new_dw->allocateAndPut(intensity, _IntensityLabels[idx] , matlIndex, patch, ghostType, 1);
+    intensity.initialize(0.0);
+    
+    //__________________________________
+    // Loop over computational domain faces
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
 
-    setIntensityBC(patch, matlIndex,intensity, radTemp,cellType,iband);
+    for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+      Patch::FaceType face = *iter;
+
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        if (cellType[c] != m_ffield ){
+          intensity[c] =  _sigma/M_PI*pow(radTemp[c],4.0)*_grey_reference_weight[iband]; // No reflections here!  Needs to be developed for reflections!
+        }
+      }
+    }
+    
   }
-
-  return;
 }
 
 //______________________________________________________________________
