@@ -561,9 +561,7 @@ namespace WasatchCore {
        */
       if( myBndSpec.has_patch(patchID) ){
         Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
-        std::cout << "totototo " <<  myBndSpec.name << std::endl;
         if (myBndSpec.type == INTERIOR) {
-          std::cout << "interior bcccccc ----------" << std::endl;
           continue; // do not do anything for the pressure at interior boundaries
         }
         double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
