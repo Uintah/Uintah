@@ -69,7 +69,7 @@ void PressureBC::register_timestep_eval( std::vector<AFC::VariableInformation>& 
 template <typename ExecSpace, typename MemSpace>
 void PressureBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto p = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( m_press );
+  auto p = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_press );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){

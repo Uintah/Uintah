@@ -188,10 +188,10 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
   const double area_NS = DX.x()*DX.z();
   const double area_TB = DX.x()*DX.y();
 
-  auto Apress = tsk_info->new_get_uintah_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
-  auto b = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("b_press");
-  auto x = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_pressure_name);
-  auto guess = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("guess_press");
+  auto Apress = tsk_info->get_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto b = tsk_info->get_field<CCVariable<double>, double, MemSpace>("b_press");
+  auto x = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_pressure_name);
+  auto guess = tsk_info->get_field<CCVariable<double>, double, MemSpace>("guess_press");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -280,10 +280,10 @@ PressureEqn::register_timestep_init(
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace> void
 PressureEqn::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  auto Apress = tsk_info->new_get_uintah_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
-  auto old_Apress = tsk_info->new_get_uintah_field<constCCVariable<Stencil7>, const Stencil7, MemSpace>("A_press");
-  auto x = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_pressure_name);
-  auto guess = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("guess_press");
+  auto Apress = tsk_info->get_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto old_Apress = tsk_info->get_field<constCCVariable<Stencil7>, const Stencil7, MemSpace>("A_press");
+  auto x = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_pressure_name);
+  auto guess = tsk_info->get_field<CCVariable<double>, double, MemSpace>("guess_press");
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -319,12 +319,12 @@ void PressureEqn::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
   const double area_TB = DX.x()*DX.y();
   const double V       = DX.x()*DX.y()*DX.z();
 
-  auto b = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("b_press");
-  auto eps = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
-  auto xmom = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
-  auto ymom = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
-  auto zmom = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
-  auto drhodt = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_drhodt_name);
+  auto b = tsk_info->get_field<CCVariable<double>, double, MemSpace>("b_press");
+  auto eps = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
+  auto xmom = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
+  auto ymom = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
+  auto zmom = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
+  auto drhodt = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_drhodt_name);
 
   Uintah::BlockRange range2(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   parallel_for(execObj, range2, KOKKOS_LAMBDA (int i, int j, int k){
@@ -361,9 +361,9 @@ template <typename ExecSpace, typename MemSpace>
 void PressureEqn::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   //This only applies BCs to A. Boundary conditions to the RHS are handled upstream in RhoUHatBC
-  auto A = tsk_info->new_get_uintah_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
-  auto b = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>("b_press");
-  auto eps = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
+  auto A = tsk_info->get_field<CCVariable<Stencil7>, Stencil7, MemSpace>("A_press");
+  auto b = tsk_info->get_field<CCVariable<double>, double, MemSpace>("b_press");
+  auto eps = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_eps_name);
 
   //Now take care of intrusions:
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );

@@ -109,14 +109,14 @@ GravityA::register_initialize( std::vector<ArchesFieldContainer::VariableInforma
 template <typename ExecSpace, typename MemSpace>
 void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto density  = tsk_info->new_get_uintah_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
+  auto density = tsk_info->get_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   const double ref_density = m_ref_density;
 
   if (m_gravity[0] != 0.0) {
     double aGravity = m_gravity[0]; // acceleration due to gravity
-    auto gx = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
+    auto gx = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
     parallel_initialize(execObj,0.0,gx);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -125,7 +125,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
 
   } else if (m_gravity[1] != 0.0) {
     double aGravity = m_gravity[1]; // acceleration due to gravity
-    auto gy = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
+    auto gy = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
     parallel_initialize(execObj,0.0,gy);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -134,7 +134,7 @@ void GravityA::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
 
   } else if (m_gravity[2] != 0.0) {
     double aGravity = m_gravity[2]; // acceleration due to gravity
-    auto gz = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
+    auto gz = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
     parallel_initialize(execObj,0.0,gz);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -180,14 +180,14 @@ GravityA::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInfo
 template <typename ExecSpace, typename MemSpace>
 void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto density  = tsk_info->new_get_uintah_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
+  auto density = tsk_info->get_field<constCCVariable<double >, const double, MemSpace>( m_density_label );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   const double ref_density = m_ref_density;
 
   if (m_gravity[0] != 0.0) {
     double aGravity = m_gravity[0]; // acceleration due to gravity
-    auto gx = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
+    auto gx = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>(m_gx_label);
     parallel_initialize(execObj,0.0,gx);
 
     Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -196,7 +196,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
 
   } else if (m_gravity[1] != 0.0) {
     double aGravity = m_gravity[1]; // acceleration due to gravity
-    auto gy = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
+    auto gy = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>(m_gy_label);
     parallel_initialize(execObj,0.0,gy);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -205,7 +205,7 @@ void GravityA::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execut
 
   } else if (m_gravity[2] != 0.0) {
     double aGravity = m_gravity[2]; // acceleration due to gravity
-    auto gz = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
+    auto gz = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>(m_gz_label);
     parallel_initialize(execObj,0.0,gz);
 
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){

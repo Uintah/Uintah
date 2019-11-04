@@ -90,7 +90,7 @@ ContinuityPredictor::register_initialize( std::vector<ArchesFieldContainer::Vari
 template <typename ExecSpace, typename MemSpace>
 void ContinuityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto Balance = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( m_label_balance );
+  auto Balance = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_balance );
   parallel_initialize(execObj,0.0,Balance);
 
 }
@@ -128,12 +128,12 @@ ContinuityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::V
 template <typename ExecSpace, typename MemSpace>
 void ContinuityPredictor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto xmom = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
-  auto ymom = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
-  auto zmom = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
+  auto xmom = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(ArchesCore::default_uMom_name);
+  auto ymom = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(ArchesCore::default_vMom_name);
+  auto zmom = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(ArchesCore::default_wMom_name);
 
-  auto drho_dt = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( m_label_drhodt );
-  auto Balance = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( m_label_balance );
+  auto drho_dt = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_label_drhodt );
+  auto Balance = tsk_info->get_field<CCVariable<double>, double, MemSpace>( m_label_balance );
   parallel_initialize(execObj,0.0,Balance);
   Vector DX = patch->dCell();
   const double area_EW = DX.y()*DX.z();

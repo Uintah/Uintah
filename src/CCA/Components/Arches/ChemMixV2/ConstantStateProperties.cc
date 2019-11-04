@@ -96,7 +96,7 @@ template <typename ExecSpace, typename MemSpace>
 void ConstantStateProperties::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
     var.initialize(i->second);
   }
 
@@ -117,8 +117,8 @@ template <typename ExecSpace, typename MemSpace>
 void ConstantStateProperties::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    constCCVariable<double>& old_var = tsk_info->new_get_uintah_field<constCCVariable<double> >( i->first );
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    constCCVariable<double>& old_var = tsk_info->get_field<constCCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
 
     var.copyData(old_var);
   }
@@ -139,7 +139,7 @@ template <typename ExecSpace, typename MemSpace>
 void ConstantStateProperties::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   for ( auto i = m_name_to_value.begin(); i != m_name_to_value.end(); i++ ){
-    CCVariable<double>& var = tsk_info->new_get_uintah_field<CCVariable<double> >( i->first );
+    CCVariable<double>& var = tsk_info->get_field<CCVariable<double> >( i->first );
     var.initialize(i->second);
   }
 

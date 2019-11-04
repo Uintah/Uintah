@@ -412,7 +412,7 @@ public:
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter ){
 
     VariableHelper<T> var_help;
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
 
@@ -477,7 +477,7 @@ template <typename ExecSpace, typename MemSpace>
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
     const IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const Vector Dx = patch->dCell();
@@ -561,8 +561,8 @@ template <typename ExecSpace, typename MemSpace>
   void eval_bc( ExecutionObject<ExecSpace, MemSpace>& execObj,std::string var_name, const Patch* patch, ArchesTaskInfoManager* tsk_info,
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
-    auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
+    auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -633,11 +633,11 @@ template <typename ExecSpace, typename MemSpace>
     const double m_two_pi = 2.0*acos(-1.0);
     const double m_amp = 1.0;
 
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    auto x = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
+    auto x = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
-    auto y = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_y_name);
+    auto y = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_y_name);
 
     VariableHelper<T> var_help;
     const IntVector iDir = patch->faceDirection( bnd->face );
@@ -766,9 +766,9 @@ template <typename ExecSpace, typename MemSpace>
     time_d = time_d + factor*dt;
 
 
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    auto x = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
+    auto x = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_x_name);
 
     VariableHelper<T> var_help;
     //IntVector iDir = patch->faceDirection( bnd->face );
@@ -822,9 +822,9 @@ template <typename ExecSpace, typename MemSpace>
 
     VariableHelper<T> var_help;
     typedef typename VariableHelper<T>::ConstType CT;
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
     const IntVector iDir = patch->faceDirection( bnd->face );
-    auto sec_var = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_sec_var_name);
+    auto sec_var = tsk_info->get_field<CT, const double, MemSpace>( m_sec_var_name);
 
     const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
 
@@ -874,7 +874,7 @@ template <typename ExecSpace, typename MemSpace>
     // There is an issue with register variable for old_var. This BC is being applied in VelRhoHatBC.cc
 
     //typedef typename VariableHelper<T>::ConstType CT;
-    //T& var = tsk_info->new_get_uintah_field<T>(var_name);
+    //T& var = tsk_info->get_field<T>(var_name);
 
     //constCCVariable<double>& old_var =
     //tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_vel_name);
@@ -966,8 +966,8 @@ template <typename ExecSpace, typename MemSpace>
 
     VariableHelper<T> var_help;
     //typedef typename VariableHelper<T>::ConstType CT;
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
-    auto rho = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
+    auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 
@@ -1111,9 +1111,9 @@ template <typename ExecSpace, typename MemSpace>
                 const BndSpec* bnd, Uintah::ListOfCellsIterator& bndIter  ){
 
     VariableHelper<T> var_help;
-    auto var = tsk_info->new_get_uintah_field<T, double, MemSpace>(var_name);
+    auto var = tsk_info->get_field<T, double, MemSpace>(var_name);
 
-    auto rhs = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_phi_name+"_rhs");
+    auto rhs = tsk_info->get_field<T, double, MemSpace>(m_phi_name+"_rhs");
 
     const IntVector iDir = patch->faceDirection( bnd->face );
 

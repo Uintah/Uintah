@@ -180,8 +180,8 @@ sumRadiation::initialize( const Patch* patch,
                           ArchesTaskInfoManager* tsk_info,
                           ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& abskt = tsk_info->new_get_uintah_field<CCVariable<double> >(m_abskt_name);
-  constCCVariable<double>& volFrac = tsk_info->new_get_uintah_field<constCCVariable<double> >("volFraction");
+  CCVariable<double>& abskt = tsk_info->get_field<CCVariable<double> >(m_abskt_name);
+  constCCVariable<double>& volFrac = tsk_info->get_field<constCCVariable<double> >("volFraction");
 
   abskt.initialize( 1.0);
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
@@ -190,7 +190,7 @@ sumRadiation::initialize( const Patch* patch,
 
   for (unsigned int i=0; i<m_absk_names.size(); i++){
 
-    constCCVariable<double>& abskf = tsk_info->new_get_uintah_field<constCCVariable<double> >(m_absk_names[i]);
+    constCCVariable<double>& abskf = tsk_info->get_field<constCCVariable<double> >(m_absk_names[i]);
 
     Uintah::parallel_for( range,
       [&](int i, int j, int k){

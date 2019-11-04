@@ -72,12 +72,12 @@ void GridInfo::register_initialize( std::vector<AFC::VariableInformation>& varia
 template <typename ExecSpace, typename MemSpace>
 void GridInfo::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto gridX = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridX" );
-  auto gridY = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridY" );
-  auto gridZ = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridZ" );
-  auto ucellX = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "ucellX" );
-  auto vcellY = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "vcellY" );
-  auto wcellZ = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "wcellZ" );
+  auto gridX = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridX" );
+  auto gridY = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridY" );
+  auto gridZ = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridZ" );
+  auto ucellX = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "ucellX" );
+  auto vcellY = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "vcellY" );
+  auto wcellZ = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "wcellZ" );
 
   Vector Dx = patch->dCell();
   const double dx = Dx.x();
@@ -132,19 +132,19 @@ GridInfo::register_timestep_init( std::vector<AFC::VariableInformation>& variabl
 template <typename ExecSpace, typename MemSpace> void
 GridInfo::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto gridX = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridX" );
-  auto gridY = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridY" );
-  auto gridZ = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "gridZ" );
-  auto ucellX = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "ucellX" );
-  auto vcellY = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "vcellY" );
-  auto wcellZ = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>( "wcellZ" );
+  auto gridX = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridX" );
+  auto gridY = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridY" );
+  auto gridZ = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "gridZ" );
+  auto ucellX = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "ucellX" );
+  auto vcellY = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "vcellY" );
+  auto wcellZ = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "wcellZ" );
 
-  auto old_gridX = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "gridX" );
-  auto old_gridY = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "gridY" );
-  auto old_gridZ = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "gridZ" );
-  auto old_ucellX = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "ucellX" );
-  auto old_vcellY = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "vcellY" );
-  auto old_wcellZ = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>( "wcellZ" );
+  auto old_gridX = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "gridX" );
+  auto old_gridY = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "gridY" );
+  auto old_gridZ = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "gridZ" );
+  auto old_ucellX = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "ucellX" );
+  auto old_vcellY = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "vcellY" );
+  auto old_wcellZ = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( "wcellZ" );
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){

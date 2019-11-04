@@ -508,12 +508,12 @@ private:
 
       const double scalar_init_value = m_init_value[ieqn];
 
-      auto u    = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_vel_name[ieqn]);
-      auto phi    = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);
-      auto rhs    = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
-      auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-      auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-      auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+      auto u    = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi    = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs    = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
       Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 
@@ -551,11 +551,11 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      auto u    = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_vel_name[ieqn]);
-      auto phi  = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_eqn_names[ieqn] );
-      auto rhs  = tsk_info->new_get_uintah_field<T, double, MemSpace>( m_eqn_names[ieqn]+"_RHS" );
-      auto old_phi = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_eqn_names[ieqn]);
-      auto old_u   = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_vel_name[ieqn]);
+      auto u    = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi  = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn] );
+      auto rhs  = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn]+"_RHS" );
+      auto old_phi = tsk_info->get_field<CT, const double, MemSpace>( m_eqn_names[ieqn]);
+      auto old_u   = tsk_info->get_field<CT, const double, MemSpace>(m_vel_name[ieqn]);
 
       Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 
@@ -615,19 +615,19 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    auto eps     = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eps_name);
+    auto eps     = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      auto phi     = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
-      auto rhs      = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+      auto phi     = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs      = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
 
       //Convection:
-      auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-      auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-      auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
       parallel_initialize(execObj,0.0,rhs,x_flux,y_flux,z_flux);
 
@@ -648,9 +648,9 @@ private:
 
         Uintah::BlockRange convection_range(low_patch_range, high_patch_range);
 
-        auto u_fx = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_x_velocity_name);
-        auto v_fy = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_y_velocity_name);
-        auto w_fz = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_z_velocity_name);
+        auto u_fx = tsk_info->get_field<CT, const double, MemSpace>(m_x_velocity_name);
+        auto v_fy = tsk_info->get_field<CT, const double, MemSpace>(m_y_velocity_name);
+        auto w_fz = tsk_info->get_field<CT, const double, MemSpace>(m_z_velocity_name);
 
         doConvection(execObj,convection_range, phi, u_fx, v_fy , w_fz , x_flux , y_flux , z_flux , eps, ieqn);
       }
@@ -663,9 +663,9 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        auto sigma1 = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_sigmax_name);
-        auto sigma2 = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_sigmay_name);
-        auto sigma3 = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_sigmaz_name);
+        auto sigma1 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmax_name);
+        auto sigma2 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmay_name);
+        auto sigma3 = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_sigmaz_name);
 
         auto stressTensor = KOKKOS_LAMBDA (int i, int j, int k){
           double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
@@ -695,7 +695,7 @@ private:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
-        auto src = tsk_info->new_get_uintah_field<CT, const double, MemSpace>((*isrc).name);
+        auto src = tsk_info->get_field<CT, const double, MemSpace>((*isrc).name);
         double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){

@@ -156,9 +156,9 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
-    CCVariable<double>&      rho   = tsk_info->new_get_uintah_field<CCVariable<double> >( rho_name );
-    constCCVariable<double>& cchar = tsk_info->new_get_uintah_field<constCCVariable<double> >( char_name );
-    constCCVariable<double>& rc    = tsk_info->new_get_uintah_field<constCCVariable<double> >( rc_name );
+    CCVariable<double>&      rho   = tsk_info->get_field<CCVariable<double> >( rho_name );
+    constCCVariable<double>& cchar = tsk_info->get_field<constCCVariable<double> >( char_name );
+    constCCVariable<double>& rc    = tsk_info->get_field<constCCVariable<double> >( rc_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -183,7 +183,7 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
       });
     } else if (_model_type == "cqmom") {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
-      constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
+      constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -205,7 +205,7 @@ void CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
       });
     } else {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
-      constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
+      constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -251,9 +251,9 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
     const std::string char_name = get_env_name( ienv, _char_base_name );
     const std::string rc_name   = get_env_name( ienv, _rawcoal_base_name );
 
-    CCVariable<double>&      rho   = tsk_info->new_get_uintah_field<CCVariable<double> >( rho_name );
-    constCCVariable<double>& cchar = tsk_info->new_get_uintah_field<constCCVariable<double> >( char_name );
-    constCCVariable<double>& rc    = tsk_info->new_get_uintah_field<constCCVariable<double> >( rc_name );
+    CCVariable<double>&      rho   = tsk_info->get_field<CCVariable<double> >( rho_name );
+    constCCVariable<double>& cchar = tsk_info->get_field<constCCVariable<double> >( char_name );
+    constCCVariable<double>& rc    = tsk_info->get_field<constCCVariable<double> >( rc_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -278,7 +278,7 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
       });
     } else if (_model_type == "cqmom"){
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
-      constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
+      constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){
@@ -298,7 +298,7 @@ void CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exe
       });
     } else {
       const std::string diameter_name  = get_env_name( ienv, _diameter_base_name );
-      constCCVariable<double>& dp = tsk_info->new_get_uintah_field<constCCVariable<double> >( diameter_name );
+      constCCVariable<double>& dp = tsk_info->get_field<constCCVariable<double> >( diameter_name );
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&](int i, int j, int k){

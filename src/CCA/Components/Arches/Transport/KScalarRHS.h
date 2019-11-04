@@ -548,7 +548,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
   template <typename ExecSpace, typename MemSpace>
   void KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    auto eps = tsk_info->new_get_uintah_field<CT,const double, MemSpace>(m_eps_name);
+    auto eps = tsk_info->get_field<CT,const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -557,12 +557,12 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
       double scalar_init_value = m_init_value[ieqn];
 
-      auto rhs = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
-      auto phi = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
+      auto phi = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
 
-      auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-      auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-      auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
       auto rho_phi = createContainer<T, double, imax, MemSpace>(m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ?  1 : 0);
 
@@ -584,8 +584,8 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     } //eqn loop
 
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-      auto phi_unscaled = tsk_info->new_get_uintah_field<T, double, MemSpace>((i->second).unscaled_var);
-      auto phi = tsk_info->new_get_uintah_field<T, double, MemSpace>(i->first);
+      auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>((i->second).unscaled_var);
+      auto phi = tsk_info->get_field<T, double, MemSpace>(i->first);
       const double scalingConstant = i->second.constant;
 
       Uintah::BlockRange range2( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -646,10 +646,10 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
       tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_eqn_names[ieqn], phi[ieqn] );
       tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_transported_eqn_names[ieqn]+"_RHS",rhs[ieqn] );
-      old_phi[ieqn] = tsk_info->new_get_uintah_field<CT, const double, MemSpace>( m_eqn_names[ieqn] );
+      old_phi[ieqn] = tsk_info->get_field<CT, const double, MemSpace>( m_eqn_names[ieqn] );
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        old_rho_phi[icount] = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn] );
+        old_rho_phi[icount] = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn] );
         tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_transported_eqn_names[ieqn],rho_phi[icount] );
         icount++;
       }
@@ -723,10 +723,10 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     double az = Dx.x() * Dx.y();
     const double V = Dx.x()*Dx.y()*Dx.z();
 
-    auto uVel = tsk_info->new_get_uintah_field<CFXT,const double, MemSpace>(m_x_velocity_name);
-    auto vVel = tsk_info->new_get_uintah_field<CFYT,const double, MemSpace>(m_y_velocity_name);
-    auto wVel = tsk_info->new_get_uintah_field<CFZT,const double, MemSpace>(m_z_velocity_name);
-    auto eps  = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eps_name);
+    auto uVel = tsk_info->get_field<CFXT,const double, MemSpace>(m_x_velocity_name);
+    auto vVel = tsk_info->get_field<CFYT,const double, MemSpace>(m_y_velocity_name);
+    auto wVel = tsk_info->get_field<CFZT,const double, MemSpace>(m_z_velocity_name);
+    auto eps  = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -735,11 +735,11 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
       auto rho_phi=createConstContainer<CT,const double,1, MemSpace>(1);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
-        rho_phi[0] = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
+        rho_phi[0] = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
       }
 
-      auto phi = tsk_info->new_get_uintah_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
-      auto rhs = tsk_info->new_get_uintah_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
+      auto phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
 
       Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       Uintah::parallel_for(execObj,range_t,  KOKKOS_LAMBDA ( int i,  int j, int k){
@@ -750,9 +750,9 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        auto x_flux = tsk_info->new_get_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-        auto y_flux = tsk_info->new_get_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-        auto z_flux = tsk_info->new_get_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+        auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+        auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+        auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -890,9 +890,9 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       //Diffusion:
       if ( m_do_diff[ieqn] ) {
 
-        auto x_dflux = tsk_info->new_get_uintah_field<CFXT, const double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
-        auto y_dflux = tsk_info->new_get_uintah_field<CFYT, const double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
-        auto z_dflux = tsk_info->new_get_uintah_field<CFZT, const double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
+        auto x_dflux = tsk_info->get_field<CFXT, const double, MemSpace>(m_eqn_names[ieqn]+"_x_dflux");
+        auto y_dflux = tsk_info->get_field<CFYT, const double, MemSpace>(m_eqn_names[ieqn]+"_y_dflux");
+        auto z_dflux = tsk_info->get_field<CFZT, const double, MemSpace>(m_eqn_names[ieqn]+"_z_dflux");
 
         GET_EXTRACELL_BUFFERED_PATCH_RANGE(0,0);
 
@@ -912,7 +912,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       for (typename VS::iterator isrc = m_source_info[ieqn].begin();
         isrc != m_source_info[ieqn].end(); isrc++){
 
-        auto src = tsk_info->new_get_uintah_field<CT, const double, MemSpace>((*isrc).name);
+        auto src = tsk_info->get_field<CT, const double, MemSpace>((*isrc).name);
         const double weight = (*isrc).weight;
         Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 

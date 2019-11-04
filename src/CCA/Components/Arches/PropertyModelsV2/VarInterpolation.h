@@ -209,7 +209,7 @@ template <typename T, typename IT>
 template <typename ExecSpace, typename MemSpace>
 void VarInterpolation<T,IT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto int_var = tsk_info->new_get_uintah_field<IT, double, MemSpace>(m_inter_var_name);
+  auto int_var = tsk_info->get_field<IT, double, MemSpace>(m_inter_var_name);
   parallel_initialize(execObj,0.0,int_var);
 
 }
@@ -231,8 +231,8 @@ template <typename T, typename IT>
 template <typename ExecSpace, typename MemSpace>
 void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto int_var = tsk_info->new_get_uintah_field<IT, double, MemSpace>(m_inter_var_name);
-  auto var = tsk_info->new_get_uintah_field<T, const double, MemSpace>(m_var_name);
+  auto int_var = tsk_info->get_field<IT, double, MemSpace>(m_inter_var_name);
+  auto var = tsk_info->get_field<T, const double, MemSpace>(m_var_name);
 
   const int ioff = m_ijk_off[0];
   const int joff = m_ijk_off[1];

@@ -151,13 +151,13 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 template <typename ExecSpace, typename MemSpace> void
 CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto old_u_cc = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_u_vel_name_cc);
-  auto old_v_cc = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_v_vel_name_cc);
-  auto old_w_cc = tsk_info->new_get_uintah_field<constCCVariable<double>, const double, MemSpace>(m_w_vel_name_cc);
+  auto old_u_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_u_vel_name_cc);
+  auto old_v_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_v_vel_name_cc);
+  auto old_w_cc = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_w_vel_name_cc);
 
-  auto u_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
-  auto v_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
-  auto w_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
+  auto u_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
+  auto v_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
+  auto w_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
   Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
@@ -195,12 +195,12 @@ void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Execution
 template <typename ExecSpace, typename MemSpace>
 void CCVel::compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto u = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto v = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto w = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
-  auto u_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
-  auto v_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
-  auto w_cc = tsk_info->new_get_uintah_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
+  auto u = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto v = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto w = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto u_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_u_vel_name_cc);
+  auto v_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_v_vel_name_cc);
+  auto w_cc = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_w_vel_name_cc);
 
   parallel_initialize(execObj,0.0,u_cc,v_cc,w_cc);
 

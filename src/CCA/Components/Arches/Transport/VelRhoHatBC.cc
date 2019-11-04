@@ -119,13 +119,13 @@ void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecSpace, MemSpace> &execObj,grid
 template <typename ExecSpace, typename MemSpace>
 void VelRhoHatBC::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto xmom = tsk_info->new_get_uintah_field<SFCXVariable<double>, double, MemSpace>( m_xmom );
-  auto ymom = tsk_info->new_get_uintah_field<SFCYVariable<double>, double, MemSpace>( m_ymom );
-  auto zmom = tsk_info->new_get_uintah_field<SFCZVariable<double>, double, MemSpace>( m_zmom );
+  auto xmom = tsk_info->get_field<SFCXVariable<double>, double, MemSpace>( m_xmom );
+  auto ymom = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>( m_ymom );
+  auto zmom = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>( m_zmom );
 
-  auto old_uVel = tsk_info->new_get_uintah_field<constSFCXVariable<double>, const double, MemSpace>( m_uVel );
-  auto old_vVel = tsk_info->new_get_uintah_field<constSFCYVariable<double>, const double, MemSpace>( m_vVel );
-  auto old_wVel = tsk_info->new_get_uintah_field<constSFCZVariable<double>, const double, MemSpace>( m_wVel );
+  auto old_uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>( m_uVel );
+  auto old_vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>( m_vVel );
+  auto old_wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>( m_wVel );
 
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
   const double possmall = 1e-16;
