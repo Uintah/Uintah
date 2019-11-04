@@ -781,9 +781,9 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   auto wp                   = tsk_info->get_field<CT, const double, MemSpace>( m_wp_name );
 
   // birth terms
-  auto rawcoal_birth = tsk_info->get_empty_uintah_field<CT, const double, MemSpace>();
-  auto char_birth    = tsk_info->get_empty_uintah_field<CT, const double, MemSpace>();
-  auto length_birth  = tsk_info->get_empty_uintah_field<CT, const double, MemSpace>();
+  auto rawcoal_birth = tsk_info->get_empty_field<CT, const double, MemSpace>();
+  auto char_birth    = tsk_info->get_empty_field<CT, const double, MemSpace>();
+  auto length_birth  = tsk_info->get_empty_field<CT, const double, MemSpace>();
 
 
   if (m_add_rawcoal_birth) {

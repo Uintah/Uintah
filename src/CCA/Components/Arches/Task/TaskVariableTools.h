@@ -185,7 +185,7 @@ namespace Uintah {
 
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, UintahSpaces::HostSpace >::value, T >::type
-      get_empty_uintah_field()
+      get_empty_field()
       {
         return T();
       }
@@ -193,7 +193,7 @@ namespace Uintah {
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::HostSpace >::value, KokkosView3<PODType, Kokkos::HostSpace> >::type
-      get_empty_uintah_field()
+      get_empty_field()
       {
         KokkosView3<PODType, Kokkos::HostSpace> temp;
         return temp;
@@ -203,7 +203,7 @@ namespace Uintah {
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
       template <typename T, typename PODType, typename MemSpace>
       inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<PODType, Kokkos::CudaSpace> >::type
-      get_empty_uintah_field()
+      get_empty_field()
       {
         KokkosView3<PODType, Kokkos::CudaSpace> temp;
         return temp;
