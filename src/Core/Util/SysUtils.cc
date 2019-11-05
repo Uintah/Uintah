@@ -74,8 +74,8 @@ namespace Uintah {
   
   std::vector< unsigned int > sysGetNUMANodeCPUs( unsigned int node) {
     std::string cpusStr = sysPipeCall( std::string( "lscpu | grep 'NUMA node" +
-						    std::to_string( node ) +
-						    " CPU(s):' | sed -n '${s/.* //; p}'" ).c_str());
+                                                    std::to_string( node ) +
+                                                    " CPU(s):' | sed -n '${s/.* //; p}'" ).c_str());
 
     std::vector< unsigned int > cpus;
     
@@ -113,8 +113,8 @@ namespace Uintah {
   
   std::vector< unsigned int > sysGetNUMANodeCPUs( unsigned int node) {
   //   std::string cpusStr = sysPipeCall( std::string( "lscpu | grep 'NUMA node" +
-  // 						    std::to_string( node ) +
-  // 						    " CPU(s):' | sed -n '${s/.* //; p}'" ).c_str());
+  //                                                std::to_string( node ) +
+  //                                                " CPU(s):' | sed -n '${s/.* //; p}'" ).c_str());
 
     std::vector< unsigned int > cpus;
     
@@ -130,4 +130,3 @@ namespace Uintah {
 #endif
   
 } // End namespace Uintah
-
