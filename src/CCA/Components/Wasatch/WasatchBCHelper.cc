@@ -561,7 +561,9 @@ namespace WasatchCore {
        */
       if( myBndSpec.has_patch(patchID) ){
         Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
-        
+        if (myBndSpec.type == INTERIOR) {
+          continue; // do not do anything for the pressure at interior boundaries
+        }
         double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
         if (myBndCondSpec) {
           if (myBndCondSpec->bcType == DIRICHLET) { // DIRICHLET on pressure
@@ -685,6 +687,7 @@ namespace WasatchCore {
       } // switch
       
       if (myBndCondSpec) {
+        
         //_____________________________________________________________________________________
         // check if we have this patchID in the list of patchIDs
         if (myBndSpec.has_patch(patchID))
