@@ -40,6 +40,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
+#include <Core/Util/SysUtils.h>
 
 #include <sci_defs/visit_defs.h>
 
@@ -233,7 +234,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->nodeStart.clear();
   sim->nodeStop.clear();
   sim->nodeCores.clear();
-  sim->nodeMemory.clear();
 
   sim->maxCores = 0;
   sim->maxNodes = 0;
@@ -258,6 +258,25 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // A machine layout file could exist for this machine.
   if( sim->hostName.size() && sim->hostNode.size() )
   {
+    // int nRanks = sim->myworld->nRanks();
+
+    // // Get the processor's number of physical cores
+    // int my_node_phyical_cores = sysGetNumSockets() * sysGetNumCoresPerSockets();
+
+    // // Gather all processor's number of physical core sizes
+    // std::vector< unsigned int > all_node_phyical_cores;
+    // all_node_phyical_cores.resize(nRanks);
+
+    // MPI::Allgather( &my_node_phyical_cores,        1,      MPI_INT,
+    // 		    all_node_phyical_cores.data(), nRanks, MPI_INT,
+    // 		    MPI_COMM_WORLD);
+
+    // // Get the maximum number of physical core size across all
+    // // processors.
+    // int max_node_phyical_cores;
+    // MPI::Allreduce( &my_node_phyical_cores, &max_node_phyical_cores,
+    // 		    1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
     // The machine layout files are in the in situ source dir
     std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
       std::string("/../src/VisIt/libsim/");
@@ -279,19 +298,20 @@ void visit_InitLibSim( visit_simulation_data *sim )
         // This is part of the node table.
         else if( line.find("Nodes") == 0 )
         {
-          // Get the node details (number of cores and memory). The
+          // Get the node details (number of cores). The
           // number of digits is the number of digits that would be
           // present for a node number (machine001). Versus a head
           // node(machine1).
-          std::string tmpNode, tmpDigits, tmpTo, tmpCores, tmpMemory, tmpGB;
-          unsigned int nDigits, start, stop, nCores, memory;
+          std::string tmpNode, tmpDigits, tmpTo, tmpCores;
+          unsigned int nDigits, start, stop, nCores;
 
           std::istringstream iss(line);
 
-          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpDigits >> nDigits >> tmpCores >> nCores >> tmpMemory >> memory >> tmpGB))
+          if (!(iss >> tmpNode >> start >> tmpTo >> stop >> tmpDigits >> nDigits >> tmpCores >> nCores))
             break; // error
 
-          // If on a head node skip the rest and bail out.
+          // If on a head node skip the rest and bail out. Assume that
+          // a head node index would never have more than one digit?
           if( sim->hostNode.size() != nDigits )
           {
             infile.close();
@@ -304,7 +324,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
           sim->nodeStart.push_back( start );
           sim->nodeStop.push_back( stop );
           sim->nodeCores.push_back( nCores );
-          sim->nodeMemory.push_back( memory );
 
           // Get the maximum number of cores.
           if( sim->maxCores < nCores )
@@ -381,7 +400,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
         sim->nodeStart.clear();
         sim->nodeStop.clear();
         sim->nodeCores.clear();
-        sim->nodeMemory.clear();
 
         std::stringstream msg;
         msg << "Visit libsim - "
@@ -421,25 +439,18 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // columns for the cores.
   unsigned int gcd = 2;
   
-  if( sim->nodeCores.size() == 1 )
+  for( unsigned int i=2; i<sqrt(sim->maxCores); ++i )
   {
-    gcd = int(ceil( sqrt(sim->maxCores) ) );
-  }
-  else
-  {
-    for( unsigned int i=2; i<sim->maxCores; ++i )
+    unsigned int cc = 0;
+    
+    for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
     {
-      unsigned int cc = 0;
-      
-      for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
-      {
-        if( sim->nodeCores[j] % i == 0 )
-          ++cc;
-      }
-      
-      if( cc == sim->nodeCores.size() )
-        gcd = i;
+      if( sim->nodeCores[j] % i == 0 )
+	++cc;
     }
+    
+    if( cc == sim->nodeCores.size() )
+      gcd = i;
   }
   
   // Size of a node based on the number of cores and GCD.

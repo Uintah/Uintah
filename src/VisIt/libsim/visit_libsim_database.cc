@@ -43,6 +43,7 @@
 
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/SysUtils.h>
 
 #include <VisIt/interfaces/warehouseInterface.h>
 
@@ -1472,98 +1473,113 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       connections[nConnections++] = (+0) * xMax + (+1);
     }
 
-    // For each rank create a quad for it's patches.
-    else if( meshName.find("/Patch" ) != std::string::npos )
+    // Create a quad for each rank on a node.
+    if( meshName.find("/Thread") != std::string::npos )
     {
-      const PatchSubset* myPatches =
-        lb->getPerProcessorPatchSet(gridP)->getSubset( domain );
-
-      const unsigned int nPatches = myPatches->size();
-
-      if( nPatches == 0 )
-        return VISIT_INVALID_HANDLE;
-
-      // Total size of the layout. Try to make rectangles.
-      unsigned int xMax = sqrt(nPatches);
-      unsigned int yMax = xMax;
-
-      // Make sure to cover all the patches - may be blank areas.
-      while( xMax * yMax < nPatches )
-        ++yMax;
-
-      // Add one to get the far boundary.
-      xMax += 1;
-      yMax += 1;
-
-      // Set all of the points as rectilinear grid.
-      nPts = xMax * yMax;
-
-      // Indexes for the switch, node, and core
+      // Indexes for the switch, node, and core.
       unsigned int s = sim->switchIndex;
       unsigned int n = sim->nodeIndex;
       unsigned int c = sim->myworld->myNode_myRank();
+      unsigned int nRanks = sim->myworld->myNode_nRanks();
+      
+      unsigned int nSockets = sysGetNumSockets();
+      unsigned int nCoresPerSocket = sysGetNumCoresPerSockets();
+      unsigned int nThreadsPerCore = sysGetNumThreadsPerCore();
+      unsigned int nThreads;
+
+      // If the number of ranks is one then not taking advantage of
+      // the sockets.
+      if( nRanks == 1 )
+      {
+	nThreads = nSockets * nCoresPerSocket * nThreadsPerCore;
+      }
+      
+      // If the number of ranks greater than one then it must equal
+      // the number of sockets.
+      else if( nRanks == nSockets )
+      {
+	nThreads = nCoresPerSocket * nThreadsPerCore;
+      }
+      
+      // Connections are for quads so the type plus four points.
+      connections = new int[ nThreads * nQuadVals ];
+
+      // Total size of the layout for one thread;
+      const unsigned int xMax = 2;
+      const unsigned int yMax = 2;
+	
+      // Set all of the points as rectilinear grid.
+      nPts = nThreads * 4;
+      xPts = new float[nPts];
+      yPts = new float[nPts];
 
       // Get the node x y location based on the x/y node size.
       unsigned int bx = s * (sim->xNode+1);
       unsigned int by = n * (sim->yNode+1);
-          
-      // Get the core x y location based on the xNode size.
-      unsigned int lx = bx + c % sim->xNode;
-      unsigned int ly = by + c / sim->xNode;
-            
-      xPts = new float[nPts];
-      yPts = new float[nPts];
-      // zPts = new float[nPts];
 
-      float dx = 1.0 / (float) (xMax-1);
-      float dy = 1.0 / (float) (yMax-1);
-
-      for( unsigned int j=0; j<yMax; ++j)
+      float dx = 1.0 /  (float) nThreadsPerCore;
+      
+      // Loop through each thread.
+      for( unsigned int t=0; t<nThreads; ++t )
       {
-        for( unsigned int i=0; i<xMax; ++i)
-        {
-          xPts[j*xMax+i] = lx + i * dx;
-          yPts[j*xMax+i] = ly + j * dy;
-          // zPts[j*xMax+i] = 1;
-        }
-      }
+	unsigned int threadID = c + t * nRanks;
 
-      // Connections are for quads so the type plus four points.
-      connections = new int[ nPatches * nQuadVals ];
+	unsigned int core        = threadID % (nSockets*nCoresPerSocket);
+	unsigned int hyperThread = threadID / (nSockets*nCoresPerSocket);
+	  
+	// Get the core x y location based on the xNode size.
+	unsigned int lx = bx + core % sim->xNode + hyperThread * dx;
+	unsigned int ly = by + core / sim->xNode;
+	
+	// zPts = new float[nPts];
 
-      for (unsigned int  p = 0; p < nPatches; ++p) {
+	for( unsigned int j=0; j<yMax; ++j)
+	{
+	  for( unsigned int i=0; i<xMax; ++i)
+	  {
+	    xPts[t*4+j*xMax+i] = lx + i * dx;
+	    yPts[t*4+j*xMax+i] = ly + j;
+	    // zPts[j*xMax+i] = 0;
+	  }
+	}
 
-        // Get an x y index based on the xMax size.
-        unsigned int px = p % (xMax-1);
-        unsigned int py = p / (xMax-1);
-
-        // All cells are quads
-        connections[nConnections++] = VISIT_CELL_QUAD;
-        
-        // Set the index based on a rectilinear grid.
-        connections[nConnections++] = (py+0) * xMax + (px+0);
-        connections[nConnections++] = (py+1) * xMax + (px+0);
-        connections[nConnections++] = (py+1) * xMax + (px+1);
-        connections[nConnections++] = (py+0) * xMax + (px+1);
+	// All cells are quads
+	connections[nConnections++] = VISIT_CELL_QUAD;
+	
+	// Set the index based on a rectilinear grid.
+	connections[nConnections++] = t*4 + (+0) * xMax + (+0);
+	connections[nConnections++] = t*4 + (+1) * xMax + (+0);
+	connections[nConnections++] = t*4 + (+1) * xMax + (+1);
+	connections[nConnections++] = t*4 + (+0) * xMax + (+1);
       }
     }
 
-    // For each node create a quad for it's thread or point
+    // For each rank create a quad for it's patches, threads or point
     // communication rank.
-    else if( meshName.find("/Thread") != std::string::npos ||
+    else if( meshName.find("/Patch" ) != std::string::npos ||
+	     meshName.find("/Thread") != std::string::npos ||
              meshName.find("/Communication") != std::string::npos )
     {
       unsigned int nValues;
 
-      if( meshName.find("/Thread") != std::string::npos ) {
-        nValues = Uintah::Parallel::getNumThreads();
+      if( meshName.find("/Patch") != std::string::npos ) {
+	const PatchSubset* myPatches =
+	  lb->getPerProcessorPatchSet(gridP)->getSubset( domain );
+
+	nValues = myPatches->size();
+      }
+      else if( meshName.find("/Thread") != std::string::npos ) {
+        // nValues = Uintah::Parallel::getNumThreads();
+
+        nValues = sysGetNumThreadsPerCore();
       }
       else if( meshName.find("/Communication") != std::string::npos ) {
       
         SchedulerCommon *scheduler = dynamic_cast<SchedulerCommon*>
           (sim->simController->getSchedulerP().get_rep());
       
-        // There may be multiple communication matrices, the index will be last.
+        // There may be multiple communication matrices, the index
+        // will be last.
         unsigned int index = 0;    
         if( scheduler->getNumTaskGraphs() > 1 ) {
           size_t found = meshName.find_last_of("/");
@@ -1579,7 +1595,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         nValues = comm_info.size();
       }
       
-      // Some nodes may not have threads or be communicating.
+      // Some ranks may not have patches, threads or be communicating.
       if( nValues == 0 )
         return VISIT_INVALID_HANDLE;
       
@@ -2195,10 +2211,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       UnifiedScheduler *unifiedScheduler = dynamic_cast<UnifiedScheduler*>
         (sim->simController->getSchedulerP().get_rep());
 
+  // int myNode_nRanks() const { return m_node_nRanks; }
+  // int myNode_myRank() const { return m_node_rank; }
+       
+      // unsigned int 
       unsigned int nValues = Uintah::Parallel::getNumThreads();
       double *values;
 
-      // Some nodes may not have any threads.
+      // Some ranks may not have any threads.
       if( nValues == 0 )
         return varH;
       
