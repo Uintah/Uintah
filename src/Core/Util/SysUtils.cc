@@ -55,7 +55,7 @@ namespace Uintah {
     return result;
   }
 
-#ifdef __LINUX__
+#ifdef __linux
   unsigned int sysGetNumNUMANodes() {
     return std::stoi( sysPipeCall("lscpu | grep 'NUMA node(s):' | sed -n '${s/.* //; p}'") );
   }
@@ -88,8 +88,6 @@ namespace Uintah {
 
     return cpus;
   }
-
-    fgdadgsfgfs;
 
 #elif defined __APPLE__
 
