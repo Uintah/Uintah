@@ -1024,16 +1024,8 @@ DORadiationModel::setLabels(const VarLabel* abskg_label,
  
   if(_LspectralSolve){
     for (int i=0; i<m_nbands; i++){
-      _abskg_label_vector[i] = VarLabel::find(_abskg_name_vector[i]);
-      _abswg_label_vector[i] = VarLabel::find(_abswg_name_vector[i]);
-
-      if (_abskg_label_vector[i]==nullptr){
-        throw ProblemSetupException("Error: spectral gas absorption coefficient label not found."+_abskg_name_vector[i], __FILE__, __LINE__);
-      }
-
-      if (_abswg_label_vector[i]==nullptr){
-        throw ProblemSetupException("Error: spectral gas weighting coefficient label not found."+_abswg_name_vector[i], __FILE__, __LINE__);
-      }
+      _abskg_label_vector[i] = VarLabel::find(_abskg_name_vector[i], "Error: spectral gas absorption coefficient" );
+      _abswg_label_vector[i] = VarLabel::find(_abswg_name_vector[i], "Error: spectral gas weighting coefficient" );
     }
   }else{
     _abskg_label_vector[0]=abskg_label;
@@ -1041,23 +1033,15 @@ DORadiationModel::setLabels(const VarLabel* abskg_label,
 
 
   for (int qn=0; qn < m_nQn_part; qn++){
-    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn]));
-
-    if (_abskp_label_vector[qn]==0){
-      throw ProblemSetupException("Error: particle absorption coefficient node not found."+_abskp_name_vector[qn], __FILE__, __LINE__);
-    }
-
-    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn]));
-
-    if (_temperature_label_vector[qn]==0){
-      throw ProblemSetupException("Error: particle temperature node not foundr! "+_temperature_name_vector[qn], __FILE__, __LINE__);
-    }
+    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn], "Error: particle absorption coefficient"));
+    
+    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn], "Error: particle temperature "));
   }
 
 
   if(m_doScattering){
-    _scatkt_label    = VarLabel::find("scatkt");
-    _asymmetry_label = VarLabel::find("asymmetryParam");
+    _scatkt_label    = VarLabel::find("scatkt",  "Error: scattering coeff");  // need more descriptive error message
+    _asymmetry_label = VarLabel::find("asymmetryParam", "Error:");
   }
   return;
 }
@@ -1068,22 +1052,14 @@ void
 DORadiationModel::setLabels()
 {
   for (int qn=0; qn < m_nQn_part; qn++){
-    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn]));
+    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn], "Error: particle absorption coefficient" ));
 
-    if (_abskp_label_vector[qn]==0){
-      throw ProblemSetupException("Error: particle absorption coefficient node not found."+_abskp_name_vector[qn], __FILE__, __LINE__);
-    }
-
-    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn]));
-
-    if (_temperature_label_vector[qn]==0){
-      throw ProblemSetupException("Error: particle temperature node not foundr! "+_temperature_name_vector[qn], __FILE__, __LINE__);
-    }
+    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn], "Error: particle temperature" ));
   }
 
   if(m_doScattering){
     _scatkt_label   = VarLabel::find("scatkt");
-    _asymmetry_label=VarLabel::find("asymmetryParam");
+    _asymmetry_label= VarLabel::find("asymmetryParam");
   }
   return;
 }
@@ -1256,10 +1232,10 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
 
     const int idx = intensityIndx(dir,iband);
     
-    CCVariable <double > intensity;
+    CCVariable<double> intensity;
     new_dw->getModifiable(intensity, _IntensityLabels[idx], matlIndex, patch, _gv[m_plusX[dir] ][m_plusY[dir]  ][m_plusZ[dir]  ],1 );
 
-    constCCVariable <double > emissSrc;
+    constCCVariable<double> emissSrc;
     if(m_doScattering){
       new_dw->get( emissSrc, _emiss_plus_scat_source_label[idx], matlIndex, patch, m_gn,0 );
     }else{
@@ -1276,6 +1252,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int kstart = (m_plusZ[dir] ? idxLo.z() : idxHi.z()); // allows for direct logic in triple for loop
     const int jstart = (m_plusY[dir] ? idxLo.y() : idxHi.y());
     const int istart = (m_plusX[dir] ? idxLo.x() : idxHi.x());
+
     const int kDir = m_plusZ[dir] ? 1 : -1; // reverse logic for negative directions
     const int jDir = m_plusY[dir] ? 1 : -1;
     const int iDir = m_plusX[dir] ? 1 : -1;
@@ -1301,7 +1278,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             im = i - m_xiter[dir];
             if (cellType(i,j,k) != m_ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
-            } else{ // else flow cell
+            } 
+            else{ // else flow cell
               intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k)  + abskt(i,j,k))*vol);
             } // end if intrusion
           } // end i loop
@@ -1317,7 +1295,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             im = i - m_xiter[dir];
             if (cellType(i,j,k) != m_ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
-            } else{ // else flow cell
+            } 
+            else{ // else flow cell
               intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + abskt(i,j,k)*vol);
             } // end if intrusion
           } // end i loop
