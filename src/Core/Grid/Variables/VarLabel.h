@@ -94,6 +94,9 @@ public:
 
   static VarLabel* find( const std::string& name );
 
+  static VarLabel* find( const std::string& name,
+                         const std::string& messg );
+
   static VarLabel* particlePositionLabel();
 
   static void setParticlePositionName(const std::string& pPosName) { s_particle_position_name = pPosName; }
@@ -173,7 +176,7 @@ private:
 
   // Static member to keep track of all labels created to prevent
   // duplicates.
-  static std::map<std::string, VarLabel*> g_all_labels; 
+  static std::map<std::string, VarLabel*> g_all_labels;
 };
 
 } // End namespace Uintah

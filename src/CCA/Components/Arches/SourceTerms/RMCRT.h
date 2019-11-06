@@ -166,6 +166,26 @@ private:
                                DataWarehouse*, 
                                DataWarehouse*){};
 
+  //__________________________________                     
+  /** @brief Schedule compute of blackbody intensity */    
+  void sched_sigmaT4( const LevelP& level,                 
+                      SchedulerP& sched,                   
+                      Task::WhichDW temp_dw, 
+                      Task::WhichDW which_cellType_dw,              
+                      const bool includeEC = true );       
+
+  //__________________________________                     
+  //                                                       
+  template< class T>                                       
+  void sigmaT4( const ProcessorGroup* pg,                  
+                const PatchSubset* patches,                
+                const MaterialSubset* matls,               
+                DataWarehouse* old_dw,                     
+                DataWarehouse* new_dw,                     
+                Task::WhichDW which_temp_dw,
+                Task::WhichDW which_cellType_dw,          
+                const bool includeEC );                    
+
 
 
   //______________________________________________________________________
@@ -236,14 +256,15 @@ private:
   Properties           * d_props{nullptr};
   const ProcessorGroup * m_my_world;
   MaterialManagerP       m_materialManager;
-  ProblemSpecP           m_ps;              // needed for extraSetup()
-
-  std::string  m_abskt_label_name;
-  std::string  m_T_label_name;
+  ProblemSpecP           m_ps;                   // needed for extraSetup()
+  const MaterialSet    * m_matlSet{nullptr};       //< Arches material set
+  
+  std::string  m_abskt_name;
+  std::string  m_gas_temp_name;
 
   const VarLabel * m_abskgLabel{nullptr};
   const VarLabel * m_absktLabel{nullptr};
-  const VarLabel * m_tempLabel{nullptr};
+  const VarLabel * m_gasTempLabel{nullptr};
   const VarLabel * m_radFluxE_Label{nullptr};
   const VarLabel * m_radFluxW_Label{nullptr};
   const VarLabel * m_radFluxN_Label{nullptr};
@@ -251,17 +272,16 @@ private:
   const VarLabel * m_radFluxT_Label{nullptr};
   const VarLabel * m_radFluxB_Label{nullptr};
 
-#if 0
-  // variables needed for particles
+  // variables needed for radiation from particles
   bool m_radiateAtGasTemp{true};  // this flag is arbitrary for no particles
+  bool m_do_partRadiation{false};
+  std::vector<std::string>       m_partGas_temp_names;
+  std::vector<std::string>       m_partGas_absk_names;
+  std::vector< const VarLabel*>  m_partGas_abskLabels;
+  std::vector< const VarLabel*>  m_partGas_tempLabels;
+  int m_nQn_part{0};
+  int m_nPartGasLabels{0};
 
-  std::vector<std::string>       m_temperature_name_vector;
-  std::vector<std::string>       m_absk_name_vector;
-  std::vector< const VarLabel*>  m_absk_label_vector;
-  std::vector< const VarLabel*>  m_temperature_label_vector;
-
-  int m_nQn_part{0} ;  // number of quadrature nodes in DQMOM
-#endif
   Ghost::GhostType m_gn{Ghost::None};
   Ghost::GhostType m_gac{Ghost::AroundCells};
   
