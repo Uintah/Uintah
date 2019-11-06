@@ -423,7 +423,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     sim->nodeIndex = 0;
 
     sim->maxNodes = 1;
-    sim->maxCores = std::max( sim->myworld->nRanks(),
+    sim->maxCores = std::max( (unsigned int) sim->myworld->nRanks(),
 			      sysGetNumSockets() * sysGetNumCoresPerSockets() );
 
     sim->nodeStart.push_back( 0 );
