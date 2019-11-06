@@ -416,14 +416,15 @@ void visit_InitLibSim( visit_simulation_data *sim )
   }
 
   // If no information is availble for this machine create a generic
-  // MPI rank based view.
+  // view assuming running on a single node or the number of MPI ranks.
   if( sim->switchNodeList.size() == 0 )
   {
     sim->switchIndex = 0;
     sim->nodeIndex = 0;
 
     sim->maxNodes = 1;
-    sim->maxCores = sim->myworld->nRanks();
+    sim->maxCores = std::max( sim->myworld->nRanks(),
+			      sysGetNumSockets() * sysGetNumCoresPerSockets() );
 
     sim->nodeStart.push_back( 0 );
     sim->nodeStop.push_back( 1 );
