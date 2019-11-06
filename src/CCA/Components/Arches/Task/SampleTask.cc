@@ -123,7 +123,6 @@ SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // But, in this case you lose some of the convenient feature of the Arches Task Interface
   // which may or may not be important to you.
   //CCVariable<double> A_trad;
-  //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("A", A_trad);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

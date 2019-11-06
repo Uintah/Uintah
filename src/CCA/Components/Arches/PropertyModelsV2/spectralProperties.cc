@@ -232,8 +232,7 @@ spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
    if (_LsootOn){
 
-     CCVariable<double>  absksoot;
-     tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("absksoot",absksoot);
+     auto& absksoot = tsk_info->get_field<CCVariable<double> >("absksoot");
 
      constCCVariable<double>& soot_vf = tsk_info->get_field<constCCVariable<double> >(_soot_name);
      Uintah::parallel_for( range,  [&](int i, int j, int k){

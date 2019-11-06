@@ -107,26 +107,6 @@ namespace Uintah {
 
       }
 
-      /** @brief Return a UINTAH field allowing the user to manage the memory. **/
-      template <typename T>
-      inline void
-      get_unmanaged_uintah_field( const std::string   name
-                                ,       T           & field
-                                )
-      {
-        _field_container->get_unmanaged_field<T>( name, field );
-      }
-
-      /** @brief Return a CONST UINTAH field allowing the user to manage the memory. **/
-      template <typename T>
-      inline void
-      get_const_unmanaged_uintah_field( const std::string   name
-                                      ,       T           & field
-                                      )
-      {
-        _field_container->get_const_unmanaged_field<T>( name, field );
-      }
-
       /** @brief Return a UINTAH particle field **/
       std::tuple<ParticleVariable<double>*, ParticleSubset*>
       get_uintah_particle_field( const std::string name )

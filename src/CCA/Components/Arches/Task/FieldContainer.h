@@ -434,38 +434,6 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a user managed variable. **/
-      template <typename T>
-      void get_unmanaged_field( const std::string name, T& field ){
-
-        VariableInformation ivar = get_variable_information( name, false );
-
-        if ( ivar.depend == MODIFIES ){
-          _new_dw->getModifiable( field, ivar.label, m_matl_index, _patch );
-        } else if ( ivar.depend == COMPUTES ) {
-          _new_dw->allocateAndPut( field, ivar.label, m_matl_index, _patch );
-        }
-
-      }
-
-      /** @brief Get a user managed variable. **/
-      template <typename T>
-      void get_const_unmanaged_field( const std::string name,
-                                      T& field ){
-
-        VariableInformation ivar = get_variable_information( name, false );
-
-        if ( ivar.dw == OLDDW ){
-
-          _old_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
-
-        } else {
-
-          _new_dw->get( field, ivar.label, m_matl_index, _patch, ivar.ghost_type, ivar.nGhost );
-
-        }
-      }
-
       /** @brief Return a reference to the NEW DW **/
       DataWarehouse* getNewDW(){
         return _new_dw;
