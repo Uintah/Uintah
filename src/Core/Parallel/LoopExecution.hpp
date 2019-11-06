@@ -1152,7 +1152,44 @@ class KokkosView3;
 
 #if defined(HAVE_CUDA)
 
+/* DS 11052019: Wrote alternative (and simpler) version of parallel_initialize_grouped for cuda
+ * The previous version seems to produce error in parallel_initialize. 
+ * This version finds the max numb of cells among variables and uses it as an
+ * iteration count. Using simpler RangePolicy instead of TeamPolicy. All computations
+ * to find out index in TeamPolicy - especially divides and mods do not seem worth for 
+ * simple init code. Secondly iterating over all variables within struct1DArray manually
+ * rather than spawning extra threads. This reduces degreee of parallelism, but produces 
+ * correct result. Revisit later if it becomes a bottleneck. 
+ */
+template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
+		const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
+	// n_cells is the max of cells total to process among collection of vars (the view of Kokkos views)
+	// For example, if this were being used to  if one var had 4096 cells and another var had 5832 cells, n_cells would become 5832
+
+	unsigned int n_cells = 0;
+	for (unsigned int j = 0; j < KKV3.runTime_size; j++){
+		n_cells = KKV3[j].m_view.size() > n_cells ? KKV3[j].m_view.size() : n_cells;
+	}
+#if defined(NO_STREAM)
+	Kokkos::RangePolicy< Kokkos::Cuda > policy(0, n_cells);
+#else
+	void* stream = execObj.getStream();
+	Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+	Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, n_cells);
+#endif
+
+	Kokkos::parallel_for (policy, KOKKOS_LAMBDA (int i){
+		for(int j=0; j<KKV3.runTime_size; j++){
+			if(i<KKV3[j].m_view.size())
+				KKV3[j](i) = init_val;
+		}
+	});
+}
+
+/*
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -1214,6 +1251,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   cudaDeviceSynchronize();
 #endif
 }
+*/
 #endif //HAVE_CUDA
 
 //For array of Views
@@ -1302,7 +1340,10 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
       ,0)...,0}; //second part of magic unpacker
 
   for (int j=0; j<n_init_groups; j++){
-    hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;
+    //DS 11052019: setting else part to n % ARRAY_SIZE instead of n % ARRAY_SIZE+1. Why +1? It adds one extra variable, which does not exist
+    //At least matches with the alternative implementation
+    //hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE+1;    
+	hostArrayOfViews[j].runTime_size=n >ARRAY_SIZE * (j+1) ? ARRAY_SIZE : n % ARRAY_SIZE;
     parallel_initialize_grouped<ExecSpace, MemSpace, KokkosView3< T, MemSpace> >( execObj, hostArrayOfViews[j], initializationValue );
     //parallel_initialize_single<ExecSpace>(execObj, inputs_, inside_value ); // safer version, less ambitious
   }

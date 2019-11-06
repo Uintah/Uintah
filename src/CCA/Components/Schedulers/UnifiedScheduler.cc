@@ -1263,6 +1263,8 @@ UnifiedScheduler::runTasks( int thread_id )
 
         // Run the task on the GPU!
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
+        //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+        markHostAsInvalid(readyTask);
 
         if (g_d2h_dbg) {
           std::ostringstream message;
@@ -1299,6 +1301,9 @@ UnifiedScheduler::runTasks( int thread_id )
         // But it will run post computation management logic, which includes
         // marking the task as done.
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
+        //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+        //is it needed here??? check.
+        markHostAsInvalid(readyTask);
 
         // recycle this task's stream
         GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
@@ -1381,6 +1386,9 @@ UnifiedScheduler::runTasks( int thread_id )
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
 #ifdef HAVE_CUDA
+          //DS: 10312019: If CPU task is going to modify any variable, mark that variable as invalid on GPU.
+          markDeviceAsInvalid(readyTask);
+
           if (g_d2h_dbg) {
             std::ostringstream message;
             message << "  Running CPU Task: " << *readyTask;
@@ -1956,15 +1964,6 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
       gpudw->putUnallocatedIfNotExists(curDependency->m_var->getName().c_str(), patchID, matlID, levelID, false,
                                        make_int3(low.x(), low.y(), low.z()),
                                        make_int3(host_size.x(), host_size.y(), host_size.z()));
-
-      //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
-      //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
-      //TODO: check is it needed for all type of variables?
-      //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
-      //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
-      if(curDependency->m_dep_type == Task::Modifies){
-        gpudw->compareAndSwapSetInvalidOnCPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
-      }
 
       bool correctSize = false;
       bool allocating = false;
@@ -3546,6 +3545,83 @@ UnifiedScheduler::markDeviceModifiesGhostAsInvalid( DetailedTask * dtask )
   }
 }
 
+void UnifiedScheduler::markDeviceAsInvalid( DetailedTask * dtask ){
+    // Data has been copied from the device to the host.  The stream has completed.
+    // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
+
+    //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+    //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+    //TODO: check is it needed for all type of variables?
+    //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+    //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+    // The only thing we need to process is the modifies.
+    //var maps associated with detailed task do not ALWAYs contain variable - especially if task is a host task.
+    //So use raw dependency linked lists from task rather than var maps associated with detailed task.
+    const Task * task = dtask->getTask();
+    for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+        constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+        constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+        const int numPatches = patches->size();
+        const int numMatls = matls->size();
+        for (int i = 0; i < numPatches; i++) {
+            for (int j = 0; j < numMatls; j++) {
+                const Patch * patch = patches->get(i);
+                unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+                int dwIndex = dependantVar->mapDataWarehouse();
+                OnDemandDataWarehouseP dw = m_dws[dwIndex];
+                GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
+
+                const char * var_name = dependantVar->m_var->getName().c_str();
+                int patchID = patch->getID();
+                int matlID = matls->get(j);
+                int levelID = patch->getLevel()->getID();
+
+                gpudw->compareAndSwapSetInvalidOnGPU(var_name, patchID, matlID, levelID);
+                gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(var_name, patchID, matlID, levelID);
+            }
+        }
+    }
+}
+
+
+void UnifiedScheduler::markHostAsInvalid( DetailedTask * dtask ){
+    // Data has been copied from the device to the host.  The stream has completed.
+    // Go through all variables that this CPU task was responsible for copying mark them as valid on the CPU
+
+    //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
+    //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
+    //TODO: check is it needed for all type of variables?
+    //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
+    //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
+    // The only thing we need to process is the modifies.	  std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = dtask->getVarsBeingCopiedByTask().getMap();
+
+    //var maps associated with detailed task do not ALWAYs contain variable - especially if task is a host task.
+    //So use raw dependency linked lists from task rather than var maps associated with detailed task.
+    const Task * task = dtask->getTask();
+    for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+        constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+        constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+        const int numPatches = patches->size();
+        const int numMatls = matls->size();
+        for (int i = 0; i < numPatches; i++) {
+            for (int j = 0; j < numMatls; j++) {
+                const Patch * patch = patches->get(i);
+                unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+                int dwIndex = dependantVar->mapDataWarehouse();
+                OnDemandDataWarehouseP dw = m_dws[dwIndex];
+                GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
+
+                const char * var_name = dependantVar->m_var->getName().c_str();
+                int patchID = patch->getID();
+                int matlID = matls->get(j);
+                int levelID = patch->getLevel()->getID();
+
+                gpudw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
+            }
+        }
+    }
+}
+
 //______________________________________________________________________
 //
 void
@@ -4467,14 +4543,6 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
             cerrLock.unlock();
           }
         }
-      }
-      //DS: 10252019 if upcoming task modifies data on host, set the variable invalid in gpu dw.
-      //This ensures a H2D copy if any subsequent task requires/modifies variable on device.
-      //TODO: check if it is needed for other type of variables.
-      //CAUTION: Positioning of compareAndSwapSetInvalidOnCPU/GPU methods is very sensitive.
-      //Wrong placement can make the variable invalid on both execution spaces and then task runner loop just hangs. Be extremely careful of placing code.
-      if(dependantVar->m_dep_type == Task::Modifies){
-        gpudw->compareAndSwapSetInvalidOnGPU(dependantVar->m_var->getName().c_str(), patchID, matlID, levelID);
       }
     }
   }

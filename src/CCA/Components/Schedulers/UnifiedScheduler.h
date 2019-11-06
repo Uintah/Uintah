@@ -203,6 +203,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask );
 
+    void markHostAsInvalid( DetailedTask * dtask );
+
     void markDeviceGhostsAsValid( DetailedTask * dtask );
 
     void markDeviceComputesDataAsValid( DetailedTask * dtask );
@@ -210,6 +212,8 @@ class UnifiedScheduler : public MPIScheduler  {
     void markDeviceModifiesGhostAsInvalid( DetailedTask * dtask );
 
     void markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask );
+
+    void markDeviceAsInvalid( DetailedTask * dtask );
 
     void initiateD2HForHugeGhostCells( DetailedTask * dtask );
 
