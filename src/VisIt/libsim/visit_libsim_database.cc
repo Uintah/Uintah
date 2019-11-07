@@ -2259,6 +2259,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
         // Set the initial values to -1 so they can be skipped when
         // visualized.
+        values = new double[ nValues ];
+
         for( unsigned int i=0; i<nValues; ++i)
           values[i] = -1;
 
@@ -2273,8 +2275,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
             values[core] =
 	      unifiedScheduler->m_thread_info[i].getRankValue(statName);
           }
-          else {
-
+          else
+	  {
             std::stringstream msg;
             msg << "Visit libsim - for domain " << domain << "  "
                 << "Uintah Processor/Machine/Thread " << i
