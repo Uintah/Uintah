@@ -478,6 +478,8 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     m_thread_info.resize( Impl::g_num_threads );
     m_thread_info.setIndexName( "Threads" );
     m_thread_info.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
+    m_thread_info.insert( LocalTID  , std::string("LocalTID")  , "Index"   );
+    m_thread_info.insert( Affinity  , std::string("Affinity")  , "CPU"     );
     m_thread_info.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
     m_thread_info.insert( NumPatches, std::string("NumPatches"), "patches" );
     
@@ -820,8 +822,11 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
 //      DOUT(true, "ThreadID: " << Impl::g_runners[i]->getLocalTID() << ", bound to core: " << Impl::g_runners[i]->getAffinity());
 
-      if( g_thread_stats || g_thread_indv_stats )
+      if( g_thread_stats || g_thread_indv_stats ) {
         m_thread_info[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
+        m_thread_info[i][LocalTID] = Impl::g_runners[i]->getLocalTID();
+        m_thread_info[i][Affinity] = Impl::g_runners[i]->getAffinity();
+      }
     }
 
     MPIScheduler::computeNetRuntimeStats();

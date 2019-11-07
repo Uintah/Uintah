@@ -113,6 +113,8 @@ class UnifiedScheduler : public MPIScheduler  {
     // timing statistics for Uintah infrastructure overhead
     enum ThreadStatsEnum {
         WaitTime
+      , LocalTID
+      , Affinity
       , NumTasks
       , NumPatches
     };
