@@ -755,31 +755,6 @@ visit_handle visit_SimGetMetaData(void *cbdata)
         
         addVectorStats( md, unifiedScheduler->m_thread_info,
                         "Processor/Machine/Thread/", meshName );
-
-        const int nVars = 1;
-        std::string vars[nVars] = { "ThreadID" };
-        
-        for( unsigned int i=0; i<nVars; ++i )
-        {
-          visit_handle vmd = VISIT_INVALID_HANDLE;
-          
-          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-          {
-            std::string var = std::string("Processor/Machine/Thread/") + vars[i];
-            
-            VisIt_VariableMetaData_setName(vmd, var.c_str());
-            VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
-            VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-            VisIt_VariableMetaData_setNumComponents(vmd, 1);
-            VisIt_VariableMetaData_setUnits(vmd, "");
-            
-            // ARS - FIXME
-            // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-            VisIt_SimulationMetaData_addVariable(md, vmd);
-          }
-        }
       }
 
       // Additional comms.
@@ -2256,19 +2231,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       size_t found = std::string("Processor/Machine/Thread/").size();
       std::string statName = varName.substr(found);
 
-      // Assume the thread ids start at 0 and monotonically increase.
-      if( statName.find("ThreadID") == 0 ) {
-
-        values = new double[ nValues ];
-
-        for( unsigned int i=0; i<nThreads; ++i)
-          values[i] = i;
-
-        for( unsigned int i=nThreads; i<nValues; ++i)
-          values[i] = -1;
-      }
-      // Reduction variable
-      else if( statName.find_last_of("/") != std::string::npos )
+      // MPI rank wise thread reduction variable
+      if( statName.find_last_of("/") != std::string::npos )
       {
         nValues = 1;    
         values = new double[ nValues ];
@@ -2290,17 +2254,26 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         else if( reductionType == "StdDev" )
           values[0] = unifiedScheduler->m_thread_info.getStdDev( statName );
       }
+      // Thread wise variables
       else {
 
-        // Thread 0 is the controlling thread so no stats are collected.
-        values = new double[ nValues ];
-        values[0] = 0;
+        // Set the initial values to -1 so they can be skipped when
+        // visualized.
+        for( unsigned int i=0; i<nValues; ++i)
+          values[i] = -1;
 
-        for( unsigned int i=1; i<nThreads; ++i) {
-          if( unifiedScheduler->m_thread_info[i].exists(statName) )
-            values[i] = unifiedScheduler->m_thread_info[i].getRankValue(statName);
+        // Get the thread values based on the affinity so they are
+        // mapped to the correct core.
+        for( unsigned int i=0; i<nThreads; ++i) {
+          if( unifiedScheduler->m_thread_info[i].exists("Affinity") &&
+              unifiedScheduler->m_thread_info[i].exists(statName) )
+          {
+            unsigned int core =
+	      unifiedScheduler->m_thread_info[i].getRankValue("Affinity");
+            values[core] =
+	      unifiedScheduler->m_thread_info[i].getRankValue(statName);
+          }
           else {
-            values[i] = 0;
 
             std::stringstream msg;
             msg << "Visit libsim - for domain " << domain << "  "
@@ -2310,9 +2283,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
             VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
           }
         }
-
-        for( unsigned int i=nThreads; i<nValues; ++i)
-          values[i] = 0;
       }
 
       if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
