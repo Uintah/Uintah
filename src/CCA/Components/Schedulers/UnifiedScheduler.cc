@@ -213,18 +213,13 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_cpu_affinities[i] = i;
   }
 
-  // set main thread's affinity (core-0) and tid
+  // set main thread's affinity and tid, core-0 and tid-0, respectively
   set_affinity(g_cpu_affinities[0]);
   t_tid = 0;
 
-  // TaskRunner threads start at g_runners[1]
+  // TaskRunner threads start at g_runners[1], and std::threads start at g_threads[1]
   for (int i = 1; i < g_num_threads; ++i) {
-    g_runners[i] = new UnifiedSchedulerWorker(sched);
-  }
-
-  // spawn worker threads
-  // TaskRunner threads start at [1]
-  for (int i = 1; i < g_num_threads; ++i) {
+    g_runners[i] = new UnifiedSchedulerWorker(sched, i, g_cpu_affinities[i]);
     Impl::g_threads.push_back(std::thread(thread_driver, i));
   }
 
@@ -822,6 +817,8 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     // Stats specific to this threaded scheduler - TaskRunner threads start at g_runners[1]
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       (*m_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
+
+//      DOUT(true, "ThreadID: " << Impl::g_runners[i]->getLocalTID() << ", bound to core: " << Impl::g_runners[i]->getAffinity());
 
       if( g_thread_stats || g_thread_indv_stats )
         m_thread_info[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
@@ -4868,9 +4865,11 @@ UnifiedScheduler::init_threads( UnifiedScheduler * sched, int num_threads )
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler, int tid, int affinity )
   : m_scheduler{ scheduler }
   , m_rank{ scheduler->d_myworld->myRank() }
+  , m_tid{ tid }
+  , m_affinity{ affinity }
 {
 }
 
@@ -4926,8 +4925,24 @@ UnifiedSchedulerWorker::stopWaitTime()
 
 //______________________________________________________________________
 //
-double
-UnifiedSchedulerWorker::getWaitTime()
+const double
+UnifiedSchedulerWorker::getWaitTime() const
 {
   return m_wait_time;
+}
+
+//______________________________________________________________________
+//
+const int
+UnifiedSchedulerWorker::getAffinity() const
+{
+  return m_affinity;
+}
+
+//______________________________________________________________________
+//
+const int
+UnifiedSchedulerWorker::getLocalTID() const
+{
+  return m_tid;
 }

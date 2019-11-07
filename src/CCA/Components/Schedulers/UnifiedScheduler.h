@@ -315,11 +315,14 @@ class UnifiedSchedulerWorker {
 
 public:
   
-  UnifiedSchedulerWorker( UnifiedScheduler * scheduler );
+  UnifiedSchedulerWorker( UnifiedScheduler * scheduler, int tid, int affinity );
 
   void run();
 
-  double getWaitTime();
+  const double getWaitTime() const;
+  const int    getLocalTID() const;
+  const int    getAffinity() const;
+
   void   startWaitTime();
   void   stopWaitTime();
   void   resetWaitTime();
@@ -330,6 +333,8 @@ private:
 
   UnifiedScheduler * m_scheduler{nullptr};
   int                m_rank{-1};
+  int                m_tid{-1};
+  int                m_affinity{-1};
 
   Timers::Simple     m_wait_timer{};
   double             m_wait_time{0.0};
