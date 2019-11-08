@@ -778,9 +778,14 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      , int iteration /* = 0 */
                      )
 {
-  // track total scheduler execution time across timesteps
+  // Track total scheduler execution time across timesteps.
   m_exec_timer.reset(true);
-  m_exec_times.clear();
+
+  // If doing in situ monitoring clear the times before each time step
+  // otherwise the times are accumulated over N time steps.
+  if (do_task_exec_stats) {
+    m_exec_times.clear();
+  }
   
   RuntimeStats::initialize_timestep(m_task_graphs);
 
@@ -974,26 +979,38 @@ MPIScheduler::outputTimingStats( const char* label )
 
   // for ExecTimes
   if (g_exec_out) {
+    static int accumulate = 10;
     static int count = 0;
 
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
+    // Only output the exec times every N timesteps.
+    if (++count % accumulate == 0) {
       std::ofstream fout;
       char filename[100];
       sprintf(filename, "exectimes.%d.%d", my_comm_size, my_rank);
       fout.open(filename);
 
-      // Report which timesteps TaskExecTime values have been accumulated over
-      fout << "Reported values are cumulative over 10 timesteps ("
-           << m_application->getTimeStep()-9
-           << " through "
-           << m_application->getTimeStep()
-           << ")" << std::endl;
-
+      // Report which timesteps TaskExecTime values have been
+      // accumulated over. If doing in situ monitoring the times will
+      // be for current time step ONLY otherwise the times are
+      // accumulated over N time steps.
+      if (do_task_exec_stats) {
+        fout << "Reported values are for timestep : "
+             << m_application->getTimeStep()
+             << " ONLY" << std::endl;
+      } else {
+        fout << "Reported values are cumulative over 10 timesteps ("
+             << m_application->getTimeStep()-9
+             << " through "
+             << m_application->getTimeStep()
+             << ")" << std::endl;
+      }
+      
       for (auto iter = m_exec_times.begin(); iter != m_exec_times.end(); ++iter) {
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
+
+      m_exec_times.clear();
     }
   }
 
