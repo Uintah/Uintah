@@ -41,6 +41,7 @@ CUDA_ENABLED_SRCS :=      \
      DiffusiveVelocity    \
      Dilatation           \
      ExprAlgebra          \
+     FanModel             \
      MomentumPartialRHS   \
      MomentumRHS          \
      MonolithicRHS        \

@@ -41,6 +41,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/GeometryBased.h>
+#include <CCA/Components/Wasatch/Expressions/FanModel.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
@@ -478,7 +479,6 @@ namespace WasatchCore{
       for( Uintah::ProblemSpecP intrusionParams = geomBasedSpec->findBlock("Intrusion");
           intrusionParams != nullptr;
           intrusionParams = intrusionParams->findNextBlock("Intrusion") ) {
-        std::cout << "intrusion " << std::endl;
         Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         double insideValue = 0.0;
         intrusionParams->getAttribute("value", insideValue);
@@ -486,6 +486,30 @@ namespace WasatchCore{
       }
       builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
+    
+    else if ( params->findBlock("FanModel") ) {
+      Uintah::ProblemSpecP fanModelSpec = params->findBlock("FanModel");
+      double targetVelocity = 0.0;
+      fanModelSpec->getAttribute("targetVelocity", targetVelocity);
+      
+      std::string momName;
+      fanModelSpec->getAttribute("momentumName", momName);
+      // need to use the old momentum RHS tag
+      Expr::Tag momRHSOldTag(momName + "_rhs_old",Expr::STATE_NONE);
+      const Expr::Tag momOldTag(momName, Expr::STATE_DYNAMIC);
+      const Expr::Tag volFracTag = parse_nametag( fanModelSpec->findBlock("Geom")->findBlock("NameTag") );
+      
+      const Expr::Tag densityTag = parse_nametag( fanModelSpec->findBlock("Density")->findBlock("NameTag") );
+
+      builder = scinew typename FanModel<FieldT>::Builder(tag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity);
+       
+      // create an old variable
+      OldVariable& oldVar = OldVariable::self();
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, tag);
+      Expr::Tag momRHSTag(momName + "_rhs", Expr::STATE_NONE);
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+    }
+
     
     else if ( params->findBlock("Bubbles") ) {
       std::vector<Uintah::GeometryPieceP> geomObjects;
