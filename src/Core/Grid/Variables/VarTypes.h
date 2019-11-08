@@ -68,7 +68,9 @@ namespace Uintah {
    const std::string outputInterval_name( "outputInterval" );
    const std::string checkpointInterval_name( "checkpointInterval" );
    const std::string outputTimeStep_name( "outputTimeStep" );
+   const std::string outputPreviousTimeStep_name( "outputPreviousTimeStep" );
    const std::string checkpointTimeStep_name( "checkpointTimeStep" );
+   const std::string checkpointPreviousTimeStep_name( "checkpointPreviousTimeStep" );
    const std::string recomputeTimeStep_name( "recomputeTimeStep" );
    const std::string abortTimeStep_name( "abortTimeStep" );
    const std::string endSimulation_name( "endSimulation" );

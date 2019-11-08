@@ -834,7 +834,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // Thread average runtime performance stats.
   if (g_thread_stats ) {
-    m_thread_info.reduce( true ); // true == skip the first entry.
+    m_thread_info.reduce( false ); // true == skip the first entry.
 
     m_thread_info.reportSummaryStats( "Thread",
 				      d_myworld->myRank(),

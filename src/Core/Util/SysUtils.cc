@@ -102,11 +102,13 @@ namespace Uintah {
   }  
 
   unsigned int sysGetNumCoresPerSockets() {
-    return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.core_count | sed -n '${s/.* //; p}'") );
+    return 4;
+    // return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.core_count | sed -n '${s/.* //; p}'") );
   }  
 
   unsigned int sysGetNumThreadsPerCore() {
-    return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.thread_count | sed -n '${s/.* //; p}'") ) / sysGetNumCoresPerSockets();
+    return 2;
+    // return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.thread_count | sed -n '${s/.* //; p}'") ) / sysGetNumCoresPerSockets();
   }
   
   std::vector< unsigned int > sysGetNUMANodeCPUs( unsigned int node) {
