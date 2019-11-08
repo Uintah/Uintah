@@ -299,7 +299,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     throw InvalidValue("ERROR: CharOxidationShaddix: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
   }
 
-  std::string taskname = "CharOxidationShaddix::sched_computeModel";
+  std::string taskname = "CharOxidationShaddix::computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
 
   Ghost::GhostType  gn  = Ghost::None;
