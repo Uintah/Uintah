@@ -394,29 +394,13 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  _T_label = VarLabel::find(_T_label_name);
-  if ( _T_label == 0){
-    throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
-  }
-
-  _abskg_label = VarLabel::find(_abskg_label_name);
-  if ( _abskg_label == 0){
-    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
-  }
-  _abskt_label = VarLabel::find(_abskt_label_name);
-  if ( _abskt_label == 0){
-    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskt label:"+_abskt_label_name, __FILE__, __LINE__);
-  }
+  _T_label     = VarLabel::find( _T_label_name,     "Error: radiation temperature");
+  _abskg_label = VarLabel::find( _abskg_label_name, "Error: gas absorption coefficient");
+  _abskt_label = VarLabel::find( _abskt_label_name, "Error: total absorption coefficient");
 
   if (_DO_model->ScatteringOnBool()){
-    _scatktLabel =  VarLabel::find("scatkt");
-    _asymmetryLabel= VarLabel::find("asymmetryParam");
-    if ( _scatktLabel == 0 ){
-      throw ProblemSetupException("Error: scatkt label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
-    }
-    if (_asymmetryLabel == 0 ){
-      throw ProblemSetupException("Error: asymmetry label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
-    }
+    _scatktLabel   = VarLabel::find("scatkt", "Error scattering coefficien");                 // Need a better error message
+    _asymmetryLabel= VarLabel::find("asymmetryParam", "Error");
   }
 
   if (_DO_model->get_nQn_part() >0 && _abskt_label_name == _abskg_label_name){
@@ -816,7 +800,7 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 //______________________________________________________________________
 //
 inline bool needRadSolveNextTimeStep( const int radSolveCounter,const int &calc_freq, const double nextCFDTime, const double& targetTime ){
-    return nextCFDTime  >= targetTime || radSolveCounter >=calc_freq;
+  return nextCFDTime  >= targetTime || radSolveCounter >=calc_freq;
 }
 
 
@@ -830,20 +814,20 @@ DORadiation::restartInitialize( const ProcessorGroup  * pc,
                                       DataWarehouse   * old_dw,
                                       DataWarehouse   * new_dw )
 {
-     //// ONLY NEW DW USED, it appears that at restart only the newDW is available.
-    simTime_vartype simTime(0);
-    new_dw->get(simTime, _simulationTimeLabel );
+   //// ONLY NEW DW USED, it appears that at restart only the newDW is available.
+  simTime_vartype simTime(0);
+  new_dw->get(simTime, _simulationTimeLabel );
 
-    timeStep_vartype timeStep(0);
-    new_dw->get(timeStep, _labels->d_timeStepLabel ); // For this to be totally correct, should have corresponding requires.
+  timeStep_vartype timeStep(0);
+  new_dw->get(timeStep, _labels->d_timeStepLabel ); // For this to be totally correct, should have corresponding requires.
 
-    SoleVariable< double > ppTargetTimeStep;
-    SoleVariable< int > lastRadSolveIndex;
+  SoleVariable< double > ppTargetTimeStep;
+  SoleVariable< int > lastRadSolveIndex;
 
-    new_dw->get( ppTargetTimeStep,  _dynamicSolveCountPatchLabel );
-    new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
+  new_dw->get( ppTargetTimeStep,  _dynamicSolveCountPatchLabel );
+  new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
 
-    m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,simTime,ppTargetTimeStep));
+  m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,simTime,ppTargetTimeStep));
 }
 
 //---------------------------------------------------------------------------
@@ -1115,11 +1099,12 @@ if (timeSubStep==0){
       tsk1->requires( Task::OldDW,spectral_gas_absorption[iband], gn, 0 );
     }
 
+    sched->addTask(tsk1, level->eachPatch(), m_matls, Radiation_TG);
+    
     //--------------------------------------------------------------------//
     //    Schedule set BCs task.  Sets the intensity fields in the walls.  //
     //--------------------------------------------------------------------//
-    sched->addTask(tsk1, level->eachPatch(), m_matls, Radiation_TG);
-
+    
     for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
       std::stringstream tasknamec;
       tasknamec << "DORadiation::sweeping_initialize_" <<ord;
@@ -1153,7 +1138,8 @@ if (timeSubStep==0){
     for( int istage=0;  istage< _nstage;istage++){ // loop over stages
       for (int idir=0; idir< nOctants; idir++){  // loop over octants
 
-        int first_intensity=idir*_nDir/nOctants;
+        const int first_intensity=idir*_nDir/nOctants;
+        
         int pAdjm = _directional_phase_adjustment[1-_DO_model->xDir(first_intensity)][1-_DO_model->yDir(first_intensity)][1-_DO_model->zDir(first_intensity)]; // L-shaped domain adjustment, assumes that ordiantes are stored in octants (8 bins), with similiar directional properties in each bin
         int pAdjp = _directional_phase_adjustment[  _DO_model->xDir(first_intensity)][  _DO_model->yDir(first_intensity)][  _DO_model->zDir(first_intensity)]; // L-shaped domain adjustment, assumes that ordiantes are stored in octants (8 bins), with similiar directional properties in each bin
 
@@ -1164,6 +1150,7 @@ if (timeSubStep==0){
 
           // combine stages into single task?
           int intensity_iter = int_x + idir*_nDir/nOctants;
+          
           std::stringstream taskname2;
           taskname2 << "DORadiation::doSweepAdvanced_" <<istage<< "_"<<intensity_iter;
           
@@ -1201,6 +1188,7 @@ if (timeSubStep==0){
             const int idx = intensityIndx( intensity_iter, iband);
             
             tsk2->modifies( _IntensityLabels[idx]);
+            
             // --- Turn on and off communication depending on phase and intensity using equation:  iStage = iPhase + intensity_within_octant_x, 8 different patch subsets, due to 8 octants ---//
             if ( _DO_model->xDir(first_intensity) ==1 && 
                  _DO_model->yDir(first_intensity) ==1 && 

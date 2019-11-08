@@ -203,15 +203,16 @@ void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
   Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-  std::vector< CCVariable<double> > abskg(_nbands  );
-  std::vector< CCVariable<double> > abswg(_nbands  );
+  std::vector< CCVariable<double>*> abskg(_nbands);
+  std::vector< CCVariable<double>*> abswg(_nbands);
+
   for (int i=0; i< _nbands  ; i++){
 
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, UintahSpaces::HostSpace>(abskg[i],_abskg_name_vector[i],patch->getID(),m_matl_index,tsk_info->get_time_substep() );
-    tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, UintahSpaces::HostSpace>(abswg[i],_abswg_name_vector[i],patch->getID(),m_matl_index,tsk_info->get_time_substep() );
+    abskg[i] = &(tsk_info->get_field<CCVariable<double> >(_abskg_name_vector[i]));
+    abswg[i] = &(tsk_info->get_field<CCVariable<double> >(_abswg_name_vector[i]));
 
-    abskg[i].initialize(0.0);
-    abswg[i].initialize(0.0);
+    (*abskg[i]).initialize(0.0);
+    (*abswg[i]).initialize(0.0);
   }
 
 
@@ -252,8 +253,8 @@ void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
                  for (int kk=0; kk < n_coeff;  kk++){
                    for (int ii=0; ii< _nbands-1 ; ii++){
 
-                     abswg[ii](i,j,k)+=b_vec[ii][kk]*T_r_k;
-                     abskg[ii](i,j,k)+=wecel_d_coeff[ii][kk]*m_k*(H2O+CO2); // table was built assuming H2O + CO2 = 1.0
+                     (*abswg[ii])(i,j,k)+=b_vec[ii][kk]*T_r_k;
+                     (*abskg[ii])(i,j,k)+=wecel_d_coeff[ii][kk]*m_k*(H2O+CO2); // table was built assuming H2O + CO2 = 1.0
                    }
                    T_r_k*=T_r;
                    m_k*=m;
@@ -261,16 +262,15 @@ void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
              double weight_sum=0.0;
              for (int ii=0; ii< _nbands-1 ; ii++){
-               weight_sum+=abswg[ii](i,j,k);
+               weight_sum+=(*abswg[ii])(i,j,k);
             }
-              abswg[_nbands-1](i,j,k)=1.0-weight_sum; // not needed, as this can be inferred from the other 4 weights, keeping for simplicity in the radiation solver
+              (*abswg[_nbands-1])(i,j,k)=1.0-weight_sum; // not needed, as this can be inferred from the other 4 weights, keeping for simplicity in the radiation solver
 
    });
 
    if (_LsootOn){
 
-     CCVariable<double>  absksoot;
-     tsk_info->get_unmanaged_uintah_field<CCVariable<double>, double, UintahSpaces::HostSpace>(absksoot,"absksoot",patch->getID(),m_matl_index,tsk_info->get_time_substep() );
+     auto& absksoot = tsk_info->get_field<CCVariable<double> >("absksoot");
 
      constCCVariable<double>& soot_vf = tsk_info->get_field<constCCVariable<double> >(_soot_name);
      Uintah::parallel_for( range,  [&](int i, int j, int k){
@@ -283,7 +283,7 @@ void spectralProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_in
    if (_absorption_modifier  > 1.00001 || _absorption_modifier  < 0.99999){ // if the modifier is 1.0, skip this loop
       Uintah::parallel_for( range,  [&](int i, int j, int k){
                  for (int ix=0; ix< _nbands ; ix++){
-                   abskg[ix](i,j,k)*=_absorption_modifier ;
+                   (*abskg[ix])(i,j,k)*=_absorption_modifier ;
                  }
       });
    }
