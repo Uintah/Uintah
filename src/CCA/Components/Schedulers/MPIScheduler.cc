@@ -46,6 +46,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/kokkos_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
@@ -70,6 +71,12 @@ using namespace Uintah;
 
 
 namespace Uintah {
+
+#ifdef HAVE_VISIT
+  bool do_task_exec_stats = true;
+#else
+  bool do_task_exec_stats = false;
+#endif
 
 // These are used externally, keep them visible outside this unit
   Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
@@ -285,7 +292,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     sumTaskMonitoringValues( dtask );
     
     double total_task_time = dtask->task_exec_time();
-    if (g_exec_out) {
+    if (g_exec_out || do_task_exec_stats) {
       m_exec_times[dtask->getTask()->getName()] += total_task_time;
     }
     // if I do not have a sub scheduler
@@ -773,7 +780,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 {
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
-
+  m_exec_times.clear();
+  
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
@@ -986,7 +994,6 @@ MPIScheduler::outputTimingStats( const char* label )
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
-      m_exec_times.clear();
     }
   }
 
