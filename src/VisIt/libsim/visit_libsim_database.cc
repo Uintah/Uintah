@@ -465,7 +465,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       std::string mesh_layout[2] = {"/Sim", "/"+sim->hostName};
 
       const char *patch_names[4] = {"Patch/Id", "Patch/Rank", "Patch/Node",
-				    "Patch/Tasks/" };
+                                    "Patch/Tasks/" };
 
       for( unsigned k=0; k<1+addMachineData; ++k )
       {
@@ -500,28 +500,28 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       }
 
       if( mpiScheduler ) {
-	
-	const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;	
-	for (auto iter = exec_times.begin(); iter != exec_times.end(); ++iter)	{
-	  visit_handle vmd = VISIT_INVALID_HANDLE;
-	
-	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-	  {
-	    std::string tmp_name = patch_names[3] + iter->first;
-	
-	    VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
-	    VisIt_VariableMetaData_setMeshName(vmd, mesh_name[1].c_str());
-	    VisIt_VariableMetaData_setCentering(vmd, cent);
-	    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	    VisIt_VariableMetaData_setUnits(vmd, "");
-	    
-	    // ARS - FIXME
-	    //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	    VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	    VisIt_SimulationMetaData_addVariable(md, vmd);
-	  }
-	}
+        
+        const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;   
+        for (auto iter = exec_times.begin(); iter != exec_times.end(); ++iter)  {
+          visit_handle vmd = VISIT_INVALID_HANDLE;
+        
+          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+          {
+            std::string tmp_name = patch_names[3] + iter->first;
+        
+            VisIt_VariableMetaData_setName(vmd, tmp_name.c_str());
+            VisIt_VariableMetaData_setMeshName(vmd, mesh_name[0].c_str());
+            VisIt_VariableMetaData_setCentering(vmd, cent);
+            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(vmd, 1);
+            VisIt_VariableMetaData_setUnits(vmd, "");
+            
+            // ARS - FIXME
+            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+            VisIt_SimulationMetaData_addVariable(md, vmd);
+          }
+        }
       }
 
       // Per rank and per node performance data on the simulation
@@ -738,48 +738,48 @@ visit_handle visit_SimGetMetaData(void *cbdata)
       // Tasks
       if( mpiScheduler )
       {
-	std::string meshName = "Machine_" + sim->hostName + "/Tasks";      
+        std::string meshName = "Machine_" + sim->hostName + "/Tasks";      
 
-	visit_handle vmd = VISIT_INVALID_HANDLE;
-	  
-	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-	{
-	  std::string var = std::string("Processor/Machine/Task/All");
-	  VisIt_VariableMetaData_setName(vmd, var.c_str());
-	  VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
-	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	  VisIt_VariableMetaData_setNumComponents(vmd, 1);	    
-	  VisIt_VariableMetaData_setUnits(vmd, "seconds");
-	  
-	  // ARS - FIXME
-	  // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	  VisIt_SimulationMetaData_addVariable(md, vmd);
-	}
+        visit_handle vmd = VISIT_INVALID_HANDLE;
+          
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          std::string var = std::string("Processor/Machine/Task/All");
+          VisIt_VariableMetaData_setName(vmd, var.c_str());
+          VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);          
+          VisIt_VariableMetaData_setUnits(vmd, "seconds");
+          
+          // ARS - FIXME
+          // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
 
-	meshName = "Machine_" + sim->hostName + "/Local";      
+        meshName = "Machine_" + sim->hostName + "/Local";      
 
-	const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;	
-	for (auto iter = exec_times.begin(); iter != exec_times.end(); ++iter)	{
-	  visit_handle vmd = VISIT_INVALID_HANDLE;
-	  
-	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-	  {
-	    std::string var = std::string("Processor/Machine/Task/") + iter->first;
-	    VisIt_VariableMetaData_setName(vmd, var.c_str());
-	    VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
-	    VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(vmd, 1);	    
-	    VisIt_VariableMetaData_setUnits(vmd, "seconds");
-	    
-	    // ARS - FIXME
-	    // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	    VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	    VisIt_SimulationMetaData_addVariable(md, vmd);
-	  }
-	}
+        const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;   
+        for (auto iter = exec_times.begin(); iter != exec_times.end(); ++iter)  {
+          visit_handle vmd = VISIT_INVALID_HANDLE;
+          
+          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+          {
+            std::string var = std::string("Processor/Machine/Task/") + iter->first;
+            VisIt_VariableMetaData_setName(vmd, var.c_str());
+            VisIt_VariableMetaData_setMeshName(vmd, meshName.c_str());
+            VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(vmd, 1);        
+            VisIt_VariableMetaData_setUnits(vmd, "seconds");
+            
+            // ARS - FIXME
+            // VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+            VisIt_SimulationMetaData_addVariable(md, vmd);
+          }
+        }
       }
       
       const int nVars = 4;
@@ -1650,10 +1650,10 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
         nValues = comm_info.size();
       }
       else if( meshName.find("/Tasks") != std::string::npos ) {
-	
-	MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
-	  (sim->simController->getSchedulerP().get_rep());
-	
+        
+        MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+          (sim->simController->getSchedulerP().get_rep());
+        
         nValues = mpiScheduler->m_exec_times.size();
       }
       
@@ -2190,7 +2190,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
                   varName.find("Processor/Machine/MPI/Node") == 0 ||
                   varName.find("Processor/Machine/MPI/Rank") == 0 ||
                   varName.find("Processor/Machine/MPI/Comm/Rank") ||
-		  varName.find("Processor/Machine/Task/") == 0);
+                  varName.find("Processor/Machine/Task/") == 0);
 
     bool thread        = (varName.find("Processor/Machine/Thread") == 0 );
     bool communication = (varName.find("Processor/Machine/Communication") == 0 );
@@ -2260,13 +2260,13 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         values[0] = sim->myworld->myNode_myRank();
       else if( varName.find("Processor/Machine/Task/") == 0 ) {
 
-	MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
-	  (sim->simController->getSchedulerP().get_rep());
-	
+        MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+          (sim->simController->getSchedulerP().get_rep());
+        
         size_t found = varName.find_last_of("/");
         std::string task = varName.substr(found + 1);
 
-	values[0] = mpiScheduler->m_exec_times[task];
+        values[0] = mpiScheduler->m_exec_times[task];
       }
       
       if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
@@ -2284,16 +2284,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     else if( task )
     {
       MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
-	(sim->simController->getSchedulerP().get_rep());
+        (sim->simController->getSchedulerP().get_rep());
 
-      const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;	
+      const std::map<std::string, double> &exec_times = mpiScheduler->m_exec_times;     
       unsigned int nValues = exec_times.size();
       double *values = new double[ nValues ];
 
       unsigned int i=0;
       
       for (auto iter = exec_times.begin(); iter != exec_times.end(); ++iter)
-	values[i++] = iter->second;
+        values[i++] = iter->second;
 
       if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
       {
@@ -2394,12 +2394,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
               unifiedScheduler->m_thread_info[i].exists(statName) )
           {
             unsigned int core =
-	      unifiedScheduler->m_thread_info[i].getRankValue("Affinity");
+              unifiedScheduler->m_thread_info[i].getRankValue("Affinity");
             values[core] =
-	      unifiedScheduler->m_thread_info[i].getRankValue(statName);
+              unifiedScheduler->m_thread_info[i].getRankValue(statName);
           }
           else
-	  {
+          {
             std::stringstream msg;
             msg << "Visit libsim - for domain " << domain << "  "
                 << "Uintah Processor/Machine/Thread " << i
@@ -2583,6 +2583,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   else if( strncmp(varname, "Patch/Communication", 19) == 0 ||
            strncmp(varname, "Patch/Rank",          10) == 0 ||
            strncmp(varname, "Patch/Node",          10) == 0 ||
+           strncmp(varname, "Patch/Tasks",         11) == 0 ||
            strncmp(varname, "Patch/Bounds/Low",    16) == 0 ||
            strncmp(varname, "Patch/Bounds/High",   17) == 0 )
   {
@@ -3010,6 +3011,26 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         gd->data = new double[gd->num * gd->components];
         
         double val = sim->myworld->myNode();
+
+        for (int i=0; i<gd->num*gd->components; ++i)
+          gd->data[i] = val;
+      }
+      // Patch task processor 
+      else if( strncmp(varname, "Patch/Tasks", 11) == 0 )
+      { 
+        varName = std::string(varname);
+
+        gd->num = 1;        // Using the simulation patch mesh
+        gd->components = 1;     
+        gd->data = new double[gd->num * gd->components];
+
+        MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+          (sim->simController->getSchedulerP().get_rep());
+        
+        size_t found = varName.find_last_of("/");
+        std::string task = varName.substr(found + 1);
+
+        double val = mpiScheduler->m_exec_times[task];
 
         for (int i=0; i<gd->num*gd->components; ++i)
           gd->data[i] = val;
