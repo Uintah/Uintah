@@ -82,12 +82,25 @@
                                 StepFunction,SineTime,ExprAlgebra,
                                 WallDistanceFunction,ReadFromFile,RandomField,
                                 ExponentialVortex,LambsDipole,TimeDerivative,
-                                RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
+                                RayleighTaylor, FanModel, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
                                        
       <TaskList      spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag       spec="REQUIRED" />
       <Constant      spec="OPTIONAL DOUBLE" />
 
+
+      <!-- provides a constant velocity fan model via momentum source to achieve a target velocity -->
+      <FanModel   spec="OPTIONAL NO_DATA"
+                       attribute1="targetVelocity REQUIRED DOUBLE"
+                       attribute2="momentumName REQUIRED STRING"> <!-- this is the outside value -->
+        <Geom spec="REQUIRED NO_DATA">
+	        <NameTag          spec="REQUIRED"/>                    
+        </Geom>
+        <Density spec="REQUIRED NO_DATA">
+	        <NameTag          spec="REQUIRED"/>                    
+        </Density>
+        
+      </FanModel>
 
       <ParticlePositionIC spec="OPTIONAL NO_DATA"
                           attribute1="coordinate REQUIRED STRING 'X,Y,Z'"

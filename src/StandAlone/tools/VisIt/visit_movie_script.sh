@@ -568,7 +568,7 @@ if ($geometry != "")       echo "  Image size = $geometry"
 
 if ($version != "") set version = "-v $version"
 
-if ($batch == "false") then
+if ($batch == "true") then
     if ($launchMethod != "") set launchMethod = "-l $launchMethod"
     if ($nNodes != "")       set nNodes = "-nn $nNodes"
     if ($nProcs != "")       set nProcs = "-np $nProcs"

@@ -295,13 +295,6 @@ namespace Uintah{
 
       }
 
-      /** @brief Get a modifiable uintah variable and allow the user to manage the memory **/
-      template <typename T>
-      void get_unmanage_const_field( const std::string name, T& field ){
-
-        VariableInformation ivar = get_variable_information( name, true );
-      }
-
       /** @brief Get a modifiable uintah variable **/
       template <typename T>
       inline T* get_field( const std::string name ){

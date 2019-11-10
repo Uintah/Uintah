@@ -117,6 +117,8 @@ class MPIScheduler : public SchedulerCommon {
 
     ReductionInfoMapper< TimingStatEnum, double > mpi_info_;
 
+    std::map<std::string, double> m_exec_times;
+
     MPIScheduler* m_parent_scheduler{nullptr};
 
 
@@ -144,8 +146,6 @@ class MPIScheduler : public SchedulerCommon {
 
     Timers::Simple              m_exec_timer;
   
-    std::map<std::string, double> m_exec_times;
-
   private:
 
     // eliminate copy, assignment and move

@@ -46,6 +46,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/kokkos_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>
@@ -70,6 +71,12 @@ using namespace Uintah;
 
 
 namespace Uintah {
+
+#ifdef HAVE_VISIT
+  bool do_task_exec_stats = true;
+#else
+  bool do_task_exec_stats = false;
+#endif
 
 // These are used externally, keep them visible outside this unit
   Dout g_task_order( "TaskOrder", "MPIScheduler", "task order debug stream", false );
@@ -278,7 +285,7 @@ MPIScheduler::runTask( DetailedTask * dtask
     sumTaskMonitoringValues( dtask );
     
     double total_task_time = dtask->task_exec_time();
-    if (g_exec_out) {
+    if (g_exec_out || do_task_exec_stats) {
       m_exec_times[dtask->getTask()->getName()] += total_task_time;
     }
     // if I do not have a sub scheduler
@@ -764,9 +771,15 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                      , int iteration /* = 0 */
                      )
 {
-  // track total scheduler execution time across timesteps
+  // Track total scheduler execution time across timesteps.
   m_exec_timer.reset(true);
 
+  // If doing in situ monitoring clear the times before each time step
+  // otherwise the times are accumulated over N time steps.
+  if (do_task_exec_stats) {
+    m_exec_times.clear();
+  }
+  
   RuntimeStats::initialize_timestep(m_task_graphs);
 
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
@@ -959,26 +972,37 @@ MPIScheduler::outputTimingStats( const char* label )
 
   // for ExecTimes
   if (g_exec_out) {
+    static int accumulate = 10;
     static int count = 0;
 
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
+    // Only output the exec times every N timesteps.
+    if (++count % accumulate == 0) {
       std::ofstream fout;
       char filename[100];
       sprintf(filename, "exectimes.%d.%d", my_comm_size, my_rank);
       fout.open(filename);
 
-      // Report which timesteps TaskExecTime values have been accumulated over
-      fout << "Reported values are cumulative over 10 timesteps ("
-           << m_application->getTimeStep()-9
-           << " through "
-           << m_application->getTimeStep()
-           << ")" << std::endl;
-
+      // Report which timesteps TaskExecTime values have been
+      // accumulated over. If doing in situ monitoring the times will
+      // be for current time step ONLY otherwise the times are
+      // accumulated over N time steps.
+      if (do_task_exec_stats) {
+        fout << "Reported values are for timestep : "
+             << m_application->getTimeStep()
+             << " ONLY" << std::endl;
+      } else {
+        fout << "Reported values are cumulative over 10 timesteps ("
+             << m_application->getTimeStep()-9
+             << " through "
+             << m_application->getTimeStep()
+             << ")" << std::endl;
+      }
+      
       for (auto iter = m_exec_times.begin(); iter != m_exec_times.end(); ++iter) {
         fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
+
       m_exec_times.clear();
     }
   }
