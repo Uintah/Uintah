@@ -183,6 +183,15 @@ RMCRT_TESTS = [
    ("multibox_rmcrt_coal_DO_threaded"   , "RMCRT/multibox_rmcrt_coal_DO.ups"      , 2   , "ALL"  , ["exactComparison", "sus_options=-nthreads 8"]) ,
 ]
 
+SWEEPS_TESTS = [
+   ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                 , 4   , "All"   , ["exactComparison"]) ,                                  
+   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"          , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
+   ("mass_energy_balance_psnox"        , "Coal/mass_energy_balance_psnox.ups"     , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
+   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"   , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
+   ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"         , 46  , "All"   , ["exactComparison"]),                                   
+   ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"           , 8   , "All"   , ["exactComparison"     , "no_cuda"])                    
+]
+
 NIGHTLYTESTS = [
    # The regrid test should be last.  It needs a checkpoint.  If you move it up the stack and run local_RT NIGHTLYTESTS then not all tests will run
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux"  , ["startFromCheckpoint" , "no_restart"])
@@ -203,7 +212,7 @@ DEBUG = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCAL_TESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
+#LIST: LOCAL_TESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
 #__________________________________
 
 
@@ -219,6 +228,8 @@ def getTestList(me) :
     TESTS = PRODUCTION_TESTS_NO_COAL
   elif me == "PRODUCTION_COAL_TESTS":
     TESTS = PRODUCTION_COAL_TESTS
+  elif me == "SWEEPS_TESTS":
+    TESTS = SWEEPS_TESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS + RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS
   elif me == "NO_RMCRT":
