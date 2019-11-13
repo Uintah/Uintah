@@ -453,9 +453,11 @@ DORadiationModel::computeOrdinatesOPL()
   //  for Orthogonal sweeps
   if( m_addOrthogonalDirs ){
   
+#if 0                      // this needs better logic
     if (m_sn != 8 ){
       throw ProblemSetupException("\nError: DORadiationModel.  To use the <addOrthogonalDirs> option you must have 8 ordinates.", __FILE__, __LINE__); 
     }
+#endif
   
     std::vector<Uintah::Vector> orthogonalCosineDirs{{1.0,    2e-16,   2e-16 }, // unit vector specifying direction of custom ray sweep
                                                      {-2e-16, 1.0,     2e-16 },
