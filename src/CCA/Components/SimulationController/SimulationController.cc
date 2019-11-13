@@ -66,7 +66,7 @@ Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationControl
 Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"          , true  );
 
 Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"       , false );
-Uintah::Dout g_comp_node_stats( "ComponentNodeStats"        , "SimulationController", "Aggregated node component stats"  , false );
+Uintah::Dout g_comp_node_stats( "ComponentNodeStats"        , "SimulationController", "Aggregated node component stats"  , false);
 Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"       , false );
 
 Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats"     , false );
@@ -641,7 +641,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
     MPIScheduler * mpiScheduler = dynamic_cast<MPIScheduler*>(m_scheduler.get_rep());
 
     if (mpiScheduler) {
-      mpiScheduler->mpi_info_.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
+      mpiScheduler->m_mpi_info.reduce(m_regridder && m_regridder->useDynamicDilation(), d_myworld);
     }
   }
 
@@ -795,9 +795,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
 
     // Infrastructure proc runtime performance stats.
     if (g_comp_stats && d_myworld->myRank() == 0 ) {
-      m_runtime_stats.reportRankSummaryStats( "Runtime",
+      m_runtime_stats.reportRankSummaryStats( "Runtime Summary ", "",
+                                              -1, -1,
                                               m_application->getTimeStep(),
                                               m_application->getSimTime(),
+                                              BaseInfoMapper::Dout,
                                               true );
 
       // Report the overhead percentage.
@@ -805,51 +807,74 @@ SimulationController::ReportStats(const ProcessorGroup*,
         std::ostringstream message;
         message << "  Percentage of time spent in overhead : "
                 << overheadAverage * 100.0;     
-        DOUT(true, message.str());
+
+        if( 0 ) {
+          DOUT(true, message.str());
+        } else if( 1 ) {
+          std::ofstream fout;
+          std::string filename = "Runtime Summary " +
+            (false ? "." + std::to_string(m_application->getTimeStep()) : "");
+
+          fout.open(filename, std::ofstream::out | std::ofstream::app);
+          fout << message.str() << std::endl;
+          fout.close();
+        }
       }
     }
 
     // Infrastructure per node runtime performance stats.
     if (g_comp_node_stats && d_myworld->myNode_myRank() == 0 ) {
-      m_runtime_stats.reportNodeSummaryStats( ("Runtime Node " + d_myworld->myNodeName()).c_str(),
+      m_runtime_stats.reportNodeSummaryStats( ("Runtime Node " + d_myworld->myNodeName()).c_str(), "",
+                                              -1, -1, 
                                               m_application->getTimeStep(),
                                               m_application->getSimTime(),
+                                              BaseInfoMapper::Dout,
                                               true );
     }
     
     // Infrastructure per proc runtime performance stats
     if (g_comp_indv_stats) {
-      m_runtime_stats.reportIndividualStats( "Runtime",
-                                             d_myworld->myRank(),
-                                             m_application->getTimeStep(),
-                                             m_application->getSimTime() );
+      m_runtime_stats.reportIndividualStats( "Runtime", "",
+                                              d_myworld->myRank(),
+                                              d_myworld->nRanks(),
+                                              m_application->getTimeStep(),
+                                              m_application->getSimTime(),
+                                              BaseInfoMapper::Dout );
     }
 
     // Application proc runtime performance stats.
     if (g_app_stats && d_myworld->myRank() == 0) {      
       m_application->getApplicationStats().
-        reportRankSummaryStats( "Application",
+        reportRankSummaryStats( "Application Summary", "",
+                                d_myworld->myRank(),
+                                d_myworld->nRanks(),
                                 m_application->getTimeStep(),
                                 m_application->getSimTime(),
+                                BaseInfoMapper::Dout,
                                 false );
     }
 
     // Application per node runtime performance stats.
     if (g_app_node_stats && d_myworld->myNode_myRank() == 0 ) {
       m_application->getApplicationStats().
-        reportNodeSummaryStats( ("Application Node " + d_myworld->myNodeName()).c_str(),
+        reportNodeSummaryStats( ("Application Node " + d_myworld->myNodeName()).c_str(), "",
+                                d_myworld->myRank(),
+                                d_myworld->nRanks(),
                                 m_application->getTimeStep(),
                                 m_application->getSimTime(),
+                                BaseInfoMapper::Dout,
                                 false );
     }
 
     // Application per proc runtime performance stats
     if (g_app_indv_stats) {
       m_application->getApplicationStats().
-        reportIndividualStats( "Application",
+        reportIndividualStats( "Application", "",
                                d_myworld->myRank(),
+                               d_myworld->nRanks(),
                                m_application->getTimeStep(),
-                               m_application->getSimTime() );
+                               m_application->getSimTime(),
+                               BaseInfoMapper::Dout );
     }
   }
 

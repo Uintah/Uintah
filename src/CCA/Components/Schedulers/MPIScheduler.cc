@@ -83,7 +83,7 @@ namespace Uintah {
   Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends or when threaded, ready", false );
   Dout g_task_run(   "TaskRun"  , "MPIScheduler", "output each task name as it runs", false );
   Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
-  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
+  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", true );
 
 }
 
@@ -131,12 +131,22 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
 
   std::string timeStr("seconds");
 
-  mpi_info_.insert( TotalSend  , std::string("TotalSend")  ,    timeStr );
-  mpi_info_.insert( TotalRecv  , std::string("TotalRecv")  ,    timeStr );
-  mpi_info_.insert( TotalTest  , std::string("TotalTest")  ,    timeStr );
-  mpi_info_.insert( TotalWait  , std::string("TotalWait")  ,    timeStr );
-  mpi_info_.insert( TotalReduce, std::string("TotalReduce"),    timeStr );
-  mpi_info_.insert( TotalTask  , std::string("TotalTask")  ,    timeStr );
+  m_mpi_info.insert( TotalSend  , std::string("TotalSend")  , timeStr );
+  m_mpi_info.insert( TotalRecv  , std::string("TotalRecv")  , timeStr );
+  m_mpi_info.insert( TotalTest  , std::string("TotalTest")  , timeStr );
+  m_mpi_info.insert( TotalWait  , std::string("TotalWait")  , timeStr );
+  m_mpi_info.insert( TotalReduce, std::string("TotalReduce"), timeStr );
+  m_mpi_info.insert( TotalTask  , std::string("TotalTask")  , timeStr );
+
+  m_task_info.setKeyName( "Task" );
+  m_task_info.insert( ExecTime  , std::string("ExecTime")   , timeStr );
+  m_task_info.insert( WaitTime  , std::string("WaitTime")   , timeStr );
+
+  m_task_info.calculateSum( true );
+  m_task_info.calculateAverage( true );
+  m_task_info.calculateMinimum( true );
+  m_task_info.calculateMaximum( true );
+  m_task_info.calculateStdDev( true );
 }
 
 //______________________________________________________________________
@@ -255,7 +265,7 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
   runReductionTask(dtask);
   timer.stop();
 
-  mpi_info_[TotalReduce] += timer().seconds();
+  m_mpi_info[TotalReduce] += timer().seconds();
 }
 
 //______________________________________________________________________
@@ -293,12 +303,13 @@ MPIScheduler::runTask( DetailedTask * dtask
     
     double total_task_time = dtask->task_exec_time();
     if (g_exec_out || do_task_exec_stats) {
-      m_exec_times[dtask->getTask()->getName()] += total_task_time;
+      m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
+      m_task_info[dtask->getTask()->getName()][WaitTime] += dtask->task_wait_time();
     }
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
+      m_mpi_info[TotalTask] += total_task_time;
       if (!m_is_copy_data_timestep && dtask->getTask()->getType() != Task::Output) {
         // add contribution for patchlist
         m_loadBalancer->addContribution(dtask, total_task_time);
@@ -322,11 +333,11 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (m_parent_scheduler) {
-    size_t num_elems = mpi_info_.size();
+    size_t num_elems = m_mpi_info.size();
     for (size_t i = 0; i < num_elems; ++i) {
-      m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
+      m_parent_scheduler->m_mpi_info[i] += m_mpi_info[i];
     }
-    mpi_info_.reset(0);
+    m_mpi_info.reset(0);
   }
 }  // end runTask()
 
@@ -485,7 +496,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
 
   {
     std::lock_guard<Uintah::MasterLock> send_time_lock(g_send_time_mutex);
-    mpi_info_[TotalSend] += send_timer().seconds();
+    m_mpi_info[TotalSend] += send_timer().seconds();
   }
 
 }  // end postMPISends();
@@ -696,7 +707,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
   {
     std::lock_guard<Uintah::MasterLock> recv_time_lock(g_recv_time_mutex);
-    mpi_info_[TotalRecv] += recv_timer().seconds();
+    m_mpi_info[TotalRecv] += recv_timer().seconds();
   }
 
 }  // end postMPIRecvs()
@@ -765,7 +776,7 @@ void MPIScheduler::processMPIRecvs( int test_type )
 
   {
     std::lock_guard<Uintah::MasterLock> wait_time_lock(g_wait_time_mutex);
-    mpi_info_[TotalWait] += process_recv_timer().seconds();
+    m_mpi_info[TotalWait] += process_recv_timer().seconds();
   }
 
 }  // end processMPIRecvs()
@@ -784,7 +795,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   // If doing in situ monitoring clear the times before each time step
   // otherwise the times are accumulated over N time steps.
   if (do_task_exec_stats) {
-    m_exec_times.clear();
+    m_task_info.reset(0);
   }
   
   RuntimeStats::initialize_timestep(m_task_graphs);
@@ -823,7 +834,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc( dts, my_rank );
 
-  mpi_info_.reset( 0 );
+  m_mpi_info.reset( 0 );
 
   DOUT(g_dbg, "Rank-" << my_rank << ", MPI Scheduler executing taskgraph: " << tgnum << ", timestep: " << m_application->getTimeStep()
                       << " with " << dts->numTasks() << " tasks (" << ntasks << " local)");
@@ -982,35 +993,78 @@ MPIScheduler::outputTimingStats( const char* label )
     static int accumulate = 10;
     static int count = 0;
 
+    ++count;
+    
     // Only output the exec times every N timesteps.
-    if (++count % accumulate == 0) {
-      std::ofstream fout;
-      char filename[100];
-      sprintf(filename, "exectimes.%d.%d", my_comm_size, my_rank);
-      fout.open(filename);
+    if (m_application->getTimeStep() % accumulate == 0) {
 
-      // Report which timesteps TaskExecTime values have been
-      // accumulated over. If doing in situ monitoring the times will
-      // be for current time step ONLY otherwise the times are
-      // accumulated over N time steps.
+      // Report which timesteps the values have been accumulated
+      // over. If doing in situ monitoring the values will be reset to
+      // zero in the "execute" method so there is no accumulation. As
+      // such the times will be for current time step ONLY otherwise
+      // the times are accumulated over N time steps.
+      std::ostringstream preamble;
+
       if (do_task_exec_stats) {
-        fout << "Reported values are for timestep : "
-             << m_application->getTimeStep()
-             << " ONLY" << std::endl;
+        preamble << "Reported values are for timestep : "
+                 << m_application->getTimeStep()
+                 << " ONLY";
       } else {
-        fout << "Reported values are cumulative over 10 timesteps ("
-             << m_application->getTimeStep()-9
-             << " through "
-             << m_application->getTimeStep()
-             << ")" << std::endl;
+        preamble << "Reported values are cumulative over "
+                 << count << " timesteps ("
+                 << m_application->getTimeStep()-(count-1)
+                 << " through "
+                 << m_application->getTimeStep()
+                 << ")";
       }
-      
-      for (auto iter = m_exec_times.begin(); iter != m_exec_times.end(); ++iter) {
-        fout << std::fixed<< "Rank-" << my_rank << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
-      }
-      fout.close();
 
-      m_exec_times.clear();
+      // This code writes out the exec time only in the "old"
+      // style. It is being left in for now just in case there is a
+      // script that parses this output.
+      
+      // std::string filename = std::string("exectimes.") +
+      //   std::to_string( my_comm_size ) + "." + std::to_string(my_rank);
+
+      // std::ofstream fout;
+      // fout.open(filename);
+      // fout << preamble.str() << std::endl;
+      
+      // for( unsigned int i=0; i<m_task_info.size(); ++i ) {
+      //   std::string task = m_task_info.getKey(i);
+          
+      //   fout << std::fixed << "Rank-" << my_rank
+      //        << ": TaskExecTime(s): " << m_task_info[task][ExecTime]
+      //        << " Task:" << task << std::endl;
+      // }
+
+      // fout.close();
+
+      // Report the stats for each task. Writing over any previous
+      // files.
+      m_task_info.reportIndividualStats( "TaskStats", preamble.str(),
+                                         my_rank, my_comm_size,
+                                         m_application->getTimeStep(),
+                                         m_application->getSimTime(),
+                                         BaseInfoMapper::Write_Last );
+      
+
+      // Not clear if writing reductions is useful so commented out for now.
+
+      // m_task_info.reduce( false );
+      
+      // m_task_info.reportSummaryStats( "TaskExecSummary", preamble.str(),
+      //                                 my_rank, my_comm_size,
+      //                                 m_application->getTimeStep(),
+      //                                 m_application->getSimTime(),
+      //                                 BaseInfoMapper::Write_Last, false );
+
+      count = 0;
+
+      // If doing in situ monitoring do not reset the values to zero
+      // as they will be reset in the "execute" method.
+      if (!do_task_exec_stats) {
+        m_task_info.reset(0);
+      }
     }
   }
 
@@ -1028,16 +1082,16 @@ MPIScheduler::outputTimingStats( const char* label )
       emitTime("NumParticles", (*m_runtimeStats)[NumParticles]);
     }
     
-    emitTime("Total send time"  , mpi_info_[TotalSend]);
-    emitTime("Total recv time"  , mpi_info_[TotalRecv]);
-    emitTime("Total test time"  , mpi_info_[TotalTest]);
-    emitTime("Total wait time"  , mpi_info_[TotalWait]);
-    emitTime("Total reduce time", mpi_info_[TotalReduce]);
-    emitTime("Total task time"  , mpi_info_[TotalTask]);
-    emitTime("Total comm time"  , mpi_info_[TotalSend] + mpi_info_[TotalRecv] + mpi_info_[TotalTest] + mpi_info_[TotalWait] + mpi_info_[TotalReduce]);
+    emitTime("Total send time"  , m_mpi_info[TotalSend]);
+    emitTime("Total recv time"  , m_mpi_info[TotalRecv]);
+    emitTime("Total test time"  , m_mpi_info[TotalTest]);
+    emitTime("Total wait time"  , m_mpi_info[TotalWait]);
+    emitTime("Total reduce time", m_mpi_info[TotalReduce]);
+    emitTime("Total task time"  , m_mpi_info[TotalTask]);
+    emitTime("Total comm time"  , m_mpi_info[TotalSend] + m_mpi_info[TotalRecv] + m_mpi_info[TotalTest] + m_mpi_info[TotalWait] + m_mpi_info[TotalReduce]);
 
     emitTime("Total execution time"   , totalexec );
-    emitTime("Non-comm execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTest] - mpi_info_[TotalWait] - mpi_info_[TotalReduce]);
+    emitTime("Non-comm execution time", totalexec - m_mpi_info[TotalSend] - m_mpi_info[TotalRecv] - m_mpi_info[TotalTest] - m_mpi_info[TotalWait] - m_mpi_info[TotalReduce]);
 
     std::vector<double> d_totaltimes(m_times.size());
     std::vector<double> d_maxtimes(m_times.size());
@@ -1147,9 +1201,9 @@ void MPIScheduler::computeNetRuntimeStats()
 {
   if( m_runtimeStats ) {
     // don't count output time
-    (*m_runtimeStats)[TaskExecTime      ] += mpi_info_[TotalTask] - (*m_runtimeStats)[TotalIOTime];
-    (*m_runtimeStats)[TaskLocalCommTime ] += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    (*m_runtimeStats)[TaskWaitCommTime  ] += mpi_info_[TotalWait];
-    (*m_runtimeStats)[TaskReduceCommTime] += mpi_info_[TotalReduce];
+    (*m_runtimeStats)[TaskExecTime      ] += m_mpi_info[TotalTask] - (*m_runtimeStats)[TotalIOTime];
+    (*m_runtimeStats)[TaskLocalCommTime ] += m_mpi_info[TotalRecv] + m_mpi_info[TotalSend];
+    (*m_runtimeStats)[TaskWaitCommTime  ] += m_mpi_info[TotalWait];
+    (*m_runtimeStats)[TaskReduceCommTime] += m_mpi_info[TotalReduce];
   }
 }
