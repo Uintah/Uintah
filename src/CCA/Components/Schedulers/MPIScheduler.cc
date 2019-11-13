@@ -83,7 +83,7 @@ namespace Uintah {
   Dout g_task_dbg(   "TaskDBG"  , "MPIScheduler", "output each task name as it begins/ends or when threaded, ready", false );
   Dout g_task_run(   "TaskRun"  , "MPIScheduler", "output each task name as it runs", false );
   Dout g_mpi_dbg(    "MPIDBG"   , "MPIScheduler", "MPI debug stream", false );
-  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", true );
+  Dout g_exec_out(   "ExecOut"  , "MPIScheduler", "exec debug stream", false );
 
 }
 
