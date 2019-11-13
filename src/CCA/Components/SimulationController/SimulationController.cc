@@ -673,11 +673,12 @@ SimulationController::ReportStats(const ProcessorGroup*,
     }
 
     message << std::left
-            << "Timestep "   << std::setw(8)  << m_application->getTimeStep()
-            << "Time="       << std::setw(12) << m_application->getSimTime()
-            << "Next delT="  << std::setw(12) << m_application->getNextDelT()
-            << "Wall Time="  << std::setw(10) << m_wall_timers.GetWallTime()
-            << "EMA="        << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
+            << "Timestep "      << std::setw(8)  << m_application->getTimeStep()
+            << "Time="          << std::setw(12) << m_application->getSimTime()
+            << "Next delT="     << std::setw(12) << m_application->getNextDelT()
+            << "Wall Time="     << std::setw(10) << m_wall_timers.GetWallTime()
+//          << "Net Wall Time=" << std::setw(10) << timeStepTime.seconds()
+            << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds();
 
     // Report on the memory used.
     if (g_sim_stats_mem) {
