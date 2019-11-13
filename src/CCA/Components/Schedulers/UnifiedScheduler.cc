@@ -65,6 +65,7 @@ namespace Uintah {
   extern Dout g_task_order;
   extern Dout g_exec_out;
 
+  extern Dout do_task_exec_stats;
 }
 
 
@@ -600,9 +601,11 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       sumTaskMonitoringValues( dtask );
 
       double total_task_time = dtask->task_exec_time();
-      if (g_exec_out) {
-        m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
+      if (g_exec_out || do_task_exec_stats) {
+	m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
+	m_task_info[dtask->getTask()->getName()][WaitTime] += dtask->task_wait_time();
       }
+
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
         //add my task time to the total time
@@ -665,6 +668,12 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
+
+  // If doing in situ monitoring clear the times before each time step
+  // otherwise the times are accumulated over N time steps.
+  if (do_task_exec_stats) {
+    m_task_info.reset(0);
+  }
 
   RuntimeStats::initialize_timestep(m_task_graphs);
 
