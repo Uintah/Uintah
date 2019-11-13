@@ -53,9 +53,9 @@ while doit == True:
     for i, name in enumerate(myTable.dep_names):
       print(name, ' = ', state_space[i])
     
-    print('')
+    print('\n')
     goon = raw_input('Enter 0 to stop or any number to continue: ')
-    print('')
+    print('\n')
     
     if ( np.float(goon) < 0.1 ):
         break
