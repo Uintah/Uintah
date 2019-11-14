@@ -397,18 +397,17 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 //______________________________________________________________________
 //  Insert the orthogonal cosine dirs every nthElement
 void
-DORadiationModel::insertEveryNth( const std::vector<Uintah::Vector>& orthogonalCosineDirs,
+DORadiationModel::insertEveryNth( const std::vector<std::vector<double>>& orthogonalCosineDirs,
                                   const int nthElement,
                                   const int dir,                // x, y, z
                                   std::vector<double>& vec)     // vector to modify
 {
-  int count = 0;
-  auto it = vec.begin();
-  std::advance(it, nthElement);         // advance the iterator
+  auto it = vec.begin() + nthElement;
+  
+  for( size_t i = 0; i < orthogonalCosineDirs.size(); i++){
 
-  for( ; it<= vec.end(); advance(it, nthElement+1) ){
-    vec.insert (it, orthogonalCosineDirs[count][dir] );
-    count ++;
+    it = vec.insert( it, orthogonalCosineDirs[i][dir] );
+    std::advance( it, ( nthElement +1) );
   }
 }
 
@@ -452,34 +451,28 @@ DORadiationModel::computeOrdinatesOPL()
   //__________________________________
   //  for Orthogonal sweeps
   if( m_addOrthogonalDirs ){
-  
-#if 0                      // this needs better logic
+
     if (m_sn != 8 ){
-      throw ProblemSetupException("\nError: DORadiationModel.  To use the <addOrthogonalDirs> option you must have 8 ordinates.", __FILE__, __LINE__); 
+      throw ProblemSetupException("\nError: DORadiationModel.  To use the <addOrthogonalDirs> option you must have 8 ordinates.  "
+                                   "The answers will be altered if you don't use 8 even with LegendreChebyshev quadrature set.", __FILE__, __LINE__);
     }
-#endif
-  
-    std::vector<Uintah::Vector> orthogonalCosineDirs{{1.0,    2e-16,   2e-16 }, // unit vector specifying direction of custom ray sweep
-                                                     {-2e-16, 1.0,     2e-16 },
-                                                     {2e-16, -2e-16,   1.0   },
-                                                     {-1.0,  -2e-16,   2e-16 },
-                                                     {2e-16,  1.0,    -2e-16 },  // NULL at 5
-                                                     {-2e-16, 1.0,    -2e-16 },  // NULL at 6
-                                                     {2e-16, -1.0,    -2e-16 },
-                                                     {-2e-16,-2e-16,  -1.0 }};
+
+    // unit vector specifying direction of that are orthogonal.  You must have 8 entries.
+    const                                             //    omu    oeta      oxi   wt
+    std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 }, 
+                                                          {-2e-16, 1.0,     2e-16, 0 },
+                                                          {2e-16, -2e-16,   1.0,   0 },
+                                                          {-1.0,  -2e-16,   2e-16, 0 },
+                                                          {2e-16,  1.0,    -2e-16, 0 },  // NULL at 5
+                                                          {-2e-16, 1.0,    -2e-16, 0 },  // NULL at 6
+                                                          {2e-16, -1.0,    -2e-16, 0 },
+                                                          {-2e-16,-2e-16,  -1.0,   0 } };
+
     const int nthElement = 10;
     insertEveryNth( orthogonalCosineDirs, nthElement, 0,  m_omu );
     insertEveryNth( orthogonalCosineDirs, nthElement, 1,  m_oeta );
     insertEveryNth( orthogonalCosineDirs, nthElement, 2,  m_oxi );
-
-    int count = 0;
-    auto it = m_wt.begin();
-    std::advance(it, nthElement);
-
-    for( ; it<= m_wt.end(); advance(it, nthElement+1) ){
-      m_wt.insert (it, 0.0 );
-      count ++;
-    }
+    insertEveryNth( orthogonalCosineDirs, nthElement, 3,  m_wt );
 
     m_totalOrds = m_totalOrds + orthogonalCosineDirs.size();
 
