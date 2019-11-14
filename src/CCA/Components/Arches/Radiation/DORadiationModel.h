@@ -246,6 +246,7 @@ private:
       bool m_radiateAtGasTemp   {true};                 // this flag is arbitrary for no particles
       bool m_doReflections      {false};
       bool m_doScattering       {false};
+      bool m_addOrthogonalDirs {false};
       initGuess m_initialGuess  {NONE};
       int _sweepMethod;
       
@@ -301,6 +302,11 @@ private:
 
       //__________________________________
       //  methods
+     void insertEveryNth( const std::vector<Uintah::Vector>& orthogonalCosineDirs,
+                          const int nthElement,
+                          const int dir,
+                          std::vector<double>& vec);
+
       void computeOrdinatesOPL();
       
       template<class TYPE>

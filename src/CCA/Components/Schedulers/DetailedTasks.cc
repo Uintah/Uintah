@@ -154,7 +154,8 @@ DetailedTasks::~DetailedTasks()
 void
 DetailedTasks::assignMessageTags( unsigned int index )
 {
-  int me = m_proc_group->myRank();
+  int me     = m_proc_group->myRank();
+  int nRanks = m_proc_group->nRanks();
 
   std::pair< std::string, std::string > allTasks("All", "Tasks");
 
@@ -241,7 +242,7 @@ DetailedTasks::assignMessageTags( unsigned int index )
     // Do the stats first so they are not affected by adding in the
     // other (possibly) unused ranks.
     info.second.calculateMinimum( true );
-    info.second.reduce();
+    info.second.reduce( false );
 
     if ( ((taskPair.first == "All" && taskPair.second == "Tasks") && g_message_tags_stats_dbg) ||
 #ifdef HAVE_VISIT
@@ -253,8 +254,12 @@ DetailedTasks::assignMessageTags( unsigned int index )
       std::string title = "Communication TG [" + std::to_string(index) + "] " +
         "for task <" + taskPair.first + "|" + taskPair.second + ">";
       
-      info.second.reportSummaryStats   ( title.c_str(), me, timeStep, simTime, false );
-      info.second.reportIndividualStats( title.c_str(), me, timeStep, simTime );
+      info.second.reportSummaryStats   ( title.c_str(), "", me,
+                                         nRanks, timeStep, simTime,
+                                         BaseInfoMapper::Dout, false );
+      info.second.reportIndividualStats( title.c_str(), "", me,
+                                         nRanks, timeStep, simTime,
+                                         BaseInfoMapper::Dout );
     }
 
     // If the number of keys (ranks) is different then add in the

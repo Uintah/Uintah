@@ -2059,9 +2059,10 @@
                                         need_applies_to="type do_radiation " >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 -->
               <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
-              <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
+              <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/>     <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
+              <addOrthogonalDirs          spec="OPTIONAL BOOLEAN" />                                  <!-- turns on an additional 8 sweeps, of these 8 sweep 5 and 6 are null, while 1 2 3 4 7 8 are x+ y+ z+ x- y- z-  -->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
-              <QuadratureSet               spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
+              <QuadratureSet              spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"  need_applies_to="type linearSolve"
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />

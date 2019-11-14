@@ -428,12 +428,13 @@ KokkosScheduler::runTask( DetailedTask*         dtask
 
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-        m_exec_times[dtask->getTask()->getName()] += total_task_time;
+	m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
       }
+
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
         //add my task time to the total time
-        mpi_info_[TotalTask] += total_task_time;
+        m_mpi_info[TotalTask] += total_task_time;
         if (!m_is_copy_data_timestep &&
             dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
@@ -461,10 +462,10 @@ KokkosScheduler::runTask( DetailedTask*         dtask
 
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
     if (m_parent_scheduler != nullptr) {
-      for (size_t i = 0; i < mpi_info_.size(); ++i) {
-        m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
+      for (size_t i = 0; i < m_mpi_info.size(); ++i) {
+        m_parent_scheduler->m_mpi_info[i] += m_mpi_info[i];
       }
-      mpi_info_.reset(0);
+      m_mpi_info.reset(0);
     }
   }
 }  // end runTask()
@@ -523,7 +524,7 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
-  mpi_info_.reset( 0 );
+  m_mpi_info.reset( 0 );
 
   m_num_tasks_done = 0;
   m_abort = false;

@@ -65,14 +65,17 @@
 // #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/LegendreChebyshevQuad.h>
 
-
 #include <cmath>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
 
 #include <Core/Parallel/LoopExecution.hpp>
 
 using namespace std;
 using namespace Uintah;
+
+#define OUTPUT_ORDINATES
 
 static DebugStream dbg("ARCHES_RADIATION",false);
 
@@ -99,7 +102,7 @@ DORadiationModel::~DORadiationModel()
   if (!_sweepMethod){
     delete d_linearSolver;
   }
-  
+
   for (unsigned int i=0; i<_emiss_plus_scat_source_label.size(); i++){
     VarLabel::destroy(_emiss_plus_scat_source_label[i]);
   }
@@ -124,7 +127,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   if(initialGuessType=="zeros"){
     m_initialGuess = ZERO;
   }
-  
+
 //  else if(initialGuessType=="prevDir"){                // This conditional doesn't make sense.  What flag is enabled??
 //    m_zeroInitialGuess    = false;
 //    _usePreviousIntensity = false;
@@ -135,8 +138,9 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
     throw ProblemSetupException("Error:DO-radiation initial guess not set!.", __FILE__, __LINE__);
   }
 
-  db->getWithDefault("ScatteringOn", m_doScattering, false);
-  db->getWithDefault("QuadratureSet",m_quadratureSet,"LevelSymmetric");
+  db->getWithDefault("ScatteringOn",     m_doScattering,       false);
+  db->getWithDefault("QuadratureSet",    m_quadratureSet,      "LevelSymmetric");
+  db->getWithDefault("addOrthogonalDirs", m_addOrthogonalDirs, false);
 
   std::string baseNameAbskp;
   std::string modelName;
@@ -393,6 +397,24 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
 }
 //______________________________________________________________________
+//  Insert the orthogonal cosine dirs every nthElement
+void
+DORadiationModel::insertEveryNth( const std::vector<Uintah::Vector>& orthogonalCosineDirs,
+                                  const int nthElement,
+                                  const int dir,                // x, y, z
+                                  std::vector<double>& vec)     // vector to modify
+{
+  int count = 0;
+  auto it = vec.begin();
+  std::advance(it, nthElement);         // advance the iterator
+
+  for( ; it<= vec.end(); advance(it, nthElement+1) ){
+    vec.insert (it, orthogonalCosineDirs[count][dir] );
+    count ++;
+  }
+}
+
+//______________________________________________________________________
 //
 void
 DORadiationModel::computeOrdinatesOPL()
@@ -404,24 +426,24 @@ DORadiationModel::computeOrdinatesOPL()
   m_wt.assign(  m_totalOrds,0.0);
 
   if (m_quadratureSet=="LegendreChebyshev"){
-  
+
     computeLegendreChebyshevQuadratureSet(m_sn, m_omu,m_oeta,m_oxi,m_wt);
 
   } else{  // Level-Symmetric
-  
+
     // base 1 arrays for the fortran subroutine
     OffsetArray1<double> oxi(  1,m_totalOrds + 1);
     OffsetArray1<double> omu(  1,m_totalOrds + 1);
     OffsetArray1<double> oeta( 1,m_totalOrds + 1);
     OffsetArray1<double> wt(   1,m_totalOrds + 1);
-    
+
     omu.initialize(0.0);
     oeta.initialize(0.0);
     oxi.initialize(0.0);
     wt.initialize(0.0);
-      
+
     fort_rordr(m_sn, oxi, omu, oeta, wt);
-    
+
     // convert to stl::vector 0 based
     m_oxi  = oxi.to_stl_vector();
     m_omu  = omu.to_stl_vector();
@@ -429,6 +451,59 @@ DORadiationModel::computeOrdinatesOPL()
     m_wt   = wt.to_stl_vector();
   }
 
+  //__________________________________
+  //  for Orthogonal sweeps
+  if( m_addOrthogonalDirs ){
+  
+#if 0                      // this needs better logic
+    if (m_sn != 8 ){
+      throw ProblemSetupException("\nError: DORadiationModel.  To use the <addOrthogonalDirs> option you must have 8 ordinates.", __FILE__, __LINE__); 
+    }
+#endif
+  
+    std::vector<Uintah::Vector> orthogonalCosineDirs{{1.0,    2e-16,   2e-16 }, // unit vector specifying direction of custom ray sweep
+                                                     {-2e-16, 1.0,     2e-16 },
+                                                     {2e-16, -2e-16,   1.0   },
+                                                     {-1.0,  -2e-16,   2e-16 },
+                                                     {2e-16,  1.0,    -2e-16 },  // NULL at 5
+                                                     {-2e-16, 1.0,    -2e-16 },  // NULL at 6
+                                                     {2e-16, -1.0,    -2e-16 },
+                                                     {-2e-16,-2e-16,  -1.0 }};
+    const int nthElement = 10;
+    insertEveryNth( orthogonalCosineDirs, nthElement, 0,  m_omu );
+    insertEveryNth( orthogonalCosineDirs, nthElement, 1,  m_oeta );
+    insertEveryNth( orthogonalCosineDirs, nthElement, 2,  m_oxi );
+
+    int count = 0;
+    auto it = m_wt.begin();
+    std::advance(it, nthElement);
+
+    for( ; it<= m_wt.end(); advance(it, nthElement+1) ){
+      m_wt.insert (it, 0.0 );
+      count ++;
+    }
+
+    m_totalOrds = m_totalOrds + orthogonalCosineDirs.size();
+
+
+    // write direction cosines to a file
+    if( d_myworld->myRank() == 0 ){
+
+      std::string filename = "dir_cosines.txt";
+      ofstream oStream;
+      oStream.open(filename);
+      oStream<< "# This file contains the Discrete Ordinate ordinate directions and weights\n"
+             << "# i     omu         oeta        oxi       wt\n";
+
+      for (int i=0; i< m_totalOrds; i++){
+        oStream <<  i<< " " << setw(10) << m_omu[i] << " "<< setw(10) << m_oeta[i] << " "<< setw(10) << m_oxi[i] << " " << setw(10) << m_wt[i] << endl;
+      }
+      oStream.close();
+    }
+  }
+
+  //__________________________________
+  //
   double sumx=0;
   double sumy=0;
   double sumz=0;
@@ -712,7 +787,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars,
                                  CCVariable<double>& divQ,
-                                 int wall_type, 
+                                 int wall_type,
                                  int matlIndex,
                                  DataWarehouse* new_dw,
                                  DataWarehouse* old_dw,
@@ -741,7 +816,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   if (m_lambda > 1) {
     fort_radarray(rgamma, sd15, sd, sd7, sd3);
   }
-  
+
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
   IntVector domLo = patch->getExtraCellLowIndex();
@@ -760,7 +835,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     for (unsigned int i=0; i< _radiationFluxLabels.size(); i++){
       constCCVariable<double> radiationFlux_temp;
       old_dw->get(radiationFlux_temp,_radiationFluxLabels[i], matlIndex , patch, m_gn, 0  );
-      
+
       radiationFlux_old[i].allocate(domLo,domHi);
       radiationFlux_old[i].copyData(radiationFlux_temp);
     }
@@ -836,9 +911,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   std::vector< constCCVariable<double> > spectral_weights(0); // spectral not supported for DO linear solve
   std::vector<      CCVariable<double> > Emission_source(1);
   std::vector< constCCVariable<double> > abskgas(1);
-  
+
   abskgas[0]=constvars->ABSKG;
-  
+
   Emission_source[0].allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Emission_source[0].initialize(0.0);
 
@@ -1020,7 +1095,7 @@ DORadiationModel::setLabels(const VarLabel* abskg_label,
 
   _abskg_label_vector= std::vector<const VarLabel* > (m_nbands);
   _abswg_label_vector= std::vector<const VarLabel* > (_LspectralSolve? m_nbands : 0 );
- 
+
   if(_LspectralSolve){
     for (int i=0; i<m_nbands; i++){
       _abskg_label_vector[i] = VarLabel::find(_abskg_name_vector[i], "Error: spectral gas absorption coefficient" );
@@ -1033,7 +1108,7 @@ DORadiationModel::setLabels(const VarLabel* abskg_label,
 
   for (int qn=0; qn < m_nQn_part; qn++){
     _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn], "Error: particle absorption coefficient"));
-    
+
     _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn], "Error: particle temperature "));
   }
 
@@ -1113,7 +1188,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch,
                                           std::vector<     CCVariable<double> > &emissSrc,
                                           std::vector<constCCVariable<double> > &spectral_weights)
 {
- 
+
   for (unsigned int qn=0; qn < abskp.size(); qn++){
     if( m_radiateAtGasTemp ){
 
@@ -1191,8 +1266,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   const double abs_oxi  = std::abs(m_oxi[dir])  * areatb;
   const double abs_oeta = std::abs(m_oeta[dir]) * areans;
   const double abs_omu  = std::abs(m_omu[dir])  * areaew;
-  
-  const double denom    = std::abs(m_omu[dir])  * areaew + 
+
+  const double denom    = std::abs(m_omu[dir])  * areaew +
                           std::abs(m_oeta[dir]) * areans +
                           std::abs(m_oxi[dir])  * areatb; // denomintor for Intensity in current cell
 
@@ -1230,7 +1305,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
   for (int iband=0; iband<m_nbands; iband++){
 
     const int idx = intensityIndx(dir,iband);
-    
+
     CCVariable<double> intensity;
     new_dw->getModifiable(intensity, _IntensityLabels[idx], matlIndex, patch, _gv[m_plusX[dir] ][m_plusY[dir]  ][m_plusZ[dir]  ],1 );
 
@@ -1308,7 +1383,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             im = i - m_xiter[dir];
             if (cellType(i,j,k) != m_ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
-            } 
+            }
             else{ // else flow cell
               intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + (abskg_array[iband](i,j,k)  + abskt(i,j,k))*vol);
             } // end if intrusion
@@ -1325,7 +1400,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
             im = i - m_xiter[dir];
             if (cellType(i,j,k) != m_ffield){ // if intrusions
               intensity(i,j,k) = emissSrc(i,j,k) ;
-            } 
+            }
             else{ // else flow cell
               intensity(i,j,k) = (emissSrc(i,j,k) + intensity(i,j,km)*abs_oxi  +  intensity(i,jm,k)*abs_oeta  +  intensity(im,j,k)*abs_omu)/(denom + abskt(i,j,k)*vol);
             } // end if intrusion
@@ -1353,11 +1428,11 @@ DORadiationModel::getDOSource(const Patch* patch,
 {
 
   _timer.reset(true); // Radiation solve start!
-  
+
   constCCVariable<double> abskt;
   constCCVariable<double> radTemp;
   constCCVariable<int> cellType;
-  
+
   old_dw->get(abskt,    _abskt_label,   matlIndex, patch, m_gn, 0);
   new_dw->get(radTemp,  _T_label,       matlIndex, patch, m_gn, 0);
   old_dw->get(cellType, _cellType_label,matlIndex, patch, m_gn, 0);
@@ -1408,7 +1483,7 @@ DORadiationModel::getDOSource(const Patch* patch,
     for (int iband=0; iband<m_nbands; iband++){
 
       std::vector< constCCVariable<double> >IntensitiesOld(m_totalOrds);
-      
+
       for( int ord=0;  ord<m_totalOrds ;ord++){
         const int idx = intensityIndx(ord,iband);
         old_dw->get(IntensitiesOld[ord],_IntensityLabels[idx], matlIndex , patch, m_gn, 0  );
@@ -1418,7 +1493,7 @@ DORadiationModel::getDOSource(const Patch* patch,
       for( int ord=0;  ord<m_totalOrds ;ord++){
 
         const int idx = intensityIndx(ord,iband);
-        
+
         CCVariable<double> scatIntensitySource;
         new_dw->allocateAndPut(scatIntensitySource, _emiss_plus_scat_source_label[idx], matlIndex, patch);
 
@@ -1484,7 +1559,7 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
 
   if(_LspectralSolve){
     for (int iband=0; iband<m_nbands; iband++){
-    
+
       old_dw->get(spectral_abskg[iband],_abskg_label_vector[iband], matlIndex, patch, m_gn,0 );
       spectral_volQ[iband].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
       spectral_volQ[iband].initialize(0.0);
@@ -1513,7 +1588,7 @@ DORadiationModel::computeFluxDiv(const Patch* patch,
   for (int iband=0; iband<m_nbands; iband++){
     new_dw->get(emissSrc[iband], _emissSrc_label[iband], matlIndex, patch, m_gn,0 );
   }
-  
+
   constCCVariable<double> abskt;
   old_dw->get(abskt,_abskt_label, matlIndex , patch, m_gn, 0  );      // should be WHICH DW !!!!!! BUG
 
@@ -1631,12 +1706,12 @@ DORadiationModel::setIntensityBC(const Patch* patch,
   //__________________________________
   //  Loop over spectral bands
   for (int iband=0; iband<m_nbands; iband++){
-    
+
     const int idx = intensityIndx(ord,iband);
     CCVariable <double > intensity;
     new_dw->allocateAndPut(intensity, _IntensityLabels[idx] , matlIndex, patch, ghostType, 1);
     intensity.initialize(0.0);
-    
+
     //__________________________________
     // Loop over computational domain faces
     vector<Patch::FaceType> bf;
@@ -1654,7 +1729,7 @@ DORadiationModel::setIntensityBC(const Patch* patch,
         }
       }
     }
-    
+
   }
 }
 
