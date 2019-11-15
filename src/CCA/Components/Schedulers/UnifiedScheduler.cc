@@ -477,7 +477,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   // Setup the thread info mapper
   if( g_thread_stats || g_thread_indv_stats ) {
     m_thread_info.resize( Impl::g_num_threads );
-    m_thread_info.setIndexName( "Threads" );
+    m_thread_info.setIndexName( "Thread" );
     m_thread_info.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
     m_thread_info.insert( LocalTID  , std::string("LocalTID")  , "Index"   );
     m_thread_info.insert( Affinity  , std::string("Affinity")  , "CPU"     );
@@ -602,8 +602,8 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out || do_task_exec_stats) {
-	m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
-	m_task_info[dtask->getTask()->getName()][WaitTime] += dtask->task_wait_time();
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::WaitTime] += dtask->task_wait_time();
       }
 
       // if I do not have a sub scheduler

@@ -303,8 +303,8 @@ MPIScheduler::runTask( DetailedTask * dtask
     
     double total_task_time = dtask->task_exec_time();
     if (g_exec_out || do_task_exec_stats) {
-      m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
-      m_task_info[dtask->getTask()->getName()][WaitTime] += dtask->task_wait_time();
+      m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
+      m_task_info[dtask->getTask()->getName()][TaskStatsEnum::WaitTime] += dtask->task_wait_time();
     }
     // if I do not have a sub scheduler
     if (!dtask->getTask()->getHasSubScheduler()) {
@@ -1052,7 +1052,7 @@ MPIScheduler::outputTimingStats( const char* label )
 
       // m_task_info.reduce( false );
       
-      // m_task_info.reportSummaryStats( "TaskExecSummary", preamble.str(),
+      // m_task_info.reportSummaryStats( "TaskStatsSummary", preamble.str(),
       //                                 my_rank, my_comm_size,
       //                                 m_application->getTimeStep(),
       //                                 m_application->getSimTime(),
