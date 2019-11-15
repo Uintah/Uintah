@@ -23,7 +23,11 @@
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
 
       <Radiometer             spec="MULTIPLE NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">   
-        <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>                                             
+        <viewAngle            spec="REQUIRED DOUBLE  'positive'"/>  
+        <!--IMPORTANT - When comparing directional data from discrete ordinates (DO) to Radiometer data,-->
+        <!-- note that signs of the unit normal vector are opposite in the two models. For example, to compare-->
+        <!--intensities arriving at the z+ wall from the z- direction, the Radiometer unit normal vector-->
+        <!--is (0, 0, -1) while the corresponding direction cosines for DO intensity are (0, 0, 1)-->
         <normalVector         spec="OPTIONAL VECTOR"/>      
         <unitNormalVector     spec="OPTIONAL VECTOR"/>                                                   
         <locationsMin         spec="REQUIRED VECTOR  'positive'"/>                                             
