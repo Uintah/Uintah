@@ -452,11 +452,6 @@ DORadiationModel::computeOrdinatesOPL()
   //  for Orthogonal sweeps
   if( m_addOrthogonalDirs ){
 
-    if (m_sn != 8 ){
-      throw ProblemSetupException("\nError: DORadiationModel.  To use the <addOrthogonalDirs> option you must have 8 ordinates.  "
-                                   "The answers will be altered if you don't use 8 even with LegendreChebyshev quadrature set.", __FILE__, __LINE__);
-    }
-
     // unit vector specifying direction of that are orthogonal.  You must have 8 entries.
     const                                             //    omu    oeta      oxi   wt
     std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 }, 
@@ -466,9 +461,9 @@ DORadiationModel::computeOrdinatesOPL()
                                                           {2e-16,  1.0,    -2e-16, 0 },  // NULL at 5
                                                           {-2e-16, 1.0,    -2e-16, 0 },  // NULL at 6
                                                           {2e-16, -1.0,    -2e-16, 0 },
-                                                          {-2e-16,-2e-16,  -1.0,   0 } };
-
-    const int nthElement = 10;
+                                                          {-2e-16,-2e-16,  -1.0,   0 } };   
+    const int nthElement = m_totalOrds/8;   
+    
     insertEveryNth( orthogonalCosineDirs, nthElement, 0,  m_omu );
     insertEveryNth( orthogonalCosineDirs, nthElement, 1,  m_oeta );
     insertEveryNth( orthogonalCosineDirs, nthElement, 2,  m_oxi );
