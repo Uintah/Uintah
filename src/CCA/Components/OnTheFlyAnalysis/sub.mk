@@ -38,6 +38,7 @@ SRCS += \
         $(SRCDIR)/AnalysisModuleFactory.cc \
         $(SRCDIR)/AnalysisModule.cc        \
         $(SRCDIR)/controlVolume.cc         \
+        $(SRCDIR)/controlVolFluxes.cc      \
         $(SRCDIR)/FileInfoVar.cc           \
         $(SRCDIR)/lineExtract.cc           \
         $(SRCDIR)/meanTurbFluxes.cc        \
