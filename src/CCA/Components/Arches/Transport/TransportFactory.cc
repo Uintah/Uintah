@@ -141,20 +141,28 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         }
 
       } else {
+
         throw InvalidValue("Error: Eqn type for group not recognized named: "+group_name+" with type: "+type,__FILE__,__LINE__);
+
       }
 
       if ( enum_grp_class == DENSITY_WEIGHTED || enum_grp_class == VOLUMETRIC ){
+
         if ( prop_scalar ){
           _prop_scalar_builders.push_back(group_name);
         } else {
           _scalar_builders.push_back(group_name);
         }
         register_task( group_name, tsk_builder, eqn_db );
+
       } else if ( enum_grp_class != DQMOM ){
+
         throw ProblemSetupException("Error: Unable to classify eqn group: "+group_name, __FILE__, __LINE__);
+
       } else {
+
         delete tsk_builder;  //this task doesnt get registered here...
+
       }
 
       std::string diffusion_task_name = "[Diffusion]" + group_name;
@@ -223,7 +231,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         register_task( scalar_update_task_name, sup_tsk, eqn_db );
 
       }
-
 
       if ( enum_grp_class == DENSITY_WEIGHTED || enum_grp_class == VOLUMETRIC ){
         if ( prop_scalar ){
@@ -682,7 +689,7 @@ void TransportFactory::register_DQMOM( ProblemSpecP db ){
       _dqmom_fe_update.push_back( update_task_name.str() );
 
       std::stringstream unweight_task_name;
-      unweight_task_name << m_dqmom_grp_name << "_" << i;
+      unweight_task_name << "[UnweightVariable]" << m_dqmom_grp_name << "_" << i;
 
       TaskInterface::TaskBuilder* weight_var_tsk =
       scinew UnweightVariable<CCVariable<double>>::Builder( "NULL", unweight_task_name.str(),

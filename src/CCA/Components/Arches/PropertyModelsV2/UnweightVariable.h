@@ -535,8 +535,12 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
     T& un_var = tsk_info->get_field<T>(m_un_eqn_names[ieqn]);
     T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+    
+    un_var.initialize(0.0);
+
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
@@ -571,8 +575,6 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     }
     });
   }
-
-
 
 }
 }

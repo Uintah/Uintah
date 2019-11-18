@@ -382,7 +382,6 @@ private:
     }
 
     // unscaling
-    // work in progress
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
 
       std::string varname = ieqn->first;
@@ -392,6 +391,8 @@ private:
 
       T& phi = tsk_info->get_field<T>(varname);
       T& phi_unscaled = tsk_info->get_field<T>(info.unscaled_var);
+
+      phi_unscaled.initialize(0.0);
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 

@@ -590,12 +590,7 @@ private:
       CT& rho_phi = *rho_phi_ptr;
       CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
       T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
-
-      Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-      Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
-        rhs(i,j,k) = 0;
-      }); //end cell loop
-
+      rhs.initialize(0.0);
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
@@ -603,6 +598,10 @@ private:
         FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
         FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
         FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+
+        x_flux.initialize(0.0);
+        y_flux.initialize(0.0);
+        z_flux.initialize(0.0);
 
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
@@ -640,8 +639,6 @@ private:
 
           CentralConvection scheme;
           CONVECTION_x(range);
-          CONVECTION_y(range);
-          CONVECTION_z(range);
 
         }
 
@@ -664,9 +661,7 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
           CONVECTION_y(range);
-          CONVECTION_z(range);
 
         }
 
@@ -690,8 +685,6 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
-          CONVECTION_y(range);
           CONVECTION_z(range);
 
         }
