@@ -37,14 +37,16 @@ SRCDIR := CCA/Components/OnTheFlyAnalysis
 SRCS += \
         $(SRCDIR)/AnalysisModuleFactory.cc \
         $(SRCDIR)/AnalysisModule.cc        \
+        $(SRCDIR)/controlVolume.cc         \
+        $(SRCDIR)/FileInfoVar.cc           \
         $(SRCDIR)/lineExtract.cc           \
         $(SRCDIR)/meanTurbFluxes.cc        \
         $(SRCDIR)/MinMax.cc                \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeAverage.cc          \
         $(SRCDIR)/planeExtract.cc          \
-        $(SRCDIR)/statistics.cc            \
-        $(SRCDIR)/FileInfoVar.cc
+        $(SRCDIR)/statistics.cc
+
 
 PSELIBS := \
 	CCA/Ports               \
