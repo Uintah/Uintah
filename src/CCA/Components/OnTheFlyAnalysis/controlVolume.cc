@@ -23,10 +23,11 @@
  */
 
 #include <CCA/Components/OnTheFlyAnalysis/controlVolume.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Box.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -35,15 +36,66 @@
 using namespace Uintah;
 using namespace std;
 
-controlVolume::controlVolume( const IntVector & lowIndex,
-                              const IntVector & highIndex )
-  : d_lowIndex(lowIndex)
-  , d_highIndex(highIndex)
+//______________________________________________________________________
+//
+controlVolume::controlVolume( const ProblemSpecP& boxps )
 {
+  ProblemSpecP box_ps = boxps;
+  
+  if( box_ps == nullptr ){
+    throw ProblemSetupException("ERROR: OnTheFlyAnalysis/Control Volume:  Couldn't find <controlVolumes> -> <box> tag", __FILE__, __LINE__);
+  }
+  
+  map<string,string> attribute;
+  box_ps->getAttributes(attribute);
+  d_CV_label = attribute["label"];
+  
+  Point min;
+  Point max;
+  box_ps->require("min",min);
+  box_ps->require("max",max); 
+  
+  double near_zero = 10 * DBL_MIN;
+  double xdiff =  std::fabs( max.x() - min.x() );
+  double ydiff =  std::fabs( max.y() - min.y() );
+  double zdiff =  std::fabs( max.z() - min.z() );
+  
+  if ( xdiff < near_zero   ||
+       ydiff < near_zero   ||
+       zdiff < near_zero ) {
+    std::ostringstream warn;
+    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< d_CV_label 
+         << ") The max coordinate cannot be <= the min coordinate (max " << max << " <= min " << min << ")." ;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  d_box = Box(min,max);
 }
+
+//______________________________________________________________________
+//
+controlVolume::~controlVolume(){};
+
+//______________________________________________________________________
+//
+void controlVolume::initialize( const Level* level)
+{
+  d_lowIndex  = level->getCellIndex( d_box.lower() );
+  d_highIndex = level->getCellIndex( d_box.upper() );
+  
+  // bulletproofing
+  IntVector diff = d_highIndex - d_lowIndex;
+  
+  if ( diff.x() < 1 || diff.y() < 1 || diff.z() < 1 ){
+    std::ostringstream warn;
+    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< d_CV_label 
+           << ") There must be at least one computational cell difference between the max and min ("<< diff << ")";
+   throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+}
+
 //______________________________________________________________________
 //  Cell iterator over all cells in the control volumne in this patch
-inline CellIterator controlVolume::getCellIterator( const Patch* patch ) const {
+CellIterator controlVolume::getCellIterator( const Patch* patch ) const {
 
   IntVector lo = Max(d_lowIndex,  patch->getCellLowIndex());
   IntVector hi = Min(d_highIndex, patch->getCellHighIndex());
@@ -106,31 +158,19 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
 
 //______________________________________________________________________
 // Returns the normal to the patch face
-IntVector controlVolume::getFaceDirection( const controlVolume::FaceType & face ) const
+double  controlVolume::getFaceNormal( const controlVolume::FaceType & face ) const
 {
-  switch( face )
-  {
-    case xminus:
-      return IntVector(-1,0,0);
-    case xplus:
-      return IntVector(1,0,0);
-    case yminus:
-      return IntVector(0,-1,0);
-    case yplus:
-      return IntVector(0,1,0);
-    case zminus:
-      return IntVector(0,0,-1);
-    case zplus:
-      return IntVector(0,0,1);
-    default:
-      throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+  double norm = 1.0;
+  if (face == xminus || face == yminus || face == zminus ){
+    norm = -1.0;
   }
+  return norm;
 }
 
 //______________________________________________________________________
 // Sets the vector faces equal to the list of faces that are on the boundary
-inline void controlVolume::getBoundaryFaces(std::vector<FaceType>& faces,
-                                            const Patch* patch) const
+void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
+                                      const Patch* patch) const
 {
   faces.clear();
 
@@ -257,6 +297,19 @@ double controlVolume::cellArea( const controlVolume::FaceType face,
    return area;
  }
 
-
+//______________________________________________________________________
+//
+void
+controlVolume::print()
+{
+  ostringstream out;
+  out.setf(ios::scientific,ios::floatfield);
+  out.precision(4);
+  out << "  controlVolume " << d_CV_label 
+      << " box lower: " << d_box.lower() << " upper: " << d_box.upper() 
+      <<", lowIndex: "  << d_lowIndex << ", highIndex: " << d_highIndex;
+  out.setf(ios::scientific ,ios::floatfield);
+  DOUT( true, out.str() );
+}
 
 

@@ -26,9 +26,12 @@
 #ifndef CCA_Components_ontheflyAnalysis_controlVolume_h
 #define CCA_Components_ontheflyAnalysis_controlVolume_h
 
+#include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Patch.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <string>
 
 namespace Uintah {
@@ -39,6 +42,9 @@ namespace Uintah {
   
   class controlVolume {
   public:
+  
+    controlVolume(const ProblemSpecP& cv_ps);
+    ~controlVolume();
   
     enum FaceType {
       xminus=0,
@@ -60,8 +66,12 @@ namespace Uintah {
     };
     
     //______________________________________________________________________
+    // void set
+    void initialize( const Level* level);
+    
+    //______________________________________________________________________
     // Returns a cell iterator over control volume cells on this patch
-    inline CellIterator getCellIterator(const Patch* patch) const ;
+    CellIterator getCellIterator(const Patch* patch) const ;
     
     
     //______________________________________________________________________
@@ -76,12 +86,12 @@ namespace Uintah {
 
     //______________________________________________________________________
     // Returns the normal to the patch face
-    IntVector getFaceDirection( const controlVolume::FaceType & face ) const;
+    double  getFaceNormal( const controlVolume::FaceType & face ) const;
     
     //______________________________________________________________________
     // Sets the vector faces equal to the list of faces that are on the boundary
-    inline void getBoundaryFaces(std::vector<FaceType>& faces,
-                                 const Patch* patch) const;
+    void getBoundaryFaces(std::vector<FaceType>& faces,
+                          const Patch* patch) const;
 
     //______________________________________________________________________
     // Returns true if a control volume boundary face exists on this patch
@@ -102,21 +112,22 @@ namespace Uintah {
     
     //______________________________________________________________________
     // Returns a string equivalent of the face name (eg: "xminus")
-    std::string getFaceName( controlVolume::FaceType face ) const;;
+    std::string getFaceName( controlVolume::FaceType face ) const;
     
     //______________________________________________________________________
     // Returns the cell area dx*dy.
     double cellArea( const controlVolume::FaceType face,
                      const Patch* patch ) const;
   
+    std::string getName() const {return d_CV_label;};
+    
+    void print();
 
   protected:
-    controlVolume( const IntVector & lowIndex,
-                   const IntVector & highIndex);
-    ~controlVolume();
-
     IntVector d_lowIndex;
     IntVector d_highIndex;
+    Box d_box;
+    std::string d_CV_label{"notSet"};
 };
 }  // end namespace Uintah
 #endif

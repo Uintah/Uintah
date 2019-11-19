@@ -26,6 +26,7 @@
 #ifndef CONTROLVOLFLUXES_H
 #define CONTROLVOLFLUXES_H
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Components/OnTheFlyAnalysis/controlVolume.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -166,31 +167,18 @@ DESCRIPTION
 
     MA_Labels* labels;
 
-    enum FaceType {
-      partialFace=0,
-      entireFace=1,
-      none=2
-    };
-
-    struct cv_face{
-      Point    startPt;
-      Point    endPt;
-      int      p_dir;
-      Vector   normalDir;
-      FaceType face;
-    };
-
-    std::map< int, cv_face* > d_cv_faces;
-
+    std::vector<controlVolume*> d_controlVols;
 
     //__________________________________
     // global constants
-    MaterialSubset * d_zeroMatl;
-    MaterialSet    * d_zeroMatlSet;
-    PatchSet       * d_zeroPatch;
-
-    int d_matlIndx;                      // material index.
-    MaterialSet* d_matl_set;
+    MaterialSubset * m_zeroMatl;
+    MaterialSet    * m_zeroMatlSet;
+    PatchSet       * m_zeroPatch;
+    MaterialSubset * m_matl;
+    MaterialSet    * m_matlSet;
+  
+    int m_matIdx;                      // material index.
+    
 
   };
 }

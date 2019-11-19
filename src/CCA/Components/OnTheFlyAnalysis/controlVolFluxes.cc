@@ -56,15 +56,17 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
                                     const ProblemSpecP    & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_zeroMatl     = 0;
-  d_zeroMatlSet  = 0;
-  d_zeroPatch    = 0;
-  d_matlIndx     = -9;
-
+  m_zeroMatl     = 0;
+  m_zeroMatlSet  = 0;
+  m_zeroPatch    = 0;
+  m_matIdx       = -9;
+  m_matl         = nullptr;
+  m_matlSet      = nullptr;
+  
   labels = scinew MA_Labels();
 
-  labels->lastCompTime      = VarLabel::create( "lastCompTime",max_vartype::getTypeDescription() );
-  labels->fileVarsStruct    = VarLabel::create( "FileInfo_MA", PerPatch<FileInfoP>::getTypeDescription() );
+  labels->lastCompTime      = VarLabel::create( "lastCompTime", max_vartype::getTypeDescription() );
+  labels->fileVarsStruct    = VarLabel::create( "FileInfo_MA",  PerPatch<FileInfoP>::getTypeDescription() );
   labels->totalQ_CV         = VarLabel::create( "totalQ_CV",    sumvec_vartype::getTypeDescription() );
   labels->net_Q_faceFluxes  = VarLabel::create( "net_Q_fluxes", sumvec_vartype::getTypeDescription() );
 }
@@ -74,23 +76,30 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
 controlVolFluxes::~controlVolFluxes()
 {
   cout_doing << " Doing: destorying fluxes " << endl;
-  if( d_zeroMatlSet  && d_zeroMatlSet->removeReference() ) {
-    delete d_zeroMatlSet;
+  if( m_zeroMatlSet  && m_zeroMatlSet->removeReference() ) {
+    delete m_zeroMatlSet;
   }
-  if( d_zeroMatl && d_zeroMatl->removeReference() ) {
-    delete d_zeroMatl;
+  if( m_zeroMatl && m_zeroMatl->removeReference() ) {
+    delete m_zeroMatl;
   }
-  if( d_zeroPatch && d_zeroPatch->removeReference() ) {
-    delete d_zeroPatch;
+  if( m_zeroPatch && m_zeroPatch->removeReference() ) {
+    delete m_zeroPatch;
   }
-  if( d_matl_set && d_matl_set->removeReference() ) {
-    delete d_matl_set;
+  if( m_matl && m_matl->removeReference() ) {
+    delete m_matl;
+  }
+  if( m_matlSet && m_matlSet->removeReference() ) {
+    delete m_matlSet;
   }
 
   VarLabel::destroy( labels->lastCompTime );
   VarLabel::destroy( labels->fileVarsStruct );
   VarLabel::destroy( labels->totalQ_CV );
   VarLabel::destroy( labels->net_Q_faceFluxes );
+  
+  for( size_t i=0; i< d_controlVols.size(); i++ ){
+    delete d_controlVols[i];
+  }
 
   delete labels;
 }
@@ -111,36 +120,34 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m_module_spec->require( "timeStart",         d_startTime );
   m_module_spec->require( "timeStop",          d_stopTime );
 
-  d_zeroMatl = scinew MaterialSubset();
-  d_zeroMatl->add(0);
-  d_zeroMatl->addReference();
+  m_zeroMatl = scinew MaterialSubset();
+  m_zeroMatl->add(0);
+  m_zeroMatl->addReference();
 
-  d_zeroMatlSet = scinew MaterialSet();
-  d_zeroMatlSet->add(0);
-  d_zeroMatlSet->addReference();
+  m_zeroMatlSet = scinew MaterialSet();
+  m_zeroMatlSet->add(0);
+  m_zeroMatlSet->addReference();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
-  d_zeroPatch = scinew PatchSet();
-  d_zeroPatch->add(p);
-  d_zeroPatch->addReference();
+  m_zeroPatch = scinew PatchSet();
+  m_zeroPatch->add(p);
+  m_zeroPatch->addReference();
 
   //__________________________________
   // find the material .  Default is matl 0.
-  // The user can use either
   //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
+  
   Material* matl;
   if( m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
   }
 
-  d_matlIndx = matl->getDWIndex();
-
+  m_matIdx = matl->getDWIndex();
 
   vector<int> m;
   m.push_back(0);            // matl index for FileInfo label
-  m.push_back( d_matlIndx );
+  m.push_back( m_matIdx );
 
   // remove any duplicate entries
   sort(m.begin(), m.end());
@@ -148,9 +155,13 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   it = unique(m.begin(), m.end());
   m.erase(it, m.end());
 
-  d_matl_set = scinew MaterialSet();
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();
+  m_matlSet = scinew MaterialSet();
+  m_matlSet->addAll(m);
+  m_matlSet->addReference();
+
+  MaterialSubset* m_matl = scinew MaterialSubset();
+  m_matl->add( m_matIdx );
+  m_matl->addReference();
 
   // HARDWIRED FOR ICE/MPMICE
   labels->vel_CC    = assignLabel( "vel_CC" );
@@ -163,45 +174,14 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
 
   //__________________________________
   // Loop over each face and find the extents
-  ProblemSpecP ma_ps = m_module_spec->findBlock("controlVolume");
-  if(! ma_ps) {
-    throw ProblemSetupException("ERROR Radiometer: Couldn't find <controlVolume> xml node", __FILE__, __LINE__);
+  ProblemSpecP cv_ps = m_module_spec->findBlock("controlVolumes");
+  if( ! cv_ps) {
+    throw ProblemSetupException("ERROR: Couldn't find <controlVolumes> xml node", __FILE__, __LINE__);
   }
 
-  for( ProblemSpecP face_ps = ma_ps->findBlock( "Face" ); face_ps != nullptr; face_ps=face_ps->findNextBlock( "Face" ) ) {
-
-    map<string,string> faceMap;
-    face_ps->getAttributes(faceMap);
-
-    string side = faceMap["side"];
-    int p_dir;
-    int index;
-    Vector norm;
-    Point start(-9,-9,-9);
-    Point end(-9,-9,-9);
-    FaceType type=none;
-
-    faceInfo(side, norm, p_dir, index);
-
-    if (faceMap["extents"] == "partialFace"){
-
-      face_ps->get( "startPt", start );
-      face_ps->get( "endPt",   end );
-      type = partialFace;
-
-      bulletProofing(grid, side, start, end);
-    }else{
-      type = entireFace;
-    }
-
-    // put the input variables into the global struct
-    cv_face* cvFace    = scinew cv_face;
-    cvFace->p_dir      = p_dir;
-    cvFace->normalDir  = norm;
-    cvFace->face       = type;
-    cvFace->startPt    = start;
-    cvFace->endPt      = end;
-    d_cv_faces[index]  = cvFace;
+  for( ProblemSpecP box_ps = cv_ps->findBlock( "box" ); box_ps != nullptr; box_ps=box_ps->findNextBlock( "box" ) ) {
+    controlVolume* cv  = scinew controlVolume(box_ps);
+    d_controlVols.push_back( cv );  
   }
 }
 
@@ -216,8 +196,8 @@ void controlVolFluxes::scheduleInitialize( SchedulerP   & sched,
                   this, &controlVolFluxes::initialize);
 
   t->computes( labels->lastCompTime );
-  t->computes( labels->fileVarsStruct, d_zeroMatl );
-  sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
+  t->computes( labels->fileVarsStruct, m_zeroMatl );
+  sched->addTask(t, m_zeroPatch, m_zeroMatlSet);
 }
 
 //______________________________________________________________________
@@ -228,6 +208,14 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
                                          DataWarehouse  *,
                                          DataWarehouse  * new_dw )
 {
+  // initialize the control volumes
+  const Level* level = getLevel(patches);
+  for( size_t i=0; i< d_controlVols.size(); i++ ){
+    controlVolume* cv = d_controlVols[i];
+    cv->initialize(level);
+    cv->print();
+  }
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
@@ -241,7 +229,7 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
     FileInfo* myFileInfo = scinew FileInfo();
     fileInfo.get() = myFileInfo;
 
-    new_dw->put(fileInfo,    labels->fileVarsStruct, 0, patch);
+    new_dw->put(fileInfo, labels->fileVarsStruct, 0, patch);
 
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
@@ -278,7 +266,7 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   sched->overrideVariableBehavior("FileInfo_MA", false, false, false, true, true);
 
   //__________________________________
-  //  compute the total momentum and fluxes
+  //  compute the total Q and net fluxes
   printSchedule( level,cout_doing,"controlVolFluxes::scheduleDoAnalysis" );
 
   Task* t0 = scinew Task( "controlVolFluxes::integrate_Q_overCV",
@@ -286,23 +274,19 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  MaterialSubset* matl_SS = scinew MaterialSubset();
-  matl_SS->add( d_matlIndx );
-  matl_SS->addReference();
-
   sched_TimeVars( t0, level, labels->lastCompTime, false );
 
-  t0->requires( Task::NewDW, labels->vel_CC,    matl_SS, gn );
-  t0->requires( Task::NewDW, labels->rho_CC,    matl_SS, gn );
+  t0->requires( Task::NewDW, labels->vel_CC,    m_matl, gn );
+  t0->requires( Task::NewDW, labels->rho_CC,    m_matl, gn );
 
-  t0->requires( Task::NewDW, labels->uvel_FC,   matl_SS, gn );
-  t0->requires( Task::NewDW, labels->vvel_FC,   matl_SS, gn );
-  t0->requires( Task::NewDW, labels->wvel_FC,   matl_SS, gn );
+  t0->requires( Task::NewDW, labels->uvel_FC,   m_matl, gn );
+  t0->requires( Task::NewDW, labels->vvel_FC,   m_matl, gn );
+  t0->requires( Task::NewDW, labels->wvel_FC,   m_matl, gn );
 
   t0->computes( labels->totalQ_CV );
   t0->computes( labels->net_Q_faceFluxes );
 
-  sched->addTask( t0, level->eachPatch(), d_matl_set );
+  sched->addTask( t0, level->eachPatch(), m_matlSet );
 
   //__________________________________
   //  Task that outputs the contributions
@@ -310,13 +294,13 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
                     this,&controlVolFluxes::doAnalysis );
 
   sched_TimeVars( t1, level, labels->lastCompTime, true );
-  t1->requires( Task::OldDW, labels->fileVarsStruct, d_zeroMatl, gn, 0 );
+  t1->requires( Task::OldDW, labels->fileVarsStruct, m_zeroMatl, gn, 0 );
 
   t1->requires( Task::NewDW, labels->totalQ_CV );
   t1->requires( Task::NewDW, labels->net_Q_faceFluxes );
 
-  t1->computes( labels->fileVarsStruct, d_zeroMatl );
-  sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
+  t1->computes( labels->fileVarsStruct, m_zeroMatl );
+  sched->addTask( t1, m_zeroPatch, m_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
 
 //______________________________________________________________________
@@ -341,116 +325,107 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     return;
   }
 
+
+  //__________________________________
+  //  Loop over patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing controlVolFluxes::integrateMomentumField");
+        
+    printTask(patches, patch,cout_doing,"Doing controlVolFluxes::integrate_Q_overCV");
 
-    Vector totalQ_CV = Vector(0.,0.,0.);
-
-    faceQuantities* faceQ = scinew faceQuantities;
-
-    initializeVars( faceQ );
 
     Vector dx = patch->dCell();
     double vol = dx.x() * dx.y() * dx.z();
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
 
-    Ghost::GhostType gn  = Ghost::None;
-    new_dw->get(rho_CC,    labels->rho_CC,     d_matlIndx, patch, gn,0);
-    new_dw->get(vel_CC,    labels->vel_CC,     d_matlIndx, patch, gn,0);
+    Ghost::GhostType gn = Ghost::None;
+    new_dw->get(rho_CC,  labels->rho_CC,   m_matIdx, patch, gn,0);
+    new_dw->get(vel_CC,  labels->vel_CC,   m_matIdx, patch, gn,0);
+    new_dw->get(uvel_FC, labels->uvel_FC,  m_matIdx, patch, gn,0);
+    new_dw->get(vvel_FC, labels->vvel_FC,  m_matIdx, patch, gn,0);
+    new_dw->get(wvel_FC, labels->wvel_FC,  m_matIdx, patch, gn,0);
 
+    Vector totalQ_CV = Vector(0.,0.,0.);
+    
     //__________________________________
-    //  Sum the total Q over the patch
-    // This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
-    for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      totalQ_CV += rho_CC[c] * vol * vel_CC[c];
-    }
+    //  loop over control volumes
+    for( size_t i=0; i< d_controlVols.size(); i++ ){
+    
+      controlVolume* cv = d_controlVols[i];
+    
+      if ( !cv->controlVolume::hasBoundaryFaces( patch ) ) {
+        continue;
+      }
 
-    //__________________________________
-    //
-    if ( patch->hasBoundaryFaces() ) {
+      //__________________________________
+      //  Sum the total Q over the patch
+      
+      for (CellIterator iter=cv->getCellIterator( patch );!iter.done();iter++){
+        IntVector c = *iter;
+        totalQ_CV += rho_CC[c] * vol * vel_CC[c];
+      }
 
-      constSFCXVariable<double> uvel_FC;
-      constSFCYVariable<double> vvel_FC;
-      constSFCZVariable<double> wvel_FC;
-
-      new_dw->get(uvel_FC,   labels->uvel_FC,    d_matlIndx, patch, gn,0);
-      new_dw->get(vvel_FC,   labels->vvel_FC,    d_matlIndx, patch, gn,0);
-      new_dw->get(wvel_FC,   labels->wvel_FC,    d_matlIndx, patch, gn,0);
 
       cout_dbg.precision(15);
       //__________________________________
       // Sum the fluxes passing through control volume surface
-      vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
+      faceQuantities* faceQ = scinew faceQuantities;
 
-      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      initializeVars( faceQ );
+      
+      vector<controlVolume::FaceType> bf;
+      cv->getBoundaryFaces(bf, patch);
 
-        Patch::FaceType face = *itr;
-        string faceName = patch->getFaceName(face );
-        cv_face* cvFace = d_cv_faces[face];
+      for( vector<controlVolume::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
-        cout_dbg << "\ncvFace: " <<  faceName << " faceType " << cvFace->face
-                 << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
-        cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
+        controlVolume::FaceType face = *itr;
+        
+        string faceName = cv->getFaceName( face );
+        double norm     = cv->getFaceNormal( face );
+        IntVector axis  = cv->getFaceAxes( face );
+        
+
+        cout_dbg << std::left << setw(7) << cv->getName() 
+                 << setw(7)   << "Face:"     << setw(7) << faceName 
+                 << setw(10)  << "faceType:" << setw(5) << face
+                 << setw(5)   << "norm:"     << setw(5) << norm 
+                 << setw(10)  << "faceAxis:" << setw(5) <<  axis << "\n";
+        
+     #if 0   
 
         // define the iterator on this face  The default is the entire face
-        Patch::FaceIteratorType SFC = Patch::SFCVars;
-        CellIterator iterLimits=patch->getFaceIterator(face, SFC);
-
-        //__________________________________
-        //  partial face iterator
-        if( cvFace->face == partialFace ){
-
-          IntVector lo  = level->getCellIndex( cvFace->startPt );
-          IntVector hi  = level->getCellIndex( cvFace->endPt );
-          IntVector pLo = patch->getCellLowIndex();
-          IntVector pHi = patch->getCellHighIndex();
-
-          IntVector low  = Max(lo, pLo);    // find the intersection
-          IntVector high = Min(hi, pHi);
-
-          //__________________________________
-          // enlarge the iterator by oneCell
-          // x-           x+        y-       y+       z-        z+
-          // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
-          IntVector oneCell = patch->faceDirection( face );
-          if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
-            low += oneCell;
-          }
-          if( face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
-            high += oneCell;
-          }
-
-          iterLimits = CellIterator(low,high);
-        }
+        controlVolume::FaceIteratorType SFC = controlVolume::SFCVars;
+        CellIterator iterLimits=patch->getFaceIterator(face, SFC, patch);
 
         //__________________________________
         //           X faces
-        if (face == Patch::xminus || face == Patch::xplus) {
+        if (face == controlVolume::xminus || face == controlVolume::xplus) {
           double area = dx.y() * dx.z();
           integrate_Q_overFace ( faceName, area, iterLimits, faceQ, uvel_FC, rho_CC, vel_CC);
         }
 
         //__________________________________
         //        Y faces
-        if (face == Patch::yminus || face == Patch::yplus) {
+        if (face == controlVolume::yminus || face == controlVolume::yplus) {
           double area = dx.x() * dx.z();
           integrate_Q_overFace( faceName, area, iterLimits,  faceQ, vvel_FC, rho_CC, vel_CC);
         }
         //__________________________________
         //        Z faces
-        if (face == Patch::zminus || face == Patch::zplus) {
+        if (face == controlVolume::zminus || face == controlVolume::zplus) {
           double area = dx.x() * dx.y();
           integrate_Q_overFace( faceName, area, iterLimits,  faceQ, wvel_FC, rho_CC, vel_CC);
 
         }
+    #endif
       }  // boundary faces
     }  // patch has faces
 
-
+#if 0
     //__________________________________
     //  Now compute the net fluxes from all of the face quantites
     Vector net_Q_flux = L_minus_R( faceQ->Q_faceFluxes );
@@ -462,6 +437,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
 
     new_dw->put( sumvec_vartype( totalQ_CV ),     labels->totalQ_CV );
     new_dw->put( sumvec_vartype( net_Q_flux ),    labels->net_Q_faceFluxes );
+#endif
   }  // patch loop
 }
 
