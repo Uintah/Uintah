@@ -17,7 +17,6 @@ import datetime
 #------------------------------------------------------------------------------
 
 def read_fileV2(name_file):
-    print('TRYING '+name_file)
     f = np.loadtxt(name_file)
     x = f[:,0] # 
     y = f[:,1] # 
@@ -324,11 +323,11 @@ def run_test(args):
       outFile = data + '/' + str(var) + '-t' + str(counter) + '.txt'
 
       if typeofanalysis == 'temporal' :
-        the_command = lineextract + ' -v ' + str(var) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName #+' >& le.out'
+        the_command = lineextract + ' -v ' + str(var) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName +' >& le.out'
       else:
-        the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName #+' >& le.out'
+        the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName +' >& le.out'
 
-      print('Running this command: '+the_command)
+      #print('Running this command: '+the_command)
       os.system(the_command)
 
     os.system('rm ' + fname)    
