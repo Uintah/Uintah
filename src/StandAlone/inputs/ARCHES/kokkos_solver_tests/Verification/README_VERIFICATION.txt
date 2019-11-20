@@ -1,9 +1,11 @@
 The verification tests are run using python's unittest framework. 
 
-Note that the setting of the sus path is required which will vary user to user. 
-To do this, edit VerificationUnitTest.py and change line 4: 
+Note that the setting of the SUSPATH environment variable
+is required which will vary user to user. 
+To do this, in your shell type (for bash):
 
-mainsuspath = '....'
+export mainsuspath='....'
+
 
 To your specific suspath. There has to be a better way of doing this part...
 

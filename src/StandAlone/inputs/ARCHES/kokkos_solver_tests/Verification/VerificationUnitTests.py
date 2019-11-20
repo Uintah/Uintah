@@ -1,7 +1,7 @@
 import KokkosVerification as KV
 import unittest
-
-mainsuspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+import os
+import sys
 
 def comparator(a,b,rel_tol=1e-3,abs_tol=1e-3,verbose=False): 
     """
@@ -24,6 +24,17 @@ def comparator(a,b,rel_tol=1e-3,abs_tol=1e-3,verbose=False):
 
 class ArchesKokkosVerification(unittest.TestCase): 
 
+    mainsuspath='' #this is grabbed from the environment
+
+    def get_suspath(self): 
+        """
+            Get suspath from environment
+        """
+        self.mainsuspath = os.environ.get('SUSPATH', self.mainsuspath) 
+        if self.mainsuspath == '': 
+            print('Error: please set SUSPATH environment variable.')
+            sys.exit()
+
     #------------------------------------------------------------------------
     def test_almgrenConv(self): 
         """
@@ -35,13 +46,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':1.99768228168, 'b':-8.14809906691, 'r':0.999999919229}
 
+        self.get_suspath()
+
         class Args: 
             ups='mom/almgren-mms_conv.ups'
             levels=3
             nsteps=1
             tstep=1
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc=None
@@ -73,13 +86,15 @@ class ArchesKokkosVerification(unittest.TestCase):
                 {'m':1.48240819129, 'b':-5.40695603565, 'r':0.999986756338},
                 {'m':1.99768228161, 'b':-5.84551397414, 'r':0.999999919229}]
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/kokkos-x-scalar_mms.ups'
             levels=None
             nsteps=None
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='cc_phi_upwind,cc_phi_vanleer,cc_phi_superbee,cc_phi_central'
             axis='x' 
             bc=None
@@ -113,13 +128,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':1.99768228168, 'b':-6.65330384082, 'r':0.999999964148}
 
+        self.get_suspath()
+
         class Args: 
             ups='mom/almgren-mms_diff.ups'
             levels=3
             nsteps=1
             tstep=1
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc=None
@@ -151,13 +168,15 @@ class ArchesKokkosVerification(unittest.TestCase):
                 {'m':1.99845512229, 'b':-6.99987743108, 'r':0.999999964148},
                 {'m':1.99845512229, 'b':-6.99987743108, 'r':0.999999964148} ]
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/kokkos-x-scalar_mms_diff.ups'
             levels=None
             nsteps=None
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='cc_phi_upwind,cc_phi_vanleer,cc_phi_superbee,cc_phi_central'
             axis='x' 
             bc=None
@@ -191,13 +210,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':0.972405518523, 'b': -0.213437131928, 'r':0.999985294018}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/kokkos-x-scalar_mms_RK1.ups'
             levels=None
             nsteps=100
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -225,13 +246,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':2.0019948411, 'b':1.13206672282, 'r':0.999999846333}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/kokkos-x-scalar_mms_RK2.ups'
             levels=None
             nsteps=100
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -259,13 +282,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':4.00529516884, 'b':2.60577077694, 'r':0.9999998411}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/kokkos-x-scalar_mms_RK3.ups'
             levels=None
             nsteps=100
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -293,13 +318,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':1.99768228174, 'b':-8.14809906667, 'r':0.999999919229}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/2D/kokkos-xy-scalar.ups'
             levels=None
             nsteps=None
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='phi' 
             axis='x,y' 
             bc=None
@@ -327,13 +354,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':1.79009294855, 'b':-8.66898383031, 'r':0.999928371945}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/2D/kokkos-xy-scalar-handoff.ups'
             levels=None
             nsteps=None
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='phi' 
             axis='x,y' 
             bc='x,y'
@@ -361,13 +390,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD STANDARD: 
         GOLD = {'m':1.99823263785, 'b':-8.14560473046, 'r':0.999999951634}
 
+        self.get_suspath()
+
         class Args: 
             ups='scalars/2D/kokkos-xy-scalar-MMSBC.ups'
             levels=None
             nsteps=None
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='phi' 
             axis='x,y' 
             bc='x,y'
@@ -396,13 +427,15 @@ class ArchesKokkosVerification(unittest.TestCase):
         #GOLD = {'m':2.00161276434, 'b':-7.6568819516, 'r':0.999999968556} #original from Oscar
         GOLD = {'m':1.9993602427515982, 'b':-8.333393691412919, 'r':0.99999997016195474} #updated 11/20/19
 
+        self.get_suspath()
+
         class Args: 
             ups='mom/almgren-mmsBC.ups'
             levels=3
             nsteps=1
             tstep=None
             tsave=None
-            suspath=mainsuspath
+            suspath=self.mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc='x,y'
