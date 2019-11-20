@@ -259,11 +259,10 @@ private:
   ProblemSpecP           m_ps;                   // needed for extraSetup()
   const MaterialSet    * m_matlSet{nullptr};       //< Arches material set
   
-  std::string  m_abskt_name;
+  std::string  m_absk_name;
   std::string  m_gas_temp_name;
 
-  const VarLabel * m_abskgLabel{nullptr};
-  const VarLabel * m_absktLabel{nullptr};
+  const VarLabel * m_abskLabel{nullptr};
   const VarLabel * m_gasTempLabel{nullptr};
   const VarLabel * m_radFluxE_Label{nullptr};
   const VarLabel * m_radFluxW_Label{nullptr};

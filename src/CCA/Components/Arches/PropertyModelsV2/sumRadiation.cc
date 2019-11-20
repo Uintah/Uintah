@@ -67,7 +67,7 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
     std::string radiation_model;
     db_src->getAttribute("type", radiation_model);
 
-    if (radiation_model == "do_radiation" || radiation_model== "rmcrt_radiation"){
+    if (radiation_model == "do_radiation" ){
 
       std::string my_abskt_name = "notSet";
       ProblemSpecP db_abskt = db_src->findBlock("abskt");
@@ -80,39 +80,52 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
       }
 
       if (m_abskt_name != "undefined" && my_abskt_name != m_abskt_name ){
-        throw ProblemSetupException("Error: Multiple Radiation solvers detected, but they are using different absorption coefficients, which is not supported. ",__FILE__, __LINE__);
+        proc0cout << "WARNING: Multiple Radiation solvers detected, but they are using different absorption coefficients. \n";
       }
       m_abskt_name = my_abskt_name;
 
 
       //--------Now check if scattering is on for DO----//
-      if(radiation_model == "do_radiation"){
-        bool scatteringOn=false;
+      bool scatteringOn=false;
 
-        db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
-        if (scatteringOn){
-          m_absk_names.push_back("scatkt");
+      db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn",scatteringOn,false) ;
+      if (scatteringOn){
+        m_absk_names.push_back("scatkt");
+      }
+    }
+
+    //__________________________________
+    //  This is confusing
+    if ( radiation_model == "rmcrt_radiation" ){
+      ProblemSpecP db_absk = db_src->findBlock("absk");
+
+      if ( db_absk ){
+        std::string my_absk_name;
+        db_absk->getAttribute("label", my_absk_name);
+
+        // only define the name if it is unique in the absk_names vector.
+        auto it = find( m_absk_names.begin(),  m_absk_names.end(), my_absk_name);
+        
+        if (it == m_absk_names.end() ){
+          m_abskt_name = my_absk_name;
         }
+      }
+      else{
+        throw ProblemSetupException("ERROR: SumRadiation:rmcrt_radiation: Absorption coefficient not specified.",__FILE__, __LINE__);
       }
     }
   }
-
+  
   //__________________________________
   //  output the variables that abskt is comprised
-  if( dbg_sumRad.active() ){
-    proc0cout << "__________________________________\n";
-    proc0cout << " sumRadiation:\n";
-    proc0cout << "  abskt name(" << m_abskt_name << ") = ";
+  proc0cout << std::right<< std::setw(20) << m_abskt_name << " = ";
 
-    size_t n = m_absk_names.size();
+  size_t n = m_absk_names.size();
 
-    for (size_t i=0; i<n; i++){
-      std::string c ( (i+1 == n) ? "\n" : " + " );    // "+" or "\n"
-      proc0cout << m_absk_names[i] << c;
-    }
-    proc0cout << "__________________________________\n";
+  for (size_t i=0; i<n; i++){
+    std::string c ( (i+1 == n) ? "\n" : " + " );    // "+" or "\n"
+    proc0cout << m_absk_names[i] << c;
   }
-
 }
 
 

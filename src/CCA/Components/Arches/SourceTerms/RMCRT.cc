@@ -114,13 +114,14 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   m_ps->getWithDefault( "calc_on_all_RKsteps",  m_all_rk, false );
 
   m_gas_temp_name = "radiation_temperature";                        // HARDWIRED
+  ProblemSpecP absk_ps = m_ps->findBlock("absk");
 
-  if ( m_ps->findBlock("abskt")){
-    m_ps->findBlock("abskt")->getAttribute("label", m_abskt_name);
-  } else {
-    throw ProblemSetupException("Error: RMCRT - The total absorption coefficient is not defined.",__FILE__,__LINE__);
+  if ( absk_ps == nullptr ){
+    throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
   }
 
+  absk_ps->getAttribute("label", m_absk_name);
+  
   //__________________________________
   //  Bulletproofing:
   if( m_all_rk){
@@ -242,18 +243,18 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   //__________________________________
   // gas radiaton
   m_gasTempLabel = VarLabel::find( m_gas_temp_name, "ERROR RMCRT_Radiation::extraSetup: " );
-  m_absktLabel   = VarLabel::find( m_abskt_name,    "ERROR RMCRT_Radiation::extraSetup: ");
+  m_abskLabel    = VarLabel::find( m_absk_name,     "ERROR RMCRT_Radiation::extraSetup: ");
 
   proc0cout << "\n __________________________________ RMCRT SETTINGS\n"
-             <<"  - Temperature label: " << m_gas_temp_name << "\n"
-             <<"  - abkst label:       " << m_abskt_name << "\n";
+             <<"  - Temperature label:      " << m_gas_temp_name << "\n"
+             <<"  - absorption Coeff label: " << m_absk_name << "\n";
 
   //-----------------------------------------
   // particle radiation
   if( m_do_partRadiation ){
 
     m_partGas_tempLabels.push_back( m_gasTempLabel );
-    m_partGas_abskLabels.push_back( m_absktLabel );
+    m_partGas_abskLabels.push_back( m_abskLabel );
 
     for (int i=0; i < m_nQn_part; i++){
       const VarLabel * Temp = VarLabel::find( m_partGas_temp_names[i], "ERROR RMCRT_Radiation::extraSetup: ");
@@ -285,7 +286,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   //__________________________________
   // create RMCRT and register the labels
   m_RMCRT->registerVariables(m_matl,
-                             m_absktLabel,
+                             m_abskLabel,
                              m_gasTempLabel,
                              m_labels->d_cellTypeLabel,
                              _src_label,
