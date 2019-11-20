@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 14 12:58:41 2015
-@author: Tony Saad (modified by Oscar Diaz)
+@author: Oscar Diaz, Jeremy Thornock (originally based on Tony Saad's script but since heavily modified)
 """
 # -*- coding: utf-8 -*-
 
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 import datetime
+import subprocess
 
 #------------------------------------------------------------------------------
 
@@ -301,8 +302,8 @@ def run_test(args):
       BCe[2] = 1
 
   # directory to save data 
-  data = 'Verification_data_'+datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-  os.system('mkdir '+data)
+  data = 'Output_Verification_data_'+datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+  subprocess.call('mkdir '+data, shell=True,executable='/bin/bash')
 
   # now run the files
   counter = 0
@@ -312,7 +313,7 @@ def run_test(args):
 
     command = 'mpirun -np '+ str(total_proc) + ' ' + sus  + ' ' + fname + ' >& log.txt'
     #print('running: '+command)
-    os.system(command)
+    subprocess.call(command,shell=True,executable='/bin/bash')
     udaName = os.path.splitext(fname)[0] + '.uda'
     p_s   = [int(fs[0]*Nx*refinement - BCs[0]), int(fs[1]*Ny*refinement - BCs[1]), int(fs[2]*Nz*refinement - BCs[2])] 
     p_end = [int(fe[0]*Nx*refinement - BCe[0]), int(fe[1]*Ny*refinement - BCe[1]), int(fe[2]*Nz*refinement - BCe[2])] 
@@ -328,9 +329,9 @@ def run_test(args):
         the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName +' >& le.out'
 
       #print('Running this command: '+the_command)
-      os.system(the_command)
+      subprocess.call(the_command,shell=True,executable='/bin/bash')
 
-    os.system('rm ' + fname)    
+    subprocess.call('rm ' + fname, shell=True,executable='/bin/bash')    
 
     if typeofanalysis != 'temporal' :
       refinement *= 2
@@ -369,9 +370,9 @@ def run_test(args):
 
   #plt.show()
   if args.keep_uda is None:
-    os.system('rm -rf *.uda*')
-  os.system('rm -rf *.dot')
-  os.system('rm log.txt')  
+    subprocess.call('rm -rf *.uda*',shell=True,executable='/bin/bash')
+  subprocess.call('rm -rf *.dot',shell=True,executable='/bin/bash')
+  subprocess.call('rm log.txt',shell=True,executable='/bin/bash')  
 
   return convergence_results
 

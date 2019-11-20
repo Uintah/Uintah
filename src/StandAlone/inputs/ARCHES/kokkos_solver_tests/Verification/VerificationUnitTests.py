@@ -1,9 +1,9 @@
 import KokkosVerification as KV
 import unittest
-import argparse 
-import numpy as np
 
-def comperator(a,b,rel_tol=1e-3,abs_tol=1e-3,verbose=False): 
+mainsuspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+
+def comparator(a,b,rel_tol=1e-3,abs_tol=1e-3,verbose=False): 
     """
         Compare absolute and relative tolerances
     """
@@ -41,7 +41,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=1
             tstep=1
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc=None
@@ -53,7 +53,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -79,7 +79,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=None
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='cc_phi_upwind,cc_phi_vanleer,cc_phi_superbee,cc_phi_central'
             axis='x' 
             bc=None
@@ -94,7 +94,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         m_check = [False, False, False, False]
         the_vars = args.vars.split(',')
         for i in range(len(GOLD)): 
-            m_check[i] = comperator(results[the_vars[i]]['m'], GOLD[i]['m'],verbose=True)
+            m_check[i] = comparator(results[the_vars[i]]['m'], GOLD[i]['m'],verbose=True)
 
         print('\n -- Checking output for each variable -- ') 
         for i, check_result in enumerate(m_check): 
@@ -119,7 +119,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=1
             tstep=1
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc=None
@@ -131,7 +131,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -157,7 +157,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=None
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='cc_phi_upwind,cc_phi_vanleer,cc_phi_superbee,cc_phi_central'
             axis='x' 
             bc=None
@@ -172,7 +172,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         m_check = [False, False, False, False]
         the_vars = args.vars.split(',')
         for i in range(len(GOLD)): 
-            m_check[i] = comperator(results[the_vars[i]]['m'], GOLD[i]['m'],verbose=True)
+            m_check[i] = comparator(results[the_vars[i]]['m'], GOLD[i]['m'],verbose=True)
 
         print('\n -- Checking output for each variable -- ') 
         for i, check_result in enumerate(m_check): 
@@ -197,7 +197,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=100
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -209,7 +209,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -231,7 +231,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=100
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -243,7 +243,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -265,7 +265,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=100
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='cc_phi_upwind' 
             axis='t' 
             bc=None
@@ -277,7 +277,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -299,7 +299,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=None
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='phi' 
             axis='x,y' 
             bc=None
@@ -311,7 +311,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -333,7 +333,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=None
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='phi' 
             axis='x,y' 
             bc='x,y'
@@ -345,7 +345,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -367,7 +367,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=None
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='phi' 
             axis='x,y' 
             bc='x,y'
@@ -379,7 +379,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
@@ -393,7 +393,8 @@ class ArchesKokkosVerification(unittest.TestCase):
         print('         Running Almgren MMS BC Test ')
         print(' ------------------------------------------------------ \n ' )
         #GOLD STANDARD: 
-        GOLD = {'m':2.00161276434, 'b':-7.6568819516, 'r':0.999999968556}
+        #GOLD = {'m':2.00161276434, 'b':-7.6568819516, 'r':0.999999968556} #original from Oscar
+        GOLD = {'m':1.9993602427515982, 'b':-8.333393691412919, 'r':0.99999997016195474} #updated 11/20/19
 
         class Args: 
             ups='mom/almgren-mmsBC.ups'
@@ -401,7 +402,7 @@ class ArchesKokkosVerification(unittest.TestCase):
             nsteps=1
             tstep=None
             tsave=None
-            suspath='/Users/jeremy/Code/Uintah/opt/StandAlone/'
+            suspath=mainsuspath
             vars='x-mom' 
             axis='x,y' 
             bc='x,y'
@@ -413,7 +414,7 @@ class ArchesKokkosVerification(unittest.TestCase):
         results = KV.run_test(args)
 
         #compare outputs
-        m_check = comperator(results[args.vars]['m'], GOLD['m'],verbose=True)
+        m_check = comparator(results[args.vars]['m'], GOLD['m'],verbose=True)
 
         #assert if not the same
         self.assertTrue(m_check)
