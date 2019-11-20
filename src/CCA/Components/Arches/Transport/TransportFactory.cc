@@ -55,6 +55,8 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         prop_scalar = true;
       }
 
+      std::string rhs_task_name = "[KScalarRHS]"+group_name;
+
       TaskInterface::TaskBuilder* tsk_builder;
       if ( type == "CC" ){
 
@@ -62,9 +64,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         typedef typename ArchesCore::VariableHelper<CCVariable<double> >::ConstType CT;
 
         if ( m_pack_transport_construction_tasks ){
-          tsk_builder = scinew KScalarRHS<C, C >::Builder("[KScalarRHS]"+group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, C >::Builder(rhs_task_name, eqn_db, 0);
         } else {
-          tsk_builder = scinew KScalarRHS<C, CT >::Builder("[KScalarRHS]"+group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, CT >::Builder(rhs_task_name, eqn_db, 0);
         }
 
         if ( enum_grp_class == DENSITY_WEIGHTED ){
@@ -86,9 +88,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         typedef typename ArchesCore::VariableHelper<SFCXVariable<double> >::ConstType CT;
 
         if ( m_pack_transport_construction_tasks ){
-          tsk_builder = scinew KScalarRHS<C, C >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, C >::Builder(rhs_task_name, eqn_db, 0);
         } else {
-          tsk_builder = scinew KScalarRHS<C, CT >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, CT >::Builder(rhs_task_name, eqn_db, 0);
         }
 
         if ( enum_grp_class == DENSITY_WEIGHTED ){
@@ -106,9 +108,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         typedef typename ArchesCore::VariableHelper<SFCYVariable<double> >::ConstType CT;
 
         if ( m_pack_transport_construction_tasks ){
-          tsk_builder = scinew KScalarRHS<C, C >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, C >::Builder(rhs_task_name, eqn_db, 0);
         } else {
-          tsk_builder = scinew KScalarRHS<C, CT >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, CT >::Builder(rhs_task_name, eqn_db, 0);
         }
 
         if ( enum_grp_class == DENSITY_WEIGHTED ){
@@ -126,9 +128,9 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
         typedef typename ArchesCore::VariableHelper<SFCZVariable<double> >::ConstType CT;
 
         if ( m_pack_transport_construction_tasks ){
-          tsk_builder = scinew KScalarRHS<C, C >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, C >::Builder(rhs_task_name, eqn_db, 0);
         } else {
-          tsk_builder = scinew KScalarRHS<C, CT >::Builder(group_name, eqn_db, 0);
+          tsk_builder = scinew KScalarRHS<C, CT >::Builder(rhs_task_name, eqn_db, 0);
         }
 
         if ( enum_grp_class == DENSITY_WEIGHTED ){
@@ -149,11 +151,11 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       if ( enum_grp_class == DENSITY_WEIGHTED || enum_grp_class == VOLUMETRIC ){
 
         if ( prop_scalar ){
-          _prop_scalar_builders.push_back(group_name);
+          _prop_scalar_builders.push_back(rhs_task_name);
         } else {
-          _scalar_builders.push_back(group_name);
+          _scalar_builders.push_back(rhs_task_name);
         }
-        register_task( group_name, tsk_builder, eqn_db );
+        register_task( rhs_task_name, tsk_builder, eqn_db );
 
       } else if ( enum_grp_class != DQMOM ){
 

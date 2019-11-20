@@ -80,7 +80,7 @@ public:
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks);
+    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( ArchesVIVector& variable_registry,
                                  const int time_substep , const bool packed_tasks);
@@ -92,7 +92,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -478,56 +478,6 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT> void
-  KScalarRHS<T, PT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-    }
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
-  KScalarRHS<T, PT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-      T& phi = tsk_info->get_field<T>( m_eqn_names[ieqn] );
-      T& rhs = tsk_info->get_field<T>( m_transported_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_field<CT>( m_eqn_names[ieqn] );
-
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        CT& old_rho_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ieqn] );
-        T& rho_phi = tsk_info->get_field<T>( m_transported_eqn_names[ieqn] );
-        rho_phi.copyData(old_rho_phi);
-      }
-
-      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-      phi.copyData(old_phi);
-      rhs.initialize(0.0);
-      x_flux.initialize(0.0);
-      y_flux.initialize(0.0);
-      z_flux.initialize(0.0);
-
-    } //equation loop
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
   KScalarRHS<T, PT>::
   register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                           const int time_substep , const bool packed_tasks ){
@@ -536,12 +486,16 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
+      if ( time_substep == 0 ){
+        register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      }
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       if ( m_do_diff[ieqn] ){
         register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
         register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
@@ -578,31 +532,60 @@ private:
     CFZT& w = tsk_info->get_field<CFZT>(m_z_velocity_name);
     CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
-
     const int istart = 0;
     const int iend = m_eqn_names.size();
+    const int time_substep = tsk_info->get_time_substep();
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
+
+      //Copy forward old values
+      // Because old values have ghosts we have to explicitly copy values over.
+      // Additionally, we want the carry forward to occur in the right place.
+      if ( time_substep == 0 ){
+
+        IntVector low  = patch->getExtraCellLowIndex();
+        IntVector high = patch->getExtraCellHighIndex();
+        Uintah::BlockRange range( low, high);
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn]){
+          T& rho_phi = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]);
+          CT& old_rho_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ieqn]);
+
+          Uintah::parallel_for(range, [&](int i, int j, int k){
+            rho_phi(i,j,k) = old_rho_phi(i,j,k);
+          });
+
+        }
+
+        T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+        CT& old_phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+
+        Uintah::parallel_for(range, [&](int i, int j, int k){
+          phi(i,j,k) = old_phi(i,j,k);
+        });
+
+      }
 
       CT* rho_phi_ptr = nullptr;
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
         rho_phi_ptr = &(tsk_info->get_field<CT>(m_transported_eqn_names[ieqn]));
       }
+
       CT& rho_phi = *rho_phi_ptr;
       CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
       T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
+
       rhs.initialize(0.0);
+
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      x_flux.initialize(0.0);
+      y_flux.initialize(0.0);
+      z_flux.initialize(0.0);
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
-        FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
-        FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-        x_flux.initialize(0.0);
-        y_flux.initialize(0.0);
-        z_flux.initialize(0.0);
-
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
         IntVector low_y  = patch->getCellLowIndex();

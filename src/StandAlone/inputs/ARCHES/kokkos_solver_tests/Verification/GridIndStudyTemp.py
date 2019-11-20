@@ -17,6 +17,7 @@ import datetime
 #------------------------------------------------------------------------------
 
 def read_fileV2(name_file):
+    print('TRYING '+name_file)
     f = np.loadtxt(name_file)
     x = f[:,0] # 
     y = f[:,1] # 
@@ -73,7 +74,7 @@ def compute_temporal(data,var_name,var_mms,Nl,p):
     #plt.loglog(dt,L1,'*--',label=var_name)
     return L1
 
-def compute_spacial(data, var_name, var_mms, Nl, p):
+def compute_spatial(data, var_name, var_mms, Nl, p):
     datname = [] 
     x =[]
     f = []
@@ -107,43 +108,8 @@ def compute_spacial(data, var_name, var_mms, Nl, p):
 #    plt.show()    
     return L1
 
-def main():
-  parser = argparse.ArgumentParser(description='I need to write a description ...' )
-  
-  parser.add_argument('-ups',
-                      help='The input file to run.',required=True)                    
-  
-  parser.add_argument('-levels',
-                      help='The number of spatial refinement levels.', type=int)                    
-  
-  parser.add_argument('-nsteps',
-                      help='The number of timesteps. Defaults to 1.', type=int)                    
-  
-  parser.add_argument('-tstep',
-                      help='The number of timesteps. Defaults to 1.', type=int)                    
+def run_test(args):
 
-  parser.add_argument('-tsave',
-                      help='save time')                    
-  parser.add_argument('-suspath',
-                      help='The path to sus.',required=True)
-  
-  parser.add_argument('-vars', required=True,
-                      help='Comma seperated list of variables for which the temporal order is to be computed. example: -vars "var1, my var".')
-                      
-  parser.add_argument('-axis',
-                      help='axis where to extrac data')
-
-  parser.add_argument('-bc',
-                      help='axis where there is a BC')
-
-  parser.add_argument('-var_mms', required=True,
-                      help='name of mms')
-
-  parser.add_argument('-keep_uda', 
-                      help='Keep the udas - do not delete them.', action='store_true')
-
-  args = parser.parse_args()
-  
   # if the number of levels is not provided, set it to 3
   if args.levels is None:
     args.levels = 3
@@ -158,7 +124,7 @@ def main():
   
   # cleanup the list of variables for which the order is to be computed
   myvars = [x.strip() for x in args.vars.split(',')]
-  #print('variables '+myvars) 
+
   # first makes copies of the ups files
   fnames = []
   basename = os.path.basename(rootups)
@@ -184,11 +150,10 @@ def main():
   
   args.suspath = os.path.normpath(args.suspath)
   args.suspath = os.path.abspath(args.suspath)
-  print(args.suspath)
-  #os.system('ln -fs ' + args.suspath + '/sus sus')
-  #os.system('ln -fs ' + args.suspath + '/tools/extractors/lineextract lineextract')
+  #print(args.suspath)
   sus = args.suspath + '/sus'
   lineextract =  args.suspath + '/tools/extractors/lineextract' 
+
   # axis for extraction 
   if args.axis is None:
     args.axis = 'x,y' 
@@ -198,7 +163,7 @@ def main():
   if mydir[0] =='t':
     typeofanalysis = 'temporal'
   else:
-    typeofanalysis = 'spacial'
+    typeofanalysis = 'spatial'
 
   if args.bc is None:
     args.bc = 'none'
@@ -206,6 +171,7 @@ def main():
 
   var_mms =  args.var_mms 
   myvars.append(var_mms) 
+
   # find total number of procs and resolution
   xmldoc = minidom.parse(rootups)
   for node in xmldoc.getElementsByTagName('patches'):
@@ -239,11 +205,11 @@ def main():
   Lx = U0 - L0
   Ly = U1 - L1
   Lz = U2 - L2
+
   for fname in fnames:
-    #print('now updating xml for '+ fname)
+
     basename = os.path.splitext(fname)[0]
     xmldoc = minidom.parse(fname)
-  
 
     for node in xmldoc.getElementsByTagName('filebase'):
       node.firstChild.replaceWholeText(basename + '.uda')
@@ -251,12 +217,11 @@ def main():
     for node in xmldoc.getElementsByTagName('delt_min'):
       dtmin = float(node.firstChild.data)
 
-      
     for node in xmldoc.getElementsByTagName('maxTime'):
       maxTime = float(node.firstChild.data)
-    #  node.firstChild.replaceWholeText('100')  
 
     if typeofanalysis == 'temporal' :
+
       for node in xmldoc.getElementsByTagName('max_Timesteps'):
         node.firstChild.replaceWholeText(maxSteps*refinement)
          
@@ -268,9 +233,6 @@ def main():
 
       for node in xmldoc.getElementsByTagName('resolution'):
          node.firstChild.replaceWholeText('[' + str(Nx*refinement) + ',' + str(Ny*refinement) + ',' + str(Nz*refinement) + ']')
-  
-      #for node in xmldoc.getElementsByTagName('max_Timesteps'):
-        #node.firstChild.replaceWholeText(2)
   
       dxyz = 1.
       d    = 0.
@@ -298,10 +260,10 @@ def main():
 
     for node in xmldoc.getElementsByTagName('outputTimestepInterval'):
       node.firstChild.replaceWholeText(tsave)
+
     # When I have a handoff plane 
     for node in xmldoc.getElementsByTagName('filename'):
       node.firstChild.replaceWholeText('scalars/2D/BC_mms/x_lr'+str(Nx*refinement)+'.dat')  
-      #print("hand off "+ 'BC_mms/x_lr'+str(Nx*refinement)+'.dat')
 
     for node in xmldoc.getElementsByTagName('delt_max'):
       node.firstChild.replaceWholeText(dtmin)
@@ -316,8 +278,7 @@ def main():
   fe = [0.5,0.5,0.5]
   BCs = [0,0,0]
   BCe = [0,0,0]
-  #print('axis: '+ mydir)
-  #print('variables: '+ myvars)
+
   for dire in mydir:
     if dire == 'x':
       fs[0] = 0
@@ -348,55 +309,56 @@ def main():
   counter = 0
   refinement = 1
 
-
   for fname in fnames:
-    os.system('mpirun -np '+ str(total_proc) + ' ' + sus +' -do_not_validate' + ' ' + fname + ' > log.txt')
-    #print('running: '+ fname)
+
+    command = 'mpirun -np '+ str(total_proc) + ' ' + sus  + ' ' + fname + ' >& log.txt'
+    #print('running: '+command)
+    os.system(command)
     udaName = os.path.splitext(fname)[0] + '.uda'
     p_s   = [int(fs[0]*Nx*refinement - BCs[0]), int(fs[1]*Ny*refinement - BCs[1]), int(fs[2]*Nz*refinement - BCs[2])] 
     p_end = [int(fe[0]*Nx*refinement - BCe[0]), int(fe[1]*Ny*refinement - BCe[1]), int(fe[2]*Nz*refinement - BCe[2])] 
-    #print( 'p_s '+ p_s)
-    #print( 'p_end '+ p_end)
-    #    #EXTRACT THE variables
+
+    #EXTRACT THE variables
     for var in myvars:
-      #print("variable: "+var)
+
       outFile = data + '/' + str(var) + '-t' + str(counter) + '.txt'
 
       if typeofanalysis == 'temporal' :
-        the_command = lineextract + ' -v ' + str(var) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName
+        the_command = lineextract + ' -v ' + str(var) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName #+' >& le.out'
       else:
+        the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName #+' >& le.out'
 
-        the_command = lineextract + ' -v ' + str(var) + ' -timestep '+ str(time_step) + ' -istart ' + str(p_s[0] )+' '+str(p_s[1])+' '+str(p_s[2])+' -iend ' + str(p_end[0] )+' '+str(p_end[1])+' '+str(p_end[2])+ ' -o ' + outFile +' -uda '+udaName
-
-      #print 'Executing command: ', the_command
+      print('Running this command: '+the_command)
       os.system(the_command)
 
     os.system('rm ' + fname)    
+
     if typeofanalysis != 'temporal' :
       refinement *= 2
+
     counter += 1
 
-
-  #print('dx '+ dx )
   ### Here is where we compute m and b   #####
-  
-  #print 'Verification data was saved in: ', data
-  #data = 'data/'
   Nl = nLevels 
   p = 2 # 
+  convergence_results = {}
+
   for i,var in enumerate(myvars):
     if var !=var_mms:
+
        if typeofanalysis != 'temporal' :
-         L1 = compute_spacial(data,var,var_mms,Nl,p)
+         L1 = compute_spatial(data,var,var_mms,Nl,p)
          label_x = '$\Delta$ [m]'
        else:
          L1 = compute_temporal(data,var,var_mms,Nl,p)
          dx = np.copy(dt)
          label_x = '$\Delta$ [s]'
-       #print('L1: ', L1)
-       #print('dx:', dx)
+
        m, b, r_value, p_value, std_err = stats.linregress(np.log(dx),np.log(L1))
-       print('m = '+np.str(m)+' b = '+np.str(b)+  ' r_value = ' +np.str(r_value)  )
+       #print('m = '+np.str(m)+' b = '+np.str(b)+  ' r_value = ' +np.str(r_value)  )
+
+       result = {'m':m, 'b':b, 'r':r_value}
+       convergence_results[var] = result
 
        plt.figure()
        plt.loglog(dx,L1,'*--',label=var)
@@ -406,14 +368,57 @@ def main():
        plt.legend(loc=3)
        plt.savefig(data+'/'+basename)
 
-  plt.show()
+  #plt.show()
   if args.keep_uda is None:
     os.system('rm -rf *.uda*')
   os.system('rm -rf *.dot')
   os.system('rm log.txt')  
-  #os.system('rm data/*.txt')  
-  
+
+  return convergence_results
 
 #------------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    main()
+
+  parser = argparse.ArgumentParser(description='I need to write a description ...' )
+  
+  parser.add_argument('-ups',
+                      help='The input file to run.',required=True)                    
+  
+  parser.add_argument('-levels',
+                      help='The number of spatial refinement levels.', type=int)                    
+  
+  parser.add_argument('-nsteps',
+                      help='The number of timesteps. Defaults to 1.', type=int)                    
+  
+  parser.add_argument('-tstep',
+                      help='The number of timesteps. Defaults to 1.', type=int)                    
+
+  parser.add_argument('-tsave',
+                      help='save time')                    
+
+  parser.add_argument('-suspath',
+                      help='The path to sus.',required=True)
+  
+  parser.add_argument('-vars', required=True,
+                      help='Comma seperated list of variables for which the temporal order is to be computed. example: -vars "var1, my var".')
+                      
+  parser.add_argument('-axis',
+                      help='axis where to extract data')
+
+  parser.add_argument('-bc',
+                      help='axis where there is a BC')
+
+  parser.add_argument('-var_mms', required=True,
+                      help='name of mms')
+
+  parser.add_argument('-keep_uda', 
+                      help='Keep the udas - do not delete them.', action='store_true')
+
+
+  args = parser.parse_args()
+
+  convergence_results = run_test(args)
+
+  print(convergence_results)
+
