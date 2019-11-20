@@ -4,7 +4,7 @@ Note that the setting of the SUSPATH environment variable
 is required which will vary user to user. 
 To do this, in your shell type (for bash):
 
-export mainsuspath='....'
+export SUSPATH='....'
 
 
 To your specific suspath. There has to be a better way of doing this part...
