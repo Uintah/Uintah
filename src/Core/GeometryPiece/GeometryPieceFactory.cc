@@ -225,7 +225,7 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
       string data = child->getNodeValue();
       remove_lt_white_space(data);
 
-      // Lookup in table to see if this piece has already be named...
+      // Lookup in table to see if this piece has already been named...
       GeometryPieceP referencedPiece = namedPieces_[ go_label ];
 
       // If it has a childBlock or data, then it is not just a reference.

@@ -182,6 +182,10 @@ evaluate()
   
   // interpolate to get area fractions
   result <<= (*interpSrcT2DestTOp_)(svolTmp);
+  // IMPORTANT: The interpolant above could results in values that are an average between the inside and outside value of the geometry (e.g. 0.5)
+  // TO fix that, uncomment the following.
+//  result <<= cond( result>0.0, 1.0 )
+//                 ( 0.0 );
 }
 
 //--------------------------------------------------------------------

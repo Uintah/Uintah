@@ -74,6 +74,21 @@
       </OscillatingCylinder>                             
    </GeometryExpression>                                                     
 
+	<!-- provides a constant velocity fan model via momentum source to achieve a target velocity -->
+	<!-- 	  This expression will automatically create as many source terms as needed to set the desired velocities. -->
+	<!-- Use a FanModel to define momentum source terms to mimic drone rotors 
+	 This expression will create up to three momentum source terms based on the dimensions
+	 of the flow. THe momentum source terms will be named based on the fan name such that
+	 [FanName]_source_x, [FanName]_source_y, and [FanName]_source_z
+	 YOU MUST add those sources manually to the momentum equations.
+	 Also, this expression will automatically create geometric location for the 
+	 fan rotors based on the CommonGeometry, those are named: [FanName]_location_x etc... -->    
+	<FanModel   spec="MULTIPLE NO_DATA"
+			  attribute1="name REQUIRED STRING">					
+	<TargetVelocities spec="REQUIRED VECTOR"/>
+	<geom_object  spec="REQUIRED"/>	<!--This can be set from a common geometry or defined in here -->      
+	</FanModel>
+
     <!-- Spec for basic expression types -->
     <BasicExpression spec="MULTIPLE NO_DATA"
                      attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL,PARTICLE'"
@@ -82,25 +97,12 @@
                                 StepFunction,SineTime,ExprAlgebra,
                                 WallDistanceFunction,ReadFromFile,RandomField,
                                 ExponentialVortex,LambsDipole,TimeDerivative,
-                                RayleighTaylor, FanModel, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
+                                RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
                                        
       <TaskList      spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag       spec="REQUIRED" />
       <Constant      spec="OPTIONAL DOUBLE" />
 
-
-      <!-- provides a constant velocity fan model via momentum source to achieve a target velocity -->
-      <FanModel   spec="OPTIONAL NO_DATA"
-                       attribute1="targetVelocity REQUIRED DOUBLE"
-                       attribute2="momentumName REQUIRED STRING"> <!-- this is the outside value -->
-        <Geom spec="REQUIRED NO_DATA">
-	        <NameTag          spec="REQUIRED"/>                    
-        </Geom>
-        <Density spec="REQUIRED NO_DATA">
-	        <NameTag          spec="REQUIRED"/>                    
-        </Density>
-        
-      </FanModel>
 
       <ParticlePositionIC spec="OPTIONAL NO_DATA"
                           attribute1="coordinate REQUIRED STRING 'X,Y,Z'"
@@ -713,6 +715,7 @@
 
     <BasicExpression      spec="MULTIPLE" />
 
+	<FanModel      spec="MULTIPLE" />
     <BCExpression         spec="MULTIPLE" />
  
     <MomentInitialization spec="MULTIPLE"/>
