@@ -335,7 +335,8 @@ POKITTTESTS=[
 ]
 
 DRONETESTS=[
-  ("FanModelXY",    "fan-model-test-xy.ups",   4, "All", ["exactComparison","no_restart"] )
+  ("FanModelXY",    "fan-model-test-xy.ups",   4, "All", ["exactComparison","no_restart"] ),
+  ("DroneXY",    "quadrotor-drone-xy.ups",   4, "All", ["exactComparison","no_restart"] )  
 ]
 
 
