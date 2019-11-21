@@ -92,39 +92,34 @@ namespace Uintah {
 #elif defined __APPLE__
 
   unsigned int sysGetNumNUMANodes() {
-    // return std::stoi( sysPipeCall("lscpu | grep 'NUMA node(s):' | sed -n '${s/.* //; p}'") );
+    // OS X does not support NUMA.
     return 1;
   }
   
   unsigned int sysGetNumSockets() {
+    // Currently no multi-socket OS X machines.
     return 1;
-    // return std::stoi( sysPipeCall("lscpu | grep 'Socket(s):' | sed -n '${s/.* //; p}'") );
   }  
 
   unsigned int sysGetNumCoresPerSockets() {
-    return 4;
-    // return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.core_count | sed -n '${s/.* //; p}'") );
+    return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.core_count | sed -n 's/.* //; p'") );
   }  
 
   unsigned int sysGetNumThreadsPerCore() {
-    return 2;
-    // return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.thread_count | sed -n '${s/.* //; p}'") ) / sysGetNumCoresPerSockets();
+    return std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.thread_count | sed -n 's/.* //; p'") ) / sysGetNumCoresPerSockets();
   }
   
   std::vector< unsigned int > sysGetNUMANodeCPUs( unsigned int node) {
-  //   std::string cpusStr = sysPipeCall( std::string( "lscpu | grep 'NUMA node" +
-  //                                                std::to_string( node ) +
-  //                                                " CPU(s):' | sed -n '${s/.* //; p}'" ).c_str());
 
+    // OS X does not support NUMA so just enter the CPU ids based on
+    // the thread count.
     std::vector< unsigned int > cpus;
-    
-  //   while( cpusStr.size() ) {
-  //     size_t found = cpusStr.find( "," );
+                          
+    unsigned int nThreads =
+      std::stoi( sysPipeCall("sysctl -a | grep machdep.cpu.thread_count") );
 
-  //     cpus.push_back( std::stoi( cpusStr.substr(0, found) ) );
-  //     cpusStr = cpusStr.substr(found+1);
-  //   }
-
+    for( unsigned int i=0; i<nThreads; ++i )
+         cpus.push_back( i );
     return cpus;
   }
 #endif
