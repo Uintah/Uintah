@@ -47,6 +47,12 @@
 using namespace Uintah;
 using namespace std;
 //______________________________________________________________________
+// ToDo:
+//       Verify the face iterators.
+//       Test in multiple patches and mpi ranks
+//       Generalize so doubles and Vectors based fluxes can be computed
+//       generalize so user inputs face centered velocities
+//______________________________________________________________________
 
 static DebugStream cout_doing("controlVolFluxes",   false);
 static DebugStream cout_dbg("controlVolFluxes_dbg", false);
@@ -62,7 +68,7 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
   m_matIdx       = -9;
   m_matl         = nullptr;
   m_matlSet      = nullptr;
-  
+
   labels = scinew MA_Labels();
 
   labels->lastCompTime      = VarLabel::create( "lastCompTime", max_vartype::getTypeDescription() );
@@ -96,7 +102,7 @@ controlVolFluxes::~controlVolFluxes()
   VarLabel::destroy( labels->fileVarsStruct );
   VarLabel::destroy( labels->totalQ_CV );
   VarLabel::destroy( labels->net_Q_faceFluxes );
-  
+
   for( size_t i=0; i< d_controlVols.size(); i++ ){
     delete d_controlVols[i];
   }
@@ -137,12 +143,14 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   //__________________________________
   // find the material .  Default is matl 0.
   //  <material>   atmosphere </material>
-  
-  Material* matl;
-  if( m_module_spec->findBlock("material") ){
-    matl = m_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
-  }
 
+  ProblemSpecP matl_ps = m_module_spec->findBlock("material");
+
+  if( matl_ps == nullptr ){
+    throw ProblemSetupException("ERROR: Couldn't find <material> xml tag", __FILE__, __LINE__);
+  }
+  
+  Material* matl= m_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
   m_matIdx = matl->getDWIndex();
 
   vector<int> m;
@@ -159,9 +167,7 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m_matlSet->addAll(m);
   m_matlSet->addReference();
 
-  MaterialSubset* m_matl = scinew MaterialSubset();
-  m_matl->add( m_matIdx );
-  m_matl->addReference();
+  m_matl = m_matlSet->getUnion();
 
   // HARDWIRED FOR ICE/MPMICE
   labels->vel_CC    = assignLabel( "vel_CC" );
@@ -180,8 +186,8 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   }
 
   for( ProblemSpecP box_ps = cv_ps->findBlock( "box" ); box_ps != nullptr; box_ps=box_ps->findNextBlock( "box" ) ) {
-    controlVolume* cv  = scinew controlVolume(box_ps);
-    d_controlVols.push_back( cv );  
+    controlVolume* cv  = scinew controlVolume(box_ps, grid);
+    d_controlVols.push_back( cv );
   }
 }
 
@@ -215,7 +221,7 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
     cv->initialize(level);
     cv->print();
   }
-  
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
@@ -330,12 +336,9 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
   //  Loop over patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-        
+
     printTask(patches, patch,cout_doing,"Doing controlVolFluxes::integrate_Q_overCV");
-
-
-    Vector dx = patch->dCell();
-    double vol = dx.x() * dx.y() * dx.z();
+    
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
     constSFCXVariable<double> uvel_FC;
@@ -349,79 +352,69 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     new_dw->get(vvel_FC, labels->vvel_FC,  m_matIdx, patch, gn,0);
     new_dw->get(wvel_FC, labels->wvel_FC,  m_matIdx, patch, gn,0);
 
-    Vector totalQ_CV = Vector(0.,0.,0.);
-    
+    double totalQ_CV = 0;
+
     //__________________________________
     //  loop over control volumes
     for( size_t i=0; i< d_controlVols.size(); i++ ){
-    
+
       controlVolume* cv = d_controlVols[i];
-    
+
       if ( !cv->controlVolume::hasBoundaryFaces( patch ) ) {
         continue;
       }
 
       //__________________________________
       //  Sum the total Q over the patch
-      
+      double  cellVol = patch->cellVolume();
       for (CellIterator iter=cv->getCellIterator( patch );!iter.done();iter++){
         IntVector c = *iter;
-        totalQ_CV += rho_CC[c] * vol * vel_CC[c];
+        totalQ_CV += rho_CC[c] * cellVol;
       }
 
 
       cout_dbg.precision(15);
       //__________________________________
       // Sum the fluxes passing through control volume surface
-      faceQuantities* faceQ = scinew faceQuantities;
 
-      initializeVars( faceQ );
-      
       vector<controlVolume::FaceType> bf;
       cv->getBoundaryFaces(bf, patch);
 
       for( vector<controlVolume::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
         controlVolume::FaceType face = *itr;
-        
+
         string faceName = cv->getFaceName( face );
-        double norm     = cv->getFaceNormal( face );
+        Vector norm     = cv->getFaceNormal( face );
         IntVector axis  = cv->getFaceAxes( face );
-        
 
-        cout_dbg << std::left << setw(7) << cv->getName() 
-                 << setw(7)   << "Face:"     << setw(7) << faceName 
+
+        cout_dbg << std::left << setw(7) << cv->getName()
+                 << setw(7)   << "Face:"     << setw(7) << faceName
                  << setw(10)  << "faceType:" << setw(5) << face
-                 << setw(5)   << "norm:"     << setw(5) << norm 
-                 << setw(10)  << "faceAxis:" << setw(5) <<  axis << "\n";
-        
-     #if 0   
+                 << setw(7)   << "norm:"     << setw(5) << norm << std::left
+                 << setw(15)  << "faceAxes:" << setw(7) <<  axis;
+                 
+        faceQuantities* faceQ = scinew faceQuantities;
 
-        // define the iterator on this face  The default is the entire face
-        controlVolume::FaceIteratorType SFC = controlVolume::SFCVars;
-        CellIterator iterLimits=patch->getFaceIterator(face, SFC, patch);
+        initializeVars( faceQ );         
 
         //__________________________________
         //           X faces
         if (face == controlVolume::xminus || face == controlVolume::xplus) {
-          double area = dx.y() * dx.z();
-          integrate_Q_overFace ( faceName, area, iterLimits, faceQ, uvel_FC, rho_CC, vel_CC);
+          integrate_Q_overFace ( face, cv, patch, faceQ, uvel_FC, rho_CC, vel_CC);
         }
 
         //__________________________________
         //        Y faces
         if (face == controlVolume::yminus || face == controlVolume::yplus) {
-          double area = dx.x() * dx.z();
-          integrate_Q_overFace( faceName, area, iterLimits,  faceQ, vvel_FC, rho_CC, vel_CC);
+          integrate_Q_overFace( face, cv, patch, faceQ, vvel_FC, rho_CC, vel_CC);
         }
         //__________________________________
         //        Z faces
         if (face == controlVolume::zminus || face == controlVolume::zplus) {
-          double area = dx.x() * dx.y();
-          integrate_Q_overFace( faceName, area, iterLimits,  faceQ, wvel_FC, rho_CC, vel_CC);
-
+          integrate_Q_overFace( face, cv, patch, faceQ, wvel_FC, rho_CC, vel_CC);
         }
-    #endif
       }  // boundary faces
     }  // patch has faces
 
@@ -542,23 +535,28 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
 //______________________________________________________________________
 //
 template < class SFC_D >
-void controlVolFluxes::integrate_Q_overFace( const std::string faceName,
-                                             const double faceArea,
-                                             CellIterator iter,
-                                             faceQuantities* faceQ,
-                                             SFC_D&  vel_FC,
+void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
+                                             const controlVolume * cv,
+                                             const Patch         * patch,
+                                             faceQuantities      * faceQ,
+                                             SFC_D               &  vel_FC,
                                              constCCVariable<double>& rho_CC,
                                              constCCVariable<Vector>& vel_CC)
 {
-  int dir;    // x, y or z
-  int f;      // face index
-  Vector norm;
-  faceInfo(faceName, norm, dir, f);
-
-  Vector convect_flux( 0. );
+  double faceArea = cv->getCellArea(face, patch);
+  Vector norm     = cv->getFaceNormal( face );
+  const int pDir  = cv->getFaceAxes( face )[0];
+  
+  double unitNormal = norm[pDir];  
+  double Q_flux( 0. );
 
   //__________________________________
-  //  Loop over a face
+  //  get the iterator on this face
+  controlVolume::FaceIteratorType MEC = controlVolume::MinusEdgeCells;
+  CellIterator iter = cv->getFaceIterator(face, MEC, patch);
+
+  cout_dbg << std::right << setw(10) <<  " faceIter: " << setw(10) << iter << endl;
+
   for(; !iter.done(); iter++) {
     IntVector c = *iter;
     double vel = vel_FC[c];
@@ -566,20 +564,18 @@ void controlVolFluxes::integrate_Q_overFace( const std::string faceName,
     // find upwind cell
     IntVector uw = c;
     if (vel > 0 ){
-      uw[dir] = c[dir] - 1;
+      uw[pDir] = c[pDir] - 1;
     }
 
     // One way to define m dot through face
-    double mdot  =  vel * faceArea * rho_CC[uw];
+    double mdot  =  vel * rho_CC[uw] * faceArea * unitNormal;
 
     // Another way
     // Vector mdotV  = faceArea * vel_CC[uw] * rho_CC[uw];
-    // double mdot = mdotV[dir];
 
-    convect_flux  += mdot * vel_CC[uw];
-
+    Q_flux  += mdot;
   }
-  faceQ->Q_faceFluxes[f] = convect_flux;
+  faceQ->Q_faceFluxes[face] = Q_flux;
 
 //  cout << "face: " << faceName << "\t dir: " << dir << " convect_Flux = " <<  convect_flux << endl;
 }
@@ -769,11 +765,12 @@ VarLabel* controlVolFluxes::assignLabel( const std::string& varName )
 //______________________________________________________________________
 //    Initialize the face quantities
 //______________________________________________________________________
-//
 void controlVolFluxes::initializeVars( faceQuantities* faceQ)
 {
+  const double  zero(0.0);
+  
   for ( int f = 0; f < 6; f++ ){
-    faceQ->Q_faceFluxes[f] = Vector( 0. ) ;
+    faceQ->Q_faceFluxes[f] = zero;
   }
 }
 

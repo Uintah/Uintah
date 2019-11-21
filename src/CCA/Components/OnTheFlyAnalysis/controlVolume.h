@@ -39,11 +39,14 @@ namespace Uintah {
   class CellIterator;
   class Box;
 
-  
+  //______________________________________________________________________
+  //  Box control volume
+
   class controlVolume {
   public:
   
-    controlVolume(const ProblemSpecP& cv_ps);
+    controlVolume(const ProblemSpecP & cv_ps,
+                  const GridP        & grid);
     ~controlVolume();
   
     enum FaceType {
@@ -86,7 +89,7 @@ namespace Uintah {
 
     //______________________________________________________________________
     // Returns the normal to the patch face
-    double  getFaceNormal( const controlVolume::FaceType & face ) const;
+    Vector getFaceNormal( const controlVolume::FaceType & face ) const;
     
     //______________________________________________________________________
     // Sets the vector faces equal to the list of faces that are on the boundary
@@ -116,7 +119,7 @@ namespace Uintah {
     
     //______________________________________________________________________
     // Returns the cell area dx*dy.
-    double cellArea( const controlVolume::FaceType face,
+    double getCellArea( const controlVolume::FaceType face,
                      const Patch* patch ) const;
   
     std::string getName() const {return d_CV_label;};

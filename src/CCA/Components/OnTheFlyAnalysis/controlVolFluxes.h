@@ -126,23 +126,23 @@ DESCRIPTION
     VarLabel* assignLabel( const std::string& desc );
 
 
-
     struct faceQuantities{
-      std::map< int, Vector > Q_faceFluxes;      // flux across control volume faces
+      std::map< int, double > Q_faceFluxes;      // flux across control volume faces
     };
+
 
     void initializeVars( faceQuantities* faceQ );
 
     //__________________________________
     //  accumulate fluxes across a control volume face
     template < class SFC_D >
-    void integrate_Q_overFace( const std::string faceName,
-                               const double faceArea,
-                               CellIterator iterLimits,
-                               faceQuantities* faceQ,
-                               SFC_D& vel_FC,
+    void integrate_Q_overFace( controlVolume::FaceType face,
+                               const controlVolume * cv,
+                               const Patch         * patch,
+                               faceQuantities      * faceQ,
+                               SFC_D               &  vel_FC,
                                constCCVariable<double>& rho_CC,
-                               constCCVariable<Vector>& vel_CC );
+                               constCCVariable<Vector>& vel_CC);
 
     //__________________________________
     //  left flux - right flux
@@ -174,11 +174,11 @@ DESCRIPTION
     MaterialSubset * m_zeroMatl;
     MaterialSet    * m_zeroMatlSet;
     PatchSet       * m_zeroPatch;
-    MaterialSubset * m_matl;
+    const MaterialSubset * m_matl;
     MaterialSet    * m_matlSet;
-  
+
     int m_matIdx;                      // material index.
-    
+
 
   };
 }

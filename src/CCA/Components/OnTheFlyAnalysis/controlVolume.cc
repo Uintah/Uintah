@@ -38,7 +38,8 @@ using namespace std;
 
 //______________________________________________________________________
 //
-controlVolume::controlVolume( const ProblemSpecP& boxps )
+controlVolume::controlVolume( const ProblemSpecP& boxps,
+                              const GridP& grid )
 {
   ProblemSpecP box_ps = boxps;
   
@@ -68,7 +69,15 @@ controlVolume::controlVolume( const ProblemSpecP& boxps )
          << ") The max coordinate cannot be <= the min coordinate (max " << max << " <= min " << min << ")." ;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-  d_box = Box(min,max);
+  
+  //__________________________________
+  //  Box cannot exceed comutational boundaries
+  BBox b;
+  grid->getInteriorSpatialRange( b );
+  
+  min = Max( b.min(), min );
+  max = Min( b.max(), max );
+  d_box = Box(min,max);  
 }
 
 //______________________________________________________________________
@@ -158,13 +167,25 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
 
 //______________________________________________________________________
 // Returns the normal to the patch face
-double  controlVolume::getFaceNormal( const controlVolume::FaceType & face ) const
+Vector controlVolume::getFaceNormal( const controlVolume::FaceType & face ) const
 {
-  double norm = 1.0;
-  if (face == xminus || face == yminus || face == zminus ){
-    norm = -1.0;
+  switch( face )
+  {
+    case xminus:
+      return Vector(-1,0,0);
+    case xplus:
+      return Vector(1,0,0);
+    case yminus:
+      return Vector(0,-1,0);
+    case yplus:
+      return Vector(0,1,0);
+    case zminus:
+      return Vector(0,0,-1);
+    case zplus:
+      return Vector(0,0,1);
+    default:
+      throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
   }
-  return norm;
 }
 
 //______________________________________________________________________
@@ -176,6 +197,10 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
 
   IntVector p_lo =  patch->getCellLowIndex();
   IntVector p_hi =  patch->getCellHighIndex();
+  
+  cout << " controlVolume::getBoundaryFaces :\n";
+  cout << " p_lo:    " << p_lo       << " p_hi:      " << p_hi << endl;
+  cout << " lowIndx: " << d_lowIndex << " highIndex: " << d_highIndex << endl;
 
   bool doesIntersect_XY = (d_highIndex.x() > p_lo.x() &&
                            d_lowIndex.x()  < p_hi.x() &&
@@ -192,22 +217,22 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
                            d_highIndex.z() > p_lo.z() &&
                            d_lowIndex.z()  < p_hi.z() );
 
-  if( d_lowIndex.x()  > p_lo.x()  && doesIntersect_YZ ) {
+  if( d_lowIndex.x()  >= p_lo.x()  && doesIntersect_YZ ) {
     faces.push_back( xminus );
   }
-  if( d_highIndex.x()  < p_hi.x() && doesIntersect_YZ ) {
+  if( d_highIndex.x()  <= p_hi.x() && doesIntersect_YZ ) {
     faces.push_back( xplus );
   }     
-  if( d_lowIndex.y()  > p_lo.y()  && doesIntersect_XZ ) {
+  if( d_lowIndex.y()  >= p_lo.y()  && doesIntersect_XZ ) {
     faces.push_back( yminus );
   }
-  if( d_highIndex.y()  < p_hi.y() && doesIntersect_XZ ) {
+  if( d_highIndex.y()  <= p_hi.y() && doesIntersect_XZ ) {
     faces.push_back( yplus );
   }
-  if( d_lowIndex.z()  > p_lo.z()  && doesIntersect_XY ) {
+  if( d_lowIndex.z()  >= p_lo.z()  && doesIntersect_XY ) {
     faces.push_back( zminus );
   }
-  if( d_highIndex.z()  < p_hi.z() && doesIntersect_XY ) {
+  if( d_highIndex.z()  <= p_hi.z() && doesIntersect_XY ) {
     faces.push_back( zplus );
   }
 }
@@ -235,17 +260,19 @@ IntVector controlVolume::getFaceAxes( const controlVolume::FaceType & face ) con
 {
   switch(face)
   {
-    case xminus: case xplus:
+    case xminus: 
+    case xplus:
       return IntVector(0,1,2);
-    case yminus: case yplus:
+    case yminus: 
+    case yplus:
       return IntVector(1,2,0);
-    case zminus: case zplus:
+    case zminus: 
+    case zplus:
       return IntVector(2,0,1);
     default:
-      throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+      throw InternalError("Invalid FaceType in controlVolume::getfaceAxes", __FILE__, __LINE__);
   };
 }
-
 
 //______________________________________________________________________
 //
@@ -266,14 +293,14 @@ controlVolume::getFaceName(controlVolume::FaceType face) const
   case zplus:
     return "zplus";
   default:
-    SCI_THROW(InternalError("Illegal FaceType in controlVolume::faceName", __FILE__, __LINE__));
+    SCI_THROW(InternalError("Illegal FaceType in controlVolume::getFaceName", __FILE__, __LINE__));
   }
 }
 
  //______________________________________________________________________
  // Returns the cell area dx*dy.
-double controlVolume::cellArea( const controlVolume::FaceType face,
-                                const Patch* patch ) const 
+double controlVolume::getCellArea( const controlVolume::FaceType face,
+                                   const Patch* patch ) const 
 {
    double area = 0.0;
    Vector dx = patch->dCell();
