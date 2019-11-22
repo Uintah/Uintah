@@ -49,7 +49,7 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
   
   map<string,string> attribute;
   box_ps->getAttributes(attribute);
-  d_CV_label = attribute["label"];
+  m_CV_name = attribute["label"];
   
   Point min;
   Point max;
@@ -65,7 +65,7 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
        ydiff < near_zero   ||
        zdiff < near_zero ) {
     std::ostringstream warn;
-    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< d_CV_label 
+    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< m_CV_name 
          << ") The max coordinate cannot be <= the min coordinate (max " << max << " <= min " << min << ")." ;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
@@ -77,7 +77,7 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
   
   min = Max( b.min(), min );
   max = Min( b.max(), max );
-  d_box = Box(min,max);  
+  m_box = Box(min,max);  
 }
 
 //______________________________________________________________________
@@ -88,15 +88,15 @@ controlVolume::~controlVolume(){};
 //
 void controlVolume::initialize( const Level* level)
 {
-  d_lowIndex  = level->getCellIndex( d_box.lower() );
-  d_highIndex = level->getCellIndex( d_box.upper() );
+  m_lowIndx  = level->getCellIndex( m_box.lower() );
+  m_highIndx = level->getCellIndex( m_box.upper() );
   
   // bulletproofing
-  IntVector diff = d_highIndex - d_lowIndex;
+  IntVector diff = m_highIndx - m_lowIndx;
   
   if ( diff.x() < 1 || diff.y() < 1 || diff.z() < 1 ){
     std::ostringstream warn;
-    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< d_CV_label 
+    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: box ("<< m_CV_name 
            << ") There must be at least one computational cell difference between the max and min ("<< diff << ")";
    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
@@ -106,8 +106,8 @@ void controlVolume::initialize( const Level* level)
 //  Cell iterator over all cells in the control volumne in this patch
 CellIterator controlVolume::getCellIterator( const Patch* patch ) const {
 
-  IntVector lo = Max(d_lowIndex,  patch->getCellLowIndex());
-  IntVector hi = Min(d_highIndex, patch->getCellHighIndex());
+  IntVector lo = Max(m_lowIndx,  patch->getCellLowIndex());
+  IntVector hi = Min(m_highIndx, patch->getCellHighIndex());
   
   return CellIterator( lo, hi ); 
 }
@@ -118,8 +118,8 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
                                             const FaceIteratorType& domain,
                                             const Patch* patch) const
 {
-  IntVector lowPt  = d_lowIndex; 
-  IntVector highPt = d_highIndex;
+  IntVector lowPt  = m_lowIndx; 
+  IntVector highPt = m_highIndx;
 
   //compute the dimension
   int dim=face/2;
@@ -158,8 +158,8 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
       throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
   }
 
-  IntVector lo = Max(lowPt,  patch->getCellLowIndex());
-  IntVector hi = Min(highPt, patch->getCellHighIndex());
+  IntVector lo = Max(lowPt,  patch->getExtraCellLowIndex());
+  IntVector hi = Min(highPt, patch->getExtraCellHighIndex());
   
   return CellIterator(lo, hi);
 
@@ -200,39 +200,39 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
   
   cout << " controlVolume::getBoundaryFaces :\n";
   cout << " p_lo:    " << p_lo       << " p_hi:      " << p_hi << endl;
-  cout << " lowIndx: " << d_lowIndex << " highIndex: " << d_highIndex << endl;
+  cout << " lowIndx: " << m_lowIndx << " highIndex: " << m_highIndx << endl;
 
-  bool doesIntersect_XY = (d_highIndex.x() > p_lo.x() &&
-                           d_lowIndex.x()  < p_hi.x() &&
-                           d_highIndex.y() > p_lo.y() &&
-                           d_lowIndex.y()  < p_hi.y() ); 
+  bool doesIntersect_XY = (m_highIndx.x() > p_lo.x() &&
+                           m_lowIndx.x()  < p_hi.x() &&
+                           m_highIndx.y() > p_lo.y() &&
+                           m_lowIndx.y()  < p_hi.y() ); 
 
-  bool doesIntersect_XZ = (d_highIndex.x() > p_lo.x() &&
-                           d_lowIndex.x()  < p_hi.x() &&
-                           d_highIndex.z() > p_lo.z() &&
-                           d_lowIndex.z()  < p_hi.z() ); 
+  bool doesIntersect_XZ = (m_highIndx.x() > p_lo.x() &&
+                           m_lowIndx.x()  < p_hi.x() &&
+                           m_highIndx.z() > p_lo.z() &&
+                           m_lowIndx.z()  < p_hi.z() ); 
 
-  bool doesIntersect_YZ = (d_highIndex.y() > p_lo.y() &&
-                           d_lowIndex.y()  < p_hi.y() &&
-                           d_highIndex.z() > p_lo.z() &&
-                           d_lowIndex.z()  < p_hi.z() );
+  bool doesIntersect_YZ = (m_highIndx.y() > p_lo.y() &&
+                           m_lowIndx.y()  < p_hi.y() &&
+                           m_highIndx.z() > p_lo.z() &&
+                           m_lowIndx.z()  < p_hi.z() );
 
-  if( d_lowIndex.x()  >= p_lo.x()  && doesIntersect_YZ ) {
+  if( m_lowIndx.x()  >= p_lo.x()  && doesIntersect_YZ ) {
     faces.push_back( xminus );
   }
-  if( d_highIndex.x()  <= p_hi.x() && doesIntersect_YZ ) {
+  if( m_highIndx.x()  <= p_hi.x() && doesIntersect_YZ ) {
     faces.push_back( xplus );
   }     
-  if( d_lowIndex.y()  >= p_lo.y()  && doesIntersect_XZ ) {
+  if( m_lowIndx.y()  >= p_lo.y()  && doesIntersect_XZ ) {
     faces.push_back( yminus );
   }
-  if( d_highIndex.y()  <= p_hi.y() && doesIntersect_XZ ) {
+  if( m_highIndx.y()  <= p_hi.y() && doesIntersect_XZ ) {
     faces.push_back( yplus );
   }
-  if( d_lowIndex.z()  >= p_lo.z()  && doesIntersect_XY ) {
+  if( m_lowIndx.z()  >= p_lo.z()  && doesIntersect_XY ) {
     faces.push_back( zminus );
   }
-  if( d_highIndex.z()  <= p_hi.z() && doesIntersect_XY ) {
+  if( m_highIndx.z()  <= p_hi.z() && doesIntersect_XY ) {
     faces.push_back( zplus );
   }
 }
@@ -243,7 +243,7 @@ std::string
 controlVolume::toString(const Patch* patch) const
 {
 
-  Box box = patch->getLevel()->getBox(d_lowIndex, d_highIndex);
+  Box box = patch->getLevel()->getBox(m_lowIndx, m_highIndx);
   
   char str[ 1024 ];
   sprintf( str, "[ [%2.2f, %2.2f, %2.2f] [%2.2f, %2.2f, %2.2f] ]",
@@ -332,9 +332,9 @@ controlVolume::print()
   ostringstream out;
   out.setf(ios::scientific,ios::floatfield);
   out.precision(4);
-  out << "  controlVolume " << d_CV_label 
-      << " box lower: " << d_box.lower() << " upper: " << d_box.upper() 
-      <<", lowIndex: "  << d_lowIndex << ", highIndex: " << d_highIndex;
+  out << "  controlVolume " << m_CV_name 
+      << " box lower: " << m_box.lower() << " upper: " << m_box.upper() 
+      <<", lowIndex: "  << m_lowIndx << ", highIndex: " << m_highIndx;
   out.setf(ios::scientific ,ios::floatfield);
   DOUT( true, out.str() );
 }

@@ -52,6 +52,7 @@ using namespace std;
 //       Test in multiple patches and mpi ranks
 //       Generalize so doubles and Vectors based fluxes can be computed
 //       generalize so user inputs face centered velocities
+//       each CV should keep track of output face fluxes
 //______________________________________________________________________
 
 static DebugStream cout_doing("controlVolFluxes",   false);
@@ -69,12 +70,10 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
   m_matl         = nullptr;
   m_matlSet      = nullptr;
 
-  labels = scinew MA_Labels();
+  m_lb = scinew labels();
 
-  labels->lastCompTime      = VarLabel::create( "lastCompTime", max_vartype::getTypeDescription() );
-  labels->fileVarsStruct    = VarLabel::create( "FileInfo_MA",  PerPatch<FileInfoP>::getTypeDescription() );
-  labels->totalQ_CV         = VarLabel::create( "totalQ_CV",    sumvec_vartype::getTypeDescription() );
-  labels->net_Q_faceFluxes  = VarLabel::create( "net_Q_fluxes", sumvec_vartype::getTypeDescription() );
+  m_lb->lastCompTime      = VarLabel::create( "lastCompTime", max_vartype::getTypeDescription() );
+  m_lb->fileVarsStruct    = VarLabel::create( "FileInfo_CVF", PerPatch<FileInfoP>::getTypeDescription() );
 }
 
 //______________________________________________________________________
@@ -98,16 +97,28 @@ controlVolFluxes::~controlVolFluxes()
     delete m_matlSet;
   }
 
-  VarLabel::destroy( labels->lastCompTime );
-  VarLabel::destroy( labels->fileVarsStruct );
-  VarLabel::destroy( labels->totalQ_CV );
-  VarLabel::destroy( labels->net_Q_faceFluxes );
+  VarLabel::destroy( m_lb->lastCompTime );
+  VarLabel::destroy( m_lb->fileVarsStruct );
+  
+  // labels for each CV
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
 
-  for( size_t i=0; i< d_controlVols.size(); i++ ){
-    delete d_controlVols[i];
+    VarLabel::destroy( m_lb->totalQ_CV[i] );
+    VarLabel::destroy( m_lb->net_Q_faceFluxes[i] );
+    
+    for( int f=0; f< 6; f++){
+      VarLabel::destroy( m_lb->Q_faceFluxes[i][f] );
+    }
+  }
+  
+  delete m_lb;
+
+  // this must be last
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    delete m_controlVols[i];
   }
 
-  delete labels;
+
 }
 
 //______________________________________________________________________
@@ -126,13 +137,11 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m_module_spec->require( "timeStart",         d_startTime );
   m_module_spec->require( "timeStop",          d_stopTime );
 
-  m_zeroMatl = scinew MaterialSubset();
-  m_zeroMatl->add(0);
-  m_zeroMatl->addReference();
-
   m_zeroMatlSet = scinew MaterialSet();
   m_zeroMatlSet->add(0);
   m_zeroMatlSet->addReference();
+
+  m_zeroMatl = m_zeroMatlSet->getUnion();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
@@ -170,24 +179,24 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
   m_matl = m_matlSet->getUnion();
 
   // HARDWIRED FOR ICE/MPMICE
-  labels->vel_CC    = assignLabel( "vel_CC" );
-  labels->rho_CC    = assignLabel( "rho_CC" );
+  m_lb->vel_CC    = VarLabel::find( "vel_CC", "ERROR  controlVolFluxes::problemSetup"  );
+  m_lb->rho_CC    = VarLabel::find( "rho_CC", "ERROR  controlVolFluxes::problemSetup"  );
 
-  labels->uvel_FC   = assignLabel( "uvel_FCME" );
-  labels->vvel_FC   = assignLabel( "vvel_FCME" );
-  labels->wvel_FC   = assignLabel( "wvel_FCME" );
+  m_lb->uvel_FC   = VarLabel::find( "uvel_FCME", "ERROR  controlVolFluxes::problemSetup"  );
+  m_lb->vvel_FC   = VarLabel::find( "vvel_FCME", "ERROR  controlVolFluxes::problemSetup"  );
+  m_lb->wvel_FC   = VarLabel::find( "wvel_FCME", "ERROR  controlVolFluxes::problemSetup"  );
 
 
   //__________________________________
-  // Loop over each face and find the extents
+  // Add the control volumes to a vector
   ProblemSpecP cv_ps = m_module_spec->findBlock("controlVolumes");
-  if( ! cv_ps) {
+  if( cv_ps == nullptr ) {
     throw ProblemSetupException("ERROR: Couldn't find <controlVolumes> xml node", __FILE__, __LINE__);
   }
 
   for( ProblemSpecP box_ps = cv_ps->findBlock( "box" ); box_ps != nullptr; box_ps=box_ps->findNextBlock( "box" ) ) {
     controlVolume* cv  = scinew controlVolume(box_ps, grid);
-    d_controlVols.push_back( cv );
+    m_controlVols.push_back( cv );
   }
 }
 
@@ -201,8 +210,8 @@ void controlVolFluxes::scheduleInitialize( SchedulerP   & sched,
   Task* t = scinew Task("controlVolFluxes::initialize",
                   this, &controlVolFluxes::initialize);
 
-  t->computes( labels->lastCompTime );
-  t->computes( labels->fileVarsStruct, m_zeroMatl );
+  t->computes( m_lb->lastCompTime );
+  t->computes( m_lb->fileVarsStruct, m_zeroMatl );
   sched->addTask(t, m_zeroPatch, m_zeroMatlSet);
 }
 
@@ -214,20 +223,49 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
                                          DataWarehouse  *,
                                          DataWarehouse  * new_dw )
 {
-  // initialize the control volumes
+  // initialize each of the control volumes
   const Level* level = getLevel(patches);
-  for( size_t i=0; i< d_controlVols.size(); i++ ){
-    controlVolume* cv = d_controlVols[i];
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    controlVolume* cv = m_controlVols[i];
     cv->initialize(level);
     cv->print();
   }
-
+  //__________________________________
+  //  Create varLabels needed for each CV
+  
+  m_lb->totalQ_CV        = createLabels(" totalQ_CV",    sum_vartype::getTypeDescription() );
+  m_lb->net_Q_faceFluxes = createLabels(" net_Q_fluxes", sumvec_vartype::getTypeDescription() );
+ 
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    controlVolume* cv = m_controlVols[i];
+    
+    int nFaces         = controlVolume::numFaces;
+    std::string cvName = cv->getName();
+    
+    FaceLabelsMap Q_faceLabels;
+    FaceNamesMap  Q_faceNames;
+    
+    for( int f=0; f< nFaces; f++){
+      controlVolume::FaceType face = static_cast<controlVolume::FaceType>(f);
+      
+      std::string name = cvName + "_Q_FaceFlux_" + cv->getFaceName(face);
+      Q_faceNames[f]  = name;
+      Q_faceLabels[f] = VarLabel::create( name, sum_vartype::getTypeDescription() );
+    }
+    
+    m_lb->Q_faceNames.push_back( Q_faceNames );
+    m_lb->Q_faceFluxes.push_back( Q_faceLabels );
+  }  
+  
+  //__________________________________
+  //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing initialize");
 
+    // last computational time
     double tminus = d_startTime - 1.0/m_analysisFreq;
-    new_dw->put( max_vartype(tminus), labels->lastCompTime );
+    new_dw->put( max_vartype(tminus), m_lb->lastCompTime );
 
     //__________________________________
     //  initialize fileInfo struct
@@ -235,8 +273,10 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
     FileInfo* myFileInfo = scinew FileInfo();
     fileInfo.get() = myFileInfo;
 
-    new_dw->put(fileInfo, labels->fileVarsStruct, 0, patch);
+    new_dw->put(fileInfo, m_lb->fileVarsStruct, 0, patch);
 
+    //__________________________________
+    //  does the uda exist?
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
 
@@ -269,7 +309,7 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   // Tell the scheduler to not copy this variable to a new AMR grid and
   // do not checkpoint it.
-  sched->overrideVariableBehavior("FileInfo_MA", false, false, false, true, true);
+  sched->overrideVariableBehavior("FileInfo_CVF", false, false, false, true, true);
 
   //__________________________________
   //  compute the total Q and net fluxes
@@ -280,18 +320,20 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  sched_TimeVars( t0, level, labels->lastCompTime, false );
+  sched_TimeVars( t0, level, m_lb->lastCompTime, false );
 
-  t0->requires( Task::NewDW, labels->vel_CC,    m_matl, gn );
-  t0->requires( Task::NewDW, labels->rho_CC,    m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->vel_CC,    m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->rho_CC,    m_matl, gn );
 
-  t0->requires( Task::NewDW, labels->uvel_FC,   m_matl, gn );
-  t0->requires( Task::NewDW, labels->vvel_FC,   m_matl, gn );
-  t0->requires( Task::NewDW, labels->wvel_FC,   m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->uvel_FC,   m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->vvel_FC,   m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->wvel_FC,   m_matl, gn );
 
-  t0->computes( labels->totalQ_CV );
-  t0->computes( labels->net_Q_faceFluxes );
-
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    t0->computes( m_lb->totalQ_CV[i] );
+    t0->computes( m_lb->net_Q_faceFluxes[i] );
+  }
+  
   sched->addTask( t0, level->eachPatch(), m_matlSet );
 
   //__________________________________
@@ -299,13 +341,15 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t1 = scinew Task("controlVolFluxes::doAnalysis",
                     this,&controlVolFluxes::doAnalysis );
 
-  sched_TimeVars( t1, level, labels->lastCompTime, true );
-  t1->requires( Task::OldDW, labels->fileVarsStruct, m_zeroMatl, gn, 0 );
+  sched_TimeVars( t1, level, m_lb->lastCompTime, true );
+  t1->requires( Task::OldDW, m_lb->fileVarsStruct, m_zeroMatl, gn, 0 );
 
-  t1->requires( Task::NewDW, labels->totalQ_CV );
-  t1->requires( Task::NewDW, labels->net_Q_faceFluxes );
-
-  t1->computes( labels->fileVarsStruct, m_zeroMatl );
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    t1->requires( Task::NewDW, m_lb->totalQ_CV[i] );
+    t1->requires( Task::NewDW, m_lb->net_Q_faceFluxes[i] );
+  }
+  
+  t1->computes( m_lb->fileVarsStruct, m_zeroMatl );
   sched->addTask( t1, m_zeroPatch, m_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
 
@@ -325,7 +369,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
 
   // Ignore the task if a recompute time step has been requested upstream
   bool rts      = new_dw->recomputeTimeStep();
-  bool itItTime = isItTime( old_dw, level, labels->lastCompTime );
+  bool itItTime = isItTime( old_dw, level, m_lb->lastCompTime );
 
   if( itItTime == false  || rts ) {
     return;
@@ -346,28 +390,28 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     constSFCZVariable<double> wvel_FC;
 
     Ghost::GhostType gn = Ghost::None;
-    new_dw->get(rho_CC,  labels->rho_CC,   m_matIdx, patch, gn,0);
-    new_dw->get(vel_CC,  labels->vel_CC,   m_matIdx, patch, gn,0);
-    new_dw->get(uvel_FC, labels->uvel_FC,  m_matIdx, patch, gn,0);
-    new_dw->get(vvel_FC, labels->vvel_FC,  m_matIdx, patch, gn,0);
-    new_dw->get(wvel_FC, labels->wvel_FC,  m_matIdx, patch, gn,0);
+    new_dw->get(rho_CC,  m_lb->rho_CC,   m_matIdx, patch, gn,0);
+    new_dw->get(vel_CC,  m_lb->vel_CC,   m_matIdx, patch, gn,0);
+    new_dw->get(uvel_FC, m_lb->uvel_FC,  m_matIdx, patch, gn,0);
+    new_dw->get(vvel_FC, m_lb->vvel_FC,  m_matIdx, patch, gn,0);
+    new_dw->get(wvel_FC, m_lb->wvel_FC,  m_matIdx, patch, gn,0);
 
     double totalQ_CV = 0;
 
     //__________________________________
     //  loop over control volumes
-    for( size_t i=0; i< d_controlVols.size(); i++ ){
+    for( size_t cv=0; cv< m_controlVols.size(); cv++ ){
 
-      controlVolume* cv = d_controlVols[i];
+      controlVolume* contVol = m_controlVols[cv];
 
-      if ( !cv->controlVolume::hasBoundaryFaces( patch ) ) {
+      if ( !contVol->controlVolume::hasBoundaryFaces( patch ) ) {
         continue;
       }
 
       //__________________________________
       //  Sum the total Q over the patch
       double  cellVol = patch->cellVolume();
-      for (CellIterator iter=cv->getCellIterator( patch );!iter.done();iter++){
+      for (CellIterator iter=contVol->getCellIterator( patch );!iter.done();iter++){
         IntVector c = *iter;
         totalQ_CV += rho_CC[c] * cellVol;
       }
@@ -378,59 +422,56 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
       // Sum the fluxes passing through control volume surface
 
       vector<controlVolume::FaceType> bf;
-      cv->getBoundaryFaces(bf, patch);
+      contVol->getBoundaryFaces(bf, patch);
+      
+      faceQuantities* faceQ = scinew faceQuantities;
+
+      initializeVars( faceQ );
 
       for( vector<controlVolume::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
 
         controlVolume::FaceType face = *itr;
 
-        string faceName = cv->getFaceName( face );
-        Vector norm     = cv->getFaceNormal( face );
-        IntVector axis  = cv->getFaceAxes( face );
-
-
-        cout_dbg << std::left << setw(7) << cv->getName()
+        string faceName = contVol->getFaceName( face );
+        Vector norm     = contVol->getFaceNormal( face );
+        IntVector axis  = contVol->getFaceAxes( face );
+        cout_dbg << std::left << setw(7) << contVol->getName()
                  << setw(7)   << "Face:"     << setw(7) << faceName
                  << setw(10)  << "faceType:" << setw(5) << face
                  << setw(7)   << "norm:"     << setw(5) << norm << std::left
                  << setw(15)  << "faceAxes:" << setw(7) <<  axis;
-                 
-        faceQuantities* faceQ = scinew faceQuantities;
-
-        initializeVars( faceQ );         
 
         //__________________________________
         //           X faces
         if (face == controlVolume::xminus || face == controlVolume::xplus) {
-          integrate_Q_overFace ( face, cv, patch, faceQ, uvel_FC, rho_CC, vel_CC);
+          integrate_Q_overFace ( face, contVol, patch, faceQ, uvel_FC, rho_CC, vel_CC);
         }
 
         //__________________________________
         //        Y faces
         if (face == controlVolume::yminus || face == controlVolume::yplus) {
-          integrate_Q_overFace( face, cv, patch, faceQ, vvel_FC, rho_CC, vel_CC);
+          integrate_Q_overFace( face, contVol, patch, faceQ, vvel_FC, rho_CC, vel_CC);
         }
         //__________________________________
         //        Z faces
         if (face == controlVolume::zminus || face == controlVolume::zplus) {
-          integrate_Q_overFace( face, cv, patch, faceQ, wvel_FC, rho_CC, vel_CC);
+          integrate_Q_overFace( face, contVol, patch, faceQ, wvel_FC, rho_CC, vel_CC);
         }
       }  // boundary faces
-    }  // patch has faces
+      
+      //__________________________________
+      //  Now compute the net fluxes from all of the face quantites
+      Vector net_Q_flux = L_minus_R( faceQ->Q_faceFluxes );
 
-#if 0
-    //__________________________________
-    //  Now compute the net fluxes from all of the face quantites
-    Vector net_Q_flux = L_minus_R( faceQ->Q_faceFluxes );
+      //__________________________________
+      // put in the dw
+      cout_dbg.precision(15);
+      cout_dbg <<  contVol->getName() << " Total CV : " << totalQ_CV << " Net face fluxes: " << net_Q_flux << endl;
 
-    //__________________________________
-    // put in the dw
-    //cout.precision(15);
-    //cout <<  " Total CV momentum: " << totalQ_CV << " Net  convectiveFlux: " << net_convect_flux << endl;
-
-    new_dw->put( sumvec_vartype( totalQ_CV ),     labels->totalQ_CV );
-    new_dw->put( sumvec_vartype( net_Q_flux ),    labels->net_Q_faceFluxes );
-#endif
+      new_dw->put( sum_vartype( totalQ_CV ),     m_lb->totalQ_CV[cv] );
+      new_dw->put( sumvec_vartype( net_Q_flux ), m_lb->net_Q_faceFluxes[cv] );
+      
+    }  // controlVol loop
   }  // patch loop
 }
 
@@ -449,8 +490,8 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
   const Level* level = getLevel(patches);
   timeVars tv;
 
-  getTimeVars( old_dw, level, labels->lastCompTime, tv );
-  putTimeVars( new_dw, labels->lastCompTime, tv );
+  getTimeVars( old_dw, level, m_lb->lastCompTime, tv );
+  putTimeVars( new_dw, m_lb->lastCompTime, tv );
 
   if( rts || tv.isItTime == false) {
     return;
@@ -468,8 +509,8 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
     // Note: after regridding this may not exist for this patch in the old_dw
     PerPatch<FileInfoP> fileInfo;
 
-    if( old_dw->exists( labels->fileVarsStruct, 0, patch ) ){
-      old_dw->get(fileInfo, labels->fileVarsStruct, 0, patch);
+    if( old_dw->exists( m_lb->fileVarsStruct, 0, patch ) ){
+      old_dw->get(fileInfo, m_lb->fileVarsStruct, 0, patch);
     }
     else{
       FileInfo* myFileInfo = scinew FileInfo();
@@ -483,50 +524,56 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
     }
 
     string udaDir = m_output->getOutputLocation();
-    string filename = udaDir + "/" + "fluxes.dat";
-    FILE *fp=nullptr;
-
-
-    if( myFiles.count(filename) == 0 ){
-      createFile(filename, fp);
-      myFiles[filename] = fp;
-    }
-    else {
-      fp = myFiles[filename];
-    }
-
-    if (!fp){
-      throw InternalError("\nERROR:dataAnalysisModule:fluxes:  failed opening file"+filename,__FILE__, __LINE__);
-    }
+    
     //__________________________________
-    //
-    sumvec_vartype totalQ_CV;
-    sumvec_vartype Q_flux;
-    new_dw->get( totalQ_CV, labels->totalQ_CV );
-    new_dw->get( Q_flux,    labels->net_Q_faceFluxes );
+    //  loop over control volumes
+    for( size_t i=0; i< m_controlVols.size(); i++ ){
+      controlVolume* cv = m_controlVols[i];
+      
+      
+      string filename = udaDir + "/" + cv->getName() + ".dat";
+      FILE *fp=nullptr;
 
-    // so fprintf can deal with it
-    Vector Q          = totalQ_CV;
-    Vector net_Q_flux = Q_flux;
 
-    fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n",
-                tv.now,
-                (double)Q.x(),
-                (double)Q.y(),
-                (double)Q.z(),
-                (double)net_Q_flux.x(),
-                (double)net_Q_flux.y(),
-                (double)net_Q_flux.z()
-            );
+      if( myFiles.count(filename) == 0 ){
+        createFile(filename, fp);
+        myFiles[filename] = fp;
+      }
+      else {
+        fp = myFiles[filename];
+      }
 
-//      fflush(fp);   If you want to write the data right now, no buffering.
+      if (!fp){
+        throw InternalError("\nERROR:dataAnalysisModule:fluxes:  failed opening file"+filename,__FILE__, __LINE__);
+      }
+      //__________________________________
+      //
+      sum_vartype    totalQ_CV;
+      sumvec_vartype Q_flux;
 
+      new_dw->get( totalQ_CV, m_lb->totalQ_CV[i] );
+      new_dw->get( Q_flux,    m_lb->net_Q_faceFluxes[i] );
+
+      // so fprintf can deal with it
+      const double Q          = totalQ_CV;
+      const Vector net_Q_flux = Q_flux;
+      const int w = m_col_width;
+
+      fprintf(fp, "%-*E %-*E %-*E %-*E %-*E\n",
+              w, tv.now,
+              w, Q,
+              w, net_Q_flux.x(),
+              w, net_Q_flux.y(),
+              w, net_Q_flux.z() );
+
+  //      fflush(fp);   If you want to write the data right now, no buffering.
+    }
     //__________________________________
     // put the file pointers into the DataWarehouse
     // these could have been altered. You must
     // reuse the Handle fileInfo and just replace the contents
     fileInfo.get().get_rep()->files = myFiles;
-    new_dw->put(fileInfo, labels->fileVarsStruct, 0, patch);
+    new_dw->put(fileInfo, m_lb->fileVarsStruct, 0, patch);
   }
 }
 
@@ -552,23 +599,25 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
 
   //__________________________________
   //  get the iterator on this face
-  controlVolume::FaceIteratorType MEC = controlVolume::MinusEdgeCells;
-  CellIterator iter = cv->getFaceIterator(face, MEC, patch);
+  //controlVolume::FaceIteratorType MEC = controlVolume::MinusEdgeCells;
+  controlVolume::FaceIteratorType IFC = controlVolume::InteriorFaceCells;
+  
+  CellIterator iter = cv->getFaceIterator(face, IFC, patch);
 
   cout_dbg << std::right << setw(10) <<  " faceIter: " << setw(10) << iter << endl;
 
   for(; !iter.done(); iter++) {
     IntVector c = *iter;
-    double vel = vel_FC[c];
+    double velNorm = vel_FC[c];  // normal component of Velocity ( V^\vec \dot n^\vec)
 
     // find upwind cell
     IntVector uw = c;
-    if (vel > 0 ){
+    if (velNorm > 0 ){
       uw[pDir] = c[pDir] - 1;
     }
 
     // One way to define m dot through face
-    double mdot  =  vel * rho_CC[uw] * faceArea * unitNormal;
+    double mdot  =  velNorm * rho_CC[uw] * faceArea;
 
     // Another way
     // Vector mdotV  = faceArea * vel_CC[uw] * rho_CC[uw];
@@ -577,13 +626,12 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
   }
   faceQ->Q_faceFluxes[face] = Q_flux;
 
-//  cout << "face: " << faceName << "\t dir: " << dir << " convect_Flux = " <<  convect_flux << endl;
+  cout_dbg<< "     Face: " << cv->getFaceName(face) << "\t dir: " << pDir << " Q_Flux = " <<  Q_flux << endl;
 }
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
 //______________________________________________________________________
-//
 void controlVolFluxes::createFile(string& filename,
                                   FILE*& fp)
 {
@@ -595,172 +643,22 @@ void controlVolFluxes::createFile(string& filename,
   }
 
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux\n");
-  fprintf(fp, "#Time                    CV_mom.x                 CV_mom.y                  CV_mom.z                  momFlux.x               momFlux.y                momFlux.z\n");
-
-
-  proc0cout << Parallel::getMPIRank() << " fluxes:Created file " << filename << endl;
+  
+  const int w = m_col_width;
+  fprintf(fp, "%-*s %-*s %-*s %-*s %-*s\n", w,"# ",
+                                            w,"ControlVol",
+                                            w, " ",
+                                            w, "net face fluxes",
+                                            w, " ");
+                                            
+  fprintf(fp,"%-*s %-*s %-*s %-*s %-*s\n", w,"#Time [s]",
+                                         w,"Total",
+                                         w,"X faces",
+                                         w,"Y faces",
+                                         w,"Z faces" );
+ 
+  proc0cout << Parallel::getMPIRank() << " controlVolFluxes:Created file " << filename << endl;
 }
-
-
-//______________________________________________________________________
-//   This is a rip off of what's done in the boundary condition code
-//______________________________________________________________________
-//
-void controlVolFluxes::faceInfo( const std::string fc,
-                                 Vector& norm,
-                                 int& p_dir,
-                                 int& index)
-{
-  if (fc == "x-" || fc == "xminus"){
-    norm = Vector(-1, 0, 0);
-    p_dir = 0;
-    index = 0;
-    return;
-  }
-  if (fc == "x+" || fc == "xplus" ){
-    norm = Vector(1, 0, 0);
-    p_dir = 0;
-    index = 1;
-    return;
-  }
-  if (fc == "y-" || fc == "yminus" ){
-    norm = Vector(0, -1, 0);
-    p_dir = 1;
-    index = 2;
-    return;
-  }
-  if (fc == "y+" || fc == "yplus" ){
-    norm = Vector(0, 1, 0);
-    p_dir = 1;
-    index = 3;
-    return;
-  }
-  if (fc == "z-" || fc == "zminus" ){
-    norm = Vector(0, 0, -1);
-    p_dir = 2;
-    index = 4;
-    return;
-  }
-  if (fc == "z+" || fc == "zplus" ){
-    norm = Vector(0, 0, 1);
-    p_dir = 2;
-    index = 5;
-    return;
-  }
-
-  ostringstream warn;
-  warn <<" ERROR:fluxes face name (" << fc << ") unknown. ";
-
-  throw InternalError( warn.str(), __FILE__, __LINE__ );
-}
-//______________________________________________________________________
-//  bulletProofing on the user inputs
-//______________________________________________________________________
-//
-void controlVolFluxes::bulletProofing(GridP& grid,
-                                      const string & side,
-                                      const Point  & start,
-                                      const Point  & end)
-{
-   //__________________________________
-   // plane must be parallel to the coordinate system
-   bool X = ( start.x() == end.x() );
-   bool Y = ( start.y() == end.y() );  // 1 out of 3 of these must be true
-   bool Z = ( start.z() == end.z() );
-
-   bool validPlane = false;
-
-   if( !X && !Y && Z ){
-     validPlane = true;
-   }
-   if( !X && Y && !Z ){
-     validPlane = true;
-   }
-   if( X && !Y && !Z ){
-     validPlane = true;
-   }
-
-   if( validPlane == false ){
-     ostringstream warn;
-     warn << "\n ERROR:fluxes: the plane on face ("<< side
-          << ") that you've specified " << start << " " << end
-          << " is not parallel to the coordinate system. \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-
-   //__________________________________
-   //  plane must be on the edge of the domain
-   validPlane = true;
-   BBox compDomain;
-   grid->getInteriorSpatialRange(compDomain);
-   Point min = compDomain.min();
-   Point max = compDomain.max();
-
-   Point me = min;
-   if (side == "x+" || side == "y+" || side == "z+" ){
-     me = max;
-   }
-
-   if(side == "x+" || side == "x-" ){
-     if(start.x() != me.x() ){
-       validPlane = false;
-     }
-   }
-   if(side == "y+" || side == "y-" ){
-     if(start.y() != me.y() ){
-       validPlane = false;
-     }
-   }
-   if(side == "z+" || side == "z-" ){
-     if(start.z() != me.z() ){
-       validPlane = false;
-     }
-   }
-   if( validPlane == false ){
-     ostringstream warn;
-     warn << "\n ERROR:controlVolFluxes: the plane on face ("<< side
-          << ") that you've specified " << start << " to " << end
-          << " is not at the edge of the computational domain. \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-
-   //__________________________________
-   //the plane can't exceed computational domain
-   if( start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-       end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ){
-     ostringstream warn;
-     warn << "\n ERROR:controlVolFluxes: a portion of plane that you've specified " << start
-          << " " << end << " lies outside of the computational domain. \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-
-   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-     ostringstream warn;
-     warn << "\n ERROR:controlVolFluxes: the plane that you've specified " << start
-          << " " << end << " the starting point is > than the ending point \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-}
-
-//______________________________________________________________________
-//  Find the VarLabel
-//______________________________________________________________________
-//
-VarLabel* controlVolFluxes::assignLabel( const std::string& varName )
-{
-  VarLabel* myLabel  = VarLabel::find( varName );
-
-  if( myLabel == nullptr ){
-    ostringstream warn;
-    warn << "ERROR fluxes One of the VarLabels for the analysis does not exist or could not be found\n"
-         << varName << "  address: " << myLabel << "\n";
-    throw InternalError(warn.str(), __FILE__, __LINE__);
-  }
-
-  return myLabel;
-}
-
 
 //______________________________________________________________________
 //    Initialize the face quantities
@@ -774,6 +672,18 @@ void controlVolFluxes::initializeVars( faceQuantities* faceQ)
   }
 }
 
+
+//______________________________________________________________________
+//
+Vector controlVolFluxes::L_minus_R( std::map <int, double >& faceFlux)
+{
+  double X_flux  = faceFlux[0] - faceFlux[1];
+  double Y_flux  = faceFlux[2] - faceFlux[3];
+  double Z_flux  = faceFlux[4] - faceFlux[5];
+
+  Vector net_flux(X_flux, Y_flux, Z_flux);
+  return net_flux;
+}
 
 //______________________________________________________________________
 //
@@ -795,3 +705,19 @@ Vector controlVolFluxes::L_minus_R( std::map <int, Vector >& faceFlux)
   return net_flux;
 }
 
+//______________________________________________________________________
+//  For each CV create a vector of labels   desc_i
+std::vector<VarLabel*>
+controlVolFluxes::createLabels(std::string desc,
+                               const Uintah::TypeDescription* td)
+{
+  std::vector<VarLabel*> labels;
+  
+  for( size_t i=0; i< m_controlVols.size(); i++ ){
+    string name = desc + "_" + std::to_string(i);
+    VarLabel* l = VarLabel::create( name, td );
+    
+    labels.push_back(l);
+  }  
+  return labels;
+}

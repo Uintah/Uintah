@@ -93,6 +93,9 @@ DESCRIPTION
 
   private:
 
+    typedef std::map< int, VarLabel*> FaceLabelsMap;
+    typedef std::map< int, std::string> FaceNamesMap;
+    
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
                     const MaterialSubset *,
@@ -111,19 +114,7 @@ DESCRIPTION
                                   DataWarehouse   * old_dw,
                                   DataWarehouse   * new_dw);
 
-    void faceInfo( const std::string fc,
-                   Vector& norm,
-                   int& p_dir,
-                   int& index);
-
     void createFile(std::string& filename, FILE*& fp);
-
-    void bulletProofing( GridP& grid,
-                         const std::string& side,
-                         const Point& start,
-                         const Point& end );
-
-    VarLabel* assignLabel( const std::string& desc );
 
 
     struct faceQuantities{
@@ -148,36 +139,52 @@ DESCRIPTION
     //  left flux - right flux
     Vector L_minus_R( std::map <int, Vector >& faceFlux);
 
+    Vector L_minus_R( std::map <int, double >& faceFlux);
+
+    //__________________________________
+    //  For each CV create a vector of labels   desc_i
+    std::vector<VarLabel*>
+    createLabels( std::string desc,
+                  const Uintah::TypeDescription* td );
+
     // VarLabels
-    class MA_Labels {
+    class labels {
       public:
         VarLabel* lastCompTime;
         VarLabel* fileVarsStruct;
-
-        VarLabel* totalQ_CV;
-        VarLabel* net_Q_faceFluxes;
-
         VarLabel* vel_CC;
         VarLabel* rho_CC;
 
         VarLabel* uvel_FC;
         VarLabel* vvel_FC;
         VarLabel* wvel_FC;
+        
+        // quanties of interest
+        std::vector<std::string> Q_names;
+        std::map<std::string, VarLabel*> Q_labels;
+        
+        // labels for each CV
+        
+        std::vector<VarLabel*>     totalQ_CV;
+        std::vector<VarLabel*>     net_Q_faceFluxes;
+        std::vector<FaceLabelsMap> Q_faceFluxes;
+        std::vector<FaceNamesMap>  Q_faceNames;
     };
 
-    MA_Labels* labels;
+    labels* m_lb;
 
-    std::vector<controlVolume*> d_controlVols;
+    std::vector<controlVolume*> m_controlVols;
 
     //__________________________________
     // global constants
-    MaterialSubset * m_zeroMatl;
-    MaterialSet    * m_zeroMatlSet;
-    PatchSet       * m_zeroPatch;
+    const MaterialSubset * m_zeroMatl;
+    MaterialSet          * m_zeroMatlSet;
+    PatchSet             * m_zeroPatch;
     const MaterialSubset * m_matl;
-    MaterialSet    * m_matlSet;
-
-    int m_matIdx;                      // material index.
+    MaterialSet          * m_matlSet;
+    
+    int m_col_width = 16;    //  column width
+    int m_matIdx;            // material index.
 
 
   };

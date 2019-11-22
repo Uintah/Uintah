@@ -100,7 +100,7 @@ namespace Uintah {
     // Returns true if a control volume boundary face exists on this patch
     bool inline hasBoundaryFaces( const Patch* patch) const {
 
-      bool test = doesIntersect( d_lowIndex, d_highIndex, patch->getCellLowIndex(), patch->getCellHighIndex() );
+      bool test = doesIntersect( m_lowIndx, m_highIndx, patch->getCellLowIndex(), patch->getCellHighIndex() );
       return test;
     }
     
@@ -120,17 +120,17 @@ namespace Uintah {
     //______________________________________________________________________
     // Returns the cell area dx*dy.
     double getCellArea( const controlVolume::FaceType face,
-                     const Patch* patch ) const;
+                        const Patch* patch ) const;
   
-    std::string getName() const {return d_CV_label;};
+    std::string getName() const {return m_CV_name;};
     
     void print();
 
   protected:
-    IntVector d_lowIndex;
-    IntVector d_highIndex;
-    Box d_box;
-    std::string d_CV_label{"notSet"};
+    IntVector m_lowIndx;
+    IntVector m_highIndx;
+    Box m_box;
+    std::string m_CV_name{"notSet"};
 };
 }  // end namespace Uintah
 #endif
