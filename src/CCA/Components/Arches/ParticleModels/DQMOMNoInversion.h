@@ -54,7 +54,7 @@ namespace Uintah{
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -64,7 +64,7 @@ namespace Uintah{
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -73,6 +73,7 @@ namespace Uintah{
     const int m_N;                              ///< The number of "environments"
     std::vector<std::string> m_ic_names;        ///< Internal coordinate names
     std::vector<std::string> m_ic_qn_srcnames;  ///< ICname + _qn# + _src, which gets put into the transport eqn
+    std::vector<std::string> m_ic_qn_rhsnames;  ///< ICname + _qn# + _RHS 
     std::map<std::string, std::vector<std::string> > m_ic_model_map;   ///< A map of ic names to models
 
   };

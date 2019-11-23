@@ -1892,14 +1892,14 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
         }
 
 
-        i_particle_models->second->schedule_task_group( "dqmom_variables",
+        i_particle_models->second->schedule_task_group( "dqmom_transport_variables",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
-        i_particle_models->second->schedule_task_group( "dqmom_model_task",
+        i_particle_models->second->schedule_task_group( "particle_models",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );
@@ -1911,10 +1911,10 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
 
         } else {
 
-          i_particle_models->second->schedule_task_group( "pre_update_property_models",
-                                                          TaskInterface::TIMESTEP_EVAL,
-                                                          dont_pack_tasks, level, sched,
-                                                          matls, curr_level);
+          i_particle_models->second->schedule_task( "[DQMOMNoInversion]",
+                                                    TaskInterface::TIMESTEP_EVAL,
+                                                    level, sched,
+                                                    matls, curr_level);
 
         }
 
@@ -2091,9 +2091,13 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
       }
     }
 
-    //ParticleModels evaluated after the RK averaging.
+    //Particle Properties dependent on the latest DW IC's
     //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
-    i_particle_models->second->schedule_task_group("post_update_particle_models", TaskInterface::TIMESTEP_EVAL,
+    i_particle_models->second->schedule_task_group("particle_properties", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
+
+    // Deposition (called out specifically because it has a specified order)
+    i_particle_models->second->schedule_task_group("deposition_models", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
 
 

@@ -459,7 +459,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
       break;
     case ArchesFieldContainer::REQUIRES:
       {
-        DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost);
+        DOUT( dbg_arches_task, "[TaskFactoryBase]      requiring: " << ivar.name << " with ghosts: " << ivar.nGhost << " from DW: " << ivar.dw );
         tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       }
       break;
