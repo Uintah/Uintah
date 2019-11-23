@@ -95,11 +95,11 @@ PRODUCTION_TESTS_NO_COAL = [
    ("PTC_3D"                            , "CQMOM_regression/PTC_3D.ups"                             , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
-   ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   #("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
-   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   #("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1   , "All"   , ["exactComparison"     , "no_restart", "no_cuda"]) ,  # 11/1/16 bug with gpu support with particles
    ("task_math"                         , "task_math.ups"                                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1   , "All"   , ["exactComparison"]) ,
