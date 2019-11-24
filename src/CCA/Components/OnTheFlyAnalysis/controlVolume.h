@@ -44,11 +44,11 @@ namespace Uintah {
 
   class controlVolume {
   public:
-  
+
     controlVolume(const ProblemSpecP & cv_ps,
                   const GridP        & grid);
     ~controlVolume();
-  
+
     enum FaceType {
       xminus=0,
       xplus=1,
@@ -62,35 +62,36 @@ namespace Uintah {
       invalidFace
     };
 
+    const std::initializer_list<FaceType> allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};
 
     enum FaceIteratorType {
       MinusEdgeCells,                 //Excludes the edge/corner cells.
       InteriorFaceCells               //Includes cells on the interior of the face
     };
-    
+
     //______________________________________________________________________
     // void set
     void initialize( const Level* level);
-    
+
     //______________________________________________________________________
     // Returns a cell iterator over control volume cells on this patch
     CellIterator getCellIterator(const Patch* patch) const ;
-    
-    
+
+
     //______________________________________________________________________
     // Returns a face cell iterator
     //  domain specifies which type of iterator will be returned
     //     MinusEdgeCells:         All cells on the face excluding the edge cells.
     //     InteriorFaceCells:      All cells on the interior of the face.
-    
-    CellIterator getFaceIterator(const controlVolume::FaceType& face, 
+
+    CellIterator getFaceIterator(const controlVolume::FaceType& face,
                                  const FaceIteratorType& domain,
                                  const Patch* patch) const;
 
     //______________________________________________________________________
     // Returns the normal to the patch face
     Vector getFaceNormal( const controlVolume::FaceType & face ) const;
-    
+
     //______________________________________________________________________
     // Sets the vector faces equal to the list of faces that are on the boundary
     void getBoundaryFaces(std::vector<FaceType>& faces,
@@ -103,28 +104,30 @@ namespace Uintah {
       bool test = doesIntersect( m_lowIndx, m_highIndx, patch->getCellLowIndex(), patch->getCellHighIndex() );
       return test;
     }
-    
+
     //______________________________________________________________________
     //
-    std::string toString(const Patch* patch) const;
+    std::string getExtents_string() const;
 
     //______________________________________________________________________
     // Returns the principal axis along a face and
     // the orthognonal axes to that face (right hand rule).
     IntVector getFaceAxes( const controlVolume::FaceType & face ) const;
-    
+
     //______________________________________________________________________
     // Returns a string equivalent of the face name (eg: "xminus")
     std::string getFaceName( controlVolume::FaceType face ) const;
-    
+
+
     //______________________________________________________________________
     // Returns the cell area dx*dy.
     double getCellArea( const controlVolume::FaceType face,
                         const Patch* patch ) const;
-  
+
     std::string getName() const {return m_CV_name;};
-    
+
     void print();
+
 
   protected:
     IntVector m_lowIndx;

@@ -93,9 +93,12 @@ DESCRIPTION
 
   private:
 
-    typedef std::map< int, VarLabel*> FaceLabelsMap;
-    typedef std::map< int, std::string> FaceNamesMap;
-    
+    typedef controlVolume::FaceType cvFace;
+
+    typedef std::map< cvFace, VarLabel*>   FaceLabelsMap;
+    typedef std::map< cvFace, std::string> FaceNamesMap;
+
+
     void initialize(const ProcessorGroup *,
                     const PatchSubset    * patches,
                     const MaterialSubset *,
@@ -114,7 +117,9 @@ DESCRIPTION
                                   DataWarehouse   * old_dw,
                                   DataWarehouse   * new_dw);
 
-    void createFile(std::string& filename, FILE*& fp);
+    void createFile(std::string& filename,
+                    FILE*& fp,
+                    const controlVolume * cv);
 
 
     struct faceQuantities{
@@ -158,13 +163,13 @@ DESCRIPTION
         VarLabel* uvel_FC;
         VarLabel* vvel_FC;
         VarLabel* wvel_FC;
-        
+
         // quanties of interest
         std::vector<std::string> Q_names;
         std::map<std::string, VarLabel*> Q_labels;
-        
+
         // labels for each CV
-        
+
         std::vector<VarLabel*>     totalQ_CV;
         std::vector<VarLabel*>     net_Q_faceFluxes;
         std::vector<FaceLabelsMap> Q_faceFluxes;
@@ -182,8 +187,8 @@ DESCRIPTION
     PatchSet             * m_zeroPatch;
     const MaterialSubset * m_matl;
     MaterialSet          * m_matlSet;
-    
-    int m_col_width = 16;    //  column width
+
+    int m_col_width = 16;    //  column width used in output formatting
     int m_matIdx;            // material index.
 
 
