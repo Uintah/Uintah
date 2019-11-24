@@ -302,7 +302,7 @@ private:
 
       //__________________________________
       //  methods
-     void insertEveryNth( const std::vector<Uintah::Vector>& orthogonalCosineDirs,
+     void insertEveryNth( const std::vector<std::vector<double>>& orthogonalCosineDirs,
                           const int nthElement,
                           const int dir,
                           std::vector<double>& vec);

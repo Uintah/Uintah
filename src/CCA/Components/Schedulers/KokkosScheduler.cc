@@ -428,7 +428,7 @@ KokkosScheduler::runTask( DetailedTask*         dtask
 
       double total_task_time = dtask->task_exec_time();
       if (g_exec_out) {
-	m_task_info[dtask->getTask()->getName()][ExecTime] += total_task_time;
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
       }
 
       // if I do not have a sub scheduler

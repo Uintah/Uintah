@@ -178,7 +178,7 @@ private:
     up_face = "face_pvel_x";
     vp_face = "face_pvel_y";
     wp_face = "face_pvel_z";
-    
+
     std::string scheme = "second";
     m_int_scheme = ArchesCore::get_interpolant_from_string( scheme );
 
@@ -217,32 +217,34 @@ private:
   void FaceParticleVel<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
 
-  for ( int ienv = 0; ienv < m_N; ienv++ ){
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
 
-    std::string up_face_i = ArchesCore::append_env(up_face,ienv);
-    std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
-    std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
+      std::string up_face_i = ArchesCore::append_env(up_face,ienv);
+      std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
+      std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
-    auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
-    auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
+      auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
+      auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
+      auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
 
-    std::string up_i = ArchesCore::append_env(up_root,ienv);
-    std::string vp_i = ArchesCore::append_env(vp_root,ienv);
-    std::string wp_i = ArchesCore::append_env(wp_root,ienv);
+      std::string up_i = ArchesCore::append_env(up_root,ienv);
+      std::string vp_i = ArchesCore::append_env(vp_root,ienv);
+      std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
-    auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
-    auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
+      auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
+      auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
+      auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
 
-    ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
-    ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
-    ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
+      Uintah::parallel_initialize( execObj, 0.0, up_f, vp_f, wp_f );
 
-  }
+      ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
+      ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
+      ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
+
+    }
   }
 
   //======TIME STEP INITIALIZATION:
@@ -257,7 +259,6 @@ private:
   //======TIME STEP EVALUATION:
   template <typename T>
   void FaceParticleVel<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks){
-
 
     for ( int ienv = 0; ienv < m_N; ienv++ ){
 
@@ -277,39 +278,37 @@ private:
       register_variable( wp_i, ArchesFieldContainer::REQUIRES, m_ghost_cells, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
 
-
   }
 
   template <typename T>
   template <typename ExecSpace, typename MemSpace>
   void FaceParticleVel<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  for ( int ienv = 0; ienv < m_N; ienv++ ){
+    for ( int ienv = 0; ienv < m_N; ienv++ ){
 
-    std::string up_face_i = ArchesCore::append_env(up_face,ienv);
-    std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
-    std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
+      std::string up_face_i = ArchesCore::append_env(up_face,ienv);
+      std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
+      std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
 
-    auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
-    auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
-    auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
+      auto up_f = tsk_info->get_field<FXT, double, MemSpace>(up_face_i);
+      auto vp_f = tsk_info->get_field<FYT, double, MemSpace>(vp_face_i);
+      auto wp_f = tsk_info->get_field<FZT, double, MemSpace>(wp_face_i);
 
-    std::string up_i = ArchesCore::append_env(up_root,ienv);
-    std::string vp_i = ArchesCore::append_env(vp_root,ienv);
-    std::string wp_i = ArchesCore::append_env(wp_root,ienv);
+      std::string up_i = ArchesCore::append_env(up_root,ienv);
+      std::string vp_i = ArchesCore::append_env(vp_root,ienv);
+      std::string wp_i = ArchesCore::append_env(wp_root,ienv);
 
-    auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
-    auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
-    auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
+      auto up = tsk_info->get_field<CT, const double, MemSpace>(up_i);
+      auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
+      auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
 
-    ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
-    ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
-    ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
+      ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
+      ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
+      ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
 
-
-  }
+    }
   }
 }
 #endif

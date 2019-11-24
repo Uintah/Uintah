@@ -166,7 +166,8 @@ namespace Uintah{
                               const bool reinitialize=false );
 
     /** @brief Public interface for scheduling a set of tasks through the factory when the
-               group of tasks was determined upstream. **/
+               group of tasks was determined upstream. This is useful when one needs to
+               enforce a specific task exe order. **/
     void schedule_task_group( const std::string task_group_name,
                               std::vector<std::string> task_names,
                               TaskInterface::TASK_TYPE type,

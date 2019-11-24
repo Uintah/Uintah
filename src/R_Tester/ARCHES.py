@@ -7,6 +7,10 @@ from helpers.modUPS import modUPS
 
 the_dir = "%s/%s" % ( getInputsDir(),"ARCHES" )
 
+BrownSoot_spectral_orthog_ups  = modUPS( the_dir, "Coal/BrownSoot_spectral.ups" , ["<addOrthogonalDirs> true </addOrthogonalDirs>"])
+
+
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #
@@ -91,11 +95,11 @@ PRODUCTION_TESTS_NO_COAL = [
    ("PTC_3D"                            , "CQMOM_regression/PTC_3D.ups"                             , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
-   ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   #("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
-   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   #("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1   , "All"   , ["exactComparison"     , "no_restart", "no_cuda"]) ,  # 11/1/16 bug with gpu support with particles
    ("task_math"                         , "task_math.ups"                                           , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("intrusion_test"                    , "intrusion_test.ups"                                      , 1   , "All"   , ["exactComparison"]) ,
@@ -129,6 +133,7 @@ PRODUCTION_COAL_TESTS = [
    ("OFC_smith"                         , "Coal/OFC_smith.ups"                                      , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("OFC4_hybrid"                       , "Coal/OFC4_hybrid.ups"                                    , 3   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"                             , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("BrownSoot_spectral_orthog"         ,  BrownSoot_spectral_orthog_ups                            , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
 ]
 
@@ -189,7 +194,8 @@ SWEEPS_TESTS = [
    ("mass_energy_balance_psnox"        , "Coal/mass_energy_balance_psnox.ups"     , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
    ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"   , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
    ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"         , 46  , "All"   , ["exactComparison"]),                                   
-   ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"           , 8   , "All"   , ["exactComparison"     , "no_cuda"])                    
+   ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"           , 8   , "All"   , ["exactComparison"     , "no_cuda"]),
+   ("BrownSoot_spectral_orthog"         , BrownSoot_spectral_orthog_ups           , 8   , "All"   , ["exactComparison"     , "no_cuda"])                    
 ]
 
 NIGHTLYTESTS = [

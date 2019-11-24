@@ -832,7 +832,7 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'firstLawThermo, flatPlate_heatFlux, 
+                                          attribute1="name REQUIRED STRING 'controlVolFluxes  firstLawThermo, flatPlate_heatFlux, 
                                                                             lineExtract,      meanTurbFluxes, minMax,         momentumAnalysis, 
                                                                             particleExtract,  planeAverage,   planeExtract, 
                                                                             radiometer,       statistics,     vorticity'" >
@@ -840,14 +840,14 @@
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract,     planeExtract, 
-                                                                                      particleExtract, firstLawThermo,  minMax"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, lineExtract,     planeExtract, 
+                                                                                      particleExtract,  firstLawThermo,  minMax"/>
                                                                                       
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name firstLawThermo,  lineExtract, 
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract, 
                                                                                       minMax,           particleExtract, planeAverage, 
                                                                                       planeExtract,     statistics"/>
                                                                                       
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name firstLawThermo,  lineExtract, 
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract, 
                                                                                       minMax,           particleExtract, planeAverage, 
                                                                                       planeExtract,     statistics"/>
                                                                                       
@@ -861,6 +861,13 @@
                                           attribute4="computeReynoldsStress OPTIONAL STRING"
                                           attribute5="weighting OPTIONAL STRING 'none, nCells, mass'" />
       </Variables>
+      
+      <!--  controlVolFluxes _____________________________-->
+      <controlVolumes                   spec="OPTIONAL NO_DATA" need_applies_to="name controlVolFluxes">
+        <box                            spec="MULTIPLE" />
+      </controlVolumes>
+      
+      
       
       <!--  lineExtract __________________________________-->
       <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">

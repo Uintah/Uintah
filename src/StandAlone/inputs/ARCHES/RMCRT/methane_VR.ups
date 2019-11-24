@@ -372,7 +372,7 @@
           <!--       RMCRT radiation   -->
           <src label="divQ_rmcrt" type="rmcrt_radiation">
             <calc_frequency>    2       </calc_frequency>
-            <abskt label="gas_abskg"/>
+            <absk label="gas_abskg"/>
             <RMCRT type = "float">
               <algorithm type="radiometerOnly"/> 
               <randomSeed>        false       </randomSeed>

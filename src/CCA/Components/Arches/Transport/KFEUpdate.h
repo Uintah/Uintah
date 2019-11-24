@@ -437,7 +437,6 @@ private:
     }
 
     // unscaling
-    // work in progress
     for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
 
       std::string varname = ieqn->first;
@@ -447,6 +446,8 @@ private:
 
       auto phi = tsk_info->get_field<T, double, MemSpace>(varname);
       auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>(info.unscaled_var);
+
+      Uintah::parallel_initialize( execObj, 0.0, phi_unscaled );
 
       Uintah::BlockRange range3( patch->getCellLowIndex(), patch->getCellHighIndex() );
 

@@ -171,7 +171,7 @@ VarLabel::find( const std::string & name,
     std::ostringstream warn;
     warn << mesg;
     warn << " --- Could not find the VarLabel (" << name << " ).";
-    InternalError(warn.str(), __FILE__, __LINE__);
+    throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   return label;
 }

@@ -1824,7 +1824,7 @@
           <!--__________________________________-->
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>3</calc_frequency>
-            <abskt label="abskg"/>
+            <absk label="abskg"/>
             <RMCRT type="float">
               <randomSeed>         false           </randomSeed>
               <nDivQRays>          100             </nDivQRays>

@@ -4,7 +4,7 @@
 
 using namespace Uintah;
 
-std::string 
+std::string
 ArchesCore::parse_ups_for_role( ArchesCore::CFD_ROLE role_enum, ProblemSpecP db, std::string mydefault  ){
 
   std::string role = role_enum_to_string( role_enum );
@@ -32,7 +32,7 @@ ArchesCore::parse_ups_for_role( ArchesCore::CFD_ROLE role_enum, ProblemSpecP db,
 
 // ---------------------------------------------------------------------------
 
-ArchesCore::CFD_ROLE 
+ArchesCore::CFD_ROLE
 ArchesCore::role_string_to_enum( const std::string role ){
 
   if ( role == "uvelocity" ){
@@ -64,7 +64,7 @@ ArchesCore::role_string_to_enum( const std::string role ){
 
 // ---------------------------------------------------------------------------
 
-std::string 
+std::string
 ArchesCore::role_enum_to_string( const ArchesCore::CFD_ROLE role ){
   if ( role == ArchesCore::UVELOCITY_ROLE ){
     return "uvelocity";
@@ -93,7 +93,7 @@ ArchesCore::role_enum_to_string( const ArchesCore::CFD_ROLE role ){
   }
 }
 
-ProblemSpecP 
+ProblemSpecP
 ArchesCore::find_node_with_att( ProblemSpecP& db, std::string start,
                                 std::string children_name,
                                 std::string att,
@@ -131,5 +131,73 @@ ArchesCore::find_node_with_att( ProblemSpecP& db, std::string start,
   }
 
   return nullptr;
+
+}
+
+std::vector<bool>
+ArchesCore::save_in_archiver( const std::vector<std::string> variables,
+                              ProblemSpecP& db,
+                              bool partial_match,
+                              const int starting_pos_in,
+                              const int starting_pos_lab )
+{
+
+  ProblemSpecP db_archive = db->getRootNode()->findBlock("DataArchiver");
+  std::vector<bool> saved;
+  int i = 0;
+
+  if (!partial_match){
+
+    // Searching for an exact match:
+    for ( auto i_var = variables.begin(); i_var != variables.end(); i_var ++ ){ //loop over user variables
+      saved.push_back(false);
+      for ( ProblemSpecP db_child = db_archive->findBlock("save"); db_child != nullptr; //loop over dataArchiver
+            db_child = db_child->findNextBlock("save") ){
+
+        std::string label;
+        db_child->getAttribute("label", label);
+
+        if ( (*i_var).compare(label) == 0 ){
+          saved[i] = true;
+          break;
+        }
+
+      }
+      i += 1;
+    }
+
+  } else {
+
+    // Searching for a partial match:
+    for ( auto i_var = variables.begin(); i_var != variables.end(); i_var ++ ){ //loop over user variables
+
+      saved.push_back(false);
+      std::string the_var = *i_var;
+
+      for ( ProblemSpecP db_child = db_archive->findBlock("save"); db_child != nullptr; //loop over dataArchiver
+            db_child = db_child->findNextBlock("save") ){
+
+        std::string label;
+        db_child->getAttribute("label", label);
+
+        int size_of_var = (*i_var).size();
+        int size_of_label = label.size();
+
+        if ( size_of_label >= size_of_var ){
+          //Can only compare the strings if the size of the label = or is > than the size of the var
+          if ( the_var.compare( starting_pos_in, size_of_var, label, starting_pos_lab, size_of_var ) == 0 ){
+            saved[i] = true;
+            break;
+          }
+        }
+
+      }
+
+      i += 1;
+
+    }
+  }
+
+  return saved;
 
 }

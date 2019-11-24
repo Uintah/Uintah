@@ -2051,9 +2051,15 @@
             <includeParticleRad         spec="OPTIONAL BOOLEAN" need_applies_to="type rmcrt_radiation" />              <!--Include particle radiation in intensity calc --> 
             <abskt                      spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
+                                        need_applies_to="type do_radiation"/>                                          <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
                                                                                                                             total absorption coeffient. When using particles, the abskg label defined there
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
+                                        <!-- used by RMCRT  -->
+            <absk                       spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"                                              
+                                        need_applies_to="type rmcrt_radiation" />                                       
+                                        
+            
             <DORadiationModel           spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'linearSolve, sweepSpatiallyParallel'"
                                         need_applies_to="type do_radiation " >

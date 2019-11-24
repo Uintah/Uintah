@@ -20,6 +20,9 @@
     <save label="cellType"/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
+    <save label="Intensity0000_00"/>
+    <save label="Intensity0005_00"/>
+    <save label="Intensity0004_00"/>
     <save label="CCVelocity"/>
     <save label="viscosityCTS"/>
     <save label="divQ"/>

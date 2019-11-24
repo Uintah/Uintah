@@ -35,6 +35,7 @@
 
 #if !defined( NO_ICE )
   #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+  #include <CCA/Components/OnTheFlyAnalysis/controlVolFluxes.h>
 #endif
 
 #if !defined( NO_MPM )
@@ -43,7 +44,7 @@
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
-  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
+  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>  
 #endif
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -114,6 +115,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 #if !defined( NO_ICE )
       else if ( module == "vorticity" ) {
         modules.push_back( scinew vorticity(           myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "controlVolFluxes" ) {
+        modules.push_back( scinew controlVolFluxes(    myworld, materialManager, module_ps ) );
       }
 #endif
 

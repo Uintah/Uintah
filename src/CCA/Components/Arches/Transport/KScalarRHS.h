@@ -62,7 +62,7 @@ public:
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks);
+    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( ArchesVIVector& variable_registry,
                                  const int time_substep , const bool packed_tasks);
@@ -77,7 +77,7 @@ public:
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -600,83 +600,6 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT> void
-  KScalarRHS<T, PT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-
-    if (iend >IMAX_SIZE){
-      throw InvalidValue("compiler static container size exceed at runtime.", __FILE__, __LINE__);
-    } 
-
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-    }
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT>
-  template <typename ExecSpace, typename MemSpace> void
-  KScalarRHS<T, PT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-
-    auto rho_phi = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
-    auto old_rho_phi = createConstContainer<CT,const double, IMAX_SIZE, MemSpace>(iend);
-
-    auto phi = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
-    auto rhs = createContainer<T,double, IMAX_SIZE, MemSpace>(iend);
-    auto old_phi = createConstContainer<CT,const double, IMAX_SIZE, MemSpace>(iend);
-
-    auto x_flux = createContainer<FXT,double, IMAX_SIZE, MemSpace>(iend);
-    auto y_flux = createContainer<FYT,double, IMAX_SIZE, MemSpace>(iend);
-    auto z_flux = createContainer<FZT,double, IMAX_SIZE, MemSpace>(iend);
-
-    int icount=0;
-
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-      tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_eqn_names[ieqn], phi[ieqn] );
-      tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_transported_eqn_names[ieqn]+"_RHS",rhs[ieqn] );
-      old_phi[ieqn] = tsk_info->get_field<CT, const double, MemSpace>( m_eqn_names[ieqn] );
-
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        old_rho_phi[icount] = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn] );
-        tsk_info->get_unmanaged_uintah_field<T, double, MemSpace>( m_transported_eqn_names[ieqn],rho_phi[icount] );
-        icount++;
-      }
-
-      tsk_info->get_unmanaged_uintah_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux",x_flux[ieqn]);
-      tsk_info->get_unmanaged_uintah_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux",y_flux[ieqn]);
-      tsk_info->get_unmanaged_uintah_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux",z_flux[ieqn]);
-
-    } //equation loop
-
-    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for(execObj,  range, KOKKOS_LAMBDA (int i, int j, int k){
-      for (int ieqn = 0; ieqn < iend; ieqn++ ){
-        rhs[ieqn](i,j,k)=(0.0);
-        x_flux[ieqn](i,j,k)=(0.0);
-        y_flux[ieqn](i,j,k)=(0.0);
-        z_flux[ieqn](i,j,k)=(0.0);
-        phi[ieqn](i,j,k)=old_phi[ieqn](i,j,k);
-      }
-      for (int ieqn = 0; ieqn < icount; ieqn++ ){
-        rho_phi[ieqn](i,j,k)=old_rho_phi[ieqn](i,j,k);
-      }
-    });
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
   KScalarRHS<T, PT>::
   register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                           const int time_substep , const bool packed_tasks ){
@@ -685,12 +608,16 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
+      if ( time_substep == 0 ){
+        register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      }
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       if ( m_do_diff[ieqn] ){
         register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
         register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
@@ -730,10 +657,38 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
+    const int time_substep = tsk_info->get_time_substep();
 
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      auto rho_phi=createConstContainer<CT,const double,1, MemSpace>(1);
+      //Copy forward old values
+      // Because old values have ghosts we have to explicitly copy values over.
+      // Additionally, we want the carry forward to occur in the right place.
+      if ( time_substep == 0 ){
+
+        IntVector low  = patch->getExtraCellLowIndex();
+        IntVector high = patch->getExtraCellHighIndex();
+        Uintah::BlockRange range( low, high);
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn]){
+          auto rho_phi = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]);
+          auto old_rho_phi = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
+
+          Uintah::parallel_for(execObj, range, [&](int i, int j, int k){
+            rho_phi(i,j,k) = old_rho_phi(i,j,k);
+          });
+
+        }
+
+        auto phi = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+        auto old_phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+
+        Uintah::parallel_for(execObj, range, [&](int i, int j, int k){
+          phi(i,j,k) = old_phi(i,j,k);
+        });
+
+      }
+
+      auto rho_phi=createConstContainer<CT, const double, 1, MemSpace>(1);
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
         rho_phi[0] = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
       }
@@ -741,19 +696,16 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
       auto phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
       auto rhs = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]+"_RHS");
 
-      Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-      Uintah::parallel_for(execObj,range_t,  KOKKOS_LAMBDA ( int i,  int j, int k){
-        rhs(i,j,k) = 0;
-      }); //end cell loop
+      Uintah::parallel_initialize( execObj, 0.0, rhs );
 
+      auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
+      auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
+      auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
+      Uintah::parallel_initialize( execObj, 0.0, x_flux, y_flux, z_flux );
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
-        auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
-        auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
-
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
         IntVector low_y  = patch->getCellLowIndex();
@@ -789,8 +741,6 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
           Uintah::BlockRange range( low, high);
 
           doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -811,9 +761,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
           low[1] = high[1] - boundary_buffer_y -1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
           doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }
 
@@ -835,8 +783,6 @@ doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
           low[2] = high[2] - boundary_buffer_z -1 ;
           Uintah::BlockRange range( low, high);
 
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],uVel,x_flux,eps,x_direc,ieqn);
-          doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],vVel,y_flux,eps,y_direc,ieqn);
           doConvection<ExecSpace, MemSpace, CentralConvection>(execObj,range,phi,rho_phi[0],wVel,z_flux,eps,z_direc,ieqn);
 
         }

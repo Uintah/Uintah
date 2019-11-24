@@ -245,7 +245,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
                   "\n       Remove the <LinearSolver> block for cases without a linear solve." << std::endl;
 
       throw ProblemSetupException(err_msg.str(),__FILE__,__LINE__);
-      
+
     }
 
     if( m_calcConditionNumber == true && m_useLapack == false ) {
@@ -341,8 +341,6 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     which_dw = Task::OldDW;
   }
 
-
-
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
 
     const VarLabel* tempLabel;
@@ -356,11 +354,11 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     stringstream mod_label;
     mod_label << eqn_label << "_src";
     const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
-    //if (timeSubStep == 0) {
-      //tsk->computes(sourceterm_label);
-    //} else {
+    if (timeSubStep == 0) {
+      tsk->computes(sourceterm_label);
+    } else {
       tsk->modifies(sourceterm_label);
-    //}
+    }
 
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
@@ -384,11 +382,11 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     stringstream mod_label;
     mod_label << eqn_label << "_src";
     const VarLabel* sourceterm_label = VarLabel::find(mod_label.str());
-    //if (timeSubStep == 0) {
-      //tsk->computes(sourceterm_label);
-    //} else {
+    if (timeSubStep == 0) {
+      tsk->computes(sourceterm_label);
+    } else {
       tsk->modifies(sourceterm_label);
-    //}
+    }
 
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
@@ -480,11 +478,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      //if ( timeSubStep == 0 ) {
-        //new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      //} else {
+      if ( timeSubStep == 0 ) {
+        new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      //}
+      }
       tempCCVar.initialize(0.0);
     }
 
@@ -493,11 +491,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      //if ( timeSubStep == 0 ){
-        //new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-      //} else {
+      if ( timeSubStep == 0 ){
+        new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else {
         new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      //}
+      }
       tempCCVar.initialize(0.0);
     }
 

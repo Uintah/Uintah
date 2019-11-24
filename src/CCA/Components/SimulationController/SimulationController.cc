@@ -66,7 +66,7 @@ Uintah::Dout g_sim_stats(       "SimulationStats"           , "SimulationControl
 Uintah::Dout g_sim_stats_mem(   "SimulationStatsMem"        , "SimulationController", "Simulation memory stats"          , true  );
 
 Uintah::Dout g_comp_stats(      "ComponentStats"            , "SimulationController", "Aggregated component stats"       , false );
-Uintah::Dout g_comp_node_stats( "ComponentNodeStats"        , "SimulationController", "Aggregated node component stats"  , false);
+Uintah::Dout g_comp_node_stats( "ComponentNodeStats"        , "SimulationController", "Aggregated node component stats"  , false );
 Uintah::Dout g_comp_indv_stats( "ComponentIndividualStats"  , "SimulationController", "Individual component stats"       , false );
 
 Uintah::Dout g_app_stats(       "ApplicationStats"          , "SimulationController", "Aggregated application stats"     , false );
@@ -797,7 +797,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
     // Infrastructure proc runtime performance stats.
     if (g_comp_stats && d_myworld->myRank() == 0 ) {
       m_runtime_stats.reportRankSummaryStats( "Runtime Summary ", "",
-                                              -1, -1,
+                                              d_myworld->myRank(),
+                                              d_myworld->nRanks(),
                                               m_application->getTimeStep(),
                                               m_application->getSimTime(),
                                               BaseInfoMapper::Dout,
@@ -807,26 +808,38 @@ SimulationController::ReportStats(const ProcessorGroup*,
       if (!std::isnan(overheadAverage)) {
         std::ostringstream message;
         message << "  Percentage of time spent in overhead : "
-                << overheadAverage * 100.0;     
+                << overheadAverage * 100.0;
 
-        if( 0 ) {
+        // This code is here in case one wants to write to disk the
+        // stats. Currently theses are written via Dout.
+        if( 1 ) {
           DOUT(true, message.str());
-        } else if( 1 ) {
-          std::ofstream fout;
-          std::string filename = "Runtime Summary " +
-            (false ? "." + std::to_string(m_application->getTimeStep()) : "");
-
-          fout.open(filename, std::ofstream::out | std::ofstream::app);
-          fout << message.str() << std::endl;
-          fout.close();
         }
+        // else if( 1 ) {
+        //   std::ofstream fout;
+        //   std::string filename = "Runtime Summary " +
+        //     (nRanks != -1 ? "." + std::to_string(nRanks)   : "") +
+        //     (rank   != -1 ? "." + std::to_string(rank)     : "") +
+        //     (oType == Write_Separate ? "." + std::to_string(timeStep) : "");
+
+        //   if( oType == Write_Append )
+        //     fout.open(filename, std::ofstream::out | std::ofstream::app);
+        //   else 
+        //     fout.open(filename, std::ofstream::out);
+            
+        //   fout << message.str() << std::endl;
+        //   fout.close();
+        // }
       }
     }
 
     // Infrastructure per node runtime performance stats.
     if (g_comp_node_stats && d_myworld->myNode_myRank() == 0 ) {
       m_runtime_stats.reportNodeSummaryStats( ("Runtime Node " + d_myworld->myNodeName()).c_str(), "",
-                                              -1, -1, 
+                                              d_myworld->myNode_myRank(),
+                                              d_myworld->myNode_nRanks(),
+                                              d_myworld->myNode(),
+                                              d_myworld->nNodes(),
                                               m_application->getTimeStep(),
                                               m_application->getSimTime(),
                                               BaseInfoMapper::Dout,
@@ -836,11 +849,11 @@ SimulationController::ReportStats(const ProcessorGroup*,
     // Infrastructure per proc runtime performance stats
     if (g_comp_indv_stats) {
       m_runtime_stats.reportIndividualStats( "Runtime", "",
-                                              d_myworld->myRank(),
-                                              d_myworld->nRanks(),
-                                              m_application->getTimeStep(),
-                                              m_application->getSimTime(),
-                                              BaseInfoMapper::Dout );
+                                             d_myworld->myRank(),
+                                             d_myworld->nRanks(),
+                                             m_application->getTimeStep(),
+                                             m_application->getSimTime(),
+                                             BaseInfoMapper::Dout );
     }
 
     // Application proc runtime performance stats.
@@ -859,8 +872,10 @@ SimulationController::ReportStats(const ProcessorGroup*,
     if (g_app_node_stats && d_myworld->myNode_myRank() == 0 ) {
       m_application->getApplicationStats().
         reportNodeSummaryStats( ("Application Node " + d_myworld->myNodeName()).c_str(), "",
-                                d_myworld->myRank(),
-                                d_myworld->nRanks(),
+                                d_myworld->myNode_myRank(),
+                                d_myworld->myNode_nRanks(),
+                                d_myworld->myNode(),
+                                d_myworld->nNodes(),
                                 m_application->getTimeStep(),
                                 m_application->getSimTime(),
                                 BaseInfoMapper::Dout,
