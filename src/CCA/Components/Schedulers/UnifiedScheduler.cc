@@ -4075,6 +4075,42 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
       hack_foundAComputes = true;
     }
 
+    // box1.ups hack
+    if ( (varName == "length_0_x_dflux") ||
+         (varName == "length_0_y_dflux") ||
+         (varName == "length_0_z_dflux") ||
+         (varName == "length_1_x_dflux") ||
+         (varName == "length_1_y_dflux") ||
+         (varName == "length_1_z_dflux") ||
+         (varName == "pU_0_x_dflux")     ||
+         (varName == "pU_0_y_dflux")     ||
+         (varName == "pU_0_z_dflux")     ||
+         (varName == "pV_0_x_dflux")     ||
+         (varName == "pV_0_y_dflux")     ||
+         (varName == "pV_0_z_dflux")     ||
+         (varName == "pW_0_x_dflux")     ||
+         (varName == "pW_0_y_dflux")     ||
+         (varName == "pW_0_z_dflux")     ||
+         (varName == "pU_1_x_dflux")     ||
+         (varName == "pU_1_y_dflux")     ||
+         (varName == "pU_1_z_dflux")     ||
+         (varName == "pV_1_x_dflux")     ||
+         (varName == "pV_1_y_dflux")     ||
+         (varName == "pV_1_z_dflux")     ||
+         (varName == "pW_1_x_dflux")     ||
+         (varName == "pW_1_y_dflux")     ||
+         (varName == "pW_1_z_dflux")     ||
+         (varName == "w_qn0_x_dflux")    ||
+         (varName == "w_qn0_y_dflux")    ||
+         (varName == "w_qn0_z_dflux")    ||
+         (varName == "w_qn1_x_dflux")    ||
+         (varName == "w_qn1_y_dflux")    ||
+         (varName == "w_qn1_z_dflux")
+       )
+    {
+      hack_foundAComputes = true;
+    }
+
     // dqmom_example_char_no_pressure.ups hack:
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
