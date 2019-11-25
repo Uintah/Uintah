@@ -134,37 +134,31 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
   IntVector lowPt  = m_lowIndx;
   IntVector highPt = m_highIndx;
 
-  //compute the dimension
-  int dim=face/2;
+  // principle direction
+  const int pDir = getFaceAxes(face)[0];
 
-  //compute if we are a plus face
-  bool plusface=face%2;
+  bool plusface= (face == xplus || face == yplus || face == zplus);
 
   switch(domain)
   {
-    case MinusEdgeCells:
+    case SFC_Cells:         // offset the plus faces by 1 cell
 
-      //select the face
       if(plusface){
-        lowPt[dim]  =  highPt[dim];   //restrict dimension to the face
-        highPt[dim] += 1;             //extend dimension by extra cells
+        lowPt[pDir]  =  highPt[pDir];
+        highPt[pDir] += 1;
       }
       else{
-        highPt[dim] = lowPt[dim];     //restrict dimension to face
-        lowPt[dim]  -=1;              //extend dimension by extra cells
+        highPt[pDir] = lowPt[pDir] + 1;
       }
       break;
 
     case InteriorFaceCells:
 
-      //select the face
       if(plusface){
-        lowPt[dim] = highPt[dim];     //restrict index to face
-        lowPt[dim]--;                 //contract dimension by 1
+        lowPt[pDir] = highPt[pDir] - 1;
       }
       else{
-        highPt[dim] = lowPt[dim];     //restrict index to face
-        highPt[dim]++;                //contract dimension by 1
+        highPt[pDir] = lowPt[pDir] + 1;
       }
       break;
     default:
@@ -210,12 +204,6 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
 
   IntVector p_lo =  patch->getCellLowIndex();
   IntVector p_hi =  patch->getCellHighIndex();
-
-/*`==========TESTING==========*/
-  cout << " controlVolume::getBoundaryFaces :\n";
-  cout << " p_lo:    " << p_lo       << " p_hi:      " << p_hi << endl;
-  cout << " lowIndx: " << m_lowIndx << " highIndex: " << m_highIndx << endl; 
-/*===========TESTING==========`*/
 
   bool doesIntersect_XY = (m_highIndx.x() > p_lo.x() &&
                            m_lowIndx.x()  < p_hi.x() &&

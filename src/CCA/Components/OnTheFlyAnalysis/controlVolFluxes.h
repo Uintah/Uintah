@@ -188,7 +188,8 @@ DESCRIPTION
     const MaterialSubset * m_matl;
     MaterialSet          * m_matlSet;
 
-    int m_col_width = 16;    //  column width used in output formatting
+    int m_col_width = 22;    //  column width used in output formatting
+    int m_precision = 16;    // number of significant digits in output
     int m_matIdx;            // material index.
 
 

@@ -406,8 +406,6 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     new_dw->get(vvel_FC, m_lb->vvel_FC,  m_matIdx, patch, gn,0);
     new_dw->get(wvel_FC, m_lb->wvel_FC,  m_matIdx, patch, gn,0);
 
-    double totalQ_CV = 0;
-
     //__________________________________
     //  loop over control volumes
     for( size_t cv=0; cv< m_controlVols.size(); cv++ ){
@@ -421,6 +419,8 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
       //__________________________________
       //  Sum the total Q over the patch
       double  cellVol = patch->cellVolume();
+      double totalQ_CV = 0;
+      
       for (CellIterator iter=contVol->getCellIterator( patch );!iter.done();iter++){
         IntVector c = *iter;
         totalQ_CV += rho_CC[c] * cellVol;
@@ -560,7 +560,7 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
         throw InternalError("\nERROR:dataAnalysisModule:fluxes:  failed opening file"+filename,__FILE__, __LINE__);
       }
       //__________________________________
-      //
+      //  Write out the total and net fluxes
       sum_vartype    totalQ_CV;
       sumvec_vartype Q_flux;
 
@@ -571,13 +571,14 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
       const double Q          = totalQ_CV;
       const Vector net_Q_flux = Q_flux;
       const int w = m_col_width;
+      const int p = m_precision;
 
-      fprintf(fp, "%-*E %-*E %-*E %-*E %-*E ",
-              w, tv.now,
-              w, Q,
-              w, net_Q_flux.x(),
-              w, net_Q_flux.y(),
-              w, net_Q_flux.z() );
+      fprintf(fp, "%-*.*E %-*.*E %-*.*E %-*.*E %-*.*E ",
+              w, p, tv.now,
+              w, p, Q,
+              w, p, net_Q_flux.x(),
+              w, p, net_Q_flux.y(),
+              w, p, net_Q_flux.z() );
 
       //__________________________________
       //   write out each face flux
@@ -586,7 +587,7 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
         new_dw->get( Q_faceFlux, m_lb->Q_faceFluxes[i][f] );
 
         const double Q_ff = Q_faceFlux;
-        fprintf(fp, "%-*E ",w, Q_ff);
+        fprintf(fp, "%-*.*E ",w, p, Q_ff);
       }
       fprintf(fp, "\n");
 
@@ -621,10 +622,7 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
 
   //__________________________________
   //  get the iterator on this face
-  //controlVolume::FaceIteratorType MEC = controlVolume::MinusEdgeCells;
-  controlVolume::FaceIteratorType IFC = controlVolume::InteriorFaceCells;
-
-  CellIterator iter = cv->getFaceIterator(face, IFC, patch);
+  CellIterator iter = cv->getFaceIterator(face, controlVolume::SFC_Cells, patch);
 
   cout_dbg << std::right << setw(10) <<  " faceIter: " << setw(10) << iter << endl;
 
