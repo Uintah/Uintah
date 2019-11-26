@@ -995,10 +995,11 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
       var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     }
     else {
+      //  Create and initialize the variable if it doesn't exist
       var = dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
       var->setBenignValue();
 
-      // put it in the DB so the next get won't fail and so we won't have to delete it manually
+      DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " reduceMPI: initializing (" <<label->getName() <<")" );
       m_level_DB.put( label, matlIndex, level, var, d_scheduler->copyTimestep(), true );
     }
 
@@ -1015,8 +1016,10 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
       ASSERTEQ( datatype, senddatatype );
     }
     count += sendcount;
-
   }
+  
+  //__________________________________
+  //
   int packsize;
   Uintah::MPI::Pack_size( count, datatype, d_myworld->getGlobalComm( nComm ), &packsize );
   std::vector<char> sendbuf( packsize );
@@ -1036,12 +1039,14 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
   }
 
   std::vector<char> recvbuf( packsize );
-
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, name " << label->getName() << " level " << (level ? level->getID() : -1));
+  
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, name " << label->getName() 
+       << " sendbuf.size() " << sendbuf.size() << " level " << (level ? level->getID() : -1));
 
   int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getGlobalComm( nComm ) );
 
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, done " << label->getName() << " level " << (level ? level->getID() : -1));
+  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, done " << label->getName() 
+      << " recvbuf.size() " << recvbuf.size() << " level " << (level ? level->getID() : -1));
 
   if( error ) {
     DOUT(true, "reduceMPI: Uintah::MPI::Allreduce error: " << error);
@@ -1061,6 +1066,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
     }
     var->putMPIData( recvbuf, unpackindex );
   }
+  
   if( matls != inmatls ) {
     delete matls;
   }
