@@ -53,9 +53,9 @@ GIMPInterpolator* GIMPInterpolator::clone(const Patch* patch)
 }
     
 int GIMPInterpolator::findCellAndWeights(const Point& pos,
-                                            vector<IntVector>& ni, 
-                                            vector<double>& S,
-                                            const Matrix3& size)
+                                         vector<IntVector>& ni, 
+                                         vector<double>& S,
+                                         const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -69,34 +69,37 @@ int GIMPInterpolator::findCellAndWeights(const Point& pos,
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
   if(cellpos.z()-(iz) <= .5){ nnz = -1; } else{ nnz = 2; }
+
+  IntVector tni[27];
+  double tS[27];
   
-  ni[0]  = IntVector(ix,    iy,      iz);
-  ni[1]  = IntVector(ix+1,  iy,      iz);
-  ni[2]  = IntVector(ix+nnx,iy,      iz);
-  ni[3]  = IntVector(ix,    iy+1,    iz);
-  ni[4]  = IntVector(ix+1,  iy+1,    iz);
-  ni[5]  = IntVector(ix+nnx,iy+1,    iz);
-  ni[6]  = IntVector(ix,    iy+nny,  iz);
-  ni[7]  = IntVector(ix+1,  iy+nny,  iz);
-  ni[8]  = IntVector(ix+nnx,iy+nny,  iz);
-  ni[9]  = IntVector(ix,    iy,      iz+1);
-  ni[10] = IntVector(ix+1,  iy,      iz+1);
-  ni[11] = IntVector(ix+nnx,iy,      iz+1);
-  ni[12] = IntVector(ix,    iy+1,    iz+1);
-  ni[13] = IntVector(ix+1,  iy+1,    iz+1);
-  ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
-  ni[15] = IntVector(ix,    iy+nny,  iz+1);
-  ni[16] = IntVector(ix+1,  iy+nny,  iz+1);
-  ni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
-  ni[18] = IntVector(ix,    iy,      iz+nnz);
-  ni[19] = IntVector(ix+1,  iy,      iz+nnz);
-  ni[20] = IntVector(ix+nnx,iy,      iz+nnz);
-  ni[21] = IntVector(ix,    iy+1,    iz+nnz);
-  ni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
-  ni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
-  ni[24] = IntVector(ix,    iy+nny,  iz+nnz);
-  ni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
-  ni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
+  tni[0]  = IntVector(ix,    iy,      iz);
+  tni[1]  = IntVector(ix+1,  iy,      iz);
+  tni[2]  = IntVector(ix+nnx,iy,      iz);
+  tni[3]  = IntVector(ix,    iy+1,    iz);
+  tni[4]  = IntVector(ix+1,  iy+1,    iz);
+  tni[5]  = IntVector(ix+nnx,iy+1,    iz);
+  tni[6]  = IntVector(ix,    iy+nny,  iz);
+  tni[7]  = IntVector(ix+1,  iy+nny,  iz);
+  tni[8]  = IntVector(ix+nnx,iy+nny,  iz);
+  tni[9]  = IntVector(ix,    iy,      iz+1);
+  tni[10] = IntVector(ix+1,  iy,      iz+1);
+  tni[11] = IntVector(ix+nnx,iy,      iz+1);
+  tni[12] = IntVector(ix,    iy+1,    iz+1);
+  tni[13] = IntVector(ix+1,  iy+1,    iz+1);
+  tni[14] = IntVector(ix+nnx,iy+1,    iz+1);
+  tni[15] = IntVector(ix,    iy+nny,  iz+1);
+  tni[16] = IntVector(ix+1,  iy+nny,  iz+1);
+  tni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
+  tni[18] = IntVector(ix,    iy,      iz+nnz);
+  tni[19] = IntVector(ix+1,  iy,      iz+nnz);
+  tni[20] = IntVector(ix+nnx,iy,      iz+nnz);
+  tni[21] = IntVector(ix,    iy+1,    iz+nnz);
+  tni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
+  tni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
+  tni[24] = IntVector(ix,    iy+nny,  iz+nnz);
+  tni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
+  tni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
   
   // (x_p - x_v)/L
   double px0 = cellpos.x() - (ix);
@@ -108,10 +111,8 @@ int GIMPInterpolator::findCellAndWeights(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
-         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
-         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
-  
+  double fx[3],fy[3],fz[3];
+
   if(px0 <= lx){
     fx[0] = 1. - (px0*px0 + (lx)*(lx))/(2*lx);
     fx[1] = (1. + lx + px1)*(1. + lx + px1)/(4*lx);
@@ -160,41 +161,51 @@ int GIMPInterpolator::findCellAndWeights(const Point& pos,
     fz[2] = (1. + lz + pz2)*(1. + lz + pz2)/(4*lz);
   }
   
-  S[0]  = fx[0]*fy[0]*fz[0];
-  S[1]  = fx[1]*fy[0]*fz[0];
-  S[2]  = fx[2]*fy[0]*fz[0];
-  S[3]  = fx[0]*fy[1]*fz[0];
-  S[4]  = fx[1]*fy[1]*fz[0];
-  S[5]  = fx[2]*fy[1]*fz[0];
-  S[6]  = fx[0]*fy[2]*fz[0];
-  S[7]  = fx[1]*fy[2]*fz[0];
-  S[8]  = fx[2]*fy[2]*fz[0];
-  S[9]  = fx[0]*fy[0]*fz[1];
-  S[10] = fx[1]*fy[0]*fz[1];
-  S[11] = fx[2]*fy[0]*fz[1];
-  S[12] = fx[0]*fy[1]*fz[1];
-  S[13] = fx[1]*fy[1]*fz[1];
-  S[14] = fx[2]*fy[1]*fz[1];
-  S[15] = fx[0]*fy[2]*fz[1];
-  S[16] = fx[1]*fy[2]*fz[1];
-  S[17] = fx[2]*fy[2]*fz[1];
-  S[18] = fx[0]*fy[0]*fz[2];
-  S[19] = fx[1]*fy[0]*fz[2];
-  S[20] = fx[2]*fy[0]*fz[2];
-  S[21] = fx[0]*fy[1]*fz[2];
-  S[22] = fx[1]*fy[1]*fz[2];
-  S[23] = fx[2]*fy[1]*fz[2];
-  S[24] = fx[0]*fy[2]*fz[2];
-  S[25] = fx[1]*fy[2]*fz[2];
-  S[26] = fx[2]*fy[2]*fz[2];
+  tS[0]  = fx[0]*fy[0]*fz[0];
+  tS[1]  = fx[1]*fy[0]*fz[0];
+  tS[2]  = fx[2]*fy[0]*fz[0];
+  tS[3]  = fx[0]*fy[1]*fz[0];
+  tS[4]  = fx[1]*fy[1]*fz[0];
+  tS[5]  = fx[2]*fy[1]*fz[0];
+  tS[6]  = fx[0]*fy[2]*fz[0];
+  tS[7]  = fx[1]*fy[2]*fz[0];
+  tS[8]  = fx[2]*fy[2]*fz[0];
+  tS[9]  = fx[0]*fy[0]*fz[1];
+  tS[10] = fx[1]*fy[0]*fz[1];
+  tS[11] = fx[2]*fy[0]*fz[1];
+  tS[12] = fx[0]*fy[1]*fz[1];
+  tS[13] = fx[1]*fy[1]*fz[1];
+  tS[14] = fx[2]*fy[1]*fz[1];
+  tS[15] = fx[0]*fy[2]*fz[1];
+  tS[16] = fx[1]*fy[2]*fz[1];
+  tS[17] = fx[2]*fy[2]*fz[1];
 
-  return 27;
+  tS[18] = fx[0]*fy[0]*fz[2];
+  tS[19] = fx[1]*fy[0]*fz[2];
+  tS[20] = fx[2]*fy[0]*fz[2];
+  tS[21] = fx[0]*fy[1]*fz[2];
+  tS[22] = fx[1]*fy[1]*fz[2];
+  tS[23] = fx[2]*fy[1]*fz[2];
+  tS[24] = fx[0]*fy[2]*fz[2];
+  tS[25] = fx[1]*fy[2]*fz[2];
+  tS[26] = fx[2]*fy[2]*fz[2];
+
+  int count = 0;
+  for(int i=0;i<27;i++){
+   if(tS[i]>0.0){
+    S[count] =tS[i];
+    ni[count]=tni[i];
+    count++;
+   }
+  }
+
+  return count;
 }
  
 int GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
-                                                     vector<IntVector>& ni,
-                                                     vector<Vector>& d_S,
-                                                     const Matrix3& size)
+                                                  vector<IntVector>& ni,
+                                                  vector<Vector>& d_S,
+                                                  const Matrix3& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -205,38 +216,42 @@ int GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double ly = size(1,1)/2.;
   double lz = size(2,2)/2.;
   
+  IntVector tni[27];
+  double tS[27];
+  Vector td_S[27];
+
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
   if(cellpos.z()-(iz) <= .5){ nnz = -1; } else{ nnz = 2; }
   
-  ni[0]  = IntVector(ix,    iy,      iz);
-  ni[1]  = IntVector(ix+1,  iy,      iz);
-  ni[2]  = IntVector(ix+nnx,iy,      iz);
-  ni[3]  = IntVector(ix,    iy+1,    iz);
-  ni[4]  = IntVector(ix+1,  iy+1,    iz);
-  ni[5]  = IntVector(ix+nnx,iy+1,    iz);
-  ni[6]  = IntVector(ix,    iy+nny,  iz);
-  ni[7]  = IntVector(ix+1,  iy+nny,  iz);
-  ni[8]  = IntVector(ix+nnx,iy+nny,  iz);
-  ni[9]  = IntVector(ix,    iy,      iz+1);
-  ni[10] = IntVector(ix+1,  iy,      iz+1);
-  ni[11] = IntVector(ix+nnx,iy,      iz+1);
-  ni[12] = IntVector(ix,    iy+1,    iz+1);
-  ni[13] = IntVector(ix+1,  iy+1,    iz+1);
-  ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
-  ni[15] = IntVector(ix,    iy+nny,  iz+1);
-  ni[16] = IntVector(ix+1,  iy+nny,  iz+1);
-  ni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
-  ni[18] = IntVector(ix,    iy,      iz+nnz);
-  ni[19] = IntVector(ix+1,  iy,      iz+nnz);
-  ni[20] = IntVector(ix+nnx,iy,      iz+nnz);
-  ni[21] = IntVector(ix,    iy+1,    iz+nnz);
-  ni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
-  ni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
-  ni[24] = IntVector(ix,    iy+nny,  iz+nnz);
-  ni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
-  ni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
-  
+  tni[0]  = IntVector(ix,    iy,      iz);
+  tni[1]  = IntVector(ix+1,  iy,      iz);
+  tni[2]  = IntVector(ix+nnx,iy,      iz);
+  tni[3]  = IntVector(ix,    iy+1,    iz);
+  tni[4]  = IntVector(ix+1,  iy+1,    iz);
+  tni[5]  = IntVector(ix+nnx,iy+1,    iz);
+  tni[6]  = IntVector(ix,    iy+nny,  iz);
+  tni[7]  = IntVector(ix+1,  iy+nny,  iz);
+  tni[8]  = IntVector(ix+nnx,iy+nny,  iz);
+  tni[9]  = IntVector(ix,    iy,      iz+1);
+  tni[10] = IntVector(ix+1,  iy,      iz+1);
+  tni[11] = IntVector(ix+nnx,iy,      iz+1);
+  tni[12] = IntVector(ix,    iy+1,    iz+1);
+  tni[13] = IntVector(ix+1,  iy+1,    iz+1);
+  tni[14] = IntVector(ix+nnx,iy+1,    iz+1);
+  tni[15] = IntVector(ix,    iy+nny,  iz+1);
+  tni[16] = IntVector(ix+1,  iy+nny,  iz+1);
+  tni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
+  tni[18] = IntVector(ix,    iy,      iz+nnz);
+  tni[19] = IntVector(ix+1,  iy,      iz+nnz);
+  tni[20] = IntVector(ix+nnx,iy,      iz+nnz);
+  tni[21] = IntVector(ix,    iy+1,    iz+nnz);
+  tni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
+  tni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
+  tni[24] = IntVector(ix,    iy+nny,  iz+nnz);
+  tni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
+  tni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
+ 
   // (x_p - x_v)/L
   double px0 = cellpos.x() - (ix);
   double px1 = cellpos.x() - (ix+1);
@@ -247,13 +262,8 @@ int GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
-  
+  double fx[3],fy[3],fz[3], dfx[3], dfy[3], dfz[3];
+
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
     fx[1]  = (1. + lx + px1)*(1. + lx + px1)/(4.*lx);
@@ -329,37 +339,75 @@ int GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
     dfz[2] = (1. + lz + pz2)/(2.*lz);
   }
   
-  d_S[0]  = Vector(dfx[0]*fy[0]*fz[0],fx[0]*dfy[0]*fz[0],fx[0]*fy[0]*dfz[0]);
-  d_S[1]  = Vector(dfx[1]*fy[0]*fz[0],fx[1]*dfy[0]*fz[0],fx[1]*fy[0]*dfz[0]);
-  d_S[2]  = Vector(dfx[2]*fy[0]*fz[0],fx[2]*dfy[0]*fz[0],fx[2]*fy[0]*dfz[0]);
-  d_S[3]  = Vector(dfx[0]*fy[1]*fz[0],fx[0]*dfy[1]*fz[0],fx[0]*fy[1]*dfz[0]);
-  d_S[4]  = Vector(dfx[1]*fy[1]*fz[0],fx[1]*dfy[1]*fz[0],fx[1]*fy[1]*dfz[0]);
-  d_S[5]  = Vector(dfx[2]*fy[1]*fz[0],fx[2]*dfy[1]*fz[0],fx[2]*fy[1]*dfz[0]);
-  d_S[6]  = Vector(dfx[0]*fy[2]*fz[0],fx[0]*dfy[2]*fz[0],fx[0]*fy[2]*dfz[0]);
-  d_S[7]  = Vector(dfx[1]*fy[2]*fz[0],fx[1]*dfy[2]*fz[0],fx[1]*fy[2]*dfz[0]);
-  d_S[8]  = Vector(dfx[2]*fy[2]*fz[0],fx[2]*dfy[2]*fz[0],fx[2]*fy[2]*dfz[0]);
+  tS[0]  = fx[0]*fy[0]*fz[0];
+  tS[1]  = fx[1]*fy[0]*fz[0];
+  tS[2]  = fx[2]*fy[0]*fz[0];
+  tS[3]  = fx[0]*fy[1]*fz[0];
+  tS[4]  = fx[1]*fy[1]*fz[0];
+  tS[5]  = fx[2]*fy[1]*fz[0];
+  tS[6]  = fx[0]*fy[2]*fz[0];
+  tS[7]  = fx[1]*fy[2]*fz[0];
+  tS[8]  = fx[2]*fy[2]*fz[0];
+  tS[9]  = fx[0]*fy[0]*fz[1];
+  tS[10] = fx[1]*fy[0]*fz[1];
+  tS[11] = fx[2]*fy[0]*fz[1];
+  tS[12] = fx[0]*fy[1]*fz[1];
+  tS[13] = fx[1]*fy[1]*fz[1];
+  tS[14] = fx[2]*fy[1]*fz[1];
+  tS[15] = fx[0]*fy[2]*fz[1];
+  tS[16] = fx[1]*fy[2]*fz[1];
+  tS[17] = fx[2]*fy[2]*fz[1];
+  tS[18] = fx[0]*fy[0]*fz[2];
+  tS[19] = fx[1]*fy[0]*fz[2];
+  tS[20] = fx[2]*fy[0]*fz[2];
+  tS[21] = fx[0]*fy[1]*fz[2];
+  tS[22] = fx[1]*fy[1]*fz[2];
+  tS[23] = fx[2]*fy[1]*fz[2];
+  tS[24] = fx[0]*fy[2]*fz[2];
+  tS[25] = fx[1]*fy[2]*fz[2];
+  tS[26] = fx[2]*fy[2]*fz[2];
   
-  d_S[9]  = Vector(dfx[0]*fy[0]*fz[1],fx[0]*dfy[0]*fz[1],fx[0]*fy[0]*dfz[1]);
-  d_S[10] = Vector(dfx[1]*fy[0]*fz[1],fx[1]*dfy[0]*fz[1],fx[1]*fy[0]*dfz[1]);
-  d_S[11] = Vector(dfx[2]*fy[0]*fz[1],fx[2]*dfy[0]*fz[1],fx[2]*fy[0]*dfz[1]);
-  d_S[12] = Vector(dfx[0]*fy[1]*fz[1],fx[0]*dfy[1]*fz[1],fx[0]*fy[1]*dfz[1]);
-  d_S[13] = Vector(dfx[1]*fy[1]*fz[1],fx[1]*dfy[1]*fz[1],fx[1]*fy[1]*dfz[1]);
-  d_S[14] = Vector(dfx[2]*fy[1]*fz[1],fx[2]*dfy[1]*fz[1],fx[2]*fy[1]*dfz[1]);
-  d_S[15] = Vector(dfx[0]*fy[2]*fz[1],fx[0]*dfy[2]*fz[1],fx[0]*fy[2]*dfz[1]);
-  d_S[16] = Vector(dfx[1]*fy[2]*fz[1],fx[1]*dfy[2]*fz[1],fx[1]*fy[2]*dfz[1]);
-  d_S[17] = Vector(dfx[2]*fy[2]*fz[1],fx[2]*dfy[2]*fz[1],fx[2]*fy[2]*dfz[1]);
-  
-  d_S[18] = Vector(dfx[0]*fy[0]*fz[2],fx[0]*dfy[0]*fz[2],fx[0]*fy[0]*dfz[2]);
-  d_S[19] = Vector(dfx[1]*fy[0]*fz[2],fx[1]*dfy[0]*fz[2],fx[1]*fy[0]*dfz[2]);
-  d_S[20] = Vector(dfx[2]*fy[0]*fz[2],fx[2]*dfy[0]*fz[2],fx[2]*fy[0]*dfz[2]);
-  d_S[21] = Vector(dfx[0]*fy[1]*fz[2],fx[0]*dfy[1]*fz[2],fx[0]*fy[1]*dfz[2]);
-  d_S[22] = Vector(dfx[1]*fy[1]*fz[2],fx[1]*dfy[1]*fz[2],fx[1]*fy[1]*dfz[2]);
-  d_S[23] = Vector(dfx[2]*fy[1]*fz[2],fx[2]*dfy[1]*fz[2],fx[2]*fy[1]*dfz[2]);
-  d_S[24] = Vector(dfx[0]*fy[2]*fz[2],fx[0]*dfy[2]*fz[2],fx[0]*fy[2]*dfz[2]);
-  d_S[25] = Vector(dfx[1]*fy[2]*fz[2],fx[1]*dfy[2]*fz[2],fx[1]*fy[2]*dfz[2]);
-  d_S[26] = Vector(dfx[2]*fy[2]*fz[2],fx[2]*dfy[2]*fz[2],fx[2]*fy[2]*dfz[2]);
+  td_S[0]  = Vector(dfx[0]*fy[0]*fz[0],fx[0]*dfy[0]*fz[0],fx[0]*fy[0]*dfz[0]);
+  td_S[1]  = Vector(dfx[1]*fy[0]*fz[0],fx[1]*dfy[0]*fz[0],fx[1]*fy[0]*dfz[0]);
+  td_S[2]  = Vector(dfx[2]*fy[0]*fz[0],fx[2]*dfy[0]*fz[0],fx[2]*fy[0]*dfz[0]);
+  td_S[3]  = Vector(dfx[0]*fy[1]*fz[0],fx[0]*dfy[1]*fz[0],fx[0]*fy[1]*dfz[0]);
+  td_S[4]  = Vector(dfx[1]*fy[1]*fz[0],fx[1]*dfy[1]*fz[0],fx[1]*fy[1]*dfz[0]);
+  td_S[5]  = Vector(dfx[2]*fy[1]*fz[0],fx[2]*dfy[1]*fz[0],fx[2]*fy[1]*dfz[0]);
+  td_S[6]  = Vector(dfx[0]*fy[2]*fz[0],fx[0]*dfy[2]*fz[0],fx[0]*fy[2]*dfz[0]);
+  td_S[7]  = Vector(dfx[1]*fy[2]*fz[0],fx[1]*dfy[2]*fz[0],fx[1]*fy[2]*dfz[0]);
+  td_S[8]  = Vector(dfx[2]*fy[2]*fz[0],fx[2]*dfy[2]*fz[0],fx[2]*fy[2]*dfz[0]);
+ 
+  td_S[9]  = Vector(dfx[0]*fy[0]*fz[1],fx[0]*dfy[0]*fz[1],fx[0]*fy[0]*dfz[1]);
+  td_S[10] = Vector(dfx[1]*fy[0]*fz[1],fx[1]*dfy[0]*fz[1],fx[1]*fy[0]*dfz[1]);
+  td_S[11] = Vector(dfx[2]*fy[0]*fz[1],fx[2]*dfy[0]*fz[1],fx[2]*fy[0]*dfz[1]);
+  td_S[12] = Vector(dfx[0]*fy[1]*fz[1],fx[0]*dfy[1]*fz[1],fx[0]*fy[1]*dfz[1]);
+  td_S[13] = Vector(dfx[1]*fy[1]*fz[1],fx[1]*dfy[1]*fz[1],fx[1]*fy[1]*dfz[1]);
+  td_S[14] = Vector(dfx[2]*fy[1]*fz[1],fx[2]*dfy[1]*fz[1],fx[2]*fy[1]*dfz[1]);
+  td_S[15] = Vector(dfx[0]*fy[2]*fz[1],fx[0]*dfy[2]*fz[1],fx[0]*fy[2]*dfz[1]);
+  td_S[16] = Vector(dfx[1]*fy[2]*fz[1],fx[1]*dfy[2]*fz[1],fx[1]*fy[2]*dfz[1]);
+  td_S[17] = Vector(dfx[2]*fy[2]*fz[1],fx[2]*dfy[2]*fz[1],fx[2]*fy[2]*dfz[1]);
+ 
+  td_S[18] = Vector(dfx[0]*fy[0]*fz[2],fx[0]*dfy[0]*fz[2],fx[0]*fy[0]*dfz[2]);
+  td_S[19] = Vector(dfx[1]*fy[0]*fz[2],fx[1]*dfy[0]*fz[2],fx[1]*fy[0]*dfz[2]);
+  td_S[20] = Vector(dfx[2]*fy[0]*fz[2],fx[2]*dfy[0]*fz[2],fx[2]*fy[0]*dfz[2]);
+  td_S[21] = Vector(dfx[0]*fy[1]*fz[2],fx[0]*dfy[1]*fz[2],fx[0]*fy[1]*dfz[2]);
+  td_S[22] = Vector(dfx[1]*fy[1]*fz[2],fx[1]*dfy[1]*fz[2],fx[1]*fy[1]*dfz[2]);
+  td_S[23] = Vector(dfx[2]*fy[1]*fz[2],fx[2]*dfy[1]*fz[2],fx[2]*fy[1]*dfz[2]);
+  td_S[24] = Vector(dfx[0]*fy[2]*fz[2],fx[0]*dfy[2]*fz[2],fx[0]*fy[2]*dfz[2]);
+  td_S[25] = Vector(dfx[1]*fy[2]*fz[2],fx[1]*dfy[2]*fz[2],fx[1]*fy[2]*dfz[2]);
+  td_S[26] = Vector(dfx[2]*fy[2]*fz[2],fx[2]*dfy[2]*fz[2],fx[2]*fy[2]*dfz[2]);
 
-  return 27;
+  int count = 0;
+  for(int i=0;i<27;i++){
+   if(tS[i]>0.0){
+    //S[count]   =tS[i];
+    d_S[count] =td_S[i];
+    ni[count]  =tni[i];
+    count++;
+   }
+  }
+
+  return count;
 }
 
 int 
@@ -377,38 +425,42 @@ GIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double lx = size(0,0)/2.;
   double ly = size(1,1)/2.;
   double lz = size(2,2)/2.;
+
+  IntVector tni[27];
+  double tS[27];
+  Vector td_S[27];
   
   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
   if(cellpos.z()-(iz) <= .5){ nnz = -1; } else{ nnz = 2; }
   
-  ni[0]  = IntVector(ix,    iy,      iz);
-  ni[1]  = IntVector(ix+1,  iy,      iz);
-  ni[2]  = IntVector(ix+nnx,iy,      iz);
-  ni[3]  = IntVector(ix,    iy+1,    iz);
-  ni[4]  = IntVector(ix+1,  iy+1,    iz);
-  ni[5]  = IntVector(ix+nnx,iy+1,    iz);
-  ni[6]  = IntVector(ix,    iy+nny,  iz);
-  ni[7]  = IntVector(ix+1,  iy+nny,  iz);
-  ni[8]  = IntVector(ix+nnx,iy+nny,  iz);
-  ni[9]  = IntVector(ix,    iy,      iz+1);
-  ni[10] = IntVector(ix+1,  iy,      iz+1);
-  ni[11] = IntVector(ix+nnx,iy,      iz+1);
-  ni[12] = IntVector(ix,    iy+1,    iz+1);
-  ni[13] = IntVector(ix+1,  iy+1,    iz+1);
-  ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
-  ni[15] = IntVector(ix,    iy+nny,  iz+1);
-  ni[16] = IntVector(ix+1,  iy+nny,  iz+1);
-  ni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
-  ni[18] = IntVector(ix,    iy,      iz+nnz);
-  ni[19] = IntVector(ix+1,  iy,      iz+nnz);
-  ni[20] = IntVector(ix+nnx,iy,      iz+nnz);
-  ni[21] = IntVector(ix,    iy+1,    iz+nnz);
-  ni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
-  ni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
-  ni[24] = IntVector(ix,    iy+nny,  iz+nnz);
-  ni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
-  ni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
+  tni[0]  = IntVector(ix,    iy,      iz);
+  tni[1]  = IntVector(ix+1,  iy,      iz);
+  tni[2]  = IntVector(ix+nnx,iy,      iz);
+  tni[3]  = IntVector(ix,    iy+1,    iz);
+  tni[4]  = IntVector(ix+1,  iy+1,    iz);
+  tni[5]  = IntVector(ix+nnx,iy+1,    iz);
+  tni[6]  = IntVector(ix,    iy+nny,  iz);
+  tni[7]  = IntVector(ix+1,  iy+nny,  iz);
+  tni[8]  = IntVector(ix+nnx,iy+nny,  iz);
+  tni[9]  = IntVector(ix,    iy,      iz+1);
+  tni[10] = IntVector(ix+1,  iy,      iz+1);
+  tni[11] = IntVector(ix+nnx,iy,      iz+1);
+  tni[12] = IntVector(ix,    iy+1,    iz+1);
+  tni[13] = IntVector(ix+1,  iy+1,    iz+1);
+  tni[14] = IntVector(ix+nnx,iy+1,    iz+1);
+  tni[15] = IntVector(ix,    iy+nny,  iz+1);
+  tni[16] = IntVector(ix+1,  iy+nny,  iz+1);
+  tni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
+  tni[18] = IntVector(ix,    iy,      iz+nnz);
+  tni[19] = IntVector(ix+1,  iy,      iz+nnz);
+  tni[20] = IntVector(ix+nnx,iy,      iz+nnz);
+  tni[21] = IntVector(ix,    iy+1,    iz+nnz);
+  tni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
+  tni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
+  tni[24] = IntVector(ix,    iy+nny,  iz+nnz);
+  tni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
+  tni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
   
   // (x_p - x_v)/L
   double px0 = cellpos.x() - (ix);
@@ -420,13 +472,8 @@ GIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         fy[3] = {DBL_MAX,DBL_MAX,DBL_MAX},
-         fz[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfx[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfy[3] = {DBL_MAX,DBL_MAX,DBL_MAX}, 
-         dfz[3] = {DBL_MAX,DBL_MAX,DBL_MAX};
-  
+  double fx[3],fy[3],fz[3], dfx[3], dfy[3], dfz[3];
+
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
     fx[1]  = (1. + lx + px1)*(1. + lx + px1)/(4.*lx);
@@ -502,65 +549,75 @@ GIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
     dfz[2] = (1. + lz + pz2)/(2.*lz);
   }
   
-  S[0]  = fx[0]*fy[0]*fz[0];
-  S[1]  = fx[1]*fy[0]*fz[0];
-  S[2]  = fx[2]*fy[0]*fz[0];
-  S[3]  = fx[0]*fy[1]*fz[0];
-  S[4]  = fx[1]*fy[1]*fz[0];
-  S[5]  = fx[2]*fy[1]*fz[0];
-  S[6]  = fx[0]*fy[2]*fz[0];
-  S[7]  = fx[1]*fy[2]*fz[0];
-  S[8]  = fx[2]*fy[2]*fz[0];
-  S[9]  = fx[0]*fy[0]*fz[1];
-  S[10] = fx[1]*fy[0]*fz[1];
-  S[11] = fx[2]*fy[0]*fz[1];
-  S[12] = fx[0]*fy[1]*fz[1];
-  S[13] = fx[1]*fy[1]*fz[1];
-  S[14] = fx[2]*fy[1]*fz[1];
-  S[15] = fx[0]*fy[2]*fz[1];
-  S[16] = fx[1]*fy[2]*fz[1];
-  S[17] = fx[2]*fy[2]*fz[1];
-  S[18] = fx[0]*fy[0]*fz[2];
-  S[19] = fx[1]*fy[0]*fz[2];
-  S[20] = fx[2]*fy[0]*fz[2];
-  S[21] = fx[0]*fy[1]*fz[2];
-  S[22] = fx[1]*fy[1]*fz[2];
-  S[23] = fx[2]*fy[1]*fz[2];
-  S[24] = fx[0]*fy[2]*fz[2];
-  S[25] = fx[1]*fy[2]*fz[2];
-  S[26] = fx[2]*fy[2]*fz[2];
+  tS[0]  = fx[0]*fy[0]*fz[0];
+  tS[1]  = fx[1]*fy[0]*fz[0];
+  tS[2]  = fx[2]*fy[0]*fz[0];
+  tS[3]  = fx[0]*fy[1]*fz[0];
+  tS[4]  = fx[1]*fy[1]*fz[0];
+  tS[5]  = fx[2]*fy[1]*fz[0];
+  tS[6]  = fx[0]*fy[2]*fz[0];
+  tS[7]  = fx[1]*fy[2]*fz[0];
+  tS[8]  = fx[2]*fy[2]*fz[0];
+  tS[9]  = fx[0]*fy[0]*fz[1];
+  tS[10] = fx[1]*fy[0]*fz[1];
+  tS[11] = fx[2]*fy[0]*fz[1];
+  tS[12] = fx[0]*fy[1]*fz[1];
+  tS[13] = fx[1]*fy[1]*fz[1];
+  tS[14] = fx[2]*fy[1]*fz[1];
+  tS[15] = fx[0]*fy[2]*fz[1];
+  tS[16] = fx[1]*fy[2]*fz[1];
+  tS[17] = fx[2]*fy[2]*fz[1];
+  tS[18] = fx[0]*fy[0]*fz[2];
+  tS[19] = fx[1]*fy[0]*fz[2];
+  tS[20] = fx[2]*fy[0]*fz[2];
+  tS[21] = fx[0]*fy[1]*fz[2];
+  tS[22] = fx[1]*fy[1]*fz[2];
+  tS[23] = fx[2]*fy[1]*fz[2];
+  tS[24] = fx[0]*fy[2]*fz[2];
+  tS[25] = fx[1]*fy[2]*fz[2];
+  tS[26] = fx[2]*fy[2]*fz[2];
   
-  d_S[0]  = Vector(dfx[0]*fy[0]*fz[0],fx[0]*dfy[0]*fz[0],fx[0]*fy[0]*dfz[0]);
-  d_S[1]  = Vector(dfx[1]*fy[0]*fz[0],fx[1]*dfy[0]*fz[0],fx[1]*fy[0]*dfz[0]);
-  d_S[2]  = Vector(dfx[2]*fy[0]*fz[0],fx[2]*dfy[0]*fz[0],fx[2]*fy[0]*dfz[0]);
-  d_S[3]  = Vector(dfx[0]*fy[1]*fz[0],fx[0]*dfy[1]*fz[0],fx[0]*fy[1]*dfz[0]);
-  d_S[4]  = Vector(dfx[1]*fy[1]*fz[0],fx[1]*dfy[1]*fz[0],fx[1]*fy[1]*dfz[0]);
-  d_S[5]  = Vector(dfx[2]*fy[1]*fz[0],fx[2]*dfy[1]*fz[0],fx[2]*fy[1]*dfz[0]);
-  d_S[6]  = Vector(dfx[0]*fy[2]*fz[0],fx[0]*dfy[2]*fz[0],fx[0]*fy[2]*dfz[0]);
-  d_S[7]  = Vector(dfx[1]*fy[2]*fz[0],fx[1]*dfy[2]*fz[0],fx[1]*fy[2]*dfz[0]);
-  d_S[8]  = Vector(dfx[2]*fy[2]*fz[0],fx[2]*dfy[2]*fz[0],fx[2]*fy[2]*dfz[0]);
+  td_S[0]  = Vector(dfx[0]*fy[0]*fz[0],fx[0]*dfy[0]*fz[0],fx[0]*fy[0]*dfz[0]);
+  td_S[1]  = Vector(dfx[1]*fy[0]*fz[0],fx[1]*dfy[0]*fz[0],fx[1]*fy[0]*dfz[0]);
+  td_S[2]  = Vector(dfx[2]*fy[0]*fz[0],fx[2]*dfy[0]*fz[0],fx[2]*fy[0]*dfz[0]);
+  td_S[3]  = Vector(dfx[0]*fy[1]*fz[0],fx[0]*dfy[1]*fz[0],fx[0]*fy[1]*dfz[0]);
+  td_S[4]  = Vector(dfx[1]*fy[1]*fz[0],fx[1]*dfy[1]*fz[0],fx[1]*fy[1]*dfz[0]);
+  td_S[5]  = Vector(dfx[2]*fy[1]*fz[0],fx[2]*dfy[1]*fz[0],fx[2]*fy[1]*dfz[0]);
+  td_S[6]  = Vector(dfx[0]*fy[2]*fz[0],fx[0]*dfy[2]*fz[0],fx[0]*fy[2]*dfz[0]);
+  td_S[7]  = Vector(dfx[1]*fy[2]*fz[0],fx[1]*dfy[2]*fz[0],fx[1]*fy[2]*dfz[0]);
+  td_S[8]  = Vector(dfx[2]*fy[2]*fz[0],fx[2]*dfy[2]*fz[0],fx[2]*fy[2]*dfz[0]);
   
-  d_S[9]  = Vector(dfx[0]*fy[0]*fz[1],fx[0]*dfy[0]*fz[1],fx[0]*fy[0]*dfz[1]);
-  d_S[10] = Vector(dfx[1]*fy[0]*fz[1],fx[1]*dfy[0]*fz[1],fx[1]*fy[0]*dfz[1]);
-  d_S[11] = Vector(dfx[2]*fy[0]*fz[1],fx[2]*dfy[0]*fz[1],fx[2]*fy[0]*dfz[1]);
-  d_S[12] = Vector(dfx[0]*fy[1]*fz[1],fx[0]*dfy[1]*fz[1],fx[0]*fy[1]*dfz[1]);
-  d_S[13] = Vector(dfx[1]*fy[1]*fz[1],fx[1]*dfy[1]*fz[1],fx[1]*fy[1]*dfz[1]);
-  d_S[14] = Vector(dfx[2]*fy[1]*fz[1],fx[2]*dfy[1]*fz[1],fx[2]*fy[1]*dfz[1]);
-  d_S[15] = Vector(dfx[0]*fy[2]*fz[1],fx[0]*dfy[2]*fz[1],fx[0]*fy[2]*dfz[1]);
-  d_S[16] = Vector(dfx[1]*fy[2]*fz[1],fx[1]*dfy[2]*fz[1],fx[1]*fy[2]*dfz[1]);
-  d_S[17] = Vector(dfx[2]*fy[2]*fz[1],fx[2]*dfy[2]*fz[1],fx[2]*fy[2]*dfz[1]);
+  td_S[9]  = Vector(dfx[0]*fy[0]*fz[1],fx[0]*dfy[0]*fz[1],fx[0]*fy[0]*dfz[1]);
+  td_S[10] = Vector(dfx[1]*fy[0]*fz[1],fx[1]*dfy[0]*fz[1],fx[1]*fy[0]*dfz[1]);
+  td_S[11] = Vector(dfx[2]*fy[0]*fz[1],fx[2]*dfy[0]*fz[1],fx[2]*fy[0]*dfz[1]);
+  td_S[12] = Vector(dfx[0]*fy[1]*fz[1],fx[0]*dfy[1]*fz[1],fx[0]*fy[1]*dfz[1]);
+  td_S[13] = Vector(dfx[1]*fy[1]*fz[1],fx[1]*dfy[1]*fz[1],fx[1]*fy[1]*dfz[1]);
+  td_S[14] = Vector(dfx[2]*fy[1]*fz[1],fx[2]*dfy[1]*fz[1],fx[2]*fy[1]*dfz[1]);
+  td_S[15] = Vector(dfx[0]*fy[2]*fz[1],fx[0]*dfy[2]*fz[1],fx[0]*fy[2]*dfz[1]);
+  td_S[16] = Vector(dfx[1]*fy[2]*fz[1],fx[1]*dfy[2]*fz[1],fx[1]*fy[2]*dfz[1]);
+  td_S[17] = Vector(dfx[2]*fy[2]*fz[1],fx[2]*dfy[2]*fz[1],fx[2]*fy[2]*dfz[1]);
   
-  d_S[18] = Vector(dfx[0]*fy[0]*fz[2],fx[0]*dfy[0]*fz[2],fx[0]*fy[0]*dfz[2]);
-  d_S[19] = Vector(dfx[1]*fy[0]*fz[2],fx[1]*dfy[0]*fz[2],fx[1]*fy[0]*dfz[2]);
-  d_S[20] = Vector(dfx[2]*fy[0]*fz[2],fx[2]*dfy[0]*fz[2],fx[2]*fy[0]*dfz[2]);
-  d_S[21] = Vector(dfx[0]*fy[1]*fz[2],fx[0]*dfy[1]*fz[2],fx[0]*fy[1]*dfz[2]);
-  d_S[22] = Vector(dfx[1]*fy[1]*fz[2],fx[1]*dfy[1]*fz[2],fx[1]*fy[1]*dfz[2]);
-  d_S[23] = Vector(dfx[2]*fy[1]*fz[2],fx[2]*dfy[1]*fz[2],fx[2]*fy[1]*dfz[2]);
-  d_S[24] = Vector(dfx[0]*fy[2]*fz[2],fx[0]*dfy[2]*fz[2],fx[0]*fy[2]*dfz[2]);
-  d_S[25] = Vector(dfx[1]*fy[2]*fz[2],fx[1]*dfy[2]*fz[2],fx[1]*fy[2]*dfz[2]);
-  d_S[26] = Vector(dfx[2]*fy[2]*fz[2],fx[2]*dfy[2]*fz[2],fx[2]*fy[2]*dfz[2]);
+  td_S[18] = Vector(dfx[0]*fy[0]*fz[2],fx[0]*dfy[0]*fz[2],fx[0]*fy[0]*dfz[2]);
+  td_S[19] = Vector(dfx[1]*fy[0]*fz[2],fx[1]*dfy[0]*fz[2],fx[1]*fy[0]*dfz[2]);
+  td_S[20] = Vector(dfx[2]*fy[0]*fz[2],fx[2]*dfy[0]*fz[2],fx[2]*fy[0]*dfz[2]);
+  td_S[21] = Vector(dfx[0]*fy[1]*fz[2],fx[0]*dfy[1]*fz[2],fx[0]*fy[1]*dfz[2]);
+  td_S[22] = Vector(dfx[1]*fy[1]*fz[2],fx[1]*dfy[1]*fz[2],fx[1]*fy[1]*dfz[2]);
+  td_S[23] = Vector(dfx[2]*fy[1]*fz[2],fx[2]*dfy[1]*fz[2],fx[2]*fy[1]*dfz[2]);
+  td_S[24] = Vector(dfx[0]*fy[2]*fz[2],fx[0]*dfy[2]*fz[2],fx[0]*fy[2]*dfz[2]);
+  td_S[25] = Vector(dfx[1]*fy[2]*fz[2],fx[1]*dfy[2]*fz[2],fx[1]*fy[2]*dfz[2]);
+  td_S[26] = Vector(dfx[2]*fy[2]*fz[2],fx[2]*dfy[2]*fz[2],fx[2]*fy[2]*dfz[2]);
 
-  return 27;
+  int count = 0;
+  for(int i=0;i<27;i++){
+   if(tS[i]>0.0){
+    S[count]   =tS[i];
+    d_S[count] =td_S[i];
+    ni[count]  =tni[i];
+    count++;
+   }
+  }
+
+  return count;
 }
 
 
