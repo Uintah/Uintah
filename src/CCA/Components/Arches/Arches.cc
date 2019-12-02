@@ -304,6 +304,7 @@ Arches::scheduleAnalysis( const LevelP& level,
   }
 }
 
+//--------------------------------------------------------------------------------------------------
 // An optional call for the application to check their reduction vars.
 void
 Arches::checkReductionVars( const ProcessorGroup * pg,
