@@ -88,18 +88,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( packed_tasks.turbulence ){
 
-          std::string sub_name = "DSFT_task1";
+          std::string sub_name = "[DSFT]";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaMML_task2";
+          sub_name = "[DSmaMML]";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaCs_task3";
+          sub_name = "[DSmaCs]";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3, db_model );
@@ -107,18 +107,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         } else {
 
-          std::string sub_name = "DSFT_task1";
+          std::string sub_name = "[DSFT]";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaMML_task2";
+          sub_name = "[DSmaMML]";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaCs_task3";
+          sub_name = "[DSmaCs]";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3, db_model );

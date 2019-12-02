@@ -18,7 +18,7 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -28,7 +28,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -172,20 +172,6 @@ DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   filterMM.initialize(0.0);
   filterML.initialize(0.0);
 }
-//--------------------------------------------------------------------------------------------------
-template<typename TT> void
-DSmaCs<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry , const bool packed_tasks){
-  //register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  //register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
-}
-
-//--------------------------------------------------------------------------------------------------
-template<typename TT> void
-DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  //CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-  //CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
-}
 
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
@@ -199,11 +185,9 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   } else {
     register_variable( m_t_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    //register_variable( m_Cs_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
   }
 
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
-  //register_variable( m_t_vis_name_production, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
 
   int nG = 1;
   if (packed_tasks ){
@@ -240,7 +224,6 @@ DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   // if ( tsk_info->packed_tasks() ){
   //   nG = 0;
   // }
-
 
   const Vector Dx = patch->dCell(); //
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);

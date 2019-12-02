@@ -129,15 +129,15 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_w_vel_name, AFC::REQUIRES, nG , AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_u_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_v_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_w_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_density_name, AFC::REQUIRES, nGrho, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::REQUIRES, nGrho, AFC::LATEST, variable_registry, time_substep );
 
-  register_variable( m_cc_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_u_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
 
   register_variable( "rhoBC",    AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable( m_IsI_name, AFC::COMPUTES, variable_registry, time_substep, m_task_name );
