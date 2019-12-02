@@ -62,8 +62,8 @@ namespace Uintah {
       invalidFace
     };
 
-    const std::initializer_list<FaceType> allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};
-
+    std::initializer_list<FaceType> allFaces;
+    
     enum FaceIteratorType {
       InteriorFaceCells,              // Includes cells on the interior of the face
       SFC_Cells                       // offset +1 cell on the plus faces
@@ -130,6 +130,7 @@ namespace Uintah {
 
 
   protected:
+    
     IntVector m_lowIndx;
     IntVector m_highIndx;
     Box m_box;
