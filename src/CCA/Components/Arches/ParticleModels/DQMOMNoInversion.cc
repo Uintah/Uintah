@@ -156,7 +156,7 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
       constCCVariable<double>& model = tsk_info->get_field<constCCVariable<double> >(*j);
 
-      std::cout << " Adding: " << *j << " to " << *i << std::endl;
+//      std::cout << " Adding: " << *j << " to " << *i << std::endl;
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for( range, [&]( int i, int j, int k){
         RHS(i,j,k) += model(i,j,k) * V;
