@@ -449,7 +449,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   }
 
-  printSchedule(level, g_ray_dbg, taskname);
+  printSchedule(level, g_ray_dbg, "Ray::sched_rayTrace");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.

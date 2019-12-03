@@ -107,17 +107,19 @@ namespace Uintah{
 
       //__________________________________
       //
-      void sched_initialize_sigmaT4( const LevelP  & level,
-                                     SchedulerP    & sched );
+      void sched_initialize_VarLabel( const LevelP   & level,
+                                      SchedulerP     & sched,
+                                      const VarLabel * label );
 
       //__________________________________
       //
       template< class T>
-      void initialize_sigmaT4( const ProcessorGroup *,
-                               const PatchSubset    * patches,
-                               const MaterialSubset *,
-                               DataWarehouse        *,
-                               DataWarehouse        * new_dw );
+      void initialize_VarLabel( const ProcessorGroup *,
+                                const PatchSubset    * patches,
+                                const MaterialSubset *,
+                                DataWarehouse        *,
+                                DataWarehouse        * new_dw,
+                                const VarLabel       * label);
 
 
       //__________________________________
