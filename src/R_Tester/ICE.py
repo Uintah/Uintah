@@ -66,7 +66,7 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
-                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison"]),   
+                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"])  # dat file comparsion not working on restart   
               ]
               
 DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]), 
