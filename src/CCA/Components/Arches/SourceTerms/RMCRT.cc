@@ -574,7 +574,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   // Initialize on all levels
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& myLevel = grid->getLevel(l);
-    m_RMCRT->sched_initialize_sigmaT4( myLevel, sched );
+    m_RMCRT->sched_initialize_VarLabel( myLevel, sched, m_RMCRT->d_sigmaT4Label  );
   }
 
 
