@@ -84,7 +84,7 @@ WALE::create_local_labels(){
 //---------------------------------------------------------------------------------
 void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
-                                       variable_registry , const bool packed_tasks){
+                           variable_registry , const bool packed_tasks ){
 
   register_variable( m_total_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );

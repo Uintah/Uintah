@@ -39,13 +39,13 @@ def tke_spectrum(u,v,w,L):
     result = np.zeros([n+1,2])
     result[:,0] = np.linspace(0,n,num=n+1)*k0
     
-    for kx in xrange(n):
+    for kx in range(n):
         rkx = kx
         if ( kx > kmax ): rkx = rkx-n
-        for ky in xrange(n):     
+        for ky in range(n):     
             rky = ky
             if ( rky > kmax ): rky = rky-n    
-            for kz in xrange(n):         
+            for kz in range(n):         
                 rkz = kz
                 if ( rkz > kmax ): rkz = rkz-n
                 k = int(np.round((rkx**2.+rky**2.+rkz**2.)**0.5,0))

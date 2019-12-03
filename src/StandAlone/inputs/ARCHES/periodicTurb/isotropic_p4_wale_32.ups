@@ -77,8 +77,7 @@
           <density>     1.0   </density>
         </table>
       </Properties>
-      <BoundaryConditions>
-    </BoundaryConditions>
+      <BoundaryConditions/>
       <ExplicitSolver>
         <initial_dt>                   1           </initial_dt>
         <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>

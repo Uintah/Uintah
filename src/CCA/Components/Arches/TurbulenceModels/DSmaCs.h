@@ -146,11 +146,8 @@ DSmaCs<TT>::create_local_labels(){
 template<typename TT> void
 DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
-  if (m_create_labels_IsI_t_viscosity) {
-    register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( m_turb_viscosity_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  }
-
+  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_turb_viscosity_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry );
@@ -159,15 +156,13 @@ DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInfor
 //--------------------------------------------------------------------------------------------------
 template<typename TT> void
 DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-  if (m_create_labels_IsI_t_viscosity) {
-    CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-    CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
-    mu_sgc.initialize(0.0);
-    mu_turb.initialize(0.0);
-  }
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
   CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
   CCVariable<double>& filterMM = tsk_info->get_field<CCVariable<double> >("filterMM");
   CCVariable<double>& filterML = tsk_info->get_field<CCVariable<double> >("filterML");
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
   Cs.initialize(0.0);
   filterMM.initialize(0.0);
   filterML.initialize(0.0);
