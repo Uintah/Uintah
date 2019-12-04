@@ -43,6 +43,7 @@ void partRadProperties::problemSetup(  Uintah::ProblemSpecP& db )
 
   ProblemSpecP db_calc = db->findBlock("calculator");
   db->getWithDefault("absorption_modifier",_absorption_modifier,1.0);
+  db->getWithDefault("scattering_modifier",_scattering_modifier,1.0);
 
   _scatteringOn = false;
   _isCoal = false;
@@ -436,7 +437,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
         CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          //double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          // New line
+          double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt(i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
           asymm(i,j,k)   =_constAsymmFact;
         });
@@ -458,7 +461,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
         CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          //double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
+          // New line
+          double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt(i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
           asymm(i,j,k)   =_constAsymmFact;
         });
@@ -499,7 +504,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
         CCVariable<double>& asymm = tsk_info->get_field<CCVariable<double> >(_asymmetryParam_name);
 
         Uintah::parallel_for( range,  [&](int i, int j, int k) {
-          double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
+          //double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
+          // New line
+          double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt(i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
           asymm(i,j,k)  =_constAsymmFact;
         });
@@ -537,7 +544,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
           for (int ix=0; ix<_nQn_part; ix++){
             total_mass[ix]     = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
-            scatQuad[ix]       =_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            //scatQuad[ix]       =_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            // New line
+            scatQuad[ix]=_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
             scatkt(i,j,k)      = (vol_fraction(i,j,k) > 1e-16) ? scatkt(i,j,k)+scatQuad[ix] : 0.0;
           }
 
@@ -575,7 +584,9 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
           for (int ix=0; ix<_nQn_part; ix++){
             total_mass[ix]      = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal  = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
-            scatQuad[ix]        = _3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            //scatQuad[ix]        = _3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
+            // New line
+            scatQuad[ix]=_3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
             scatkt(i,j,k)       = (vol_fraction(i,j,k) > 1e-16) ? scatkt(i,j,k)+scatQuad[ix] : 0.0;
           }
 

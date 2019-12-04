@@ -141,6 +141,7 @@
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
+              <scattering_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties "/> <!-- multiplicative modifier on particle scattering coefficients, is ignored when radiation scattering is turned off  -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
               <density_label              spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density of the gas soot mixture-->
