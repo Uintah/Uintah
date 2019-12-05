@@ -28,7 +28,7 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -41,7 +41,7 @@ public:
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -129,11 +129,7 @@ TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskEvalFunctionPointers()
 template<typename TT>
 TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &DSmaCs<TT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DSmaCs<TT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaCs<TT>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -207,11 +203,8 @@ DSmaCs<TT>::create_local_labels(){
 template<typename TT> void
 DSmaCs<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
                                        variable_registry , const bool packed_tasks){
-  if (m_create_labels_IsI_t_viscosity) {
-    register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable( m_turb_viscosity_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  }
-
+  register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( m_turb_viscosity_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "filterMM", ArchesFieldContainer::COMPUTES, variable_registry );
   register_variable( "filterML", ArchesFieldContainer::COMPUTES, variable_registry );
@@ -222,33 +215,16 @@ template<typename TT>
 template <typename ExecSpace, typename MemSpace>
 void DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  if (m_create_labels_IsI_t_viscosity) {
-    CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-    CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
-    mu_sgc.initialize(0.0);
-    mu_turb.initialize(0.0);
-  }
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
   CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
   CCVariable<double>& filterMM = tsk_info->get_field<CCVariable<double> >("filterMM");
   CCVariable<double>& filterML = tsk_info->get_field<CCVariable<double> >("filterML");
+  mu_sgc.initialize(0.0);
+  mu_turb.initialize(0.0);
   Cs.initialize(0.0);
   filterMM.initialize(0.0);
   filterML.initialize(0.0);
-}
-//--------------------------------------------------------------------------------------------------
-template<typename TT> void
-DSmaCs<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry , const bool packed_tasks){
-  //register_variable( m_t_vis_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  //register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES, variable_registry );
-}
-
-//--------------------------------------------------------------------------------------------------
-template<typename TT> 
-template <typename ExecSpace, typename MemSpace> void
-DSmaCs<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-  //CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-  //CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -263,11 +239,9 @@ DSmaCs<TT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableIn
   } else {
     register_variable( m_t_vis_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
     register_variable( m_turb_viscosity_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
-    //register_variable( m_Cs_name, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
   }
 
   register_variable( m_Cs_name, ArchesFieldContainer::COMPUTES ,  variable_registry, time_substep );
-  //register_variable( m_t_vis_name_production, ArchesFieldContainer::MODIFIES ,  variable_registry, time_substep );
 
   int nG = 1;
   if (packed_tasks ){
@@ -305,7 +279,6 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   // if ( tsk_info->packed_tasks() ){
   //   nG = 0;
   // }
-
 
   const Vector Dx = patch->dCell(); //
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);

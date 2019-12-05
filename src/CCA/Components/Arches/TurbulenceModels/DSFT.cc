@@ -133,10 +133,49 @@ DSFT::register_initialize( std::vector<ArchesFieldContainer::VariableInformation
                                        variable_registry , const bool packed_tasks){
 
 
-  register_variable( "Filterrho", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
-  register_variable( "Filterrhou", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
-  register_variable( "Filterrhov", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
-  register_variable( "Filterrhow", ArchesFieldContainer::COMPUTES ,  variable_registry,  m_task_name, packed_tasks);
+  typedef ArchesFieldContainer AFC;
+  int nG = 1;
+  int nGrho = nG + 1;
+
+  register_variable( m_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+  register_variable( m_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+  register_variable( m_w_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+  register_variable( m_density_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry);
+  register_variable( m_volFraction_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry);
+
+  register_variable( m_cc_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+  register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+  register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry);
+
+  register_variable( "rhoBC",    AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( m_IsI_name, AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta11",   AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta12",   AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta13",   AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta22",   AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta23",   AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Beta33",   AFC::COMPUTES, variable_registry, m_task_name );
+
+  register_variable( "s11", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "s12", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "s13", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "s22", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "s23", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "s33", AFC::COMPUTES, variable_registry, m_task_name );
+
+  register_variable( "Filterrho",  AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Filterrhou", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Filterrhov", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "Filterrhow", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoUU",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoVV",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoWW",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoUV",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoUW",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoVW",      AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoU",       AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoV",       AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "rhoW",       AFC::COMPUTES, variable_registry, m_task_name );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -152,13 +191,15 @@ void DSFT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   filterRhoV.initialize(0.0);
   filterRhoW.initialize(0.0);
 
+  computeModel(patch, tsk_info, execObj);
 
 }
 
 //--------------------------------------------------------------------------------------------------
 void
-DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry, const int time_substep , const bool packed_tasks){
+DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+                              const int time_substep,
+                              const bool packed_tasks){
   int nG = 1;
   if (packed_tasks ){
    nG = 3;
@@ -167,15 +208,15 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 
   typedef ArchesFieldContainer AFC;
 
-  register_variable( m_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_w_vel_name, AFC::REQUIRES, nG , AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_density_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_volFraction_name, AFC::REQUIRES, nGrho, AFC::NEWDW, variable_registry, time_substep );
+  register_variable( m_u_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_v_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_w_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_density_name, AFC::REQUIRES, nGrho, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_volFraction_name, AFC::REQUIRES, nGrho, AFC::LATEST, variable_registry, time_substep );
 
-  register_variable( m_cc_u_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
-  register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::NEWDW, variable_registry, time_substep);
+  register_variable( m_cc_u_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_cc_v_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
+  register_variable( m_cc_w_vel_name, AFC::REQUIRES, nG, AFC::LATEST, variable_registry, time_substep);
 
   register_variable( "rhoBC",    AFC::COMPUTES, variable_registry, time_substep, m_task_name );
   register_variable( m_IsI_name, AFC::COMPUTES, variable_registry, time_substep, m_task_name );
@@ -212,6 +253,12 @@ DSFT::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformat
 //--------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename MemSpace>
 void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+  this->computeModel(patch, tsk_info, execObj);
+}
+
+//--------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename MemSpace>
+void DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);

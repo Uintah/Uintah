@@ -346,7 +346,7 @@ Radiometer::sched_radiometer( const LevelP & level,
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
-  std::string taskname = "Radiometer::radiometer";
+  std::string taskname = "Radiometer::radiometerTask";
   Task *tsk;
 
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {

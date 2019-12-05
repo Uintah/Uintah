@@ -72,7 +72,7 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
 
   m_lb = scinew labels();
 
-  m_lb->lastCompTime      = VarLabel::create( "lastCompTime", max_vartype::getTypeDescription() );
+  m_lb->lastCompTime      = VarLabel::create( "lastCompTime_CVF", max_vartype::getTypeDescription() );
   m_lb->fileVarsStruct    = VarLabel::create( "FileInfo_CVF", PerPatch<FileInfoP>::getTypeDescription() );
 }
 
@@ -106,7 +106,7 @@ controlVolFluxes::~controlVolFluxes()
     VarLabel::destroy( m_lb->totalQ_CV[i] );
     VarLabel::destroy( m_lb->net_Q_faceFluxes[i] );
 
-   for( int f=cvFace::startFace; f< cvFace::endFace; f++){
+   for( int f=cvFace::startFace; f <= cvFace::endFace; f++){
       cvFace face = static_cast<cvFace>(f);
       VarLabel::destroy( m_lb->Q_faceFluxes[i][face] );
     }
@@ -114,7 +114,7 @@ controlVolFluxes::~controlVolFluxes()
 
   delete m_lb;
 
-  // this must be last
+  // This must be last
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     delete m_controlVols[i];
   }
@@ -131,6 +131,14 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
                                     std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tfluxes" << endl;
+
+  if(grid->numLevels() > 1 ) {
+    proc0cout << "______________________________________________________________________\n"
+              << " DataAnalysis:controlVolFluxes\n"
+              << " ERROR:  Currently, this analysis module only works on a single level\n"
+              << "______________________________________________________________________\n";
+    throw ProblemSetupException("", __FILE__, __LINE__);
+  }
 
   //__________________________________
   //  Read in timing information
@@ -213,7 +221,12 @@ void controlVolFluxes::scheduleInitialize( SchedulerP   & sched,
 
   t->computes( m_lb->lastCompTime );
   t->computes( m_lb->fileVarsStruct, m_zeroMatl );
-  sched->addTask(t, m_zeroPatch, m_zeroMatlSet);
+
+  // only run task once per proc
+  t->setType( Task::OncePerProc );
+  const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
+
+  sched->addTask(t, perProcPatches, m_zeroMatlSet);
 }
 
 //______________________________________________________________________
@@ -229,11 +242,11 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     controlVolume* cv = m_controlVols[i];
     cv->initialize(level);
-    cv->print();
+    //cv->print();
   }
   //__________________________________
   //  Create varLabels needed for each CV
-
+  // ONLY create these labels once per proc, otherwise nPatches labels are created
   m_lb->totalQ_CV        = createLabels("totalQ_CV",    sum_vartype::getTypeDescription() );
   m_lb->net_Q_faceFluxes = createLabels("net_Q_fluxes", sumvec_vartype::getTypeDescription() );
 
@@ -385,7 +398,6 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     return;
   }
 
-
   //__________________________________
   //  Loop over patches
   for(int p=0;p<patches->size();p++){
@@ -420,12 +432,11 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
       //  Sum the total Q over the patch
       double  cellVol = patch->cellVolume();
       double totalQ_CV = 0;
-      
+
       for (CellIterator iter=contVol->getCellIterator( patch );!iter.done();iter++){
         IntVector c = *iter;
         totalQ_CV += rho_CC[c] * cellVol;
       }
-
 
       cout_dbg.precision(15);
       //__________________________________
@@ -484,6 +495,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
       new_dw->put( sum_vartype( totalQ_CV ),     m_lb->totalQ_CV[cv] );
       new_dw->put( sumvec_vartype( net_Q_flux ), m_lb->net_Q_faceFluxes[cv] );
 
+      delete faceQ;
     }  // controlVol loop
   }  // patch loop
 }
@@ -666,7 +678,7 @@ void controlVolFluxes::createFile(string& filename,
   fp = fopen(filename.c_str(), "w");
 
   const int w = m_col_width;
-  
+
   std::string mesg = cv->getExtents_string();
   fprintf(fp, "#%s \n", mesg.c_str() );
 
@@ -747,7 +759,10 @@ controlVolFluxes::createLabels(std::string desc,
   std::vector<VarLabel*> labels;
 
   for( size_t i=0; i< m_controlVols.size(); i++ ){
-    string name = desc + "_" + std::to_string(i);
+    controlVolume* cv = m_controlVols[i];
+    std::string cvName = cv->getName();
+
+    string name = cvName + "_" + desc;
     VarLabel* l = VarLabel::create( name, td );
 
     labels.push_back(l);

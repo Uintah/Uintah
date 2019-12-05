@@ -25,9 +25,9 @@ public:
 
   void problemSetup( ProblemSpecP& db );
 
-  void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+  void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
-  void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+  void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
   void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -37,10 +37,10 @@ public:
   void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
   template <typename ExecSpace, typename MemSpace>
-  void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+  void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
   template <typename ExecSpace, typename MemSpace>
-  void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+  void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
   template <typename ExecSpace, typename MemSpace>
   void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -195,32 +195,6 @@ DSmaMMML<TT>::create_local_labels(){
 
   register_new_variable< CCVariable<double> > ( "MM");
   register_new_variable< CCVariable<double> > ( "ML");
-}
-
-//--------------------------------------------------------------------------------------------------
-template<typename TT> void
-DSmaMMML<TT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
-                                       variable_registry , const bool packed_tasks){
-}
-//--------------------------------------------------------------------------------------------------
-
-template<typename TT>
-template <typename ExecSpace, typename MemSpace>
-void DSmaMMML<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-
-}
-//--------------------------------------------------------------------------------------------------
-template<typename TT> void
-DSmaMMML<TT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
-                                          variable_registry , const bool packed_tasks){
-
-}
-
-//--------------------------------------------------------------------------------------------------
-template<typename TT>
-template <typename ExecSpace, typename MemSpace> void
-DSmaMMML<TT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
-
 }
 
 //--------------------------------------------------------------------------------------------------

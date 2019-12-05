@@ -147,8 +147,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     new_dw->getModifiable(viscosity,     d_lab->d_viscosityCTSLabel,indx, patch);
     new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch );
 
-//    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
-
     if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
@@ -190,8 +188,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }
@@ -205,8 +201,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }
@@ -220,8 +214,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }
@@ -235,8 +227,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }
@@ -250,8 +240,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }
@@ -265,8 +253,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
           if (cellType[currCell] != wall_celltypeval){
             viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
-            //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-            //                    *density[currCell]/density[IntVector(colX,colY,colZ)];
           }
         }
       }

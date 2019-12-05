@@ -22,13 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/GeometryPiece/TriGeometryPiece.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Box.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Grid/Box.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include   <iostream>
 #include   <fstream>
@@ -364,13 +365,14 @@ void
 TriGeometryPiece::readPoints(const string& file)
 {
   string f = file + ".pts";
+  
+  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";
   std::ifstream source(f.c_str());
   
   if (!source) {
     std::ostringstream warn;
     warn << "\n ERROR: opening geometry pts points file ("<< f
-         << ").\n  The file must be in the same directory as sus \n"
-         << "  Do not enclose the filename in quotation marks\n";
+         << ").\n  Do not enclose the filename in quotation marks\n";
     throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
@@ -403,13 +405,13 @@ void
 TriGeometryPiece::readTri(const string& file)
 {
   string f = file + ".tri";
+  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";;
   std::ifstream source(f.c_str());
   
   if (!source) {
     std::ostringstream warn;
     warn << "\n ERROR: opening geometry tri points file ("<< f
-         << ").\n   The file must be in the same directory as sus"
-         << "   Do not enclose the filename in quotation marks\n";
+         << ").\n  Do not enclose the filename in quotation marks\n";
     throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 

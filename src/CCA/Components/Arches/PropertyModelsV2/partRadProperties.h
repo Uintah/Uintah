@@ -179,6 +179,7 @@ namespace Uintah{
      int _nDVs{0};  /// number of dependent variables for table lookup
 
       double _absorption_modifier;
+      double _scattering_modifier;
       double  _charAsymm;
       double  _rawCoalAsymm;
       double  _ashAsymm;
