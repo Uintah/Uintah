@@ -240,9 +240,9 @@ private:
 
       Uintah::parallel_initialize( execObj, 0.0, up_f, vp_f, wp_f );
 
-      ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
-      ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
-      ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
+      ArchesCore::doInterpolation( execObj, range, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( execObj, range, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( execObj, range, wp_f, wp,  0,  0, -1, m_int_scheme );
 
     }
   }
@@ -304,9 +304,19 @@ private:
       auto vp = tsk_info->get_field<CT, const double, MemSpace>(vp_i);
       auto wp = tsk_info->get_field<CT, const double, MemSpace>(wp_i);
 
-      ArchesCore::doInterpolation(execObj, range, up_f, up , -1, 0, 0 ,m_int_scheme);
-      ArchesCore::doInterpolation(execObj, range, vp_f, vp , 0, -1, 0 ,m_int_scheme);
-      ArchesCore::doInterpolation(execObj, range, wp_f, wp , 0, 0, -1 ,m_int_scheme);
+      GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1);
+      GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1);
+      GET_EXTRACELL_FZ_BUFFERED_PATCH_RANGE(0, 1);
+
+      Uintah::BlockRange range_x( low_fx_patch_range, high_fx_patch_range );
+      Uintah::BlockRange range_y( low_fy_patch_range, high_fy_patch_range );
+      Uintah::BlockRange range_z( low_fz_patch_range, high_fz_patch_range );
+
+      Uintah::parallel_initialize( execObj, 0.0, up_f, vp_f, wp_f );
+
+      ArchesCore::doInterpolation( execObj, range_x, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( execObj, range_y, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( execObj, range_z, wp_f, wp,  0,  0, -1, m_int_scheme );
 
     }
   }
