@@ -183,7 +183,6 @@ void Tracer::scheduleInitialize(const LevelP& level,
                   this, &Tracer::initialize);
 
   t->computes(d_lb->pXLabel);
-  t->computes(d_lb->pDispLabel);
   t->computes(d_lb->tracerIDLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));
