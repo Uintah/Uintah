@@ -27,6 +27,7 @@
 
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+
 #include <string>
 
 
@@ -38,14 +39,16 @@ namespace Uintah {
   class ApplicationFactory  {
   
   public:
+
     // this function has a switch for all known components
-    
-    static UintahParallelComponent* create(ProblemSpecP& ps,
-                                           const ProcessorGroup* world, 
-                                           const MaterialManagerP materialManager,
-                                           const std::string & uda);
+    static UintahParallelComponent* create(       ProblemSpecP     & prob_spec
+                                          , const ProcessorGroup   * myworld
+                                          , const MaterialManagerP   materialManager
+                                          , const std::string      & uda
+                                          );
   };
-} // End namespace Uintah
+
+} // namespace Uintah
 
 
 #endif

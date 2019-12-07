@@ -218,7 +218,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
-  mpi_info_.reset( 0 );
+  m_mpi_info.reset( 0 );
 
   g_num_tasks_done = 0;
 

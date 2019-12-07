@@ -16,9 +16,9 @@ void CCVel::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
 
   m_u_vel_name_cc = m_u_vel_name + "_cc";
   m_v_vel_name_cc = m_v_vel_name + "_cc";
@@ -107,13 +107,13 @@ void CCVel::register_timestep_init( AVarInfo& variable_registry , const bool pac
 //--------------------------------------------------------------------------------------------------
 void CCVel::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& old_u_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_u_vel_name_cc);
-  constCCVariable<double>& old_v_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_v_vel_name_cc);
-  constCCVariable<double>& old_w_cc = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_w_vel_name_cc);
+  constCCVariable<double>& old_u_cc = tsk_info->get_field<constCCVariable<double> >(m_u_vel_name_cc);
+  constCCVariable<double>& old_v_cc = tsk_info->get_field<constCCVariable<double> >(m_v_vel_name_cc);
+  constCCVariable<double>& old_w_cc = tsk_info->get_field<constCCVariable<double> >(m_w_vel_name_cc);
 
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  CCVariable<double>& u_cc = tsk_info->get_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->get_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->get_field<CCVariable<double> >(m_w_vel_name_cc);
 
   u_cc.copy(old_u_cc);
   v_cc.copy(old_v_cc);
@@ -146,12 +146,12 @@ void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  CCVariable<double>& u_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_u_vel_name_cc);
-  CCVariable<double>& v_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_v_vel_name_cc);
-  CCVariable<double>& w_cc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_w_vel_name_cc);
+  constSFCXVariable<double>& u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  CCVariable<double>& u_cc = tsk_info->get_field<CCVariable<double> >(m_u_vel_name_cc);
+  CCVariable<double>& v_cc = tsk_info->get_field<CCVariable<double> >(m_v_vel_name_cc);
+  CCVariable<double>& w_cc = tsk_info->get_field<CCVariable<double> >(m_w_vel_name_cc);
 
   u_cc.initialize(0.0);
   v_cc.initialize(0.0);

@@ -40,6 +40,7 @@ SRCS += \
         $(SRCDIR)/SizeTypeConvert.cc    \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
+        $(SRCDIR)/SysUtils.cc           \
         $(SRCDIR)/XMLUtils.cc           \
         $(SRCDIR)/Util.cc
 

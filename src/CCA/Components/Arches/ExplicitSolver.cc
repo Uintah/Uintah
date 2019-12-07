@@ -298,6 +298,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
 
   //------------------------------------------------------------------------------------------------
+  //Looking to see if we are using the turb models abstracted into the task Interface
+  if ( db->findBlock("TurbulenceModels")){
+    if ( db->findBlock("TurbulenceModels")->findBlock("model")){
+      d_using_TI_turb = true;
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
   //Look for coal information
   if( db->findBlock("ParticleProperties") ) {
     string particle_type;
@@ -335,7 +343,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   _task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2F));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
-  proc0cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering and Building Tasks For: " << std::endl;
   for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
@@ -343,16 +351,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     i->second->register_all_tasks(db);
 
   }
-
-  proc0cout << "\n Building Tasks For: " << std::endl;
-
-  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
-
-    proc0cout << "   " << i->first << std::endl;
-    i->second->build_all_tasks(db);
-
-  }
-
   proc0cout << endl;
 
   //Checking for lagrangian particles:
@@ -1266,7 +1264,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     //formerly known as paramInit
     sched_initializeVariables( level, sched );
 
-
     // initialize hypre variables
     d_pressSolver->scheduleInitialize( level, sched, matls);
 
@@ -1312,7 +1309,6 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     sched_scalarInit( level, sched );
 
     //------------------ New Task Interface (start) ------------------------------------------------
-    //property models v2
     i_property_models_fac->second->schedule_initialization( level, sched, matls, false );
     //------------------ New Task Interface (end) ------------------------------------------------
 
@@ -1365,11 +1361,11 @@ ExplicitSolver::sched_initialize( const LevelP& level,
 
     sched_getCCVelocities(level, sched);
 
-    d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
-
-    //--- New interface
-    _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::TIMESTEP_EVAL, dont_pack_tasks, level, sched, matls );
-    // ----
+    if ( !d_using_TI_turb ){
+      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+    } else {
+      _task_factory_map["turbulence_model_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, dont_pack_tasks, level, sched, matls );
+    }
 
     //----------------------
     //DQMOM initialization
@@ -1475,8 +1471,10 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   tsk->computes(d_lab->d_pressurePredLabel);
   tsk->computes(d_lab->d_pressureIntermLabel);
   tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_viscosityCTSLabel);
-  tsk->computes(d_lab->d_turbViscosLabel);
+  if ( !d_using_TI_turb ){
+    tsk->computes(d_lab->d_viscosityCTSLabel);
+    tsk->computes(d_lab->d_turbViscosLabel);
+  }
   tsk->computes(d_lab->d_oldDeltaTLabel);
   tsk->computes(d_lab->d_conv_scheme_x_Label);
   tsk->computes(d_lab->d_conv_scheme_y_Label);
@@ -1665,8 +1663,10 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     allocateAndInitializeToC( d_lab->d_pressureIntermLabel, new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_densityCPLabel     , new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_viscosityCTSLabel  , new_dw, indx, patch, 0.0 );
-    allocateAndInitializeToC( d_lab->d_turbViscosLabel    , new_dw, indx, patch, 0.0 );
-    allocateAndInitializeToC( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch, 0.0 );
+    if ( !d_using_TI_turb ){
+      allocateAndInitializeToC( d_lab->d_turbViscosLabel    , new_dw, indx, patch, 0.0 );
+      allocateAndInitializeToC( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch, 0.0 );
+    }
     allocateAndInitializeToC( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch, 0.0 );
     allocateAndInitializeToC( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch, 0.0 );
 
@@ -1902,14 +1902,14 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
         }
 
 
-        i_particle_models->second->schedule_task_group( "dqmom_variables",
+        i_particle_models->second->schedule_task_group( "dqmom_transport_variables",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );
         // schedule the models for evaluation
         modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
-        i_particle_models->second->schedule_task_group( "dqmom_model_task",
+        i_particle_models->second->schedule_task_group( "particle_models",
                                                          TaskInterface::TIMESTEP_EVAL,
                                                          dont_pack_tasks, level, sched,
                                                          matls, curr_level );
@@ -1921,10 +1921,10 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
 
         } else {
 
-          i_particle_models->second->schedule_task_group( "pre_update_property_models",
-                                                          TaskInterface::TIMESTEP_EVAL,
-                                                          dont_pack_tasks, level, sched,
-                                                          matls, curr_level);
+          i_particle_models->second->schedule_task( "[DQMOMNoInversion]",
+                                                    TaskInterface::TIMESTEP_EVAL,
+                                                    level, sched,
+                                                    matls, curr_level);
 
         }
 
@@ -2101,9 +2101,13 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
       }
     }
 
-    //ParticleModels evaluated after the RK averaging.
+    //Particle Properties dependent on the latest DW IC's
     //All particle transport should draw from the "latest" DW (old for rk = 0, new for rk > 0)
-    i_particle_models->second->schedule_task_group("post_update_particle_models", TaskInterface::TIMESTEP_EVAL,
+    i_particle_models->second->schedule_task_group("particle_properties", TaskInterface::TIMESTEP_EVAL,
+      dont_pack_tasks, level, sched, matls, curr_level );
+
+    // Deposition (called out specifically because it has a specified order)
+    i_particle_models->second->schedule_task_group("deposition_models", TaskInterface::TIMESTEP_EVAL,
       dont_pack_tasks, level, sched, matls, curr_level );
 
 

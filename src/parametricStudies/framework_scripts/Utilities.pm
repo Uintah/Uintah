@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter 'import';
 
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(cleanStr print_XML_ElementTree get_XML_value modify_batchScript read_file write_file );
+our @EXPORT_OK = qw(cleanStr setPath print_XML_ElementTree get_XML_value modify_batchScript read_file write_file );
 
 #______________________________________________________________________
 #  
@@ -51,6 +51,45 @@ sub cleanStr {
   return @result;
 }
 
+#______________________________________________________________________
+#   Test to see if file exist at the user input path or in it's default location(s)
+#   The paths can be either a scalar or an array
+sub setPath{
+  my($input, @paths) = @_;
+  
+  if( -e $input ){
+    return $input;
+  } 
+
+  # the input file may have a wildcard
+  if($input =~ m/\*/){
+    my @files = glob($input);
+    foreach  my $file (@files){
+      print "The file contains a wild card, ignoring  ($file)\n";
+    }
+    return $input;
+  }
+
+  foreach  my $path (@paths){
+    my $modInput  = $path."/".$input;
+    
+    if( -e $modInput ){
+      return $modInput;
+    }
+  }
+  
+  #  Bulletproofing
+  print "\n \nERROR:setupFrameWork:\n";
+  print "The file: \n ($input) \n";
+  
+  foreach my $path (@paths){
+    my $modInput  = $path."/".$input;
+    print " ($modInput)\n";
+  }
+  
+  print "does not exist.  Now exiting\n";
+  exit
+}
 
 #______________________________________________________________________
 #   usage:  get_XML_value( elementList, <xmltag>, "defaultValue")

@@ -14,7 +14,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
+      <NameTag name="mixture fraction" state="STATE_NONE"/>
       <GaussianFunction amplitude="1.0" deviation="0.25" mean="0.0" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 

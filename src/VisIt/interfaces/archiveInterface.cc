@@ -229,18 +229,13 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
 
       for( unsigned int m=0; m<5; ++m )
       {
-        IntVector iLow, iHigh, iExtraLow, iExtraHigh;
+        IntVector iLow, iHigh;
 
         // If the user wants to see extra cells, just include them and
         // let VisIt believe they are part of the original data. This is
         // accomplished by setting <meshtype>_low and <meshtype>_high to
         // the extra cell boundaries so that VisIt is none the wiser.
-        if (loadExtraGeometry == NO_EXTRA_GEOMETRY)
-        {
-          iLow  = patch->getLowIndex (basis[m]);
-          iHigh = patch->getHighIndex(basis[m]);
-        }
-        else if (loadExtraGeometry == CELLS)
+        if (loadExtraGeometry == CELLS)
         {
           iLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
           iHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
@@ -250,8 +245,8 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
           iLow  = patch->getLowIndex (basis[m]);
           iHigh = patch->getHighIndex(basis[m]);
 
-          iExtraLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
-          iExtraHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
+          IntVector iExtraLow  = patch->getExtraLowIndex (basis[m], IntVector(0,0,0));
+          IntVector iExtraHigh = patch->getExtraHighIndex(basis[m], IntVector(0,0,0));
 
           // Extend the patch when extra elements are present. In this
           // case if extra elements are present instead of just adding
@@ -283,7 +278,12 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
           // iLow  = Uintah::Max(lLow,  iLow);
           // iHigh = Uintah::Min(lHigh, iHigh);
         }
-        
+        else //if (loadExtraGeometry == NO_EXTRA_GEOMETRY)
+        {
+          iLow  = patch->getLowIndex (basis[m]);
+          iHigh = patch->getHighIndex(basis[m]);
+        }
+                
         patchInfo.setBounds(&iLow[0], &iHigh[0], meshTypes[m]);
       }
 

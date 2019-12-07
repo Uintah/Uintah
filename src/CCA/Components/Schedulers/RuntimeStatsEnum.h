@@ -91,6 +91,13 @@ namespace Uintah {
 
   };
 
+  // timing statistics to test load balance
+  enum TaskStatsEnum
+  {
+      ExecTime
+    , WaitTime
+  };
+  
   // timing statistics for Uintah infrastructure overhead
   enum CommunicationStatsEnum {
       CommPTPMsgTo

@@ -80,7 +80,7 @@ public:
 
     void register_initialize( ArchesVIVector& variable_registry , const bool pack_tasks);
 
-    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks);
+    void register_timestep_init( ArchesVIVector& variable_registry , const bool packed_tasks){}
 
     void register_timestep_eval( ArchesVIVector& variable_registry,
                                  const int time_substep , const bool packed_tasks);
@@ -92,7 +92,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -432,7 +432,7 @@ private:
   template <typename T, typename PT> void
   KScalarRHS<T, PT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
@@ -440,30 +440,30 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& rhs = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]+"_RHS");
-      T& phi = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
+      T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
 
       rhs.initialize(0.0);
       phi.initialize(scalar_init_value);
 
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);
       z_flux.initialize(0.0);
 
       if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        T& rho_phi  = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]);
+        T& rho_phi = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]);
         rho_phi.initialize(0.0);
       }
 
     } //eqn loop
 
     for ( auto i = m_scaling_info.begin(); i != m_scaling_info.end(); i++ ){
-      T& phi_unscaled = tsk_info->get_uintah_field_add<T>((i->second).unscaled_var);
-      T& phi = tsk_info->get_uintah_field_add<T>(i->first);
+      T& phi_unscaled = tsk_info->get_field<T>((i->second).unscaled_var);
+      T& phi = tsk_info->get_field<T>(i->first);
       Scaling_info info = i->second;
 
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
@@ -478,56 +478,6 @@ private:
 
   //------------------------------------------------------------------------------------------------
   template <typename T, typename PT> void
-  KScalarRHS<T, PT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry, m_task_name  );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-    }
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
-  KScalarRHS<T, PT>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
-
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    const int istart = 0;
-    const int iend = m_eqn_names.size();
-
-    for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
-      T& phi = tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
-      T& rhs = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
-
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-        CT& old_rho_phi = tsk_info->get_const_uintah_field_add<CT>(m_transported_eqn_names[ieqn] );
-        T& rho_phi      = tsk_info->get_uintah_field_add<T>( m_transported_eqn_names[ieqn] );
-        rho_phi.copyData(old_rho_phi);
-      }
-
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-      phi.copyData(old_phi);
-      rhs.initialize(0.0);
-      x_flux.initialize(0.0);
-      y_flux.initialize(0.0);
-      z_flux.initialize(0.0);
-
-    } //equation loop
-  }
-
-  //------------------------------------------------------------------------------------------------
-  template <typename T, typename PT> void
   KScalarRHS<T, PT>::
   register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
                           const int time_substep , const bool packed_tasks ){
@@ -536,12 +486,16 @@ private:
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
+      if ( time_substep == 0 ){
+        register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::COMPUTES , variable_registry, time_substep, m_task_name );
+        register_variable( m_eqn_names[ieqn], ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      }
       register_variable( m_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
       register_variable( m_transported_eqn_names[ieqn], ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::LATEST, variable_registry, time_substep, m_task_name );
-      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
-      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::MODIFIES, variable_registry, time_substep, m_task_name );
+      register_variable( m_transported_eqn_names[ieqn]+"_RHS", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_x_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_y_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
+      register_variable( m_eqn_names[ieqn]+"_z_flux", ArchesFieldContainer::COMPUTES, variable_registry, time_substep, m_task_name );
       if ( m_do_diff[ieqn] ){
         register_variable( m_eqn_names[ieqn]+"_x_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
         register_variable( m_eqn_names[ieqn]+"_y_dflux", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry, time_substep, m_task_name );
@@ -573,56 +527,65 @@ private:
     double az = Dx.x() * Dx.y();
     double V = Dx.x()*Dx.y()*Dx.z();
 
-    CFXT& u = tsk_info->get_const_uintah_field_add<CFXT>(m_x_velocity_name);
-    CFYT& v = tsk_info->get_const_uintah_field_add<CFYT>(m_y_velocity_name);
-    CFZT& w = tsk_info->get_const_uintah_field_add<CFZT>(m_z_velocity_name);
-    CT& eps = tsk_info->get_const_uintah_field_add<CT>(m_eps_name);
-
+    CFXT& u = tsk_info->get_field<CFXT>(m_x_velocity_name);
+    CFYT& v = tsk_info->get_field<CFYT>(m_y_velocity_name);
+    CFZT& w = tsk_info->get_field<CFZT>(m_z_velocity_name);
+    CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
+    const int time_substep = tsk_info->get_time_substep();
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
+      //Copy forward old values
+      // Because old values have ghosts we have to explicitly copy values over.
+      // Additionally, we want the carry forward to occur in the right place.
+      if ( time_substep == 0 ){
+
+        IntVector low  = patch->getExtraCellLowIndex();
+        IntVector high = patch->getExtraCellHighIndex();
+        Uintah::BlockRange range( low, high);
+        if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn]){
+          T& rho_phi = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]);
+          CT& old_rho_phi = tsk_info->get_field<CT>(m_transported_eqn_names[ieqn]);
+
+          Uintah::parallel_for(range, [&](int i, int j, int k){
+            rho_phi(i,j,k) = old_rho_phi(i,j,k);
+          });
+
+        }
+
+        T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+        CT& old_phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+
+        Uintah::parallel_for(range, [&](int i, int j, int k){
+          phi(i,j,k) = old_phi(i,j,k);
+        });
+
+      }
+
       CT* rho_phi_ptr = nullptr;
-      //if ( m_premultiplier_name != "none" )
-      //if ( m_transported_eqn_names[ieqn] != "NA" )
-      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] )
-        //rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_premultiplier_name+m_eqn_names[ieqn]);
-        rho_phi_ptr = tsk_info->get_const_uintah_field<CT>(m_transported_eqn_names[ieqn]);
+      if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ){
+        rho_phi_ptr = &(tsk_info->get_field<CT>(m_transported_eqn_names[ieqn]));
+      }
 
       CT& rho_phi = *rho_phi_ptr;
-      CT& phi     = tsk_info->get_const_uintah_field_add<CT>(m_eqn_names[ieqn]);
-      T& rhs      = tsk_info->get_uintah_field_add<T>(m_transported_eqn_names[ieqn]+"_RHS");
+      CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_transported_eqn_names[ieqn]+"_RHS");
 
-      //Timers::Simple timer;
-      //Timers::Simple timer2;
+      rhs.initialize(0.0);
 
-      //timer.start();
-      //for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-        //rhs[*iter] = 0.;
-      //}
-      //timer.stop();
-      //std::cout << "rhs init Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
-
-      //timer.reset(false);
-
-      //timer.start();
-      Uintah::BlockRange range_t(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
-      Uintah::parallel_for(range_t,  [&]( int i,  int j, int k){
-        rhs(i,j,k) = 0;
-      }); //end cell loop
-
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      x_flux.initialize(0.0);
+      y_flux.initialize(0.0);
+      z_flux.initialize(0.0);
 
       if ( m_conv_scheme[ieqn] != NOCONV ){
 
         //Convection:
-        FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-        FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-        FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
-
-        //IntVector low  = patch->getCellLowIndex();
-        //IntVector high = patch->getExtraCellHighIndex();
-
         IntVector low_x  = patch->getCellLowIndex();
         IntVector high_x = patch->getCellHighIndex();
         IntVector low_y  = patch->getCellLowIndex();
@@ -659,8 +622,6 @@ private:
 
           CentralConvection scheme;
           CONVECTION_x(range);
-          CONVECTION_y(range);
-          CONVECTION_z(range);
 
         }
 
@@ -683,9 +644,7 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
           CONVECTION_y(range);
-          CONVECTION_z(range);
 
         }
 
@@ -709,8 +668,6 @@ private:
           Uintah::BlockRange range( low, high);
 
           CentralConvection scheme;
-          CONVECTION_x(range);
-          CONVECTION_y(range);
           CONVECTION_z(range);
 
         }
@@ -723,13 +680,9 @@ private:
 
           UpwindConvection scheme;
 
-          //timer.reset(false);
-          //timer.start();
           CONVECTION_x(range_cl_to_ech_x);
           CONVECTION_y(range_cl_to_ech_y);
           CONVECTION_z(range_cl_to_ech_z);
-          //timer.stop();
-          //std::cout << "CONVECTION Time: " << m_eqn_names[ieqn]<<": " <<timer().seconds() << std::endl;
 
         } else if ( m_conv_scheme[ieqn] == CENTRAL ){
 
@@ -781,9 +734,9 @@ private:
       //Diffusion:
       if ( m_do_diff[ieqn] ) {
 
-        CFXT& x_dflux = tsk_info->get_const_uintah_field_add<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
-        CFYT& y_dflux = tsk_info->get_const_uintah_field_add<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
-        CFZT& z_dflux = tsk_info->get_const_uintah_field_add<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
+        CFXT& x_dflux = tsk_info->get_field<CFXT>(m_eqn_names[ieqn]+"_x_dflux");
+        CFYT& y_dflux = tsk_info->get_field<CFYT>(m_eqn_names[ieqn]+"_y_dflux");
+        CFZT& z_dflux = tsk_info->get_field<CFZT>(m_eqn_names[ieqn]+"_z_dflux");
 
         GET_EXTRACELL_BUFFERED_PATCH_RANGE(0,0);
 
@@ -803,7 +756,7 @@ private:
       for (typename VS::iterator isrc = m_source_info[ieqn].begin();
         isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        CT& src = tsk_info->get_field<CT>((*isrc).name);
         double weight = (*isrc).weight;
         Uintah::BlockRange src_range(patch->getCellLowIndex(), patch->getCellHighIndex());
 

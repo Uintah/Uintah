@@ -94,7 +94,6 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     proc0cout << "  - Using double implementation of RMCRT" << std::endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
-    d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
     proc0cout << "  - Using float implementation of RMCRT" << std::endl;
   }
 
@@ -154,12 +153,23 @@ RMCRTCommon::registerVariables(int   matlIndex,
 
   d_abskgBC_tag = d_compAbskgLabel->getName(); // The label name changes when using floats.
 
-  // If using RMCRT:DBL
+  // define the abskg VarLabel
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
   
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ) {
+  auto double_type = TypeDescription::double_type;
+  auto float_type = TypeDescription::float_type;
+  
+  if ( RMCRTCommon::d_FLT_DBL == double_type && subtype == double_type ) {
     d_abskgLabel = d_compAbskgLabel;
+  }
+  
+  if ( RMCRTCommon::d_FLT_DBL == float_type && subtype == float_type ) {
+    d_abskgLabel = d_compAbskgLabel;
+  }
+  
+  if ( RMCRTCommon::d_FLT_DBL == float_type && subtype == double_type ) {
+    d_abskgLabel = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
   }
 
   //__________________________________
@@ -317,44 +327,50 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
 //
 //______________________________________________________________________
 void
-RMCRTCommon::sched_initialize_sigmaT4( const LevelP  & level,
-                                       SchedulerP    & sched )
+RMCRTCommon::sched_initialize_VarLabel( const LevelP  & level,
+                                       SchedulerP     & sched,
+                                       const VarLabel * label )
 {
-  std::string taskname = "RMCRTCommon::initialize_sigmaT4";
+  std::string taskname = "RMCRTCommon::initialize_VarLabel";
 
   Task* tsk = nullptr;
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<double> );
+  const TypeDescription* td = label->typeDescription();
+  const TypeDescription::Type subtype = td->getSubType()->getType();
+  
+  if ( subtype == TypeDescription::double_type ) {
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_VarLabel<double>, label );
   } else {
-    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_sigmaT4<float> );
+    tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_VarLabel<float>, label );
   }
 
-  printSchedule(level, g_ray_dbg, "RMCRTCommon::initialize_sigmaT4");
+  std::string mesg = "RMCRTCommon::initialize_VarLabel (" + label->getName() + ")";
+  printSchedule( level, g_ray_dbg, mesg );
 
-  tsk->computes(d_sigmaT4Label);
+  tsk->computes( label );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //______________________________________________________________________
-// Initialize sigmaT4 = 0
+// Initialize a VarLabel = 0
 //______________________________________________________________________
 template< class T>
 void
-RMCRTCommon::initialize_sigmaT4( const ProcessorGroup *,
-                                 const PatchSubset    * patches,
-                                 const MaterialSubset *,
-                                 DataWarehouse        *,
-                                 DataWarehouse        * new_dw )
+RMCRTCommon::initialize_VarLabel( const ProcessorGroup *,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset *,
+                                  DataWarehouse        *,
+                                  DataWarehouse        * new_dw,
+                                  const VarLabel       * label )
 {
   for (int p=0; p < patches->size(); p++){
-
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, g_ray_dbg, "Doing RMCRTCommon::initialize_sigmaT4");
+    std::string mesg = "Doing RMCRTCommon::initialize_VarLabel (" + label->getName() + ")";
+    printTask(patches, patch, g_ray_dbg, mesg );
 
-    CCVariable< T > sigmaT4;
-    new_dw->allocateAndPut( sigmaT4, d_sigmaT4Label, d_matl, patch );
-    sigmaT4.initialize( 0.0 );
+    CCVariable< T > var;
+    new_dw->allocateAndPut( var, label, d_matl, patch );
+    var.initialize( 0.0 );
   }
 }
 
@@ -844,7 +860,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
                                       const VarLabel* variable,
                                       const int tg_num /* == -1 */)
 {
-  std::string taskname = "        carryForward_Var: " + variable->getName();
+  std::string taskname = "RMCRTCommon::sched_CarryForward_Var_" + variable->getName();
   printSchedule(level, g_ray_dbg, taskname);
 
   Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );

@@ -184,7 +184,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
     d_radiometer = scinew Radiometer( d_FLT_DBL );
-    d_radiometer->problemSetup( prob_spec, rad_ps, grid );
+    d_radiometer->problemSetup( prob_spec, rmcrtps, grid );
   }
 
   //__________________________________
@@ -449,7 +449,7 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   }
 
-  printSchedule(level, g_ray_dbg, taskname);
+  printSchedule(level, g_ray_dbg, "Ray::sched_rayTrace");
 
   //__________________________________
   // Require an infinite number of ghost cells so you can access the entire domain.

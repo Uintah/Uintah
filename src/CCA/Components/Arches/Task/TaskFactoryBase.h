@@ -32,9 +32,6 @@ namespace Uintah{
     /** @brief Parse the input file and create builders for all tasks listed in the UPS file **/
     virtual void register_all_tasks( ProblemSpecP& db ) = 0;
 
-    /** @brief Actually build and call problemSetups for each tasks **/
-    virtual void build_all_tasks( ProblemSpecP& db ) = 0;
-
     /** @brief Register tasks in a convenient container **/
     void register_task( std::string task_name,
                         TaskInterface::TaskBuilder* builder,
@@ -169,7 +166,8 @@ namespace Uintah{
                               const bool reinitialize=false );
 
     /** @brief Public interface for scheduling a set of tasks through the factory when the
-               group of tasks was determined upstream. **/
+               group of tasks was determined upstream. This is useful when one needs to
+               enforce a specific task exe order. **/
     void schedule_task_group( const std::string task_group_name,
                               std::vector<std::string> task_names,
                               TaskInterface::TASK_TYPE type,

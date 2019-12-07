@@ -113,7 +113,6 @@ namespace Uintah{
     bool m_pack_transport_construction_tasks{false};
 
     void register_DQMOM( ProblemSpecP db );
-    void build_DQMOM( ProblemSpecP db );
 
     std::string m_dqmom_grp_name{"dqmom_eqns"};
 

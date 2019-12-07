@@ -1838,7 +1838,8 @@
             <calc_frequency>2</calc_frequency>
             <abskt label="abskt"/>
             <DORadiationModel type="sweepSpatiallyParallel">
-              <ordinates>6</ordinates>
+              <ordinates>8</ordinates>
+              <addOrthogonalDirs> false </addOrthogonalDirs>
               <initialGuess>prevRadSolve</initialGuess>
               <ScatteringOn>true</ScatteringOn>
             </DORadiationModel>

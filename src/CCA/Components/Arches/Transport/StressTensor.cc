@@ -26,10 +26,10 @@ void StressTensor::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-    m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-    m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-    m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db );
+    m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+    m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+    m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+    m_t_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db );
 //
   /* It is going to use central scheme as default   */
   diff_scheme = "central";
@@ -65,12 +65,12 @@ void StressTensor::register_initialize( AVarInfo& variable_registry , const bool
 void StressTensor::initialize( const Patch*, ArchesTaskInfoManager* tsk_info ){
 
 
-  CCVariable<double>& sigma11 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[0]));
-  CCVariable<double>& sigma12 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[1]));
-  CCVariable<double>& sigma13 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[2]));
-  CCVariable<double>& sigma22 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[3]));
-  CCVariable<double>& sigma23 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[4]));
-  CCVariable<double>& sigma33 = *(tsk_info->get_uintah_field<CCVariable<double> >(m_sigma_t_names[5]));
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   sigma11.initialize(0.0);
   sigma12.initialize(0.0);
@@ -98,20 +98,20 @@ void StressTensor::register_timestep_eval( VIVec& variable_registry, const int t
 //--------------------------------------------------------------------------------------------------
 void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
-  constCCVariable<double>&     D  = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_t_vis_name);
-  constSFCXVariable<double>& eps_x = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_eps_x_name);
-  constSFCYVariable<double>& eps_y = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_eps_y_name);
-  constSFCZVariable<double>& eps_z = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_eps_z_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& D  = tsk_info->get_field<constCCVariable<double> >(m_t_vis_name);
+  constSFCXVariable<double>& eps_x = tsk_info->get_field<constSFCXVariable<double> >(m_eps_x_name);
+  constSFCYVariable<double>& eps_y = tsk_info->get_field<constSFCYVariable<double> >(m_eps_y_name);
+  constSFCZVariable<double>& eps_z = tsk_info->get_field<constSFCZVariable<double> >(m_eps_z_name);
 
-  CCVariable<double>& sigma11 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[0]);
-  CCVariable<double>& sigma12 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[1]);
-  CCVariable<double>& sigma13 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[2]);
-  CCVariable<double>& sigma22 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[3]);
-  CCVariable<double>& sigma23 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[4]);
-  CCVariable<double>& sigma33 = tsk_info->get_uintah_field_add<CCVariable<double> >(m_sigma_t_names[5]);
+  CCVariable<double>& sigma11 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[0]);
+  CCVariable<double>& sigma12 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[1]);
+  CCVariable<double>& sigma13 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[2]);
+  CCVariable<double>& sigma22 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[3]);
+  CCVariable<double>& sigma23 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[4]);
+  CCVariable<double>& sigma33 = tsk_info->get_field<CCVariable<double> >(m_sigma_t_names[5]);
 
   // initialize all velocities
   sigma11.initialize(0.0);
@@ -132,32 +132,44 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
-    double dudx = 0.0;
     double dudy = 0.0;
     double dudz = 0.0;
     double dvdx = 0.0;
-    double dvdy = 0.0;
     double dvdz = 0.0;
     double dwdx = 0.0;
     double dwdy = 0.0;
-    double dwdz = 0.0;
-    double mu12 = 0.0;
-    double mu13 = 0.0;
-    double mu23 = 0.0;
 
-    mu12  = 0.5*(D(i-1,j,k)+D(i,j,k)); // First interpolation at j
-    mu12 += 0.5*(D(i-1,j-1,k)+D(i,j-1,k));// Second interpolation at j-1
-    mu12 *= 0.5;
-    mu13  = 0.5*(D(i-1,j,k-1)+D(i,j,k-1));//First interpolation at k-1
-    mu13 += 0.5*(D(i-1,j,k)+D(i,j,k));//Second interpolation at k
-    mu13 *= 0.5;
-    mu23  = 0.5*(D(i,j,k)+D(i,j,k-1));// First interpolation at j
-    mu23 += 0.5*(D(i,j-1,k)+D(i,j-1,k-1));// Second interpolation at j-1
-    mu23 *= 0.5;
+    const double mu12  = 0.5 * ( 0.5 * (D(i-1,j,k)+D(i,j,k))
+                               + 0.5 * (D(i-1,j-1,k)+D(i,j-1,k)) );
+    const double mu13  = 0.5 * ( 0.5 * (D(i-1,j,k-1)+D(i,j,k-1))
+                               + 0.5 * (D(i-1,j,k)+D(i,j,k)) );
+    const double mu23  = 0.5 * ( 0.5 * ( D(i,j,k)+D(i,j,k-1))
+                               + 0.5 * (D(i,j-1,k)+D(i,j-1,k-1)) );
 
-    dVeldDir( uVel, eps_x, Dx, dudx, dudy, dudz, i, j, k );
-    dVeldDir( vVel, eps_y, Dx, dvdx, dvdy, dvdz, i, j, k );
-    dVeldDir( wVel, eps_z, Dx, dwdx, dwdy, dwdz, i, j, k );
+    {
+      STENCIL3_1D(1);
+      dudy = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.y();
+    }
+    {
+      STENCIL3_1D(2);
+      dudz = eps_x(IJK_)*eps_x(IJK_M_)*(uVel(IJK_) - uVel(IJK_M_))/Dx.z();\
+    }
+    {\
+      STENCIL3_1D(0);\
+      dvdx = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.x();\
+    }\
+    {\
+      STENCIL3_1D(2);\
+      dvdz = eps_y(IJK_)*eps_y(IJK_M_)*(vVel(IJK_) - vVel(IJK_M_))/Dx.z();
+    }
+    {\
+      STENCIL3_1D(0);\
+      dwdx = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.x();\
+    }\
+    {\
+      STENCIL3_1D(1);\
+      dwdy = eps_z(IJK_)*eps_z(IJK_M_)*(wVel(IJK_) - wVel(IJK_M_))/Dx.y();\
+    }\
 
     sigma12(i,j,k) =  mu12 * (dudy + dvdx );
     sigma13(i,j,k) =  mu13 * (dudz + dwdx );

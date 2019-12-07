@@ -46,8 +46,10 @@ namespace WasatchCore{
   /**
    *  \brief Build the transport equation specified by "params"
    *
-   *  \param params the tag from the input file specifying the
+   *  \param scalarEqnParams the tag from the input file specifying the
    *         transport equation.
+   *  \param wasatchParams the tag from the input file specifying the wasatch
+   *         component of uintah
    *  \param turbParams
    *  \param densityTag a tag for the density to be passed to
    *         the scalar transport equations if it is needed.
@@ -60,7 +62,8 @@ namespace WasatchCore{
    *          plug this transport equation into a TimeStepper.
    */
   EqnTimestepAdaptorBase*
-  parse_scalar_equation( Uintah::ProblemSpecP params,
+  parse_scalar_equation( Uintah::ProblemSpecP scalarEqnParams,
+                         Uintah::ProblemSpecP wasatchParams,
                          TurbulenceParameters turbParams,
                          const Expr::Tag densityTag,
                          GraphCategories& gc,

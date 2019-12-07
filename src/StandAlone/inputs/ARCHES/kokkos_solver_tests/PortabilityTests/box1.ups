@@ -1,0 +1,495 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title> simple box problem  </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>20.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-3</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>.5</timestep_multiplier>
+    <max_Timesteps>1000</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>box1.uda</filebase>
+    <outputTimestepInterval>50</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="x-mom"/>
+    <save label="drhodt"/>
+    <save label="gas_kinetic_energy"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="rho_phi"/>
+    <save label="A_press"/>
+    <save label="b_press"/>
+    <save label="phi"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="t_viscosity"/>
+    <save label="density"/>
+    <save label="density_star"/>
+    <save label="continuity_balance"/>
+    <save label="pressure"/>
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="length_qn0"/>
+    <save label="length_qn1"/>
+    <save label="pU_qn0"/>
+    <save label="pU_qn1"/>
+    <save label="pV_qn0"/>
+    <save label="pV_qn1"/>
+    <save label="pW_qn0"/>
+    <save label="pW_qn1"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="pU_0"/>
+    <save label="pU_1"/>
+    <save label="pV_0"/>
+    <save label="pV_1"/>
+    <save label="pW_0"/>
+    <save label="pW_1"/>
+    <save label="length_0"/>
+    <save label="length_1"/>
+    <save label="w_qn1_RHS"/>
+    <save label="w_qn1_x_flux"/>
+    <save label="w_qn1_y_flux"/>
+    <save label="w_qn1_z_flux"/>
+    <save label="face_pvel_x_0"/>
+    <save label="face_pvel_y_0"/>
+    <save label="face_pvel_z_0"/>
+    <save label="face_pvel_x_1"/>
+    <save label="face_pvel_y_1"/>
+    <save label="face_pvel_z_1"/>
+    <checkpoint cycle="1" interval=".0007"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [1,1,1]   </upper>
+      	<resolution>  [20,20,20]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+	      <patches>     [1,1,1]   </patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="z-" type="Inlet" >
+        <BCType var="Custom" label="z-mom" type="velocity">
+          <value>1</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1</value>
+        </BCType>
+        <BCType var="Dirichlet" label="w_qn0">
+          <value>1</value>
+        </BCType>
+        <BCType var="Dirichlet" label="w_qn1">
+          <value>1</value>
+        </BCType>
+        <BCType var="Dirichlet" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pW_qn0">
+          <value>.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="pW_qn1">
+          <value>1</value>
+        </BCType>
+      </Face>
+      <Face side = "z+" type="Outflow" >
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Custom" type="PressureOutlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn1">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" type="Wall" >
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn1">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" type="Wall" >
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn1">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" type="Wall" >
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn1">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" type="Wall" >
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="w_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="length_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pU_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pV_qn1">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn0">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="pW_qn1">
+          <value>0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>       0.000020      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <EulerianParticles>
+        <ParticleVariables> 
+          <variable label="length" role="size"/>
+          <variable label="particle_rho" role="density"/>
+          <variable label="pU" role="uvel"/>
+          <variable label="pV" role="vvel"/>
+          <variable label="pW" role="wvel"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <DQMOM>
+        <number_quad_nodes>2</number_quad_nodes>
+        <kokkos_translate/>
+        <write_input_with_dqmom_eqns>withdmqom.out</write_input_with_dqmom_eqns>
+        <convection scheme="upwind"/>
+        <diffusion scheme="central" D_label="gamma_dqmom"/>
+        <Weights>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="1e-5"/>
+            <env_constant qn="1" value="1e-5"/>
+          </initialization>
+        </Weights>
+        <Ic label="length">
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0"/>
+            <env_constant qn="1" value="0"/>
+          </initialization>
+        </Ic>
+        <Ic label="pU">
+          <!--<model label="drag_x"/>-->
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+          </initialization>
+        </Ic>
+        <Ic label="pV">
+          <!--<model label="drag_y"/>-->
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0.0"/>
+            <env_constant qn="1" value="0.0"/>
+          </initialization>
+        </Ic>
+        <Ic label="pW">
+          <!--<model label="drag_z"/>-->
+          <initialization type="env_constant">
+            <env_constant qn="0" value="0."/>
+            <env_constant qn="1" value="0."/>
+          </initialization>
+        </Ic>
+      </DQMOM>
+      <ParticleModels>
+        <model label="drag_x" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>x</direction>
+        </model>
+        <model label="drag_y" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>y</direction>
+        </model>
+        <model label="drag_z" type="wdrag">
+          <grid dependent_type="CC" independent_type="CC"/>
+          <direction>z</direction>
+        </model>
+        <model label="particle_rho" type="constant">
+          <grid dependent_type="CC"/>
+          <constant>[1000,1000]</constant> 
+        </model>
+        <model label="velocities" type="particle_face_velocity">
+          <grid dependent_type="CC"/>
+        </model>
+      </ParticleModels>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
+        <var role="total_viscosity" label="t_viscosity"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties>
+        <model label= "cold_flow_property_evaluator" type = "coldflow" >
+          <property label = "density" stream_1 = "0.986" stream_0 = "0.187">
+            <volumetric/>
+          </property>
+          <mixture_fraction label = "phi"/>
+        </model>
+      </StateProperties>
+      <PropertyModelsV2>
+        <model label="gamma_dqmom" type="constant_property">
+          <grid type="CC"/>
+          <value>1e-5</value>
+        </model>
+        <model label="gamma" type="constant_scalar_diffusion_coef">
+          <D_mol>1e-5</D_mol>
+          <turbulentPrandtlNumber>0.5</turbulentPrandtlNumber>
+        </model>
+        <model label="t_gas_kinetic_energy" type="gas_kinetic_energy"/>
+      </PropertyModelsV2>
+      <KMomentum>
+        <convection scheme="central"/>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <TurbulenceModels>
+	      <model label="DS" type="dynamic_smagorinsky">
+	        <filter type="three_points"/>
+	      </model>
+      </TurbulenceModels>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <diffusion_coef label="gamma"/>
+          <eqn label="phi">
+            <convection scheme="superbee"/>
+            <!--<diffusion scheme ="central"/>-->
+	          <clip low="0" high="1"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver/>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

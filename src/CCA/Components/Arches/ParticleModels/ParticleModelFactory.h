@@ -19,25 +19,21 @@ namespace Uintah{
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) {
 
-      if ( subset == "coal_models"){
+      if ( subset == "particle_models"){
 
-        return _coal_models;
+        return m_particle_models;
 
-      } else if ( subset == "dqmom_variables"){
+      } else if ( subset == "deposition_models" ){
 
-        return _dqmom_variables;
+        return m_deposition_models;
 
-      } else if ( subset == "dqmom_model_task"){
+      } else if ( subset == "dqmom_transport_variables"){
 
-        return _dqmom_model_task;
+        return m_dqmom_transport_variables;
 
-      } else if ( subset == "post_update_particle_models"){
+      } else if ( subset == "particle_properties"){
 
-        return _post_update_particle_tasks;
-
-      } else if ( subset == "pre_update_property_models"){
-
-        return _pre_update_particle_tasks;
+        return m_particle_properties;
 
       } else if ( subset == _all_tasks_str ){
 
@@ -48,17 +44,12 @@ namespace Uintah{
       }
     }
 
-  protected:
-
-
   private:
 
-    std::vector<std::string> _coal_models;                 ///< Tasks associated with coal
-    std::vector<std::string> _post_update_particle_tasks;  ///< Tasks that execute after the timeave
-                                                            //  of the particle transport variables
-    std::vector<std::string> _pre_update_particle_tasks;   ///< Tasks before update
-    std::vector<std::string> _dqmom_model_task;   ///<
-    std::vector<std::string> _dqmom_variables;   ///<
+    std::vector<std::string> m_particle_models;             ///< Particle Models for IC's
+    std::vector<std::string> m_deposition_models;           ///< Wall deposition models
+    std::vector<std::string> m_particle_properties;         ///< IC dependent properties
+    std::vector<std::string> m_dqmom_transport_variables;   ///< Variables needed for transport construction
 
   };
 }

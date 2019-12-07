@@ -65,6 +65,7 @@ namespace Uintah {
   extern Dout g_task_order;
   extern Dout g_exec_out;
 
+  extern Dout do_task_exec_stats;
 }
 
 
@@ -213,18 +214,13 @@ void init_threads( UnifiedScheduler * sched, int num_threads )
     g_cpu_affinities[i] = i;
   }
 
-  // set main thread's affinity (core-0) and tid
+  // set main thread's affinity and tid, core-0 and tid-0, respectively
   set_affinity(g_cpu_affinities[0]);
   t_tid = 0;
 
-  // TaskRunner threads start at g_runners[1]
+  // TaskRunner threads start at g_runners[1], and std::threads start at g_threads[1]
   for (int i = 1; i < g_num_threads; ++i) {
-    g_runners[i] = new UnifiedSchedulerWorker(sched);
-  }
-
-  // spawn worker threads
-  // TaskRunner threads start at [1]
-  for (int i = 1; i < g_num_threads; ++i) {
+    g_runners[i] = new UnifiedSchedulerWorker(sched, i, g_cpu_affinities[i]);
     Impl::g_threads.push_back(std::thread(thread_driver, i));
   }
 
@@ -481,8 +477,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
   // Setup the thread info mapper
   if( g_thread_stats || g_thread_indv_stats ) {
     m_thread_info.resize( Impl::g_num_threads );
-    m_thread_info.setIndexName( "Threads" );
+    m_thread_info.setIndexName( "Thread" );
     m_thread_info.insert( WaitTime  , std::string("WaitTime")  , "seconds" );
+    m_thread_info.insert( LocalTID  , std::string("LocalTID")  , "Index"   );
+    m_thread_info.insert( Affinity  , std::string("Affinity")  , "CPU"     );
     m_thread_info.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
     m_thread_info.insert( NumPatches, std::string("NumPatches"), "patches" );
     
@@ -603,13 +601,15 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
       sumTaskMonitoringValues( dtask );
 
       double total_task_time = dtask->task_exec_time();
-      if (g_exec_out) {
-        m_exec_times[dtask->getTask()->getName()] += total_task_time;
+      if (g_exec_out || do_task_exec_stats) {
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += total_task_time;
+        m_task_info[dtask->getTask()->getName()][TaskStatsEnum::WaitTime] += dtask->task_wait_time();
       }
+
       // if I do not have a sub scheduler
       if (!dtask->getTask()->getHasSubScheduler()) {
         //add my task time to the total time
-        mpi_info_[TotalTask] += total_task_time;
+        m_mpi_info[TotalTask] += total_task_time;
         if (!m_is_copy_data_timestep &&
             dtask->getTask()->getType() != Task::Output) {
           //add contribution for patchlist
@@ -637,10 +637,10 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
     // Add subscheduler timings to the parent scheduler and reset subscheduler timings
     if (m_parent_scheduler != nullptr) {
-      for (size_t i = 0; i < mpi_info_.size(); ++i) {
-        m_parent_scheduler->mpi_info_[i] += mpi_info_[i];
+      for (size_t i = 0; i < m_mpi_info.size(); ++i) {
+        m_parent_scheduler->m_mpi_info[i] += m_mpi_info[i];
       }
-      mpi_info_.reset(0);
+      m_mpi_info.reset(0);
       m_thread_info.reset( 0 );
     }
   }
@@ -668,6 +668,12 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // track total scheduler execution time across timesteps
   m_exec_timer.reset(true);
+
+  // If doing in situ monitoring clear the times before each time step
+  // otherwise the times are accumulated over N time steps.
+  if (do_task_exec_stats) {
+    m_task_info.reset(0);
+  }
 
   RuntimeStats::initialize_timestep(m_task_graphs);
 
@@ -706,7 +712,7 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
-  mpi_info_.reset( 0 );
+  m_mpi_info.reset( 0 );
   m_thread_info.reset( 0 );
 
   m_num_tasks_done = 0;
@@ -823,8 +829,13 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
     for (int i = 1; i < Impl::g_num_threads; ++i) {
       (*m_runtimeStats)[TaskWaitThreadTime] += Impl::g_runners[i]->getWaitTime();
 
-      if( g_thread_stats || g_thread_indv_stats )
+//      DOUT(true, "ThreadID: " << Impl::g_runners[i]->getLocalTID() << ", bound to core: " << Impl::g_runners[i]->getAffinity());
+
+      if( g_thread_stats || g_thread_indv_stats ) {
         m_thread_info[i][WaitTime] = Impl::g_runners[i]->getWaitTime();
+        m_thread_info[i][LocalTID] = Impl::g_runners[i]->getLocalTID();
+        m_thread_info[i][Affinity] = Impl::g_runners[i]->getAffinity();
+      }
     }
 
     MPIScheduler::computeNetRuntimeStats();
@@ -832,21 +843,24 @@ UnifiedScheduler::execute( int tgnum       /* = 0 */
 
   // Thread average runtime performance stats.
   if (g_thread_stats ) {
-    m_thread_info.reduce( true ); // true == skip the first entry.
+    m_thread_info.reduce( false ); // true == skip the first entry.
 
-    m_thread_info.reportSummaryStats( "Thread",
-				      d_myworld->myRank(),
-				      m_application->getTimeStep(),
-				      m_application->getSimTime(),
-				      false );
+    m_thread_info.reportSummaryStats( "Thread", "",
+                                      d_myworld->myRank(),
+                                      d_myworld->nRanks(),
+                                      m_application->getTimeStep(),
+                                      m_application->getSimTime(),
+                                      BaseInfoMapper::Dout, false );
   }
 
   // Per thread runtime performance stats
   if (g_thread_indv_stats) {
-    m_thread_info.reportIndividualStats( "Thread",
-					 d_myworld->myRank(),
-					 m_application->getTimeStep(),
-					 m_application->getSimTime() );
+    m_thread_info.reportIndividualStats( "Thread", "",
+                                         d_myworld->myRank(),
+                                         d_myworld->nRanks(),
+                                         m_application->getTimeStep(),
+                                         m_application->getSimTime(),
+                                         BaseInfoMapper::Dout );
   }
 
   // only do on toplevel scheduler
@@ -4868,9 +4882,11 @@ UnifiedScheduler::init_threads( UnifiedScheduler * sched, int num_threads )
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler )
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler, int tid, int affinity )
   : m_scheduler{ scheduler }
   , m_rank{ scheduler->d_myworld->myRank() }
+  , m_tid{ tid }
+  , m_affinity{ affinity }
 {
 }
 
@@ -4926,8 +4942,24 @@ UnifiedSchedulerWorker::stopWaitTime()
 
 //______________________________________________________________________
 //
-double
-UnifiedSchedulerWorker::getWaitTime()
+const double
+UnifiedSchedulerWorker::getWaitTime() const
 {
   return m_wait_time;
+}
+
+//______________________________________________________________________
+//
+const int
+UnifiedSchedulerWorker::getAffinity() const
+{
+  return m_affinity;
+}
+
+//______________________________________________________________________
+//
+const int
+UnifiedSchedulerWorker::getLocalTID() const
+{
+  return m_tid;
 }

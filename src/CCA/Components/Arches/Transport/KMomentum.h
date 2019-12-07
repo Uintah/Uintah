@@ -228,7 +228,7 @@ private:
     std::vector<SourceInfo> eqn_srcs;
     if ( my_dir == ArchesCore::XDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name ));
 
       for ( ProblemSpecP src_db = db->findBlock("src_x");
             src_db != nullptr; src_db = src_db->findNextBlock("src_x") ){
@@ -252,7 +252,7 @@ private:
 
     } else if ( my_dir == ArchesCore::YDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_y");
             src_db != nullptr; src_db = src_db->findNextBlock("src_y") ){
 
@@ -275,7 +275,7 @@ private:
 
     } else if ( my_dir == ArchesCore::ZDIR ){
 
-      m_vel_name.push_back(parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name ));
+      m_vel_name.push_back(parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name ));
       for ( ProblemSpecP src_db = db->findBlock("src_z");
             src_db != nullptr; src_db = src_db->findNextBlock("src_z") ){
 
@@ -315,7 +315,7 @@ private:
     m_sigmaz_name     = var_map.sigmaz_name;
 
     m_mu_name = var_map.mu_name;
-    m_rho_name = parse_ups_for_role( DENSITY, db, "density" );
+    m_rho_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
     if ( input_db->findBlock("velocity") ){
       // can overide the global velocity space with this:
@@ -377,12 +377,12 @@ private:
 
       double scalar_init_value = m_init_value[ieqn];
 
-      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
-      T& phi    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]);
-      T& rhs    = tsk_info->get_uintah_field_add<T>(m_eqn_names[ieqn]+"_RHS");
-      FXT& x_flux = tsk_info->get_uintah_field_add<FXT>(m_eqn_names[ieqn]+"_x_flux");
-      FYT& y_flux = tsk_info->get_uintah_field_add<FYT>(m_eqn_names[ieqn]+"_y_flux");
-      FZT& z_flux = tsk_info->get_uintah_field_add<FZT>(m_eqn_names[ieqn]+"_z_flux");
+      T& u = tsk_info->get_field<T>(m_vel_name[ieqn]);
+      T& phi = tsk_info->get_field<T>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_eqn_names[ieqn]+"_RHS");
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       phi.initialize(0.0);
       rhs.initialize(0.0);
@@ -415,11 +415,11 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      T& u    = tsk_info->get_uintah_field_add<T>(m_vel_name[ieqn]);
-      T& phi =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn] );
-      T& rhs =  tsk_info->get_uintah_field_add<T>( m_eqn_names[ieqn]+"_RHS" );
-      CT& old_phi = tsk_info->get_const_uintah_field_add<CT>( m_eqn_names[ieqn] );
-      CT& old_u    = tsk_info->get_const_uintah_field_add<CT>(m_vel_name[ieqn]);
+      T& u = tsk_info->get_field<T>(m_vel_name[ieqn]);
+      T& phi = tsk_info->get_field<T>( m_eqn_names[ieqn] );
+      T& rhs = tsk_info->get_field<T>( m_eqn_names[ieqn]+"_RHS" );
+      CT& old_phi = tsk_info->get_field<CT>( m_eqn_names[ieqn] );
+      CT& old_u = tsk_info->get_field<CT>(m_vel_name[ieqn]);
 
       phi.copyData(old_phi);
       u.copyData(old_u);
@@ -474,19 +474,19 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    CT& eps     = *(tsk_info->get_const_uintah_field<CT>(m_eps_name));
+    CT& eps = tsk_info->get_field<CT>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      CT& phi     = *(tsk_info->get_const_uintah_field<CT>(m_eqn_names[ieqn]));
-      T& rhs      = *(tsk_info->get_uintah_field<T>(m_eqn_names[ieqn]+"_RHS"));
+      CT& phi = tsk_info->get_field<CT>(m_eqn_names[ieqn]);
+      T& rhs = tsk_info->get_field<T>(m_eqn_names[ieqn]+"_RHS");
 
       //Convection:
-      FXT& x_flux = *(tsk_info->get_uintah_field<FXT>(m_eqn_names[ieqn]+"_x_flux"));
-      FYT& y_flux = *(tsk_info->get_uintah_field<FYT>(m_eqn_names[ieqn]+"_y_flux"));
-      FZT& z_flux = *(tsk_info->get_uintah_field<FZT>(m_eqn_names[ieqn]+"_z_flux"));
+      FXT& x_flux = tsk_info->get_field<FXT>(m_eqn_names[ieqn]+"_x_flux");
+      FYT& y_flux = tsk_info->get_field<FYT>(m_eqn_names[ieqn]+"_y_flux");
+      FZT& z_flux = tsk_info->get_field<FZT>(m_eqn_names[ieqn]+"_z_flux");
 
       x_flux.initialize(0.0);
       y_flux.initialize(0.0);
@@ -510,9 +510,9 @@ private:
 
         Uintah::BlockRange convection_range(low_patch_range, high_patch_range);
 
-        CT& u_fx = tsk_info->get_const_uintah_field_add<CT>(m_x_velocity_name);
-        CT& v_fy = tsk_info->get_const_uintah_field_add<CT>(m_y_velocity_name);
-        CT& w_fz = tsk_info->get_const_uintah_field_add<CT>(m_z_velocity_name);
+        CT& u_fx = tsk_info->get_field<CT>(m_x_velocity_name);
+        CT& v_fy = tsk_info->get_field<CT>(m_y_velocity_name);
+        CT& w_fz = tsk_info->get_field<CT>(m_z_velocity_name);
 
         // switch between difference convection schemes:
         switch (m_conv_scheme[ieqn]){
@@ -565,9 +565,9 @@ private:
 
         ArchesCore::VariableHelper<T> var_help;
 
-        constCCVariable<double>& sigma1 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmax_name));
-        constCCVariable<double>& sigma2 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmay_name));
-        constCCVariable<double>& sigma3 = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_sigmaz_name));
+        constCCVariable<double>& sigma1 = tsk_info->get_field<constCCVariable<double> >(m_sigmax_name);
+        constCCVariable<double>& sigma2 = tsk_info->get_field<constCCVariable<double> >(m_sigmay_name);
+        constCCVariable<double>& sigma3 = tsk_info->get_field<constCCVariable<double> >(m_sigmaz_name);
 
         auto stressTensor = [&] (int i, int j, int k){
           double div_sigma1 = (sigma1(i+1,j,k) - sigma1(i,j,k))*areaEW +
@@ -597,7 +597,7 @@ private:
       typedef std::vector<SourceInfo> VS;
       for (typename VS::iterator isrc = m_source_info[ieqn].begin(); isrc != m_source_info[ieqn].end(); isrc++){
 
-        CT& src = *(tsk_info->get_const_uintah_field<CT>((*isrc).name));
+        CT& src = tsk_info->get_field<CT>((*isrc).name);
         double weight = (*isrc).weight;
 
         if ( my_dir == ArchesCore::XDIR ){

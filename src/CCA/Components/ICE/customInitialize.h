@@ -104,8 +104,8 @@ namespace Uintah {
     int verticalDir;              // vertical direction
     int principalDir;             // component of velocity to set
     double halfChanHeight;        // half channel height
-    Point gridMin;
-    Point gridMax;
+    double floor;                 // channel floor, above mpm particles
+    double ceiling;               // channel ceiling, below mpm particles
     ~powerLaw2() {};
   };
 

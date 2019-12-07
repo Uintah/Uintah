@@ -173,6 +173,7 @@ get_reduction_variable( const Uintah::ProcessorGroup* const pg,
         Uintah::PerPatch<double> perPatchVal;
         newDW->get(perPatchVal, thisVarLabel_, im, patch );
         perPatchVal.setData(reducedValue);
+        this->value()[0] = reducedValue;
         //*( (double *) perPatchVal.getBasePointer()) = reducedValue;
         dbg_red << this->get_tag().name() << " expression value on patch " << patch->getID() << " after reduction = " << this->value()[0] << std::endl;
       } else {

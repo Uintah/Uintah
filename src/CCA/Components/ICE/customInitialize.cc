@@ -217,11 +217,22 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       cib->powerLaw2_vars.verticalDir  = vDir;
       cib->powerLaw2_vars.principalDir = pDir;
       cib->powerLaw2_vars.halfChanHeight = halfChannelHeight;
-      // geometry: computational domain
-      BBox bb;
-      grid->getInteriorSpatialRange(bb);
-      cib->powerLaw2_vars.gridMin = bb.min();
-      cib->powerLaw2_vars.gridMax = bb.max();
+      
+      // determine the floor and ceiling of the channel
+      double floor   = DBL_MAX;
+      double ceiling = DBL_MAX;
+      pL2_ps->get( "channelFloor",   floor );
+      pL2_ps->get( "channelCeiling", ceiling );      
+   
+      // use computational grid if floor & ceiling haven't been specified
+      if( floor == DBL_MAX || ceiling == DBL_MAX) {
+        BBox bb;
+        grid->getInteriorSpatialRange(bb);
+        floor   = bb.min()(vDir);
+        ceiling = bb.max()(vDir);
+      }
+      cib->powerLaw2_vars.floor   = floor;
+      cib->powerLaw2_vars.ceiling = ceiling;
     }  // powerLaw2 inputs
 
     //_______________________________________________
@@ -603,8 +614,8 @@ void customInitialization(const Patch* patch,
 
       int vDir          =  cib->powerLaw2_vars.verticalDir;
       int pDir          =  cib->powerLaw2_vars.principalDir;
-      double gridMin    =  cib->powerLaw2_vars.gridMin(vDir);
-      double gridMax    =  cib->powerLaw2_vars.gridMax(vDir);
+      double floor      =  cib->powerLaw2_vars.floor;
+      double ceiling    =  cib->powerLaw2_vars.ceiling;
       double halfChanHeight  =  cib->powerLaw2_vars.halfChanHeight;
       const Level* level = patch->getLevel();
 
@@ -614,9 +625,8 @@ void customInitialization(const Patch* patch,
       double u_tau     = ( visc * Re_tau/(rho * halfChanHeight) ) ;
       double vonKarman = 0.4;
       
-//      std::cout << "     halfChannelHeight: " << halfChannelHeight << " vDir: " << vDir << " pDir: " << pDir 
-//                << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
-
+      //std::cout << "     halfChannelHeight: " << halfChanHeight << " vDir: " << vDir << " pDir: " << pDir 
+      //          << " visc: " << visc << " Re_tau: " << Re_tau << " u_tau: " << u_tau << endl;
 
       for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -624,21 +634,23 @@ void customInitialization(const Patch* patch,
         Point here   = level->getCellPosition(c);
         double h     = here.asVector()[vDir] ;
         
+         // Clamp cells outide of channel
+        if( h < floor || h > ceiling ){
+          vel_CC[c] = Vector(0,0,0);
+          continue;
+        }
+        
         double ratio = -9;
         if ( h < halfChanHeight) {
-          ratio = (h - gridMin)/halfChanHeight;
+          ratio = (h - floor)/halfChanHeight;
         } 
         else {
           ratio = 1 - (h - halfChanHeight)/halfChanHeight;
         }
         
         ratio = Clamp(ratio,0.0,1.0);
+        
         vel_CC[c][pDir] = (u_tau/vonKarman) * std::log( ratio * Re_tau );
-
-        // Clamp edge/corner values
-        if( h < gridMin || h > gridMax ){
-          vel_CC[c] = Vector(0,0,0);
-        }
       }
     }
     //_______________________________________________

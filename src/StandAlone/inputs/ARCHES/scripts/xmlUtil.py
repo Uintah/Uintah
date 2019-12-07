@@ -32,6 +32,53 @@ class UPSxmlHelper:
         parent = delete_me.getparent()
         parent.remove(delete_me)
 
+    def get_node( self, node ): 
+        """
+        Return a node given a tag
+        """
+        the_node = self.root.find(node)
+        return the_node
+
+    def get_node_subnodes( self, node, subnode, atts=[], att_values=[] ): 
+        """
+        Return the subnodes of a node (maybe multiple subnodes with same tag)
+        If att and value are supplied then it returns only those subnodes
+        who match with the exact same atts and values
+
+        If att and values are not supplied, the return value if simply the 
+        last subnode found (if multiple are present)
+        """
+        the_node = self.root.find(node)
+
+        if the_node is not None: 
+          return_node = None
+          total_atts = len(atts)
+
+          for elem in the_node.iter(tag=subnode): 
+
+            this_att = elem.attrib
+            #When atts and their values aren't supplied, just return the last 
+            #one found. 
+            return_node = elem 
+
+            counter = 0
+
+            for i, a in enumerate(atts):
+              if this_att[a] is not None: 
+                if att_values[i] == this_att[a]: 
+                  counter += 1
+
+            if counter == total_atts: 
+              #all attributes found and the values match
+              #returns the elem that first matches the criteria
+              return elem
+          if total_atts == 0:     
+            return return_node
+          else: 
+            return None
+        else: 
+          return None
+
     def add_node( self, parent_node, new_node, xml_node=None ):
         """
         Add a new node to the root at the parent_node location

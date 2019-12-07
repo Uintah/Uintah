@@ -239,10 +239,12 @@ public:
      *  @param densEvaluator The function to evaluate density from mixture fraction and heat loss
      *  @param enthEvaluator The function to evaluate enthalpy from mixture fraction and heat loss
      */
-    Builder( const Expr::Tag& rhoOldTag,
-             const Expr::Tag& rhoTag,
-             const Expr::Tag& gammaOldTag,
+    Builder( const Expr::Tag& rhoTag,
              const Expr::Tag& gammaTag,
+             const Expr::Tag& dRhodFTag,
+             const Expr::Tag& dRhodHTag,
+             const Expr::Tag& rhoOldTag,
+             const Expr::Tag& gammaOldTag,
              const Expr::Tag& rhofTag,
              const Expr::Tag& rhohTag,
              const InterpT& densEvaluator,

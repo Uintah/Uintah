@@ -191,7 +191,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   // This only happens if "-emit_taskgraphs" is passed to sus
   makeTaskGraphDoc(dts, me);
 
-  mpi_info_.reset( 0 );
+  m_mpi_info.reset( 0 );
 
   if( m_reloc_new_pos_label && m_dws[m_dwmap[Task::OldDW]] != nullptr ) {
     m_dws[m_dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, m_loadBalancer, m_reloc_new_pos_label, iteration);
@@ -416,4 +416,3 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/
   RuntimeStats::report(d_myworld->getComm());
 
 } // end execute()
-

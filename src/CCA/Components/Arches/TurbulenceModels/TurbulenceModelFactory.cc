@@ -88,18 +88,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         if ( packed_tasks.turbulence ){
 
-          std::string sub_name = "DSFT_task1";
+          std::string sub_name = "[DSFT]";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaMML_task2";
+          sub_name = "[DSmaMML]";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaCs_task3";
+          sub_name = "[DSmaCs]";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< CCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3, db_model );
@@ -107,18 +107,18 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
         } else {
 
-          std::string sub_name = "DSFT_task1";
+          std::string sub_name = "[DSFT]";
           TaskInterface::TaskBuilder* tsk_builder = scinew DSFT::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaMML_task2";
+          sub_name = "[DSmaMML]";
           TaskInterface::TaskBuilder* tsk_builder2
             = scinew DSmaMMML< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder2, db_model );
           m_momentum_closure_tasks.push_back(sub_name);
 
-          sub_name = "DSmaCs_task3";
+          sub_name = "[DSmaCs]";
           TaskInterface::TaskBuilder* tsk_builder3
             = scinew DSmaCs< constCCVariable<double> >::Builder( sub_name, 0, name );
           register_task( sub_name, tsk_builder3, db_model );
@@ -178,66 +178,6 @@ TurbulenceModelFactory::register_all_tasks( ProblemSpecP& db )
 
     }
   }
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-TurbulenceModelFactory::build_all_tasks( ProblemSpecP& db )
-{
-
-  // if ( db->findBlock("TurbulenceModels")){
-  //   ProblemSpecP db_m = db->findBlock("TurbulenceModels");
-  //
-  //   for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != nullptr;
-  //         db_model=db_model->findNextBlock("model")){
-  //
-  //     std::string name;
-  //     std::string type;
-  //     db_model->getAttribute("label", name);
-  //     db_model->getAttribute("type", type);
-  //
-  //     if (type == "dynamic_smagorinsky" ) {
-  //
-  //       name = "DSFT_task1";
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //
-  //       name = "DSmaMML_task2";
-  //       TaskInterface* tsk2 = retrieve_task(name);
-  //       tsk2->problemSetup(db_model);
-  //       tsk2->create_local_labels();
-  //
-  //       name = "DSmaCs_task3";
-  //       TaskInterface* tsk3 = retrieve_task(name);
-  //       tsk3->problemSetup(db_model);
-  //       tsk3->create_local_labels();
-  //
-  //     }else if (type == "multifractal" ) {
-  //
-  //        name="fractal_UD";
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //
-  //       name="MultifractalSGS";
-  //       TaskInterface* tsk2 = retrieve_task(name);
-  //       tsk2->problemSetup(db_model);
-  //       tsk2->create_local_labels();
-  //
-  //       name="TransportCouple";
-  //       TaskInterface* tsk3 = retrieve_task(name);
-  //       tsk3->problemSetup(db_model);
-  //       tsk3->create_local_labels();
-  //
-  //     } else {
-  //
-  //       TaskInterface* tsk = retrieve_task(name);
-  //       tsk->problemSetup(db_model);
-  //       tsk->create_local_labels();
-  //     }
-  //   }
-  // }
 }
 
 //--------------------------------------------------------------------------------------------------

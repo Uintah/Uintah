@@ -52,9 +52,9 @@ MassFlowRate::~MassFlowRate(){
 void MassFlowRate::problemSetup( ProblemSpecP& db ){
 
   // Parse from UPS file
-  m_g_uVel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_g_vVel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_g_wVel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_g_uVel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_g_vVel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_g_wVel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
 
   m_volFraction_name = "volFraction";
   particleMethod_bool = check_for_particle_method( db, DQMOM_METHOD );
@@ -208,8 +208,8 @@ void MassFlowRate::register_massFlowRate( std::vector<ArchesFieldContainer::Vari
 // -----------------------------------------------------------------------------
 void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("density");
-  constCCVariable<double>& eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >("density");
+  constCCVariable<double>& eps = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
   DataWarehouse* new_dw = tsk_info->getNewDW();
 
@@ -226,27 +226,27 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   double m_dot_coal = 0.0;
 
   // Gas phase
-  constSFCXVariable<double>& uvel_g  = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_g_uVel_name);
-  constSFCYVariable<double>& vvel_g  = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_g_vVel_name);
-  constSFCZVariable<double>& wvel_g  = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_g_wVel_name);
+  constSFCXVariable<double>& uvel_g = tsk_info->get_field<constSFCXVariable<double> >(m_g_uVel_name);
+  constSFCYVariable<double>& vvel_g = tsk_info->get_field<constSFCYVariable<double> >(m_g_vVel_name);
+  constSFCZVariable<double>& wvel_g = tsk_info->get_field<constSFCZVariable<double> >(m_g_wVel_name);
 
   if(particleMethod_bool){
 
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
       // Coal phase
-      constCCVariable<double>& wqn  = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_w_names[qn]  ));
-      constCCVariable<double>& RCqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_RC_names[qn] ));
-      constCCVariable<double>& CHqn = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_CH_names[qn] ));
+      constCCVariable<double>& wqn = tsk_info->get_field<constCCVariable<double> >( m_w_names[qn]  );
+      constCCVariable<double>& RCqn = tsk_info->get_field<constCCVariable<double> >( m_RC_names[qn] );
+      constCCVariable<double>& CHqn = tsk_info->get_field<constCCVariable<double> >( m_CH_names[qn] );
 
-      constCCVariable<double>& uvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_uVel_names[qn] ));
-      constCCVariable<double>& vvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_vVel_names[qn] ));
-      constCCVariable<double>& wvel_p = *(tsk_info->get_const_uintah_field<constCCVariable<double> >( m_p_wVel_names[qn] ));
+      constCCVariable<double>& uvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_uVel_names[qn] );
+      constCCVariable<double>& vvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_vVel_names[qn] );
+      constCCVariable<double>& wvel_p = tsk_info->get_field<constCCVariable<double> >( m_p_wVel_names[qn] );
 
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
         // Sweep through, for type == Inlet, then sweep through the specified cells
-        if ( i_bc->second.type == INLET ){
+        if ( i_bc->second.type == INLET_BC ){
 
           // Get the cell iterator - range of cellID:
           Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
@@ -302,7 +302,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
     // Sweep through, for type == Inlet, then sweep through the specified cells
 
-    if ( i_bc->second.type == INLET ){
+    if ( i_bc->second.type == INLET_BC ){
 
       // Get the cell iterator - range of cellID:
       Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());

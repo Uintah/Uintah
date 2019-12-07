@@ -100,7 +100,7 @@ class MPIScheduler : public SchedulerCommon {
     void computeNetRuntimeStats();
 
     // timing statistics for Uintah infrastructure overhead
-    enum TimingStatEnum {
+    enum TimingStatsEnum {
         TotalSend = 0
       , TotalRecv
       , TotalTest
@@ -115,10 +115,10 @@ class MPIScheduler : public SchedulerCommon {
       , WAIT_ALL
     };
 
-    ReductionInfoMapper< TimingStatEnum, double > mpi_info_;
+    ReductionInfoMapper< TimingStatsEnum, double > m_mpi_info;
+    MapInfoMapper< std::string, TaskStatsEnum, double > m_task_info;
 
     MPIScheduler* m_parent_scheduler{nullptr};
-
 
   protected:
 
@@ -144,8 +144,6 @@ class MPIScheduler : public SchedulerCommon {
 
     Timers::Simple              m_exec_timer;
   
-    std::map<std::string, double> m_exec_times;
-
   private:
 
     // eliminate copy, assignment and move

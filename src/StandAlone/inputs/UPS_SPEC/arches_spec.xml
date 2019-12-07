@@ -34,7 +34,9 @@
       <Utilities                        spec="OPTIONAL NO_DATA">
         <utility                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'variable_math, mass_flow_rate'">
+                                        attribute2="type REQUIRED STRING 'variable_math, 
+                                                                          mass_flow_rate, 
+                                                                          poisson'">
 
           <!-- mass_flow_rate -->
           <!-- The mass_flow_rate utility computes the mass flowrate of inlet boundary conditions.
@@ -81,6 +83,13 @@
             <op                         spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           </exe_order>
+
+          <!-- for an independent poisson solver -->
+          <!-- note that the use of this still requires u,v,w be defined -->
+          <PoissonSolver                spec="REQUIRED NO_DATA"
+                                        need_applies_to="type poisson">
+            <include href="solver_spec.xml" section="Parameters" />
+          </PoissonSolver>
         </utility>
 
       </Utilities>
@@ -132,6 +141,7 @@
                                                                           wall_thermal_resistance'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
+              <scattering_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties "/> <!-- multiplicative modifier on particle scattering coefficients, is ignored when radiation scattering is turned off  -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
               <density_label              spec="REQUIRED STRING"  need_applies_to="type sootVolumeFrac" />    <!--density of the gas soot mixture-->
@@ -952,11 +962,11 @@
         <intrusions                 spec="OPTIONAL NO_DATA">
          <!-- NOTES: -->
          <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... -->
-         <!-- variable = mass_flow_rate is a specific variable that sets the velocity components based
-                         on a specified mass flow rate. -->
+         <!-- variable = mass_flow_rate is a specific variable that sets the normal velocity component based
+                         on a specified mass flow rate. Note that the value must always be positive. -->
          <!-- If multiple directions are entered, then the mass flow rate is divided across
          all valid face directions with non-zero velocity normal to that face. -->
-         <!-- Enthalpy is computed based on independ. table variables, including heat loss -->
+         <!-- Tabulated variables are computed based on independent table variables, including heat loss. -->
          <!-- Zero values of velocity are ignored. -->
          <intrusion                     spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING">       <!-- type = how bc is applied,
@@ -998,10 +1008,11 @@
             <relative_xyz               spec="REQUIRED VECTOR"
                                         need_applies_to="type from_file"/> <!-- relative position of the 0,0,0 value of the handoff plane -->
 
-            <!-- mass flow [kg/sec]-->
-            <!-- NOTE: With mass flow, you must specify flat values of scalars which
-                       determine the density value. -->
-            <flow_rate                  spec="REQUIRED DOUBLE"
+            <!-- mass flow [kg/sec]. Must be a positive value. The resulting velocity sign depends on the face. -->
+            <!--    NOTE: With mass flow, you must specify flat values of scalars which
+                        determine the density value and other property values uniformly 
+                        across the inlet. -->
+            <flow_rate                  spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type massflow"/>
 
 
@@ -2035,22 +2046,30 @@
 
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->
-            <use_dynamic_frequency        spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- Turns on a global reduction estimate the radiation time scale then resolves that scale with the specified number of steps-->
+            <use_dynamic_frequency      spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- Turns on a global reduction estimate the radiation time scale then resolves that scale with the specified number of steps-->
             <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart -->
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false -->
+            <includeParticleRad         spec="OPTIONAL BOOLEAN" need_applies_to="type rmcrt_radiation" />              <!--Include particle radiation in intensity calc --> 
             <abskt                      spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type do_radiation rmcrt_radiation" />                         <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
+                                        need_applies_to="type do_radiation"/>                                          <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
                                                                                                                             total absorption coeffient. When using particles, the abskg label defined there
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
+                                        <!-- used by RMCRT  -->
+            <absk                       spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"                                              
+                                        need_applies_to="type rmcrt_radiation" />                                       
+                                        
+            
             <DORadiationModel           spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'linearSolve, sweepSpatiallyParallel'"
                                         need_applies_to="type do_radiation " >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 -->
               <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
-              <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
+              <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/>     <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
+              <addOrthogonalDirs          spec="OPTIONAL BOOLEAN" />                                  <!-- turns on an additional 8 sweeps, of these 8 sweep 5 and 6 are null, while 1 2 3 4 7 8 are x+ y+ z+ x- y- z-  -->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
-              <QuadratureSet               spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
+              <QuadratureSet              spec="OPTIONAL STRING 'LevelSymmetric, LegendreChebyshev" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"  need_applies_to="type linearSolve"
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />

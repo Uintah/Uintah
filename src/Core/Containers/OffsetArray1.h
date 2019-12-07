@@ -38,6 +38,7 @@
 #define SCI_Containers_OffsetArray1_h 1
 
 #include <Core/Util/Assert.h>
+#include <vector>
 
 namespace Uintah {
 
@@ -71,9 +72,9 @@ template<class T> class OffsetArray1;
   
 ****************************************/
 template<class T> class OffsetArray1 {
-  T* objs;
-  int _l;
-  int _h;
+  T* m_objs;
+  int m_l;
+  int m_h;
 public:
 
   //////////
@@ -98,24 +99,24 @@ public:
   //////////
   // Accesses the nth element of the array
   inline const T& operator[](int n) const {
-    CHECKARRAYBOUNDS(n, _l, _h);
-    return objs[n];
+    CHECKARRAYBOUNDS(n, m_l, m_h);
+    return m_objs[n];
   }
 
   //////////
   // Accesses the nth element of the array
   inline T& operator[](int n) {
-    CHECKARRAYBOUNDS(n, _l, _h);
-    return objs[n];
+    CHECKARRAYBOUNDS(n, m_l, m_h);
+    return m_objs[n];
   }
     
   //////////
   // Returns the lower bound of the array
-  inline int low() const{ return _l;}
+  inline int low() const{ return m_l;}
 
   //////////
   // Returns the upper bound of the array
-  inline int high() const{ return _h;}
+  inline int high() const{ return m_h;}
 
 
   //////////
@@ -129,85 +130,120 @@ public:
   //////////
   // Get the array information
   T* get_objs();
-
+  
+  //////////
+  // convert offsetArray to a std::vector
+  std::vector<T> to_stl_vector();
 };
 
 template<class T>
 OffsetArray1<T>::OffsetArray1(const OffsetArray1<T>& a)
 {
-  _l=a._l;
-  _h=a._h;
-  int size = _h-_l;
+  m_l=a.m_l;
+  m_h=a.m_h;
+  int size = m_h-m_l;
   ASSERT(size>=0);
-  if(size)
-    objs=new T[size]-_l;
-  else
-    objs=0;
-  for(int i=this->_l;i<this->_h;i++)objs[i]=a.objs[i];
+  if(size){
+    m_objs=new T[size]-m_l;
+  }else{
+    m_objs=0;
+  }
+  
+  for(int i=this->m_l;i<this->m_h;i++){
+    m_objs[i]=a.m_objs[i];
+  }
 }
 
 template<class T>
 OffsetArray1<T>& OffsetArray1<T>::operator=(const OffsetArray1<T>& copy)
 {
-  if (objs)delete [] (objs+_l);
-  _l=copy._l;
-  _h=copy._h;
-  int size = _h-_l;
+  if (m_objs){
+    delete [] (m_objs+m_l);
+  }
+  m_l=copy.m_l;
+  m_h=copy.m_h;
+  int size = m_h-m_l;
   ASSERT(size>=0);
-  if(size)
-    objs=new T[size]-_l;
-  else
-    objs=0;
-  for(int i=_l;i<_h;i++)objs[i]=copy.objs[i];
+  if(size){
+    m_objs=new T[size]-m_l;
+  }else{
+    m_objs=0;
+  }
+    
+  for(int i=m_l;i<m_h;i++){
+    m_objs[i]=copy.m_objs[i];
+  }
   return(*this);
 }
 
 template<class T>
 OffsetArray1<T>::OffsetArray1(int l, int h)
-  : _l(l), _h(h)
+  : m_l(l), m_h(h)
 {
-  int size=_h-_l;
+  int size=m_h-m_l;
   ASSERT(size >= 0);
-  if(size)
-    objs=new T[size]-_l;
-  else
-    objs=0;
+  if(size){
+    m_objs=new T[size]-m_l;
+  }else{
+    m_objs=0;
+  }
 }       
 
 template<class T>
 OffsetArray1<T>::~OffsetArray1()
 {
-  if(objs)delete [] (objs+_l);
+  if(m_objs){
+    delete [] (m_objs+m_l);
+  }
 }
 
 template<class T>
 void OffsetArray1<T>::resize(int l, int h)
 {
   int newsize=h-l;
-  int cursize=_h-_l;
+  int cursize=m_h-m_l;
   if(newsize == cursize){
-    objs+=_l-l;
+    m_objs+=m_l-l;
   } else {
-    delete[] (objs+_l);
-    if(newsize != 0)
-      objs = new T[newsize]-l;
-    else
-      objs = 0;
+  
+    delete[] (m_objs+m_l);
+    if(newsize != 0){
+      m_objs = new T[newsize]-l;
+    }else{
+      m_objs = 0;
+    }
   }
-  _l=l;
-  _h=h;
+  m_l=l;
+  m_h=h;
 }
 
 template<class T>
 void OffsetArray1<T>::initialize(const T& val)
 {
-  for (int i=_l;i<_h;i++)objs[i]=val;
+  for (int i=m_l;i<m_h;i++){
+    m_objs[i]=val;
+  }
 }
 
 template<class T>
 T* OffsetArray1<T>::get_objs()
 {
-  return objs+_l;
+  return m_objs + m_l;
+}
+
+
+//////////
+// to_stl_vector()
+template<class T>
+std::vector<T> OffsetArray1<T>::to_stl_vector( )
+{
+  ASSERT( (m_h-m_l) >=0 );
+  
+  std::vector<T> vec;
+  for(int i= m_l;i< m_h;i++){
+    vec.push_back(m_objs[i]);
+  }
+  return vec;
 }
 
 #define OFFSETARRAY1_VERSION 1
@@ -216,5 +252,5 @@ T* OffsetArray1<T>::get_objs()
 } // End namespace Uintah
 
 
-#endif /* SCI_Containers_OffsetArray1_h */
+#endif /* SCI_Containers_OffsetArray1m_h */
 

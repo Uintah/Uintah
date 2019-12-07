@@ -173,15 +173,15 @@ if __name__ == "__main__":
     x0 = array([0.0050674086, -0.875, 0.050000000699999998])
     selected_dep = range(myTable.dep_n)
     y0 = myTable(x0, selected_dep)
-    print ' '
-    print 'Independent Variables:'
-    print '   ', ', '.join(myTable.ind_names)
-    print '   ', ', '.join(map(str, x0))
-    print ' '
-    print 'Dependent Variables:'
+    print( ' ')
+    print( 'Independent Variables:')
+    print( '   ', ', '.join(myTable.ind_names))
+    print( '   ', ', '.join(map(str, x0)))
+    print( ' ')
+    print( 'Dependent Variables:')
     i0 = 0
     for i in selected_dep:
-        print str(myTable.dep_names[i]).rjust(30), repr(y0[i0]).rjust(25), \
-              str(myTable.dep_units[i]).ljust(15)
+        print(str(myTable.dep_names[i]).rjust(30), repr(y0[i0]).rjust(25), \
+              str(myTable.dep_units[i]).ljust(15))
         i0 += 1
-    print ' '
+    print(' ')

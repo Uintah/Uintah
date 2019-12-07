@@ -515,6 +515,8 @@ public:
   bool d_printTotalKE;
   double d_ke_limit;
 
+  bool d_using_TI_turb{false};                  ///< Are we using the Task Interface turbulence model? 
+
   const VarLabel* d_x_vel_label;
   const VarLabel* d_y_vel_label;
   const VarLabel* d_z_vel_label;

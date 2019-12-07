@@ -18,21 +18,21 @@ Smagorinsky::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocity" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocity" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocity" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocity" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocity" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocity" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc" );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc" );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc" );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, m_u_vel_name + "_cc" );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, m_v_vel_name + "_cc" );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, m_w_vel_name + "_cc" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
   Nghost_cells = 1;
 
   db->getWithDefault("Cs", m_Cs, 1.3);
 
-  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, default_viscosity_name );
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, default_viscosity_name );
 
   // ** HACK **
   if ( m_total_vis_name == "viscosityCTS" ){ m_using_production = true; }
@@ -80,7 +80,7 @@ Smagorinsky::register_initialize(
 void
 Smagorinsky::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
   mu_sgc.initialize(0.0);
 
 }
@@ -103,7 +103,7 @@ void
 Smagorinsky::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   if ( !m_using_production ){
-    CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
+    CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
     mu_sgc.initialize(0.0);
   }
 
@@ -132,17 +132,17 @@ Smagorinsky::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
 void
 Smagorinsky::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  constCCVariable<double>& density = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& density = tsk_info->get_field<constCCVariable<double> >(m_density_name);
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
 
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);

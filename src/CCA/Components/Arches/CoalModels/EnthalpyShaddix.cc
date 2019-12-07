@@ -388,11 +388,11 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
 //---------------------------------------------------------------------------
 void
 EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
-                                  const PatchSubset    * patches,
-                                  const MaterialSubset * matls,
-                                  DataWarehouse        * old_dw,
-                                  DataWarehouse        * new_dw,
-                                  const int timeSubStep )
+                               const PatchSubset    * patches,
+                               const MaterialSubset * matls,
+                               DataWarehouse        * old_dw,
+                               DataWarehouse        * new_dw,
+                               const int timeSubStep )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -411,167 +411,187 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     CCVariable<double> qconv;
     CCVariable<double> qrad;
     DataWarehouse* which_dw;
+    
     if ( timeSubStep == 0 ){
       which_dw = old_dw;
-      new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( heat_rate,     d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( gas_heat_rate, d_gasLabel,   matlIndex, patch );
+      new_dw->allocateAndPut( qconv,         d_qconvLabel, matlIndex, patch );
+      new_dw->allocateAndPut( qrad,          d_qradLabel,  matlIndex, patch );
+      
       heat_rate.initialize(0.0);
-      new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
       gas_heat_rate.initialize(0.0);
-      new_dw->allocateAndPut( qconv, d_qconvLabel, matlIndex, patch );
       qconv.initialize(0.0);
-      new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
       qrad.initialize(0.0);
     }
     else {
       which_dw = new_dw;
-      new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch );
-      new_dw->getModifiable( gas_heat_rate, d_gasLabel, matlIndex, patch );
-      new_dw->getModifiable( qconv, d_qconvLabel, matlIndex, patch );
-      new_dw->getModifiable( qrad, d_qradLabel, matlIndex, patch );
+      new_dw->getModifiable( heat_rate,     d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( gas_heat_rate, d_gasLabel,   matlIndex, patch );
+      new_dw->getModifiable( qconv,         d_qconvLabel, matlIndex, patch );
+      new_dw->getModifiable( qrad,          d_qradLabel,  matlIndex, patch );
     }
 
     // get gas phase variables
     constCCVariable<double> temperature;
-    which_dw->get( temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> specific_heat;
-    which_dw->get( specific_heat, _gas_cp_varlabel, matlIndex, patch, gn, 0 );  // in J/kg/K
+    which_dw->get( temperature,   _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( specific_heat, _gas_cp_varlabel,           matlIndex, patch, gn, 0 );  // in J/kg/K
+    
     constCCVariable<double> radiationVolqIN;
     constCCVariable<double> abskp;
-
     constCCVariable<double> rad_particle_temperature;
+    
     if ( d_radiation ){
-      which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
-      which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
+      which_dw->get( radiationVolqIN, _volq_varlabel,  matlIndex, patch, gn, 0);
+      which_dw->get( abskp,           _abskp_varlabel, matlIndex, patch, gn, 0);
+      
       if (_radiateAtGasTemp){
-       
         which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
       }else{
         which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
       }
     }
+    
     constCCVariable<Vector> gasVel;
-    which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> den;
-    which_dw->get( den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> devol_gas_source;
-    new_dw->get( devol_gas_source, _devolgas_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> chargas_source;
-    new_dw->get( chargas_source, _chargas_varlabel, matlIndex, patch, gn, 0 );
+    
+    which_dw->get( gasVel,        d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
+    which_dw->get( den,           d_fieldLabels->d_densityCPLabel,  matlIndex, patch, gn, 0 );
+    new_dw->get( devol_gas_source, _devolgas_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( chargas_source,    _chargas_varlabel, matlIndex, patch, gn, 0 );
 
     // get particle phase variables
     constCCVariable<double> length;
-    which_dw->get( length, _length_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> weight;
-    which_dw->get( weight, _weight_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> rawcoal_mass;
-    which_dw->get( rawcoal_mass, _rcmass_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> char_mass;
-    which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> particle_temperature;
+    
+    which_dw->get( length,        _length_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( weight,        _weight_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( rawcoal_mass,  _rcmass_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( char_mass,     _char_varlabel,   matlIndex, patch, gn, 0 );
     which_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> charoxi_temp_source;
-    new_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> surface_rate;
-    new_dw->get( surface_rate, _surfacerate_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<Vector> partVel;
+    
+    new_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( surface_rate,        _surfacerate_varlabel, matlIndex, patch, gn, 0 );
+    
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
-  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
-      Uintah::parallel_for( range, [&](int i, int j, int k) {
-         double max_Q_convection;
-         double heat_rate_;
-         double gas_heat_rate_;
-         double Q_convection;
-         double Q_radiation;
-         double Q_reaction;
-         double blow;
-         double kappa;
+    //______________________________________________________________________
+    //
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+    
+    Uintah::parallel_for( range, [&](int i, int j, int k) {
+      double heatRate;
+      double gas_heatRate;
+      double Q_convection;
+      double Q_radiation;
+      double Q_reaction;
 
-         if (weight(i,j,k)/_weight_scaling_constant < _weight_small) {
-         heat_rate_ = 0.0;
-         gas_heat_rate_ = 0.0;
-         Q_convection = 0.0;
-         Q_radiation = 0.0;
-         } else {
+      if (weight(i,j,k)/_weight_scaling_constant < _weight_small) {
+        heatRate     = 0.0;
+        gas_heatRate = 0.0;
+        Q_convection = 0.0;
+        Q_radiation  = 0.0;
+      } else {
 
-         double rawcoal_massph=rawcoal_mass(i,j,k);
-         double char_massph=char_mass(i,j,k);
-         double temperatureph=temperature(i,j,k);
-         double specific_heatph=specific_heat(i,j,k);
-         double denph=den(i,j,k);
-         double devol_gas_sourceph=devol_gas_source(i,j,k);
-         double chargas_sourceph=chargas_source(i,j,k);
-         double lengthph=length(i,j,k);
-         double weightph=weight(i,j,k);
-         double particle_temperatureph=particle_temperature(i,j,k);
-         double charoxi_temp_sourceph=charoxi_temp_source(i,j,k);
-         double surface_rateph=surface_rate(i,j,k);
+        double rawcoal_massph = rawcoal_mass(i,j,k);
+        double char_massph = char_mass(i,j,k);
+        double temperatureph = temperature(i,j,k);
+        double specific_heatph = specific_heat(i,j,k);
+        double denph = den(i,j,k);
+        double devol_gas_sourceph = devol_gas_source(i,j,k);
+        double chargas_sourceph = chargas_source(i,j,k);
+        double lengthph = length(i,j,k);
+        double weightph = weight(i,j,k);
+        double particle_temperatureph = particle_temperature(i,j,k);
+        double charoxi_temp_sourceph = charoxi_temp_source(i,j,k);
+        double surface_rateph = surface_rate(i,j,k);
 
-         // velocities
-         Vector gas_velocity = gasVel(i,j,k);
-         Vector particle_velocity = partVel(i,j,k);
+        // velocities
+        Vector gas_velocity      = gasVel(i,j,k);
+        Vector particle_velocity = partVel(i,j,k);
 
-         double FSum = 0.0;
+        // intermediate calculation values
+      
+        // Convection part: -----------------------
+        // Reynolds number
+        double delta_V =sqrt( std::pow(gas_velocity.x() - particle_velocity.x(),2.0) + 
+                              std::pow(gas_velocity.y() - particle_velocity.y(),2.0) + 
+                              std::pow(gas_velocity.z() - particle_velocity.z(),2.0));
+                              
+        double Re = delta_V * lengthph * denph/_visc;
 
-         // intermediate calculation values
-         double Re;
-         double Nu;
-         double rkg;
-         // Convection part: -----------------------
-         // Reynolds number
-         double delta_V =sqrt(std::pow(gas_velocity.x() - particle_velocity.x(),2.0) + std::pow(gas_velocity.y() - particle_velocity.y(),2.0)+std::pow(gas_velocity.z() - particle_velocity.z(),2.0));
-         Re = delta_V*lengthph*denph/_visc;
+        // Nusselt number
+        double Nu = 2.0 + 0.65*std::pow(Re,0.50)*std::pow(_Pr,(1.0/3.0));
 
-         // Nusselt number
-         Nu = 2.0 + 0.65*std::pow(Re,0.50)*std::pow(_Pr,(1.0/3.0));
+        // Gas thermal conductivity
+        double rkg = props(temperatureph, particle_temperatureph); // [=] J/s/m/K
 
-         // Gas thermal conductivity
-         rkg = props(temperatureph, particle_temperatureph); // [=] J/s/m/K
+        // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
+        double kappa =  -surface_rateph*lengthph*specific_heatph/(2.0*rkg);
 
-         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
-         kappa =  -surface_rateph*lengthph*specific_heatph/(2.0*rkg);
-         if(std::abs(exp(kappa)-1.0) < 1e-16){
-         blow = 1.0;
-         } else {
-         blow = kappa/(exp(kappa)-1.0);
-         }
+        double blow;
+        if(std::abs(exp(kappa)-1.0) < 1e-16){
+          blow = 1.0;
+        } else {
+          blow = kappa/(exp(kappa)-1.0);
+        }
 
-         Q_convection = Nu*_pi*blow*rkg*lengthph*(temperatureph - particle_temperatureph); // J/(#.s)
-         //clip convection term if timesteps are too large
-         double deltaT=temperatureph-particle_temperatureph;
-         double alpha_rc=(rawcoal_massph+char_massph);
-         double alpha_cp=cp_c(particle_temperatureph)*alpha_rc+cp_ash(particle_temperatureph)*_init_ash[_nQuadNode];
-         max_Q_convection=alpha_cp*(deltaT/dt);
-         if (std::abs(Q_convection) > std::abs(max_Q_convection)){
-         Q_convection = max_Q_convection;
-         }
-         Q_convection = Q_convection*weightph;
-         // Radiation part: -------------------------
-         Q_radiation = 0.0;
-         if ( _radiationOn) {
-         double Eb;
-         Eb = 4.0*_sigma*std::pow(rad_particle_temperature(i,j,k),4.0);
-         FSum = radiationVolqIN(i,j,k);
-         Q_radiation = abskp(i,j,k)*(FSum - Eb);
-         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp*weightph ;
-         if (std::abs(Q_radMax) < std::abs(Q_radiation)){
-         Q_radiation=Q_radMax;
-         }
-         }
-         double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
-         double hc = _Hc0 + hint * _RdMW;
-         Q_reaction = charoxi_temp_sourceph;
-         // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-         heat_rate_ = (Q_convection + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
-         (_enthalpy_scaling_constant*_weight_scaling_constant);
-         gas_heat_rate_ = -Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
-         }
-         heat_rate(i,j,k) = heat_rate_;
-         gas_heat_rate(i,j,k) = gas_heat_rate_;
-         qconv(i,j,k) = Q_convection; // W/m^3
-         qrad(i,j,k) = Q_radiation; // W/m^3
-       } );
+        Q_convection = Nu * _pi * blow * rkg * lengthph * (temperatureph - particle_temperatureph); // J/(#.s)
+        //clip convection term if timesteps are too large
+        double deltaT   = temperatureph - particle_temperatureph;
+        double alpha_rc = (rawcoal_massph + char_massph);
+        double alpha_cp = cp_c(particle_temperatureph) * alpha_rc + cp_ash(particle_temperatureph) * _init_ash[_nQuadNode];
+        double max_Q_convection= alpha_cp*(deltaT/dt);
+        
+        if (std::abs(Q_convection) > std::abs(max_Q_convection)){
+          Q_convection = max_Q_convection;
+        }
+        
+        Q_convection = Q_convection*weightph;
+        
+        // Radiation part: -------------------------
+        Q_radiation = 0.0;
+        
+        if ( _radiationOn) {
+
+          double Eb   = 4.0*_sigma*std::pow( rad_particle_temperature(i,j,k), 4.0);
+          double FSum = radiationVolqIN(i,j,k);
+          Q_radiation = abskp(i,j,k)*(FSum - Eb);
+          
+          double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * _sigma ), 0.25) - rad_particle_temperature(i,j,k))/(dt)*alpha_cp*weightph ;
+          
+          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
+            Q_radiation=Q_radMax;
+          }
+        }
+        
+        double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
+        double hc = _Hc0 + hint * _RdMW;
+        Q_reaction = charoxi_temp_sourceph;
+        
+        // This needs to be made consistant with lagrangian particles!!! - derek 12/14
+        heatRate = (Q_convection + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
+                     (_enthalpy_scaling_constant*_weight_scaling_constant);
+        
+        gas_heatRate = -Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
+      }
+      
+      
+      heat_rate(i,j,k)     = heatRate;
+      gas_heat_rate(i,j,k) = gas_heatRate;
+      qconv(i,j,k)         = Q_convection; // W/m^3
+      qrad(i,j,k)          = Q_radiation;  // W/m^3
+    } );
 
 
   }//end patch loop

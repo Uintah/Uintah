@@ -141,7 +141,6 @@ typedef struct visit_simulation_data
   std::vector< unsigned int > nodeStart  {0};
   std::vector< unsigned int > nodeStop   {0};
   std::vector< unsigned int > nodeCores  {0};
-  std::vector< unsigned int > nodeMemory {0};
 
   unsigned int maxNodes, maxCores, xNode, yNode;
 

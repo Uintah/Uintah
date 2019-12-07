@@ -828,10 +828,10 @@ void visit_SetMPIStats( visit_simulation_data *sim )
     (sim->simController->getSchedulerP().get_rep());
   
   // Add in the mpi run time stats.
-  if( mpiScheduler && mpiScheduler->mpi_info_.size() )
+  if( mpiScheduler && mpiScheduler->m_mpi_info.size() )
   {
-    ReductionInfoMapper< MPIScheduler::TimingStatEnum, double > &mpiStats =
-      mpiScheduler->mpi_info_;
+    ReductionInfoMapper< MPIScheduler::TimingStatsEnum, double > &mpiStats =
+      mpiScheduler->m_mpi_info;
 
     reportStats( "MPI", mpiStats, true, sim );
   }

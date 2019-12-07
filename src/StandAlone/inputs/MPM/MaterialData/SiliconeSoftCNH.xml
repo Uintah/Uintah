@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Silicon - Properties from https://www.azom.com/properties.aspx?ArticleID=920 -->
+<Uintah_Include>
+    <density> 2300.0 </density>                         <!-- kg/m^3 -->
+    <constitutive_model type="comp_neo_hook">
+        <bulk_modulus>  1.5e9  </bulk_modulus>          <!-- Pa -->
+        <shear_modulus> 0.02e9 </shear_modulus>
+    </constitutive_model>
+    <thermal_conductivity> 1.0 </thermal_conductivity>  <!-- W/m.K -->
+    <specific_heat>       1000.</specific_heat>         <!-- J/kgK -->
+</Uintah_Include>

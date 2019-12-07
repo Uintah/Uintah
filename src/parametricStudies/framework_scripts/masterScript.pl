@@ -41,7 +41,7 @@ use File::Basename;
 
 use Cwd;
 use lib dirname (__FILE__) ."/framework_scripts";    # needed to find local Utilities.pm
-use Utilities qw( cleanStr print_XML_ElementTree get_XML_value);
+use Utilities qw( cleanStr setPath print_XML_ElementTree get_XML_value);
 
 #__________________________________
 # bulletproofing
@@ -112,7 +112,7 @@ $ENV{"PATH"} = "$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScri
 # bulletproofing
 print "----------------------   \n";
 print "Using the following commands:\n";
-system("which sus") == 0               || die("\nCannot find the command sus $@");
+system("which sus") == 0               || die("\nCannot find the command sus.  You may want to set <sus_path> in components.xml, or run in Uintah:StandAlone dir $@");
 #system("which octave")  == 0           || die("\nCannot find the command octave.  You may want to comment this out if you're not using octave $@");
 #system("which gnuplot") == 0           || die("\nCannot find the command gnuplot.  You may want to comment this out if you're not using octave  $@");
 system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
@@ -158,15 +158,17 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
    #__________________________________
    # loop over all tests
    #   - make test directories
-   #   - copy config_files_path_pathig & input files
+   #   - copy tst, batch scripts, other files & input files
    my $otherFiles = "";
 
    foreach my $test ( $whatToRun->findnodes('test') ) {
 
      my $testName = cleanStr( $test->findvalue('name') );
 
+     # tst file can live outside of uintah src tree
      my $tstFile  = cleanStr( $test->findvalue('tst') );
-     $tstFile     = $fw_path."/".$tstFile;
+     $tstFile     = setPath( $tstFile, $fw_path );
+
      my $tst_basename = basename( $tstFile );
 
      my $dom      = XML::LibXML->load_xml(location => "$tstFile" , no_blanks => 1);
@@ -178,19 +180,14 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
                    # UPS file
      my $ups_tmp  = cleanStr( $tstData->findvalue('upsFile') );
-     my $upsFile  = $inputs_path.$component."/".$ups_tmp;
+     my $upsFile  = setPath( $ups_tmp, $fw_path, $inputs_path.$component );
 
-                   # if it's not in the std location look for it
-     if ( ! -e $ups_tmp ){
-       $upsFile = `find $inputs_path  |grep --word-regexp $ups_tmp`;
-       chomp( $upsFile );
-     }
-
-                   # Other files needed
+                   # Other files needed.  This could contain wildcards 
      if($test->exists('otherFilesToCopy') ){
-       $otherFiles= cleanStr( $test->findvalue('otherFilesToCopy') );
-      }
-
+       $otherFiles = cleanStr( $test->findvalue('otherFilesToCopy') );
+       $otherFiles = setPath( $otherFiles, $fw_path, $inputs_path.$component ) ;
+     }
+     
                     # find a unique testname
      my $count = 0;
      my $testNameOld = $testName;
@@ -207,17 +204,15 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
 
      chdir($testName);
 
-
-
+     #__________________________________
      # bulletproofing
      # do these files exist
      if (! -e $upsFile ||
-         ! -e $tstFile ||
-         ! -e $fw_path."/".$otherFiles ){
+         ! -e $tstFile ){
        print "\n \nERROR:setupFrameWork:\n";
        print "The ups file: \n       \t ($upsFile) \n";
        print "or the tst file: \n     \t ($tstFile)\n";
-       print "or the other file(s) \n \t ($fw_path/$otherFiles) \n";
+       print "or the other file(s) \n \t ($otherFiles) \n";
        print "do not exist.  Now exiting\n";
        exit
      }
@@ -239,9 +234,10 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      system("ln -s $inputs_path > /dev/null 2>&1");
 
      # create any symbolic links requested by that component
-     if( $#symLinks > 0 ){
+     if( @symLinks ){
        foreach my $s (@symLinks) {
          if( $s ne ""){
+           print " creating symbolic link: $s \n";
            system("ln -s $s> /dev/null 2>&1");
          }
        }

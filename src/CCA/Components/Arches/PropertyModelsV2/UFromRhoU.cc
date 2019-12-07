@@ -16,11 +16,11 @@ void UFromRhoU::problemSetup( ProblemSpecP& db ){
 
   using namespace Uintah::ArchesCore;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, "uVelocitySPBC" );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, "vVelocitySPBC" );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, "wVelocitySPBC" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, "uVelocitySPBC" );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, "vVelocitySPBC" );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, "wVelocitySPBC" );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
   m_xmom = default_uMom_name;
   m_ymom = default_vMom_name;
   m_zmom = default_wMom_name;
@@ -79,13 +79,13 @@ void UFromRhoU::register_timestep_init( AVarInfo& variable_registry , const bool
 void UFromRhoU::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
-  constSFCXVariable<double>& old_u = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& old_v = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& old_w = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& old_u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& old_v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& old_w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  SFCXVariable<double>& u = tsk_info->get_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->get_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->get_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.copy(old_u);
   v.copy(old_v);
@@ -118,14 +118,14 @@ void UFromRhoU::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 //--------------------------------------------------------------------------------------------------
 void UFromRhoU::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constCCVariable<double>&    rho = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_density_name );
-  constCCVariable<double>&    eps = tsk_info->get_const_uintah_field_add<constCCVariable<double> >( m_eps_name );
-  constSFCXVariable<double>& xmom = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >( m_xmom );
-  constSFCYVariable<double>& ymom = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >( m_ymom );
-  constSFCZVariable<double>& zmom = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >( m_zmom );
-  SFCXVariable<double>& u = tsk_info->get_uintah_field_add<SFCXVariable<double> >(m_u_vel_name);
-  SFCYVariable<double>& v = tsk_info->get_uintah_field_add<SFCYVariable<double> >(m_v_vel_name);
-  SFCZVariable<double>& w = tsk_info->get_uintah_field_add<SFCZVariable<double> >(m_w_vel_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >( m_density_name );
+  constCCVariable<double>& eps = tsk_info->get_field<constCCVariable<double> >( m_eps_name );
+  constSFCXVariable<double>& xmom = tsk_info->get_field<constSFCXVariable<double> >( m_xmom );
+  constSFCYVariable<double>& ymom = tsk_info->get_field<constSFCYVariable<double> >( m_ymom );
+  constSFCZVariable<double>& zmom = tsk_info->get_field<constSFCZVariable<double> >( m_zmom );
+  SFCXVariable<double>& u = tsk_info->get_field<SFCXVariable<double> >(m_u_vel_name);
+  SFCYVariable<double>& v = tsk_info->get_field<SFCYVariable<double> >(m_v_vel_name);
+  SFCZVariable<double>& w = tsk_info->get_field<SFCZVariable<double> >(m_w_vel_name);
 
   u.initialize(0.0);
   v.initialize(0.0);

@@ -6,10 +6,20 @@
 
 <!-- Ray convergence test using Burns & Christon benchmark -->
 
+
+<!-- Sanity checks of the virtual radiometer -->
+<test>
+  <name>VR</name>
+  <tst>RMCRT_radiometer.tst</tst>
+</test>
+
+<!--
 <test>
   <name>DoubleRMCRT_OA_Ray_1L_LHC</name>
   <tst>ray.tst</tst>
 </test>
+-->
+
 <!--
 <test>
   <name>GPU_RMCRT_OA_Ray_1L_LHC</name>

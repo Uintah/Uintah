@@ -22,7 +22,7 @@ for dir in $*; do
 
 done
 
-testing=false
+testing="true"
 preTimestep=-1
 
 for dir in $*; do
@@ -34,7 +34,7 @@ for dir in $*; do
          tsNum=`echo $timestep | cut -d"t" -f2`
          if test "$tsNum" -le "$preTimestep"; then
             if test "$testing" == "true"; then
-               echo "ERROR: $timestep is before previous timestep: t$preTimestep"
+               echo "ERROR: $timestep is before previous timestep: t$preTimestep" >&2
             fi
          else
 
@@ -51,7 +51,7 @@ for dir in $*; do
          fi
       else
          if test "$testing" == "true"; then
-            echo "WARNING $dir/$timestep/timestep.xml does not exist"
+            echo "ERROR $dir/$timestep/timestep.xml does not exist" >&2
          fi
       fi
    done

@@ -49,12 +49,12 @@ SampleTask::register_initialize(
 void
 SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  //CCVariable<double>& field  = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_sample_field" ));
-  //CCVariable<double>& result = *(tsk_info->get_uintah_field<CCVariable<double> >( "a_result_field" ));
+  //CCVariable<double>& field = tsk_info->get_field<CCVariable<double> >( "a_sample_field" );
+  //CCVariable<double>& result = tsk_info->get_field<CCVariable<double> >( "a_result_field" );
 
-  //constCCVariable<double>& field = tsk_info->get_const_uintah_field_add<constCCVariable<double> >("a_sample_field");
-  CCVariable<double>& field  = tsk_info->get_uintah_field_add<CCVariable<double> >("a_sample_field");
-  CCVariable<double>& result = tsk_info->get_uintah_field_add<CCVariable<double> >("a_result_field");
+  //constCCVariable<double>& field = tsk_info->get_field<constCCVariable<double> >("a_sample_field");
+  CCVariable<double>& field = tsk_info->get_field<CCVariable<double> >("a_sample_field");
+  CCVariable<double>& result = tsk_info->get_field<CCVariable<double> >("a_result_field");
 
   //traditional functor:
   struct mySpecialOper{
@@ -108,22 +108,21 @@ SampleTask::register_timestep_eval(
 void
 SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& field   = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_sample_field" );
-  CCVariable<double>& result  = tsk_info->get_uintah_field_add<CCVariable<double> >( "a_result_field" );
-  CCVariable<double>& density = tsk_info->get_uintah_field_add<CCVariable<double> >( "density" );
+  CCVariable<double>& field = tsk_info->get_field<CCVariable<double> >( "a_sample_field" );
+  CCVariable<double>& result = tsk_info->get_field<CCVariable<double> >( "a_result_field" );
+  CCVariable<double>& density = tsk_info->get_field<CCVariable<double> >( "density" );
 
   //Three ways to get variables:
   // Note that there are 'const' versions of these access calls to tsk_info as well. Just use a
   // tsk_info->get_const_*
   // By reference
-  //CCVariable<double>& A_ref = tsk_info->get_uintah_field_add<CCVariable<double> >("A");
+  //CCVariable<double>& A_ref = tsk_info->get_field<CCVariable<double> >("A");
   // Pointer
   //CCVariable<double>* A_ptr = tsk_info->get_uintah_field<CCVariable<double> >("A");
   // Traditional Uintah Style
   // But, in this case you lose some of the convenient feature of the Arches Task Interface
   // which may or may not be important to you.
   //CCVariable<double> A_trad;
-  //tsk_info->get_unmanaged_uintah_field<CCVariable<double> >("A", A_trad);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   Uintah::parallel_for( range, [&](int i, int j, int k){

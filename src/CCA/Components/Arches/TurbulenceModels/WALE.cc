@@ -23,16 +23,16 @@ WALE::problemSetup( ProblemSpecP& db ){
 
   Nghost_cells = 1;
 
-  m_u_vel_name = parse_ups_for_role( UVELOCITY, db, ArchesCore::default_uVel_name );
-  m_v_vel_name = parse_ups_for_role( VVELOCITY, db, ArchesCore::default_vVel_name );
-  m_w_vel_name = parse_ups_for_role( WVELOCITY, db, ArchesCore::default_wVel_name );
-  m_density_name = parse_ups_for_role( DENSITY, db, "density" );
+  m_u_vel_name = parse_ups_for_role( UVELOCITY_ROLE, db, ArchesCore::default_uVel_name );
+  m_v_vel_name = parse_ups_for_role( VVELOCITY_ROLE, db, ArchesCore::default_vVel_name );
+  m_w_vel_name = parse_ups_for_role( WVELOCITY_ROLE, db, ArchesCore::default_wVel_name );
+  m_density_name = parse_ups_for_role( DENSITY_ROLE, db, "density" );
 
-  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY, db, m_u_vel_name + "_cc"  );
-  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY, db, m_v_vel_name + "_cc"  );
-  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY, db, m_w_vel_name + "_cc"  );
+  m_cc_u_vel_name = parse_ups_for_role( CCUVELOCITY_ROLE, db, m_u_vel_name + "_cc"  );
+  m_cc_v_vel_name = parse_ups_for_role( CCVVELOCITY_ROLE, db, m_v_vel_name + "_cc"  );
+  m_cc_w_vel_name = parse_ups_for_role( CCWVELOCITY_ROLE, db, m_w_vel_name + "_cc"  );
 
-  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY, db, ArchesCore::default_viscosity_name );
+  m_total_vis_name = parse_ups_for_role( TOTAL_VISCOSITY_ROLE, db, ArchesCore::default_viscosity_name );
 
   std::stringstream composite_name;
   composite_name << "strainMagnitudeLabel_" << m_task_name;
@@ -84,7 +84,7 @@ WALE::create_local_labels(){
 //---------------------------------------------------------------------------------
 void
 WALE::register_initialize( std::vector<AFC::VariableInformation>&
-                                       variable_registry , const bool packed_tasks){
+                           variable_registry , const bool packed_tasks ){
 
   register_variable( m_total_vis_name, AFC::COMPUTES, variable_registry );
   register_variable( m_turb_viscosity_name, AFC::COMPUTES, variable_registry );
@@ -95,8 +95,8 @@ WALE::register_initialize( std::vector<AFC::VariableInformation>&
 void
 WALE::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  CCVariable<double>& mu_sgc = *(tsk_info->get_uintah_field<CCVariable<double> >(m_total_vis_name));
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
   mu_sgc.initialize(0.0);
   mu_turb.initialize(0.0);
 
@@ -131,19 +131,19 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
 void
 WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  constSFCXVariable<double>& uVel = tsk_info->get_const_uintah_field_add<constSFCXVariable<double> >(m_u_vel_name);
-  constSFCYVariable<double>& vVel = tsk_info->get_const_uintah_field_add<constSFCYVariable<double> >(m_v_vel_name);
-  constSFCZVariable<double>& wVel = tsk_info->get_const_uintah_field_add<constSFCZVariable<double> >(m_w_vel_name);
+  constSFCXVariable<double>& uVel = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  constSFCYVariable<double>& vVel = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  constSFCZVariable<double>& wVel = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
 
-  constCCVariable<double>& CCuVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_u_vel_name);
-  constCCVariable<double>& CCvVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_v_vel_name);
-  constCCVariable<double>& CCwVel = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_cc_w_vel_name);
+  constCCVariable<double>& CCuVel = tsk_info->get_field<constCCVariable<double> >(m_cc_u_vel_name);
+  constCCVariable<double>& CCvVel = tsk_info->get_field<constCCVariable<double> >(m_cc_v_vel_name);
+  constCCVariable<double>& CCwVel = tsk_info->get_field<constCCVariable<double> >(m_cc_w_vel_name);
 
-  CCVariable<double>& mu_sgc = tsk_info->get_uintah_field_add<CCVariable<double> >(m_total_vis_name);
-  CCVariable<double>& mu_turb = *(tsk_info->get_uintah_field<CCVariable<double> >(m_turb_viscosity_name));
-  CCVariable<double>& IsI = tsk_info->get_uintah_field_add< CCVariable<double> >(m_IsI_name);
-  constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(m_density_name));
-  constCCVariable<double>& vol_fraction = tsk_info->get_const_uintah_field_add<constCCVariable<double> >(m_volFraction_name);
+  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_total_vis_name);
+  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
+  CCVariable<double>& IsI = tsk_info->get_field< CCVariable<double> >(m_IsI_name);
+  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
+  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
 
   IsI.initialize(0.0);
   mu_sgc.initialize(0.0);
