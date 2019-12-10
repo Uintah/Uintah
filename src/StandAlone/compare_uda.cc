@@ -1318,9 +1318,9 @@ main( int argc, char** argv )
       udaLevels[1] = atoi(argv[++i]);
       cout << "  " << udaLevels[1];
     }
-    else if(s == "-ignoreVariable") {
+    else if(s == "-ignoreVariables") {
       if (++i == argc){
-        usage("-ignoreVariable, no variable given", argv[0]);
+        usage("-ignoreVariables, no variable given", argv[0]);
       }
       else{
         stringstream ss (argv[i]);  
