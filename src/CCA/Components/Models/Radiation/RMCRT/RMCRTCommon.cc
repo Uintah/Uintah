@@ -903,11 +903,11 @@ void
 RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
                                                   SchedulerP& sched )
 {
+  std::string schedName = "RMCRTCommon::sched_CarryForward_FineLevelLabels";
+  std::string taskName  = "RMCRTCommon::carryForward_FineLevelLabels";
+  printSchedule( level, g_ray_dbg, schedName );
 
-  std::string taskname = "RMCRTCommon::sched_CarryForward_FineLevelLabels";
-  printSchedule( level, g_ray_dbg, taskname );
-
-  Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
+  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_FineLevelLabels<UintahSpaces::CPU, UintahSpaces::HostSpace> );
 
   tsk->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
   tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
@@ -951,10 +951,11 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
                                       const VarLabel* variable,
                                       const int tg_num /* == -1 */)
 {
-  std::string taskname = "RMCRTCommon::sched_CarryForward_Var_" + variable->getName();
-  printSchedule(level, g_ray_dbg, taskname);
+  std::string schedName = "RMCRTCommon::sched_CarryForward_Var_" + variable->getName();
+  std::string taskName  = "RMCRTCommon::carryForward_Var_" + variable->getName();
+  printSchedule(level, g_ray_dbg, schedName);
 
-  Task* task = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
+  Task* task = scinew Task( taskName, this, &RMCRTCommon::carryForward_Var<UintahSpaces::CPU, UintahSpaces::HostSpace>, variable );
 
   task->requires(Task::OldDW, variable,   d_gn, 0);
   task->computes(variable);

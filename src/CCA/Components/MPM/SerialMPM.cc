@@ -5595,6 +5595,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
       } // axisymmetric conditional
     }   // matl loop
 
+#if 0
     // Make normal vectors colinear by setting all norms to be
     // in the opposite direction of the norm with the largest magnitude
     if(flags->d_computeColinearNormals){
@@ -5619,6 +5620,38 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
         }  // loop over matls
       }
     }
+#endif
+
+    // Make normal vectors colinear by taking an average with the
+    // other materials at a node
+    if(flags->d_computeColinearNormals){
+     for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      vector<Vector> norm_temp(numMPMMatls);
+      for(unsigned int m=0; m<numMPMMatls; m++){
+       norm_temp[m]=Vector(0.,0.,0);
+       if(gmass[m][c]>1.e-200){
+        Vector mWON(0.,0.,0.);
+        double mON=0.0;
+        for(unsigned int n=0; n<numMPMMatls; n++){
+          if(n!=m){
+            mWON += gmass[n][c]*gsurfnorm[n][c];
+            mON  += gmass[n][c];
+          }
+        }  // loop over other matls
+        mWON/=(mON+1.e-100);
+        norm_temp[m]=0.5*(gsurfnorm[m][c] - mWON);
+
+       } // If node has mass
+      }  // Outer loop over materials
+
+      // Now put temporary norm into main array
+      for(unsigned int m=0; m<numMPMMatls; m++){
+        gsurfnorm[m][c] = norm_temp[m];
+      }  // Outer loop over materials
+
+     }   // Loop over nodes
+    }    // if(flags..)
 
     // Make traditional norms unit length, compute gnormtraction
     for(unsigned int m=0;m<numMPMMatls;m++){
@@ -5661,7 +5694,7 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
 
   t->requires(Task::OldDW, lb->pXLabel,                  particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
-  t->requires(Task::OldDW, lb->pSurfLabel,               particle_ghost_type, particle_ghost_layer);
+  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
