@@ -33,6 +33,7 @@ SRCDIR := Core/Grid/Variables
 SRCS += \
         $(SRCDIR)/Iterator.cc                   \
         $(SRCDIR)/CellIterator.cc               \
+        $(SRCDIR)/UnstructuredCellIterator.cc               \
         $(SRCDIR)/NodeIterator.cc               \
         $(SRCDIR)/GridIterator.cc               \
         $(SRCDIR)/UnstructuredGridIterator.cc               \

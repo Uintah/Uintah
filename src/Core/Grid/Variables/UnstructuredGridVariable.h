@@ -25,7 +25,7 @@
 #ifndef UINTAH_HOMEBREW_UnstructuredGridVARIABLE_H
 #define UINTAH_HOMEBREW_UnstructuredGridVARIABLE_H
 
-#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/Array1.h>
 #include <Core/Grid/Variables/UnstructuredGridVariableBase.h>
 #include <Core/Disclosure/UnstructuredTypeDescription.h>
 #include <Core/Disclosure/UnstructuredTypeUtils.h>
@@ -73,24 +73,24 @@ WARNING
 ****************************************/
 
   template<class T>
-  class UnstructuredGridVariable : public UnstructuredGridVariableBase, public Array3<T> {
+  class UnstructuredGridVariable : public UnstructuredGridVariableBase, public Array1<T> {
 
   public:
     UnstructuredGridVariable() {}
     virtual ~UnstructuredGridVariable() {}
 
-    inline void copyPointer(UnstructuredGridVariable<T>& copy) { Array3<T>::copyPointer(copy); }
+    inline void copyPointer(UnstructuredGridVariable<T>& copy) { Array1<T>::copyPointer(copy); }
 
     virtual void copyPointer(UnstructuredVariable&);
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
-      { return Array3<T>::rewindow(low, high); }
+      { return Array1<T>::rewindow(low, high); }
 
-    virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); }
+    virtual void offset(const IntVector& offset)  { Array1<T>::offset(offset); }
 
     // offset the indexing into the array (useful when getting virtual
     // patch data -- i.e. for periodic boundary conditions)
-    virtual void offsetGrid(const IntVector& offset) { Array3<T>::offset(offset); }
+    virtual void offsetGrid(const IntVector& offset) { Array1<T>::offset(offset); }
 
     static const UnstructuredGridVariable<T>& castFromBase(const UnstructuredGridVariableBase* srcptr);
 
@@ -157,7 +157,7 @@ WARNING
     {
       const UnstructuredTypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
-        Array3<T>::write(out, l, h, outputDoubleAsFloat);
+        Array1<T>::write(out, l, h, outputDoubleAsFloat);
       else
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
@@ -168,7 +168,7 @@ WARNING
       const UnstructuredTypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
         RunLengthEncoder<T> rle;
-        Array3<T> & a3 = *this;
+        Array1<T> & a3 = *this;
 
         serial_for( a3.range(), [&](int i, int j, int k) {
           rle.addItem( a3(i,j,k) );
@@ -185,7 +185,7 @@ WARNING
     {
       const UnstructuredTypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
-        Array3<T>::read(in, swapBytes);
+        Array1<T>::read(in, swapBytes);
       else
         SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
@@ -196,7 +196,7 @@ WARNING
       if( td->isFlat() ) {
         RunLengthEncoder<T> rle( in, swapBytes, nByteMode );
 
-        Array3<T> & a3 = *this;
+        Array1<T> & a3 = *this;
         auto in_itr = rle.begin();
         const auto end_itr = rle.end();
 
@@ -215,11 +215,11 @@ WARNING
     virtual RefCounted* getRefCounted() { return this->getWindow(); }
 
   protected:
-    UnstructuredGridVariable(const UnstructuredGridVariable<T>& copy) : Array3<T>(copy) {}
+    UnstructuredGridVariable(const UnstructuredGridVariable<T>& copy) : Array1<T>(copy) {}
 
   private:
-    UnstructuredGridVariable(Array3Window<T>* window)
-      : Array3<T>(window) {}
+    UnstructuredGridVariable(Array1Window<T>* window)
+      : Array1<T>(window) {}
     UnstructuredGridVariable<T>& operator=(const UnstructuredGridVariable<T>&);
   };
 

@@ -41,7 +41,7 @@
 #include <Core/Grid/UnstructuredTask.h>
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/UnstructuredCellIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/UnstructuredParticleVariable.h>
 #include <Core/Grid/Variables/UnstructuredReductionVariable.h>
@@ -1943,11 +1943,11 @@ UnstructuredOnDemandDataWarehouse::allocateAndPut(       UnstructuredGridVariabl
           IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
           IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
           if (UnstructuredGridVariable<double>* typedVar = dynamic_cast<UnstructuredGridVariable<double>*>(&var)) {
-            for (CellIterator iter(low, high); !iter.done(); iter++) {
+            for (UnstructuredCellIterator iter(low, high); !iter.done(); iter++) {
               (*typedVar)[*iter] = -5.555555e256;
             }
           } else if (UnstructuredGridVariable<Vector>* typedVar = dynamic_cast<UnstructuredGridVariable<Vector>*>(&var)) {
-            for (CellIterator iter(low, high); !iter.done(); iter++) {
+            for (UnstructuredCellIterator iter(low, high); !iter.done(); iter++) {
               (*typedVar)[*iter] = -5.555555e256;
             }
           }
