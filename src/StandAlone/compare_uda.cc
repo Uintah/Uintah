@@ -100,15 +100,15 @@ usage(const std::string& badarg, const std::string& progname)
        << " [options] <UDA archive directory 1> <UDA archive directory 2>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
-  cerr << "  -abs_tolerance [double]  (Allowable absolute difference of any number, default: 1e-9)\n";
-  cerr << "  -rel_tolerance [double]  (Allowable relative difference of any number, default: 1e-6)\n";
-  cerr << "  -exact                   (Perform an exact comparison, absolute/relative tolerance = 0)\n";
-  cerr << "  -levels     [int int]    (Optional:  level index for uda 1 and uda 2)\n";
-  cerr << "  -as_warnings             (Treat tolerance errors as warnings and continue)\n";
-  cerr << "  -concise                 (With '-as_warnings', only print first incidence of error per var.)\n";
-  cerr << "  -skip_unknown_types      (Skip variable comparisons of unknown types without error)\n";
-  cerr << "  -ignoreVariable [string] (Skip this variable)\n";
-  cerr << "  -dont_sort               (Don't sort the variable names before comparing them)";
+  cerr << "  -abs_tolerance [double]          (Allowable absolute difference of any number, default: 1e-9)\n";
+  cerr << "  -rel_tolerance [double]          (Allowable relative difference of any number, default: 1e-6)\n";
+  cerr << "  -exact                           (Perform an exact comparison, absolute/relative tolerance = 0)\n";
+  cerr << "  -levels     [int int]            (Optional:  level index for uda 1 and uda 2)\n";
+  cerr << "  -as_warnings                     (Treat tolerance errors as warnings and continue)\n";
+  cerr << "  -concise                         (With '-as_warnings', only print first incidence of error per var.)\n";
+  cerr << "  -skip_unknown_types              (Skip variable comparisons of unknown types without error)\n";
+  cerr << "  -ignoreVariables [var1,var2....] (Skip these variables. Comma delimited list, no spaces.)\n";
+  cerr << "  -dont_sort                       (Don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
   cerr << "  Exit values:\n";
@@ -1273,9 +1273,9 @@ main( int argc, char** argv )
 {
   Uintah::Parallel::initializeManager(argc, argv);
 
+  vector<string> ignoreVars;
   double rel_tolerance  = 1e-6; // Default
   double abs_tolerance  = 1e-9; //   values...
-  string ignoreVar      = "none";
   bool sortVariables    = true;
   int  udaLevels[2];                // user can override and specify the levels to compare.  Useful for 1L vs N level comparison
   udaLevels[0]          =-9;
@@ -1321,8 +1321,14 @@ main( int argc, char** argv )
     else if(s == "-ignoreVariable") {
       if (++i == argc){
         usage("-ignoreVariable, no variable given", argv[0]);
-      }else{
-        ignoreVar = argv[i];
+      }
+      else{
+        stringstream ss (argv[i]);  
+        while( ss.good() ){
+          string substr;
+          getline( ss, substr, ',' );
+          ignoreVars.push_back( substr );
+        }
       }
     }
     else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
@@ -1392,7 +1398,7 @@ main( int argc, char** argv )
     da2->queryVariables( vars2, num_matls2, types2 );
     ASSERTEQ(vars2.size(), types2.size());
 
-    if (vars.size() != vars2.size() && ignoreVar.size() == 0) {
+    if (vars.size() != vars2.size() && ignoreVars.size() == 0) {
       ostringstream warn;
       warn << "    " << d_filebase1 << " has " << vars.size() << " variables\n";
       warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
@@ -1406,14 +1412,14 @@ main( int argc, char** argv )
     //  eliminate the variable to be ignored
     // Create a list of ignored variables
     // uda 1
-    stringstream iV(ignoreVar);
-    vector<string> vs;
-    copy(istream_iterator<string>(iV), istream_iterator<string>(), back_inserter(vs));
+    for (auto i = ignoreVars.begin(); i != ignoreVars.end(); i++){
+      cout << "Ignoring variable: " << *i << endl;
+    }
 
     for (unsigned int i = 0; i < vars.size(); i++) {
-      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars[i]);
+      auto fs = find(ignoreVars.begin(),ignoreVars.end(),vars[i]);
       // if vars[i] is NOT in the ignore Variables list make a pair
-      if (fs == vs.end()){
+      if (fs == ignoreVars.end()){
         vartypes1[count] = make_pair(vars[i], types[i]);
         count ++;
       }
@@ -1423,10 +1429,11 @@ main( int argc, char** argv )
 
     // uda 2
     count =0;
+    
     for (unsigned int i = 0; i < vars2.size(); i++) {
-      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars2[i]);
+      auto fs = find(ignoreVars.begin(),ignoreVars.end(),vars[i]);
       // if vars[i] is NOT in the ignore Variables list make a pair
-      if (fs == vs.end()){
+      if (fs == ignoreVars.end()){
         vartypes2[count] = make_pair(vars2[i], types2[i]);
         count ++;
       }
