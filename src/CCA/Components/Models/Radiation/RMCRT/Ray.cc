@@ -2108,8 +2108,9 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             const bool modifies,
                             const VarLabel* variable )
 {
-  string taskname = "        Coarsen_Q_" + variable->getName();
-  printSchedule(coarseLevel,g_ray_dbg,taskname);
+  string taskName  = "Ray::coarsen_Q_" + variable->getName();
+  string schedName = "Ray::sched_coarsen_Q_" + variable->getName();
+  printSchedule(coarseLevel,g_ray_dbg,schedName);
 
   const Uintah::TypeDescription* td = variable->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
@@ -2117,10 +2118,10 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   Task* tsk = nullptr;
   switch( subtype ) {
     case TypeDescription::double_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >, variable, modifies, fineLevel_Q_dw );
+      tsk = scinew Task( taskName, this, &Ray::coarsen_Q< double >, variable, modifies, fineLevel_Q_dw );
       break;
     case TypeDescription::float_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >, variable, modifies, fineLevel_Q_dw );
+      tsk = scinew Task( taskName, this, &Ray::coarsen_Q< float >, variable, modifies, fineLevel_Q_dw );
       break;
     default:
       throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__);
