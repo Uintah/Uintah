@@ -144,12 +144,6 @@ WARNING
       }
 #endif
 
-      //if A is on device, using &A(i,j,k) on host segfaults because it first tries to access the element and the get the address.
-      //Hence new method to calculate the address of an element, without actually accessing it.
-    inline T* getAddress(int i, int j, int k){
-   	  return this->rep_.getAddress(i,j,k);
-    }
-
 
     inline const T& operator()(int i, int j, int k) const
     {

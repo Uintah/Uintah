@@ -56,6 +56,7 @@
 #include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/PortableDependencyTest.h>
 #include <CCA/Components/Examples/PortableDependencyTest1.h>
+#include <CCA/Components/Examples/GPUResizeTest1.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/SolverTest2.h>
@@ -431,6 +432,13 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "portabledependencytest1 ";
+  }
+
+  if (sim_comp == "gpuresizetest1" || sim_comp == "GPURESIZETEST1") {
+    return scinew GPUResizeTest1(myworld, materialManager);
+  }
+  else {
+    turned_on_options += "gpuresizetest1 ";
   }
 
 #ifndef NO_MODELS_RADIATION

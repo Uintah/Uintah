@@ -283,12 +283,6 @@ public:
   }
 #endif
 
-  //if A is on device, using &A(i,j,k) on host segfaults because it first tries to access the element and the get the address.
-  //Hence new method to calculate the address of an element, without actually accessing it.
-  inline T* getAddress(int i, int j, int k){
-	  return d_window->getAddress(i,j,k);
-  }
-
   inline T& get(const IntVector& idx) const {
     return d_window->get(idx);
   }

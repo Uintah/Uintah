@@ -214,6 +214,9 @@ class TaskGraph {
                                       , const bool    hasDistalReqs = false
                                       );
 
+    //DS 12062019: update max ghost cell count for variables across all GPU tasks depending on max count. update it in dependencies of all gpu tasks before task graph compilation
+    void updateMaxGhostCells();
+
     inline DetailedTasks* getDetailedTasks()
     {
       return m_detailed_tasks;

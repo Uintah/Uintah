@@ -47,6 +47,7 @@ SRCS += \
         $(SRCDIR)/Poisson4.cc               \
         $(SRCDIR)/PortableDependencyTest.cc \
         $(SRCDIR)/PortableDependencyTest1.cc \
+        $(SRCDIR)/GPUResizeTest1.cc					\
         $(SRCDIR)/RegionDB.cc               \
         $(SRCDIR)/RegridderTest.cc          \
         $(SRCDIR)/SolverTest1.cc            \

@@ -68,13 +68,6 @@ public:
   reference_type operator()(const IType & i ) const
   { return m_view( i, 0, 0 ); }
 
-  //if A is on device, using &A(i,j,k) on host segfaults because it first tries to access the element and the get the address.
-  //Hence new method to calculate the address of an element, without actually accessing it.
-  template< typename IType, typename JType, typename KType >
-  KOKKOS_FORCEINLINE_FUNCTION
-  T* getAddress(const IType & i, const JType & j, const KType & k ) const
-  { return m_view.data() + ( i - m_i ) + ( j - m_j )*m_view.extent(1)  + ( k - m_k )*m_view.extent(0)*m_view.extent(1) ; }
-
   KokkosView3( const view_type & v, int i, int j, int k, Array3Data<T>* A3Data)
     : m_view(v)
     , m_i(i)

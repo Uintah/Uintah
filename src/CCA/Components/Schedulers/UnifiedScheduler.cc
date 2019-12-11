@@ -145,7 +145,8 @@ void set_affinity( const int proc_unit )
   unsigned int len = sizeof(mask);
   CPU_ZERO(&mask);
   CPU_SET(proc_unit, &mask);
-  sched_setaffinity(0, len, &mask);
+  //DS 12112019: commented sched_setaffinity. When two MPI ranks are assigned to the same node, both get pinned to zero'th core and GPU execution hangs. Need to figure out alternative.
+  //sched_setaffinity(0, len, &mask);
 #endif
 }
 
@@ -551,6 +552,14 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
+
+      //DS: 10312019: If CPU task is going to modify any variable, mark that variable as invalid on GPU.
+      if(event == CallBackEvent::CPU)
+    	  markDeviceAsInvalid(dtask);
+
+      //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+      if(event == CallBackEvent::postGPU)
+    	  markHostAsInvalid(dtask);
 
       // TODO: Don't make every task run through this
       // TODO: Verify that it only looks for data that's valid in the GPU, and not assuming it's valid.
@@ -1277,8 +1286,6 @@ UnifiedScheduler::runTasks( int thread_id )
 
         // Run the task on the GPU!
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
-        //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
-        markHostAsInvalid(readyTask);
 
         if (g_d2h_dbg) {
           std::ostringstream message;
@@ -1315,9 +1322,6 @@ UnifiedScheduler::runTasks( int thread_id )
         // But it will run post computation management logic, which includes
         // marking the task as done.
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
-        //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
-        //is it needed here??? check.
-        markHostAsInvalid(readyTask);
 
         // recycle this task's stream
         GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
@@ -1400,9 +1404,6 @@ UnifiedScheduler::runTasks( int thread_id )
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
 #ifdef HAVE_CUDA
-          //DS: 10312019: If CPU task is going to modify any variable, mark that variable as invalid on GPU.
-          markDeviceAsInvalid(readyTask);
-
           if (g_d2h_dbg) {
             std::ostringstream message;
             message << "  Running CPU Task: " << *readyTask;

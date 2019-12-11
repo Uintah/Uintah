@@ -409,7 +409,7 @@
                                                 esmpm,
                                                 esmpm2,
                                                 unifiedschedulertest, poisson1,
-                                                poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, benchmark,
+                                                poisson2, poisson3, poisson4, portabledependencytest, portabledependencytest1, gpuresizetest1, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
                                                 smpmice,switcher,wave,
                                                 solvertest, solvertest2, heat,

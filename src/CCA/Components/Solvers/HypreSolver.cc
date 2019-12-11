@@ -150,6 +150,16 @@ namespace Uintah {
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
       VarLabel::destroy(m_hypre_solver_label);
+      //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+      if(m_buff)
+    	  cudaErrorCheck(cudaFree(m_buff));
+#else
+      if(m_buff)
+    	  free(m_buff);
+#endif
+      //-----------------  end of hypre-cuda  -----------------
+
     }
 
 
@@ -171,6 +181,32 @@ namespace Uintah {
     }
 
     //---------------------------------------------------------------------------------------------
+    double * getBuffer(size_t buff_size){
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+            if(m_buff_size < buff_size){
+            	m_buff_size = buff_size;
+            	if(m_buff){
+            		cudaErrorCheck(cudaFree((void*)m_buff));
+            	}
+            	cudaErrorCheck(cudaMalloc((void**)&m_buff, buff_size));
+            }
+#else
+            if(m_buff_size < buff_size){
+            	m_buff_size = buff_size;
+            	if(m_buff){
+            		free(m_buff);
+            	}
+            	m_buff = (double *)malloc(buff_size);
+            }
+#endif
+
+            return m_buff;	//although m_buff is a member of the class and can be accessed inside task, it can not be directly
+            				//accessed inside parallel_for on device (even though its a device pointer, value is not passed by reference)
+            				//So return explicitly to a local variable. The local variable gets passed by copy.
+    }
+
+
+    //---------------------------------------------------------------------------------------------
     //   Create and populate a Hypre struct vector,
     template <typename ExecSpace, typename MemSpace>
     HYPRE_StructVector
@@ -183,7 +219,8 @@ namespace Uintah {
                                , const int                matl
                                , const VarLabel         * Q_label
                                , OnDemandDataWarehouse  * Q_dw
-                               , HYPRE_StructVector     * HQ)
+                               , HYPRE_StructVector     * HQ
+							   , ExecutionObject<ExecSpace, MemSpace> & execObj)
     {
       //__________________________________
       // Create the vector
@@ -214,25 +251,25 @@ namespace Uintah {
           IntVector hi;
           getPatchExtents( patch, lo, hi );
 
-          //__________________________________
-          // Feed Q variable to Hypre
-          //DS 10/22/2019: Change HYPRE_StructVectorSetBoxValues code in the future if needed. Use similar logic to HYPRE_StructMatrixSetBoxValues
-          //existing invokes cuda kernel inside HYPRE_StructVectorSetBoxValues Ny*Nz into times. Copying entire patch into the buffer and then
-          //calling HYPRE_StructVectorSetBoxValues will lead to only 2 kernel calls - 1 parallel_for to copy values into the buffer and
-          //1 kernel call by HYPRE_StructVectorSetBoxValues. Although new method needs extra buffer and no cache reuse, it still should be faster than existing code
-          for(int z=lo.z(); z<hi.z(); z++){
-            for(int y=lo.y(); y<hi.y(); y++){
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda and used Uintah::parallel_for to copy values portably.----------------
+          //existing invokes cuda kernel inside HYPRE_StructMatrixSetBoxValues Ny*Nz into times. Copying entire patch into the buffer and then
+          //calling HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel calls - 1 parallel_for to copy values into the buffer and
+          //1 kernel call by HYPRE_StructMatrixSetBoxValues. Although new method needs extra buffer and no cache reuse, it still should be faster than existing code
+          IntVector hh(hi.x()-1, hi.y()-1, hi.z()-1);
+          Uintah::BlockRange range( lo, hi );
+          unsigned long Nx = abs(hi.x()-lo.x()), Ny = abs(hi.y()-lo.y()), Nz = abs(hi.z()-lo.z());
+          int start_offset = lo.x() + lo.y()*Nx + lo.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
+          size_t buff_size = Nx*Ny*Nz*sizeof(double);
+          double * d_buff = getBuffer( buff_size );	//allocate / reallocate d_buff;
 
-              IntVector l(lo.x(), y, z);
-              IntVector h(hi.x()-1, y, z);
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+            int id = (i + j*Nx + k*Nx*Ny - start_offset);
+            d_buff[id] = Q(i, j, k);
+          });
 
-              double * values = const_cast<double*>(Q.getAddress(lo.x(), y, z));	//getAddress is new method to portably get address of device memory on CPU. using &Q(i,j,k) gives segfault
-
-              HYPRE_StructVectorSetBoxValues( *HQ,
-                                             l.get_pointer(), h.get_pointer(),
-                                             values);
-            }
-          }
+          HYPRE_StructVectorSetBoxValues( *HQ,
+										  lo.get_pointer(), hh.get_pointer(),
+										  d_buff);
         }  // label exist?
       }  // patch loop
 
@@ -458,15 +495,9 @@ namespace Uintah {
             Uintah::BlockRange range( l, h );
             int stencil_point = ( m_params->getSymmetric()) ? 4 : 7;
             unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
-            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_values
-            unsigned long row_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
-
-            double *d_values;
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))	//shift it to constructor ??
-            cudaErrorCheck(cudaMalloc((void**)&d_values, row_size));
-#else
-            d_values = (double *)malloc(row_size);
-#endif
+            int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
+            size_t buff_size = Nx*Ny*Nz*sizeof(double)*stencil_point;
+            double * d_buff = getBuffer( buff_size );	//allocate / reallocate d_buff;
             //-----------------  end of hypre-cuda  -----------------
 
             //__________________________________
@@ -487,10 +518,10 @@ namespace Uintah {
 
                 Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                   int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-                  d_values[id + 0] = AStencil4(i, j, k).p;
-                  d_values[id + 1] = AStencil4(i, j, k).w;
-                  d_values[id + 2] = AStencil4(i, j, k).s;
-                  d_values[id + 3] = AStencil4(i, j, k).b;
+                  d_buff[id + 0] = AStencil4(i, j, k).p;
+                  d_buff[id + 1] = AStencil4(i, j, k).w;
+                  d_buff[id + 2] = AStencil4(i, j, k).s;
+                  d_buff[id + 3] = AStencil4(i, j, k).b;
                 });
 
               } else { // use stencil7
@@ -499,10 +530,10 @@ namespace Uintah {
 
                 Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                   int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-                  d_values[id + 0] = A(i, j, k).p;
-                  d_values[id + 1] = A(i, j, k).w;
-                  d_values[id + 2] = A(i, j, k).s;
-                  d_values[id + 3] = A(i, j, k).b;
+                  d_buff[id + 0] = A(i, j, k).p;
+                  d_buff[id + 1] = A(i, j, k).w;
+                  d_buff[id + 2] = A(i, j, k).s;
+                  d_buff[id + 3] = A(i, j, k).b;
                 });
 
               }
@@ -512,29 +543,20 @@ namespace Uintah {
 
               Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                 int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
-                d_values[id + 0] = A(i, j, k).p;
-                d_values[id + 1] = A(i, j, k).e;
-                d_values[id + 2] = A(i, j, k).w;
-                d_values[id + 3] = A(i, j, k).n;
-                d_values[id + 4] = A(i, j, k).s;
-                d_values[id + 5] = A(i, j, k).t;
-                d_values[id + 6] = A(i, j, k).b;
+                d_buff[id + 0] = A(i, j, k).p;
+                d_buff[id + 1] = A(i, j, k).e;
+                d_buff[id + 2] = A(i, j, k).w;
+                d_buff[id + 3] = A(i, j, k).n;
+                d_buff[id + 4] = A(i, j, k).s;
+                d_buff[id + 5] = A(i, j, k).t;
+                d_buff[id + 6] = A(i, j, k).b;
               });
             }
 
             HYPRE_StructMatrixSetBoxValues(*HA,
                                            l.get_pointer(), hh.get_pointer(),
                                            stencil_point, stencil_indices,
-                                           d_values);
-
-            //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))	//shift it to destructor ??
-            cudaErrorCheck(cudaFree(d_values));
-#else
-            free(d_values);
-#endif
-            //-----------------  end of hypre-cuda  -----------------
-
+										   d_buff);
           }
           if (timeStep == 1 || recompute || do_setup){
             HYPRE_StructMatrixAssemble(*HA);
@@ -544,12 +566,12 @@ namespace Uintah {
         //__________________________________
         // Create the RHS
         HYPRE_StructVector HB;
-        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p);
+        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p, execObj);
 
         //__________________________________
         // Create the solution vector
         HYPRE_StructVector HX;
-        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p);
+        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p, execObj);
 
         hypre_EndTiming( m_tMatVecSetup );
 
@@ -807,19 +829,25 @@ namespace Uintah {
 
           Uintah::BlockRange range( l, h );
 
+          //-------------DS: 04262019: Added to run hypre task using hypre-cuda and used Uintah::parallel_for to copy values portably.----------------
+          //existing invokes cuda kernel inside HYPRE_StructVectorGetBoxValues Ny*Nz into times. Copying entire patch into the buffer and then
+          //calling HYPRE_StructMatrixSetBoxValues will lead to only 2 kernel calls - 1 parallel_for to copy values into the buffer and
+          //1 kernel call by HYPRE_StructMatrixSetBoxValues. Although new method needs extra buffer and no cache reuse, it still should be faster than existing code
+          IntVector hh(h.x()-1, h.y()-1, h.z()-1);
+          unsigned long Nx = abs(h.x()-l.x()), Ny = abs(h.y()-l.y()), Nz = abs(h.z()-l.z());
+          int start_offset = l.x() + l.y()*Nx + l.z()*Nx*Ny; //ensure starting point is 0 while indexing d_buff
+          size_t buff_size = Nx*Ny*Nz*sizeof(double);
+          double * d_buff = getBuffer( buff_size );	//allocate / reallocate d_buff;
+
           // Get the solution back from hypre
-          for(int z=l.z();z<h.z();z++){
-            for(int y=l.y();y<h.y();y++){
+		  HYPRE_StructVectorGetBoxValues(HX,
+				l.get_pointer(), hh.get_pointer(),
+				d_buff);
 
-              double* values = Xnew.getAddress(l.x(), y, z);
-              IntVector ll(l.x(), y, z);
-              IntVector hh(h.x()-1, y, z);
-
-              HYPRE_StructVectorGetBoxValues(HX,
-                  ll.get_pointer(), hh.get_pointer(),
-                  values);
-            }
-          }
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+            int id = (i + j*Nx + k*Nx*Ny - start_offset);
+            Xnew(i, j, k) = d_buff[id];
+          });
         }
         //__________________________________
         // clean up
@@ -1040,6 +1068,8 @@ namespace Uintah {
     Task::WhichDW      m_which_guess_dw;
     const HypreParams* m_params;
     bool               m_isFirstSolve;
+    mutable double *   m_buff{nullptr};
+    mutable size_t	   m_buff_size{0};
 
     const VarLabel*    m_timeStepLabel;
     const VarLabel*    m_hypre_solver_label;
