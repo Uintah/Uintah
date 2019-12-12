@@ -208,21 +208,30 @@ void TaskGraph::updateMaxGhostCells(){
 	if (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc) {
 
 	    for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
-	      //std::cout << "req: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
-	      dep->m_num_ghost_cells = dep->m_var->getMaxDeviceGhost();		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
-		  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+	      int ghosts = dep->m_var->getMaxDeviceGhost();
+	      if(dep->m_num_ghost_cells < ghosts){	//avoid overwriting SHRT_MAX (set for RMCRT)
+			  //std::cout << "req: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
+			  dep->m_num_ghost_cells = ghosts;		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
+			  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+	      }
 	    }
 
 	    for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
-	      //std::cout << "mod: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
-	      dep->m_num_ghost_cells = dep->m_var->getMaxDeviceGhost();		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
-		  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+		      int ghosts = dep->m_var->getMaxDeviceGhost();
+		      if(dep->m_num_ghost_cells < ghosts){	//avoid overwriting SHRT_MAX (set for RMCRT)
+				  //std::cout << "mod: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
+				  dep->m_num_ghost_cells = ghosts;		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
+				  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+		      }
 	    }
 
 	    for (auto dep = task->getComputes(); dep != nullptr; dep = dep->m_next) {
-	      //std::cout << "com: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
-	      dep->m_num_ghost_cells = dep->m_var->getMaxDeviceGhost();		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
-		  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+		      int ghosts = dep->m_var->getMaxDeviceGhost();
+		      if(dep->m_num_ghost_cells < ghosts){	//avoid overwriting SHRT_MAX (set for RMCRT)
+				  //std::cout << "comp: " << dep->m_var->getName() << " " << dep->m_num_ghost_cells << " " << dep->m_var->getMaxDeviceGhost() << "\n";
+				  dep->m_num_ghost_cells = ghosts;		  //var is a pointer. So same instance should be updated and maxdeviceghost value should be reflected here. Copy it on dep
+				  dep->m_gtype = dep->m_var->getMaxDeviceGhostType();
+		      }
 		}
 	    //std::cout << "\n";
 	}

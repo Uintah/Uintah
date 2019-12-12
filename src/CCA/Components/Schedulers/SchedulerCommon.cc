@@ -924,7 +924,7 @@ SchedulerCommon::addTask(       Task        * task
   for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
 	//DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
 	if(task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc){
-		if(dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()){
+		if(dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()){ 	//avoid overwriting SHRT_MAX (set for RMCRT)
 			dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
 			dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
 		}
@@ -946,7 +946,7 @@ SchedulerCommon::addTask(       Task        * task
   //in case modifieswithscratchghost is used.
   if(task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc){
     for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
-	  if(dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()){
+	  if(dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()){ 	//avoid overwriting SHRT_MAX (set for RMCRT)
 		  dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
 		  dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
 	  }
