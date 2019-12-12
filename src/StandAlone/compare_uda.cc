@@ -1321,6 +1321,7 @@ main( int argc, char** argv )
   udaLevels[0]          =-9;
   udaLevels[1]          =-9;
 
+  //__________________________________
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
@@ -1397,6 +1398,8 @@ main( int argc, char** argv )
     }
   }
 
+  //__________________________________
+  //  bulletproofing
   if( d_filebase2 == "" ){
     cerr << "\nYou must specify two archive directories.\n";
     usage("", argv[0]);
@@ -1423,6 +1426,7 @@ main( int argc, char** argv )
     Parallel::exitAll(1);
   }
 
+  //__________________________________
   // default to 16 digits of precision when using exact comparison (i.e. rel_tolerance = 0)
   int digits_precision = (rel_tolerance > 0 ) ? (int)ceil(-log10(rel_tolerance)) + 1 : 16;
   cerr << setprecision(digits_precision);
@@ -1432,10 +1436,12 @@ main( int argc, char** argv )
     DataArchive* da1 = scinew DataArchive(d_filebase1);
     DataArchive* da2 = scinew DataArchive(d_filebase2);
 
+    typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
     vector<string> vars, vars2;
     vector<int>    num_matls, num_matls2;
     vector<const Uintah::TypeDescription*> types, types2;
-    vector< pair<string, const Uintah::TypeDescription*> > vartypes1, vartypes2;
+    VarTypeVec vartypes1;
+    VarTypeVec vartypes2;
 
     da1->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
@@ -1443,17 +1449,9 @@ main( int argc, char** argv )
     da2->queryVariables( vars2, num_matls2, types2 );
     ASSERTEQ(vars2.size(), types2.size());
 
-    if (vars.size() != vars2.size() && ignoreVars.size() == 0) {
-      ostringstream warn;
-      warn << "    " << d_filebase1 << " has " << vars.size() << " variables\n";
-      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable( warn );
-    }
-
     vartypes1.resize( vars.size() );
     vartypes2.resize( vars2.size() );
-   
-   
+      
     //__________________________________
     // Create a list of variables
     // minus the ignored variables
@@ -1524,15 +1522,9 @@ main( int argc, char** argv )
       vartypes2.resize(vars2.size());    
     }
 
-    //__________________________________
-    //
-    if (vartypes1.size() != vartypes2.size() )  {
-      ostringstream warn;
-      warn << "    " << d_filebase1 << " has " << vars.size()  << " variables\n";
-      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable(warn);
-    }
-
+    size_t vars1_size = vars.size();    // needed for bullet proofing
+    size_t vars2_size = vars2.size();
+    
     //__________________________________
     // sort vars so uda's can be compared if their index files have
     // different orders of variables.
@@ -1542,13 +1534,50 @@ main( int argc, char** argv )
       sort(vartypes1.begin(), vartypes1.end());
       sort(vartypes2.begin(), vartypes2.end());
     }
-    for (unsigned int i = 0; i < vars.size(); i++) {
-      vars[i]   = vartypes1[i].first;
-      types[i]  = vartypes1[i].second;
-      vars2[i]  = vartypes2[i].first;
-      types2[i] = vartypes2[i].second;
+
+    //__________________________________
+    //  created vector of vars to compare
+    bool do_udas_have_same_nVars = true;
+
+    if ( vartypes1.size() == vartypes2.size() )  {
+      for (unsigned int i = 0; i < vars.size(); i++) {
+        vars[i]   = vartypes1[i].first;
+        types[i]  = vartypes1[i].second;
+        vars2[i]  = vartypes2[i].first;
+        types2[i] = vartypes2[i].second;
+      }    
+    }
+    //__________________________________
+    // If the number of variables in each uda 
+    // differs then find a common set of variables
+    else {
+      
+      do_udas_have_same_nVars = false;
+      
+      cerr << "\nWARNING: The udas contain a different number of variables.  Now comparing the common set of variables.\n";
+
+      size_t size  = min( vartypes1.size(), vartypes2.size() );
+      VarTypeVec commonVars(size); 
+
+      set_intersection(vartypes1.begin(), vartypes1.end(), 
+                       vartypes2.begin(), vartypes2.end(), 
+                       commonVars.begin()); 
+
+      vars.resize(size);
+      vars2.resize(size);
+      vartypes1.resize(size);
+      vartypes2.resize(size);
+      
+      for (unsigned int i = 0; i <size; i++) {
+        vars[i]   = commonVars[i].first;
+        types[i]  = commonVars[i].second;
+        vars2[i]  = commonVars[i].first;
+        types2[i] = commonVars[i].second;
+      }
     }
 
+    //__________________________________
+    //  bulletproofing
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
         ostringstream warn;
@@ -2039,6 +2068,15 @@ main( int argc, char** argv )
       warn << "\n";
       warn << "    " << d_filebase1 << " has " << times.size() << " timesteps\n";
       warn << "    " << d_filebase2 << " has " << times2.size() << " timesteps\n";
+      abort_uncomparable(warn);
+    }
+    
+    //__________________________________
+    //
+    if ( ! do_udas_have_same_nVars ) {
+      ostringstream warn;
+      warn << "    " << d_filebase1 << " has " << vars1_size << " variables\n";
+      warn << "    " << d_filebase2 << " has " << vars2_size << " variables\n";
       abort_uncomparable(warn);
     }
 
