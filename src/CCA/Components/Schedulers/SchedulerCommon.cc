@@ -767,7 +767,10 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
         }
 
         const TypeDescription::Type subType = td->getSubType()->getType();
-        if (subType != TypeDescription::double_type && subType != TypeDescription::int_type && subType != TypeDescription::Vector) {
+        if (subType != TypeDescription::double_type &&
+            subType != TypeDescription::float_type  &&
+            subType != TypeDescription::int_type    && 
+            subType != TypeDescription::Vector) {
 
           // Only allow *Variable<double>, *Variable<int> and *Variable<Vector> for now.
           std::ostringstream mesg;
@@ -826,6 +829,11 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
           case TypeDescription::double_type : {
             GridVariable<double>* var = dynamic_cast<GridVariable<double>*>(v);
             printTrackedValues<double>(var, start, end);
+          }
+            break;
+          case TypeDescription::float_type : {
+            GridVariable<float>* var = dynamic_cast<GridVariable<float>*>(v);
+            printTrackedValues<float>(var, start, end);
           }
             break;
           case TypeDescription::int_type : {
