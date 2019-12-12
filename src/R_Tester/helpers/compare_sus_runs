@@ -23,12 +23,13 @@ compareUda_function()
   sus_dir=$3          # path to sus
   abs_tol=$4          # Absolute tolerance passed to compare_uda()
   rel_tol=$5          # Relative tolerance passed to compare_uda()
-
+  options="$6"        # Additional options
+  
   msg_comp_dats="No comparison made"
   msg_comp_uda="PASSED"
   msg_comp_ckpt="PASSED"
 
-  compare_flags="-as_warnings -concise -abs_tolerance $abs_tol -rel_tolerance $rel_tol"
+  compare_flags="-as_warnings -concise -abs_tolerance $abs_tol -rel_tolerance $rel_tol $options"
 
   inputs_differ=0
   echo
@@ -185,13 +186,14 @@ compareUda_function()
 #     5:    The udas may not be compared
 #______________________________________________________________________
 
-test=$1                # name of regression test
-test_dir=$2            # path to uda to be compared
-gs_component_dir=$3    # path to gold standard component
-sus_dir=$4             # path to sus
-abs_tol=$5             # Absolute tolerance
-rel_tol=$6             # Relative tolerance
-create_gs=$7           # bool should the gold_standard be created?
+test=$1                  # name of regression test
+test_dir=$2              # path to uda to be compared
+gs_component_dir=$3      # path to gold standard component
+sus_dir=$4               # path to sus
+abs_tol=$5               # Absolute tolerance
+rel_tol=$6               # Relative tolerance
+create_gs=$7             # bool should the gold_standard be created?
+compareUda_options="$8"  # additional compare_uda options
 
 #__________________________________
 # determine the paths of the 2 udas
@@ -298,7 +300,8 @@ if [ -d "$test_uda_dir" ]; then
     #  now run the comparison function
     echo "`date +'%r %D'`"
     echo "Testing $test"
-    compareUda_function $test_uda_dir $gs_uda_dir $sus_dir $abs_tol $rel_tol
+    echo "compareUda_options: ($compareUda_options)"
+    compareUda_function $test_uda_dir $gs_uda_dir $sus_dir $abs_tol $rel_tol "$compareUda_options"
     exit $?
   fi
 else

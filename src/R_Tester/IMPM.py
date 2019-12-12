@@ -9,25 +9,26 @@ from helpers.runSusTests import runSusTests, ignorePerformanceTests
 #
 #  OS:  Linux, Darwin, or ALL
 #
-#  flags: 
-#       gpu:                    - run test if machine is gpu enabled
-#       no_uda_comparison:      - skip the uda comparisons
-#       no_memoryTest:          - skip all memory checks
-#       no_restart:             - skip the restart tests
-#       no_dbg:                 - skip all debug compilation tests
-#       no_opt:                 - skip all optimized compilation tests
-#       no_cuda:                - skip test if this is a cuda enable build
-#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
-#                                 (You cannot perform uda comparsions with this flag set)
-#       doesTestRun:            - Checks if a test successfully runs
-#       abs_tolerance=[double]  - absolute tolerance used in comparison
-#       rel_tolerance=[double]  - relative tolerance used in comparison
-#       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
-#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
-#       sus_options="string"    - Additional command line options for sus command
+#  flags:
+#       gpu:                        - run test if machine is gpu enabled
+#       no_uda_comparison:          - skip the uda comparisons
+#       no_memoryTest:              - skip all memory checks
+#       no_restart:                 - skip the restart tests
+#       no_dbg:                     - skip all debug compilation tests
+#       no_opt:                     - skip all optimized compilation tests
+#       no_cuda:                    - skip test if this is a cuda enable build
+#       do_performance_test:        - Run the performance test, log and plot simulation runtime.
+#                                     (You cannot perform uda comparsions with this flag set)
+#       doesTestRun:                - Checks if a test successfully runs
+#       abs_tolerance=[double]      - absolute tolerance used in comparison
+#       rel_tolerance=[double]      - relative tolerance used in comparison
+#       exactComparison             - set absolute/relative tolerance = 0  for uda comparisons
+#       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
+#       sus_options="string"        - Additional command line options for sus command
+#       compareUda_options="string" - Additional command line options for compare_uda
 #
-#  Notes: 
+#  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
 #  2) Performance_tests are not run on a debug build.
 #______________________________________________________________________
@@ -43,8 +44,8 @@ NIGHTLYTESTS = [  ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None", ["exac
 	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1,   "ALL", ["exactComparison"]), \
 	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1,   "ALL", ["exactComparison"])
     	         ]
-                
-# Tests that are run during local regression testing       
+
+# Tests that are run during local regression testing
 LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
 	           ("billet.static",    "billet.static.ups",  2,   "ALL"), \
 	           ("adiCuJC01s296K",   "adiCuJC01s296K.ups", 1,   "ALL"), \
@@ -52,7 +53,7 @@ LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
 	           ("adiCuPTW01s296K",  "adiCuPTW01s296K.ups",1,   "ALL"), \
 	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1,   "ALL"), \
 	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1,   "ALL")
-    	       ]       
+    	       ]
 DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
@@ -60,7 +61,7 @@ DEBUGTESTS =[]
 #LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS BUILDBOTTESTS
 #__________________________________
 
-# returns the list  
+# returns the list
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS

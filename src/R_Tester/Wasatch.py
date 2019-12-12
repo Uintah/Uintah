@@ -29,7 +29,7 @@ gpu_compressible_1d_ups = modUPS( the_dir, \
 gpu_compressible_2d_ups = modUPS( the_dir, \
                   "compressible-flow-test-2d.ups", \
                    ["<outputTimestepInterval>1</outputTimestepInterval>", "<patches>[1,1,1]</patches>"])
-                 
+
 scalarequationperf_ups = modUPS( the_dir, \
                                        "ScalarTransportEquation.ups", \
                                        ["<max_Timesteps> 40 </max_Timesteps>","<resolution>[400,400,400]</resolution>","<patches>[1,1,1]</patches>"])
@@ -121,22 +121,23 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #  OS:  Linux, Darwin, or ALL
 #
 #  flags:
-#       gpu:                    - run test if machine is gpu enabled
-#       no_uda_comparison:      - skip the uda comparisons
-#       no_memoryTest:          - skip all memory checks
-#       no_restart:             - skip the restart tests
-#       no_dbg:                 - skip all debug compilation tests
-#       no_opt:                 - skip all optimized compilation tests
-#       no_cuda:                - skip test if this is a cuda enable build
-#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
-#                                 (You cannot perform uda comparsions with this flag set)
-#       doesTestRun:            - Checks if a test successfully runs
-#       abs_tolerance=[double]  - absolute tolerance used in comparisons
-#       rel_tolerance=[double]  - relative tolerance used in comparisons
-#       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
-#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
-#       sus_options="string"    - Additional command line options for sus command
+#       gpu:                        - run test if machine is gpu enabled
+#       no_uda_comparison:          - skip the uda comparisons
+#       no_memoryTest:              - skip all memory checks
+#       no_restart:                 - skip the restart tests
+#       no_dbg:                     - skip all debug compilation tests
+#       no_opt:                     - skip all optimized compilation tests
+#       no_cuda:                    - skip test if this is a cuda enable build
+#       do_performance_test:        - Run the performance test, log and plot simulation runtime.
+#                                     (You cannot perform uda comparsions with this flag set)
+#       doesTestRun:                - Checks if a test successfully runs
+#       abs_tolerance=[double]      - absolute tolerance used in comparisons
+#       rel_tolerance=[double]      - relative tolerance used in comparisons
+#       exactComparison             - set absolute/relative tolerance = 0  for uda comparisons
+#       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
+#       sus_options="string"        - Additional command line options for sus command
+#       compareUda_options="string" - Additional command line options for compare_uda
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -182,17 +183,17 @@ DUALTIMETESTS=[
 COMPRESSIBLETESTS=[
   ("compressible-test-1d-nonreflecting-x",  "compressible-test-1d-nonreflecting-x.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-test-1d-nonreflecting-y",  "compressible-test-1d-nonreflecting-y.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-1d-nonreflecting-z",  "compressible-test-1d-nonreflecting-z.ups", 1,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-test-2d-nonreflecting-xy",  "compressible-test-2d-nonreflecting-xy.ups", 1,  "All",  ["abs_tolerance=1e-10","exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-test-2d-nonreflecting-xz",  "compressible-test-2d-nonreflecting-xz.ups", 1,  "All",  ["abs_tolerance=1e-10","exactComparison","no_restart","no_memoryTest","no_dbg"] ),
-  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["abs_tolerance=1e-10","exactComparison","no_restart","no_memoryTest"] ),    
+  ("compressible-test-2d-nonreflecting-yz",  "compressible-test-2d-nonreflecting-yz.ups", 1,  "All",  ["abs_tolerance=1e-10","exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-test-3d-nonreflecting",  "compressible-test-3d-nonreflecting.ups", 8,  "All",  ["abs_tolerance=1e-10","exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d",        "compressible-bubble-2d.ups",         4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-bubble-2d-PGS",    "compressible-bubble-2d-AC-PGS.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+  ("compressible-bubble-2d-ASR",    "compressible-bubble-2d-AC-ASR.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-3d-bcs", "compressible-flow-test-3d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d-bcs", "compressible-flow-test-2d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("compressible-flow-test-1d-bcs", "compressible-flow-test-1d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
+  ("compressible-flow-test-1d-bcs", "compressible-flow-test-1d-bcs.ups",  4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-3d",     "compressible-flow-test-3d.ups",      8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d",     "compressible-flow-test-2d.ups",      4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-1d",     "compressible-flow-test-1d.ups",      4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -277,7 +278,7 @@ MISCTESTS=[
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] ) ,
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-  ("scalability-test-uncoupled",    "scalability-test-uncoupled.ups",    1,  "All",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),    
+  ("scalability-test-uncoupled",    "scalability-test-uncoupled.ups",    1,  "All",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "All",  ["exactComparison","no_restart"] ),
   ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
@@ -336,7 +337,7 @@ POKITTTESTS=[
 
 DRONETESTS=[
   ("FanModelXY",    "fan-model-test-xy.ups",   4, "All", ["exactComparison","no_restart"] ),
-  ("DroneXY",    "quadrotor-drone-xy.ups",   4, "All", ["exactComparison","no_restart"] )  
+  ("DroneXY",    "quadrotor-drone-xy.ups",   4, "All", ["exactComparison","no_restart"] )
 ]
 
 
@@ -359,11 +360,11 @@ GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("gpu-tabprops"         , "TabPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("gpu-radprops"         , "RadPropsInterface.ups",   1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
-  ("bc-test-svol-gpu-z"   , bc_gpu_z_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
+  ("bc-test-svol-gpu-x"   , bc_gpu_x_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("bc-test-svol-gpu-y"   , bc_gpu_y_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("bc-test-svol-gpu-z"   , bc_gpu_z_ups,            1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("bc-test-svol-gpu-xyz" , bc_gpu_xyz_ups,          1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
-#  ("scalability-test"     , "scalability-test.ups",  1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+#  ("scalability-test"     , "scalability-test.ups",  1, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
 #  ("gpu-compressible-1d"  , gpu_compressible_1d_ups, 1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("gpu-compressible-2d"  , gpu_compressible_2d_ups, 1, "All", ["gpu", "abs_tolerance=1e-7", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("taylor-green-vortex-2d-xy",    "taylor-green-vortex-2d-xy.ups",    4, "All", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
@@ -381,9 +382,9 @@ PARTICLETESTS=[
 	("particle-test-wall-bc-all-dir", "particle-test-wall-bc-all-dir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-wall-bc-xdir", "particle-test-wall-bc-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-wall-bc-ydir", "particle-test-wall-bc-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-wall-bc-zdir", "particle-test-wall-bc-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-two-way-coupling-xdir", "particle-test-free-fall-two-way-coupling-xdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),	
+	("particle-test-free-fall-two-way-coupling-ydir", "particle-test-free-fall-two-way-coupling-ydir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-two-way-coupling-zdir", "particle-test-free-fall-two-way-coupling-zdir.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-geom-shape-icse", "particle-test-geom-shape-icse.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("particle-test-geom-shape-flow-mickey-mouse", "particle-test-geom-shape-flow-mickey-mouse.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
@@ -403,7 +404,7 @@ pattern = "HAVE_POKITT"
 if (wasatchDefsExists):
   cmd = "grep -c %s %s" % (pattern, wasatchDefs)
   HAVE_POKITT = getoutput(cmd)
-  print( "Cmd: %s"      % cmd )  
+  print( "Cmd: %s"      % cmd )
   print( " --------------------" )
 else:
   HAVE_POKITT="0"
@@ -452,28 +453,28 @@ def getTestList(me) :
   elif me == "RADIATIONTESTS":
     TESTS = RADIATIONTESTS
   elif me == "PARTICLETESTS":
-    TESTS = PARTICLETESTS   
+    TESTS = PARTICLETESTS
   elif me == "COMPRESSIBLETESTS":
-    TESTS = COMPRESSIBLETESTS       
+    TESTS = COMPRESSIBLETESTS
   elif me == "DUALTIMETESTS":
-    TESTS = DUALTIMETESTS           
+    TESTS = DUALTIMETESTS
   elif me == "POKITTTESTS":
     TESTS = POKITTTESTS
   elif me == "COALTESTS":
     TESTS = COALTESTS
   elif me == "DRONETESTS":
-    TESTS = DRONETESTS  
+    TESTS = DRONETESTS
   elif me == "BUILDBOTTESTS":
-    TESTS = ignorePerformanceTests( NIGHTLYTESTS )           
+    TESTS = ignorePerformanceTests( NIGHTLYTESTS )
   else:
     print("\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me)
     exit(1)
-    
-  # Limit the tests run on the nightly gpu_rt.  Brittle  
+
+  # Limit the tests run on the nightly gpu_rt.  Brittle
   if environ['LOGNAME'] == "gpu_rt" and me == "NIGHTLYTESTS" :
     print( "\nWARNING: running GPUTESTS not NIGHTLYTESTS\n" )
     TESTS = GPUTESTS
-      
+
   return TESTS
 
 
@@ -504,6 +505,6 @@ if __name__ == "__main__":
   # cleanup modified files
   command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
   system( command )
-  
+
   exit( result )
 

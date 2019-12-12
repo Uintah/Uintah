@@ -17,22 +17,23 @@ BrownSoot_spectral_orthog_ups  = modUPS( the_dir, "Coal/BrownSoot_spectral.ups" 
 #  OS:  Linux, Darwin, or ALL
 #
 #  flags:
-#       gpu:                    - run test if machine is gpu enabled
-#       no_uda_comparison:      - skip the uda comparisons
-#       no_memoryTest:          - skip all memory checks
-#       no_restart:             - skip the restart tests
-#       no_dbg:                 - skip all debug compilation tests
-#       no_opt:                 - skip all optimized compilation tests
-#       no_cuda:                - skip test if this is a cuda enable build
-#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
-#                                 (You cannot perform uda comparsions with this flag set)
-#       doesTestRun:            - Checks if a test successfully runs
-#       abs_tolerance=[double]  - absolute tolerance used in comparisons
-#       rel_tolerance=[double]  - relative tolerance used in comparisons
-#       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
-#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
-#       sus_options="string"    - Additional command line options for sus command
+#       gpu:                        - run test if machine is gpu enabled
+#       no_uda_comparison:          - skip the uda comparisons
+#       no_memoryTest:              - skip all memory checks
+#       no_restart:                 - skip the restart tests
+#       no_dbg:                     - skip all debug compilation tests
+#       no_opt:                     - skip all optimized compilation tests
+#       no_cuda:                    - skip test if this is a cuda enable build
+#       do_performance_test:        - Run the performance test, log and plot simulation runtime.
+#                                     (You cannot perform uda comparsions with this flag set)
+#       doesTestRun:                - Checks if a test successfully runs
+#       abs_tolerance=[double]      - absolute tolerance used in comparisons
+#       rel_tolerance=[double]      - relative tolerance used in comparisons
+#       exactComparison             - set absolute/relative tolerance = 0  for uda comparisons
+#       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
+#       sus_options="string"        - Additional command line options for sus command
+#       compareUda_options="string" - Additional command line options for compare_uda
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -44,8 +45,8 @@ BrownSoot_spectral_orthog_ups  = modUPS( the_dir, "Coal/BrownSoot_spectral.ups" 
 #  massource_coal_DQMOM: a coal reacting channel flow with a constant mass source term (or with coal mass source term), used to test mass conservation for pressure solver
 #  methane_RCCE: 3m fire using the westbrook dryer/RCCE model
 
-# NOTE on adding tests: 
-    # 1. Add tests to the group to which it belongs. 
+# NOTE on adding tests:
+    # 1. Add tests to the group to which it belongs.
     # 2. Make sure that group is included in NIGHTLYTESTS if you want it tested by the builtbot, nightlyRT, and localRT
     # 3. If the test doesn't belong in any subgroup, you must manually add it to the nightlyRT and/or localRT
 
@@ -189,13 +190,13 @@ RMCRT_TESTS = [
 ]
 
 SWEEPS_TESTS = [
-   ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                 , 4   , "All"   , ["exactComparison"]) ,                                  
-   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"          , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
-   ("mass_energy_balance_psnox"        , "Coal/mass_energy_balance_psnox.ups"     , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
-   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"   , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,                  
-   ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"         , 46  , "All"   , ["exactComparison"]),                                   
+   ("methane_fire_dRad"                 , "methane_fire_dRad.ups"                 , 4   , "All"   , ["exactComparison"]) ,
+   ("mass_energy_balance"               , "Coal/mass_energy_balance.ups"          , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("mass_energy_balance_psnox"        , "Coal/mass_energy_balance_psnox.ups"     , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("mass_energy_balance_Tfluid"        , "Coal/mass_energy_balance_Tfluid.ups"   , 2   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("multibox_sweeps_coal"              , "Coal/multibox_sweeps_coal.ups"         , 46  , "All"   , ["exactComparison"]),
    ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"           , 8   , "All"   , ["exactComparison"     , "no_cuda"]),
-   ("BrownSoot_spectral_orthog"         , BrownSoot_spectral_orthog_ups           , 8   , "All"   , ["exactComparison"     , "no_cuda"])                    
+   ("BrownSoot_spectral_orthog"         , BrownSoot_spectral_orthog_ups           , 8   , "All"   , ["exactComparison"     , "no_cuda"])
 ]
 
 NIGHTLYTESTS = [
@@ -211,7 +212,7 @@ LOCAL_TESTS = [
 NO_RMCRT = [
 ]
 
-# An empty list for debugging purposes. Please add tests as you need them when developing, but don't actually commit anything to this list. 
+# An empty list for debugging purposes. Please add tests as you need them when developing, but don't actually commit anything to this list.
 DEBUG = [
 ]
 
@@ -225,7 +226,7 @@ DEBUG = [
 # returns the list
 def getTestList(me) :
   if me == "LOCAL_TESTS":
-    TESTS = RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS 
+    TESTS = RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS
   elif me == "KOKKOS_TESTS":
     TESTS = KOKKOS_TESTS
   elif me == "RMCRT_TESTS":
