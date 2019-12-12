@@ -124,9 +124,9 @@ namespace Uintah {
         int which_dw = _field_container->get_variable_information( name, true ).uintah_task_dw;
 
         if ( which_dw == ArchesFieldContainer::OLDDW || ( which_dw == ArchesFieldContainer::LATEST && _tsk_info.time_substep == 0 ) ) {
-          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
         } else {
-          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
         }
       }
 #endif
@@ -140,9 +140,9 @@ namespace Uintah {
                )
       {
         if ( which_dw == ArchesFieldContainer::OLDDW || ( which_dw == ArchesFieldContainer::LATEST && _tsk_info.time_substep == 0 ) ) {
-          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+          return getOldDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
         } else {
-          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(),_field_container->getPatch()->getID(),_field_container->getMaterialIndex(), 0 );
+          return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
         }
       }
 #endif
@@ -179,7 +179,7 @@ namespace Uintah {
       typename std::enable_if<!std::is_base_of<Uintah::constVariableBase<Uintah::GridVariableBase>, T>::value && std::is_same<MemSpace, Kokkos::CudaSpace>::value, KokkosView3<PODType, Kokkos::CudaSpace>>::type
       get_field( const std::string name )
       {
-        return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), 0 );
+        return getNewDW()->getGPUDW()->getKokkosView<PODType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
       }
 #endif
 
@@ -256,7 +256,7 @@ namespace Uintah {
                                 , const int           DW_index
                                 )
       {
-        field = getNewDW()->getGPUDW()->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, 0 );
+        field = getNewDW()->getGPUDW()->getKokkosView<ElemType>( name.c_str(), patch, matl_indx, _field_container->getPatch()->getLevel()->getIndex() );
       }
 #endif
 
@@ -287,7 +287,7 @@ namespace Uintah {
                                 ,       KokkosView3<double, MemSpace> & field
                                 )
       {
-        field = getNewDW()->getGPUDW()->getKokkosView<ElemType>( name.c_str(),_field_container->getPatch()->getID(), _field_container->getMaterialIndex() , 0 );
+        field = getNewDW()->getGPUDW()->getKokkosView<ElemType>( name.c_str(), _field_container->getPatch()->getID(), _field_container->getMaterialIndex(), _field_container->getPatch()->getLevel()->getIndex() );
       }
 #endif
 
@@ -326,10 +326,10 @@ namespace Uintah {
 
     private:
 
-      ArchesFieldContainer* _field_container;
+      ArchesFieldContainer* _field_container{nullptr};
 
             std::vector<ArchesFieldContainer::VariableInformation>   _var_reg;
-      const Patch                                                  * _patch;
+      const Patch                                                  * _patch{nullptr};
             SchedToTaskInfo                                        & _tsk_info;
 
   }; // ArchesTaskInfoManager
