@@ -180,29 +180,35 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
 
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
+
+  //x-direction:
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
 
-  ArchesCore::doInterpolation(execObj, x_range, ucell_xvel, uVel , -1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, x_range, ucell_yvel, vVel , -1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, x_range, ucell_zvel, wVel , -1, 0, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation( execObj, x_range, ucell_xvel, uVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, x_range, ucell_yvel, vVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, x_range, ucell_zvel, wVel, -1, 0, 0, m_int_scheme );
 
+  //y-direction:
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
+
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
-  ArchesCore::doInterpolation(execObj, y_range, vcell_xvel, uVel , 0, -1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, y_range, vcell_yvel, vVel , 0, -1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, y_range, vcell_zvel, wVel , 0, -1, 0 ,m_int_scheme);
+  ArchesCore::doInterpolation( execObj, y_range, vcell_xvel, uVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, y_range, vcell_yvel, vVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, y_range, vcell_zvel, wVel, 0, -1, 0, m_int_scheme );
 
+  //z-direction:
   low = patch->getCellLowIndex();
   high = patch->getCellHighIndex();
+
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
-  ArchesCore::doInterpolation(execObj, z_range, wcell_xvel, uVel , 0, 0, -1 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, z_range, wcell_yvel, vVel , 0, 0, -1 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, z_range, wcell_zvel, wVel , 0, 0, -1 ,m_int_scheme);
+  ArchesCore::doInterpolation( execObj, z_range, wcell_xvel, uVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, z_range, wcell_yvel, vVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, z_range, wcell_zvel, wVel, 0, 0, -1, m_int_scheme );
 
 }

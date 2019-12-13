@@ -206,8 +206,8 @@ void CCVel::compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, co
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  ArchesCore::doInterpolation(execObj, range, u_cc, u , 1, 0, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, range, v_cc, v , 0, 1, 0 ,m_int_scheme);
-  ArchesCore::doInterpolation(execObj, range, w_cc, w , 0, 0, 1 ,m_int_scheme);
+  ArchesCore::doInterpolation( execObj, range, u_cc, u , 1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, range, v_cc, v , 0, 1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( execObj, range, w_cc, w , 0, 0, 1, m_int_scheme );
 
 }

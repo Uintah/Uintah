@@ -4,7 +4,6 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/GridTools.h>
 
-
 namespace Uintah{
 
   template <typename T, typename IT>
@@ -239,8 +238,7 @@ void VarInterpolation<T,IT>::eval( const Patch* patch, ArchesTaskInfoManager* ts
   const int koff = m_ijk_off[2];
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
-  ArchesCore::doInterpolation(execObj, range, int_var, var, ioff, joff, koff, m_int_scheme);
-
+  ArchesCore::doInterpolation( execObj, range, int_var, var, ioff, joff, koff, m_int_scheme );
 
 }
 }

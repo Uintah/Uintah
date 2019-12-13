@@ -30,6 +30,20 @@
                                                                           total_viscosity'"/>
       </VarID>
 
+      <!-- A virtual radiometer using RMCRT. RMCRT may also be used as a source term for divQ, as specified in the <Sources>
+           spec for a transport equation. These two share the same spec, with the only difference (IMPORTANT) being the 
+           algorithm type specified as <RMCRT><algorithm type="radiometerOnly"/></RMCRT> -->
+      <Radiometer                       spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"> 
+        <includeParticleRad             spec="OPTIONAL BOOLEAN"/>     <!--Include particle radiation in intensity calc --> 
+        <calc_frequency                 spec="OPTIONAL INTEGER"/>     <!-- calculate radiation every N steps, default = 3 -->
+        <absk                           spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+                                      
+        <!-- RMCRT -->
+        <include href="Models.xml"  section="Models/RMCRT/" need_applies_to="type rmcrt_radiation" />
+      </Radiometer>
+
       <!-- Utility functions -->
       <Utilities                        spec="OPTIONAL NO_DATA">
         <utility                        spec="MULTIPLE NO_DATA"
