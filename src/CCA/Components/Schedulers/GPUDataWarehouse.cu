@@ -3570,19 +3570,23 @@ HOST_DEVICE void
 GPUDataWarehouse::printError(const char* msg, const char* methodName, char const* label, const int patchID, int8_t matlIndx, int8_t levelIndx )
 {
 #ifdef __CUDA_ARCH__
+
   __syncthreads();
-  if( isThread0() ){
+  
+  if ( isThread0() ) {
     if (label[0] == '\0') {
       printf("  \nERROR GPU-side: GPUDataWarehouse::%s() - %s\n", methodName, msg );
-    } else {
+    }
+    else {
       printf("  \nERROR GPU-side: GPUDataWarehouse::%s(), label:  \"%s\", patch: %i, matlIndx: %i, levelIndx: %i - %s\n", methodName, label, patchID, matlIndx, levelIndx, msg);
     }
     //Should this just loop through the variable database and print out only items with a
     //levelIndx value greater than zero? -- Brad
 
-    //for (int i = 0; i < d_numLevelItems; i++) {
+    //for ( int i = 0; i < d_numLevelItems; i++ ) {
     //  printf("   Available levelDB labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_levelDB[i].matlIndx, d_levelDB[i].levelIndx);
     // }
+    
     __syncthreads();
 
     printThread();
@@ -3595,9 +3599,10 @@ GPUDataWarehouse::printError(const char* msg, const char* methodName, char const
 #else
   //__________________________________
   //  CPU code
-  if (label[0] == '\0') {
+  if ( label[0] == '\0' ) {
     printf("  \nERROR host-side: GPUDataWarehouse::%s() - %s\n", methodName, msg );
-  } else {
+  }
+  else {
     printf("  \nERROR host-side: GPUDataWarehouse::%s(), label:  \"%s\", patch: %i, matlIndx: %i, levelIndx: %i - %s\n", methodName, label, patchID, matlIndx, levelIndx, msg);
   }
   exit(-1);
@@ -3610,8 +3615,10 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx)
 {
 #ifdef __CUDA_ARCH__
+
   __syncthreads();
-  if( isThread0() ){
+  
+  if ( isThread0() ) {
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, matlIndx);
     //Should this just loop through the variable database and print out only items with a
     //levelIndx value greater than zero? -- Brad
@@ -3638,15 +3645,21 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t levelIndx, const int patchID, int8_t matlIndx)
 {
 #ifdef __CUDA_ARCH__
-  __syncthreads();
-  if( isThread0() ) {
-    printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n",
-            msg,  label, levelIndx, patchID, matlIndx);
 
-    for (int i = 0; i < d_numVarDBItems; i++) {
-      printf("   Available varDB labels(%i of %i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", i, d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx,
-             d_varDB[i].domainID, d_varDB[i].levelIndx);
+  __syncthreads();
+  
+  if ( isThread0() ) {
+    printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, patchID, matlIndx);
+
+    if ( d_numVarDBItems == 0 ) {
+    printf("\tEmpty GPU-DW\n");
     }
+    else {
+      for ( int i = 0; i < d_numVarDBItems; i++ ) {
+        printf("   Available varDB labels(%i of %i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", i, d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx, d_varDB[i].domainID, d_varDB[i].levelIndx);
+      }
+    }
+    
     __syncthreads();
 
     printThread();
@@ -3660,12 +3673,17 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
 #else
   //__________________________________
   //  CPU code
-  printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable in DW %s\n", msg, label, levelIndx,
-         patchID, matlIndx, _internalName);
-  for (int i = 0; i < d_numVarDBItems; i++) {
-    printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", d_numVarDBItems, d_varDB[i].label,
-           d_varDB[i].matlIndx, d_varDB[i].domainID, d_varDB[i].levelIndx);
+  printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable in DW %s\n", msg, label, levelIndx, patchID, matlIndx, _internalName);
+  
+  if ( d_numVarDBItems == 0 ) {
+    printf("\tEmpty GPU-DW\n");
   }
+  else {
+    for ( int i = 0; i < d_numVarDBItems; i++ ) {
+      printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx, d_varDB[i].domainID, d_varDB[i].levelIndx);
+    }
+  }
+  
 #endif
 }
 
