@@ -4060,11 +4060,13 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
     // don't need to copy it back D2H"
     // RMCRT hack:
-    if (varName == "divQ" ||
-        varName == "RMCRTboundFlux" ||
-        varName == "radiationVolq") {
+    if ( (varName == "divQ")           ||
+         (varName == "RMCRTboundFlux") ||
+         (varName == "radiationVolq")
+       )
+    {
           hack_foundAComputes = true;
-     }
+    }
 
     // almgren-mmsBC.ups hack
     // almgren-mms_conv.ups hack
@@ -4117,7 +4119,9 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
     // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
     if ( (varName.substr(0,10) == "char_ps_qn") ||
-         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ){
+         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW)
+       )
+    {
       hack_foundAComputes = true;
     }
 
@@ -4185,16 +4189,18 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "z-mom_RHS")          ||
          (varName == "z-mom_x_flux")       ||
          (varName == "z-mom_y_flux")       ||
-         (varName == "z-mom_z_flux")	   ||
-		 (varName == "hypre_solver_label")
+         (varName == "z-mom_z_flux")	     ||
+		     (varName == "hypre_solver_label")
        )
     {
       hack_foundAComputes = true;
     }
 
     // Poisson hack:
-    if (varName == "phi" ||
-        varName == "residual") {
+    if ( (varName == "phi")      ||
+         (varName == "residual")
+       )
+    {
       hack_foundAComputes = true;
     }
 
