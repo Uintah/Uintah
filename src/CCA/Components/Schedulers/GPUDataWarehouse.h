@@ -383,9 +383,9 @@ public:
     }
     else {
       printf( "Error in getKokkosView() - I'm GPUDW with name: \"%s\" at %p \n", _internalName, this );
-      printf( "Couldn't find an entry for label %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx );
+      printf( "Couldn't find an entry for label %s patch %d matl %d level %d\n", label, levelIndx, patchID, matlIndx );
+      GPUDataWarehouse::printGetError("GPUDataWarehouse::getKokkosView(...)", label, levelIndx, patchID, matlIndx );
       exit(-1);
-      //printGetError("GPUDataWarehouse::getKokkosView(...)", label, -1, patchID, matlIndx);
     }
 
     varLock->unlock();
