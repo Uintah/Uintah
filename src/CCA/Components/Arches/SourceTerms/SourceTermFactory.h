@@ -66,7 +66,7 @@ public:
     double      weight;
   };
 
-  void commonSrcProblemSetup( const ProblemSpecP& db );
+  void commonSrcProblemSetup( ProblemSpecP& db );
 
   void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup);
 
