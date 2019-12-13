@@ -174,7 +174,7 @@ private:
   // Allow a variable of this label to be computed multiple times in a TaskGraph without complaining.
   bool                        m_allow_multiple_computes{false};
 
-  mutable int 				  m_max_device_ghost{0};	//DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
+  mutable int                 m_max_device_ghost{0};	//DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
   mutable Ghost::GhostType    m_max_device_ghost_type{Ghost::None};
 
   // eliminate copy, assignment and move

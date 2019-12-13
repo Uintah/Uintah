@@ -554,12 +554,14 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
     if (Uintah::Parallel::usingDevice()) {
 
       //DS: 10312019: If CPU task is going to modify any variable, mark that variable as invalid on GPU.
-      if(event == CallBackEvent::CPU)
-    	  markDeviceAsInvalid(dtask);
+      if(event == CallBackEvent::CPU){
+        markDeviceAsInvalid(dtask);
+      }
 
       //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
-      if(event == CallBackEvent::postGPU)
-    	  markHostAsInvalid(dtask);
+      if(event == CallBackEvent::postGPU){
+        markHostAsInvalid(dtask);
+      }
 
       // TODO: Don't make every task run through this
       // TODO: Verify that it only looks for data that's valid in the GPU, and not assuming it's valid.
@@ -4189,8 +4191,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
          (varName == "z-mom_RHS")          ||
          (varName == "z-mom_x_flux")       ||
          (varName == "z-mom_y_flux")       ||
-         (varName == "z-mom_z_flux")	     ||
-		     (varName == "hypre_solver_label")
+         (varName == "z-mom_z_flux")       ||
+         (varName == "hypre_solver_label")
        )
     {
       hack_foundAComputes = true;
