@@ -91,37 +91,6 @@ KokkosSolver::~KokkosSolver()
 
 //--------------------------------------------------------------------------------------------------
 void
-KokkosSolver::sched_restartInitialize( const LevelP     & level
-                                     ,       SchedulerP & sched
-                                     )
-{
-
-  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
-
-  // Setup BCs
-  setupBCs( level, sched, matls );
-
-  // initialize hypre objects
-  if ( m_task_factory_map["transport_factory"]->has_task("[PressureEqn]")){
-    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("[PressureEqn]"));
-    press_tsk->sched_restartInitialize( level, sched );
-  }
-
-  //transport factory
-  BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
-  i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
-
-}
-
-//--------------------------------------------------------------------------------------------------
-void
-KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP     & level
-                                                ,       SchedulerP & sched
-                                                )
-{}
-
-//--------------------------------------------------------------------------------------------------
-void
 KokkosSolver::problemSetup( const ProblemSpecP     & input_db
                           ,       MaterialManagerP & materialManager
                           ,       GridP            & grid
@@ -131,6 +100,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   ProblemSpecP db = input_db;
   ProblemSpecP db_ks = db->findBlock("KokkosSolver");
   ProblemSpecP db_root = db->getRootNode();
+  m_archesLevelIndex = grid->numLevels() - 1;
 
   ArchesCore::TaskController& tsk_controller = ArchesCore::TaskController::self();
   tsk_controller.parse_task_controller(db);
@@ -210,6 +180,41 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
 
 //--------------------------------------------------------------------------------------------------
 void
+KokkosSolver::sched_restartInitialize( const LevelP     & level
+                                     ,       SchedulerP & sched
+                                     )
+{
+
+  const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
+
+  // Setup BCs
+  setupBCs( level, sched, matls );
+
+  //transport factory
+  BFM::iterator i_trans_fac = m_task_factory_map.find("transport_factory");
+  i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()]);
+
+  // CFD only on the finest level
+  if ( !level->hasFinerLevel() ){
+    // initialize hypre objects
+    if ( m_task_factory_map["transport_factory"]->has_task("[PressureEqn]")){
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["transport_factory"]->retrieve_task("[PressureEqn]"));
+      press_tsk->sched_restartInitialize( level, sched );
+    }
+  }
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+KokkosSolver::sched_restartInitializeTimeAdvance( const LevelP     & level
+                                                ,       SchedulerP & sched
+                                                )
+{}
+
+
+//--------------------------------------------------------------------------------------------------
+void
 KokkosSolver::computeTimestep( const LevelP     & level
                              ,       SchedulerP & sched
                              )
@@ -243,7 +248,6 @@ KokkosSolver::computeTimestep( const LevelP     & level
                              &KokkosSolver::computeStableTimeStep);
 
     // Actually compute the dt based on CFD variables.
-
     tsk->computes( m_delTLabel, level.get_rep() );
 
     m_uLabel = VarLabel::find( uname );
@@ -252,11 +256,13 @@ KokkosSolver::computeTimestep( const LevelP     & level
     m_rhoLabel = VarLabel::find( rhoname );
     m_tot_muLabel = VarLabel::find( muname );
 
-    tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
-    tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+    if ( level->getIndex() == m_archesLevelIndex ){
+      tsk->requires( Task::NewDW, m_uLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_vLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_wLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_rhoLabel, Ghost::None, 0 );
+      tsk->requires( Task::NewDW, m_tot_muLabel, Ghost::None, 0 );
+    }
 
     m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
 
@@ -302,54 +308,59 @@ KokkosSolver::computeStableTimeStep( const ProcessorGroup *
 {
 
   const Level* level = getLevel(patches);
-  for (int p = 0; p < patches->size(); p++) {
 
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = m_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
+  if ( level->getIndex() == m_archesLevelIndex ){
+    for (int p = 0; p < patches->size(); p++) {
 
-    Vector Dx = patch->dCell();
+      const Patch* patch = patches->get(p);
+      int archIndex = 0; // only one arches material
+      int indx = m_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
-    constSFCXVariable<double> u;
-    constSFCYVariable<double> v;
-    constSFCZVariable<double> w;
-    constCCVariable<double> rho;
-    constCCVariable<double> mu;
+      Vector Dx = patch->dCell();
 
-    new_dw->get( u, m_uLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( v, m_vLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( w, m_wLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( rho, m_rhoLabel, indx, patch, Ghost::None, 0 );
-    new_dw->get( mu, m_tot_muLabel, indx, patch, Ghost::None, 0 );
+      constSFCXVariable<double> u;
+      constSFCYVariable<double> v;
+      constSFCZVariable<double> w;
+      constCCVariable<double> rho;
+      constCCVariable<double> mu;
 
-    double dt = m_dt_init;
+      new_dw->get( u, m_uLabel, indx, patch, Ghost::None, 0 );
+      new_dw->get( v, m_vLabel, indx, patch, Ghost::None, 0 );
+      new_dw->get( w, m_wLabel, indx, patch, Ghost::None, 0 );
+      new_dw->get( rho, m_rhoLabel, indx, patch, Ghost::None, 0 );
+      new_dw->get( mu, m_tot_muLabel, indx, patch, Ghost::None, 0 );
 
-    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+      double dt = m_dt_init;
 
-    Uintah::parallel_reduce_min( range, [&]( int i, int j, int k, double & m_dt ) {
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-      const double small_num = 1.e-10;
+      Uintah::parallel_reduce_min( range, [&]( int i, int j, int k, double & m_dt ) {
 
-      const double dx = Dx.x();
-      const double dy = Dx.y();
-      const double dz = Dx.z();
+        const double small_num = 1.e-10;
 
-      double denom_dt = std::fabs( u(i,j,k) ) / dx +
-                        std::fabs( v(i,j,k) ) / dy +
-                        std::fabs( w(i,j,k) ) / dz +
-                        mu(i,j,k) / rho(i,j,k) *
-                        ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
-                        small_num;
+        const double dx = Dx.x();
+        const double dy = Dx.y();
+        const double dz = Dx.z();
+
+        double denom_dt = std::fabs( u(i,j,k) ) / dx +
+                          std::fabs( v(i,j,k) ) / dy +
+                          std::fabs( w(i,j,k) ) / dz +
+                          mu(i,j,k) / rho(i,j,k) *
+                          ( 1. / ( dx * dx ) + 1. / ( dy * dy ) + 1. / ( dz * dz ) ) +
+                          small_num;
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      m_dt = std::fmin( 1.0 / denom_dt, m_dt_init ); // m_dt reduced by Kokkos::parallel_reduce
+        m_dt = std::fmin( 1.0 / denom_dt, m_dt_init ); // m_dt reduced by Kokkos::parallel_reduce
 #else
-      m_dt = std::fmin( 1.0 / denom_dt, m_dt );      // m_dt reduced here
+        m_dt = std::fmin( 1.0 / denom_dt, m_dt );      // m_dt reduced here
 #endif
 
-    }, dt );
+      }, dt );
 
-    new_dw->put(delt_vartype(dt), m_delTLabel, level);
+      new_dw->put(delt_vartype(dt), m_delTLabel, level);
+    }
+  } else {
+    new_dw->put(delt_vartype(9e99), m_delTLabel, level);
   }
 }
 
@@ -363,8 +374,12 @@ KokkosSolver::setTimeStep( const ProcessorGroup *
                          )
 {
   const Level* level = getLevel(patches);
-  for (int p = 0; p < patches->size(); p++) {
-    new_dw->put(delt_vartype(m_dt_init), m_delTLabel, level);
+  if ( level->getIndex() == m_archesLevelIndex ){
+    for (int p = 0; p < patches->size(); p++) {
+      new_dw->put(delt_vartype(m_dt_init), m_delTLabel, level);
+    }
+  } else {
+    new_dw->put(delt_vartype(9e99), m_delTLabel, level);
   }
 }
 
@@ -378,29 +393,32 @@ KokkosSolver::sched_initialize( const LevelP& level,
 
   const MaterialSet* matls = m_materialManager->allMaterials( "Arches" );
 
-  // Setup BCs
-  setupBCs( level, sched, matls );
+  if ( level->getIndex() == m_archesLevelIndex ){
 
-  if ( m_nonlinear_solver == SANDBOX ){
+    // Setup BCs
+    setupBCs( level, sched, matls );
 
-    SandBox_initialize( level, sched );
+    if ( m_nonlinear_solver == SANDBOX ){
 
-  } else {
+      SandBox_initialize( level, sched );
 
-    SSPRKSolve_initialize( level, sched );
+    } else {
+
+      SSPRKSolve_initialize( level, sched );
+
+    }
+
+    for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
+      std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
+      insert_max_ghost( the_ghost_info );
+      //SCI_DEBUG for printing information per task.
+      i->second->print_variable_max_ghost();
+    }
+
+    // SCI_DEBUG for printing across ALL tasks.
+    print_variable_max_ghost();
 
   }
-
-  for (auto i = m_task_factory_map.begin(); i != m_task_factory_map.end(); i++ ){
-    std::map<std::string, TaskFactoryBase::GhostHelper>& the_ghost_info = i->second->get_max_ghost_info();
-    insert_max_ghost( the_ghost_info );
-    //SCI_DEBUG for printing information per task.
-    i->second->print_variable_max_ghost();
-  }
-
-  // SCI_DEBUG for printing across ALL tasks.
-  print_variable_max_ghost();
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -667,7 +685,7 @@ KokkosSolver::SSPRKSolve( const LevelP & level,
 
     i_transport->second->schedule_task_group("dqmom_fe_update",
       TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
-      
+
     i_particle_model_fac->second->schedule_task_group("particle_properties",
       TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 

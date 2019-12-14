@@ -169,6 +169,7 @@ namespace Uintah{
 
     SolverInterface* m_hypreSolver;
     TableLookup* m_table_lookup;
+    int m_archesLevelIndex;                      ///< Finest level for arches solve
 
 };
 }
