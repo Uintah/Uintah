@@ -1101,12 +1101,18 @@ private:
                                               , RunningTaskInfo * info
                                               );
 
+  //DS 12132019: Added scratch ghost cell layer defaulted to 0. Will allocate memory for (numGhostCells+scratchGhostCells), but will gather only numGhostCells
+  //To avoid resizing on GPU, gpu variables need to be allocated with max ghost cell size. But changing ghost cells on host to max causes an asymmetric MPI
+  //message generation due to bc's conditional dependencies in Arches. Hence only option now is to allocate max ghost cells on CPU and GPU both, but gather
+  //only numGhostCells i.e., provided by user in task dependency. Extra padding will help align CPU and GPU variables which is needed for correct copying.
+  //Logic is handled in scheduler. No need to change user tasks. Pass scratchGhostCells = max_ghost_cells - numGhostCells;
   void getGridVar(       GridVariableBase & var
                  , const VarLabel         * label
                  ,       int                matlIndex
                  , const Patch            * patch
                  ,       Ghost::GhostType   gtype
                  ,       int                numGhostCells
+				 ,       int                scratchGhostCells=0
                  );
 
   inline Task::WhichDW getWhichDW( RunningTaskInfo * info );

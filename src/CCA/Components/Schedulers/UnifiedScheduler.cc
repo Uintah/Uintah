@@ -2619,8 +2619,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
           const IntVector offset = it->second.m_offset;
           const IntVector size = it->second.m_sizeVector;
-          const IntVector low = offset;
-          const IntVector high = offset + size;
+          IntVector low = offset;           //DS 12132019: GPU Resize fix. update low and high to max ghost cell if needed
+          IntVector high = offset + size;
           const TypeDescription* type_description = it->second.m_dep->m_var->typeDescription();
           const TypeDescription::Type type = type_description->getType();
           const TypeDescription::Type subtype = type_description->getSubType()->getType();
@@ -2636,6 +2636,13 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           const int numGhostCells = it->second.m_numGhostCells;
           Ghost::GhostType ghosttype = it->second.m_gtype;
           bool uses_SHRT_MAX = (numGhostCells == SHRT_MAX);
+
+          //DS 12132019: GPU Resize fix. getting max ghost cell related info
+          const IntVector boundaryLayer = it->second.m_dep->m_var->getBoundaryLayer();
+          Ghost::GhostType dgtype = it->second.m_dep->m_var->getMaxDeviceGhostType();
+          int dghost = it->second.m_dep->m_var->getMaxDeviceGhost();
+          int scratchGhost = (it->second.m_staging) ? 0 : (dghost - numGhostCells);
+
 
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
@@ -2663,10 +2670,16 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(subtype);
 
               if (!uses_SHRT_MAX) {
+              //DS 12132019: GPU Resize fix. Do it only if its not staging. Use max ghost cells and corresponding low and high to allocate scratch space
+            	if(it->second.m_staging==false){
+            	  const TypeDescription::Type type = it->second.m_dep->m_var->typeDescription()->getType();
+            	  Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+            	  patch->computeVariableExtents(basis, it->second.m_dep->m_var->getBoundaryLayer(), dgtype, dghost, low, high);
+            	}
                 gpudw->allocateAndPut(*device_var, label_cstr, patchID, matlIndx, levelID, staging,
                                       make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()),
-                                      elementDataSize, (GPUDataWarehouse::GhostType)(it->second.m_gtype),
-                                      it->second.m_numGhostCells);
+                                      elementDataSize, (GPUDataWarehouse::GhostType)(dgtype),
+									  dghost);
               } else {
 
                 //TODO, give it an offset so it could be requested as a patch or as a level.  Right now they all get the same low/high.
@@ -2821,11 +2834,13 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                         //all variable copies complete, then delete the object, which in turn decrements the refcounter, which then allows it to clean
                         //up later where needed (either immediately if the temp's refcounts hit 0, or later when the it does the scrub checks).
 
+                        //DS 12132019: GPU Resize fix. Do it only if its not staging. Use max ghost cells and corresponding low and high to allocate scratch space
                         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(type_description->createInstance());
-                        dw->getGridVar(*gridVar, label, matlIndx, patch, ghosttype, numGhostCells);
+                        dw->getGridVar(*gridVar, label, matlIndx, patch, dgtype, numGhostCells, scratchGhost);
                         host_ptr = gridVar->getBasePointer();
                         it->second.m_tempVarToReclaim = gridVar;  //This will be held onto so it persists, and then cleaned up after the device-to-host copy
-
+                        if(it->second.m_staging==false)
+                        	it->second.m_varMemSize = gridVar->getDataSize(); //update it->second.m_varMemSize to add scratchGhost;
                       }
                     }
                     break;
@@ -4304,7 +4319,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
               if (uses_SHRT_MAX) {
                 level->findCellIndexRange(host_low, host_high); // including extraCells
               } else {
-                Patch::getGhostOffsets(type, gtype, numGhostCells, host_lowOffset, host_highOffset);
+                //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+            	Patch::getGhostOffsets(type, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost(), host_lowOffset, host_highOffset);
                 patch->computeExtents(basis, dependantVar->m_var->getBoundaryLayer(), host_lowOffset, host_highOffset, host_low, host_high);
               }
               host_size = host_high - host_low;
@@ -4356,7 +4372,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 if (uses_SHRT_MAX) {
                   gridVar->allocate(host_low, host_high);
                 } else {
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, gtype, numGhostCells);
+                //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
                 }
                 if (finalized) {
                   dw->refinalize();

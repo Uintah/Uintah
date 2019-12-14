@@ -2604,8 +2604,9 @@ GPUDataWarehouse::getStatusFlagsForVariableOnGPU(bool& correctSize, bool& alloca
     allVarPointersInfo vp = varPointers->at(lpml);
     int3 device_offset = vp.var->device_offset;
     int3 device_size = vp.var->device_size;
-    correctSize = (device_offset.x == offset.x && device_offset.y == offset.y && device_offset.z == offset.z
-                   && device_size.x == size.x && device_size.y == size.y && device_size.z == size.z);
+    //DS 12132019: GPU Resize fix. Changed condition == to <= (and >=). If device variable is greater than host, its ok. 
+    correctSize = (device_offset.x <= offset.x && device_offset.y <= offset.y && device_offset.z <= offset.z
+                   && device_size.x >= size.x && device_size.y >= size.y && device_size.z >= size.z);
 
     //get the value
     atomicDataStatus varStatus  = __sync_or_and_fetch(&(vp.var->atomicStatusInGpuMemory), 0);
