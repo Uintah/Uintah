@@ -147,18 +147,6 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   // bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   // bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  ArchesCore::OneDInterpolator my_interpolant_ucellx( ucell_xvel, uVel, -1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_ucelly( ucell_yvel, vVel, -1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_ucellz( ucell_zvel, wVel, -1, 0, 0 );
-
-  ArchesCore::OneDInterpolator my_interpolant_vcellx( vcell_xvel, uVel,0,-1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_vcelly( vcell_yvel, vVel,0,-1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_vcellz( vcell_zvel, wVel,0,-1, 0 );
-
-  ArchesCore::OneDInterpolator my_interpolant_wcellx( wcell_xvel, uVel,0, 0, -1);
-  ArchesCore::OneDInterpolator my_interpolant_wcelly( wcell_yvel, vVel,0, 0, -1);
-  ArchesCore::OneDInterpolator my_interpolant_wcellz( wcell_zvel, wVel,0, 0, -1);
-
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
