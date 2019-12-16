@@ -43,7 +43,6 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
                               const GridP& grid )
 {
   ProblemSpecP box_ps = boxps;
-  allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};  // must define allFaces here for clang ccmpilers
 
   if( box_ps == nullptr ){
     throw ProblemSetupException("ERROR: OnTheFlyAnalysis/Control Volume:  Couldn't find <controlVolumes> -> <box> tag", __FILE__, __LINE__);
