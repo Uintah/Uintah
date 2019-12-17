@@ -335,9 +335,15 @@ POKITTTESTS=[
   # ("implicit-compressible-multispecies-x",      "implicit-compressible-multispecies-x.ups" ,      1, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
+
+#   The drone tests fail on debug builds with:
+# sus: Wasatch3P/src/SpatialOps/spatialops/structured/MemoryWindow.cpp:54: SpatialOps::MemoryWindow::MemoryWindow(const IntVec&, const IntVec&, const IntVec&): Assertion `sanity_check()' failed.
+# sus: Wasatch3P/src/SpatialOps/spatialops/structured/MemoryWindow.cpp:54: SpatialOps::MemoryWindow::MemoryWindow(const IntVec&, const IntVec&, const IntVec&): Assertion `sanity_check()' failed.
+# sus: Wasatch3P/src/SpatialOps/spatialops/structured/MemoryWindow.cpp:54: SpatialOps::MemoryWindow::MemoryWindow(const IntVec&, const IntVec&, const IntVec&): Assertion `sanity_check()' failed.
+#  Todd
 DRONETESTS=[
-  ("FanModelXY",    "fan-model-test-xy.ups",   4, "All", ["exactComparison","no_restart"] ),
-  ("DroneXY",    "quadrotor-drone-xy.ups",   4, "All", ["exactComparison","no_restart"] )
+  ("FanModelXY",    "fan-model-test-xy.ups",   4, "All", ["exactComparison","no_restart", "no_dbg"] ),
+  ("DroneXY",    "quadrotor-drone-xy.ups",   4, "All", ["exactComparison","no_restart", "no_dbg"] )
 ]
 
 

@@ -50,19 +50,19 @@ namespace Uintah {
     ~controlVolume();
 
     enum FaceType {
-      xminus=0,
-      xplus=1,
-      yminus=2,
-      yplus=3,
-      zminus=4,
-      zplus=5,
+      xminus = 0,
+      xplus  = 1,
+      yminus = 2,
+      yplus  = 3,
+      zminus = 4,
+      zplus  = 5,
       startFace = xminus,
       endFace = zplus,
       numFaces, // 6
       invalidFace
     };
 
-    std::initializer_list<FaceType> allFaces;
+    const std::vector<FaceType> allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};
     
     enum FaceIteratorType {
       InteriorFaceCells,              // Includes cells on the interior of the face

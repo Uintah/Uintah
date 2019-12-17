@@ -35,6 +35,8 @@
            algorithm type specified as <RMCRT><algorithm type="radiometerOnly"/></RMCRT> -->
       <Radiometer                       spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"> 
+         <calc_on_all_RKsteps           spec="OPTIONAL BOOLEAN"/>     <!-- calculate radiation every RK step, default = false -->
+                               
         <includeParticleRad             spec="OPTIONAL BOOLEAN"/>     <!--Include particle radiation in intensity calc --> 
         <calc_frequency                 spec="OPTIONAL INTEGER"/>     <!-- calculate radiation every N steps, default = 3 -->
         <absk                           spec="REQUIRED NO_DATA"
