@@ -154,10 +154,11 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
 
-  global svn_revision
-  svn_revision = getoutput("svn info ../src |grep Revision")
-  svn_revision = svn_revision.split(" ")[1]
-
+  global git_revision
+  myHash = getoutput("cd ../src; git log -1 --pretty=format:%H: )
+  myDate = getoutput("cd ../src; git log -1 --pretty=format:%cd: )
+  git_revision = "%s %s" % (myHash, myDate)
+  
   #check sus for CUDA capabilities
   has_gpu  = 0
   print( "Running command to test if sus was compiled with CUDA and there is a GPU is active: " + susdir + "/sus -gpucheck" )
@@ -179,7 +180,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
 
-  outputpath    = startpath
+  outputpath = startpath
   
   # If running Nightly RT, output logs in web dir
   # otherwise, save it in the build.  Also turn on plotting
@@ -510,12 +511,12 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     print( "Test Timer: %s" % strftime("%H:%M:%S",gmtime(test_timer)) )
 
     #__________________________________
-    # If the test passed put an svn revision stamp in the goldstandard
+    # If the test passed put an git "revision" stamp in the goldstandard
     # Only do this if the nightly RT cronjob is running
-    if failcode == 0 and getenv('AUTO_UPDATE_SVN_STAMP') == "yes":
-      print( "Updating the svn revision file %s" %svn_revision )
-      svn_file = "%s/%s/%s/svn_revision" % (gold_standard,application,testname)
-      system( "echo 'This test last passed with Revision: %s'> %s" %(svn_revision, svn_file))
+    if failcode == 0 and getenv('AUTO_UPDATE_GIT_STAMP') == "yes":
+      print( "Updating the git revision file %s" %git_revision )
+      git_file = "%s/%s/%s/git_revision" % (gold_standard,application,testname)
+      system( "echo 'This test last passed with Revision: %s'> %s" %(git_revision, git_file))
     #__________________________________
     # end of test loop
 
@@ -587,7 +588,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs):
   global startpath
   global helperspath
-  global svn_revision
+  global git_revision
 
   testname = getTestName(test)
 
@@ -678,10 +679,10 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     inputxml = path.basename(inputxml)
 
 
-  SVN_OPTIONS = "-svnStat -svnDiff"
-  #SVN_OPTIONS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
+  #SVN_OPTIONS = "-svnStat -svnDiff"
+  GIT_OPTIONS = "" # When debugging, if you don't want to spend time waiting for git, uncomment this line.
 
-  command = "/usr/bin/time -p %s %s %s/sus %s %s " % (MPIHEAD, int(np), susdir, sus_options, SVN_OPTIONS)
+  command = "/usr/bin/time -p %s %s %s/sus %s %s " % (MPIHEAD, int(np), susdir, sus_options, GIT_OPTIONS)
   mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer

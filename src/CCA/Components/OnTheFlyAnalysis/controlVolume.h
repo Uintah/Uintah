@@ -99,12 +99,26 @@ namespace Uintah {
 
     //______________________________________________________________________
     // Returns true if a control volume boundary face exists on this patch
+    // Be careful:  Acid test is a CV with faces that coincide with patch boundary
     bool inline hasBoundaryFaces( const Patch* patch) const {
 
-      bool test = doesIntersect( m_lowIndx, m_highIndx, patch->getCellLowIndex(), patch->getCellHighIndex() );
+      // Inclusive tests 
+      IntVector pLo = patch->getCellLowIndex();
+      IntVector pHi = patch->getCellHighIndex() - IntVector(1,1,1);
+      
+      bool test = m_lowIndx.x()  < pHi.x() &&       
+                  m_lowIndx.y()  < pHi.y() &&       
+                  m_lowIndx.z()  < pHi.z() &&       
+                  m_highIndx.x() >= pLo.x() &&      
+                  m_highIndx.y() >= pLo.y() &&      
+                  m_highIndx.z() >= pLo.z();
       return test;
     }
 
+    //______________________________________________________________________
+    //  Returns the cell index nearest to the point
+    IntVector findCell( const Level * level, 
+                        const Point & p);
     //______________________________________________________________________
     //
     std::string getExtents_string() const;

@@ -46,7 +46,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
 {   
   ProblemSpecP child = matl_ps->findBlock("damage_model");
   if(!child) {
-    proc0cout << "**WARNING** Creating default null damage model" << endl;
+    //proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage() );
   }
   
