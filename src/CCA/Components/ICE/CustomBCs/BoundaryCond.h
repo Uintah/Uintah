@@ -41,7 +41,6 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 
 

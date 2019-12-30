@@ -1140,23 +1140,30 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       IntVector neg_cell;
       ostringstream warn;
       if( !areAllValuesPositive(rho_CC, neg_cell) ) {
+        Point pt = patch->getCellPosition(neg_cell);
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " rho_CC is negative\n";
+            <<neg_cell << " position " << pt << " rho_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " Temp_CC is negative\n";
+            <<neg_cell << " position " << pt << " Temp_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " sp_vol_CC is negative\n";
+            <<neg_cell << " position " << pt << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesNumbers(speedSound, neg_cell) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " speedSound is nan\n";
+            <<neg_cell << " position " << pt << " speedSound is nan\n";
         warn << "speedSound = " << speedSound[neg_cell] << " sp_vol_CC = " << sp_vol_CC[neg_cell]
              << " rho_micro = " << rho_micro[neg_cell] << " Temp_CC = " << Temp_CC[neg_cell] << endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
@@ -1187,10 +1194,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
+      Point pt = patch->getCellPosition(c);
       
       if(!(vol_frac_sum[c] <= errorThresholdTop && vol_frac_sum[c] >= errorThresholdBottom)){\
         ostringstream warn;
-        warn << "ERROR MPMICE::actuallyInitialize cell " << *iter << "\n\n"
+        warn << "ERROR MPMICE::actuallyInitialize cell " << *iter << " position" << pt << "\n\n"
              << "volume fraction ("<< std::setprecision(13)<< vol_frac_sum[*iter] << ") does not sum to 1.0 +- 1e-10.\n"
              << "Verify that this region of the domain contains at least 1 geometry object.  If you're using the optional\n"
              << "'volumeFraction' tags verify that they're correctly specified.\n";
@@ -2086,8 +2094,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
       if(allTestsPassed != true){  // throw an exception of there's a problem
+        Point pt = patch->getCellPosition(c);
+        
         ostringstream warn;
-        warn << "\nMPMICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
+        warn << "\nMPMICE::ComputeEquilibrationPressure: Cell: "<< c << ", position: " << pt << ", L-"<<L_indx <<"\n"
              << message
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
              <<"\nCompute equilibration pressure task is rarely the problem. "
@@ -2713,19 +2723,25 @@ MPMICE::refine(const ProcessorGroup*,
       //    B U L L E T   P R O O F I N G
       IntVector neg_cell;
       ostringstream warn;
-      if( !areAllValuesPositive(rho_CC, neg_cell) ) {
-        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-            <<neg_cell << " rho_CC is negative\n";
+      if( !areAllValuesPositive( rho_CC, neg_cell ) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell: "
+            << neg_cell << ", position: " << pt << ", rho_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
+      if( !areAllValuesPositive( Temp_CC, neg_cell ) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-            <<neg_cell << " Temp_CC is negative\n";
+            << neg_cell << ", position: " << pt << ", Temp_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+      if( !areAllValuesPositive( sp_vol_CC, neg_cell ) ) {
+        Point pt = patch->getCellPosition(neg_cell);
+        
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-            <<neg_cell << " sp_vol_CC is negative\n";
+            << neg_cell << ", position: " << pt << ", sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
     }  //mpmMatls

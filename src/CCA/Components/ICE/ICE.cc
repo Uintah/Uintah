@@ -2349,23 +2349,33 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< indx <<" cell ";
       
       if( !areAllValuesPositive( press_CC, neg_cell ) ) {
-        warn << base.str()<< neg_cell << " press_CC is invalid (" <<press_CC[neg_cell] <<")";
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn << base.str()<< neg_cell << " position: " << pt << ", press_CC is invalid (" <<press_CC[neg_cell] <<")";
         throw ProblemSetupException( warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive( rho_CC[indx], neg_cell ) ) {
-        warn << base.str()<< neg_cell << " rho_CC is invalid (" <<rho_CC[indx][neg_cell] <<")";
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn << base.str()<< neg_cell << " position: " << pt <<  ", rho_CC is invalid (" <<rho_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive( Temp_CC[indx], neg_cell ) ) {
-        warn << base.str()<< neg_cell << " Temp_CC is invalid (" <<Temp_CC[indx][neg_cell] <<")";
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn << base.str()<< neg_cell << " position: " << pt <<  ", Temp_CC is invalid (" <<Temp_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive( sp_vol_CC[indx], neg_cell ) ) {
-        warn << base.str()<< neg_cell << " sp_vol_CC is invalid (" <<sp_vol_CC[indx][neg_cell] <<")";
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn << base.str()<< neg_cell << " position: " << pt <<  ", sp_vol_CC is invalid (" <<sp_vol_CC[indx][neg_cell] <<")";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive( speedSound[indx], neg_cell ) ) {
-        warn << base.str()<< neg_cell << " speedSound is invalid (" <<speedSound[indx][neg_cell] <<")"
+        Point pt = patch->getCellPosition(neg_cell);
+        
+        warn << base.str()<< neg_cell << " position: " << pt <<  ", speedSound is invalid (" <<speedSound[indx][neg_cell] <<")"
              << "  Verify that at least one geom_object covers the entire computational domain.";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
@@ -2375,11 +2385,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     if(!d_with_mpm)
     {
       for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-        if(vol_frac_sum[*iter] > 1.0 + 1e-10 || vol_frac_sum[*iter] < 1.0 - 1e-10)
-        {
-          ostringstream warn, base;
-          base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize";
-          warn << base.str() << "Cell: " << *iter << " Volume fractions did not sum to 1. Sum=" << vol_frac_sum[*iter] << "\n";
+        IntVector c = *iter;
+        if(vol_frac_sum[c] > 1.0 + 1e-10 || vol_frac_sum[c] < 1.0 - 1e-10) {
+          Point pt = patch->getCellPosition(c);
+          
+          ostringstream warn;
+          warn <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize"
+               << "Cell: " << c << " position: " << pt <<  ". Volume fractions did not sum to 1. Sum=" << vol_frac_sum[c] << "\n";
           throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
         }
       }
@@ -2734,8 +2746,10 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
       if(allTestsPassed != true){  // throw an exception of there's a problem
+        Point pt = patch->getCellPosition(c);
+        
         ostringstream warn;
-        warn << "\nICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
+        warn << "\nICE::ComputeEquilibrationPressure: Cell "<< c << " position: " << pt << ", L-"<<L_indx <<"\n"
              << message
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
              <<"\nCompute equilibration pressure task is rarely the problem. "
