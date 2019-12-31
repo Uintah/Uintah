@@ -2578,7 +2578,10 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     }
     else
     {
-      varType = "Patch_Mesh";
+      // Get the mesh type.
+      varName = std::string(varname);
+      found = varName.find_last_of("/");
+      varType = varName.substr(found + 1);
     }
   }
 
