@@ -26,7 +26,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <iomanip>
 

@@ -43,7 +43,6 @@
 
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Parallel/Parallel.h>
 #include <sci_defs/hypre_defs.h>
 

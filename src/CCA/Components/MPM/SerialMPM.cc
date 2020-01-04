@@ -5868,6 +5868,8 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
        double tol = 1.e-5;
        double phi[4]={1.,0.,0.,0.};
        Vector nhat_k(phi[0],phi[1],phi[2]);
+       Vector nhat_backup(0.);
+       double error_min=1.0;
        while(!converged){
         num_iters++;
         // Initialize the coefficient matrix
@@ -5930,9 +5932,17 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         Vector nhat_kp1(phi[0],phi[1],phi[2]);
         nhat_kp1/=(nhat_kp1.length()+1.e-100);
         double error = 1.0 - Dot(nhat_kp1,nhat_k);
+        if(error < error_min){
+          error_min = error;
+          nhat_backup = nhat_kp1;
+        }
         if(error < tol || num_iters > 15){
           converged=true;
-          normAlphaToBeta[c] = nhat_kp1;
+          if(num_iters > 15){
+           normAlphaToBeta[c] = nhat_backup;
+          } else {
+           normAlphaToBeta[c] = nhat_kp1;
+          }
         } else{
           nhat_k=nhat_kp1;
         }
@@ -5949,6 +5959,13 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       normAlphaToBeta[c]/=(normAlphaToBeta[c].length()+1.e-100);
       if(alphaMaterial[c]==-99){
         normAlphaToBeta[c]=Vector(0.);
+      }
+      if(!(normAlphaToBeta[c].length() >= 0.0)){
+        cout << "Node  = " << c << endl;
+        cout << "normAlphaToBeta[c] = " << normAlphaToBeta[c] << endl;
+        cout << "alphaMaterial[c] = " << alphaMaterial[c] << endl;
+        cout << "NumMatlsOnNode[c] = " << NumMatlsOnNode[c] << endl;
+        cout << "NumParticlesOnNode[c] = " << NumParticlesOnNode[c] << endl;
       }
     }    // Loop over nodes
 
@@ -6078,6 +6095,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         } // Loop over nodes near this particle
 #endif
 
+#if 1
         // This version uses particle faces to compute prominence.
         // Compute vectors from particle center to the faces
         Vector RFL[6];
@@ -6109,6 +6127,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
             }  // Only deal with nodes that this particle affects
           }  // If node is on the patch
         } // Loop over nodes near this particle
+#endif
        } // Is a surface particle
       } // end Particle loop
     }  // loop over matls

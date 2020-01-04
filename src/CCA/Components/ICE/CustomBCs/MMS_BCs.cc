@@ -24,8 +24,6 @@
 
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Math/MiscMath.h>
