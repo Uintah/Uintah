@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>Hydrostatic compression fully saturated</title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+      <maxTime> 1.0 </maxTime>
+      <initTime> 0.0 </initTime>
+      <delt_min> 1.0e-6 </delt_min>
+      <delt_max> 0.01 </delt_max>
+      <timestep_multiplier> 0.3 </timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+      <filebase>HydrostaticCompressionSaturated.uda</filebase>
+      <outputInterval>0.04</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.color"/>
+      <save label = "p.temperature"/>
+      <save label = "p.velocity"/>
+      <save label = "p.particleID"/>
+      <save label = "p.stress"/>
+      <save label = "g.mass"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "g.acceleration"/>
+      <save label = "p.capX"/>
+      <save label = "p.plasticStrain"/>
+      <save label = "p.plasticCumEqStrain"/>
+      <save label = "p.plasticVolStrain"/>
+      <save label = "p.p3"/>
+      <save label = "p.porePressure"/>
+      <save label = "p.ArenaPEAKI1"/>
+      <save label = "p.ArenaFSLOPE"/>
+      <save label = "p.ArenaSTREN"/>
+      <save label = "p.ArenaYSLOPE"/>
+      <save label = "p.ArenaBETA"/>
+      <save label = "p.ArenaCR"/>
+      <save label = "p.ArenaT1"/>
+      <save label = "p.ArenaT2"/>
+      <save label = "p.porosity"/>
+      <save label = "p.saturation"/>
+      <save label = "p.elasticVolStrain"/>
+      <save label = "p.stressQS"/>
+      <save label = "p.COHER"/>
+      <save label = "p.TGROW"/>
+      <checkpoint cycle = "2" timestepInterval = "4000"/>
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>              explicit   </time_integrator>
+    <interpolator>                 linear     </interpolator>
+    <use_load_curves>              false      </use_load_curves>
+    <minimum_particle_mass>        1.0e-15    </minimum_particle_mass>
+    <minimum_mass_for_acc>         1.0e-15    </minimum_mass_for_acc>
+    <maximum_particle_velocity>    1.0e5      </maximum_particle_velocity>
+    <artificial_damping_coeff>     0.0        </artificial_damping_coeff>
+    <artificial_viscosity>         true       </artificial_viscosity>
+    <artificial_viscosity_heating> false      </artificial_viscosity_heating>
+    <do_contact_friction_heating>  false      </do_contact_friction_heating>
+    <create_new_particles>         false      </create_new_particles>
+    <UseMomentumForm>              false      </UseMomentumForm>
+    <withColor>                    true       </withColor>
+    <UsePrescribedDeformation>     true       </UsePrescribedDeformation>
+    <PrescribedDeformationFile>    HydrostaticCompression_PrescribedDeformation.inp   </PrescribedDeformationFile>
+    <minimum_subcycles_for_F>       -2        </minimum_subcycles_for_F>
+    <erosion algorithm = "none"/>
+  </MPM>
+
+  <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+    <MPM>
+      <material name="SimplifiedPlasticity">
+        <density>1050</density>
+        <melt_temp>3695.0</melt_temp>
+        <room_temp>294.0</room_temp>
+        <thermal_conductivity>174.0e-7</thermal_conductivity>
+        <specific_heat>134.0e-8</specific_heat>
+
+        <constitutive_model type="ArenaSoil">
+
+          <initial_porosity> 0.4 </initial_porosity>
+          <initial_saturation> 1.0 </initial_saturation>
+          <initial_fluid_pressure> 0.0 </initial_fluid_pressure>
+
+	  <p0>      0.0       </p0>
+	  <p1>      482.68e6  </p1>
+	  <p1_sat>  1.0       </p1_sat>
+	  <p2>      0.719     </p2>
+	  <p3>      0.448     </p3>
+
+          <elastic_moduli_model type="arena">
+	    <b0>  0.0029  </b0>
+	    <b1>  0.4731  </b1>
+	    <b2>  1.5057  </b2>
+	    <b3>  2.5728  </b3>
+	    <b4>  2.0799  </b4>
+	    <G0>  7.0e8   </G0>
+            <nu1> 0.0     </nu1>
+            <nu2> 0.0     </nu2>
+          </elastic_moduli_model>
+
+          <plastic_yield_condition type="arena">
+	    <PEAKI1> 1.0e3 </PEAKI1>
+	    <FSLOPE> 0.453  </FSLOPE>
+	    <STREN>  1.0e7  </STREN>
+	    <YSLOPE> 0.31   </YSLOPE>
+	    <BETA>   1.0    </BETA>
+	    <CR>     0.5    </CR>
+	    <T1>     0.0    </T1>
+	    <T2>     0.0    </T2> 
+          </plastic_yield_condition>
+
+          <consistency_bisection_tolerance>0.0001</consistency_bisection_tolerance>
+          <yield_surface_radius_scaling_factor> 1000.0 </yield_surface_radius_scaling_factor>
+          <use_disaggregation_algorithm> false </use_disaggregation_algorithm>
+	  <subcycling_characteristic_number>256</subcycling_characteristic_number>
+
+        </constitutive_model>
+
+        <geom_object>
+          <box label = "Plate1">
+            <min>[0.0,0.0,0.0]</min>
+            <max>[1.0,1.0,1.0]</max>
+        </box>
+        <res>[1,1,1]</res>
+        <velocity>[0.0,0.0,0.0]</velocity>
+        <temperature>294</temperature>
+        <color>0</color>
+        </geom_object>
+      </material>
+      <contact>
+        <type>null</type>
+        <materials>[0]</materials>
+        <mu>0.1</mu>
+      </contact>
+    </MPM>
+  </MaterialProperties>
+
+  <Grid>
+      <BoundaryConditions>                      
+      </BoundaryConditions>
+      <Level>
+        <Box label = "1">
+            <lower>[-2.0, -2.0, -2.0]</lower>
+            <upper>[3.0, 3.0, 3.0]</upper>
+            <resolution>[5,5,5]</resolution>
+            <extraCells>[0,0,0]</extraCells>
+            <patches>[1,1,1]</patches>
+        </Box>
+      </Level>
+  </Grid>
+
+</Uintah_specification>

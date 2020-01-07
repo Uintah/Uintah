@@ -1,0 +1,1101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>698</width>
+    <height>837</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>681</width>
+      <height>781</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Simulation Info</string>
+     </attribute>
+     <widget class="QGroupBox" name="TimeInfoGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>661</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>TIme Info</string>
+      </property>
+      <widget class="QLineEdit" name="SimTimeMax">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>60</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="SimTimeMaxLabel">
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>60</y>
+         <width>100</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Max Sim Time</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="TimeStepLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>111</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Time Step</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="TimeStep">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>30</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="SimTime">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>30</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="SimTimeLabel">
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>30</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Sim Time</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="TimeStepMaxLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>111</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Max Time Steps</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="TimeStepsMax">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>60</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="SimTimeEndAtMax">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>60</y>
+         <width>211</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>End at max sim time exactly</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="SimTimeClampToOutput">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>30</y>
+         <width>211</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Clamp sim time to output times</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="StopATimeStepLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>170</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at time step</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="StopAtTimeStep">
+       <property name="geometry">
+        <rect>
+         <x>180</x>
+         <y>100</y>
+         <width>81</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="StopAtLastTimeStep">
+       <property name="geometry">
+        <rect>
+         <x>330</x>
+         <y>100</y>
+         <width>250</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at the last time step</string>
+       </property>
+      </widget>
+      <widget class="Line" name="line">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>581</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="GridInfoGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>590</y>
+        <width>661</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Grid Information</string>
+      </property>
+      <widget class="QTableWidget" name="GridInfoTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>641</width>
+         <height>110</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Level</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Refinement Ratio</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Patches</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Cells</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Mean</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Volume</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="AnalysisVariableGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>370</y>
+        <width>391</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Analysis Variables</string>
+      </property>
+      <widget class="QTableWidget" name="AnalysisVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>371</width>
+         <height>181</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Component</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Material</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Level</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="UPSVariableGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>130</y>
+        <width>391</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>UPS Variables</string>
+      </property>
+      <widget class="QTableWidget" name="UPSVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>30</y>
+         <width>371</width>
+         <height>201</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Component</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Value</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="WallTimesGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>370</y>
+        <width>261</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Wall Times</string>
+      </property>
+      <widget class="QTableWidget" name="WallTimesVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>241</width>
+         <height>181</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Seconds</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="DeltaTGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>261</width>
+        <height>241</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Delta T</string>
+      </property>
+      <widget class="QTableWidget" name="DeltaTVariableTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>241</width>
+         <height>201</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Seconds</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Runtime Info</string>
+     </attribute>
+     <widget class="QGroupBox" name="RuntimeStatsGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>661</width>
+        <height>301</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Runtime Performance Stats</string>
+      </property>
+      <widget class="QTableWidget" name="RuntimeStatsTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>641</width>
+         <height>261</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Units</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Maxium</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>%</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="MPIStatsGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>300</y>
+        <width>661</width>
+        <height>281</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>MPI Performance Stats</string>
+      </property>
+      <widget class="QTableWidget" name="MPIStatsTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>641</width>
+         <height>241</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Units</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Maxium</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>%</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="ApplicationStatsGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>580</y>
+        <width>661</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Application Performance Stats</string>
+      </property>
+      <widget class="QTableWidget" name="ApplicationStatsTable">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>641</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <column>
+        <property name="text">
+         <string>Variable</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Units</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Minimum</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Average</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Std. Dev.</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Maxium</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Misc</string>
+     </attribute>
+     <widget class="QGroupBox" name="ImageGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>661</width>
+        <height>70</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Generate Images</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <widget class="QLabel" name="ImageFilenameLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>55</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Filename</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageHeightLabel">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>30</y>
+         <width>55</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Height</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageWidthLabel">
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>30</y>
+         <width>55</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Width</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageFormatLabel">
+       <property name="geometry">
+        <rect>
+         <x>490</x>
+         <y>30</y>
+         <width>55</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Format</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="ImageFormat">
+       <property name="geometry">
+        <rect>
+         <x>540</x>
+         <y>30</y>
+         <width>105</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>BMP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>JPEG</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string notr="true">PNG</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>POVRAY</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PPM</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RGB</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>TIFF</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLineEdit" name="ImageWidth">
+       <property name="geometry">
+        <rect>
+         <x>420</x>
+         <y>30</y>
+         <width>60</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="ImageHeight">
+       <property name="geometry">
+        <rect>
+         <x>300</x>
+         <y>30</y>
+         <width>60</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="ImageFilename">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>30</y>
+         <width>171</width>
+         <height>20</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="InteractionGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>661</width>
+        <height>671</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Simulation Intereaction</string>
+      </property>
+      <widget class="QGroupBox" name="StateVariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>311</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>State Variables</string>
+       </property>
+       <widget class="QTableWidget" name="StateVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>291</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Component</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>State Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="DebugStreamGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>480</y>
+         <width>641</width>
+         <height>181</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Debug Streams</string>
+       </property>
+       <widget class="QTableWidget" name="DebugStreamTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>621</width>
+          <height>141</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Active</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Debug Stream</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Component</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Stream</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="OutputIntervalGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>20</y>
+         <width>311</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Output Intervals</string>
+       </property>
+       <widget class="QTableWidget" name="OutputIntervalVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>291</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="DoutGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>300</y>
+         <width>641</width>
+         <height>181</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Douts</string>
+       </property>
+       <widget class="QTableWidget" name="DoutTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>621</width>
+          <height>141</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Active</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Dout</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Component</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Stream</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="LoadExtraGeometryGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>240</y>
+         <width>311</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Database</string>
+       </property>
+       <widget class="QComboBox" name="LoadExtraGeometry">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>20</y>
+          <width>105</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>None</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Cells</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Patches</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="LoadExtraGeometryLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>131</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Load extra geometry</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="ReductionVariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>311</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Reduction variables</string>
+       </property>
+       <widget class="QTableWidget" name="ReductionVariableTable">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>291</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <column>
+         <property name="text">
+          <string>Variable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Count</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Overridden</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="VariableGroupBox">
+       <property name="geometry">
+        <rect>
+         <x>340</x>
+         <y>170</y>
+         <width>311</width>
+         <height>71</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Variables</string>
+       </property>
+       <widget class="QLabel" name="LoadVariablesLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>131</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Load variables</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="LoadVariables">
+        <property name="geometry">
+         <rect>
+          <x>160</x>
+          <y>30</y>
+          <width>105</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">Output</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Checkpoint</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>698</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>TimeStep</tabstop>
+  <tabstop>TimeStepsMax</tabstop>
+  <tabstop>SimTime</tabstop>
+  <tabstop>SimTimeMax</tabstop>
+  <tabstop>SimTimeEndAtMax</tabstop>
+  <tabstop>StopAtTimeStep</tabstop>
+  <tabstop>StopAtLastTimeStep</tabstop>
+  <tabstop>DeltaTVariableTable</tabstop>
+  <tabstop>WallTimesVariableTable</tabstop>
+  <tabstop>UPSVariableTable</tabstop>
+  <tabstop>AnalysisVariableTable</tabstop>
+  <tabstop>GridInfoTable</tabstop>
+  <tabstop>RuntimeStatsTable</tabstop>
+  <tabstop>MPIStatsTable</tabstop>
+  <tabstop>ApplicationStatsTable</tabstop>
+  <tabstop>ImageGroupBox</tabstop>
+  <tabstop>ImageFilename</tabstop>
+  <tabstop>ImageHeight</tabstop>
+  <tabstop>ImageWidth</tabstop>
+  <tabstop>ImageFormat</tabstop>
+  <tabstop>StateVariableTable</tabstop>
+  <tabstop>LoadExtraGeometry</tabstop>
+  <tabstop>OutputIntervalVariableTable</tabstop>
+  <tabstop>DoutTable</tabstop>
+  <tabstop>DebugStreamTable</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

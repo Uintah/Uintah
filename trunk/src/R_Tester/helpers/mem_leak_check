@@ -1,0 +1,148 @@
+#!/bin/bash
+
+TEST=$1
+MAKEPLOTS=$2
+MALLOC_STATS=$3
+COMPARE_ROOT=$4
+TMPDIR=$5
+HELPERPATH=$6
+
+GS="$COMPARE_ROOT/$TEST/"
+COMPARISON_MALLOC_STATS="$GS/$MALLOC_STATS"
+HERE=`pwd`
+
+#__________________________________
+# define the stat command
+if [ $OS = "Linux" ]; then
+  STAT_CMD="stat --format %s"
+fi
+if [ $OS = "Darwin" ]; then 
+  STAT_CMD="stat -f %z"
+fi
+
+#______________________________________________________________________
+# This function merges the malloc_stats files.  There is a
+# separate file for each process id.
+function merge_malloc_stats_files()
+{  
+  here=`pwd`
+  malloc_dir=$1
+  cd $malloc_dir
+  echo "  Merging malloc_stats_files: ($malloc_dir)"
+  
+  # if malloc_stats exists then return
+  if [ -f $MALLOC_STATS ]; then
+    bytes=`$STAT_CMD $MALLOC_STATS 2>/dev/null`
+
+    if [ $bytes != "0" ]; then
+      echo -e "    $MALLOC_STATS exists nothing to merge.\n"
+      return 0
+    fi
+  fi
+  
+  #__________________________________
+  cat $MALLOC_STATS.* > $MALLOC_STATS 
+  
+  bytes=`$STAT_CMD $MALLOC_STATS 2>/dev/null`
+  
+  if [ $bytes = "0" ]; then
+      echo "  ERROR, combining the malloc_stats files in the directory: $malloc_dir."
+      echo "  Not performing memory leak or memory highwater tests"
+      echo "  This occurs with the localRT on restarts, or if the gold standards haven't been created"
+      exit 5
+   fi
+   echo -e "    Successfully merged malloc_stats files.*.\n"
+  return 0
+}
+#______________________________________________________________________
+
+
+#__________________________________
+# merge the malloc_stat files in both the local and gold Standards directories
+# After generating the localRT
+ 
+merge_malloc_stats_files $HERE
+
+if [ ! -f $MALLOC_STATS ] && [ ! -f $MALLOC_STATS.0 ]; then
+  echo "The malloc_stats file(s) is missing.  Can't perform memory leak test."
+  echo "Verify that you've configured with"
+  echo "  --enable-sci-malloc"
+  exit 5
+fi
+
+
+merge_malloc_stats_files $GS
+
+if [ ! -f $COMPARISON_MALLOC_STATS ]; then
+  echo "The gold standard malloc_stats file(s) are missing for this test.  Now exiting."
+  exit 5
+fi
+
+cd $HERE
+
+#__________________________________
+echo -e "  Checking $TEST for scinew memory leaks"
+grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
+retval=$?
+
+if [ $retval = "0" ]; then
+  echo "    ***Memory leaks found***"
+  echo "    Here are the object allocated with scinew but not deleted."
+  echo
+  cat $TMPDIR/scinew_malloc_stats
+  exit 1
+fi
+
+echo -e "    Memory leak test passed -- no scinew memory leaks found\n"
+
+#__________________________________
+#  run check the highwater memory usage
+echo -e "  Performing highwater memory usage check"
+
+meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
+percent=`echo $meminfo | cut -d " " -f 1`
+abs=`echo $meminfo | cut -d " " -f 2`
+testHighwater=`echo $meminfo | cut -d " " -f 3`
+
+returnCode=0
+#__________________________________
+if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
+  echo "***Highwater memory usage test failed"
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  returnCode=2
+
+elif [ $percent -gt "0" ]; then
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+elif [ $percent -lt "0" ]; then
+  let percent_improvement=-$percent;
+  echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+else
+  echo "" > $TMPDIR/highwater_shortmessage.txt
+  echo "    Highwater memory usage check passed!"
+fi
+
+
+#__________________________________
+if [ $MAKEPLOTS -eq "1" ]; then
+  echo -e "    Saving highwater memory usage\n"
+
+  memHistory="$COMPARE_ROOT/$TEST/memHistory"
+
+  now=`date +%m-%d-%Y`
+  echo "$now  $testHighwater" >> $memHistory
+
+  #eliminate entries from the restart test or if
+  #it runs more that once a day
+  uniq -w 10 $memHistory > $memHistory.clean
+  cp $memHistory.clean $memHistory
+  
+  /bin/rm $memHistory.clean
+
+  #make a local copy
+  cp $memHistory ./memHistory
+  
+  echo -e "  Plotting memory usage\n"
+  gnuplot $HELPERPATH/plotMemUsage.gp
+  
+fi
+exit $returnCode

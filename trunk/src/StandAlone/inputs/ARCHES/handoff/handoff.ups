@@ -1,0 +1,372 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>IFRF Single Burner Test</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>10.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-08</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+    <max_Timesteps>5</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>handoff.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="CCVelocity"/>
+    <save label="cellType"/>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="enthalpy"/>
+    <save label="vorticity"/>
+    <save label="density"/>
+    <save label="viscosityCTS"/>
+    <!-- Table Variables -->
+    <!-- iv's -->
+    <save label="eta"/>
+    <save label="fp"/>
+    <save label="heat_loss"/>
+    <!-- dv's -->
+    <save label="temperature" table_lookup="true"/>
+    <save label="density"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="O2" table_lookup="true"/>
+    <save label="H2O" table_lookup="true"/>
+    <checkpoint cycle="2" interval="1e-5"/>
+    <compression>gzip</compression>
+    <outputInitTimestep/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="fosper1">
+        <lower>[-0.25,0,-0.25]</lower>
+        <upper>[0.25,0.05,0.25]</upper>
+        <patches>[1,1,1]</patches>
+        <resolution>[50,20,50]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-">
+        <BCType var="WallBC" label="x-wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType var="WallBC" label="x+wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType var="WallBC" label="y-wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face circle="y-" origin="0 0 0" radius="0.23625" name="burner">
+        <BCType label="burner_inlet" var="VelocityFileInput">
+          <value>inputs/ARCHES/handoff/input/ifrf_sources/velocity_0.dat</value>
+          <relative_xyz>[0,0,0]</relative_xyz>
+          <default type="Dirichlet" velvalue="[1.0, 0, 0]"/>
+        </BCType>
+        <BCType label="enthalpy" var="FromFile">
+          <value>inputs/ARCHES/handoff/input/ifrf_sources/enthalpy_0.dat</value>
+          <relative_xyz>[0,0,0]</relative_xyz>
+          <default type="Neumann" value="0.0"/>
+        </BCType>
+        <BCType label="fp" var="FromFile">
+          <value>inputs/ARCHES/handoff/input/ifrf_sources/fp_0.dat</value>
+          <relative_xyz>[0,0,0]</relative_xyz>
+          <default type="Neumann" value="0.0"/>
+        </BCType>
+        <BCType label="eta" var="FromFile">
+          <value>inputs/ARCHES/handoff/input/ifrf_sources/eta_0.dat</value>
+          <relative_xyz>[0,0,0]</relative_xyz>
+          <default type="Neumann" value="0.0"/>
+        </BCType>
+        <BCType label="heat_loss" var="Dirichlet">
+          <value>0.000000</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value>400</value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType var="WallBC" label="y+wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face circle="y+" origin="0 0.05 0" radius=".304" name="y+ outlet">
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="fp" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="eta" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType var="WallBC" label="z-wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType var="WallBC" label="z+wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="eta">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="fp">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="enthalpy">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="radiation_temperature" var="Dirichlet">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <Turbulence model="compdynamicprocedure"/>
+      <TransportEqns>
+        <Eqn label="eta" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="fp" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
+        <Sources>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>5</calc_frequency>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <abskg label="gas_abskg"/>
+            <DORadiationModel type="linearSolve">
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-10</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>500</max_iter>
+              </LinearSolver>
+            </DORadiationModel>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <PropertyModels>
+        <model type="radiation_properties" label="gas_abskg">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <!--noisy_hl_warning/-->
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+        <model type="empirical_soot" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <opl>3</opl>
+          <carbon_content_fuel>0.75</carbon_content_fuel>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <E_st>0.08</E_st>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>eta</mixture_fraction_label>
+        </model>
+      </PropertyModels>
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state fp="1.0" hl="0.0" eta="0.0"/>
+          <coal eta_label="eta" hl_label="heat_loss" fp_label="fp"/>
+          <inputfile>inputs/ARCHES/handoff/input/ifrf_equil.mix.gz</inputfile>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+        <wall_csmag>0.0</wall_csmag>
+        <intrusions>
+          <intrusion label="quarl">
+            <geom_object>
+              <difference>
+                <box>
+                  <min>[-1,0,-1]</min>
+                  <max>[1,0.05,1]</max>
+                </box>
+                <cone>
+                  <top>[0,0,0]</top>
+                  <top_radius>.23623</top_radius>
+                  <bottom>[0,0.05,0]</bottom>
+                  <bottom_radius>.2665</bottom_radius>
+                </cone>
+              </difference>
+            </geom_object>
+            <constant_temperature T="1462.00"/>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    500     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

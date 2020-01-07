@@ -1,0 +1,172 @@
+<Uintah_specification>
+  <Meta>
+    <title>Particles Free Fall</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>
+    <ParticleTransportEquations>
+      <ParticlesPerCell>100</ParticlesPerCell>
+      <ParticleDensity name="p.rho"/>
+      <ParticleMass name="p.m" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleMass>
+      <ParticleSize name="p.size" state="STATE_DYNAMIC">
+        <SourceTerm name="nothing"/>
+      </ParticleSize>
+      <ParticlePosition x="p.xw" y="p.yw" z="p.zw">
+        <Velocity>
+          <XVel name="p.u" state="STATE_DYNAMIC"/>
+          <YVel name="p.v" state="STATE_DYNAMIC"/>
+          <ZVel name="p.w" state="STATE_DYNAMIC"/>
+        </Velocity>
+      </ParticlePosition>
+      <ParticleMomentum x="p.u" y="p.v" z="p.w">
+        <Gravity direction="Z"/>
+        <GasProperties>
+          <GasViscosity name="viscosity"/>
+          <GasDensity name="density"/>
+          <GasVelocity>
+            <XVel name="u"/>
+            <YVel name="v"/>
+            <ZVel name="w"/>
+          </GasVelocity>
+        </GasProperties>
+      </ParticleMomentum>
+    </ParticleTransportEquations>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.size"/>
+      <RandomField low="0.001" high="0.01" seed="11"/>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.rho"/>
+      <Constant>1000</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.yw"/>
+      <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
+        <Random seed="1"/>
+      </ParticlePositionIC>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.xw"/>
+      <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
+        <Random seed="3"/>
+      </ParticlePositionIC>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.zw"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.v"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="PARTICLE">
+      <TaskList>initialization</TaskList>
+      <NameTag name="p.w"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for momentum -->
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="u"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="v"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="w"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.01</Constant>
+    </BasicExpression>
+  </Wasatch>
+  <Time>
+    <maxTime>60</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.01</delt_max>
+    <max_Timesteps> 100</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>particle-test-free-fall-zdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.0001"/>
+    <save label="p.x"/>
+    <save label="p.xw_rhs"/>
+    <save label="p.yw_rhs"/>
+    <save label="p.zw_rhs"/>
+    <save label="p.re"/>
+    <save label="p.cd"/>
+    <save label="p.tau"/>
+    <save label="p.drag_x"/>
+    <save label="p.drag_y"/>
+    <save label="p.drag_z"/>
+    <save label="p.particleID"/>
+    <save label="p.body_z"/>
+    <save label="p.u_rhs"/>
+    <save label="p.v_rhs"/>
+    <save label="p.w_rhs"/>
+    <save label="p.m"/>
+    <save label="p.u"/>
+    <save label="p.v"/>
+    <save label="p.w"/>
+    <save label="p.size"/>
+    <save label="p.xw"/>
+    <save label="p.yw"/>
+    <save label="p.zw"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions/>
+    <Level>
+      <Box label="1">
+        <lower>[ 0, 0, -3]</lower>
+        <upper>[ 3, 3,  1]</upper>
+        <resolution>[2,2,2]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

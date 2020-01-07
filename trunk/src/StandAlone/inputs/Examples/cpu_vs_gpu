@@ -1,0 +1,99 @@
+#!/bin/csh -f
+#______________________________________________________________________
+# cpu_vs_gpu
+#  This scripts runs an input file using both GPU and CPU code and
+#  uses compare_uda to compare the results
+#
+#  This script assumes that 
+#______________________________________________________________________
+
+getopt -Q -q --long np,nthreads,test -- $argv:q >& /dev/null
+
+if($#argv != 6) then
+  echo "Usage: $0 "
+  echo ""
+  echo " Manditory inputs:"
+  echo "   --np           < number of processors >"
+  echo "   --nthreads     < number of threads    >"
+  echo "   --test        < (1) = Benchmark 1, 1L, "
+  echo "                   (2) = Benchmark 1, 2L, "
+  echo "                   (3) = Benchmark 1, DataOnion"
+  exit 1
+endif
+#______________________________________________________________________
+
+while ($#argv)
+   echo $1 $2
+
+   switch ($1:q)
+
+     case --np:
+        @ np = $2
+        shift; shift;
+        breaksw
+     case --nthreads:
+        @ threads = "$2"
+        shift; shift
+        breaksw
+     case --test:
+        @ test = "$2"
+        shift; shift
+        breaksw
+     case " ":
+        shift
+        break
+     default:
+        echo "Usage: $0 "
+        echo ""
+        echo " Manditory inputs:"
+        echo "   --np           < number of processors >"
+        echo "   --nthreads     < number of threads    >"
+        echo "   --test        < (1) = 1L, "
+        echo "                   (2) = 2L, "
+        echo "                   (3) = dataOnion"
+        echo "                   (4) = all tests"
+        exit 1
+  endsw
+end
+
+#______________________________________________________________________
+
+set upsArray = ( "RMCRT_bm1_1L.ups" "RMCRT_ML.ups" "RMCRT_bm1_DO.ups")
+set udaArray = ( "rmcrt_1L.uda" "RMCRT_ML.uda" "RMCRT_bm1_DO.uda" )
+set descArray = ( "1L" "ML" "DO" )
+
+# Titan
+#set MPIRUN = "aprun -n $np -N 1 -d 16"
+
+set MPIRUN = "mpirun -n $np" 
+
+
+if ( $test == 4 ) then
+  @ x   = 1
+  @ max = 4
+else 
+  @ x   = $test
+  @ max = $test + 1
+endif
+
+while ( $x < $max)
+
+  set ups  = $upsArray[$x]
+  set uda  = $udaArray[$x]
+  set desc = $descArray[$x]
+  echo " " 
+  echo "working on test:$x UPS: $ups UDA: $uda Description:$desc"
+  
+  rm -rf $uda.00* out.$desc.gpu out.$desc.cpu >& /dev/null
+  echo "Running GPU"
+  $MPIRUN sus -do_not_validate -nthreads $threads -gpu  inputs/Examples/$ups >& out.$desc.gpu
+  echo "Running CPU"
+  $MPIRUN sus -do_not_validate -nthreads $threads       inputs/Examples/$ups >& out.$desc.cpu
+
+  echo "compare_uda -abs_tolerance 1e-14 -rel_tolerance 1e-14 -as_warnings $uda.000 $uda.001 >& out.$desc.compare"
+  compare_uda -abs_tolerance 1e-14 -rel_tolerance 1e-14 -as_warnings $uda.000 $uda.001 >& out.$desc.compare
+  more out.$desc.compare
+  @ x = $x + 1
+end
+
+exit

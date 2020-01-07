@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061T6 Aluminum Alloy -->
+<Uintah_Include>
+  <!-- This file contains the stenosis barnicles on the mitral valve -->
+     <union label="stenosis">
+       <cylinder label = "top1">
+         <bottom>    [0.0175,0.006,0.0]   </bottom>
+         <top>       [0.0175,0.006,0.1]   </top>
+         <radius>        0.001              </radius>
+       </cylinder>
+
+       <cylinder label = "top2">
+         <bottom>    [0.025,0.0072,0.0]    </bottom>
+         <top>       [0.025,0.0072,0.1]    </top>
+         <radius>        0.002              </radius>
+       </cylinder>
+
+        <cylinder label = "top3">
+         <bottom>    [0.034,0.01,0.0]    </bottom>
+         <top>       [0.034,0.01,0.1]    </top>
+         <radius>        0.0015              </radius>
+        </cylinder>
+
+        <cylinder label = "top4">
+          <bottom>    [0.0476,0.162,0.0]   </bottom>
+          <top>       [0.0476,0.162,0.1]   </top>
+          <radius>        0.0013             </radius>
+        </cylinder>
+
+        <cylinder label = "top5">
+          <bottom>    [0.0569, 0.022,0.0]  </bottom>
+          <top>       [0.0569, 0.022,0.1]  </top>
+          <radius>        0.0021              </radius>
+        </cylinder>
+
+        <cylinder label = "top6">
+          <bottom>    [0.0671, 0.031,0.0]  </bottom>
+          <top>       [0.0671, 0.031,0.1]  </top>
+          <radius>        0.0015             </radius>
+        </cylinder>
+
+        <cylinder label = "top7">
+          <bottom>    [0.0752, 0.0385,0.0]  </bottom>
+          <top>       [0.0752, 0.0385,0.1]  </top>
+          <radius>        0.002              </radius>
+        </cylinder>
+        <!--__________________________________-->
+
+       <cylinder label = "bot1">
+         <bottom>    [0.0175, -0.006,0.0]   </bottom>
+         <top>       [0.0175, -0.006,0.1]   </top>
+         <radius>        0.001                </radius>
+       </cylinder>
+
+       <cylinder label = "bot2">
+         <bottom>    [0.025, -0.0072,0.0]    </bottom>
+         <top>       [0.025, -0.0072,0.1]    </top>
+         <radius>        0.0017                </radius>
+       </cylinder>
+
+        <cylinder label = "bot3">
+         <bottom>    [0.034, -0.01,0.0]    </bottom>
+         <top>       [0.034, -0.01,0.1]    </top>
+         <radius>        0.0013                </radius>
+        </cylinder>
+
+        <cylinder label = "bot4">
+          <bottom>    [0.0476, -0.0162,0.0]  </bottom>
+          <top>       [0.0476, -0.0162,0.1]  </top>
+          <radius>        0.0021               </radius>
+        </cylinder>
+
+        <cylinder label = "bot5">
+          <bottom>    [0.0569, -0.022,0.0]  </bottom>
+          <top>       [0.0569, -0.022,0.1]  </top>
+          <radius>        0.0015               </radius>
+        </cylinder>
+
+        <cylinder label = "bot6">
+          <bottom>    [0.0671, -0.031,0.0]  </bottom>
+          <top>       [0.0671, -0.031,0.1]  </top>
+          <radius>        0.002              </radius>
+        </cylinder>
+
+        <cylinder label = "bot7">
+          <bottom>    [0.0752, -0.0385,0.0]  </bottom>
+          <top>       [0.0752, -0.0385,0.1]  </top>
+          <radius>        0.002               </radius>
+        </cylinder> 
+     </union>
+</Uintah_Include>

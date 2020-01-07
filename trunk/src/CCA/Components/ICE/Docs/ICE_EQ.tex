@@ -1,0 +1,313 @@
+\documentclass[fleqn]{article}
+\usepackage{amsmath}
+\usepackage{setspace}
+\usepackage{algorithmic}    % Debian:texlive-science package
+\usepackage{color}
+\usepackage{vmargin}        % Debian: texlive-latex-extra package
+%\setpapersize{USletter}
+\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
+%...................................................
+\usepackage{pslatex}
+\usepackage[ps2pdf]{}
+%..............................
+% Alias commands
+%..............................    
+\newcommand{\SUM}[1]    {\ensuremath{\sum \limits_{{#1}=1}^N }}
+\newcommand{\bigS}[1]   {\ensuremath{S^{r \leftrightarrow m}_{#1}}  } 
+\newcommand{\B}[1]      {\biggr{#1}}            
+\newcommand{\U}         {{\vec{U}}}                    
+\newcommand{\uo}        {\ensuremath{\vec{U}_o}}      
+\newcommand{\rhoM}      {\ensuremath{\rho^{o}_m}}                 
+\newcommand{\delt}      {\ensuremath{\Delta{t}} }                 
+\newcommand{\delx}      {\ensuremath{\Delta{x}} } 
+\newcommand{\f}         {\ensuremath{f^{\theta}_m} }
+\newcommand{\sv}[1]     {\ensuremath{v^o_{m_{#1}} }} 
+\newcommand{\dpdrho}    {\ensuremath{ \frac{dP}{d\rhoM}} }
+\newcommand{\compute}   {\ensuremath{\quad{\text{compute}\rightarrow}\quad}}
+ %.....................................................
+% This command is necessary so that the subscripts, some of which are
+% in capital letters come out
+%\DeclareMathSizes{10}{10}{6}{5}
+%______________________________________________________________________
+\begin{document}
+\setlength{\abovedisplayskip}{0.1in}
+\setlength{\mathindent}{0.0in}
+\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}07/11/05}
+
+\begin{enumerate}
+\item \underline{Compute Thermodynamic/Transport Properties
+$c_v, k, \mu, \gamma$}
+
+%__________________________________
+\item \underline{Compute the equilibration pressure}
+$P_{eq}, c_m, \rhoM, \theta_m, \f, \kappa_m$, such that $\SUM{m}\theta_m = 1$, see attached for details.
+
+%__________________________________
+\item \underline{Compute the mass exchange between materials}
+$  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
+
+%__________________________________
+\item \underline{Compute the face-centered velocities} 
+\[
+    \vec{U_m}^{*^{f}} 
+    = \B{<} \frac{ \rho_m \U_m }{\rho_m} \B{>}^{n^{f}}
+%
+    - \frac{ \delt }{< \rhoM >^f} \nabla^{f} P_{eq}
+    + \SUM{n} \B{<} \frac{\delt \theta_n K_{n,m}}{\rho_m} \biggl{>}^f(\vec{U_n}^{*^{f}} - \vec{U_m}^{*^{f}})  
+    + \delt\vec{g}
+\]
+\[    
+   =\frac{(\rho \U)_{m_R} + (\rho \U)_{m_L}}{\rho_{m_R} + \rho_{m_L}}
+%
+   -\delt \frac{2.0 (\sv{L} \sv{R})}  {\sv{L} + \sv{R}}  \B{(} \frac{P_{eq_R} - P_{eq_L}}{\Delta x}\B{)}
+   + \text{Exchange Contribution}
+   + \delt\vec{g}
+\]
+The exchange contribution involves a pointwise implicit solve, see attached for details.
+
+%__________________________________
+\item \underline{Update the volume fraction}\\
+$V_{total} = \SUM{m}(\rho_m V v^o_m)$\\
+$V_m^{new} = \theta_m V_{total}  v^o_m + \bigS{(m v^o)_m}$\\
+$\theta_m = \frac{V_m^{new}}{V_{total}}, \SUM{m} \theta_m \kappa_m $
+%__________________________________
+\item \underline{Compute $\Delta P$} 
+\[
+     \Delta P = \Delta t 
+                        \frac{   \SUM{r}  \bigS{(m v^o)_r}
+                      - \overbrace { \SUM{m} \nabla \cdot \theta_m \vec{U_m}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U_m}^{*^{f}}) } }
+                       {\SUM{m} (\theta_m) \kappa_m}
+\]
+where $P^{n+1} = P_{eq} + \Delta{P}, \bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$
+and $\kappa_m = \frac{v^o_m}{c^2_m}$ .
+%__________________________________
+\item \underline{Compute the face centered pressure}
+\[
+    P^{*^{f}} = \frac{\frac{P}{\SUM{m} \rho_m} + \frac{P_{adj}}{\SUM{m} \rho_{m, adj}}}
+                     {\frac{1}{\SUM{m} \rho_m} + \frac{1}{\SUM{m} \rho_{m, adj}}}
+%
+              =\frac{ {P \SUM{m} \rho_{m,adj}} + {P_{adj} \SUM{m} \rho_{m} }  }
+                 { {\SUM{m} \rho_m} + {\SUM{m} \rho_{m, adj}  }  }
+\]
+\newpage
+%__________________________________
+\item \underline{Accumulate sources}\\  
+ $\Delta(m\vec{U})_m = 
+    - \delt V \theta_m \nabla{ P^{*^f}} 
+    + \delt V \SUM{l} \theta_m \theta_l K_{ml}(\U_l^{{n+1}^L} - \U_m^{{n+1}^L} )
+    + \delt \nabla{ \cdot (\theta^{*^f}_m \tau^{*^f}_m})
+    + m_m \vec{g}\delt$
+    
+ $\Delta(me)_m =  
+    V \theta_m \kappa_m P \Delta P_{\text{Dilatate}}
+    - \delt \nabla (\theta^{*^f} q_{m}^{*^f})
+    + \delt V \SUM{l}  \theta_m \theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$ \\
+where $\theta^{*^f}q^{*^f} = - <\theta k> \nabla T$ and 
+${<}\theta k{>} = (2 (\theta k)_{m_R} (\theta k)_{m_L} )/((\theta k)_{m_R}  + (\theta k)_{m_L} )$
+%__________________________________
+
+\item \underline{Compute Lagrangian quantities}\\
+    $m^L_m     = {\rho_m}V + \bigS{m_m} $ \\
+    $(m\U)^L_m = (m\U)_m + \Delta(m\U)_m + \bigS{(m\U)_m}$ \\
+    $(m e)^L_m = (m e)_m + \Delta(m e)_m + \bigS{(me)_m}$\\
+    \text{Note this includes the pointwise implicit solve for the momentum and energy exchange}
+
+\text{\bf{Evolution of specific volume}}\\
+    $(mv^o)^L_m = (mv^o)_m + \delt \f V \nabla \cdot  \vec{U_m}^{*^{f}}
+                + \delt V [\theta_m \alpha_m \dot{T_m} 
+                - \f \SUM{s} {\theta_s \alpha_s \dot{T_s}}]  $ \quad where $\alpha = 0 (mpm) = 1/T (ice)$  \\
+    Note $\delt \f V \nabla \cdot  \vec{U_m}^{*^{f}} = \theta_m \kappa_m V \Delta{p}$\\
+   $\dot T_m =\frac{ (T_{\text{After Exchange Process}} - T_{\text{Top of the time step}})}{\delt} $
+%__________________________________
+\item \underline{Advect and Advance in time}\\
+$
+    m^{n+1}_m     = m^L_m 
+                  - \delt\text{Advection}(m^L_m, \U_ m^{*^{f}})$\\
+$
+    (m \U)^{n+1}_m = (m \U)^L_m 
+                   - \delt\text{Advection}((m \U)^L_m, \vec{U_m}^{*^{f}})$\\
+$
+    (me)^{n+1}_m   = (me)^L_m       
+                   - \delt\text{Advection}((\rho  e)^L_m, \vec{U_m}^{*^{f}})$ \\
+$
+    (mv^o)^{n+1}_m   = (mv^o)^L_m       
+                   - \delt\text{Advection}((\rho  v^o)^L_m, \vec{U_m}^{*^{f}})
+$
+
+\end{enumerate}
+%______________________________________________________________________
+\newpage
+\underline{Calculation of the equilibration pressure}
+
+\begin{algorithmic}
+\STATE Initial Guess \\
+  $eos(T_m, P)  \compute ,\rhoM$ \\
+  $\theta_m = \frac{\rho_m}{\rhoM}$  \\
+  $eos(T_m, \rhoM)  \compute P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ 
+%
+\WHILE{ $|1 - \sum{\theta_m}| <$ convergence criteria}
+    
+    \FOR{$m=1$ to All Matls}
+      \STATE  $eos(T_m,\rhoM{m})  \compute P_{eos_{m}}, \dpdrho$
+      \STATE $Q_m += P- P_{{eos}_m}$
+      \STATE $y_m  += \dpdrho \frac{\rho_m}{\theta_m^2}$
+    \ENDFOR
+
+    \STATE $\Delta p = \frac{  \sum{\theta_m} - \theta_{closedpacked} - \sum{\frac{Q_m}{y_m}}  }{\sum{\frac{1}{y_m}} } $
+    \STATE $P_{eq}=P_{eq}+ \Delta p $
+%
+    \FOR{$m=1$ to All Matls}
+      \STATE $ eos(P, T_m) \compute  \rhoM$ 
+      \STATE $ eos(\rhoM, T_m) \compute   P_{{eos}_m}, \dpdrho, \frac{dP}{de}$ 
+      \STATE $c_m = \sqrt{ \dpdrho + \frac{dP}{de}  \frac{P_{{eos}_m }}{\rho^{o^2}_m} }$
+      \STATE $ \theta_m =  \frac{\rho_m}{\rhoM}$
+    \ENDFOR
+
+\ENDWHILE 
+\STATE BulletProofing$(P, \rhoM, \theta_m) $
+
+\STATE compute $ \kappa_m = \frac{v^o_m}{c^2_m}, \f = \frac{\theta_m \kappa_m}{\SUM{s}{\theta_s \kappa_s}},  \quad\sv{} = \frac {1}{\rhoM}$
+\end{algorithmic}
+
+%______________________________________________________________________
+\newpage
+\underline{Solving for the Lagrangian momentum with an implicit solve}
+
+\begin{enumerate}
+%__________________________________
+\item Rearrange the starting momentum Equation in the x-direction \\
+$  (mu)^{n+1^{L}}_m 
+    = (m u)_m^{n}
+    + \text{sources /Sinks}
+    + \delt V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})
+$\\
+Divide through by the mass\\
+$   u^{n+1^{L}}_m 
+    = \frac{(m u)_m^{n} }{m^{n+1^{L}}_m}
+    + \frac{\text{sources /Sinks} }{m^{n+1^{L}}_m}
+    + \frac{\delt V \sum_n \theta_m \theta_n K_{m,n} (u_n^{n+1^{L}} - u_m^{n+1^{L}})}{m^{n+1^{L}}_m}
+$\\ 
+Now assume that $m^{n+1^{L}}_m = m^{n}_m$ and using $\theta_m = \frac{\rho_m}{\rhoM}$\\
+$    u^{n+1^{L}}_m 
+    = \underbrace{ u^{n}  }_a
+    - \underbrace{\frac{\text{sources /Sinks} }{m^{n}_m}}_b
+    + \underbrace{\delt\sum_n \frac{\theta_n K_{m,n}}{\rhoM} }_\beta  (u_n^{n+1^{L}} - u_m^{n+1^{L}})
+$
+\[
+    u^{n+1^{L}}_m 
+    = a
+    + b
+    + \beta_{mn}  (u_n^{n+1^{L}} - u_m^{n+1^{L}})
+\]
+
+\item Let \\
+$u^{n+1^{L}}_m = \underbrace{\tilde u^{n^{L}}_m}_{\text{base vel FC}} 
++ \underbrace{\Delta{u^{L}_m}}_{\text{contribution due momentum exchange}}$
+%__________________________________
+\item  For two materials we have\\
+$
+    \tilde u^{n^{L}}_1 + \Delta{u^{L_1}} = a_1 + b_1 + 
+    \beta_{12}\B[(\tilde u^{n^{L}}_2 + \Delta{u^{L_2}}) - (\tilde u^{n^{L}}_1 + \Delta{u^{L_1}}) \B]
+$\\
+$
+    \tilde u^{n^{L}}_2 + \Delta{u^{L_2}} = a_2 + b_2 + 
+    \beta_{21}\B[(\tilde u^{n^{L}}_1 + \Delta{u^{L_1}}) - (\tilde u^{n^{L}}_2 + \Delta{u^{L_2}}) \B]
+$\\
+\\
+Note that $\tilde u^{n^{L}}_2 = a_1 + b_1$,and rearranging\\
+$
+\Delta{u^{L_1}}(1 + \beta_{12}) - \beta_{12}\Delta{u^{L_2}} = \beta_{12}(\tilde u^{n^{L}}_2 - \tilde u^{n^{L}}_1)
+$\\
+$
+-\beta_{21}\Delta{u^{L_1}} - \Delta{u^{L_2}}(1 + \beta_{21}) = \beta_{21}(\tilde u^{n^{L}}_1 - \tilde u^{n^{L}}_2)
+$
+\[ \begin{vmatrix} (1 + \beta_{12})  &  -\beta_{12} \\
+                  -\beta_{21}       &  (1 + \beta_{21})
+    \end{vmatrix}
+    \begin{vmatrix} \Delta{u^{L_1}} \\
+                    \Delta{u^{L_2}}
+    \end{vmatrix}
+    =
+    \begin{vmatrix} \beta_{12}(\tilde u^{n^{L}}_2 - \tilde u^{n^{L}}_1) \\
+                    \beta_{21}(\tilde u^{n^{L}}_1 - \tilde u^{n^{L}}_2)
+    \end{vmatrix}                
+\]
+%__________________________________
+\item Solve for $\Delta{u^{L_1}}$ and add it to $\tilde u^{n^{L}}_m$ to get $u^{n+1^{L}}_m $
+\end{enumerate}
+
+
+%______________________________________________________________________
+\newpage
+\underline{Solving for the Face centered velocities with an implicit solve}
+
+\begin{enumerate}
+%__________________________________
+\item Rearrange the starting momentum Equation in the x-direction \\
+$    (mu)^{n+1^{*^{f}}}_m 
+    = \B<(m u)_m\B>^{n^{f}}
+    -\delt V \theta_m \nabla^{f}P_{eq}
+    + \delt V \sum_n \B<\theta_m \theta_n K_{m,n}\B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \delt m_m \vec{g}
+$\\
+ where $\theta = \frac{\rho_m}{\rhoM}=\nu^o_m$ and $m_m = \rho_m V$ so \\
+$    (mu)^{n+1^{*^{f}}}_m 
+    = \B<(m u)_m\B>^{n^{f}}
+    -\delt \B<\frac{m_m}{\rhoM}\B>^f \nabla^{f}P_{eq}
+    + \delt\sum_n \B<\frac{m_m\theta_n K_{m,n}}{\rhoM} \B>^f (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \delt \B<m_m\B>^f \vec{g}
+$\\ 
+Now assume that $(m)^{n+1^{*^{f}}}_m = \B<m\B>^{n^{*^{f}}}_m$ and divide through.\\
+$    (u)^{n+1^{*^{f}}}_m 
+    = \underbrace{ \B<\frac{(\rho u)_m}{\rho_m}\B>^{n^{f}}  }_a
+    - \underbrace{\delt \B<\frac{1}{\rhoM}\B>^f}_b \nabla^{f}P_{eq}
+    + \underbrace{\delt\sum_n \B<\frac{\theta_n K_{m,n}}{\rhoM} \B>^f}_\beta  (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + \underbrace{\delt \vec{g}}_c
+$
+\[
+    (u)^{n+1^{*^{f}}}_m 
+    = a
+    - b \nabla^{f}P_{eq}
+    + \beta_{mn}  (u_n^{n+1^{*^{f}}} - u_m^{n+1^{*^{f}}})
+    + c
+\]
+%__________________________________
+\item Let \\
+$u^{n+1^{*^{f}}}_m = \underbrace{\tilde u^{n^{*^{f}}}_m}_{\text{base vel FC}} 
++ \underbrace{\Delta{u^{*^{f}}}}_{\text{contribution due momentum exchange}}$
+%__________________________________
+\item  For two materials we have\\
+$
+    \tilde u^{n^{*^{f}}}_1 + \Delta{u^{*^{f}}_1} = a_1 - b_1\nabla^{f}P_{eq} + 
+    \beta_{12}\B[(\tilde u^{n^{*^{f}}}_2 + \Delta{u^{*^{f}}_2}) - (\tilde u^{n^{*^{f}}}_1 + \Delta{u^{*^{f}}_1}) \B]
+    + c
+$\\
+$
+    \tilde u^{n^{*^{f}}}_2 + \Delta{u^{*^{f}}_2} = a_2 - b_2\nabla^{f}P_{eq} + 
+    \beta_{21}\B[(\tilde u^{n^{*^{f}}}_1 + \Delta{u^{*^{f}}_1}) - (\tilde u^{n^{*^{f}}}_2 + \Delta{u^{*^{f}}_2}) \B]
+    + c
+$\\
+\\
+Note that $\tilde u^{n^{*^{f}}}_1 = a_1 - b_1\nabla^{f}P_{eq} + c$,and rearranging\\
+$
+\Delta{u^{*^{f}}_1}(1 + \beta_{12}) - \beta_{12}\Delta{u^{*^{f}}_2} = \beta_{12}(\tilde u^{n^{*^{f}}}_2 - \tilde u^{n^{*^{f}}}_1)
+$\\
+$
+-\beta_{21}\Delta{u^{*^{f}}_1} - \Delta{u^{*^{f}}_2}(1 + \beta_{21}) = \beta_{21}(\tilde u^{n^{*^{f}}}_1 - \tilde u^{n^{*^{f}}}_2)
+$
+\[ \begin{vmatrix} (1 + \beta_{12})  &  -\beta_{12} \\
+                  -\beta_{21}       &  (1 + \beta_{21})
+    \end{vmatrix}
+    \begin{vmatrix} \Delta{u^{*^{f}}_1} \\
+                    \Delta{u^{*^{f}}_2}
+    \end{vmatrix}
+    =
+    \begin{vmatrix}  \beta_{12}(\tilde u^{n^{*^{f}}}_2 - \tilde u^{n^{*^{f}}}_1) \\
+                    \beta_{21}(\tilde u^{n^{*^{f}}}_1 - \tilde u^{n^{*^{f}}}_2)
+    \end{vmatrix}                
+\]
+%__________________________________
+\item Solve for $\Delta{u^{*^{f}}_1}$ and add it to $\tilde u^{n^{*^{f}}}_m$ to get $(u)^{n+1^{*^{f}}}_m $
+\end{enumerate}
+
+\end{document}

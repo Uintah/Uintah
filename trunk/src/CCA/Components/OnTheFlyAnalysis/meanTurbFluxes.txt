@@ -1,0 +1,113 @@
+
+______________________________________________________________________
+
+  Below is the algorithm used to compute the mean turbulent fluxes of the 
+  velocity and scalar fields.  This works for CCVariable< double /Vector >.
+
+
+UPS inputs: 
+
+   <DataAnalysis>
+     <Module name="meanTurbFluxes">
+       
+        <material>    Atmosphere </material>
+        <samplingFrequency> 2000 </samplingFrequency>
+        <timeStart>         0.00 </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <planeOrientation>  XZ   </planeOrientation>
+        <weight label= "mass_adv"/>
+        
+        <Variables>
+          <analyze label="press_CC" matl="0" weighting="nCells"/> 
+          <analyze label="Temp_CC"           weighting="mass"/>
+          <analyze label="scalarF_CC"        weighting="nCells"/>
+          <analyze label="momentum_CC"       weighting="mass"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>
+
+______________________________________________________________________
+
+1)  Compute planar average for each variable
+
+    //Velocity:
+    foreach y ( n_planes )
+      u_bar(y), v_bar(y), w_bar(y)     => std:vector < Uintah:Vector > 
+    end 
+      
+    //Scalars:  
+    foreach Y ( n_planes )  
+      foreach Q ( T, P, scalar )
+        Q_bar(y)                       => std::vector< double >
+      end
+    end
+
+______________________________________________________________________
+
+2) Compute_Turbulent_fluctutations
+    
+    foreach y ( n_planes )
+      iterate over all cells in Y plane {
+        u' = u - u_bar(y)           Each plane in the grid will have a different _bar value
+        v' = v - v_bar(y)           => CCVariable< Uintah:Vector >
+        w' = w - w_bar(y)
+      }
+    end
+    
+
+    foreach y ( n_planes )
+      foreach Q ( T, P, scalar )
+        Q' = Q - Q_bar(y)          => CCVariable< double >
+      end
+    end
+
+
+______________________________________________________________________
+
+3) Compute turbulentFluxes
+    iterate over all cells{
+    
+      u'u', v'v', w'w'      => CCVariable< Uintah:Vector > normalturb_strss
+      u'v', v'w', w'u'      => CCVariable< Uintah:Vector > shearTurb_strss
+
+      // scalar
+      foreach Q ( T, P, scalar )
+        u'Q', v'Q', w'Q'    => CCVariable< Uintah:Vector > Q_turb_flux
+      end
+    }
+
+______________________________________________________________________
+    
+4)  compute planarAve_turbFluxes
+
+
+    foreach y ( n_planes )
+      u'u'_bar(y), v'v'_bar(y), w'w'_bar(y)     => std::vector< Uintah:Vector >  normal_turbFlux
+      u'v'_bar(y), vw'_bar(y), w'u'_bar(y)      => std::vector< Uintah:Vector >  shear_turbFlux
+    end
+    
+    foreach y ( n_planes )
+      foreach Q ( T, P, scalar )
+        u'Q'_bar(y), v'Q'_bar(y), w'Q'_bar(y)    => std::vector< Uintah:Vector > mean_Q_turb_flux
+      end
+    end
+
+______________________________________________________________________
+    
+5)  write to files
+
+    foreach L ( n_Levels )
+    
+      foreach y ( n_planes )
+       fprintf(fp, u'u'_bar(y), v'v'_bar(y), w'w'_bar(y)  u'v'_bar(y), v'w'_bar(y), w'u'_bar(y) )
+      end
+      
+      foreach y ( n_planes )
+        foreach Q ( T, P, scalar )
+          fprintf( u'Q'_bar(y), v'Q'_bar(y), w'Q'_bar(y) )
+        end
+      end  
+      
+    end  // level loop

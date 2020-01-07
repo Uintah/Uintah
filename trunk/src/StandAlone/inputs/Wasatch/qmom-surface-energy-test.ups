@@ -1,0 +1,149 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test QMOM Implementation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>  
+
+  <Wasatch>    
+
+    <Density method="CONSTANT">
+      <Constant value="1" name="rho"/>
+    </Density>
+
+    <MomentInitialization>
+      <PopulationName>CACO3</PopulationName>
+        <Values>
+         9.9e7,
+         4.9995e9,
+         3.333333e11,
+         2.499999975e13,
+         1.9999999998e15,
+         1.6666666666665e17
+      </Values>
+    </MomentInitialization>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="S"/>
+      <Constant>7</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="S"/>
+      <Constant>7</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="ceq"/>
+      <Constant>.1</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="ceq"/>
+      <Constant>.1</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> initialization </TaskList>
+      <NameTag name="sigma"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+
+   <PrecipitationBasicExpression type="SVOL">
+    <TaskList> advance_solution </TaskList>
+    <NameTag name="sigma"/>
+    <CriticalSurfaceEnergy Bulk_Surf_Eng="0.04" Temperature="298" Molar_Vol="3.693e-5">
+      <Supersaturation>
+        <NameTag name="S"/>
+      </Supersaturation>
+     </CriticalSurfaceEnergy>
+   </PrecipitationBasicExpression>
+
+   <PrecipitationBasicExpression type="SVOL">
+     <TaskList> advance_solution </TaskList>
+     <NameTag name="RStarExpr"/>
+     <PrecipitationClassicRStarValue Surf_Eng="0.04" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
+       <Supersaturation>
+         <NameTag name="S"/>
+       </Supersaturation>
+       <SurfaceEnergy>
+         <NameTag name="sigma"/>
+       </SurfaceEnergy>
+      </PrecipitationClassicRStarValue>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="NewBirth"/>
+      <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1.0">
+        <Supersaturation>
+          <NameTag name="S"/>  
+        </Supersaturation> 
+        <EquilibriumConcentration>
+          <NameTag name="ceq"/>
+        </EquilibriumConcentration>
+        <SurfaceEnergy>
+          <NameTag name="sigma"/>
+        </SurfaceEnergy>  
+     </HomogeneousNucleationCoefficient>
+    </PrecipitationBasicExpression>
+    
+     <MomentTransportEquation>
+     <RealizableQMOM/>
+        <PopulationName>CACO3</PopulationName>
+        <NumberOfEnvironments>3</NumberOfEnvironments>   
+             
+        <BirthExpression>   
+          <BirthModel> POINT </BirthModel>
+          <BirthCoefficientExpression>
+            <NameTag name="NewBirth"/>
+          </BirthCoefficientExpression> 
+          <RStarExpression>
+            <NameTag name="RStarExpr"/>
+          </RStarExpression> 
+        </BirthExpression>
+    </MomentTransportEquation>
+  </Wasatch>
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>qmom-surface-energy-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="m_CACO3_0"/>
+    <save label="m_CACO3_1"/>
+    <save label="m_CACO3_2"/>    
+    <save label="m_CACO3_3"/>  
+    
+    <save label="sigma"/>
+    <save label="S"/>   
+    <save label="NewBirth"/>
+    <save label="RStarExpr"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

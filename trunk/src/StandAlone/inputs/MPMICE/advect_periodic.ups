@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>MPMICE Advection test in a periodic domain</title>
+   </Meta>
+
+   <SimulationComponent type="rmpmice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.015       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-4      </delt_init>
+       <timestep_multiplier>0.8         </timestep_multiplier>
+       <max_Timesteps>       500        </max_Timesteps>
+   </Time>
+
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+
+       <Level>
+           <Box label="1">
+             <lower>       [0,0,0]    </lower>
+             <upper>       [1,1,1]    </upper>
+             <extraCells>  [0,0,0]    </extraCells>
+             <patches>     [2,2,2]    </patches>
+             <resolution>  [20,20,20] </resolution>
+           </Box>
+           <periodic>      [1,1,1]          </periodic>
+       </Level>
+    </Grid>
+
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>advect_periodic.uda</filebase>
+      <outputTimestepInterval>10</outputTimestepInterval>
+      <save label="press_equil_CC"/>
+      <save label="uvel_FC"/>
+      <save label="vvel_FC"/>
+      <save label="wvel_FC"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>
+      <save label="vorticity"/>
+      <save label="p.x"/>
+      <save label="p.volume"/>
+      <save label="p.velocity"/>
+      <save label="TotalMass"/>
+      <save label="TotalMomentum"/>
+      <save label="TotalIntEng"/>
+      <checkpoint interval="0.0045" cycle="1"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <advection type = "FirstOrder" />
+        <ClampSpecificVolume>false</ClampSpecificVolume>
+      </ICE>
+    </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+              <density>             8900.0           </density>
+              <constitutive_model type = "comp_neo_hook_plastic">
+                <useModifiedEOS>     true          </useModifiedEOS>
+                <bulk_modulus>      117.0e7        </bulk_modulus>
+                <shear_modulus>      43.8e7        </shear_modulus>
+                <yield_stress>       70.0e6        </yield_stress>
+                <hardening_modulus>  43.8e5        </hardening_modulus>
+                <alpha>               0.0          </alpha>
+                <strain_limit>       3.05          </strain_limit>
+                <reduction_factor>   1.0           </reduction_factor>
+              </constitutive_model>
+              <thermal_conductivity>  400.0         </thermal_conductivity>
+              <specific_heat>         386.0         </specific_heat>
+              <geom_object>
+                <box label="box">
+                    <min>           [0.8,0.8,0.8]   </min>
+                    <max>           [0.95,0.95,0.95]   </max>
+                </box>
+                <res>               [2,2,2]         </res>
+                <velocity>          [20.0,20.0,20.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+
+         <contact>
+           <type>null</type>
+           <materials>  [0]  </materials>
+         </contact>
+      </MPM>
+       <ICE>
+         <material name = "air">
+           <EOS type = "ideal_gas">                   </EOS>                   
+           <dynamic_viscosity>          0.0           </dynamic_viscosity>     
+           <thermal_conductivity>       0.0           </thermal_conductivity>  
+           <specific_heat>              716.0         </specific_heat>         
+           <gamma>                      1.4           </gamma>                 
+           <geom_object>
+              <difference>
+                <box label="wholeDomain">
+                  <min>           [-1.1,-1.1,-1.1]    </min>
+                  <max>           [1.1,1.1,1.1 ]      </max>
+                </box>
+                <box label="box"/>
+              </difference>
+              <res>                [2,2,2]           </res>
+              <velocity>           [20.0,20.0,20.0]  </velocity>
+              <temperature>        300.0             </temperature>
+              <density>    1.1792946927374306000e+00 </density>
+              <pressure>           101325.0          </pressure>
+           </geom_object>
+         </material>
+      </ICE>
+
+      <exchange_properties>
+        <exchange_coefficients>
+          <momentum>   [1e10]  </momentum>
+          <heat>       [1e10]  </heat>
+        </exchange_coefficients>
+      </exchange_properties>
+    </MaterialProperties>
+
+    <!--__________________________________-->
+    <DataAnalysis>
+
+      <Module name = "minMax">
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"   matl="1"/>
+          <analyze label="vel_CC"    matl="1"/>
+          <analyze label="uvel_FCME" matl="1"/>
+          <analyze label="vvel_FCME" matl="1"/>
+          <analyze label="wvel_FCME" matl="1"/>
+          <analyze label="g.velocity" matl="0"/>
+        </Variables>
+      </Module>
+      <Module name="vorticity">
+        <material>air</material>
+      </Module>
+      
+    </DataAnalysis>
+
+</Uintah_specification>

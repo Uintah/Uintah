@@ -1,0 +1,70 @@
+#!/bin/bash
+
+PATH="/usr/sbin/":"$PATH"
+
+#______________________________________________________________________
+#  This script is called as a cronjob before the startTester
+#  script and cleans up all previous Uintah.* directories.
+#  It will send mail to the user if a file can't be removed.
+#
+
+OS=`uname -s`
+MACHINE=`hostname`
+
+if [ "$MACHINE" == "uintah-build" ]; then
+  BUILD_DIR=/home/${LOGNAME}/"$OS"
+fi
+
+cd $BUILD_DIR
+
+#__________________________________
+# delete all Uintah.* directories
+# First move them to the trash directory
+
+if [ ! -d "trash" ]; then
+  mkdir trash
+fi
+
+mv Uintah.* trash/.
+
+# Delete what we own.  Note other users may have
+# compiled code or run tests in this directory, screwing up the 
+# permissions
+/bin/rm -rf trash > /dev/null 2>&1
+
+if [ ! -d "trash" ]; then
+  exit 0 # cleanup was successful
+fi
+
+#__________________________________
+# find out who owns the files that can't be removed and 
+# send them a message
+
+find trash \( ! -user ${LOGNAME} \) -prune > trash/need_removal
+
+trashUsers=`cat trash/need_removal | xargs stat --printf '%U\n' | sort -u`
+
+#__________________________________
+# send email to each user with trash
+
+for username in ${trashUsers}; do
+  sendto=${username}@sci.utah.edu
+  cat > trash/userRemoval <<EOF
+
+Subject: Cleanup needed for regression tester
+To: $sendto
+
+This is an automated e-mail.
+Please remove the following directories regression tester.
+
+Under `pwd` on `hostname`:
+
+EOF
+  
+  find trash -user $username -prune -exec echo "rm -rf `pwd`/{}" \; >> trash/userRemoval    
+  
+  sendmail "$sendto" < trash/userRemoval
+  
+  # cleanup
+  /bin/rm trash/userRemoval trash/need_removal
+done

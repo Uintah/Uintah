@@ -1,0 +1,131 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <!-- ************************************************** -->
+    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- ************************************************** -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi0-scalar"/>
+      <Constant> 100.0 </Constant>      
+    </BasicExpression>
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi0-scalar</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>
+    <!-- ************************************************** -->
+    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- ************************************************** -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar"/>
+      <LinearFunction slope="1.0" intercept="5.0">
+          <NameTag name="XSVOL"/>
+      </LinearFunction>      
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>  
+    <!-- ************************************************** -->
+    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- ************************************************** -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi2-scalar"/>
+      <SineFunction amplitude="10.0" frequency="2.0" offset="0.0">
+         <NameTag name="XSVOL"/>
+       </SineFunction>
+    </BasicExpression>
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi2-scalar</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>    
+    <!-- ************************************************** -->
+    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- ************************************************** -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi3-scalar"/>
+      <DoubleTanhFunction amplitude="10.0" width="4.0" midpointUp="1.0" midpointDown="2.0">
+          <NameTag name="XSVOL"/>
+      </DoubleTanhFunction>
+    </BasicExpression>
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi3-scalar</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>    
+    <!-- ************************************************** -->
+    <!-- Set the initial condition for non-staggered scalar -->
+    <!-- ************************************************** -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi4-scalar"/>
+      <GaussianFunction amplitude="5.0" deviation="2.0" mean="2.0" baseline="0.0">
+          <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi4-scalar</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.01"/>
+      <DiffusiveFlux direction="Y" coefficient="0.01"/>
+      <DiffusiveFlux direction="Z" coefficient="0.01"/>
+    </TransportEquation>    
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.01</delt_min>
+    <delt_max>0.05</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>wasatch-functions-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.01"/>
+    <compression>gzip</compression>
+    <save label="phi0-scalar"/>
+    <save label="phi1-scalar"/>
+    <save label="phi2-scalar"/>
+    <save label="phi3-scalar"/>
+    <save label="phi4-scalar"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-5,0,0]</lower>
+        <upper>[5,1,1]</upper>
+        <resolution>[20,5,5]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

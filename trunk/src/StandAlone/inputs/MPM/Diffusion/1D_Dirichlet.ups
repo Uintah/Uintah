@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+  <Meta>
+    <title>1D Dirichlet</title>
+  </Meta>
+
+  <SimulationComponent type="amrmpm" />
+
+  <Time>
+     <maxTime>4</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-1</delt_max>
+     <timestep_multiplier>0.4</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>data_1D_Dirichlet</filebase>
+    <outputInterval>0.1</outputInterval>
+    <save label="p.x"/>
+    <save label="p.mass"/>
+    <save label="p.volume"/>
+    <save label="p.velocity"/>
+    <save label="p.particleID"/>
+    <save label="p.scalefactor" />
+    <save label="p.concentration" />
+    <save label="g.mass"/>
+    <save label="g.concentration" />
+    <save label="g.velocity"/>
+  </DataArchiver>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>linear</interpolator>
+      <do_scalar_diffusion>true</do_scalar_diffusion>
+  </MPM>
+
+  <AMR>
+     <useLockStep> true </useLockStep>
+     <MPM>
+     </MPM>
+   </AMR>
+
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+       <MPM>
+         <material name="solid">
+           <density>   2330000000.00 </density> <!-- kg/m^3 -->
+           <melt_temp> 2000.00 </melt_temp> <!-- K -->
+           <constitutive_model type="rf_elastic_plastic"> 
+             <bulk_modulus>      6.5e6    </bulk_modulus>  <!-- Pa -->
+             <shear_modulus>     3.9e6    </shear_modulus> <!-- Pa -->
+             <volume_expansion_coeff>             0.0      </volume_expansion_coeff>
+             <initial_material_temperature>     298.15     </initial_material_temperature>
+             <flow_model type = "johnson_cook">
+               <A> 2.00e6 </A>
+               <B> 0.00   </B>
+               <C> 0.00   </C>
+               <n> 0.00   </n>
+               <m> 2.00   </m>
+             </flow_model>
+             <yield_condition type = "vonMises" />
+           </constitutive_model>
+           <thermal_conductivity>0.0</thermal_conductivity>
+           <specific_heat>5</specific_heat>
+           <diffusion_model type = "jg">
+             <diffusivity>        1e-9    </diffusivity>  <!-- m^2/s -->
+             <max_concentration>  1.0      </max_concentration> <!-- #-->
+           </diffusion_model>
+           <geom_object>
+             <box label = "line" >
+               <min>[0.00, 0.00, 0.00]</min>
+               <max>[0.10, 0.01, 0.01]</max>
+             </box>
+             <res>[2,2,2]</res>
+             <velocity>[0.00,0.00,0.00]</velocity>
+             <temperature>  298.00 </temperature>
+             <concentration>  0.00 </concentration>
+           </geom_object>
+         </material>
+
+         <diffusion_interface>
+           <type>null</type>
+         </diffusion_interface>
+      </MPM>
+    </MaterialProperties>
+       
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0.00,    0.00,    0.00]   </lower>
+        <upper>[0.10,    0.01,    0.01]   </upper>
+        <resolution>[100, 1, 1]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[1,1,1]               </patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

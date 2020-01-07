@@ -1,0 +1,379 @@
+#! /bin/bash -norc
+#
+#______________________________________________________________________
+# Parallel copy (cp)
+# This script copies an uda between file system in parallel.  It requires
+# that the user use interactive nodes or is using batch scheduling system.
+#______________________________________________________________________
+# unalias commands
+unalias -a rm
+unalias -a cd
+
+#__________________________________
+# defaults
+nCores="1"
+transferWholeUda="Y"
+continueCopying="N"
+OS="Linux"
+FIND=find
+
+#______________________________________________________________________
+# Parse input
+show_help=0
+if test $# -lt 6; then
+  echo "Wrong number of arguments ($#)."
+  show_help=1
+fi
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+  -nCores|--nCores)
+      shift
+      numNodes="$1"
+      ;;
+  -allTimesteps|--allTimesteps)
+      shift
+      ans=`echo $1 | tr [:lower:] [:upper:]` # upper case trick
+      transferWholeUda=$ans
+      ;;
+  -removeRemoteDir|--removeRemoteDir)
+      shift
+      ans=`echo $1 | tr [:lower:] [:upper:]` # upper case trick
+      rmDir=$ans
+      ;;
+  -continueCopying|--continueCopying)
+      continueCopying="Y"
+      ;;
+  -method|--method)
+      shift
+      METHOD="$1"
+      ;;
+  -remoteDir|--remoteDir)
+      shift
+      REMOTEDIR="$1"
+      ;;
+  -uda|--uda)
+      shift
+      uda="$1"
+      LOCALDIR=`pwd`/$uda
+      ;;
+  -help|--help|-h)
+      show_help=1
+      ;;
+   *)
+      echo "$1: Unknown option, -help for help"
+      exit 1
+      ;;
+   esac
+   shift
+done
+
+# usage string - exit
+if [ $show_help -ne 0 ]; then
+  cat <<EOF
+      This script does not delete the original timestep directories. 
+
+      Options:                        default
+          -nCores:                    [int]         1       Number of cores used.
+          -allTimesteps:              [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+          -continueCopying            blank                 continue copying if previous attempts failed
+          -method                     [cp/rsync/tar]        method used to move transfer
+          -removeRemoteDir            [y/n]                 remove the remote uda before copying
+          -remoteDir                  [path]                path to the destination directory
+          -uda                        [dir name]            uda name
+          -help:                                            Display this option summary
+EOF
+  exit 1
+fi
+#______________________________________________________________________
+
+# is this node under PBS control?
+printenv PBS_NUM_PPN > /dev/null 2>&1
+if test $? != 0 ; then
+  echo ""
+  echo "ERROR: you must run this script on interactive nodes or through the batch scheduling system."
+  echo ""
+  exit 1  
+fi
+
+
+#__________________________________
+# local variables are all lowercase
+# upper case:  enviromental vars that are passed to the makefile
+pcpfulldir=`readlink -f $0`     
+PCPDIR=`dirname $pcpfulldir`    # path to driver script
+
+let numPPM=$PBS_NUM_PPN-1       # number of processors per node, keep one node free or you will lock up the machine 
+
+OS=`uname`
+if test "$OS" == "Darwin"; then
+  OS="Linux"   # Darwin and Linux are similar
+fi
+export OS
+
+if test $METHOD != "cp" -a $METHOD != "rsync" -a $METHOD != "tar"; then
+  echo ""
+  echo "ERROR:  the method option is not valid ($METHOD)"
+  echo "        valid options are  (cp/rsync/tar)"
+  echo ""
+  exit 1
+fi
+
+
+pcpTmpDir="$LOCALDIR/.pcp"                # directory to keep temporary files
+/bin/rm -rf $pcpTmpDir
+mkdir $pcpTmpDir
+
+export PCP_FILES=$pcpTmpDir/pcp_files
+
+echo "_____________________________________"
+echo "Inputs:"
+echo "	# nodes:               $numNodes"
+echo "	# procs per node:      $numPPM"
+echo "	method:                $METHOD"
+echo "	transfer whole uda:    $transferWholeUda"
+echo "	LOCALDIR:              $LOCALDIR"
+echo "	remoteDir:             $REMOTEDIR"
+echo "	continueCopying:       $continueCopying"
+echo "	remove the remote directory?: " $rmDir
+echo "_____________________________________"
+echo ""
+#__________________________________
+# Bulletproofing
+echo "Bullet proof tests:"
+
+validateCopiedFilesDir()
+{
+  continueCopying=$1
+  
+  if test -d "$STAMP_DIR"; then
+    echo ""
+    echo "  WARNING: The previous attempt at copying the directores was interrupted."
+    echo "           The list of directories already copied can be found at:"
+    echo "                 $STAMP_DIR/stamp"
+    echo ""
+    echo "            It is possible, though unlikely, that some of the directories listed"
+    echo "            did not complete successfully."
+    echo ""
+    
+    if test "$continueCopying" == "Y"; then
+      return
+    fi
+    
+    echo "  Do you wish to continue copied the remaining directories? (y/n)"
+    echo "  If not, manually remove the following directory and run this script again:"
+    echo "           $STAMP_DIR"
+    echo ""
+    echo -n " Please answer y/n: "
+    read answer
+    echo ""
+     if test "$answer" != "y"; then
+      echo "Goodbye."
+      echo ""
+      exit 1
+    fi
+  else
+    mkdir $STAMP_DIR
+  fi
+}
+
+#__________________________________
+
+export STAMP_DIR=$LOCALDIR/.transferred_files
+validateCopiedFilesDir $continueCopying
+
+if test ! -d "$STAMP_DIR"; then
+  # Didn't have permissions to make the directory... so place it in tmp
+  echo ""
+  echo "  WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  export STAMP_DIR=/tmp/.transferred_files_`basename $LOCALDIR`_`whoami`
+  echo "           Placing it in $STAMP_DIR instead."
+  echo ""
+  validateCopiedFilesDir $continueCopying
+fi
+
+if test ! -d "$STAMP_DIR"; then
+  echo ""
+  echo "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
+  echo ""
+fi
+
+if test "$LOCALDIR" == "."; then
+  echo ""
+  echo "  ERROR: You can't set the local dir to '.'"
+  echo ""
+  exit 1
+fi
+
+echo -n "  Testing: does the local folder ($LOCALDIR) exist... "
+if test ! -e $LOCALDIR; then
+  echo ""
+  echo ""
+  echo "  ERROR: Local directory '$LOCALDIR' does not exist"
+  echo ""
+  exit 1
+fi
+echo "yes."
+
+echo -n "  Testing: does the remote folder ($REMOTEDIR) exist..... "
+if test ! -d "$REMOTEDIR"; then
+  echo ""
+  echo ""
+  echo "  ERROR:  The destination remote directory '$REMOTEDIR' does not exist..."
+  echo "          Are you sure you typed it in correctly?"
+  echo ""
+  echo ""
+  exit
+fi
+echo "yes."
+
+if test ! -e $PCPDIR/pcp_driver_$OS; then
+  echo ""
+  echo ""
+  echo " ERROR: the driver file $PCPDIR/pcp_driver_$OS does not exist..."
+  echo ""
+  echo ""
+fi
+
+if test $numNodes -gt $PBS_NUM_NODES; then
+  echo ""
+  echo ""
+  echo " ERROR:  The number of nodes you've requested to copy data exceeds what the batch scheduler system has allocated to you"
+  echo ""
+  exit 1 
+fi
+
+which pbsdsh > /dev/null
+if test $? != 0 ; then
+  echo ""
+  echo "Error:  Can't find the pbs command pbsdsh.  Please correct your path"
+  echo ""
+  exit 1
+fi
+
+echo "_____________________________________"
+
+#______________________________________________________________________
+# Now do the work
+# record some info for posterity
+
+PCP_RECORD=$LOCALDIR/pcp_record
+touch $PCP_RECORD
+
+if test ! -f $PCP_RECORD; then
+  # Can't write to that directory... just place it in tmp for now.
+  PCP_RECORD=/tmp/pcp_record`whoami`
+fi
+
+echo "--------------------------------" >> $PCP_RECORD
+echo "Data transferred from: $HOSTNAME" >> $PCP_RECORD
+echo "on `date`."                       >> $PCP_RECORD
+echo "Data originally in $LOCALDIR"     >> $PCP_RECORD
+echo "Copied to $REMOTEDIR"             >> $PCP_RECORD
+echo "Number of nodes: $numNodes"       >> $PCP_RECORD
+echo "Method of copying data: $METHOD"  >> $PCP_RECORD
+echo ""                                 >> $PCP_RECORD
+
+# remove the remote directory
+REMOTEDIR="$REMOTEDIR/$uda/"
+
+if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
+  echo "Now removing $REMOTEDIR if it exists..."
+  /bin/rm -rf $REMOTEDIR
+  mkdir $REMOTEDIR > /dev/null 2>&1
+else
+  mkdir $REMOTEDIR > /dev/null 2>&1
+fi
+
+cd $LOCALDIR
+
+#______________________________________________________________________
+# make a sorted list of potential files/directories to copy
+# let the user edit that file with vi 
+/bin/rm -f $PCP_FILES
+
+$FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transferred_files > $PCP_FILES 2>&1
+$FIND .             -maxdepth 1 -type d -exec basename {} \; | grep -v "t[0-9]\|checkpoints\|.transferred_files" >> $PCP_FILES 2>&1
+$FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PCP_FILES 2>&1
+$FIND ./checkpoints -maxdepth 1                                                           >>$PCP_FILES 2>&1
+
+#remove "./checkpoints" from PTAR_FILES
+sed -i /".\/checkpoints$"/d $PCP_FILES
+
+if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
+  echo "Now starting an editor:  Remove the files you don't want transferred"
+  vi $PCP_FILES
+fi
+
+chmod ug+rw $PCP_FILES
+ 
+echo
+echo -n "Starting at: "
+date
+echo
+
+#__________________________________
+# chop up the PCP_files into smaller chunks
+# one chunk for each node.  You must do this when 
+# udas have hundreds of timesteps.
+
+totalLines=`wc -l $PCP_FILES| cut -f1 -d" "`
+let nLines=$totalLines/$numNodes 
+
+node=0
+startLine=1
+
+while [  $node -lt $numNodes ]; do
+  sed -n -e "$startLine,+$nLines p" $PCP_FILES > $PCP_FILES.$node
+  let node=node+1 
+  startLine=$((startLine+nLines))
+done
+
+#__________________________________
+# export all of the environmental variables.
+# These are read during the pbsdsh command.
+
+/bin/rm ~/pcpEnv > /dev/null 2>&1
+envVariables=~/pcpEnv
+
+echo "export REMOTEDIR=$REMOTEDIR"   >$envVariables
+echo "export PCP_FILES=$PCP_FILES"   >>$envVariables
+echo "export PCP_RECORD=$PCP_RECORD" >>$envVariables
+echo "export STAMP_DIR=$STAMP_DIR"   >>$envVariables
+echo "export LOCAL_DIR=$LOCALDIR"    >>$envVariables
+echo "export numPPM=$numPPM"         >>$envVariables
+echo "export OS=$OS"                 >>$envVariables
+echo "export PCPDIR=$PCPDIR"         >>$envVariables
+echo "export METHOD=$METHOD"         >>$envVariables
+
+#__________________________________
+# Distribute the work over the nodes, 
+# each node receives one copy of the command
+pbsdsh -u  bash -c 'source ~/pcpEnv; cd $LOCAL_DIR; make --file $PCPDIR/pcp_driver_$OS -j $numPPM | tee -a $PCP_RECORD' > $PCP_RECORD 2>&1
+
+rc=$?
+echo "pbsdsh return code: $rc"
+
+if test "$rc" != "0"  ; then
+  echo "__________________________________"
+  echo "ERROR:  something went wrong with the copy."
+  echo "__________________________________"
+else
+  echo ""
+  echo "$uda has be copied to $REMOTEDIR"
+  echo "Blowing away the list of copied files"
+  /bin/rm -rf $STAMP_DIR
+fi
+
+
+# copy logs to the remoteDir
+cp $PCP_RECORD $REMOTEDIR
+mv ~/pcpEnv    $REMOTEDIR
+
+echo
+echo -n "Ending at: "
+date
+echo
+
+exit

@@ -1,0 +1,9 @@
+<!-- provides a way to initialize a field using geometry primitives -->
+<GeometryBased      spec="OPTIONAL NO_DATA"
+										attribute1="value REQUIRED DOUBLE"> <!-- this is the outside value -->
+	<Intrusion      spec       = "MULTIPLE NO_DATA"
+									attribute1 = "name OPTIONAL STRING"
+									attribute2 = "value REQUIRED DOUBLE"> <!-- value of field inside this intrusion -->
+		<geom_object  spec="REQUIRED"/>
+	</Intrusion>			
+</GeometryBased>

@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test</title>
+   </Meta>
+   
+   <SimulationComponent type="ice" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.1        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <max_delt_increase>    2         </max_delt_increase>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>      110           </max_Timesteps>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Neumann"> 
+                            <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101425 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [-0.6,-0.6,-0.6]    </lower>
+              <upper>        [0.6,0.6,0.6]       </upper>
+              <extraCells>   [1,1,1]     </extraCells>
+              <patches>      [3,3,3]     </patches>
+              <resolution> [60,60,60]    </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>constantPress_BC.uda</filebase>
+      <outputInterval>5e-4</outputInterval>
+      <save label="press_equil_CC"/>
+      <save label="uvel_FC"/>
+      <save label="vvel_FC"/>
+      <save label="wvel_FC"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/>         
+      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>
+      <checkpoint timestepInterval="40" cycle="1"/>
+   </DataArchiver>
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.3</cfl>
+       
+       <ICE>
+        <advection type = "SecondOrder" />
+<!--
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.2            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>          20     </max_outer_iterations>
+           <outer_iteration_tolerance>     1.0e-7 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5      </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+            <tolerance>      1.e-8   </tolerance>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+-->        
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+         <material name="atmosphere">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <gamma>              1.4                     </gamma>
+           <geom_object>
+                <box label="wholeDomain">
+                    <min>       [ -10, -10.0, -10.0 ]    </min>
+                    <max>       [ 10.0, 10.0, 10.0 ]     </max>
+                </box>
+               <res>                 [2,2,2]            </res>
+               <velocity>      [0.,0.,0.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties> 
+    
+    <!--______________________________________________________________________-->
+    
+    <DataAnalysis>
+
+       <Module name="lineExtract">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 5000 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <Variables>
+          <analyze label="press_CC" matl="0"/> 
+          <analyze label="rho_CC"/>
+          <analyze label="temp_CC"/>
+          <analyze label="delP_Dilatate"/>
+        </Variables>
+
+        <lines>
+          <line name="X_line"> 
+                <startingPt>  [-0.6, 0., 0.]   </startingPt>
+                <endingPt>    [ 0.6, 0., 0.]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+          <line name="Y_line"> 
+                <startingPt>  [0., -0.6, 0.]   </startingPt>
+                <endingPt>    [0.,  0.6, 0.]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+          <line name="Z_line"> 
+                <startingPt>  [0., 0., -0.6]   </startingPt>
+                <endingPt>    [0., 0., 0.6]   </endingPt>
+                <stepSize> 0.1 </stepSize>
+          </line>
+        </lines>
+      </Module>
+    
+      <!--__________________________________-->
+      
+     <Module name = "minMax">
+        <samplingFrequency> 5000</samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <Variables>
+          <analyze label="press_CC"      matl="0"/>
+          <analyze label="temp_CC"       matl="0"/>
+          <analyze label="vel_CC"        matl="0"/>
+          <analyze label="rho_CC"        matl="0"/>
+          <analyze label="delP_Dilatate" matl="0"/>
+          <analyze label="uvel_FCME"     matl="0"/>
+          <analyze label="vvel_FCME"     matl="0"/>
+          <analyze label="wvel_FCME"     matl="0"/>
+        </Variables>
+      </Module>
+    
+      <!--__________________________________-->
+      
+      <Module name = "controlVolFluxes">
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <material>    atmosphere </material>
+            
+        <controlVolumes>
+          <!--__________________________________-->
+          <!-- bottom corners -->
+          <box label="cv_left_bot_back">
+              <min>  [ -1,   -1,   -1]    </min>
+              <max>  [ -0.2, -0.2, -0.2]  </max>
+          </box>
+
+          <box label="cv_right_bot_back">
+              <min>  [ 0.2, -1,   -1]     </min>
+              <max>  [ 1,   -0.2, -0.2]   </max>
+          </box>
+          <box label="cv_left_bot_frnt">
+              <min>  [ -1,   -1,   0.2]   </min>
+              <max>  [ -0.2, -0.2, 1]     </max>
+          </box>
+          <box label="cv_right_bot_frnt">
+              <min>  [ 0.2, -1,   0.2]    </min>
+              <max>  [ 1,   -0.2, 1]      </max>
+          </box>
+
+          <!--__________________________________-->
+          <!-- Top corners  -->
+
+          <box label="cv_left_top_back">
+              <min>  [ -1, 0.2, -1]        </min>
+              <max>  [ -0.2, 1, -0.2]      </max>
+          </box>
+
+          <box label="cv_right_top_back">
+              <min>  [ 0.2, 0.2, -1]       </min>
+              <max>  [ 1,   1,   -0.2]     </max>
+          </box>
+          <box label="cv_left_top_frnt">
+              <min>  [ -1,   0.2, 0.2]   </min>
+              <max>  [ -0.2, 1,   1]     </max>
+          </box>
+          <box label="cv_right_top_frnt">
+              <min>  [ 0.2, 0.2, 0.2]    </min>
+              <max>  [ 1,   1,   1]      </max>
+          </box>
+          
+          <!--__________________________________-->
+          <!-- centered about the origin -->
+          <box label="cv1">
+              <min>  [-0.1, -0.1, -0.1] </min>
+              <max>  [ 0.1,  0.1,  0.1] </max>
+          </box>
+          <box label="cv2">
+              <min>  [-0.2, -0.2, -0.2] </min>
+              <max>  [ 0.2,  0.2,  0.2] </max>
+          </box>
+          <box label="cv3">
+              <min>  [-1,-1,-1] </min>
+              <max>  [ 1, 1, 1] </max>
+          </box>
+
+        </controlVolumes>
+
+      </Module>
+      
+               
+    </DataAnalysis>     
+</Uintah_specification>

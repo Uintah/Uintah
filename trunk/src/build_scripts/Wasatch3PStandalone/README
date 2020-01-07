@@ -1,0 +1,65 @@
+
+This directory contains scripts to allow for updating, building, and installing the
+Wasatch3P libraries outside of Uintah.  This set of scripts is stored in the Uintah
+SVN repository under src/build_scripts/Wasatch3PStandalone/.  It should be checked
+out into the Wasatch3P git directory using:
+
+svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src/build_scripts/Wasatch3PStandalone .
+
+It builds the W3P in this order (in the "*-build" directories):
+
+SpatialOps
+ExprLib
+TabProps (though TabProps doesn't actually depend on either of the other two)
+RadProps
+
+--------------------------------------
+
+And uses: 'git pull' to update code.
+
+To git the original files:
+
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/SpatialOps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/ExprLib.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/TabProps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://gitlab.multiscale.utah.edu/common/RadProps.git
+
+To git *OLDER* files, do not use "--depth 1" on the clone... Then when you have the entire tree, use the
+following command to get a git version has number:
+
+> git rev-list -n 1 --before="2016-01-01 13:37" master
+
+Then use that hash number #### in this command:
+
+> git checkout #### -b branch_version_name
+
+You can then switch between these two branches using:
+
+> git checkout master
+
+or
+
+> git checkout branch_version_name
+
+etc.
+
+------------------
+
+On Vulcan @ LLNL:
+----------------
+
+   # If this is ever fixed:
+   use cmake-3.1 
+   # otherwise use /usr/gapps/uintah/Thirdparty-install/vulcan/CMake/bin/cmake
+
+
+On Cab @ LLNL:
+-------------
+
+icc:
+use mvapich2-intel-1.9
+use ic-14.0.174
+
+gcc:
+use mvapich2-gnu-1.9
+use gcc-4.6.1

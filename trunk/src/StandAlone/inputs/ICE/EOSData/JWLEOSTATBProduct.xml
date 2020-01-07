@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWL">
+    <!-- TATB Products Parameters
+         From: 
+          S.G. Cochran, C.M. tarver, Modeling Particle Size and Inital Temperature 
+          Effects on Shock Initiation of TATB-Based Explosives.  Shock Waves in 
+          Condensed Matter, 1983, J.R. Asay, R.A. Graham, G.K. Straub, eds.
+     -->
+     <A> 4.9775e11 </A>
+     <B> 5.407e9   </B>
+     <Cv> 1.0e6    </Cv>
+     <R1> 4.2      </R1>
+     <R2> 1.2      </R2>
+     <om> 0.4      </om>
+     <rho0> 1800   </rho0>
+  </EOS>
+</Uintah_Include>

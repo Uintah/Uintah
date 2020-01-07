@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: Updated 7/31/00 -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Heat conduction problem</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>.1</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.6</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>heatcond2mat.uda</filebase>
+        <outputTimestepInterval>25</outputTimestepInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.particleID"/>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
+       <save label = "p.temperature"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "0.01"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+   </MPM>
+
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+                <density>10000.0</density>
+                <thermal_conductivity>237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>2000.0</bulk_modulus>
+                    <shear_modulus>1500.0</shear_modulus>
+                </constitutive_model>
+              <geom_object>
+                  <box label="gp1">
+                     <min>[0,0,0]</min>
+                     <max>[0.01,0.004,0.004]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>300.</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+                <density>1000.0</density>
+                <thermal_conductivity>23.70</thermal_conductivity>
+                <specific_heat>603</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>2000.0</bulk_modulus>
+                    <shear_modulus>1500.0</shear_modulus>
+                </constitutive_model>
+              <geom_object>
+                  <box label="gp2">
+                     <min>[0.01,0,0]</min>
+                     <max>[0.02,0.004,0.004]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>100.</temperature>
+               </geom_object>
+           </material>
+
+            <contact>
+               <type>single_velocity</type>
+               <materials>[1,2,3]</materials>
+            </contact>
+
+            <thermal_contact></thermal_contact>
+
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+      <BoundaryConditions>
+             <Face side = "x-">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "x+">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "y-">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+         </BCType>
+       </Face>
+       <Face side = "y+">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
+              <value> 300. </value>
+           </BCType>
+       </Face>
+       <Face side = "z-">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature"> 
+              <value> 300. </value>
+       </BCType>
+       </Face>
+       <Face side = "z+">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature"> 
+              <value> 300. </value>
+       </BCType>
+       </Face>
+       </BoundaryConditions>       
+       <Level>
+           <Box label="1">
+              <lower>[0,0,0]</lower>
+              <upper>[0.02,0.004,0.004]</upper>
+               <resolution>[20,4,4]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    
+</Uintah_specification>

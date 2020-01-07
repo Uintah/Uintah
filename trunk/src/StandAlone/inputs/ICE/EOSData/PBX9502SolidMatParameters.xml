@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+   <!-- Data from:
+           Gibbs, T.R., Popalato, A. LASL Explosive Property Data. Berkeley: University of California Press, 1980.
+   -->
+   <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+   <thermal_conductivity>   0.5439              </thermal_conductivity>
+   <specific_heat>          1043.03             </specific_heat>
+   <gamma>                  1.4                 </gamma>
+</Uintah_Include>

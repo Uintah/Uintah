@@ -1,0 +1,965 @@
+%\documentclass[onetabnum,onefignum,final]{siamltex}
+\documentclass[11pt,oneside]{article}
+\usepackage[dvips]{graphicx}
+%\usepackage{epsf,here,rotate,makeidx}
+
+%%%%% My macros - get rid of them later if needed.
+
+\newcommand{\single }{\renewcommand{\baselinestretch}{1} \large \normalsize}
+\newcommand{\hdouble}{\renewcommand{\baselinestretch}{1.5} \large \normalsize}
+\newcommand{\double }{\renewcommand{\baselinestretch}{1.66} \large \normalsize}
+
+\input amssym.def
+\input amssym
+
+\def \n {{\mbox{ }}\\}
+\def \l {\lambda}
+\def \L {\Lambda}
+\def \be {\begin{equation}}
+\def \ee {\end{equation}}
+\def \loc {{\mathrm{local}}}
+\def \e {\varepsilon}
+\def \w {\omega}
+\def \W {\Omega}
+\def \dW {\partial \Omega}
+\def \bW {\bar{\W}}
+\def \sgn {{\mathrm{sgn}}}
+\def \bsigma {\bar{\sigma}}
+\def \bw {\bar{\w}}
+\def \bN {\bar{N}}
+\def \k {\kappa}
+\def \opt {{\mathrm{opt}}}
+\def \te {\tilde{\e}}
+\def \a { \alpha }
+\def \xa {x_{\a}}
+\def \g {\gamma}
+\def \gsc {GS$_c$ }
+\def \gsct {GS$_c$}
+\def \crelax {CR${(\nu_1,\nu_2)}$ }
+\def \Cc {C^{(c)}}
+\def \mod {{\mbox{\rm mod }}}
+\def \t { \theta }
+\def \et {e^{i \t \a}}
+\def \etm {e^{-i \t \a}}
+\def \pc {\frac{2\pi}{c}}
+\def \pcv {(2 \pi)/c}
+\def \tc#1 {\t^{c,(#1)} }
+\def \tctwo#1 {\t^{c_2,(#1)} }
+\def \Ac#1 {A_{#1}}
+\def \ec {\eta}
+\def \xic {\xi}
+\def \ux {\underline{x}}
+\def \uy {\underline{y}}
+\def \T {\Theta}
+\def \B {{\cal B}}
+\def \V {{\cal V}}
+\def \F {{\cal F}}
+\def \H {{\cal H}}
+\def \K {{\cal K}}
+\def \PB {{\cal P}}
+\def \qed    {$\blacksquare$}
+\def \bmu {\overline{\mu}}
+\def \bM {\overline{M}}
+\def \mod {{\mbox{\rm mod }}}
+\def \lcm {{\mbox{\rm lcm}}}
+\def \sa {\Sigma_{\a}}
+\def \ip#1#2 {\langle #1,#2 \rangle}
+\def \vec#1#2     { \left( \begin{array}{c} #1 \\ #2 \end{array} \right) }
+\def \mat#1#2#3#4 {\left(\begin{array}{cc} #1 & #2\\#3 & #4\end{array}\right) }
+\def \D {\Delta}
+\def \px {\partial_x}
+\def \py {\partial_y}
+\def \pz {\partial_z}
+\def \Dh {\Delta^h}
+\def \pxh {\partial_x^h}
+\def \pyh {\partial_y^h}
+\def \pzh {\partial_z^h}
+\def \AA {\hat{A}}
+\def \LL {\hat{L}}
+\def \MM {\hat{M}}
+\def \LM {\LL \MM}
+\def \eee {\hat{e}}
+\def \ff {\hat{f}}
+\def \uu {\hat{u}}
+\def \cfl {\mathrm{CFL}}
+
+%%%%%%%%%%%%% for siam : comment the following lines
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+\newcommand\keywordsname{Key words}
+\newcommand\AMSname{AMS subject classifications}
+\newenvironment{@abssec}[1]{%
+     \if@twocolumn
+       \section*{#1}%
+     \else
+       \vspace{.05in}\footnotesize
+       \parindent .2in
+         {\upshape\bfseries #1. }\ignorespaces
+     \fi}
+     {\if@twocolumn\else\par\vspace{.1in}\fi}
+\newenvironment{keywords}{\begin{@abssec}{\keywordsname}}{\end{@abssec}}
+\newenvironment{AMS}{\begin{@abssec}{\AMSname}}{\end{@abssec}}
+%%%%%%%%%%%%% siam: comment up to here
+
+%\def \britem {\begin{romannum}}
+%\def \eritem {\end{romannum}}
+
+\def \bn {\begin{enumerate}}
+\def \en {\end{enumerate}}
+\def \bi {\begin{itemize}}
+\def \ei {\end{itemize}}
+
+\title{Shocktube Problem - Status Report 4 \\ ICE Algorithm Description}
+\author{Oren E.~Livne \footnotemark[1]}
+
+\begin{document}
+
+%\def \myspace {\double}
+\def \myspace {\single}
+\myspace
+
+\maketitle
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext[1]{SCI Institute, 50 South Central Campus Dr., Room 3490,
+University of Utah, Salt Lake City,
+UT 84112.Phone: +1-801-581-4772. Fax: +1-801-585-6513.
+Email address: {\tt livne@sci.utah.edu}}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+\begin{abstract}
+We describe the main ICE advection algorithm for scalar advection problems
+(advection and Burgers), and then for the compressible Euler system of
+equations (Sod's Shocktube problem), without boundary conditions. We explain
+each step in this original Kashiwa ICE algorithm \cite{kashiwa2}, 
+and its relation of both the Davis
+scheme \cite{davis} and the algorithm currently implemented in Uintah.
+\end{abstract}
+
+\begin{keywords}
+Advection, ICE, Shocktube problem, Euler equations, limiters, Davis scheme.
+\end{keywords}
+
+%\begin{AMS}
+%42A16, 42A38, 65B99, 65G99, 65N06, 65N12, 65N55.
+%\end{AMS}
+
+\pagestyle{myheadings}
+\thispagestyle{plain}
+\markboth{}{{\small OREN E.~LIVNE: SHOCKTUBE STATUS REPORT 4}}
+
+\newpage
+\tableofcontents
+
+%################### BUCKY 2002 ICE ALGORITHM FOR SCALAR ###################
+
+\newpage
+\section{ICE Algorithm for Scalar Advection}
+\label{BuckyScalar}
+
+We describe and implement Bucky's ICE algorithm for scalar conservation laws,
+see \cite[pp.~27--29]{kashiwa2}.
+This scheme turns to be almost equivalent to Davis' scheme \cite{davis},
+however, it produces better results than those reported in \cite{report_s3}
+for the Davis scheme. In \S \ref{ScalarEq} we define the equation.
+
+\subsection{The Equations}
+\label{ScalarEq}
+We cosnider a general one dimensional scalar advection equation,
+\be
+q_t + f(q)_x = q_t + (f'(q)) q_x = 0,
+\label{ScalarFlux}
+\ee
+defined over an infinite domain, or for $x \in [0,1]$ with periodic boundary
+conditions. The convective velocity is denoted by $u = u(x) = f(q(x))$.
+
+\subsection{Discretization}
+We use a finite volume discretization on a uniform grid with meshsize $\D x$.
+The discrete $\{q_j\}_j$ are defined at cell centers $x_j = j \D x$;
+the numerical fluxes $\{f_{j+\frac12}\}_j$ are defined at
+face centers, $x_{j+\frac12} = (j+\frac12) \D x$; the fluxing velocities
+$u^*_{j+\frac12}$ are defined at face centers. See Fig.~\ref{ScalarGrid}.
+\begin{figure}[htbp]
+   \centering
+   \includegraphics[width=4.8in]{ScalarGrid.eps}
+   \caption{Cell-centered discretization of (\ref{ScalarFlux}). The discrete
+   state variables $q_j$ are defined at cell centers $j$ (``x'').
+   Cell faces $j+\frac12$ are marked by ``$|$'', where $f$ and $u$ are
+   defined.}
+   \label{ScalarGrid}
+\end{figure}
+
+\subsection{Advection Scheme}
+The ICE algorithm timestep for computing $q^{(n+1)}$ at time
+$t_{n+1}$ at all cell centers $j$ from $q=q^n$ at all cell centers
+consists of the following steps:
+
+\bn
+
+%%%%%%%%%%%%%%%%% STEP 1: Compute speeds %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute the numerical flux}:
+compute the fluxing velocity $u^*_{j+\frac12}$ at all faces using an averaged
+Jacobian from neighboring cell centers Jacobians.
+\be
+   u^*_{j+\frac12} = 0.5 \left( f'\left(q_j\right) + f'(q_{j+1})\right)
+   \qquad \forall j.
+   \label{ScalarUStar}
+\ee
+
+%%%%%%%%%%%%%%%%% STEP 2: Compute the numerical flux %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute the numerical flux}:
+compute the gradient-limited fluxes at cell faces $j+\frac12$:
+\begin{eqnarray}
+   r^+_j & = & (q_{j+2} - q_{j+1})/(q_{j+1} - q_j) \\
+   r^-_j & = & (q_j - q_{j-1})/(q_{j+1} - q_j) \\
+   \phi_j & = & 2 - \max \left\{0,\min\left\{1,2 r^+_j\right\}\right\} -
+                \max\left\{0,\min\left\{1,2 r^-_j\right\}\right\} \\
+   \label{ScalarDelTStar}
+   \D^* t_j & = & 0.5\left( (1-\phi_j) \D t +
+                  \phi_j \D x/u^*_{j+\frac12} \right)\\
+   f_{j+\frac12} & = & u^*_{j+\frac12} \left( 0.5 (q_j+q_{j+1})  - 
+   \left(u^*_{j+\frac12} \D^* t_j / \D x \right) (q_{j+1} - q_j) \right)
+   \label{ScalarICEFlux}
+\end{eqnarray}
+
+%%%%%%%%%%%%%%%%% STEP 3: Advect & Advance %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Advect and advance in time}:
+\be
+   q^{n+1}_j = q^n_j - 
+   \frac{\D t}{\D x} \left(f_{j+\frac12} - f_{j-\frac12}\right)
+   \qquad \forall j.
+   \label{ScalarAdvect}
+\ee
+
+%%%%%%%%%%%%%%%%% STEP 4: Set delT %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute $\D t$}: the global $\D t$ should satisfy
+$|u^*_{j+\frac12}| \D t/\D x \leq 1$ for all $j$ \cite[p.~29]{kashiwa2},
+hence we choose
+\be
+   \D t = \min_j\left\{ \frac{\cfl \cdot \D x}{|u^*_{j+\frac12}| + \varepsilon}\right\},
+   \label{ScalarDelT}
+\ee
+where $\e = 10^{-30}$ is a small number, and $0 < \cfl < 1$ is a prescribed
+desired Courant number.
+\en
+
+\subsection{Numerical Results}
+We define two scalar model problems,
+\bi
+\item[(A)] \emph{Advection:} $f(q) = q u$, where $u = 1$ is a constant
+speed propagation (wave propagates to the right).
+\item[(B)] \emph{Burgers:} $f(q) = q^2/2$. Here the speed propagation is
+$f'(q) = q$. A shock may develop; sonic points occur when $q=0$.
+\ei
+We test them for two initial conditions at $t=0$:
+\bi
+\item[(1)] \emph{Positive square wave:}
+\be
+\label{PositiveSquareWave}
+q(x) := \cases{
+0, & if $0 \leq x < 0.3$,\cr
+1, & if $0.3 < x < 0.5$,\cr
+0, & if $0.5 < x \leq 1$.
+}
+\ee
+\item[(2)] \emph{Square wave:} identical to (1), except a shift by $0.5$
+so that $q$ crosses zero at two points (initially at $x=0.3,0.5$).
+\be
+\label{SquareWave}
+q(x) := \cases{
+-0.5, & if $0 \leq x < 0.3$,\cr
+0.5, & if $0.3 < x < 0.5$,\cr
+0.5, & if $0.5 < x \leq 1$.
+}
+\ee
+Sonic points occur only for the case (B2). The profile $q(x)$
+after $100$ timesteps for each of the four cases (A1),(A2),(B1),(B2) is shown
+in Fig.~\ref{ScalarResults1}.
+\ei
+We discretize in space using $N = 100$ points over the interval $[0,1]$,
+hence $\D x = 0.01$. We use a CFL number of $0.2$.
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.45\textwidth]
+{advection_positivesquarewave_0.20_100.eps}
+\includegraphics[width=0.45\textwidth]
+{advection_squarewave_0.20_100.eps}
+\end{center}
+\vskip -0.5cm
+\centerline{(A1) \hskip 5cm (A2)}
+\vskip 1cm
+\begin{center}
+\includegraphics[width=0.45\textwidth]
+{burgers_positivesquarewave_0.20_100.eps}
+\includegraphics[width=0.45\textwidth]
+{burgers_squarewave_0.20_100.eps}
+\end{center}
+\vskip -0.5cm
+\centerline{(B1) \hskip 5cm (B2)}
+\caption{Results of Kashiwa ICE algorithm for scalar equations, (A1)--(B2),
+after $100$ timesteps with $100$ gridpoints and CFL of $0.2$.
+Top line: constant advection; bottom line: Burger's
+equation. Left column: positive square wave initial data; left column:
+square wave initial data.}
+\label{ScalarResults1}
+\end{figure}
+
+The ICE algorithm performs well for cases (A1),(A2) and (B1). It exhibits
+poor results in (B2), due to the sonic points: in (\ref{ScalarUStar}) with
+$f'(q_j)$, $f'(q_{j+1}) \approx 0$, $u^*_{j+\frac12}$ may be close to zero,
+and when we divide by it in (\ref{ScalarDelTStar}), we may get absurd values
+for $\D^* t$. A ``sonic point fix'' (adding artificial viscosity in these
+cases) is required, as indicated in \cite[pp.~8--9]{davis}.
+
+
+%################### CURRENT UINTAH ALGORITHM FOR EULER ###################
+
+\newpage
+\section{Uintah ICE Algorithm for Euler}
+\label{UintahAlgorithm}
+
+We describe the ICE algorithm currently implemented in Uintah for the 1D
+compressible Euler equations.
+
+\subsection{The Equations}
+\label{EulerEq}
+Because the Euler equations have many formulations, we specify the unknowns
+and the conservation equations they satisfy. The unknowns consist of
+a state vector $Q := (\rho,\rho u,\rho i)^T$ ($\rho$ is the density,
+$u$ is the velocity, $i$ is the specific internal energy), and the pressure
+$p$. To set boundary conditions, we first translate these variables into
+$(\rho,u,T)$ and $p$, set B.C. for those, and translates back to the state
+variables $Q$. This is a separate issue that will not be investigated here.
+The equations are
+\be
+Q_t + C(Q)_x = -P(Q),
+Q :=
+\left[
+\begin{array}{c}
+\rho\\
+\rho u\\
+\rho i
+\end{array}
+\right],
+C(Q) :=
+\left[
+\begin{array}{c}
+u \rho\\
+u \rho u\\
+u \rho i
+\end{array}
+\right],
+S(Q) :=
+\left[
+\begin{array}{c}
+0\\
+p_x\\
+p u_x \\
+\end{array}
+\right].
+\label{EulerFlux}
+\ee
+The Equation Of State (EOS) assumes an ideal gas model,
+\be
+  p = (\gamma-1) \rho e
+  \label{EOS}
+\ee
+where $\gamma=1.4$. In (\ref{EulerFlux}), $C$ is the advection flux (convective
+term) and $P$ represents sources due to pressure.
+Notice that $P$ is not in flux form.
+
+\subsection{Discretization}
+We define all state vector at cell centers. Intermediate values inside
+the timestep are calculated at the faces for $p$ and $u$. See
+Fig.~\ref{Grid}.
+\begin{figure}[htbp]
+   \centering
+   \includegraphics[width=4.8in]{Grid.eps}
+   \caption{Cell-centered discretization of (\ref{EulerFlux}). The discrete
+   state variables $Q_j$ are defined at cell centers $j$ (``x'').
+   Cell faces $j+\frac12$ are marked by ``$|$''.}
+   \label{Grid}
+\end{figure}
+
+We assume an infinite (or periodic) grid to avoid treating boundary conditions.
+
+\subsection{Advection Scheme}
+The ICE algorithm timestep for computing the quantities at time
+$t_{n+1}$ (denoted $Q^{(n+1)}$) from quantities at time $n$ (denoted
+$Q$, omitting the $n$-superscript) consists of the following steps:
+\bn
+%%%%%%%%%%%%%%%%% STEP 1 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute pressure}:
+compute $p_j$ from the EOS at all cell centers $j$,
+\be
+   p_j = (\gamma-1) \rho_j i_j, \qquad \forall j.
+   \label{Equilibration Pressure}
+\ee
+Then compute the speed of sound,
+\be
+   c_j = \left(\sqrt{\frac{\partial p}{\partial \rho} +
+   \frac{\partial p}{\partial i} \frac{p}{\rho^2}}\right)_j =
+   \sqrt{(\gamma-1) \left(i_j + \frac{p_j}{\rho_j} \right)} , \qquad \forall j.
+   \label{SpeedSound}
+\ee
+
+%%%%%%%%%%%%%%%%% STEP 2 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute the face-centered velocities}:
+we denote them by $u^*_{j+\frac12}$, at all faces $j+\frac12$. 
+\be
+   u^*_{j+\frac12} =
+   \frac{\rho_j u_j + \rho_{j+1} u_{j+1}}{\rho_j + \rho_{j+1}} -
+   \D t \frac12 \left( \frac{1}{\rho_j} + \frac{1}{\rho_{j+1}} \right)
+   \frac{p_{j+1} - p_j}{\D x}, \qquad \forall j.
+\ee
+
+%%%%%%%%%%%%%%%%% STEP 3 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute pressure correction and update pressure}.
+Note that the correction is defined at cell centers.
+\be
+  (\D P)_j =
+  -\D t c_j^2 \rho_j ADV(vol,u^*)_j, \qquad \forall j.
+  \label{DelP}
+\ee
+\be
+   p_j = p_j + (\D P)_j, \qquad \forall j.
+   \label{UpdatePress}
+\ee
+Here $vol$ is the volume fraction of the material, defined at each cell center.
+In this setting, we have one material, so $vol \equiv 1$.
+The notation $ADV(a,u^*)$ is the discrete advection operator of the
+function $a=a(x)$ using the velocities $u^*$ at the faces. It will be
+further explained later on.
+
+%%%%%%%%%%%%%%%%% STEP 4 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute the face-centered pressure}:
+denoted by $p^*_{j+\frac12}$, and computed at all faces $j+\frac12$ as
+averages of the cell-centered pressure.
+\be
+   p^*_{j+\frac12} =
+   \frac{\rho_{j+1} p_j + \rho_{j} p_{j+1}}{\rho_j + \rho_{j+1}}.
+   \label{FacePressure}
+\ee
+
+%%%%%%%%%%%%%%%%% STEP 5 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute Lagrangian quantities}: these values seem to be
+the values of the cell-centered state variables, which are advected along
+the characteristics of the system.
+\begin{eqnarray}
+   \rho^L_j     & = & \rho_j \\
+   \label{Sources1}
+   (\rho u)^L_j & = & \rho_j u_j - \D t \frac{p^*_{j+\frac12} -
+               p^*_{j-\frac12}}{\D x} \\
+   \label{Sources2}
+   (\rho i)^L_j & = & \rho_j i_j - \D t p_j ADV(vol,u^*)_j
+   \label{Sources3}
+\end{eqnarray}
+for all cell centers $j$.
+
+%%%%%%%%%%%%%%%%% STEP 6 %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Advect and advance in time}: we pass back from the
+Lagrangian coordinate system to the cell centers at time $n+1$.
+\begin{eqnarray}
+   \rho^{n+1}_j     & = & \rho^L_j - \D t ADV(\rho^L,u^*)_j \\
+   (\rho u)^{n+1}_j & = & (\rho u)^L_j - \D t ADV((\rho u)^L,u^*)_j \\
+   (\rho i)^{n+1}_j & = & (\rho i)^L_j - \D t ADV((\rho i)^L,u^*)_j. \\
+   \label{Advection}
+\end{eqnarray}
+for all cell centers $j$.
+
+%%%%%%%%%%%%%%%%% STEP 7: Set delT %%%%%%%%%%%%%%%%%%%
+
+\item \underline{Compute $\D t$}: the next timestep is computed similarly
+to (\ref{ScalarDelT}). Based on a user-specified Courant number $0 < \cfl < 1$,
+\be
+   \D t = \min_j\left\{ \frac{\cfl \cdot \D x}
+   {|u^*_{j+\frac12} + c_j| + \varepsilon}\right\},
+   \label{ICEDelT}
+\ee
+where $\e = 10^{-30}$ is a small number.
+\en
+
+\subsubsection{The $ADV$ operator}
+This section is based on the Uintah code. It turns out that it contradicts
+the description in \cite{kashiwa2}. As we will see, it is probable that
+the paper is wrong and the code is correct. 
+
+The advection operator $ADV(q,u^*)$ takes cell centered values $\{q_j\}_j$
+of an advected quantity $q=q(x)$, and returns a correction defined at cell
+centers. When this correction is multiplied by $\D t$ and subtracted,
+we obtain $\{q^{(n+1)}_j\}_j$.
+$ADV$ requires the face-centered velocities $\{u^*_{j+\frac12}\}_j$.
+$ADV(q,u^*)_j$ can be interpreted as discrete divergence operator centered
+at cell $j$.
+
+\bi
+\item \emph{Viewpoint 1: moving ``slabs''.} Geometrically, we can
+approximate the amount of volume advected in and out every cell during
+a $\D t$ time interval; the volumes depend on $\D x$, $\D t$ and the $u^*$'s,
+but \emph{independent of $\{q_j\}_j$}. Then, we approximate the average of
+$q$ on each slab to get the total in-flux and out-flux of $q$ to/from 
+cell $j$. The resulting formula can thus be applied to all state variables
+(substituted for $q$).
+
+Thus, $ADV$ is given by
+\be
+ADV(q,u^*)_j := -\frac{1}{\D x \D t}
+\left( q_{in} V_{in} - q_{out} V_{out} \right),
+\label{InOut}
+\ee
+where $V_{in}$ is the slab volume advected into cell $j$, $q_{in}$ is
+an average of $q$ over this in-slab, $V_{out}$ is the slab volume advected
+outside cell $j$, and $q_{out}$ is the average of $q$ over the out-slab.
+
+Fig.~\ref{Slabs} illustrates the case where $u^*_{j-\frac12}>0$,
+$u^*_{j+\frac12}>0$. The in-slab is a volume of cell $j-1$ entering cell $j$,
+and the out-slab is a volume of cell $j$ leaving cell $j$ and entering
+cell $j+1$. Assuming that $u^*_{j+\frac12}$ is the average velocity at
+the face $j+\frac12$ over the time period $[t_n,t_{n+1}]$, 
+$V_{in,j} = \D t u^*_{j-\frac12}$ and $V_{ou,jt} = \D t u^*_{j-\frac12}$; 
+if $u^*_{j+\frac12}$ is a velocity value at the face at $t_n+\frac12 \D t$,
+the slab volumes are exact to $O(\D t^2)$. The average of $q$ over $V_{in}$
+is approximated to $O(\D x^2)$ by the value $q^S_j$ of $q$ in the middle
+of the slab.
+
+\begin{figure}[htbp]
+   \centering
+   \includegraphics[width=4.8in]{Slabs.eps}
+   \caption{The in-slab and out-slab of cell $j$ for the case of
+   $u^*_{j-\frac12}>0$, $u^*_{j+\frac12}>0$.}
+   \label{Slabs}
+\end{figure}
+
+In general, the in-flux is a summation of the in-flux through face
+$j-\frac12$ and $j+\frac12$. If we define
+\be
+u^+_{j+\frac12} := \max\left\{ u^*_{j+\frac12}, 0 \right\}, \qquad
+u^-_{j+\frac12} := \min\left\{ u^*_{j+\frac12}, 0 \right\}
+\ee
+then
+\begin{eqnarray}
+V_{in,j} &=& q^S_{j-1} \D t u^+_{j-\frac12} - q^S_{j+1} \D t u^-_{j+\frac12}\\
+V_{out,j} &=& -q^S_{j} \D t u^-_{j-\frac12} + q^S_{j} \D t u^+_{j+\frac12}.\\
+\end{eqnarray}
+Substituting into (\ref{InOut}) gives
+\begin{eqnarray}
+\nonumber
+ADV(q,u^*)_j & = & -\frac{1}{\D x} \left( 
+                   q^S_{j-1} u^+_{j-\frac12} -
+                   q^S_{j+1} u^-_{j+\frac12} + \right. \\
+&&                 \left. q^S_{j} u^-_{j-\frac12} - 
+                   q^S_{j} u^+_{j+\frac12} \right).
+\label{AdvInOut}
+\end{eqnarray}
+
+\item \emph{Viewpoint 2: conservation form.} As in (\ref{ScalarAdvect}),
+we can rearrange (\ref{AdvInOut}) in terms of face $j-\frac12$, $j+\frac12$
+contributions rather than ``in'' and ``out'' contributions. Namely,
+if
+\be
+ADV(q,u^*) = \frac{1}{\D x} \left(C^*_{j+\frac12} - C^*_{j-\frac12}\right),
+\ee
+where the numerical flux is
+\be
+C^*_{j+\frac12} := q_j^S u^+_{j+\frac12} + q^S_{j+1} u^-_{j+\frac12}.
+\label{AdvFlux}
+\ee
+\ei
+
+Note that when $q \equiv 1$, $C^*_{j+\frac12} =
+u^+_{j+\frac12} + u^-_{j+\frac12} = u^*_{j+\frac12}$, and $ADV$ becomes
+the discrete divergence operator.
+
+The advantage of viewpoint 1 is that the same $ADV$ operator
+(except for the limiter) applies to all state variables in the Euler equations,
+as they are all advected with the same velocity $u^*$. The only quantities
+that need to be computed for each new variable are the slab averages
+$\{q^S_j\}_j$.
+
+The advantage of viewpoint 2 is that it allows a direct relation to
+schemes based on Riemann solvers. (\ref{AdvFlux}) is a special
+case of a flux-vector splitting \cite[p.~83, (4.56)]{leveque2}.
+
+We now describe the choice of $q^S_j$.
+\bi
+\item \emph{First order.} Here
+\be
+q^S_j := q_j.
+\label{qslab1}
+\ee
+Thus (\ref{AdvFlux}) is
+an upwind flux \cite[p.~75, (4.33)]{leveque2}. More generally, it can be
+viewed as a Godunov method, where $q^S_j$ represents the value
+solution $\hat{q}$ of the Riemann problem with piecewise constant initial data
+$q_{j-1},q_j$ on the left and the right of the face $j+\frac12$, evaluated
+at mid-time (i.e., $q^S_j = \hat{q}((j+\frac12) \D x, (n+\frac12) \D t)$).
+\item \emph{Second order.} Here we use
+\be
+q^S_j := q_j + r_j \frac{q_{j+1} - q_{j-1}}{2 \D x},
+\label{qslab2}
+\ee
+where $r_j := |\D x/2 - u^*_{j+\frac12} \D t/2|$ is the ``centroid'' vector,
+that is, the vector pointing from the cell center to the slab center.
+Following the derivation of \cite{kashiwa1} and \cite[\S 6.4]{leveque2},
+we see that (\ref{AdvFlux}) is equivalent to a Godunov method based on
+piecewise linear reconstruction of $q$. (\ref{qslab2}) is a second-order
+approximation to the value of $q$ at the center of the slab.
+\item \emph{Limited.} This combines the first and second order methods using
+\be
+q^S_j := q_j + r_j \phi_j \frac{q_{j+1} - q_{j-1}}{2 \D x},
+\label{qslablimited}
+\ee
+$\phi_j$ is either a van-Leer gradient limiter, when advecting volume
+fraction and density, or a compatible flux limiter \cite{kashiwa1}, for
+all other advected quantities.
+\ei
+
+\subsection{Scheme Analysis}
+We reformulate ICE in terms of the state variables $Q$ only. The target is
+to find the operator transforming $Q^n$ into $Q^{n+1}$.
+The ICE timestep can be rewritten as follows.
+\bn
+\item Advance pressure to time $n$ using the EOS ($p^n$).
+\item Compute half-space, [locally] time advanced quantities $u^*$, $p^*$.
+Let
+\begin{eqnarray}
+A(q)_{j+\frac12} & := & \frac12 \left( q_{j+1} + q_{j} \right) \\
+D(q)_{j+\frac12}   & := & \frac12 \left( q_{j+1} - q_{j} \right);
+\end{eqnarray}
+for all $j$; then in vector form,
+\begin{eqnarray}
+  u^* & = & \frac{A(\rho u)}{A(\rho)} - \D t A\left(\frac{1}{\rho}\right) D(p^n) \\
+  \label{uStar}
+  \D p & = & -\D t c^2 \rho \left[ D\left(\frac{A(\rho u)}{A(\rho)}\right) -
+  \D t D\left( A \left(\frac{1}{\rho}\right) D(p^n) \right) \right] \\
+  \label{Dp}
+  p^{n+1} & = & p^n - \D t c^2 \rho D\left( \frac{A(\rho u)}{A(\rho)} \right) +
+  \D t^2 c^2 \rho D\left( A \left(\frac{1}{\rho}\right) D(p^n) \right) \\
+  \label{PCC}
+  p^* & = & \frac{1}{A\left(\frac{1}{\rho}\right)} \left[ A\left(\frac{p^{n}}{\rho} \right)
+  - \D t c^2 D\left( \frac{A(\rho u)}{A(\rho)} \right) +
+  \D t^2 c^2 D\left( A \left(\frac{1}{\rho}\right) D(p^n) \right) \right].
+  \label{pStar}
+\end{eqnarray}
+
+\item \emph{Lagrangian phase:} Advance in time based on the sources,
+\be
+  Q^L = Q^n - \D t LAG(Q^n,u^*,p^*)
+  \label{Lagrangian}
+\ee
+\item \emph{Eulerian phase:} advect forward in time. The advection operator
+is based on the already-computed Lagrangian values.
+\be
+  Q^{n+1} = Q^L - \D t ADV(Q^L,u^*)
+  \label{Eulerian}
+\ee
+\en
+The Lagrangian operator advances $Q$ using the equation $Q_t = -S(Q)$
+(without advection). Discretizing $S$ (see (\ref{EulerFlux})) at cell
+centers (using differencing of the face-centered $u^*,p^*$, we define
+\be
+  LAG(Q)_j := 
+  \left[
+  \begin{array}{c}
+  0\\
+  \frac{p^*_{j+\frac12} - p^*_{j-\frac12}}{\D x} \\
+  p^{n+1}_j \left( u^*_{j+\frac12} - u^*_{j-\frac12} \right)_j
+  \end{array}
+  \right].
+\ee
+Note that $LAG$ contains two pressures: face-centered $p^*$ and cell-centered
+$p^{n+1}$. Both are time-advanced. In ICE we are not really conforming to
+Bucky's page-$29$ scheme for $p^*$, rather, we average time-$n+1$ pressure
+values (equivalent to $\D^*_p t = \D t$ and taking the average over the entire
+right-hand-side for the $p^*$ equation on page 29).
+
+\subsection{Numerical Results}
+Our initial data is the shock tube piecewise constant data depicted
+in Fig.~\ref{ShockTubeInitialData}.
+\begin{figure}[tbp]
+   \centering
+   \includegraphics[width=4.8in]{iceInitialData.eps}
+   \caption{Initial data for the compressible Euler equations (shock tube
+   problem).}
+   \label{ShockTubeInitialData}
+\end{figure}
+
+We tested the ICE algorithm using $\cfl = 0.45$ and
+an initial $\D t = 10^{-6}$ for the first timestep (subsequent timesteps
+are computed using (\ref{ICEDelT})). We discretize in space using $N = 100$
+points over the interval $[0,1]$, hence $\D x = 0.01$.
+The state variable profiles after $100$ timesteps are depicted in
+Fig.~\ref{ICEResultLimiter}. We tested the same algorithm with first order
+advection (\ref{qslab1}). The results are depicted in Fig.~\ref{ICEResultFO}.
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceResult1Limiter.eps}
+\end{center}
+%\vskip -0.5cm
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceResult2Limiter.eps}
+\end{center}
+%\vskip -0.5cm
+\caption{Results of Kashiwa ICE algorithm for the shock tube problem
+with a limiter,
+after $100$ timesteps with $100$ gridpoints and CFL of $0.45$. The top
+two lines show $\rho,u_1\equiv u, T$ and $p$ vs. $x$. The last line
+shows the internal variables $\D P$ and the speed of sound $c$ vs. $x$.}
+\label{ICEResultLimiter}
+\end{figure}
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceResult1FO.eps}
+\end{center}
+%\vskip -0.5cm
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceResult2FO.eps}
+\end{center}
+%\vskip -0.5cm
+\caption{The same as Fig.~\ref{ICEResultLimiter}, for first order advection
+in $ADV$.}
+\label{ICEResultFO}
+\end{figure}
+
+Note that
+\begin{itemize}
+\item All state variables have oscillations near the shocks, for first
+order advection. I cannot explain this result - shouldn't the
+first order advection operator $ADV$ be monotone (even though it's a system
+of equations, not a scalar conservation law)?
+\item First order advection is much more diffusive, which is to be expected.
+\item The oscillation appear also for the second order limited case,
+thus we might be led to thinking that the limiter is not working properly.
+But even if it would reduce the advection order to first near shocks, as
+we already saw, oscillations still occur. So the limiter might not be
+the problem, although we do not know for sure before we resolve the
+first order oscillations issue.
+\end{itemize}
+
+%################### MY CONSERVATIVE VERSION OF THE UINTAH ALGORITHM FOR EULER ###################
+
+\newpage
+\section{Conservative ICE Algorithm for Euler}
+\label{ConservativeICE}
+
+\subsection{The Equations}
+\label{ConservativeEulerEq}
+The difference between the algorithm in this section and the ICE algorithm
+in \S \ref{UintahAlgorithm} is the formulation of the energy equation. We use
+the conservative form of the Euler system, replacing $i$ (specific internal
+energy) by $e$ (specific energy), where $e = i + \frac12 u^2$. We do not
+deal here with the implications of this change on the boundary conditions.
+Working in this form allows us to compare ICE to the very similar Zha-Bilgen
+flux vector splitting described in \cite{zb}.
+
+The equations are
+\be
+Q_t + F(Q)_x = 0,
+\qquad
+Q :=
+\left[
+\begin{array}{c}
+\rho\\
+\rho u\\
+\rho e
+\end{array}
+\right],
+\qquad
+F(Q) :=
+\left[
+\begin{array}{c}
+u \rho\\
+\rho u^2 + p\\
+(\rho e + p) u
+\end{array}
+\right],
+\label{ConservativeEulerFlux}
+\ee
+The Equation Of State (EOS) assumes an ideal gas model,
+\be
+  p = (\gamma-1) \rho \left( e - \frac12 u^2 \right)
+  \label{EOS2}
+\ee
+where $\gamma=1.4$. The eigenvalues of the Jacobian $\partial F/\partial Q$
+has three real eigenvalues, $u, u+c, u-c$, where $c = \sqrt{\gamma p/\rho}$
+is the speed of sound. We split $F$ as in \cite[eq.~(7)]{zb},
+\be
+  F = C + P, \qquad 
+  C := 
+  u
+  \left[
+  \begin{array}{c}
+  \rho\\
+  \rho u\\
+  \rho e
+  \end{array}
+  \right],
+  \qquad
+  P := 
+  \left[
+  \begin{array}{c}
+  0\\
+  p\\
+  p u
+  \end{array}
+  \right].
+  \label{FluxSplit}
+\ee
+In (\ref{FluxSplit}), $F$ is total flux, $C$ is the convective flux and
+$P$ is the pressure term, now in flux form (compare with (\ref{EulerFlux})).
+The eigenvalues of $C$ are $u,u,u$ and $P$'s eigenvalues are $0,c,-c$.
+
+\subsection{Discretization}
+$Q$ and $p$ are defined at cell centers. We will again use $u^*$ and $p^*$ at
+the face centers. We assume an infinite (or periodic) grid to avoid treating
+boundary conditions.
+
+\subsection{Advection Scheme}
+In this case we can write ICE in discrete conservative form. ICE's operator
+splitting consists of the stages
+\begin{eqnarray}
+  p^{n} & = & p\left(Q)\right) \quad {\mbox{(Evaluate EOS)}} \\
+  \label{EvalEOS}
+  && {\mbox{Compute $u^*,p^{n+1},p^*$}} \\
+  Q^L & = & Q^n - \D t LAG(Q^n,u^*,p^*) \quad {\mbox{(Lagrangian phase)}} \\
+  \label{LAG}
+  Q^{n+1} & = & Q^L - \D t ADV(Q^L,u^*) \quad {\mbox{(Eulerian phase)}}
+  \label{ADV}
+\end{eqnarray}
+$u^*,p^{n+1},p^*$ are computed as in the Uintah ICE algorithm.
+The Lagrangian phase is now cast in terms of $(\rho,\rho u,\rho e)$ rather
+than $(\rho,\rho u,\rho i)$. Instead of (\ref{Sources1})--(\ref{Sources3})
+we have
+\begin{eqnarray}
+   \rho^L_j     & = & \rho_j \\
+   \label{LAG1}
+   (\rho u)^L_j & = & \rho_j u_j - \D t \frac{p^*_{j+\frac12} -
+               p^*_{j-\frac12}}{\D x} \\
+   \label{LAG2}
+   (\rho e)^L_j & = & \rho_j e_j - \D t ADV(p^{(n+1)},u^*)_j.
+   \label{LAG3}
+\end{eqnarray}
+Thus, the Lagrangian phase now has the numerical flux form
+\begin{eqnarray}
+  LAG(Q,u^*) & = &
+  \frac{1}{\D x} \left(P^*_{j+\frac12} - P^*_{j-\frac12}\right), \\
+  \label{LAGFluxForm}
+  P^*_{j+\frac12} & := &
+  \left[
+  \begin{array}{c}
+  0\\
+  p^*_{j+\frac12} \\
+  u^+_{j+\frac12} p^{n+1,S} + u^-_{j+\frac12} p^{n+1,S}
+  \end{array}
+  \right].
+  \label{PStar}
+\end{eqnarray}
+The convective numerical flux is given as before (see (\ref{AdvFlux})) by
+\begin{eqnarray}
+  ADV(Q,u^*) & = &
+  \frac{1}{\D x} \left(C^*_{j+\frac12} - C^*_{j-\frac12}\right), \\
+  \label{ADVFluxForm}
+  C^*_{j+\frac12} & := & u^+_{j+\frac12} Q_j^S + u^-_{j+\frac12} Q^S_{j+1}.
+  \label{CStar}
+\end{eqnarray}
+Thus, the total numerical flux of the scheme is
+\begin{eqnarray}
+\nonumber
+F^*_{j+\frac12} & = & C^*_{j+\frac12} + P^*_{j+\frac12} \\
+\nonumber
+  & = &
+  u^+_{j+\frac12}
+  \left[
+  \begin{array}{c}
+  \rho_j^S \\
+  (\rho u)_j^S \\
+  (\rho e)_j^S
+  \end{array}
+  \right]
+  +
+  u^-_{j+\frac12}
+  \left[
+  \begin{array}{c}
+  \rho_{j+1}^S \\
+  (\rho u)_{j+1}^S \\
+  (\rho e)_{j+1}^S
+  \end{array}
+  \right] \\
+  && +
+  \left[
+  \begin{array}{c}
+  0\\
+  p^*_{j+\frac12} \\
+  u^+_{j+\frac12} p^{n+1,S} + u^-_{j+\frac12} p^{n+1,S}
+  \end{array}
+  \right].
+\end{eqnarray}
+
+\subsection{Numerical Results}
+Our initial data is the shock tube piecewise constant data depicted
+in Fig.~\ref{ShockTubeInitialData}.
+We tested the ICE algorithm using $\cfl = 0.45$ and
+an initial $\D t = 10^{-6}$ for the first timestep (subsequent timesteps
+are computed using (\ref{ICEDelT})). We discretize in space using $N = 100$
+points over the interval $[0,1]$, hence $\D x = 0.01$.
+The state variable profiles after $100$ timesteps are depicted in
+Fig.~\ref{ICEResultLimiter}. We tested first order advection only.
+The results are depicted in Fig.~\ref{ICEConservativeResultFO}.
+These are initial results only. The same wiggles occur in here as in Uintah
+ICE. However, the velocity profile seems to be wrong, unlike the Uintah
+results.
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceConservativeResult1FO.eps}
+\end{center}
+%\vskip -0.5cm
+\begin{center}
+\includegraphics[width=0.8\textwidth]{iceConservativeResult2FO.eps}
+\end{center}
+%\vskip -0.5cm
+\caption{The same as Fig.~\ref{ICEResultLimiter}, for first order advection
+in $ADV$.}
+\label{ICEConservativeResultFO}
+\end{figure}
+
+%################### SUMMARY AND QUESTIONS ###################
+
+\newpage
+\section{Concluding Remarks and Questions for Bucky}
+\begin{itemize}
+\item The scalar ICE algorithm works, except near sonic points, where we
+have to add more diffusion. This action item can be treated separately
+of the rest of the ``machinery''.
+\item First order advection in ICE produces oscillations. Can we show that
+it must be monotone? If not, what is the point of using a limiter to reduce
+the advection order from second to first in non-smooth regions, if we cannot
+anyway obtain a monotone profile using first order?
+\item The precise role of $u^*$ and $p^*$ from \cite[p.~29]{kashiwa2} in
+the ICE advection scheme is still not part of the
+description of this report and should be added as soon as possible as it
+might be the key to the questions above.
+\item Should $p^*$ be based on old pressures (time $n$) or new pressure
+averages (time $n+1$)? Bucky has an old pressure average when $\D^* p_t = 0$
+pn page $29$, and again uses $p^L = p$ for explicit timestepping on pages
+$41-42$, which are averaged to give $p^*$.
+\item Can the entire ICE algorithm be written in conservation form (i.e.,
+a grand numerical flux combining both the Lagrangian and Eulerian phases)?
+\end{itemize}
+
+\bibliographystyle{alpha}
+\bibliography{reports}        % guide.bib is the name of our database
+
+\end{document}

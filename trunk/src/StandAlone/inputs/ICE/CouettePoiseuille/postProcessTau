@@ -1,0 +1,32 @@
+#!/bin/csh -f
+
+set LINEEXTRACT = "/home/builds/Fresh/NB/opt_gcc/StandAlone/lineextract"
+
+#______________________________________________________________________
+#         XY
+echo "Extracting tau_XY and tau_YX and plotting"
+$LINEEXTRACT   -m 0 -cellCoords -v tau_X_FC -timestep 2 -startPt 0.5 -0.055 0 -endPt 0.5 0.055 0 -uda CouettePoiseuille-XY.uda.000 > & out.tau_X_FC
+$LINEEXTRACT   -m 0 -cellCoords -v tau_Y_FC -timestep 2 -startPt 0.5 -0.055 0 -endPt 0.5 0.055 0 -uda CouettePoiseuille-XY.uda.000 > & out.tau_Y_FC
+
+gnuplot plotTau.XY.gp
+
+#______________________________________________________________________
+#         XZ
+echo "Extracting tau_XZ and tau_ZX and plotting"
+$LINEEXTRACT   -m 0 -cellCoords -v tau_X_FC -timestep 2 -startPt 0.5 0 -0.055 -endPt 0.5 0 0.055 -uda CouettePoiseuille-XZ.uda.000 > & out.tau_X_FC
+$LINEEXTRACT   -m 0 -cellCoords -v tau_Z_FC -timestep 2 -startPt 0.5 0 -0.055 -endPt 0.5 0 0.055 -uda CouettePoiseuille-XZ.uda.000 > & out.tau_Z_FC
+
+gnuplot plotTau.XZ.gp
+
+
+#______________________________________________________________________
+#         YZ
+echo "Extracting tau_YZ and tau_ZY and plotting"
+$LINEEXTRACT   -m 0 -cellCoords -v tau_Y_FC -timestep 2 -startPt 0 0.5 -0.055 -endPt 0 0.5 0.055 -uda CouettePoiseuille-YZ.uda.000 > & out.tau_Y_FC
+$LINEEXTRACT   -m 0 -cellCoords -v tau_Z_FC -timestep 2 -startPt 0 0.5 -0.055 -endPt 0 0.5 0.055 -uda CouettePoiseuille-YZ.uda.000 > & out.tau_Z_FC
+
+gnuplot plotTau.YZ.gp
+
+#__________________________________
+#  cleanup
+/bin/rm Tau_XY.ps Tau_YZ.ps Tau_XZ.ps

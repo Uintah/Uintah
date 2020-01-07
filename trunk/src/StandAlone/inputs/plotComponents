@@ -1,0 +1,207 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script parses output from sus 
+#  and plots the various component times using gnuplot.
+#  Note you must have set the environmental variable:
+#
+#  SCI_DEBUG ComponentTimings:+
+#
+#  Usage:
+#     plotComponents <sus output file> < output postScript and pdf files (y/Y), default is no>
+#
+#  This requires gnuplot 3.8 or greater.
+#______________________________________________________________________
+
+if( $#argv == 0 ) then
+  echo "plotComponents <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+
+set out = $argv[1]
+
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+grep -q TaskExec $out
+if($status) then
+  echo ""
+  echo "ERROR:"
+  echo "Could not find task communication output in the output file"
+  echo "You must have the environmental variable:"
+  echo ""
+  echo "    SCI_DEBUG ComponentTimings:+"
+  echo ""
+  echo " set when you run your simulation and your simulatiion must be run on "
+  echo " more than 1 mpi process"
+  exit
+endif
+    
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+
+#__________________________________
+# make a copy of the output file
+
+mkdir scraps >&/dev/null
+cp $out scraps/tmp
+
+#__________________________________
+# extract the average and maximum values data
+cd scraps
+
+echo "Now extracting the data"
+
+grep "Wall Time"    tmp | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
+grep TaskExec       tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& exec
+grep TaskGlobalComm tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& global
+grep TaskLocalComm  tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& local
+grep TaskWaitComm   tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& wait
+
+@ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
+@ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
+set machine = `grep Machine    tmp | cut -d":" -f 2`
+set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
+
+paste -d "  " elapsedTime exec global local wait>& data
+sed  -i s/","//g data    # eliminate any ","
+
+#__________________________________
+# extract the imbalance data
+echo "Now extracting the Load Imbalance data"
+
+grep TaskExec       tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& exec
+grep TaskGlobalComm tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& global
+grep TaskLocalComm  tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& local
+grep TaskWaitComm   tmp | awk -F : '{print $5}'| tr -d "[:alpha:]" >& wait
+paste -d "  " elapsedTime exec global local wait>& LIBdata
+
+#__________________________________
+# bulletproofing
+# - delete any lines with alphabetical letters
+# - delete any line without 5 columns
+sed '/[:alpha:]/d' data >& data.sed
+awk 'NF == 9 {print $1, " ", $2, " ", $3, " ", $4, " ", $5, " ", $6, " ", $7, " ", $8, " ", $9}' data.sed >& data
+
+
+echo "Done extracting data"
+/bin/rm gp >& /dev/null
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotComp.ps and plotComp.pdf"
+
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "plotTaskComm.ps"
+fin
+else
+
+cat > gp << fin
+set terminal x11 font "fixed,bold,12" size 1024,768
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+
+#__________________________________
+# compute stats this version of gnuplot is > 3.8
+haveStats =0
+# does this version have the stats patch 
+if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) print "Computing the statistics of the mean time per timestep"; haveStats = 1
+if(haveStats == 1) stats 'data' using 2 name "A";   # Task execution
+if(haveStats == 1) stats 'data' using 3 name "B";   # Task Max
+
+
+set multiplot
+set size   1.0, 0.5 # for three plots
+set origin 0.0, 0.5
+set autoscale
+set pointsize 0.9
+
+set grid xtics ytics
+set title "$date, $machine, $procs MPI ranks, $threads Threads \n Average"
+set xlabel 'Timestep'
+set ylabel 'Time [s]'
+
+set yrange[0:A_mean + 2*A_stddev]
+plot 'data' using 2 t 'Task Execution'       with linespoints,\
+     'data' using 4 t 'Global Comm'          with linespoints,\
+     'data' using 6 t 'Local Comm'           with linespoints,\
+     'data' using 8 t 'Waiting Comm'         with linespoints 
+     
+set origin 0.0,0.0
+set yrange[0:B_mean + 2*B_stddev]
+set title 'Maximum'
+plot 'data' using 3 t 'Task Execution'       with linespoints,\
+     'data' using 5 t 'Global Comm'          with linespoints,\
+     'data' using 7 t 'Local Comm'           with linespoints,\
+     'data' using 9 t 'Waiting Comm'         with linespoints 
+
+set nomultiplot
+
+fin
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
+
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotLoadImbalance.ps and plotLoadImbalance.pdf"
+
+cat >> gp << fin
+set terminal postscript color solid "Times-Roman" 12
+set output "plotLoadImbalance.ps"
+fin
+else
+cat >> gp << fin
+set terminal x11 2
+fin
+endif
+
+cat >> gp << fin
+set autoscale
+set size 1.0,1.0
+set grid xtics ytics
+set title "$date : $machine : $procs Processors: ($threads) Threads \n 100*(1-maxTime)/aveTime"
+set xlabel 'Elaspsed Time'
+set ylabel 'Percentage'
+
+plot 'LIBdata' using 2 t 'Task Execution'        with linespoints,\
+     'LIBdata' using 3 t 'Global Comm'           with linespoints,\
+     'LIBdata' using 4 t 'Local Comm'            with linespoints,\
+     'LIBdata' using 5 t 'Waiting Comm'          with linespoints
+fin
+
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  echo "converting PostScript files to PDF"
+  ps2pdf plotTaskComm.ps
+  ps2pdf plotLoadImbalance.ps
+  mv *.pdf ../
+  
+endif
+#__________________________________
+# clean up
+
+#/bin/rm -rf scraps
+
+exit

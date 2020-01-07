@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!--
+  This input script based off the experimental and numerical results
+  found in the following papers,
+  *  Two-Phase Electrochemical Lithiation in Amorphous Silicon
+  *  Jiang Wei Wang, Yu He, Feifei Fan, Xiao Hua Liu, Shuman Xia, Yang Liu,
+  *  C. Thomas Harris, Hong Li, Jian Yu Huang, Scott X. Mao, and Ting Zhu
+  *  Nano Letters 2013 13 (2), 709-715
+  *
+  *  Size-Dependent Fracture of Silicon Nanoparticles During Lithiation
+  *  Xiao Hua Liu, Li Zhong, Shan Huang, Scott X. Mao, Ting Zhu, and Jian Yu Huang
+  *  ACS Nano 2012 6 (2), 1522-1531
+  *
+  *  Also see the supplementary information associated with each paper
+  *  for more details.
+
+  Input parameters are,
+  *  Young's Modulus -> Looking at the two papers one has a yield strength
+  *                     of 1.5GPa and the other has 0.03E. One is amorphous
+  *                     and the other appears to be crystalline. This makes
+  *                     it difficult to dervive Young's Modulus. If the two
+  *                     are taken to be equal then E = 50 GPa. A further
+  *                     further search for the for values of amorphous silicon
+  *                     shows values for E = 80 GPa plus or minus 20. This
+  *                     source is http://www.mit.edu/~6.777/matprops/asi.htm
+  *
+  *  Poisson's ratio -> The two papers use a Poisson's ratio of 0.3 and the 
+  *                     alternate source specified above uses 0.22.
+  *
+  *  Bulk Modulus -> 48 GPa = 80GPa / (3 * (1 - 2 * .22)), the alternate source
+  *                  42 GPa = 50GPa / (3 * (1 - 2 * .30)), based on papers
+  *
+  *  Shear Modulus -> 33 GPa = 80GPa / (2 * (1 + .22)), the alternate source
+  *                   19 GPa = 50GPa / (2 * (1 + .30)), based on papers
+  *
+  *  Yield Strength -> 2.4GPa = .03 * 80, using alternate source for E, but
+  *                                       equation from paper, Ystr = .03*E
+  *                    1.5GPa based on papers
+  *
+  *  Density -> The density of silicon is not stated in the two papers but
+  *             the above alternate source has a density of 2.33 g/cm^3, or
+  *             2330 kg/m^3
+  *
+  *  Diffusivity -> In the papers there is no given value for D0. In the
+  *                 following paper,
+  *                 N. Ding, J. Xu, Y.X. Yao, G. Wegner, X. Fang, C.H. Chen,
+  *                 I. Lieberwirth, Determination of the diffusion coefficient
+  *                 of lithium ions in nano-Si, Solid State Ionics, Volume 180,
+  *                 Issues 2–3, 9 March 2009, Pages 222-225
+  *                 The value for diffusivity is 10e-16 m^2/s
+  *
+  *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
+  *
+
+  Units used for this simulation,
+  *  density  -> picogram/micrometer^3
+  *  pressure -> picogram / (microsecond^2 * micrometer)
+  *  temperature -> K, kelvin
+  *  diffusivity -> micrometer^2 / microsecond
+
+  Conversions
+  *  density  -> 1 kg/m^3 = 1e-3 picogram/micrometer^3
+  *  pressure -> 1 GPa = 1e6 picogram / (microsecond^2 * micrometer)
+  *  diffusivity -> 1 m^2/s = 1e6 micrometer^2/microsecond
+-->
+<Uintah_specification>
+
+   <Meta>
+       <title>smooth cylinder representation of nano-pillar</title>
+   </Meta>    
+
+   <SimulationComponent type="amrmpm" />
+
+   <Time>
+     <maxTime>3e7</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e8</delt_max>
+<!--
+     <max_Timesteps>10</max_Timesteps>
+-->
+     <timestep_multiplier>0.2</timestep_multiplier>
+   </Time>    
+
+   <DataArchiver>
+      <filebase>SmoothNanoPillar2D_FBC.uda</filebase>
+      <outputInterval>2.e5</outputInterval>
+<!--
+      <outputTimestepInterval>1</outputTimestepInterval>
+-->
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.area"/>
+      <save label = "p.volume"/>
+      <save label = "p.stress"/>
+      <save label = "p.concentration"/>
+      <save label = "p.displacement"/>
+      <save label = "p.scalefactor"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.velocity"/>
+      <save label = "p.diffusivity"/>
+      <save label = "p.externalscalarflux"/>
+      <save label = "p.particleID"/>
+      <save label = "p.refinedMPM"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "g.concentration"/>
+      <checkpoint cycle = "2" interval = "2.0e8"/>
+   </DataArchiver>
+
+   <MPM>
+     <time_integrator>explicit</time_integrator>
+     <interpolator>cpdi</interpolator>
+     <use_load_curves> true </use_load_curves>
+     <do_scalar_diffusion>true</do_scalar_diffusion>
+     <refine_particles>      true      </refine_particles>
+     <DoPressureStabilization> false </DoPressureStabilization>
+   </MPM>
+
+  <AMR>
+     <useLockStep> true </useLockStep>
+     <MPM>
+       <Refinement_Criteria_Thresholds>
+         <Variable name = "stretchRatio" value = "3.0" matl = "0" />
+       </Refinement_Criteria_Thresholds>
+     </MPM>
+     <Regridder type="Tiled">
+       <max_levels>1</max_levels>
+       <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+       <min_patch_size>           [[5,5,1]]</min_patch_size>
+       <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
+       <max_timestep_interval>    50000000   </max_timestep_interval>
+       <cell_regrid_dilation>      [0,0,0]   </cell_regrid_dilation>
+       <cell_stability_dilation>   [0,0,0]   </cell_stability_dilation>
+     </Regridder>
+   </AMR>
+
+   <PhysicalConstants>
+      <gravity>            [0,0,0]   </gravity>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+     <MPM>
+       <material name="T91">
+         <density>2.33e21</density>
+         <melt_temp> 2000.0 </melt_temp>
+         <constitutive_model type="rf_elastic_plastic"> 
+           <bulk_modulus>            48e6    </bulk_modulus>
+           <shear_modulus>           33e6    </shear_modulus>
+           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
+           <!-- Temperature is not currently used in this model, -->
+           <!-- Keep initial material Temperature set to 298.0 -->
+           <initial_material_temperature> 298.0 </initial_material_temperature>
+           <taylor_quinney_coeff>    0.9     </taylor_quinney_coeff>
+           <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
+
+           <!-- Shear Modulus Model type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <shear_modulus_model type = "constant_shear">
+           </shear_modulus_model>
+
+           <!-- Deviatoric Stress Model type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <deviatoric_stress_model type="hypoElastic">
+           </deviatoric_stress_model>
+
+           <!-- Equation of State type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <equation_of_state type = "default_hypo">
+           </equation_of_state>
+
+           <flow_model type = "johnson_cook">
+             <A> 2.0e6 </A>
+             <B> 0.0   </B>
+             <C> 0.0   </C>
+             <n> 0.0   </n>
+             <m> 2.0   </m>
+           </flow_model>
+
+           <yield_condition type = "vonMises">
+           </yield_condition>
+         </constitutive_model>
+         <thermal_conductivity>0.0</thermal_conductivity>
+         <specific_heat>5</specific_heat>
+         <diffusion_model type = "non_linear1">
+           <diffusivity>  1.0e-11   </diffusivity>
+           <max_concentration> 1.0 </max_concentration>
+           <use_pressure>false</use_pressure>
+           <tuning1> 7.90  </tuning1>
+           <tuning2> 0.00  </tuning2>
+					 <!--
+           <tuning2> 2.07  </tuning2>
+					 -->
+           <tuning3> 0.0   </tuning3>
+           <tuning4> 3.0   </tuning4>
+           <tuning5> 1e-6  </tuning5>
+         </diffusion_model>
+         <geom_object>
+           <smoothcyl label = "cylinder">
+             <discretization_scheme> pie_slices </discretization_scheme>
+             <bottom>[0.0,0.0,0.0] </bottom>
+             <top>   [0.0,0.0,0.01]</top>
+             <outer_radius> 0.25   </outer_radius>
+             <inner_radius> 0.0    </inner_radius>
+             <num_radial> 70 </num_radial>
+             <num_axial> 1 </num_axial>
+             <num_angular> 150 </num_angular>
+             <arc_start_angle> 0.0 </arc_start_angle>
+             <arc_angle> 360 </arc_angle>
+           </smoothcyl>
+           <res>                 [1,1,1]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         0             </temperature>
+           <concentration> 0 </concentration>
+         </geom_object>
+       </material>
+       <contact>
+         <type>null</type>
+         <materials>              [0,1]         </materials>
+       </contact>
+       <diffusion_interface>
+         <type>null</type>
+       </diffusion_interface>
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <scalar_flux>
+         <geom_object>
+           <cylinder label = "side">
+             <bottom>          [0.0,0.0,0.0]     </bottom>
+             <top>             [0.0,0.0,0.01]   </top>
+             <radius>          0.257             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 2.e-8 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 2.e-8 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+     </MPM>
+   </PhysicalBC>
+
+   <Grid doAMR="true">
+     <Level>
+       <Box label = "1">
+         <lower>        [-.4,-.4,0.0]    </lower>
+         <upper>        [0.4,0.4,0.01]   </upper>
+         <resolution>   [80, 80, 1]    </resolution>
+         <patches>      [2,2,1]          </patches>
+         <extraCells>   [1,1,1]          </extraCells>
+       </Box>
+     </Level>
+     <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+     </BoundaryConditions>
+   </Grid>
+</Uintah_specification>

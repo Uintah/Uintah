@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+
+  <Meta>
+     <title>Poisson3  + domain 1L test</title>
+  </Meta>
+
+  <SimulationComponent type="poisson3" />
+
+  <Time>
+    <maxTime>              1.0   </maxTime>
+    <initTime>             0.0   </initTime>
+    <delt_min>             1e-5  </delt_min>
+    <delt_max>             1     </delt_max>
+    <timestep_multiplier>  1     </timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>poisson3_+Domain_1L.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <save label = "phi"/>
+    <!--       <save label = "residual"/> -->
+    <checkpoint cycle = "2" timestepInterval = "4"/>
+  </DataArchiver>
+
+  <Poisson>
+    <delt>.01</delt>
+    <maxresidual>.01</maxresidual>
+  </Poisson>
+
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Phi"     var = "Dirichlet">
+          <value> 0. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label = "Left horizontalLeg">
+        <lower>        [ 0.0, 0.45, 0.45]    </lower>
+        <upper>        [ 0.45, 0.55, 0.55]   </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [2,1,1]               </patches>
+        <resolution>   [72,16,16]            </resolution>
+      </Box>
+      <Box label = "Right horizontalLeg">
+        <lower>        [ 0.55, 0.45, 0.45]   </lower>
+        <upper>        [ 1.0, 0.55, 0.55]    </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [2,1,1]               </patches>
+        <resolution>   [72,16,16]            </resolution>
+      </Box>
+      <Box label = "center patch">
+        <lower>        [ 0.45, 0.45, 0.45]   </lower>
+        <upper>        [ 0.55, 0.55, 0.55]   </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [1,1,1]               </patches>
+        <resolution>   [16,16,16]            </resolution>
+      </Box>
+
+      <Box label = "Lower verticalLeg">
+        <lower>        [ 0.45, 0.0, 0.45]    </lower>
+        <upper>        [ 0.55, 0.45, 0.55]   </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [1,2,1]               </patches>
+        <resolution>   [16,72,16]            </resolution>
+      </Box>
+
+      <Box label = "Upper verticalLeg">
+        <lower>        [ 0.45, 0.55, 0.45]   </lower>
+        <upper>        [ 0.55, 1.0, 0.55]    </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [1,2,1]               </patches>
+        <resolution>   [16,72,16]            </resolution>
+      </Box>
+      <Box label = "back Leg">
+        <lower>        [ 0.45, 0.45, 0.0]    </lower>
+        <upper>        [ 0.55, 0.55, 0.45]   </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [1,1,2]               </patches>
+        <resolution>   [16,16,72]            </resolution>
+      </Box>
+
+      <Box label = "Front Leg">
+        <lower>        [ 0.45, 0.45, 0.55]   </lower>
+        <upper>        [ 0.55, 0.55, 1.0]    </upper>
+        <extraCells>   [1,1,1]               </extraCells>
+        <patches>      [1,1,2]               </patches>
+        <resolution>   [16,16,72]            </resolution>
+      </Box>
+    </Level>
+  </Grid>
+
+  <PhysicalConstants>
+     <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+
+</Uintah_specification>
+

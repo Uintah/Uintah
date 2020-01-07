@@ -1,0 +1,223 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>almgren mms </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>0.3</timestep_multiplier>
+    <max_Timesteps>3</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>mmsBC-almgren.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <!--outputInitTimestep/-->
+    <save label="x-mom"/>
+    <save label="x_mms"/>
+    <save label="y_mms"/>
+    <save label="x_mms_source"/>
+    <save label="y-mom"/>
+    <save label="y_mms"/>
+    <save label="z-mom"/>
+    <save label="uVelocity"/>
+    <save label="vVelocity"/>
+    <save label="wVelocity"/>
+    <save label="gamma"/>
+    <!--save label="pressure"/>
+    <save label="b_press"/-->
+    <checkpoint cycle="2" interval="1e-5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[1,1,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face side="x-" type = "Inlet" >
+        <BCType var="Custom" label="x-mom" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" label="y-mom" type="MMS_almgren">
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+
+      <Face side="x+" type ="Inlet" >
+        <BCType var="Custom" label="x-mom" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" label="y-mom" type="MMS_almgren">
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+
+      <Face side="y-" type ="Inlet" >
+        <BCType var="Custom" label="x-mom" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" label="y-mom" type="MMS_almgren">
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+
+      <Face side="y+" type ="Inlet" >
+        <BCType var="Custom" label="x-mom" type="MMS_almgren">
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" label="y-mom" type="MMS_almgren">
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+          <value>0</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+
+      <Face side="z-" type ="Inlet"  >
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+
+      <Face side="z+" type ="Inlet" >
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var= "Neumann" label="z-mom">
+          <value>0.</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <!--model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model-->
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties> 
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <SourceV2>
+        <src label="x_mms" type="MMS_mom">
+          <variable type="FX"/>
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+        </src>
+        <src label="y_mms" type="MMS_mom">
+          <variable type="FY"/>
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+        </src>
+      </SourceV2>
+      <KMomentum>
+        <!--do_not_build_pressure_system/-->
+        <convection scheme="central"/>
+        <!--convection scheme="f_central"/-->
+        <!--convection scheme="upwind"/-->
+        <src_x label = "x_mms_source"/>
+        <src_y label = "y_mms_source"/>
+        <inviscid/>
+        <!--src_x label = "x_mms_source_diff"/>
+        <src_y label = "y_mms_source_diff"/-->
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    750     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <Initialization>
+        <task task_label="uVel-init" variable_label="uVelocity" type="almgren_mms">
+          <variable type="FX"/>
+          <which_vel>u</which_vel>
+          <coordinates x="ucellX" y="gridY"/>
+        </task>
+        <task task_label="vVel-init" variable_label="vVelocity" type="almgren_mms">
+          <variable type="FY"/>
+          <which_vel>v</which_vel>
+          <coordinates x="gridX" y="vcellY"/>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061T6 Aluminum Alloy -->
+<!--   Von Mises approximation using 'small' FSLOPE
+         and PEAKI1 = tau_y / FSLOPE, where tau_y
+         is shear strength. (Al: tau_y = 159MPa) -->
+<Uintah_Include>
+  <FSLOPE> 1.0e-10 </FSLOPE>
+  <PEAKI1> 1.59e18 </PEAKI1>
+</Uintah_Include>

@@ -1,0 +1,150 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>MMS for verifying the Pressure projection method in wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+
+		
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+
+    <!-- Setup the parameters for variable density MMS -->
+    <VarDenOscillatingMMS rho0="5.0" rho1="1.0" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5" x1="Y" x2="Z">
+       <DiffusionCoefficient>
+          <NameTag name="diffcoef"/>
+       </DiffusionCoefficient>
+       <Scalar>f</Scalar>    
+       <ConservedScalar>rhof</ConservedScalar>           
+    </VarDenOscillatingMMS>
+
+    <TwoStreamMixing rho0="5.0" rho1="1.0">
+      <Density><NameTag name="density"/></Density>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>  
+            
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.5</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.5</Constant>
+    </BasicExpression>
+
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+
+      <DiffusiveFlux direction="YZ" isvelocity="true" coefficient="0.001"/>
+
+      <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+      <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+    </TransportEquation>   
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+        
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+        <NameTag name="viscosity"/>
+      <Constant>0.001</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      <ComputeMassResidual/>
+      <Pressure>
+        <ReferencePressure value="0.0">
+        	<ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  100   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0005</delt_min>
+    <delt_max>0.0005</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-2d-oscillating-periodic-mms-yz.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.0005"/>
+    <save label="density"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="v"/>
+    <save label="w"/>
+    <save label="strain_yz"/>
+    <save label="strain_zy"/>
+    <save label="f"/>
+    <save label="rhof"/>
+    <save label="pressure"/>
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,-1,-1]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[1,128,128]</resolution>
+        <patches>[1,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

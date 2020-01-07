@@ -1,0 +1,11 @@
+void mmbcvelocity_momex(IntVector idxLoU, IntVector idxHiU,
+	                Array3<double> an, Array3<double> as,
+                        Array3<double> at, Array3<double> ab,
+                        Array3<double> sp,
+	                OffsetArray1<double> sewu, OffsetArray1<double> sns,
+                        OffsetArray1<double> stb,
+                        OffsetArray1<double> y, OffsetArray1<double> yv,
+                        OffsetArray1<double> z, OffsetArray1<double> zw,
+                        double viscos, constCCVariable<int> pcell,
+                        int mmwallid, int ioff, int joff, int koff);
+

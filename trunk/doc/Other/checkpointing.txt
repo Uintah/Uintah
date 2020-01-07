@@ -1,0 +1,37 @@
+Information about using checkpoint/restart capabilities of sus.
+
+Checkpointing:
+
+To checkpoint your sus run, put a "checkpoint" tag in the DataArchiver
+section of your input file.  This tag should have an "interval"
+attribute and optionally a "cycle" attribute.  The "interval" attribute
+works just the same as <outputInterval>, telling it how often to save
+checkpoint data.  The "cycle" attribute tells it how many checkpointed
+timesteps to store at a time (before "recycling").  cycle=2 is the
+default.  You should have cycle >= 2 in order to prevent a program crash
+from causing you to lose your checkpoint (in other words, keep a
+checkpoint as backup).
+
+Here is an example:
+ <checkpoint interval="0.01" cycle="2"/>
+
+I've also committed a checkpointing version of disk.ups as an example.
+
+Restarting:
+
+To restart from a checkpointed archive, simply put "-restart" in your
+sus command-line arguments and specify the .uda directory where you have
+your checkpointed data as input instead of a ups file (it reads the
+copied input.ups from the archive).  You can optionally specify a
+certain timestep to restart from with "-t <timestep>" if you have
+multiple checkpoints, but the last checkpointed timestep is the
+default.  When you restart, it copies all of the appropriate stuff from
+the old uda directory to its new uda directory.  If you don't want to
+keep the old uda directory around, you can specify "-nocopy" to have it
+be removed (i.e. if you are cramped for disk space).  Either way it
+creates a new uda directory for you as always.
+
+Here are some example:
+./sus -mpm -restart disks.uda.000 -nocopy
+./sus -mpm -restart disks.uda.000 -t 29
+

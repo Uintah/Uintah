@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Template -->
+<!-- 
+    From: 
+-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0> .   </C_0>
+    <Gamma_0>.  </Gamma_0>
+    <S_alpha>. </S_alpha>
+    <S_2>    . </S_2>
+    <S_3>    . </S_3>
+  </equation_of_state>
+</Uintah_Include>

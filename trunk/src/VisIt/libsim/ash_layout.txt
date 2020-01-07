@@ -1,0 +1,711 @@
+Nodes 001 to 251   Digits 3    Cores 12
+Nodes 416 to 417   Digits 3    Cores 12
+Nodes 252 to 415   Digits 3    Cores 20
+Nodes 418 to 465   Digits 3    Cores 24
+
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500203a65
+switchguid=0x8f10500203a64(8f10500203a64)
+Switch	36 "S-0008f10500203a64"		# "Mellanox 4036 # ddc-ib-tor-t04-2" enhanced port 0 lid 34 lmc 0
+[1]	"H-0002c90300097448"[1](2c90300097449) 		# "ash238 mlx4_0" lid 398 4xQDR
+[2]	"H-0002c90300097310"[1](2c90300097311) 		# "ash239 mlx4_0" lid 399 4xQDR
+[3]	"H-0002c903000bba80"[1](2c903000bba81) 		# "ash240 mlx4_0" lid 410 4xQDR
+[4]	"H-0002c903000bb800"[1](2c903000bb801) 		# "ash241 mlx4_0" lid 442 4xQDR
+[5]	"H-0002c903000bbc14"[1](2c903000bbc15) 		# "ash196 mlx4_0" lid 345 4xQDR
+[6]	"H-0002c903000bb8b4"[1](2c903000bb8b5) 		# "ash197 mlx4_0" lid 348 4xQDR
+[7]	"H-0002c903000bbaf8"[1](2c903000bbaf9) 		# "ash198 mlx4_0" lid 358 4xQDR
+[8]	"H-0002c903000bbafc"[1](2c903000bbafd) 		# "ash199 mlx4_0" lid 344 4xQDR
+[9]	"H-0002c903000bb714"[1](2c903000bb715) 		# "ash200 mlx4_0" lid 336 4xQDR
+[10]	"H-0002c903000bba08"[1](2c903000bba09) 		# "ash201 mlx4_0" lid 327 4xQDR
+[11]	"H-0002c903000bb9f4"[1](2c903000bb9f5) 		# "ash202 mlx4_0" lid 330 4xQDR
+[12]	"H-0002c903000bb9f0"[1](2c903000bb9f1) 		# "ash203 mlx4_0" lid 338 4xQDR
+[13]	"H-0002c903000bb5dc"[1](2c903000bb5dd) 		# "ash204 mlx4_0" lid 349 4xQDR
+[14]	"H-0002c903000bb5e4"[1](2c903000bb5e5) 		# "ash205 mlx4_0" lid 326 4xQDR
+[15]	"H-0002c903000967e8"[1](2c903000967e9) 		# "ash206 mlx4_0" lid 352 4xQDR
+[16]	"H-0002c90300097424"[1](2c90300097425) 		# "ash207 mlx4_0" lid 340 4xQDR
+[17]	"H-0002c903000960c4"[1](2c903000960c5) 		# "ash208 mlx4_0" lid 368 4xQDR
+[18]	"H-0002c90300096100"[1](2c90300096101) 		# "ash209 mlx4_0" lid 332 4xQDR
+[19]	"H-0002c90300097618"[1](2c90300097619) 		# "ash242 mlx4_0" lid 466 4xQDR
+[21]	"H-0002c903000bbaac"[1](2c903000bbaad) 		# "ash244 mlx4_0" lid 434 4xQDR
+[22]	"H-0002c903000bbaa0"[1](2c903000bbaa1) 		# "ash245 mlx4_0" lid 426 4xQDR
+[23]	"H-0002c903000bbb9c"[1](2c903000bbb9d) 		# "ash246 mlx4_0" lid 456 4xQDR
+[24]	"H-0002c903000bb9f8"[1](2c903000bb9f9) 		# "ash247 mlx4_0" lid 440 4xQDR
+[25]	"H-0002c903000bb740"[1](2c903000bb741) 		# "ash248 mlx4_0" lid 432 4xQDR
+[26]	"H-0002c903000967bc"[1](2c903000967bd) 		# "ash249 mlx4_0" lid 458 4xQDR
+[27]	"H-0002c90300097428"[1](2c90300097429) 		# "ash250 mlx4_0" lid 459 4xQDR
+[28]	"H-0002c903000bb88c"[1](2c903000bb88d) 		# "ash251 mlx4_0" lid 436 4xQDR
+[29]	"S-f4521403004614b0"[25]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[30]	"S-f4521403004614b0"[26]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[31]	"S-f4521403004615b0"[25]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[32]	"S-f4521403004615b0"[26]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[33]	"S-f4521403004610b0"[25]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[26]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[25]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[26]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500109963
+switchguid=0x8f10500109962(8f10500109962)
+Switch	36 "S-0008f10500109962"		# "Mellanox 4036 # ddc-ib-tor-t07-1" enhanced port 0 lid 28 lmc 0
+[1]	"H-0002c903000bbae0"[1](2c903000bbae1) 		# "ash084 mlx4_0" lid 207 4xQDR
+[2]	"H-0002c903000bbad8"[1](2c903000bbad9) 		# "ash085 mlx4_0" lid 204 4xQDR
+[3]	"H-0002c903000bbb70"[1](2c903000bbb71) 		# "ash086 mlx4_0" lid 209 4xQDR
+[4]	"H-0002c903000bb720"[1](2c903000bb721) 		# "ash087 mlx4_0" lid 208 4xQDR
+[5]	"H-0002c903000bbba0"[1](2c903000bbba1) 		# "ash088 mlx4_0" lid 216 4xQDR
+[6]	"H-0002c903000bba0c"[1](2c903000bba0d) 		# "ash089 mlx4_0" lid 210 4xQDR
+[7]	"H-0002c9030009743c"[1](2c9030009743d) 		# "ash090 mlx4_0" lid 213 4xQDR
+[8]	"H-0002c90300096838"[1](2c90300096839) 		# "ash091 mlx4_0" lid 211 4xQDR
+[9]	"H-0002c90300096124"[1](2c90300096125) 		# "ash092 mlx4_0" lid 226 4xQDR
+[10]	"H-0002c90300096110"[1](2c90300096111) 		# "ash093 mlx4_0" lid 218 4xQDR
+[11]	"H-0002c90300097458"[1](2c90300097459) 		# "ash094 mlx4_0" lid 214 4xQDR
+[12]	"H-0002c9030009730c"[1](2c9030009730d) 		# "ash095 mlx4_0" lid 219 4xQDR
+[13]	"H-0002c90300096254"[1](2c90300096255) 		# "ash096 mlx4_0" lid 227 4xQDR
+[14]	"H-0002c90300096128"[1](2c90300096129) 		# "ash097 mlx4_0" lid 228 4xQDR
+[15]	"H-0002c903000bb944"[1](2c903000bb945) 		# "ash098 mlx4_0" lid 233 4xQDR
+[16]	"H-0002c903000bbc34"[1](2c903000bbc35) 		# "ash099 mlx4_0" lid 232 4xQDR
+[17]	"H-0002c903000bbb34"[1](2c903000bbb35) 		# "ash100 mlx4_0" lid 231 4xQDR
+[18]	"H-0002c903000bbb08"[1](2c903000bbb09) 		# "ash101 mlx4_0" lid 241 4xQDR
+[19]	"H-0002c903000bb9b0"[1](2c903000bb9b1) 		# "ash102 mlx4_0" lid 243 4xQDR
+[20]	"H-0002c903000bb924"[1](2c903000bb925) 		# "ash103 mlx4_0" lid 236 4xQDR
+[21]	"H-0002c903000bbb2c"[1](2c903000bbb2d) 		# "ash104 mlx4_0" lid 234 4xQDR
+[22]	"H-0002c903000bbcd4"[1](2c903000bbcd5) 		# "ash105 mlx4_0" lid 239 4xQDR
+[23]	"H-0002c903000bb9a8"[1](2c903000bb9a9) 		# "ash106 mlx4_0" lid 242 4xQDR
+[24]	"H-0002c903000bb7c0"[1](2c903000bb7c1) 		# "ash107 mlx4_0" lid 251 4xQDR
+[25]	"H-0002c903000bb9a4"[1](2c903000bb9a5) 		# "ash108 mlx4_0" lid 246 4xQDR
+[26]	"H-0002c903000bbae8"[1](2c903000bbae9) 		# "ash109 mlx4_0" lid 240 4xQDR
+[27]	"H-0002c903000bba94"[1](2c903000bba95) 		# "ash110 mlx4_0" lid 249 4xQDR
+[28]	"H-0002c903000bba98"[1](2c903000bba99) 		# "ash111 mlx4_0" lid 238 4xQDR
+[29]	"S-f4521403004615b0"[23]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[24]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004610b0"[23]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[32]	"S-f4521403004614b0"[23]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004614b0"[24]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[34]	"S-f4521403004610b0"[24]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[23]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[24]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201d7f
+switchguid=0x8f10500201d7e(8f10500201d7e)
+Switch	36 "S-0008f10500201d7e"		# "Mellanox 4036 # ddc-ib-tor-t08-1" enhanced port 0 lid 35 lmc 0
+[1]	"H-0002c903000bbb3c"[1](2c903000bbb3d) 		# "ash042 mlx4_0" lid 142 4xQDR
+[2]	"H-0002c903000bba9c"[1](2c903000bba9d) 		# "ash043 mlx4_0" lid 143 4xQDR
+[3]	"H-0002c903000bb6f4"[1](2c903000bb6f5) 		# "ash044 mlx4_0" lid 145 4xQDR
+[4]	"H-0002c903000bb6f0"[1](2c903000bb6f1) 		# "ash045 mlx4_0" lid 147 4xQDR
+[5]	"H-0002c903000bbab8"[1](2c903000bbab9) 		# "ash046 mlx4_0" lid 150 4xQDR
+[6]	"H-0002c903000bbc08"[1](2c903000bbc09) 		# "ash047 mlx4_0" lid 148 4xQDR
+[7]	"H-0002c903000bbad4"[1](2c903000bbad5) 		# "ash048 mlx4_0" lid 156 4xQDR
+[8]	"H-0002c903000bb974"[1](2c903000bb975) 		# "ash049 mlx4_0" lid 152 4xQDR
+[9]	"H-0002c903000bb5e8"[1](2c903000bb5e9) 		# "ash050 mlx4_0" lid 154 4xQDR
+[10]	"H-0002c903000967e0"[1](2c903000967e1) 		# "ash051 mlx4_0" lid 160 4xQDR
+[11]	"H-0002c903000bbaf0"[1](2c903000bbaf1) 		# "ash052 mlx4_0" lid 157 4xQDR
+[12]	"H-0002c903000bbc04"[1](2c903000bbc05) 		# "ash053 mlx4_0" lid 162 4xQDR
+[13]	"H-0002c90300097154"[1](2c90300097155) 		# "ash054 mlx4_0" lid 165 4xQDR
+[14]	"H-0002c90300097144"[1](2c90300097145) 		# "ash055 mlx4_0" lid 158 4xQDR
+[15]	"H-0002c90300096118"[1](2c90300096119) 		# "ash056 mlx4_0" lid 857 4xQDR
+[16]	"H-0002c903000bb5ec"[1](2c903000bb5ed) 		# "ash057 mlx4_0" lid 170 4xQDR
+[17]	"H-0002c903000bb700"[1](2c903000bb701) 		# "ash058 mlx4_0" lid 182 4xQDR
+[18]	"H-0002c9030009683c"[1](2c9030009683d) 		# "ash059 mlx4_0" lid 171 4xQDR
+[19]	"H-0002c903000bb970"[1](2c903000bb971) 		# "ash060 mlx4_0" lid 177 4xQDR
+[20]	"H-0002c903000bba90"[1](2c903000bba91) 		# "ash062 mlx4_0" lid 172 4xQDR
+[21]	"H-0002c903000bbb6c"[1](2c903000bbb6d) 		# "ash061 mlx4_0" lid 176 4xQDR
+[22]	"H-0002c903000bbc0c"[1](2c903000bbc0d) 		# "ash063 mlx4_0" lid 188 4xQDR
+[23]	"H-0002c90300096840"[1](2c90300096841) 		# "ash064 mlx4_0" lid 175 4xQDR
+[24]	"H-0002c903000967ec"[1](2c903000967ed) 		# "ash065 mlx4_0" lid 196 4xQDR
+[25]	"H-0002c90300096248"[1](2c90300096249) 		# "ash066 mlx4_0" lid 178 4xQDR
+[26]	"H-0002c903004f7e98"[1](2c903004f7e99) 		# "ash067 mlx4_0" lid 193 4xQDR
+[27]	"H-0002c903000968d8"[1](2c903000968d9) 		# "ash068 mlx4_0" lid 183 4xQDR
+[28]	"H-0002c903000bbbb0"[1](2c903000bbbb1) 		# "ash069 mlx4_0" lid 186 4xQDR
+[29]	"S-f4521403004615b0"[21]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[22]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[21]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[22]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[21]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[22]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[21]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[22]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201d8b
+switchguid=0x8f10500201d8a(8f10500201d8a)
+Switch	36 "S-0008f10500201d8a"		# "Mellanox 4036 # ddc-ib-tor-t04-1" enhanced port 0 lid 36 lmc 0
+[1]	"H-0002c903000bb79c"[1](2c903000bb79d) 		# "ash210 mlx4_0" lid 339 4xQDR
+[2]	"H-0002c903000bbce8"[1](2c903000bbce9) 		# "ash211 mlx4_0" lid 334 4xQDR
+[3]	"H-0002c903000bbac0"[1](2c903000bbac1) 		# "ash212 mlx4_0" lid 341 4xQDR
+[4]	"H-0002c903000bbbf4"[1](2c903000bbbf5) 		# "ash213 mlx4_0" lid 369 4xQDR
+[5]	"H-0002c903000bba00"[1](2c903000bba01) 		# "ash214 mlx4_0" lid 333 4xQDR
+[6]	"H-0002c903000bba04"[1](2c903000bba05) 		# "ash215 mlx4_0" lid 335 4xQDR
+[7]	"H-0002c903000bb928"[1](2c903000bb929) 		# "ash216 mlx4_0" lid 353 4xQDR
+[8]	"H-0002c903000bb914"[1](2c903000bb915) 		# "ash217 mlx4_0" lid 342 4xQDR
+[9]	"H-0002c9030009724c"[1](2c9030009724d) 		# "ash218 mlx4_0" lid 370 4xQDR
+[10]	"H-0002c903000976c0"[1](2c903000976c1) 		# "ash219 mlx4_0" lid 363 4xQDR
+[11]	"H-0002c903000bc098"[1](2c903000bc099) 		# "ash220 mlx4_0" lid 360 4xQDR
+[12]	"H-0002c9030009603c"[1](2c9030009603d) 		# "ash221 mlx4_0" lid 372 4xQDR
+[13]	"H-0002c903000bb724"[1](2c903000bb725) 		# "ash222 mlx4_0" lid 361 4xQDR
+[14]	"H-0002c903000bb994"[1](2c903000bb995) 		# "ash223 mlx4_0" lid 367 4xQDR
+[15]	"H-0002c903000bb9b8"[1](2c903000bb9b9) 		# "ash224 mlx4_0" lid 356 4xQDR
+[16]	"H-0002c903000bb9c4"[1](2c903000bb9c5) 		# "ash225 mlx4_0" lid 365 4xQDR
+[17]	"H-0002c903000967f8"[1](2c903000967f9) 		# "ash226 mlx4_0" lid 359 4xQDR
+[18]	"H-0002c90300096814"[1](2c90300096815) 		# "ash227 mlx4_0" lid 377 4xQDR
+[19]	"H-0002c90300096800"[1](2c90300096801) 		# "ash228 mlx4_0" lid 350 4xQDR
+[20]	"H-0002c90300096848"[1](2c90300096849) 		# "ash229 mlx4_0" lid 378 4xQDR
+[21]	"H-0002c903000bc09c"[1](2c903000bc09d) 		# "ash230 mlx4_0" lid 374 4xQDR
+[22]	"H-0002c903000bb5d4"[1](2c903000bb5d5) 		# "ash231 mlx4_0" lid 373 4xQDR
+[23]	"H-0002c90300096968"[1](2c90300096969) 		# "ash232 mlx4_0" lid 375 4xQDR
+[24]	"H-0002c90300097480"[1](2c90300097481) 		# "ash233 mlx4_0" lid 384 4xQDR
+[25]	"H-0002c903000bb7b4"[1](2c903000bb7b5) 		# "ash235 mlx4_0" lid 468 4xQDR
+[26]	"H-0002c903000bb7c8"[1](2c903000bb7c9) 		# "ash234 mlx4_0" lid 796 4xQDR
+[27]	"H-0002c903000bbb98"[1](2c903000bbb99) 		# "ash236 mlx4_0" lid 391 4xQDR
+[28]	"H-0002c903000bb7b8"[1](2c903000bb7b9) 		# "ash237 mlx4_0" lid 392 4xQDR
+[30]	"S-f4521403004615b0"[10]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[9]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[10]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[34]	"S-f4521403004610b0"[10]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[9]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[10]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201d83
+switchguid=0x8f10500201d82(8f10500201d82)
+Switch	36 "S-0008f10500201d82"		# "Mellanox 4036 # ddc-ib-tor-t05-1" enhanced port 0 lid 29 lmc 0
+[1]	"H-0002c90300105c5a"[1](2c90300105c5b) 		# "ash168 mlx4_0" lid 303 4xQDR
+[2]	"H-0002c9030010606a"[1](2c9030010606b) 		# "ash169 mlx4_0" lid 302 4xQDR
+[3]	"H-0002c90300105a72"[1](2c90300105a73) 		# "ash170 mlx4_0" lid 307 4xQDR
+[4]	"H-0002c90300105ae6"[1](2c90300105ae7) 		# "ash171 mlx4_0" lid 306 4xQDR
+[5]	"H-0002c90300105bda"[1](2c90300105bdb) 		# "ash172 mlx4_0" lid 305 4xQDR
+[6]	"H-0002c90300105c1a"[1](2c90300105c1b) 		# "ash173 mlx4_0" lid 309 4xQDR
+[7]	"H-0002c90300105c42"[1](2c90300105c43) 		# "ash174 mlx4_0" lid 304 4xQDR
+[8]	"H-0002c90300105cb6"[1](2c90300105cb7) 		# "ash175 mlx4_0" lid 317 4xQDR
+[9]	"H-0002c90300105f6a"[1](2c90300105f6b) 		# "ash176 mlx4_0" lid 315 4xQDR
+[10]	"H-0002c90300105eaa"[1](2c90300105eab) 		# "ash177 mlx4_0" lid 308 4xQDR
+[11]	"H-0002c90300106166"[1](2c90300106167) 		# "ash178 mlx4_0" lid 314 4xQDR
+[12]	"H-0002c90300105b9a"[1](2c90300105b9b) 		# "ash179 mlx4_0" lid 310 4xQDR
+[13]	"H-0002c90300105a62"[1](2c90300105a63) 		# "ash180 mlx4_0" lid 311 4xQDR
+[14]	"H-0002c90300105e0e"[1](2c90300105e0f) 		# "ash181 mlx4_0" lid 316 4xQDR
+[15]	"H-0002c90300105e36"[1](2c90300105e37) 		# "ash182 mlx4_0" lid 313 4xQDR
+[16]	"H-0002c90300105bd2"[1](2c90300105bd3) 		# "ash183 mlx4_0" lid 312 4xQDR
+[17]	"H-0002c903000bbb78"[1](2c903000bbb79) 		# "ash193 mlx4_0" lid 346 4xQDR
+[18]	"H-0002c903000bbbf8"[1](2c903000bbbf9) 		# "ash185 mlx4_0" lid 318 4xQDR
+[19]	"H-0002c903000bb5e0"[1](2c903000bb5e1) 		# "ash186 mlx4_0" lid 325 4xQDR
+[20]	"H-0002c903000967dc"[1](2c903000967dd) 		# "ash187 mlx4_0" lid 322 4xQDR
+[21]	"H-0002c903000bb9ec"[1](2c903000bb9ed) 		# "ash188 mlx4_0" lid 320 4xQDR
+[22]	"H-0002c903000bb5f4"[1](2c903000bb5f5) 		# "ash189 mlx4_0" lid 323 4xQDR
+[23]	"H-0002c903000bb748"[1](2c903000bb749) 		# "ash190 mlx4_0" lid 328 4xQDR
+[24]	"H-0002c903000bb9ac"[1](2c903000bb9ad) 		# "ash191 mlx4_0" lid 324 4xQDR
+[25]	"H-0002c903000bb990"[1](2c903000bb991) 		# "ash192 mlx4_0" lid 329 4xQDR
+[26]	"H-0002c903000bbab0"[1](2c903000bbab1) 		# "ash184 mlx4_0" lid 319 4xQDR
+[27]	"H-0002c903000bb9cc"[1](2c903000bb9cd) 		# "ash194 mlx4_0" lid 450 4xQDR
+[28]	"H-0002c90300096040"[1](2c90300096041) 		# "ash195 mlx4_0" lid 321 4xQDR
+[29]	"S-f4521403004615b0"[7]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[8]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[7]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[8]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[7]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[8]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[7]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201d8d
+switchguid=0x8f10500201d8c(8f10500201d8c)
+Switch	36 "S-0008f10500201d8c"		# "Mellanox 4036 # ddc-ib-tor-t06-1" enhanced port 0 lid 30 lmc 0
+[1]	"H-0002c90300105ef6"[1](2c90300105ef7) 		# "ash126 mlx4_0" lid 280 4xQDR
+[2]	"H-0002c90300105ada"[1](2c90300105adb) 		# "ash127 mlx4_0" lid 282 4xQDR
+[3]	"H-0002c90300105cfe"[1](2c90300105cff) 		# "ash128 mlx4_0" lid 257 4xQDR
+[4]	"H-0002c90300105baa"[1](2c90300105bab) 		# "ash129 mlx4_0" lid 250 4xQDR
+[5]	"H-0002c90300105b36"[1](2c90300105b37) 		# "ash130 mlx4_0" lid 252 4xQDR
+[6]	"H-0002c90300106136"[1](2c90300106137) 		# "ash131 mlx4_0" lid 269 4xQDR
+[7]	"H-0002c9030010604a"[1](2c9030010604b) 		# "ash132 mlx4_0" lid 288 4xQDR
+[8]	"H-0002c90300105a8a"[1](2c90300105a8b) 		# "ash133 mlx4_0" lid 259 4xQDR
+[9]	"H-0002c9030010605e"[1](2c9030010605f) 		# "ash134 mlx4_0" lid 247 4xQDR
+[10]	"H-0002c90300105f9a"[1](2c90300105f9b) 		# "ash135 mlx4_0" lid 278 4xQDR
+[11]	"H-0002c90300106132"[1](2c90300106133) 		# "ash136 mlx4_0" lid 264 4xQDR
+[12]	"H-0002c90300105fc2"[1](2c90300105fc3) 		# "ash137 mlx4_0" lid 256 4xQDR
+[13]	"H-0002c90300105a86"[1](2c90300105a87) 		# "ash138 mlx4_0" lid 267 4xQDR
+[14]	"H-0002c903001060b6"[1](2c903001060b7) 		# "ash139 mlx4_0" lid 271 4xQDR
+[15]	"H-0002c90300105d76"[1](2c90300105d77) 		# "ash140 mlx4_0" lid 276 4xQDR
+[16]	"H-0002c90300105cc6"[1](2c90300105cc7) 		# "ash141 mlx4_0" lid 275 4xQDR
+[17]	"H-0002c90300105cde"[1](2c90300105cdf) 		# "ash142 mlx4_0" lid 265 4xQDR
+[18]	"H-0002c90300105c9e"[1](2c90300105c9f) 		# "ash143 mlx4_0" lid 274 4xQDR
+[19]	"H-0002c9030010608a"[1](2c9030010608b) 		# "ash144 mlx4_0" lid 270 4xQDR
+[20]	"H-0002c90300105c32"[1](2c90300105c33) 		# "ash145 mlx4_0" lid 277 4xQDR
+[21]	"H-0002c90300105b52"[1](2c90300105b53) 		# "ash146 mlx4_0" lid 266 4xQDR
+[22]	"H-0002c90300105eee"[1](2c90300105eef) 		# "ash147 mlx4_0" lid 279 4xQDR
+[23]	"H-0002c90300105f4e"[1](2c90300105f4f) 		# "ash148 mlx4_0" lid 284 4xQDR
+[24]	"H-0002c90300105f06"[1](2c90300105f07) 		# "ash149 mlx4_0" lid 272 4xQDR
+[25]	"H-0002c90300105b7a"[1](2c90300105b7b) 		# "ash150 mlx4_0" lid 281 4xQDR
+[26]	"H-0002c90300105b7e"[1](2c90300105b7f) 		# "ash151 mlx4_0" lid 286 4xQDR
+[27]	"H-0002c90300105b12"[1](2c90300105b13) 		# "ash152 mlx4_0" lid 292 4xQDR
+[28]	"H-0002c90300105c5e"[1](2c90300105c5f) 		# "ash153 mlx4_0" lid 289 4xQDR
+[29]	"S-f4521403004615b0"[5]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[6]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[5]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[6]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[5]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[6]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[5]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[6]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500202e33
+switchguid=0x8f10500202e32(8f10500202e32)
+Switch	36 "S-0008f10500202e32"		# "Mellanox 4036 # ddc-ib-tor-t06-2" enhanced port 0 lid 33 lmc 0
+[1]	"H-0002c90300105b02"[1](2c90300105b03) 		# "ash154 mlx4_0" lid 283 4xQDR
+[2]	"H-0002c90300105ece"[1](2c90300105ecf) 		# "ash155 mlx4_0" lid 287 4xQDR
+[3]	"H-0002c903001060ee"[1](2c903001060ef) 		# "ash156 mlx4_0" lid 296 4xQDR
+[4]	"H-0002c9030010616a"[1](2c9030010616b) 		# "ash157 mlx4_0" lid 285 4xQDR
+[5]	"H-0002c9030009713c"[1](2c9030009713d) 		# "ash112 mlx4_0" lid 237 4xQDR
+[6]	"H-0002c90300097134"[1](2c90300097135) 		# "ash113 mlx4_0" lid 258 4xQDR
+[7]	"H-0002c903000bb5f8"[1](2c903000bb5f9) 		# "ash114 mlx4_0" lid 262 4xQDR
+[8]	"H-0002c903000bc0a0"[1](2c903000bc0a1) 		# "ash115 mlx4_0" lid 255 4xQDR
+[9]	"H-0002c90300097440"[1](2c90300097441) 		# "ash116 mlx4_0" lid 253 4xQDR
+[10]	"H-0002c90300097350"[1](2c90300097351) 		# "ash117 mlx4_0" lid 263 4xQDR
+[11]	"H-0002c90300097128"[1](2c90300097129) 		# "ash118 mlx4_0" lid 261 4xQDR
+[12]	"H-0002c9030009604c"[1](2c9030009604d) 		# "ash119 mlx4_0" lid 273 4xQDR
+[13]	"H-0002c90300105bd6"[1](2c90300105bd7) 		# "ash120 mlx4_0" lid 244 4xQDR
+[14]	"H-0002c9030010612a"[1](2c9030010612b) 		# "ash121 mlx4_0" lid 268 4xQDR
+[15]	"H-0002c90300105b9e"[1](2c90300105b9f) 		# "ash122 mlx4_0" lid 248 4xQDR
+[16]	"H-0002c90300105d7a"[1](2c90300105d7b) 		# "ash123 mlx4_0" lid 245 4xQDR
+[17]	"H-0002c90300105c9a"[1](2c90300105c9b) 		# "ash124 mlx4_0" lid 254 4xQDR
+[18]	"H-0002c90300106112"[1](2c90300106113) 		# "ash125 mlx4_0" lid 260 4xQDR
+[19]	"H-0002c90300105c82"[1](2c90300105c83) 		# "ash158 mlx4_0" lid 290 4xQDR
+[20]	"H-0002c903001060aa"[1](2c903001060ab) 		# "ash159 mlx4_0" lid 291 4xQDR
+[21]	"H-0002c90300105d72"[1](2c90300105d73) 		# "ash160 mlx4_0" lid 295 4xQDR
+[22]	"H-0002c90300105ce2"[1](2c90300105ce3) 		# "ash161 mlx4_0" lid 299 4xQDR
+[23]	"H-0002c90300105b4a"[1](2c90300105b4b) 		# "ash162 mlx4_0" lid 294 4xQDR
+[24]	"H-0002c90300105e9a"[1](2c90300105e9b) 		# "ash163 mlx4_0" lid 293 4xQDR
+[25]	"H-0002c90300105ab2"[1](2c90300105ab3) 		# "ash164 mlx4_0" lid 298 4xQDR
+[26]	"H-0002c90300105f5e"[1](2c90300105f5f) 		# "ash165 mlx4_0" lid 301 4xQDR
+[27]	"H-0002c90300105e3a"[1](2c90300105e3b) 		# "ash166 mlx4_0" lid 300 4xQDR
+[28]	"H-0002c90300105f52"[1](2c90300105f53) 		# "ash167 mlx4_0" lid 297 4xQDR
+[29]	"S-f4521403004615b0"[3]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[4]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[3]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[4]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[3]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[4]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[3]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[4]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201b25
+switchguid=0x8f10500201b24(8f10500201b24)
+Switch	36 "S-0008f10500201b24"		# "Mellanox 4036 # ddc-ib-tor-t09-1" enhanced port 0 lid 32 lmc 0
+[1]	"H-0002c903000bbb24"[1](2c903000bbb25) 		# "ash001 mlx4_0" lid 47 4xQDR
+[2]	"H-0002c90300097130"[1](2c90300097131) 		# "ashrm mlx4_0" lid 731 4xQDR
+[3]	"H-0002c903000960f0"[1](2c903000960f1) 		# "ash002 mlx4_0" lid 92 4xQDR
+[4]	"H-0002c903000960d8"[1](2c903000960d9) 		# "ash003 mlx4_0" lid 99 4xQDR
+[5]	"H-0002c90300525132"[1](2c90300525133) 		# "ash004 mlx4_0" lid 96 4xQDR
+[6]	"H-0002c903000bb704"[1](2c903000bb705) 		# "ash005 mlx4_0" lid 95 4xQDR
+[7]	"H-0002c903000969ec"[1](2c903000969ed) 		# "ash006 mlx4_0" lid 100 4xQDR
+[8]	"H-0002c903000975c0"[1](2c903000975c1) 		# "ash007 mlx4_0" lid 102 4xQDR
+[9]	"H-0002c903000967b0"[1](2c903000967b1) 		# "ash009 mlx4_0" lid 104 4xQDR
+[10]	"H-0002c903000975b8"[1](2c903000975b9) 		# "ash008 mlx4_0" lid 797 4xQDR
+[11]	"H-0002c903000bba84"[1](2c903000bba85) 		# "ash010 mlx4_0" lid 103 4xQDR
+[12]	"H-0002c903000bba8c"[1](2c903000bba8d) 		# "ash011 mlx4_0" lid 111 4xQDR
+[13]	"H-0002c90300097438"[1](2c90300097439) 		# "ash012 mlx4_0" lid 105 4xQDR
+[14]	"H-0002c903000bb884"[1](2c903000bb885) 		# "ash013 mlx4_0" lid 115 4xQDR
+[15]	"H-0002c9030009625c"[1](2c9030009625d) 		# "ash014 mlx4_0" lid 114 4xQDR
+[16]	"H-0002c903000960c8"[1](2c903000960c9) 		# "ash015 mlx4_0" lid 116 4xQDR
+[17]	"H-0002c90300096058"[1](2c90300096059) 		# "ash016 mlx4_0" lid 117 4xQDR
+[18]	"H-0002c90300096050"[1](2c90300096051) 		# "ash017 mlx4_0" lid 118 4xQDR
+[19]	"H-0002c90300097498"[1](2c90300097499) 		# "ash018 mlx4_0" lid 119 4xQDR
+[20]	"H-0002c9030009712c"[1](2c9030009712d) 		# "ash019 mlx4_0" lid 122 4xQDR
+[21]	"H-0002c9030009715c"[1](2c9030009715d) 		# "ash020 mlx4_0" lid 120 4xQDR
+[22]	"H-0002c903000976bc"[1](2c903000976bd) 		# "ash021 mlx4_0" lid 125 4xQDR
+[23]	"H-0002c90300097230"[1](2c90300097231) 		# "ash022 mlx4_0" lid 121 4xQDR
+[24]	"H-0002c90300097464"[1](2c90300097465) 		# "ash023 mlx4_0" lid 124 4xQDR
+[25]	"H-0002c903000bc0a4"[1](2c903000bc0a5) 		# "ash024 mlx4_0" lid 127 4xQDR
+[26]	"H-0002c903000bb8f8"[1](2c903000bb8f9) 		# "ash025 mlx4_0" lid 128 4xQDR
+[27]	"H-0002c903000bb91c"[1](2c903000bb91d) 		# "ash026 mlx4_0" lid 126 4xQDR
+[28]	"H-0002c903000bb7bc"[1](2c903000bb7bd) 		# "ash027 mlx4_0" lid 129 4xQDR
+[29]	"S-f4521403004615b0"[1]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[2]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[1]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[2]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[1]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[2]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[35]	"S-f452140300461030"[1]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[2]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xe41d2d030046c840
+switchguid=0xe41d2d030046c840(e41d2d030046c840)
+Switch	36 "S-e41d2d030046c840"		# "MF0;ddc-ib-tor-s03-1:SX6036/U1" enhanced port 0 lid 5 lmc 0
+[1]	"H-e41d2d0300b2b650"[1](e41d2d0300b2b651) 		# "ash465 mlx4_0" lid 730 4xFDR
+[2]	"H-e41d2d0300b34fa0"[1](e41d2d0300b34fa1) 		# "ash464 mlx4_0" lid 726 4xFDR
+[3]	"H-e41d2d0300b34fc0"[1](e41d2d0300b34fc1) 		# "ash463 mlx4_0" lid 727 4xFDR
+[4]	"H-e41d2d0300b2bbf0"[1](e41d2d0300b2bbf1) 		# "ash462 mlx4_0" lid 729 4xFDR
+[5]	"H-e41d2d0300b2bb10"[1](e41d2d0300b2bb11) 		# "ash461 mlx4_0" lid 725 4xFDR
+[6]	"H-e41d2d0300b34fd0"[1](e41d2d0300b34fd1) 		# "ash460 mlx4_0" lid 724 4xFDR
+[7]	"H-e41d2d0300b2bc40"[1](e41d2d0300b2bc41) 		# "ash459 mlx4_0" lid 723 4xFDR
+[8]	"H-e41d2d0300b2b670"[1](e41d2d0300b2b671) 		# "ash458 mlx4_0" lid 721 4xFDR
+[9]	"H-e41d2d0300b2bc00"[1](e41d2d0300b2bc01) 		# "ash457 mlx4_0" lid 722 4xFDR
+[10]	"H-e41d2d0300b2bbd0"[1](e41d2d0300b2bbd1) 		# "ash456 mlx4_0" lid 720 4xFDR
+[11]	"H-e41d2d0300b344b0"[1](e41d2d0300b344b1) 		# "ash455 mlx4_0" lid 719 4xFDR
+[12]	"H-e41d2d0300b2bd60"[1](e41d2d0300b2bd61) 		# "ash454 mlx4_0" lid 718 4xFDR
+[13]	"H-e41d2d0300b34430"[1](e41d2d0300b34431) 		# "ash453 mlx4_0" lid 717 4xFDR
+[14]	"H-e41d2d0300b2ab10"[1](e41d2d0300b2ab11) 		# "ash452 mlx4_0" lid 716 4xFDR
+[15]	"H-e41d2d0300b344e0"[1](e41d2d0300b344e1) 		# "ash451 mlx4_0" lid 715 4xFDR
+[16]	"H-e41d2d0300b34f30"[1](e41d2d0300b34f31) 		# "ash450 mlx4_0" lid 714 4xFDR
+[17]	"H-e41d2d0300b2b680"[1](e41d2d0300b2b681) 		# "ash449 mlx4_0" lid 712 4xFDR
+[18]	"H-e41d2d0300b2b6b0"[1](e41d2d0300b2b6b1) 		# "ash448 mlx4_0" lid 713 4xFDR
+[19]	"H-e41d2d0300b34250"[1](e41d2d0300b34251) 		# "ash447 mlx4_0" lid 710 4xFDR
+[20]	"H-e41d2d0300b2aed0"[1](e41d2d0300b2aed1) 		# "ash446 mlx4_0" lid 711 4xFDR
+[21]	"H-e41d2d0300b34220"[1](e41d2d0300b34221) 		# "ash445 mlx4_0" lid 709 4xFDR
+[22]	"H-e41d2d0300b2bc70"[1](e41d2d0300b2bc71) 		# "ash444 mlx4_0" lid 708 4xFDR
+[23]	"H-e41d2d0300b2bd40"[1](e41d2d0300b2bd41) 		# "ash443 mlx4_0" lid 707 4xFDR
+[24]	"H-e41d2d0300b2b940"[1](e41d2d0300b2b941) 		# "ash442 mlx4_0" lid 706 4xFDR
+[25]	"H-e41d2d0300b2bb20"[1](e41d2d0300b2bb21) 		# "ash441 mlx4_0" lid 705 4xFDR
+[26]	"H-e41d2d0300b34480"[1](e41d2d0300b34481) 		# "ash440 mlx4_0" lid 704 4xFDR
+[27]	"H-e41d2d0300b34470"[1](e41d2d0300b34471) 		# "ash439 mlx4_0" lid 703 4xFDR
+[28]	"H-e41d2d0300b34490"[1](e41d2d0300b34491) 		# "ash438 mlx4_0" lid 701 4xFDR
+[29]	"S-f4521403004610b0"[33]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[30]	"S-f4521403004610b0"[34]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[31]	"S-f4521403004615b0"[33]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[32]	"S-f452140300461030"[34]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[33]	"S-f452140300461030"[33]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[34]	"S-f4521403004615b0"[34]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[35]	"S-f4521403004614b0"[33]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[36]	"S-f4521403004614b0"[34]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300461630
+switchguid=0xf452140300461630(f452140300461630)
+Switch	36 "S-f452140300461630"		# "MF0;ddc-ib-tor-s07-1:SX6036/U1" enhanced port 0 lid 11 lmc 0
+[1]	"H-f452140300862a40"[1](f452140300862a41) 		# "ash3 mlx4_0" lid 859 4xFDR
+[2]	"H-f452140300862a90"[1](f452140300862a91) 		# "ash4 mlx4_0" lid 800 4xFDR
+[3]	"H-0002c903000b3a26"[1](2c903000b3a27) 		# "ash2 mlx4_0" lid 591 4xQDR
+[4]	"H-0002c903000b39fa"[1](2c903000b39fb) 		# "ash1 mlx4_0" lid 590 4xQDR
+[5]	"H-0002c903000697ce"[1](2c903000697cf) 		# "ash5 mlx4_0" lid 516 4xQDR
+[6]	"H-0002c903000688b6"[1](2c903000688b7) 		# "ash6 mlx4_0" lid 515 4xQDR
+[7]	"H-e41d2d0300b341c0"[1](e41d2d0300b341c1) 		# "ash437 mlx4_0" lid 702 4xFDR
+[8]	"H-e41d2d0300b34420"[1](e41d2d0300b34421) 		# "ash436 mlx4_0" lid 700 4xFDR
+[9]	"H-e41d2d0300b34260"[1](e41d2d0300b34261) 		# "ash435 mlx4_0" lid 697 4xFDR
+[10]	"H-e41d2d0300b344d0"[1](e41d2d0300b344d1) 		# "ash434 mlx4_0" lid 699 4xFDR
+[11]	"H-e41d2d0300b35170"[1](e41d2d0300b35171) 		# "ash433 mlx4_0" lid 698 4xFDR
+[12]	"H-e41d2d0300b34230"[1](e41d2d0300b34231) 		# "ash432 mlx4_0" lid 695 4xFDR
+[13]	"H-e41d2d030074ed00"[1](e41d2d030074ed01) 		# "kingspeak25 mlx4_0" lid 496 4xFDR
+[14]	"H-e41d2d0300b2baf0"[1](e41d2d0300b2baf1) 		# "ash430 mlx4_0" lid 694 4xFDR
+[15]	"H-e41d2d0300b344a0"[1](e41d2d0300b344a1) 		# "ash429 mlx4_0" lid 693 4xFDR
+[16]	"H-e41d2d0300b351b0"[1](e41d2d0300b351b1) 		# "ash428 mlx4_0" lid 692 4xFDR
+[17]	"H-e41d2d0300b2b910"[1](e41d2d0300b2b911) 		# "ash427 mlx4_0" lid 691 4xFDR
+[18]	"H-e41d2d0300b2bb00"[1](e41d2d0300b2bb01) 		# "ash426 mlx4_0" lid 689 4xFDR
+[19]	"H-e41d2d0300b2bae0"[1](e41d2d0300b2bae1) 		# "ash425 mlx4_0" lid 687 4xFDR
+[20]	"H-e41d2d0300b2bbe0"[1](e41d2d0300b2bbe1) 		# "ash424 mlx4_0" lid 685 4xFDR
+[21]	"H-e41d2d0300b2ae40"[1](e41d2d0300b2ae41) 		# "ash423 mlx4_0" lid 683 4xFDR
+[22]	"H-e41d2d0300b2bb40"[1](e41d2d0300b2bb41) 		# "ash422 mlx4_0" lid 684 4xFDR
+[23]	"H-e41d2d0300b2b700"[1](e41d2d0300b2b701) 		# "ash421 mlx4_0" lid 682 4xFDR
+[24]	"H-e41d2d0300b2bc30"[1](e41d2d0300b2bc31) 		# "ash420 mlx4_0" lid 681 4xFDR
+[25]	"H-e41d2d0300b2bc20"[1](e41d2d0300b2bc21) 		# "ash419 mlx4_0" lid 680 4xFDR
+[26]	"H-e41d2d0300b2bad0"[1](e41d2d0300b2bad1) 		# "ash418 mlx4_0" lid 679 4xFDR
+[27]	"H-e41d2d0300b2bb30"[1](e41d2d0300b2bb31) 		# "ash431 mlx4_0" lid 696 4xFDR
+[28]	"H-e41d2d0300b34e70"[1](e41d2d0300b34e71) 		# "kingspeak26 mlx4_0" lid 497 4xFDR
+[29]	"S-f4521403004615b0"[31]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[32]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[31]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[32]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[31]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[32]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[31]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[32]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300461430
+switchguid=0xf452140300461430(f452140300461430)
+Switch	36 "S-f452140300461430"		# "MF0;ddc-ib-tor-s05-2:SX6036/U1" enhanced port 0 lid 12 lmc 0
+[1]	"H-f4521403004c9330"[1](f4521403004c9331) 		# "ash336 mlx4_0" lid 467 4xFDR
+[2]	"H-f45214030048baa0"[1](f45214030048baa1) 		# "ash337 mlx4_0" lid 423 4xFDR
+[3]	"H-f4521403004c92d0"[1](f4521403004c92d1) 		# "ash339 mlx4_0" lid 463 4xFDR
+[4]	"H-f45214030048b510"[1](f45214030048b511) 		# "ash338 mlx4_0" lid 855 4xFDR
+[5]	"H-f45214030048bef0"[1](f45214030048bef1) 		# "ash340 mlx4_0" lid 471 4xFDR
+[6]	"H-f45214030048bf00"[1](f45214030048bf01) 		# "ash341 mlx4_0" lid 477 4xFDR
+[7]	"H-f4521403004c9c40"[1](f4521403004c9c41) 		# "ash342 mlx4_0" lid 465 4xFDR
+[8]	"H-f4521403004c9f50"[1](f4521403004c9f51) 		# "ash343 mlx4_0" lid 462 4xFDR
+[9]	"H-f45214030048b440"[1](f45214030048b441) 		# "ash344 mlx4_0" lid 473 4xFDR
+[10]	"H-f45214030048b9d0"[1](f45214030048b9d1) 		# "ash345 mlx4_0" lid 481 4xFDR
+[11]	"H-f45214030048ba80"[1](f45214030048ba81) 		# "ash346 mlx4_0" lid 453 4xFDR
+[12]	"H-f45214030048ba30"[1](f45214030048ba31) 		# "ash347 mlx4_0" lid 470 4xFDR
+[13]	"H-f4521403004c8df0"[1](f4521403004c8df1) 		# "ash348 mlx4_0" lid 474 4xFDR
+[14]	"H-f4521403004c8e10"[1](f4521403004c8e11) 		# "ash349 mlx4_0" lid 488 4xFDR
+[15]	"H-f4521403004c8ee0"[1](f4521403004c8ee1) 		# "ash350 mlx4_0" lid 478 4xFDR
+[16]	"H-f4521403004c8e00"[1](f4521403004c8e01) 		# "ash351 mlx4_0" lid 475 4xFDR
+[17]	"H-f45214030048c540"[1](f45214030048c541) 		# "ash352 mlx4_0" lid 485 4xFDR
+[18]	"H-f4521403004c8ed0"[1](f4521403004c8ed1) 		# "ash353 mlx4_0" lid 486 4xFDR
+[19]	"H-f4521403004c8ea0"[1](f4521403004c8ea1) 		# "ash354 mlx4_0" lid 476 4xFDR
+[20]	"H-f45214030048c9a0"[1](f45214030048c9a1) 		# "ash355 mlx4_0" lid 482 4xFDR
+[21]	"H-f45214030048c450"[1](f45214030048c451) 		# "ash356 mlx4_0" lid 472 4xFDR
+[22]	"H-f4521403004c8e50"[1](f4521403004c8e51) 		# "ash357 mlx4_0" lid 484 4xFDR
+[23]	"H-f45214030048c9c0"[1](f45214030048c9c1) 		# "ash358 mlx4_0" lid 479 4xFDR
+[24]	"H-f4521403004c8fc0"[1](f4521403004c8fc1) 		# "ash359 mlx4_0" lid 490 4xFDR
+[25]	"H-f45214030048bbf0"[1](f45214030048bbf1) 		# "ash360 mlx4_0" lid 491 4xFDR
+[26]	"H-f45214030045a000"[1](f45214030045a001) 		# "ash361 mlx4_0" lid 492 4xFDR
+[27]	"H-f45214030048b750"[1](f45214030048b751) 		# "ash362 mlx4_0" lid 494 4xFDR
+[28]	"H-f4521403004c9e80"[1](f4521403004c9e81) 		# "ash363 mlx4_0" lid 495 4xFDR
+[29]	"S-f4521403004615b0"[29]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[30]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[29]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[30]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[29]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[30]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[29]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[30]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300460f30
+switchguid=0xf452140300460f30(f452140300460f30)
+Switch	36 "S-f452140300460f30"		# "MF0;ddc-ib-tor-s04-1:SX6036/U1" enhanced port 0 lid 10 lmc 0
+[1]	"H-f452140300459f70"[1](f452140300459f71) 		# "ash252 mlx4_0" lid 362 4xFDR
+[2]	"H-f45214030048bb20"[1](f45214030048bb21) 		# "ash253 mlx4_0" lid 343 4xFDR
+[3]	"H-f45214030048bad0"[1](f45214030048bad1) 		# "ash255 mlx4_0" lid 351 4xFDR
+[4]	"H-f45214030048be50"[1](f45214030048be51) 		# "ash263 mlx4_0" lid 379 4xFDR
+[5]	"H-f45214030048b6c0"[1](f45214030048b6c1) 		# "ash256 mlx4_0" lid 357 4xFDR
+[6]	"H-f45214030048b6a0"[1](f45214030048b6a1) 		# "ash257 mlx4_0" lid 331 4xFDR
+[7]	"H-f45214030045a0c0"[1](f45214030045a0c1) 		# "ash258 mlx4_0" lid 364 4xFDR
+[8]	"H-f45214030048b2a0"[1](f45214030048b2a1) 		# "ash259 mlx4_0" lid 347 4xFDR
+[9]	"H-f4521403004c9eb0"[1](f4521403004c9eb1) 		# "ash260 mlx4_0" lid 355 4xFDR
+[10]	"H-f45214030048b930"[1](f45214030048b931) 		# "ash261 mlx4_0" lid 354 4xFDR
+[11]	"H-f4521403004c9310"[1](f4521403004c9311) 		# "ash262 mlx4_0" lid 366 4xFDR
+[12]	"H-f45214030048b740"[1](f45214030048b741) 		# "ash254 mlx4_0" lid 337 4xFDR
+[13]	"H-f45214030048b240"[1](f45214030048b241) 		# "ash264 mlx4_0" lid 381 4xFDR
+[14]	"H-f452140300459fb0"[1](f452140300459fb1) 		# "ash265 mlx4_0" lid 387 4xFDR
+[15]	"H-f45214030048b270"[1](f45214030048b271) 		# "ash267 mlx4_0" lid 385 4xFDR
+[16]	"H-f452140300459f50"[1](f452140300459f51) 		# "ash266 mlx4_0" lid 854 4xFDR
+[17]	"H-f4521403004c9c90"[1](f4521403004c9c91) 		# "ash268 mlx4_0" lid 389 4xFDR
+[18]	"H-f4521403004c9ca0"[1](f4521403004c9ca1) 		# "ash269 mlx4_0" lid 376 4xFDR
+[19]	"H-f4521403004c9ce0"[1](f4521403004c9ce1) 		# "ash271 mlx4_0" lid 864 4xFDR
+[20]	"H-f4521403004c9e90"[1](f4521403004c9e91) 		# "ash270 mlx4_0" lid 371 4xFDR
+[21]	"H-f4521403004c9580"[1](f4521403004c9581) 		# "ash272 mlx4_0" lid 382 4xFDR
+[22]	"H-f4521403004c9320"[1](f4521403004c9321) 		# "ash273 mlx4_0" lid 380 4xFDR
+[23]	"H-f45214030048b460"[1](f45214030048b461) 		# "ash274 mlx4_0" lid 388 4xFDR
+[24]	"H-f45214030048b710"[1](f45214030048b711) 		# "ash275 mlx4_0" lid 386 4xFDR
+[25]	"H-f45214030048b2b0"[1](f45214030048b2b1) 		# "ash276 mlx4_0" lid 397 4xFDR
+[26]	"H-f45214030048b260"[1](f45214030048b261) 		# "ash277 mlx4_0" lid 396 4xFDR
+[27]	"H-f45214030048b320"[1](f45214030048b321) 		# "ash278 mlx4_0" lid 403 4xFDR
+[28]	"H-f45214030048b310"[1](f45214030048b311) 		# "ash279 mlx4_0" lid 390 4xFDR
+[29]	"S-f4521403004615b0"[27]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[28]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[27]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[28]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[27]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[28]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[27]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[28]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x8f1
+devid=0x5a5a
+sysimgguid=0x8f10500201211
+switchguid=0x8f10500201210(8f10500201210)
+Switch	36 "S-0008f10500201210"		# "Mellanox 4036 # ddc-ib-tor-t08-2" enhanced port 0 lid 31 lmc 0
+[1]	"H-0002c903000bbb8c"[1](2c903000bbb8d) 		# "ash070 mlx4_0" lid 185 4xQDR
+[2]	"H-0002c903000bb9b4"[1](2c903000bb9b5) 		# "ash071 mlx4_0" lid 187 4xQDR
+[3]	"H-0002c90300096258"[1](2c90300096259) 		# "ash072 mlx4_0" lid 191 4xQDR
+[4]	"H-0002c9030009610c"[1](2c9030009610d) 		# "ash073 mlx4_0" lid 202 4xQDR
+[5]	"H-0002c903000bb874"[1](2c903000bb875) 		# "ash028 mlx4_0" lid 133 4xQDR
+[6]	"H-0002c903000969fc"[1](2c903000969fd) 		# "ash029 mlx4_0" lid 130 4xQDR
+[7]	"H-0002c903000bb614"[1](2c903000bb615) 		# "ash030 mlx4_0" lid 131 4xQDR
+[8]	"H-0002c903000bc090"[1](2c903000bc091) 		# "ash031 mlx4_0" lid 132 4xQDR
+[9]	"H-0002c903000bbba4"[1](2c903000bbba5) 		# "ash032 mlx4_0" lid 134 4xQDR
+[10]	"H-0002c903000bb9c0"[1](2c903000bb9c1) 		# "ash033 mlx4_0" lid 137 4xQDR
+[11]	"H-0002c903000bb87c"[1](2c903000bb87d) 		# "ash034 mlx4_0" lid 136 4xQDR
+[12]	"H-0002c903000bb878"[1](2c903000bb879) 		# "ash035 mlx4_0" lid 135 4xQDR
+[13]	"H-0002c903000bb888"[1](2c903000bb889) 		# "ash036 mlx4_0" lid 138 4xQDR
+[14]	"H-0002c903004f7eec"[1](2c903004f7eed) 		# "ash037 mlx4_0" lid 123 4xQDR
+[15]	"H-0002c903000bb738"[1](2c903000bb739) 		# "ash038 mlx4_0" lid 139 4xQDR
+[16]	"H-0002c903000bbb80"[1](2c903000bbb81) 		# "ash039 mlx4_0" lid 141 4xQDR
+[17]	"H-0002c903000bbac4"[1](2c903000bbac5) 		# "ash040 mlx4_0" lid 140 4xQDR
+[18]	"H-0002c903000bbacc"[1](2c903000bbacd) 		# "ash041 mlx4_0" lid 146 4xQDR
+[19]	"H-0002c90300097488"[1](2c90300097489) 		# "ash074 mlx4_0" lid 192 4xQDR
+[20]	"H-0002c90300097460"[1](2c90300097461) 		# "ash075 mlx4_0" lid 194 4xQDR
+[21]	"H-0002c903000bb8b8"[1](2c903000bb8b9) 		# "ash076 mlx4_0" lid 203 4xQDR
+[22]	"H-0002c903000bc094"[1](2c903000bc095) 		# "ash077 mlx4_0" lid 195 4xQDR
+[23]	"H-0002c903000bb9fc"[1](2c903000bb9fd) 		# "ash078 mlx4_0" lid 197 4xQDR
+[24]	"H-0002c903000bb850"[1](2c903000bb851) 		# "ash079 mlx4_0" lid 205 4xQDR
+[25]	"H-0002c903000bbabc"[1](2c903000bbabd) 		# "ash080 mlx4_0" lid 199 4xQDR
+[26]	"H-0002c903000bbaf4"[1](2c903000bbaf5) 		# "ash081 mlx4_0" lid 200 4xQDR
+[27]	"H-0002c903000bb920"[1](2c903000bb921) 		# "ash082 mlx4_0" lid 206 4xQDR
+[28]	"H-0002c903000bb7c4"[1](2c903000bb7c5) 		# "ash083 mlx4_0" lid 201 4xQDR
+[29]	"S-f4521403004615b0"[19]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[30]	"S-f4521403004615b0"[20]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xQDR
+[31]	"S-f4521403004614b0"[19]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[32]	"S-f4521403004614b0"[20]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xQDR
+[33]	"S-f4521403004610b0"[19]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xQDR
+[34]	"S-f4521403004610b0"[20]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xSDR
+[35]	"S-f452140300461030"[19]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+[36]	"S-f452140300461030"[20]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xQDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf4521403004616b0
+switchguid=0xf4521403004616b0(f4521403004616b0)
+Switch	36 "S-f4521403004616b0"		# "MF0;ddc-ib-tor-s06-1:SX6036/U1" enhanced port 0 lid 7 lmc 0
+[1]	"H-f45214030045a100"[1](f45214030045a101) 		# "ash364 mlx4_0" lid 798 4xFDR
+[2]	"H-f45214030045a120"[1](f45214030045a121) 		# "ash365 mlx4_0" lid 801 4xFDR
+[3]	"H-f45214030045a0f0"[1](f45214030045a0f1) 		# "ash366 mlx4_0" lid 812 4xFDR
+[4]	"H-f452140300459f30"[1](f452140300459f31) 		# "ash367 mlx4_0" lid 810 4xFDR
+[5]	"H-f45214030048b280"[1](f45214030048b281) 		# "ash368 mlx4_0" lid 802 4xFDR
+[6]	"H-f452140300459fa0"[1](f452140300459fa1) 		# "ash369 mlx4_0" lid 811 4xFDR
+[7]	"H-f45214030048b250"[1](f45214030048b251) 		# "ash370 mlx4_0" lid 813 4xFDR
+[8]	"H-f45214030048b2f0"[1](f45214030048b2f1) 		# "ash371 mlx4_0" lid 814 4xFDR
+[9]	"H-f4521403004c9e00"[1](f4521403004c9e01) 		# "ash372 mlx4_0" lid 820 4xFDR
+[10]	"H-f45214030048ba60"[1](f45214030048ba61) 		# "ash373 mlx4_0" lid 816 4xFDR
+[11]	"H-f45214030048baf0"[1](f45214030048baf1) 		# "ash374 mlx4_0" lid 818 4xFDR
+[12]	"H-f4521403004c9f00"[1](f4521403004c9f01) 		# "ash375 mlx4_0" lid 819 4xFDR
+[13]	"H-f4521403004c9300"[1](f4521403004c9301) 		# "ash376 mlx4_0" lid 815 4xFDR
+[14]	"H-f45214030048b700"[1](f45214030048b701) 		# "ash377 mlx4_0" lid 821 4xFDR
+[15]	"H-f45214030048bae0"[1](f45214030048bae1) 		# "ash378 mlx4_0" lid 834 4xFDR
+[16]	"H-f4521403004c9e50"[1](f4521403004c9e51) 		# "ash379 mlx4_0" lid 832 4xFDR
+[17]	"H-f4521403004c9c30"[1](f4521403004c9c31) 		# "ash380 mlx4_0" lid 823 4xFDR
+[18]	"H-f4521403004c9c20"[1](f4521403004c9c21) 		# "ash381 mlx4_0" lid 822 4xFDR
+[19]	"H-f4521403004c9cb0"[1](f4521403004c9cb1) 		# "ash382 mlx4_0" lid 826 4xFDR
+[20]	"H-f4521403004c9cd0"[1](f4521403004c9cd1) 		# "ash383 mlx4_0" lid 824 4xFDR
+[21]	"H-f45214030045a130"[1](f45214030045a131) 		# "ash384 mlx4_0" lid 828 4xFDR
+[22]	"H-f452140300459f60"[1](f452140300459f61) 		# "ash385 mlx4_0" lid 833 4xFDR
+[23]	"H-f452140300459fc0"[1](f452140300459fc1) 		# "ash386 mlx4_0" lid 827 4xFDR
+[24]	"H-f45214030048b230"[1](f45214030048b231) 		# "ash387 mlx4_0" lid 825 4xFDR
+[25]	"H-f452140300459ea0"[1](f452140300459ea1) 		# "ash388 mlx4_0" lid 829 4xFDR
+[26]	"H-f45214030045a170"[1](f45214030045a171) 		# "ash389 mlx4_0" lid 835 4xFDR
+[27]	"H-f45214030045a160"[1](f45214030045a161) 		# "ash390 mlx4_0" lid 838 4xFDR
+[28]	"H-f452140300459f20"[1](f452140300459f21) 		# "ash391 mlx4_0" lid 830 4xFDR
+[29]	"S-f4521403004615b0"[17]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[18]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[17]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[18]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[17]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[18]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[17]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[18]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300461530
+switchguid=0xf452140300461530(f452140300461530)
+Switch	36 "S-f452140300461530"		# "MF0;ddc-ib-tor-s06-2:SX6036/U1" enhanced port 0 lid 3 lmc 0
+[1]	"H-f45214030048b330"[1](f45214030048b331) 		# "ash392 mlx4_0" lid 831 4xFDR
+[2]	"H-f45214030048b340"[1](f45214030048b341) 		# "ash393 mlx4_0" lid 837 4xFDR
+[3]	"H-f45214030048bd20"[1](f45214030048bd21) 		# "ash394 mlx4_0" lid 839 4xFDR
+[4]	"H-f45214030048b4b0"[1](f45214030048b4b1) 		# "ash395 mlx4_0" lid 842 4xFDR
+[5]	"H-f45214030048b530"[1](f45214030048b531) 		# "ash396 mlx4_0" lid 836 4xFDR
+[6]	"H-f45214030048b4e0"[1](f45214030048b4e1) 		# "ash397 mlx4_0" lid 843 4xFDR
+[7]	"H-f45214030048b470"[1](f45214030048b471) 		# "ash398 mlx4_0" lid 840 4xFDR
+[8]	"H-f45214030048b7a0"[1](f45214030048b7a1) 		# "ash399 mlx4_0" lid 848 4xFDR
+[9]	"H-f45214030048b540"[1](f45214030048b541) 		# "ash400 mlx4_0" lid 841 4xFDR
+[10]	"H-f45214030048bd90"[1](f45214030048bd91) 		# "ash401 mlx4_0" lid 844 4xFDR
+[11]	"H-f45214030048bd80"[1](f45214030048bd81) 		# "ash402 mlx4_0" lid 847 4xFDR
+[12]	"H-f45214030048b790"[1](f45214030048b791) 		# "ash403 mlx4_0" lid 849 4xFDR
+[13]	"H-f45214030048b300"[1](f45214030048b301) 		# "ash404 mlx4_0" lid 845 4xFDR
+[14]	"H-f45214030048b2d0"[1](f45214030048b2d1) 		# "ash405 mlx4_0" lid 850 4xFDR
+[15]	"H-f452140300459e80"[1](f452140300459e81) 		# "ash406 mlx4_0" lid 852 4xFDR
+[16]	"H-f45214030045a060"[1](f45214030045a061) 		# "ash407 mlx4_0" lid 851 4xFDR
+[17]	"H-f45214030045a080"[1](f45214030045a081) 		# "ash408 mlx4_0" lid 846 4xFDR
+[18]	"H-f45214030045a090"[1](f45214030045a091) 		# "ash409 mlx4_0" lid 672 4xFDR
+[19]	"H-f45214030045a0d0"[1](f45214030045a0d1) 		# "ash410 mlx4_0" lid 673 4xFDR
+[20]	"H-f45214030045a110"[1](f45214030045a111) 		# "ash411 mlx4_0" lid 678 4xFDR
+[21]	"H-f45214030048b550"[1](f45214030048b551) 		# "ash412 mlx4_0" lid 677 4xFDR
+[22]	"H-f4521403004c9530"[1](f4521403004c9531) 		# "ash413 mlx4_0" lid 675 4xFDR
+[23]	"H-f4521403004c9380"[1](f4521403004c9381) 		# "ash414 mlx4_0" lid 676 4xFDR
+[24]	"H-f45214030048b4c0"[1](f45214030048b4c1) 		# "ash415 mlx4_0" lid 674 4xFDR
+[27]	"H-0002c903000cdbee"[1](2c903000cdbef) 		# "ash416 mlx4_0" lid 688 4xQDR
+[28]	"H-0002c903000cdc12"[1](2c903000cdc13) 		# "ash417 mlx4_0" lid 690 4xQDR
+[29]	"S-f4521403004615b0"[15]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[16]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[15]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[16]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[15]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[16]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[15]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[16]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300461830
+switchguid=0xf452140300461830(f452140300461830)
+Switch	36 "S-f452140300461830"		# "MF0;ddc-ib-tor-s05-1:SX6036/U1" enhanced port 0 lid 17 lmc 0
+[1]	"H-f45214030048b800"[1](f45214030048b801) 		# "ash308 mlx4_0" lid 430 4xFDR
+[2]	"H-f45214030048ba50"[1](f45214030048ba51) 		# "ash309 mlx4_0" lid 441 4xFDR
+[3]	"H-f45214030048b730"[1](f45214030048b731) 		# "ash310 mlx4_0" lid 446 4xFDR
+[4]	"H-f45214030045a070"[1](f45214030045a071) 		# "ash311 mlx4_0" lid 448 4xFDR
+[5]	"H-f45214030048bb10"[1](f45214030048bb11) 		# "ash313 mlx4_0" lid 451 4xFDR
+[6]	"H-f45214030048b720"[1](f45214030048b721) 		# "ash312 mlx4_0" lid 460 4xFDR
+[7]	"H-f45214030048b9c0"[1](f45214030048b9c1) 		# "ash314 mlx4_0" lid 407 4xFDR
+[8]	"H-f45214030048ba90"[1](f45214030048ba91) 		# "ash315 mlx4_0" lid 429 4xFDR
+[9]	"H-f4521403004c9e70"[1](f4521403004c9e71) 		# "ash316 mlx4_0" lid 414 4xFDR
+[10]	"H-f4521403004c92f0"[1](f4521403004c92f1) 		# "ash317 mlx4_0" lid 464 4xFDR
+[11]	"H-f4521403004c9e10"[1](f4521403004c9e11) 		# "ash318 mlx4_0" lid 431 4xFDR
+[12]	"H-f45214030048b4f0"[1](f45214030048b4f1) 		# "ash319 mlx4_0" lid 422 4xFDR
+[13]	"H-f45214030048b450"[1](f45214030048b451) 		# "ash320 mlx4_0" lid 461 4xFDR
+[14]	"H-f45214030048b6f0"[1](f45214030048b6f1) 		# "ash321 mlx4_0" lid 445 4xFDR
+[15]	"H-f45214030048b520"[1](f45214030048b521) 		# "ash322 mlx4_0" lid 419 4xFDR
+[16]	"H-f4521403004c92e0"[1](f4521403004c92e1) 		# "ash323 mlx4_0" lid 856 4xFDR
+[17]	"H-f45214030048b6d0"[1](f45214030048b6d1) 		# "ash324 mlx4_0" lid 444 4xFDR
+[18]	"H-f4521403004c9ed0"[1](f4521403004c9ed1) 		# "ash325 mlx4_0" lid 427 4xFDR
+[19]	"H-f45214030048b6b0"[1](f45214030048b6b1) 		# "ash326 mlx4_0" lid 863 4xFDR
+[20]	"H-f4521403004c9ee0"[1](f4521403004c9ee1) 		# "ash327 mlx4_0" lid 853 4xFDR
+[21]	"H-f4521403004c9f10"[1](f4521403004c9f11) 		# "ash328 mlx4_0" lid 425 4xFDR
+[22]	"H-f45214030048b430"[1](f45214030048b431) 		# "ash329 mlx4_0" lid 455 4xFDR
+[23]	"H-f45214030048c230"[1](f45214030048c231) 		# "ash330 mlx4_0" lid 417 4xFDR
+[24]	"H-f45214030048bb70"[1](f45214030048bb71) 		# "ash331 mlx4_0" lid 452 4xFDR
+[25]	"H-f4521403004c9420"[1](f4521403004c9421) 		# "ash332 mlx4_0" lid 469 4xFDR
+[26]	"H-f4521403004c9cf0"[1](f4521403004c9cf1) 		# "ash333 mlx4_0" lid 424 4xFDR
+[27]	"H-f4521403004c9340"[1](f4521403004c9341) 		# "ash334 mlx4_0" lid 457 4xFDR
+[28]	"H-f4521403004c9cc0"[1](f4521403004c9cc1) 		# "ash335 mlx4_0" lid 454 4xFDR
+[29]	"S-f4521403004615b0"[13]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[14]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[13]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[14]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f4521403004610b0"[13]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[34]	"S-f4521403004610b0"[14]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR
+[35]	"S-f452140300461030"[13]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[36]	"S-f452140300461030"[14]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+
+vendid=0x2c9
+devid=0xc738
+sysimgguid=0xf452140300460fb0
+switchguid=0xf452140300460fb0(f452140300460fb0)
+Switch	36 "S-f452140300460fb0"		# "MF0;ddc-ib-tor-s04-2:SX6036/U1" enhanced port 0 lid 6 lmc 0
+[1]	"H-f4521403004c9c50"[1](f4521403004c9c51) 		# "ash280 mlx4_0" lid 416 4xFDR
+[2]	"H-f4521403004c9c60"[1](f4521403004c9c61) 		# "ash281 mlx4_0" lid 420 4xFDR
+[3]	"H-f4521403004c9c70"[1](f4521403004c9c71) 		# "ash282 mlx4_0" lid 421 4xFDR
+[4]	"H-f4521403004c9c80"[1](f4521403004c9c81) 		# "ash283 mlx4_0" lid 402 4xFDR
+[5]	"H-f45214030048c870"[1](f45214030048c871) 		# "ash284 mlx4_0" lid 394 4xFDR
+[6]	"H-f45214030048c740"[1](f45214030048c741) 		# "ash285 mlx4_0" lid 401 4xFDR
+[7]	"H-f452140300459d70"[1](f452140300459d71) 		# "ash286 mlx4_0" lid 393 4xFDR
+[8]	"H-f45214030048c490"[1](f45214030048c491) 		# "ash287 mlx4_0" lid 435 4xFDR
+[9]	"H-f45214030048c770"[1](f45214030048c771) 		# "ash288 mlx4_0" lid 409 4xFDR
+[10]	"H-f45214030048c760"[1](f45214030048c761) 		# "ash289 mlx4_0" lid 395 4xFDR
+[11]	"H-f45214030048c860"[1](f45214030048c861) 		# "ash290 mlx4_0" lid 438 4xFDR
+[12]	"H-f45214030048c840"[1](f45214030048c841) 		# "ash291 mlx4_0" lid 413 4xFDR
+[13]	"H-f45214030048c880"[1](f45214030048c881) 		# "ash292 mlx4_0" lid 404 4xFDR
+[14]	"H-f45214030048c810"[1](f45214030048c811) 		# "ash293 mlx4_0" lid 418 4xFDR
+[15]	"H-f45214030048c910"[1](f45214030048c911) 		# "ash294 mlx4_0" lid 437 4xFDR
+[16]	"H-f45214030048c830"[1](f45214030048c831) 		# "ash295 mlx4_0" lid 400 4xFDR
+[17]	"H-f4521403004c8e20"[1](f4521403004c8e21) 		# "ash296 mlx4_0" lid 443 4xFDR
+[18]	"H-f4521403004c8e40"[1](f4521403004c8e41) 		# "ash297 mlx4_0" lid 447 4xFDR
+[19]	"H-f45214030048c3c0"[1](f45214030048c3c1) 		# "ash298 mlx4_0" lid 411 4xFDR
+[21]	"H-f45214030048c920"[1](f45214030048c921) 		# "ash300 mlx4_0" lid 415 4xFDR
+[22]	"H-f45214030048c960"[1](f45214030048c961) 		# "ash301 mlx4_0" lid 439 4xFDR
+[23]	"H-f45214030048ca00"[1](f45214030048ca01) 		# "ash302 mlx4_0" lid 408 4xFDR
+[24]	"H-f45214030048c950"[1](f45214030048c951) 		# "ash303 mlx4_0" lid 428 4xFDR
+[25]	"H-f45214030048c790"[1](f45214030048c791) 		# "ash304 mlx4_0" lid 449 4xFDR
+[26]	"H-f45214030048c780"[1](f45214030048c781) 		# "ash305 mlx4_0" lid 433 4xFDR
+[27]	"H-f45214030048c750"[1](f45214030048c751) 		# "ash306 mlx4_0" lid 406 4xFDR
+[28]	"H-f45214030048c720"[1](f45214030048c721) 		# "ash307 mlx4_0" lid 412 4xFDR
+[29]	"S-f4521403004615b0"[11]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[30]	"S-f4521403004615b0"[12]		# "MF0;ddc-ib-spn-t03-1:SX6036/U1" lid 13 4xFDR
+[31]	"S-f4521403004614b0"[11]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[32]	"S-f4521403004614b0"[12]		# "MF0;ddc-ib-spn-t03-2:SX6036/U1" lid 44 4xFDR
+[33]	"S-f452140300461030"[11]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[34]	"S-f452140300461030"[12]		# "MF0;ddc-ib-spn-t02-2:SX6036/U1" lid 2 4xFDR
+[35]	"S-f4521403004610b0"[11]		# "MF0;ddc-ib-spn-t02-1:SX6036/U1" lid 43 4xFDR

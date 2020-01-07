@@ -1,0 +1,57 @@
+#!/bin/bash
+#______________________________________________________________________
+#  This script takes a folder of exectime.* files and summarizes them so
+#  the user can see what task is taking the most time.  Below is an example:
+#
+# Processors=4
+# Total(s)=784.726
+# Task:send   Avg(s)=0.001259   Max(s)=0.001602
+# Task:RMCRT_Test::initProperties   Avg(s)=0.450059   Max(s)=0.683893
+# Task:RMCRT_Test::initialize   Avg(s)=0.0510892   Max(s)=0.076248
+# Task:RMCRT_Test::computeStableTimestep   Avg(s)=1.17948   Max(s)=1.680541
+# Task:RMCRTCommon::sigmaT4   Avg(s)=0.462538   Max(s)=0.575988
+# Task:reduceSysVar   Avg(s)=0.839146   Max(s)=1.548100
+# Task:Ray::setBoundaryConditions   Avg(s)=0.596272   Max(s)=0.753568
+# Task:Ray::rayTrace   Avg(s)=779.806   Max(s)=797.282158
+# Task:   Avg(s)=1.34021   Max(s)=1.404592
+#
+#  To output the exectime files set the environmental variable
+#     SCI_DEBUG ExecTimes:+
+#
+#            -- The Ghost of Justin
+#______________________________________________________________________
+
+count=`ls -1 exectimes.* | wc -l`
+timesteps=`cat exectimes.* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}'`
+
+echo "----------------------------------------------------------"
+echo "  Reported values are cumulative over:"
+echo "       1) 10 timesteps $timesteps"
+echo "       2) $count processors"
+echo "      3a) nthreads when using the UnifiedScheduler"
+echo "      3b) nthreads-1 when using the ThreadedMPIScheduler"
+echo "----------------------------------------------------------"
+
+echo "Processors=$count"
+cat exectimes.* | grep -Ev "Reported" > .exectimes.tmp
+cat .exectimes.tmp | awk -v count=$count -- \
+  'BEGIN{
+           total=0
+         }
+         {
+           ave[$4] += $3;
+           total   += $3;
+           if (max[$4] < $3)
+             max[$4]=$3
+         }
+  END\
+  {
+    print "Total(s)="total/count;
+    printf ("%20s %30s %10s","Task",  "Ave(s)", "Max(s)\n")
+    for (i in ave)
+     printf "%-40s|  %-10g|  %g \n", i, ave[i]/count, max[i] > ".exectimes.tmp2"
+  }'
+  
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse .exectimes.tmp2
+
+rm -f .exectimes.tmp

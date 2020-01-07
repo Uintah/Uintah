@@ -1,0 +1,34 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+# This  helper script  parses the out.* files from a parametric study
+# and produces:
+#
+# 1 Timestep 100 Time=0.0726817 Next delT=0.000191659 Wall Time=286.141 EMA=3.29039 
+# 1 Total kinetic energy: 2.30058e+07
+# 2 Timestep 100 Time=0.0726817 Next delT=0.000191659 Wall Time=284.03 EMA=3.31361 
+# 2 Total kinetic energy: 2.30058e+07
+# 3 Timestep 100 Time=0.0726817 Next delT=0.000191659 Wall Time=287 EMA=3.43172 
+# 3 Total kinetic energy: 2.30058e+07
+#______________________________________________________________________
+#
+
+/bin/rm  -f /tmp/all 
+
+foreach X ( out.* )
+
+  set timestep = `grep "Timestep 100"    $X`
+  set ke       = `grep "kinetic energy"  $X | tail --lines 1`
+
+  echo $X $ke        >> /tmp/all  
+  echo $X $timestep  >> /tmp/all
+
+end
+
+# sort the output by test name out.X
+cat /tmp/all | sort -n -t. -k 2 > /tmp/all2
+
+# remove "out.", Memory -> EOL and "stat" from the file
+cat /tmp/all2 | sed s/"out."//g | sed s/'Memory.*$'/""/g | sed /'stat'/d
+
+/bin/rm -f /tmp/all

@@ -1,0 +1,434 @@
+<html>
+<head>
+<meta name="Author" value="James Bigler">
+<title>Using uda2nrrd, unu, and SCIRun::Teem to inspect data</title>
+</head>
+<body bgcolor="white">
+
+<h1>Using uda2nrrd, unu, and SCIRun::Teem to inspect data</h1>
+
+<h2>What can these tools do for you?</h2>
+
+<ol>
+<li>uda2nrrd can be used to extract values of a field.  Fields are
+specified by variable name, material, and timestep.</li>
+<li>unu can be used to inspect and process data remotely or
+locally</li>
+<li>The Teem package in SCIRun can be used to visualize data similar
+to how you do it with the Uintah package</li>
+</ol>
+
+<h2>A brief introduction to nrrd, unu, and teem</h2>
+
+<p>teem is a collection of libraries and utilities which aid in the
+processing and exploration of rasterized data.  Full documentation for
+teem can be found at its <a href="http://teem.sourceforge.net">home</a>
+at sourceforge.
+</p>
+
+<p>The primary data format used by teem is called <a
+href="http://teem.sourceforge.net/nrrd/index.html">nrrd</a> (Nearly
+Raw Raster Data) and pronounced "nerd".  The format consists of an
+ASCII header followed by the data (raw or ASCII).  The headers were
+designed to be human readable/writable while maintaining the raw data.
+Headers can be either attached (the head of the file preceeding the
+data) or detached.  These are designated with .nrrd and .nhdr
+extensions respectfully.  Detached headers can use any name for a raw
+file, but the default is .raw.  More detail on the file format can be
+found <a href="http://teem.sourceforge.net/nrrd/format.html">here</a>.
+</p>
+
+<p>The nrrd library comes with many functions for manipulating nrrd
+files.  Many of these hese functions have been wrapped into a stand
+alone utility called unu (Utah Nrrd Utilites) and pronounced U-N-U
+(also referred to as unrrdu).  There is extensive <a
+href="http://teem.sourceforge.net/unrrdu/index.html">documentation</a>
+for unu on the web.
+</p>
+
+<p>unu will read and write nrrd files from either a file or from
+standard in and out ("-" can be used as the file name to specify
+stdin/out when the default does not use stdin/out).  By using unix
+pipes ("|") you can chain together several commands to perform more
+complex operations without the use of intermediate files.  I'll show
+some examples later.
+</p>
+
+<h2>uda2nrrd</h2>
+
+<p>uda2nrrd extracts a field from an uda and writes a nrrd file.  The
+user must specify the uda file and a variable name.  All other options
+have default values.</p>
+
+<h3>Uda Specifier Option</h3>
+
+<ul>
+<li>-uda &lt;archive&gt; Required argument to specify name of uda file</li>
+</ul>
+
+<h3>Field Specifier Options</h3>
+
+<ul>
+<li>-v,--variable &lt;variable name&gt;</li>
+<li>-m,--material &lt;material number&gt; [defaults to first material found]</li>
+<li>-l,--level &lt;level index&gt; [defaults to 0]</li>
+<li>-mo &lt;operator&gt; type of operator to apply to matricies.
+Options are none, det, norm, and trace [defaults to none]</li>
+</ul>
+
+<h3>Timestep Specifier Options</h3>
+
+<ul>
+<li>-tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]</li>
+<li>-thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]</li>
+<li>-tinc [int] (output every n timesteps) [defaults to 1]</li>
+<li>-tstep,--timestep [int] (only outputs timestep int)</li>
+</ul>
+
+<h3>Output Options</h3>
+
+<ul>
+<li>-o,--out &lt;output file name root&gt; [defaults to the name of the
+variable followed by the material number]  The index of the timestep
+will be appended to this argument.</li>
+<li>-dh,--detatched-header - writes the data with detached headers.
+The default action is to write files with attached headers.  The file
+extension will now be .nhdr instead of .nrrd.</li>
+</ul>
+
+<h3>Chatty Options</h3>
+
+<ul>
+<li>-vv,--verbose Output is more chatty (also prints out list of
+material numbers for given variable).</li>
+<li>-q,--quiet Very little output</li>
+</ul>
+
+<h3>Other usage notes</h3>
+
+<p>If you run uda2nrrd with no arguments the usage is printed.  If you
+want to know how many timesteps and what variables are in the uda run
+uda2nrrd with only the archive argument.
+</p>
+
+<h3>Examples of use</h3>
+
+<ul>
+<li>To see the list of variables supply only the archive name.<br />
+
+<block><pre>
+% uda2nrrd -uda  /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000//index.xml
+There are 105 timesteps:
+Variable "" was not found.
+If a variable name was not specified try -v [name].
+Possible variable names are:
+vars[0] = rho_CC
+vars[1] = temp_CC
+vars[2] = press_CC
+vars[3] = term2
+vars[4] = term3
+vars[5] = delP_Dilatate
+vars[6] = speedSound_CC
+vars[7] = press_equil_CC
+vars[8] = press_force
+vars[9] = vol_frac_CC
+vars[10] = int_eng_L_CC
+vars[11] = int_eng_L_ME_CC
+vars[12] = mom_L_ME_CC
+vars[13] = sp_vol_CC
+vars[14] = p.particleID
+vars[15] = p.x
+vars[16] = p.volume
+vars[17] = p.stress
+vars[18] = p.pressure
+vars[19] = p.velocity
+vars[20] = gradPAccNC
+vars[21] = g.velocity
+vars[22] = g.acceleration
+vars[23] = g.internalforce
+vars[24] = g.mass
+Aborting!!
+</pre></block>
+</li>
+
+<li>To pull out the temperature for the first timestep (<tt>-v temp_CC -thigh 0</tt>).  This results in a file named <tt>temp_CC_M00_0000.nrrd</tt>.<br />
+<block><pre>
+% /data/SCIRun/trunk/opt/Packages/Uintah/StandAlone/uda2nrrd -uda /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000 -v temp_CC -thigh 0
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/index.xml
+There are 105 timesteps:
+Using variable name (temp_CC) as output file base name.
+Extracing data for temp_CC: CCVariable<double>
+outputting for times[0] = 1.3584e-06 to times[0] = 1.3584e-06
+WARNING: Data archive does not have level ID
+This is okay, as long as you aren't trying to do AMR
+Extracting data for material 0.
+Building Field from uda data
+Bounding box: min([-1.25 -1.25 -0.02]), max([1.25 1.25 0.04])
+Converting field to nrrd.
+Writing nrrd file
+Done writing nrrd file
+</pre></block>
+</li>
+
+<li>To see all the material numbers use <tt>-vv</tt> while printing<br />
+<block><pre>
+% /data/SCIRun/trunk/opt/Packages/Uintah/StandAlone/uda2nrrd -uda /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000 -v temp_CC -thigh 0 -vv
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/index.xml
+There are 105 timesteps:
+There are 25 variables:
+Using variable name (temp_CC) as output file base name.
+Extracing data for temp_CC: CCVariable<double>
+outputting for times[0] = 1.3584e-06 to times[0] = 1.3584e-06
+WARNING: Data archive does not have level ID
+This is okay, as long as you aren't trying to do AMR
+Valid materials for temp_CC at time[0](1.3584e-06) are
+        0, 1, 2,
+Extracting data for material 0.
+Building Field from uda data
+Bounding box: min([-1.25 -1.25 -0.02]), max([1.25 1.25 0.04])
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Converting field to nrrd.
+size[0] = 50
+size[1] = 50
+size[2] = 3
+Writing nrrd file
+Done writing nrrd file
+</pre></block>
+</li>
+
+</ul>
+  
+<h2>unu</h2>
+
+<p>The most useful thing that you can do with unu is make images to
+view the data.  By using a combination of unu commands and xv you can
+view the data without ever having to create intermediate data files.
+Data from one use of unu goes to stdout and is read by the next on
+stdin.  The following command will quantize your data to 8 bits
+(uchars), format the data into an image formate (pnm is used for
+ppm:color and pgm:grayscale images), and then piped to xv (the "-"
+says read from stdin).
+
+<blockquote><pre>
+unu quantize -b 8 | unu save -f pnm | xv -
+</pre></blockquote>
+This bit of code is so useful that you should alias it to something
+like this:
+<blockquote><pre>
+alias XV "unu quantize -b 8 | unu save -f pnm | xv -"
+</pre></blockquote>
+In order to view images the data must be in 8 bit format for pnm
+format or 8-16 bit for png format (although xv will quantize 16-bit
+images to 8 bit anyway).
+</p>
+
+<p>Let's take a look at some data.  Using uda2nrrd I extracted a file
+called temp_CC0050.nrrd.  You can <a
+href="temp_CC0050.nrrd">download</a> it to follow along.</p>
+
+<p>Use "<tt>unu head temp_CC0050.nrrd</tt>" to view the header.
+<blockquote><pre>
+NRRD0001
+type: double
+dimension: 3
+sizes: 50 50 3
+endian: little
+encoding: raw
+</pre></blockquote>
+</p>
+
+<p>We only really need to care about the sizes of the dimensions for
+now.  We can use the command unu slice to take a slice along any
+dimension and view it in xv.
+
+<blockquote><pre>
+unu slice -p 1 -a 2 -i temp_CC0050.nrrd | XV
+</pre></blockquote>
+This is like making a 2D nrrd from data[][][1].  And should look
+something like this<br /><img src="slice01.png" />
+</p>
+
+<p>Now this is kind of hard to see anthing interesting.  We have a
+couple of optoins.  In xv we can press CTRL-c to view the comments to
+the file.  This will tell use the min and max which was used in the
+quantization.
+<blockquote><pre>
+NRRD>old min: 300
+NRRD>old max: 19751.1
+</pre></blockquote>
+This tells us that there was more dynamic range than could be
+expressed in 256 values.  We can do a histogram equalization to try
+and see the changes in values easier.  We'll use the <tt>unu heq</tt>
+command using 4000 bins for the quantization.  Smaller numbers will
+work, but I haven't experimented much with different values.  heq has
+other options which you can see by running <tt>unu heq</tt> with no
+arguments.
+<blockquote><pre>
+unu slice -p 1 -a 2 -i temp_CC0050.nrrd | unu heq -b 4000 | XV
+</pre></blockquote>
+Still hard to see stuff as it is so little.<br /><img
+src="slice01heq.png" />
+</p>
+
+<p>We can resize our image by using <tt>unu resample</tt>.  You can
+specify the new size with -s followed by the new size of each
+dimension delileated with spaces.  You can specify the exact size (-s
+100 100) or by a multiplication factor using x (-s x10 x0.1).
+</p>
+
+<p>This uses convolution to produce the resized image.  Different
+kernels will produce different types of interpolation.  For now there
+is the default, tent (linear), and box (nearest neighbor).  You can
+specify these with <tt>-k tent</tt>, <tt>-k box</tt>.  If you don't
+want the data modified by the kernel use "=" for the size of that
+dimension (useful for resizing color images where you don't the color
+dimension mucked with).  Here are a few examples.</p>
+
+<table>
+<tr><td>Command</td><td>With heq</td><td>Without heq</td></tr>
+
+<tr><td><tt>unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu heq -b 4000 \<br />
+| unu resample -s x5 x5 \<br />
+| XV</tt></td>
+<td><img src="slice01-resize01.png" /></td>
+<td><img src="slice01-resize01-noheq.png" /></td>
+</tr>
+
+<tr><td><tt>unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu heq -b 4000 \<br />
+| unu resample -s x5 x5 -k tent \<br />
+| XV</tt></td>
+<td><img src="slice01-resize02.png" /></td>
+<td><img src="slice01-resize02-noheq.png" /></td>
+</tr>
+
+<tr><td><tt>unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu heq -b 4000 \<br />
+| unu resample -s x5 x5 -k box \<br />
+| XV</tt></td>
+<td><img src="slice01-resize03.png" /></td>
+<td><img src="slice01-resize03-noheq.png" /></td>
+</tr>
+</table>
+
+<p>Another option is to use a colormap.  unu can use colormaps that
+come in the form of nrrds or text files.  You will want to quantize it
+down to 8-bits before doing the colormapping.</p>
+
+<table>
+<tr><td>Command</td><td>With heq</td><td>Without heq</td></tr>
+
+<tr><td><tt>unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu heq -b 4000 \<br />
+| unu resample -s x5 x5 -k box \<br />
+| unu quantize -b 8 \<br />
+| unu rmap -m <a href="invrainbow.cmp">invrainbow.cmp</a> \<br />
+| XV</tt></td>
+<td><img src="slice01-invr.png" /></td>
+<td><img src="slice01-invr-noheq.png" /></td>
+</tr>
+
+<tr><td><tt>unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu heq -b 4000 \<br />
+| unu resample -s x5 x5 -k box \<br />
+| unu quantize -b 8 \<br />
+| unu rmap -m <a href="blackbody.cmp">blackbody.cmp</a> \<br />
+| XV</tt></td>
+<td><img src="slice01-bb.png" /></td>
+<td><img src="slice01-bb-noheq.png" /></td>
+</tr>
+</table>
+
+<p>Here are some commands which you may find useful</p>
+
+<ul>
+
+<li><p><b>Graph a scan line of data</b> - You can use unu to take
+slices of the data to give you a single scan line which you can either
+view as the text values or pipe to a graphing program such as xmgr or
+grace.  You can use Steve Parker's version of <a
+href="http://plasma-gate.weizmann.ac.il/Xmgr/">xmgr</a> on the SCI
+side for SGI by using this command: <tt>alias xmgr
+~sparker/bin/xmgr</tt>.  On linux you will have to download and
+install <a href="http://plasma-gate.weizmann.ac.il/Grace/">Grace</a>.
+The default installation path is /usr/local/grace/bin/xmgrace, which
+you can alias to xmgr with this command: <tt>alias xmgr
+'/usr/local/grace/bin/xmgrace -free'</tt> (the -free option will allow
+xmgrace to resize the graph with the window size which is xmgr's
+default)</p>
+
+<table>
+<tr><td><tt>
+unu slice -p 1 -a 2 -i temp_CC0050.nrrd \<br />
+| unu slice -a 1 -p 35 \<br />
+| unu save -f text \<br />
+| xmgr -pipe
+</tt></td>
+<td><img src="slice-xmgr.png" /></td></tr>
+</table>
+
+</li>
+
+</ul>
+
+<h2>SCIRun::Teem</h2>
+
+<table border="1">
+<tr><td valign="top">
+
+<p>Alternatively you can use SCIRun to visualize your nrrd data.  Most
+of the Uintah and SCIRun visualization modules use SCIRun::Fields as
+input.  By enabling the Teem package you can read nrrd files and
+convert them to SCIRun::Fields.
+</p>
+
+<p>You can enable the Teem package from any machine for which the
+Thirdparty libraries have been built.  In fact you can get a copy of
+unu from the Thirdparty bin directory.  Use <tt>--enable-package="Teem
+Uintah"</tt> to get access to both Teem and Uintah visualization
+tools.  Once you have configured and built your scirun binary you will
+need two modules.  This example net loads in a nrrd and visualizes it
+using texture cutting planes.  If you run scirun from the directory
+you downloaded the data and net into, all you have to do is click
+execute on any module to fire it up.</p>
+
+<p>Here is an example net using texture cutting planes.  Click to
+download the net.<br />
+<a href="slice-vis.net"><img src="scirun.png" /></a></p>
+
+<p>Here is an example net using isosurfaces colored by the isovalue.
+Click to download the net.  Be sure to clidk autoview in the viewer as
+the location of the view is not saved.<br />
+<a href="iso-vis.net"><img src="scirun-iso.png" /></a></p>
+
+</td>
+<td valign="top">
+
+<p>SCIRun nrrds have a notion of a tuple axis.  This facilitates items
+such as vectors and matricies where a single axis is used as a data
+item rather than a physical dimension.  For vector and matrix data the
+first axis is the tuple axis.  For scalar data, make sure you check
+the CreateNewTuple radio button
+</p>
+
+<img src="tuple.png" />
+</td></tr></table>
+
+
+<blockquote><pre>
+</pre></blockquote>
+
+<blockquote><pre>
+</pre></blockquote>
+
+<blockquote><pre>
+</pre></blockquote>
+
+
+</body>
+</html>

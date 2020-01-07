@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<Uintah_specification>
+  <Meta>
+    <title>Compressible flow in 2D</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>
+    <Density method="COMPRESSIBLE">
+      <NameTag name="density"/>
+    </Density>
+    <NSCBC pfarfield="101325"/>
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f0"/>
+      <GaussianFunction amplitude="10.0" deviation="0.1" mean="0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f1"/>
+      <GaussianFunction amplitude="10.0" deviation="0.1" mean="0" baseline="0.0">
+        <NameTag name="ZSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f01"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <!-- specify the list of tags of the source expressions -->
+        <NameTag name="f0"/>
+        <NameTag name="f1"/>
+      </ExprAlgebra>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f3"/>
+      <Constant>273.0</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <ExprAlgebra algebraicOperation="SUM">
+        <!-- specify the list of tags of the source expressions -->
+        <NameTag name="f01"/>
+        <NameTag name="f3" />
+      </ExprAlgebra>
+    </BasicExpression>
+    <!-- Set the initial condition expression for mixture fraction -->
+    <!-- 
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="1000.0" deviation="1.0" mean="0.0" baseline="273.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+ -->
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>1.95e-5</Constant>
+    </BasicExpression>
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="XZ" coefficient="0.025"/>
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="UPWIND">
+        <AdvectiveVelocity>
+          <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+  </Wasatch>
+  <Time>
+    <maxTime>0.05</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-7</delt_min>
+    <delt_max>1.0e-7</delt_max>
+    <max_Timesteps> 20 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>compressible-test-2d-nonreflecting-xz.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" timestepInterval="2"/>
+    <save label="Temperature"/>
+    <save label="u"/>
+    <save label="w"/>
+    <save label="pressure"/>
+    <save label="density"/>
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+<!-- 
+        
+            <save label="Temperature"/>
+    <save label="u"/>
+    <save label="pressure"/>
+    <save label="density"/>
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+    <save label="viscous_dissipation"/>
+    <save label="x-mom"/>        
+    <save label="x-mom_rhs"/>    
+    <save label="y-mom"/>        
+    <save label="y-mom_rhs"/>    
+    
+    <save label="x-mom_rhs_partial"/>        
+    <save label="x-mom_convFlux_x"/>
+    <save label="x-mom_convFlux_y"/>    
+    <save label="y-mom_convFlux_x"/>
+    <save label="y-mom_convFlux_y"/>    
+    
+    <save label="strain_xx"/>
+        <save label="strain_yy"/>    
+    <save label="density_convFlux_X"/>
+    <save label="density_rhs"/>
+    <save label="et"/>
+    <save label="kinetic energy"/>        
+    <save label="rhoet_and_pressure_convFlux_X"/>
+       <save label="rhoet_and_pressure_convFlux_Y"/> 
+    <save label="Temperature_diffVelocity_X"/>
+    <save label="Temperature_diffVelocity_Y"/>    
+    <save label="density_convFlux_X"/>
+    <save label="density_convFlux_Y"/>    
+    <save label="rhoet_and_pressure"/>
+    <save label="viscous_dissipation"/>
+    <save label="sound_speed"/>
+ -->
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+			<Face side="x-" type="Open">
+<!-- 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			   -->
+			</Face>
+			<Face side="x+" type="Open">
+<!-- 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			   -->
+			</Face>
+			<Face side="z-" type="Open">
+<!-- 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			   -->
+			</Face>
+			<Face side="z+" type="Open">
+<!-- 			  <BCType label="rhoet" var="Neumann" value="0.0"/>        			   -->
+			</Face>      
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.5,-0.5,-0.5]</lower>
+        <upper>[0.5,0.5,0.5]</upper>
+        <resolution>[100,1,100]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,1,0]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

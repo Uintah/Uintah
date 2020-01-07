@@ -1,0 +1,214 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Rising bubbles</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre" />
+  <Wasatch>
+        
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+  
+  <TimeIntegrator>FE</TimeIntegrator>
+
+  <BasicExpression type="ZVOL">
+     <TaskList>advance_solution</TaskList>
+     <NameTag name="gravity" />
+     <Constant>-9.81</Constant>
+  </BasicExpression>
+
+  <BasicExpression type="SVOL">
+     <TaskList>initialization</TaskList>
+     <NameTag name="f" />
+     <Bubbles insidevalue="1.0" outsidevalue="0.0" radius="0.06">
+      <Layout>[2,2,2]</Layout>
+     </Bubbles>
+  </BasicExpression>
+    
+    <TwoStreamMixing rho1="0.9463728369939" rho0="1.29302955384148">
+      <Density><NameTag name="density" /></Density>
+      <MixtureFraction> <NameTag name="f" /> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>  
+
+  <!-- Set the initial condition expression for x-momentum -->
+
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"  />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="w"  />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="v"  />
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+        <NameTag name="f" />        
+      </FieldExpression>                    
+      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+        <NameTag name="f*" />        
+      </FieldExpression>                          
+      <FieldExpression type ="SVOL" min="0.0" max="1.29302">
+        <NameTag name="rhof" state="STATE_NP1" />        
+      </FieldExpression>                                
+    </FieldClipping>
+
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="mixturefraction">
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="u" />
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="v" />
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
+        <AdvectiveVelocity>
+          <NameTag name="w" />
+        </AdvectiveVelocity>
+      </ConvectiveFlux>      
+      <DiffusiveFlux direction="XYZ" coefficient="1.5e-5" isvelocity="true"/>
+    </TransportEquation>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"  />
+      <Constant>2.181e-5</Constant>
+    </BasicExpression>
+    
+  <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      
+      <Viscosity>
+        <NameTag name="viscosity"  />
+      </Viscosity>
+      
+      <Pressure>
+<!--         <Use3DLaplacian>   false</Use3DLaplacian> -->
+<!-- 
+        <EnforceSolvability/>
+        <ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure>
+ -->
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-8  </tolerance>
+            <maxiterations>  100    </maxiterations>
+           </Parameters>
+      </Pressure>
+      <BodyForce direction="Z">
+        <NameTag name="gravity" />
+      </BodyForce>
+      
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.73</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-3</delt_min>
+    <delt_max>1e-3</delt_max>
+<!--     <delt_init>1e-5</delt_init> -->
+<!--     <max_Timesteps>25</max_Timesteps> -->
+    <timestep_multiplier>1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-bubbles-3d.uda</filebase>
+    <outputInterval>0.01</outputInterval>
+<!--     <outputTimestepInterval>10</outputTimestepInterval> -->
+<!--     <outputInitTimestep/> -->
+    <checkpoint cycle = "0" interval = "0.0"/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="u"/>
+    <save label="v"/>
+    <save label="w"/>    
+    <save label="f"/>
+    <save label="pressure"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      
+      <Face side="y-" name="bottom-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>        
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+        
+      <Face side="y+" name="top-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>        
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+      
+      <Face side="x-" name="left-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+        
+      <Face side="x+" name="right-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>        
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+
+      <Face side="z-" name="zm-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>        
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+        
+      <Face side="z+" name="zt-wall" type="Wall">
+        <BCType label="rhof" var="Neumann" value="0.0"/>        
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>            
+      </Face>
+
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[0.0, 0,0.0]</lower>
+        <upper>[1.0, 1.0, 1.0]</upper>
+        <resolution>[32,32,32]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

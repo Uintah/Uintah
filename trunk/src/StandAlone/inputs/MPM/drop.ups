@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+   <Meta>
+       <title>none</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>0.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <max_Timesteps>3000000</max_Timesteps>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>Drop.uda</filebase>
+       <outputInterval>.001</outputInterval>
+       <save label="p.x"/>
+       <save label="p.velocity"/>
+       <save label="p.volume"/>
+       <save label="p.size"/>
+       <save label="p.temperature"/>
+       <save label="p.deformationMeasure"/>
+       <save label="p.stress"/>
+       <save label="g.mass"/>
+       <save label="g.stressFS"/>
+       <save label="g.velocity"/>
+       <save label="g.velocity_star"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,-9.81,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1000.0</density>
+              <constitutive_model type="water"> 
+                 <bulk_modulus>15000.0</bulk_modulus>
+                 <viscosity>.5</viscosity>
+                 <gamma>7.0</gamma>
+               </constitutive_model>
+              <thermal_conductivity>0.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "boxL">
+                     <min>[0.0, 0.0, 0.0]</min>
+                     <max>[0.12,0.02,0.1]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>12</temperature>
+              </geom_object>
+              <geom_object>
+                  <cylinder label = "drop">
+                     <bottom>[.06,.03,.0]</bottom>
+                     <top>   [.06,.03,.1]</top>
+                     <radius> .005 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,-2.0,0.0]</velocity>
+                  <temperature>13</temperature>
+              </geom_object>
+           </material>
+
+           <contact>
+             <type>null</type>
+             <materials>[0,1]</materials>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+           <Face side = "x-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+           <Face side = "y+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+<!--
+              <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                <value> [0.0,0.0,0.0] </value>
+              </BCType>
+-->
+       <Level>
+           <Box label="1">
+              <lower>[0.0,  0.0, 0.0]   </lower>
+              <upper>[0.12, 0.04, 0.001]</upper>
+              <resolution>[240,80,1]   </resolution>
+              <extraCells>[1,1,1]      </extraCells>
+              <patches>[1,1,1]         </patches>
+           </Box>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

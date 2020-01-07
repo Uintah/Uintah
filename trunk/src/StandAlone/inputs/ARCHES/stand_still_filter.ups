@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>This input file doesn't do anything interesting</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>25</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>5</delt_max>
+    <max_Timesteps> 2 </max_Timesteps>
+    <timestep_multiplier>0.1</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>stand_still.uda</filebase>
+    <outputInterval>0.01</outputInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,3.0]</upper>
+        <resolution>[8,8,8]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <Turbulence model="compdynamicprocedure"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298.0</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

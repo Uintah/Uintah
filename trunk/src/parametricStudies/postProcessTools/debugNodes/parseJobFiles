@@ -1,0 +1,28 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This helper script parses the job-*.out files from a parametric study
+# and produces: 
+#
+#1   ash[186-187,189-190] 
+#2   ash[183,185-186,190] 
+#3   ash[183-184,187,190] 
+#4   ash[183-186]         
+#5   ash[181,184,187,191] 
+#
+#  This is used for creating a table
+#______________________________________________________________________
+
+
+/bin/rm -f /tmp/nodes
+
+foreach X (job-*.out )
+ 
+  set testNum  = `echo $X | tr -d '[:alpha:],-\.'`
+  set nodes    = `grep extern $X | grep extern | awk '{print $4}'`
+  echo "$testNum $nodes" >> /tmp/nodes
+
+end
+
+cat /tmp/nodes | sort -n -k1
+
+/bin/rm -f /tmp/nodes

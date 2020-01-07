@@ -1,0 +1,421 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>char oxidation ps 0D </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>100.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>5</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>charps.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="gridX"/>
+    <save label="gridY"/>
+    <save label="gridZ"/>
+    <save label="ucellX"/>
+    <save label="vcellY"/>
+    <save label="wcellZ"/>
+    <save label="number_density"/>
+    <save label="surfaceAreaFraction_0"/>
+    <save label="surfaceAreaFraction_1"/>
+    <save label="surfaceAreaFraction_2"/>
+    <save label="surfaceAreaFraction_3"/>
+    <save label="surfaceAreaFraction_4"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="w_4"/>
+    <save label="temperature_coal_0"/>
+    <save label="temperature_coal_1"/>
+    <save label="temperature_coal_2"/>
+    <save label="temperature_coal_3"/>
+    <save label="temperature_coal_4"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="ux_3"/>
+    <save label="ux_4"/>
+    <save label="uy_0"/>
+    <save label="uy_1"/>
+    <save label="uy_2"/>
+    <save label="uy_3"/>
+    <save label="uy_4"/>
+    <save label="uz_0"/>
+    <save label="uz_1"/>
+    <save label="uz_2"/>
+    <save label="uz_3"/>
+    <save label="uz_4"/>
+    <save label="char_ps_qn0"/>
+    <save label="char_ps_qn1"/>
+    <save label="char_ps_qn2"/>
+    <save label="char_ps_qn3"/>
+    <save label="char_ps_qn4"/>
+    <save label="char_ps_qn0_gasSource"/>
+    <save label="char_ps_qn1_gasSource"/>
+    <save label="char_ps_qn2_gasSource"/>
+    <save label="char_ps_qn3_gasSource"/>
+    <save label="char_ps_qn4_gasSource"/>
+    <save label="rho_coal_0"/>
+    <save label="rho_coal_1"/>
+    <save label="rho_coal_2"/>
+    <save label="rho_coal_3"/>
+    <save label="rho_coal_4"/>
+    <save label="char_gas_reaction0_qn0"/>
+    <save label="char_gas_reaction1_qn0"/>
+    <save label="char_gas_reaction2_qn0"/>
+    <save label="char_gas_reaction0_qn1"/>
+    <save label="char_gas_reaction1_qn1"/>
+    <save label="char_gas_reaction2_qn1"/>
+    <save label="char_gas_reaction0_qn2"/>
+    <save label="char_gas_reaction1_qn2"/>
+    <save label="char_gas_reaction2_qn2"/>
+    <save label="char_gas_reaction0_qn3"/>
+    <save label="char_gas_reaction1_qn3"/>
+    <save label="char_gas_reaction2_qn3"/>
+    <save label="char_gas_reaction0_qn4"/>
+    <save label="char_gas_reaction1_qn4"/>
+    <save label="char_gas_reaction2_qn4"/>
+    <checkpoint cycle="2" interval="1e-5"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[24,24,24]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <model label="RCmass_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn0_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn1_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn2_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn3_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="RCmass_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="Charmass_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="length_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="w_qn4_RHS" type="constant_property">
+          <grid type="CC"/>
+          <value>0</value>
+        </model>
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.e-4</value>
+        </model>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>1</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>1</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>1</value>
+        </model>
+        <model label="uVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>1</value>
+        </model>
+        <model label="vVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>1</value>
+        </model>
+        <model label="wVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>1</value>
+        </model>
+        <model label="temperature" type="constant_property">
+          <grid type="CC"/>
+          <value>1000.</value>
+        </model>
+        <model label="mixture_molecular_weight" type="constant_property">
+          <grid type="CC"/>
+          <value>0.035506854</value><!--it was computed with the folliwng  mass fraction -->
+        </model>
+        <model label="O2" type="constant_property">
+          <grid type="CC"/>
+          <value>0.2</value>
+        </model>
+        <model label="CO2" type="constant_property">
+          <grid type="CC"/>
+          <value>0.1</value>
+        </model>
+        <model label="H2O" type="constant_property">
+          <grid type="CC"/>
+          <value>0.1</value>
+        </model>
+        <model label="N2" type="constant_property">
+          <grid type="CC"/>
+          <value>0.6</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties>
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model>
+      </StateProperties>
+      <DQMOM>
+        <number_quad_nodes>5</number_quad_nodes>
+        <Weights/>
+      </DQMOM>
+      <ParticleProperties type="coal">
+        <diameter_distribution>[50e-6,50e-6,150e-6,200e-6,200e-6]</diameter_distribution>
+        <density>1130.0</density>
+        <rho_ash_bulk>2300.0</rho_ash_bulk>
+        <void_fraction>0.007801494299130</void_fraction>
+        <temperature>300.0</temperature>
+        <ultimate_analysis>
+          <C>0.6674982537</C>
+          <H>0.0450054885</H>
+          <O>0.1357149985</O>
+          <N>0.0116754815</N>
+          <S>0.0035924558</S>
+          <CHAR>0.0000000000</CHAR>
+          <ASH>0.0786348668</ASH>
+          <H2O>0.0578784552</H2O>
+        </ultimate_analysis>
+        <daf_volatiles_fraction>.45</daf_volatiles_fraction>  <!--dray ash free volatiles content - computed from SUFCO analysis -->
+        <raw_coal_enthalpy>-1064549.81069</raw_coal_enthalpy>
+        <char_enthalpy>0.0</char_enthalpy>
+        <ash_enthalpy>-9.5686e7</ash_enthalpy>
+        <Yamamoto_coefficients>[1.75e10,2.592280258e5,0.53,16.26759,-39.1322,61.04079,-38.3719,0.108926,0.032302]</Yamamoto_coefficients>
+        <KobayashiSarofim_coefficients>[8.7e7, 1.2e14, 25632.3, 49873.7, 0.357, 0.504]</KobayashiSarofim_coefficients>
+        <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
+        <FOWYDevol>
+          <v_hiT>6.641e-01</v_hiT>
+          <A>19724227.36</A>
+          <Ta>1.113e4</Ta>
+          <Tbp_graphite>3e3</Tbp_graphite>
+          <T_mu>1100.0</T_mu>
+          <T_sigma>250.0</T_sigma>
+          <T_hardened_bond>1800.0</T_hardened_bond>
+          <sigma>8.258e2</sigma>
+        </FOWYDevol>
+        <ShaddixChar>
+          <As> 344.0 </As>
+          <Es> 45.5e3 </Es>
+          <n> 0.18 </n>
+        </ShaddixChar>
+        <SmithChar>
+          <char_MW>12.0</char_MW>
+          <Sg0>6.7e5</Sg0>
+          <surface_area_mult_factor>1.0</surface_area_mult_factor>
+          <species>O2</species>
+          <species>H2O</species>
+          <species>CO2</species>
+          <species>N2</species>
+          <reaction>
+            <oxidizer_name>O2</oxidizer_name>
+            <oxidizer_MW>32.0</oxidizer_MW>
+            <pre_exponential_factor>90.405</pre_exponential_factor>
+            <activation_energy>22305.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>1.0</heat_of_reaction_constant>
+            <use_co2co>true</use_co2co>
+          </reaction>
+          <reaction>
+            <oxidizer_name>H2O</oxidizer_name>
+            <oxidizer_MW>18.0</oxidizer_MW>
+            <pre_exponential_factor>7614.3</pre_exponential_factor>
+            <activation_energy>59315.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>131.3e3</heat_of_reaction_constant>
+            <use_co2co>false</use_co2co>
+          </reaction>
+          <reaction>
+            <oxidizer_name>CO2</oxidizer_name>
+            <oxidizer_MW>44.0</oxidizer_MW>
+            <pre_exponential_factor>3000.0</pre_exponential_factor>
+            <activation_energy>70099.0</activation_energy>
+            <stoich_coeff_ratio>1.0</stoich_coeff_ratio>
+            <heat_of_reaction_constant>172459</heat_of_reaction_constant>
+            <use_co2co>false</use_co2co>
+          </reaction>
+        </SmithChar>
+        <ksi>0.97266</ksi>
+        <LinearSwelling>
+          <Fsw>1.05</Fsw>
+        </LinearSwelling>
+      </ParticleProperties>
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="RCmass" role="raw_coal"/>
+          <variable label="Charmass" role="char"/>
+          <variable label="pE" role="enthalpy"/>
+          <variable label="length" role="size"/>
+          <variable label="rho_coal" role="density"/>
+          <variable label="temperature_coal" role="temperature"/>
+          <variable label="dTdt" role="dTdt"/>
+          <variable label="ux" role="uvel"/>
+          <variable label="uy" role="vvel"/>
+          <variable label="uz" role="wvel"/>
+          <variable label="number_density" role="total_number_density"/>
+        </ParticleVariables>
+      </EulerianParticles>
+      <ParticleModels>
+        <model label="ux" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[2., 2., 2., 2, 2]</constant>
+        </model>
+        <model label="uy" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[2., 2., 2., 2, 2]</constant>
+        </model>
+        <model label="uz" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[2., 2., 2., 2, 2]</constant>
+        </model>
+        <model label="w" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[0.2, 0.2, 0.2, 0.2, 0.2]</constant>
+        </model>
+        <model label="temperature_coal" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[1500., 1500.,1500.,1500,1500]</constant>
+        </model>
+        <model label="RCmass" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+          <constant>[2.96E-11, 2.96E-11, 7.99E-10, 1.89E-09, 1.89E-09]</constant>
+        </model>
+        <model label="Charmass" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[3.70E-11, 3.70E-11, 9.98E-10, 2.37E-09, 2.37E-09]</constant>
+        </model>
+        <model label="devol_rate" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[0,0,0,0,0]</constant>
+        </model>
+        <model label="length" type="constant">
+          <grid independent_type="CC" dependent_type="CC"/>
+        <constant>[50e-6,50e-6,150e-6,200e-6,200e-6]</constant>
+        </model>
+        <model label="rho_coal" type="coal_density">
+          <model_type>dynamic_dqmom</model_type>
+        </model>
+        <!--model label="number_density" type="total_number_density"/-->
+        <model label="dqmom_variales" type="particle_variables_dqmom"/>
+        <model label="char_ps" type="char_oxidation_ps">
+          <devol_model_name>devol_rate</devol_model_name>
+        </model>
+      </ParticleModels>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+        <!--<global_pack_tasks/>-->
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

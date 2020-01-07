@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+        <title>Compaction of cylinders using both impm and mpm</title>
+   </Meta>
+
+   <SimulationComponent type="switcher" >
+       <subcomponent>
+           <SimulationComponent type="mpm" />
+           <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
+           <SwitchCriteria type = "Timestep">
+             <timestep> 5 </timestep>
+           </SwitchCriteria>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent type="impm" />
+           <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
+           <init var = "p.VolumeOld" matls="mpm_matls"/>
+           <init var = "p.acceleration" matls="mpm_matls"/>
+       </subcomponent>
+   </SimulationComponent>
+
+  <Time>
+     <maxTime>3.e-6</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>5.e-8</delt_min>
+     <delt_max>5.e-8</delt_max>
+     <max_Timesteps>     100          </max_Timesteps>
+     <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+      <filebase>imp-exp.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "p.x"/>
+      <save label = "p.velocity"/>
+      <save label = "p.volume"/>
+      <save label = "p.stress"/>
+      <save label = "g.stressFS" material = "0"/>
+      <!--        <save label = "dispNew"/> -->
+      <!--
+      <save label = "KineticEnergy"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress"/>
+      <save label = "g.mass" material = "2"/>
+      <save label = "g.temperature" material = "2"/>
+      <save label = "g.velocity"/>
+      -->
+     <checkpoint cycle = "2" timestepInterval = "1"/>
+   </DataArchiver>
+
+
+   <Grid>
+    <BoundaryConditions>
+       <Face side = "x-">
+         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+       </Face>
+       <Face side = "x+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "y-">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "y+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "z-">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "z+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       </BoundaryConditions>
+
+       <Level>
+              <Box label = "1">
+              <lower>[-0.55, 0.00, -0.10]</lower>
+              <upper>[ 0.55, 0.05,  4.10]</upper>
+              <resolution>[22,1,84]</resolution>
+              <patches>[1,1,1]</patches>
+              </Box>
+       </Level>
+     </Grid>
+
+
+</Uintah_specification>
+

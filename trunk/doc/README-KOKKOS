@@ -1,0 +1,13 @@
+Uintah-specific Kokkos documentation can be found at http://uintah-build.sci.utah.edu/trac/wiki/Kokkos.
+
+To automatically download and build Kokkos when building Uintah, add --enable-kokkos to the Uintah configure line.
+
+To specify a custom Kokkos installation when building Uintah, add --with-kokkos=DIR to the Uintah configure line.
+
+Manual Kokkos installation instructions can be found in src/build_scripts/build_kokkos_deprecated.
+
+An example of Kokkos usage within Uintah can be found in src/CCA/Components/Examples/Poisson1.cc.
+
+A collection of Kokkos tutorials can be found at https://github.com/kokkos/kokkos-tutorials.
+
+The Kokkos programming guide can be found in KOKKOS_PATH/doc/Kokkos_PG.pdf.

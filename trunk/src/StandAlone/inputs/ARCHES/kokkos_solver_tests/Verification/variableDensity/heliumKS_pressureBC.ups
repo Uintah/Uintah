@@ -1,0 +1,295 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title> helium plume </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>10.</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
+    <delt_init>1e-1</delt_init>
+    <timestep_multiplier>1</timestep_multiplier>
+    <max_Timesteps>10</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>KS_helium.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <save label="x-mom"/>
+    <save label="volFraction"/>
+    <save label="cellType"/>
+    <save label="volFractionX"/>
+    <save label="volFractionY"/>
+    <save label="volFractionZ"/>
+    <save label="drhodt"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="x-mom_RHS"/>
+    <save label="x-mom_x_flux"/>
+    <save label="x-mom_y_flux"/>
+    <save label="x-mom_z_flux"/>
+    <save label="z-mom_RHS"/>
+    <save label="z-mom_x_flux"/>
+    <save label="z-mom_y_flux"/>
+    <save label="z-mom_z_flux"/>
+    <save label="rho_phi"/>
+    <save label="phi_x_flux"/>
+    <save label="phi_y_flux"/>
+    <save label="phi_z_flux"/>
+    <save label="phi_x_dflux"/>
+    <save label="phi_y_dflux"/>
+    <save label="phi_z_dflux"/>
+    <save label="rho_phi_RHS"/>
+    <save label="A_press"/>
+    <save label="b_press"/>
+    <save label="phi"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="gamma"/>
+    <save label="t_viscosity"/>
+    <save label="density"/>
+    <save label="density_star"/>
+    <save label="continuity_balance"/>
+    <save label="b_press"/>
+    <save label="pressure"/>
+    <save label="gravity_z"/>
+    <save label="A_press"/>
+    <save label="gridX"/>
+    <save label="gridY"/>
+    <save label="gridZ"/>
+    <save label="ucellX"/>
+    <save label="vcellY"/>
+    <save label="wcellZ"/>
+    <checkpoint cycle="1" interval=".0006"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [4,4,3]   </upper>
+	<resolution>  [40,40,30]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+	<patches>     [1,1,1]   </patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- Secondary Air, Co-Flow Inlet --> 
+      <Face side="z-" type="Inlet">
+        <BCType var="Custom" label="z-mom" type="velocity">
+          <value>0.1</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>0</value>
+        </BCType>
+      </Face>
+      <!-- Annular Ring WallBC -->
+      <Face annulus="z-" origin="2.0 2.0 0.0" inner_radius="0.5" 
+        outer_radius="1.01" type="Wall">
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+       <!-- Bottom Helium Flow Inlet -->
+      <Face  circle="z-" origin="2.0 2.0 0.0" radius="0.5"
+         type="Inlet" >
+        <BCType var="Custom" label="z-mom" type="velocity">
+          <value>0.29</value>
+        </BCType>
+        <BCType var="Dirichlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="phi">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side = "z+" type="Outflow">
+        <BCType var="Neumann" label="x-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Custom" type="PressureOutlet" label="z-mom">
+          <value>0.</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x-" type="Pressure">
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" type="Pressure">
+        <BCType var="Custom" type="PressureOutlet" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" type="Pressure">
+        <BCType var="Neumann" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" type="Pressure">
+        <BCType var="Neumann" label="x-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Custom" type="PressureOutlet" label="y-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="z-mom">
+          <value>0</value>
+        </BCType>
+        <BCType var="Neumann" label="phi">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,-9.8]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.00002</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="ccuvelocity" label="uVel_cc"/>
+        <var role="ccvvelocity" label="vVel_cc"/>
+        <var role="ccwvelocity" label="wVel_cc"/>
+        <var role="total_viscosity" label="t_viscosity"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <StateProperties>
+        <!--model label="density_model" type="constant">
+          <const_property label="density" value="1."/>
+        </model-->
+        <model label= "cold_flow_property_evaluator" type = "coldflow" >
+          <property label = "density" stream_1 = "0.986" stream_0 = "0.187">
+            <volumetric/>
+          </property>
+          <mixture_fraction label = "phi"/>
+        </model>
+      </StateProperties>
+      <PropertyModelsV2>
+        <model label="gamma" type="constant_scalar_diffusion_coef">
+          <D_mol>0.0</D_mol>
+          <turbulentPrandtlNumber>0.5</turbulentPrandtlNumber>
+        </model>
+      </PropertyModelsV2>
+      <SourceV2>
+        <src label="gravity" type="gravity">
+          <reference_density value = "0.986"/>
+        </src>
+      </SourceV2>
+      <KMomentum>
+        <convection scheme="central"/>
+        <!--inviscid/-->
+        <src_z label = "gravity_z"/>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <TurbulenceModels>
+	<!--model label="DS" type="dynamic_smagorinsky">
+	  <filter type="three_points"/>
+	  <epsilon>3.0</epsilon>
+	</model-->
+       <model label="Cwale" type="wale">
+        <Cs>0.5</Cs>
+       </model>
+      </TurbulenceModels>
+      <KScalarTransport>
+        <eqn_group label="CCFields" type="CC">
+          <diffusion_coef label="gamma"/>
+          <eqn label="phi">
+            <convection scheme="superbee"/>
+            <diffusion scheme ="central"/>
+            <!--initialize value="1"/-->
+            <clip low="0" high="1"/>
+          </eqn>
+        </eqn_group>
+      </KScalarTransport>
+      <BoundaryConditions>
+      <!--intrusions>
+	<intrusion label="chimenea">
+	  <geom_object>
+	    <tri label="chimenea">
+	      <name>Geometry/chimenea</name>
+	    </tri>
+	  </geom_object>
+	</intrusion>
+      </intrusions-->
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver/>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

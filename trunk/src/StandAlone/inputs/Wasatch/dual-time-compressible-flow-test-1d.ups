@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<Uintah_specification>
+  <Meta>
+    <title>Dual Time Compressible flow in 1D</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+    <DualTime iterations="20000" tolerance="1e-3" ds="2.5e-5"/>
+    <Density method="COMPRESSIBLE">
+      <NameTag name="density"/>
+    </Density>
+    <!-- Set the initial condition on temperature -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="100.0" deviation="1.0" mean="0.0" baseline="273.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction>
+    </BasicExpression>
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="u"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+    <!-- Set the initial condition expression for pressure - currently pressure has to be name pressure -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="pressure"/>
+      <Constant>101325.0</Constant>
+    </BasicExpression>
+    <!-- Set the molecular weight - needed both on initial condition and advance solution -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Mixture_MW"/>
+      <Constant>28.966</Constant>
+    </BasicExpression>
+    <!-- specify the viscosity -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>1.95e-5</Constant>
+    </BasicExpression>
+    
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>    
+    </MomentumEquations>
+    <EnergyEquation>
+      <SolutionVariable>rhoet</SolutionVariable>
+      <PrimitiveVariable>et</PrimitiveVariable>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </EnergyEquation>
+  </Wasatch>
+  <Time>
+    <maxTime>0.3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-3</delt_min>
+    <delt_max>1.0e-3</delt_max>
+    <max_Timesteps> 10 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>dual-time-compressible-1d-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" timestepInterval="2e-3"/>
+    <save label="Temperature"/>
+    <save label="u"/>
+    <save label="pressure"/>
+    <save label="density"/>
+    <save label="x-mom"/>    
+    <save label="u"/>      
+    <save label="et"/>
+    <save label="rhoet"/>
+    <save label="x-mom_residual"/>
+    <save label="rhoet_residual"/>    
+    <save label="density_residual"/>        
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-5,-5,0]</lower>
+        <upper>[5,5,1]</upper>
+        <resolution>[100,1,1]</resolution>
+        <patches>[2,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

@@ -1,0 +1,189 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Outflow BC Test </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+  
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    
+    <TimeIntegrator>FE</TimeIntegrator>    
+    
+    <!-- Set the initial condition expression for x-momentum -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="ZVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="w"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+               
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+<!-- 
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="x-outflowbc"  />
+      <OutflowBC>
+         <NameTag name="u"  />
+       </OutflowBC>
+    </BCExpression>
+
+    <BCExpression type="YVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="ym-pressurebc"  />
+      <PressureBC>
+         <NameTag name="v"  />
+       </PressureBC>
+    </BCExpression>
+
+    <BCExpression type="YVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="yp-pressurebc"  />
+      <PressureBC>
+         <NameTag name="v"  />
+       </PressureBC>
+    </BCExpression>
+
+    <BCExpression type="ZVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="zm-pressurebc"  />
+      <PressureBC>
+         <NameTag name="w"  />
+       </PressureBC>
+    </BCExpression>
+
+    <BCExpression type="ZVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="zp-pressurebc"  />
+      <PressureBC>
+         <NameTag name="w"  />
+       </PressureBC>
+    </BCExpression>
+ -->
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+         
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>      
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <Parameters>
+ 	 	 	<skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  50    </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>10</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>5e-4</delt_min>
+    <delt_max>5e-4</delt_max>
+    <max_Timesteps>5</max_Timesteps>
+    <timestep_multiplier>0.1</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>outflow-bc-test-firstorder.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1e-4"/>
+    <save label="x-mom"/>
+    <save label="x-mom_rhs"/>    
+    <save label="y-mom"/>
+    <save label="y-mom_rhs"/>        
+    <save label="z-mom"/>    
+    <save label="z-mom_rhs"/>        
+    <save label="u"/>
+    <save label="v"/>    
+    <save label="w"/>        
+    <save label="pressure"/>
+    <save label="pressure_rhs"/>    
+    <save label="dilatation"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face circle="x-" origin="0 0.5 0.5" radius="0.0625" name="circle-inlet">
+        <BCType label="x-mom" var="Dirichlet" value="1.0"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="1.0"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="x-" name="inlet">
+        <BCType label="x-mom" var="Dirichlet" value="0.35"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="0.35"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="pressure" var="Neumann" value="0.0"/>
+      </Face>
+      <Face side="x+" name="outlet" type="Outflow"/>
+
+      <Face side="y-" name="ym-pressure" type="Open"/>
+      
+      <Face side="y+" name="yp-pressure" type="Open"/>
+
+      <Face side="z-" name="zm-pressure" type="Open"/>
+      
+      <Face side="z+" name="zp-pressure" type="Open"/>
+      
+
+      </BoundaryConditions>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[2,1,1]</upper>
+        <resolution>[60,30,30]</resolution>
+        <patches>[4,2,2]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

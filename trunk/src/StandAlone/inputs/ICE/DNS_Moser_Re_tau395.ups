@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+<!--______________________________________________________________________-->
+<!-- This input file is designed to reproduce the results in the paper    -->  
+<!-- R.D. Moser, J. Kim, N.N. Mansour, "Direct Numerical Simulation       -->
+<!--  of Turbulent Channel Flow up to Re_tau = 590"                       -->
+<!-- Physics of Fluids, Vol 11, 4, 1999, pps 943-945                      -->
+<!--______________________________________________________________________-->
+
+ <Meta>
+     <title>None</title>
+ </Meta>
+
+ <SimulationComponent type="ice" />
+ <Solver type="hypre" />
+
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+ <Time>
+     <maxTime>            14400        </maxTime>
+     <initTime>           0.0         </initTime>
+     <delt_min>           0.0         </delt_min>
+     <delt_max>           1.0         </delt_max>
+     <delt_init>          1.0e-5      </delt_init>
+     <max_delt_increase>  2.0        </max_delt_increase>
+     <timestep_multiplier>1.0         </timestep_multiplier>
+ </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <!-- see: 
+            https://www.rs.tus.ac.jp/~t2lab/db/  
+         for resolution selections 
+    -->
+
+    <Level>
+      <Box label="1">
+        <lower>       [0,       0, 0]        </lower>
+        <upper>       [6.28319, 2, 3.14159]  </upper>
+        <extraCells>  [0,1,0]               </extraCells>
+        <patches>     [16,6,16]               </patches>
+        <resolution>  [512,192,512]         </resolution>
+      </Box>
+      <periodic>  [1,0,1]     </periodic>
+    </Level>
+  </Grid>
+
+  <!--____________________________________________________________________-->
+  <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>
+    <filebase>fullChannel_CFL_0.2_diffKnob_0.6_D.uda</filebase>
+    <!--<outputInitTimestep/>  -->
+    <outputInterval>60</outputInterval>
+
+    <save label="press_CC"/>
+    <save label="rho_CC"/>
+    <save label="vel_CC"/>
+    <save label="scalar-f"/>
+<!--
+    <save label="delP_Dilatate"/>
+
+    <save label="variance_press_CC" />
+    <save label="skewness_press_CC" />
+    <save label="kurtosis_press_CC" />
+
+    <save label="variance_scalar-f"/>
+    <save label="skewness_scalar-f"/>
+    <save label="kurtosis_scalar-f"/>
+
+    <save label="variance_vel_CC"/>
+    <save label="skewness_vel_CC"/>
+    <save label="kurtosis_vel_CC"/>
+
+    <save label="uv_vw_wu_prime"/>
+    <save label="mean_uv_vw_wu" />
+    <save label="sum_uv_vw_wu"  />
+
+    <save label="sum_press_CC"  />
+    <save label="sum_vel_CC"    />
+    <save label="sum_scalar-f"  />
+
+    <save label="mean_press_CC" />
+    <save label="mean_vel_CC"   />
+    <save label="mean_scalar-f" />
+-->
+    <save label="vorticity"     />
+
+    <outputDoubleAsFloat/>
+    <checkpoint cycle="2" interval="300"/>
+  </DataArchiver>
+
+
+  <!--____________________________________________________________________-->
+  <CFD>
+    <cfl>0.2</cfl>
+     
+    <ICE>
+      <advection type = "SecondOrder" />
+
+      <TimeStepControl>
+        <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
+        <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        <knob_for_diffusion>   0.6            </knob_for_diffusion>
+      </TimeStepControl>
+
+      <ImplicitSolver>
+        <max_outer_iterations>          5      </max_outer_iterations>
+        <outer_iteration_tolerance>     1.0e-12 </outer_iteration_tolerance>
+        <iters_before_timestep_restart> 3      </iters_before_timestep_restart>
+
+        <Parameters variable="implicitPressure">
+          <tolerance>      1.e-16   </tolerance>        <!--increase tolerance -->
+          <solver>         cg      </solver>
+          <preconditioner> pfmg    </preconditioner>
+          <maxiterations>  7500    </maxiterations>
+          <npre>           1       </npre>
+          <npost>          1       </npost>
+          <skip>           0       </skip>
+          <jump>           0       </jump>
+        </Parameters>
+      </ImplicitSolver>
+      
+      <fixedPressureGradient>
+        <x_dir>            +1.5E-5   </x_dir>
+      </fixedPressureGradient>
+        
+      <customInitialization>
+
+        <!-- the peak velocity is slightly below fully developed -->
+        <powerLawProfile2>
+          <verticalDir>      1      </verticalDir>
+          <principalDir>     0      </principalDir>
+          <Re_tau>           395    </Re_tau>
+          <halfChannelHeight> 1.0   </halfChannelHeight>
+        </powerLawProfile2>
+
+        <vortexPairs>
+          <strength>      2.5e-3      </strength>
+          <axis>           x          </axis>
+          <numVortexPairs> 2          </numVortexPairs>
+        </vortexPairs>
+      </customInitialization>
+
+    </ICE>
+  </CFD>
+
+  <!--____________________________________________________________________-->
+  <PhysicalConstants>
+     <gravity>            [0,0,0]   </gravity>
+     <reference_pressure> 101325.0  </reference_pressure>
+  </PhysicalConstants>
+
+  <!--____________________________________________________________________-->
+  <!--      material Properties and Initial Conditions                    -->
+  <!-- Properties from "Introduction to Heat Transfer," Incropera & DeWitt -->
+  <!--____________________________________________________________________-->
+  <MaterialProperties>
+     <ICE>
+       <material name="air">
+         <EOS type = "ideal_gas"/>
+         <dynamic_viscosity>     1.179295e-05   </dynamic_viscosity>
+         <thermal_conductivity>  1e-5           </thermal_conductivity>
+         <specific_heat>         716.0          </specific_heat>
+         <gamma>                 1.4            </gamma>
+
+         <geom_object>
+           <box label="wholeDomain">
+             <min>  [0.0,0.0,0.0]        </min>
+             <max>  [50.0,20.0,20.0]     </max>
+           </box>
+           <res>          [2,2,2]        </res>
+           <velocity>     [0.0,0,0]      </velocity>
+           <density>  1.1792946927374306 </density>
+           <pressure>     101325.0       </pressure>
+           <temperature>  300.0          </temperature>
+
+         </geom_object>
+       </material>
+    </ICE>
+  </MaterialProperties>
+
+  <!--____________________________________________________________________-->
+  <!--  Use passiveScalar model to advect a scalar around                
+  <Models>
+    <Model type="PassiveScalar">
+      <PassiveScalar>
+        <material>air</material>
+        <scalar name="f">
+          <test_conservation> false </test_conservation>
+          
+          <constants>
+            <diffusivity> 0.0 </diffusivity>
+          </constants>
+          
+          <initialization>
+            <geom_object>
+              <box label="wholeDomain"/>
+              <scalar> 0.00 </scalar>
+            </geom_object>
+          </initialization>
+
+          <interiorSources>
+            
+            <geom_object>
+              <union>
+                <sphere label = "x-1">
+                  <origin>[ 0.0, 0.1, 0.7854]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                <sphere label = "x-2">
+                  <origin>[ 0.0, 0.1, 1.5708 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                <sphere label = "x-3">
+                  <origin>[ 0.0, 0.1, 2.3562 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                
+                <sphere label = "x-4">
+                  <origin>[ 0.0, 1.9, 0.7854]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                <sphere label = "x-5">
+                  <origin>[ 0.0, 1.9, 1.5708 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+                <sphere label = "x-6">
+                  <origin>[ 0.0, 1.9, 2.3562 ]</origin>
+                  <radius> 0.1 </radius>
+                </sphere>
+              </union>
+              
+              <scalar>    1   </scalar>
+              <maxScalar> 1.0 </maxScalar>
+            </geom_object>
+          </interiorSources>
+
+        </scalar>
+      </PassiveScalar>
+    </Model>
+  </Models>
+-->
+  
+<!--__________________________________-->
+  <DataAnalysis>
+  
+    <!--
+    <Module name="statistics">
+      <material>          air  </material>
+      <samplingFrequency> 0.03333  </samplingFrequency>
+      <timeStart>         5400    </timeStart>
+      <timeStop>          1e99   </timeStop>
+
+      <computeHigherOrderStats> true </computeHigherOrderStats>
+      <Variables>
+        <analyze label="scalar-f" />
+        <analyze label="press_CC" />
+        <analyze label="vel_CC"  computeReynoldsStress="true"/>
+      </Variables>
+    </Module>
+    -->
+
+    <!--________________-->    
+    <Module name="meanTurbFluxes">
+      <material>          air  </material>
+      <samplingFrequency> 0.03333  </samplingFrequency>
+      <timeStart>         0    </timeStart>
+      <timeStop>          1e99 </timeStop>
+
+      <planeOrientation>  XZ   </planeOrientation>
+      <weight label="mass_adv"/>
+      <velocity label="vel_CC" />
+
+      <Variables> 
+        <analyze label="vel_CC"            weighting="nCells" />     
+        <analyze label="press_CC" matl="0" weighting="nCells" />
+        <analyze label="temp_CC"           weighting="nCells" />
+        <analyze label="rho_CC"            weighting="nCells" />
+        <analyze label="scalar-f"          weighting="nCells" />
+      </Variables>
+    </Module>
+    
+    <!--________________-->
+    <Module name="vorticity">
+      <material>air</material>
+    </Module> 
+    
+    <!--________________-->
+    <Module name="minMax">
+      <material>          air    </material>
+      <samplingFrequency> 1    </samplingFrequency>
+      <timeStart>          0     </timeStart>
+      <timeStop>          999999 </timeStop>
+      <Variables>
+        <analyze label="vorticity"/>
+        <analyze label="temp_CC"/>
+        <analyze label="vel_CC"/>
+        <analyze label="rho_CC"/>
+      </Variables>
+    </Module>
+  </DataAnalysis>
+</Uintah_specification>

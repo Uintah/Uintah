@@ -1,0 +1,189 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test QMOM Implementation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>  
+
+  <Wasatch>    
+
+    <Density method="CONSTANT">
+      <Constant value="1" name="rho"/>
+    </Density>
+  
+    <MomentInitialization>
+      <PopulationName>Calcite_1</PopulationName>
+        <Values>
+          1.0e-8,
+          5.0e-7,
+          3.333333333333e-5,
+          2.5e-3,
+          2.0e-1,
+          1.66666666666667e1
+        </Values>
+    </MomentInitialization>
+
+    <MomentInitialization>
+      <PopulationName>Calcite_2</PopulationName>
+        <Values>
+          9.9e7,
+          4.9995e9,
+          3.333333e11,
+          2.499999975e13,
+          1.9999999998e15,
+          1.6666666666665e17
+      </Values>
+    </MomentInitialization>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="S"/>
+      <Constant>7</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="S"/>
+      <Constant>7</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="ceq"/>
+      <Constant>.1</Constant>
+    </BasicExpression>
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="ceq"/>
+      <Constant>.1</Constant>
+    </BasicExpression>
+
+   <PrecipitationBasicExpression type="SVOL">
+     <TaskList> advance_solution </TaskList>
+     <NameTag name="RStarExpr"/>
+     <PrecipitationClassicRStarValue Surf_Eng="0.04" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
+       <Supersaturation>
+         <NameTag name="S"/>
+       </Supersaturation>
+    </PrecipitationClassicRStarValue>
+  </PrecipitationBasicExpression>
+  
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="ClassicBirth"/>
+      <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298">
+        <Supersaturation>
+          <NameTag name="S"/>  
+        </Supersaturation> 
+     </PrecipitationClassicNucleationCoefficient>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="NewBirth"/>
+      <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1">
+        <Supersaturation>
+          <NameTag name="S"/>  
+        </Supersaturation> 
+        <EquilibriumConcentration>
+          <NameTag name="ceq"/>
+        </EquilibriumConcentration>  
+     </HomogeneousNucleationCoefficient>
+    </PrecipitationBasicExpression>
+
+
+    <MomentTransportEquation>
+      <PopulationName>Calcite_1</PopulationName>
+      <NumberOfEnvironments>3</NumberOfEnvironments>        
+      <RealizableQMOM/>  
+      
+      <BirthExpression>
+        <BirthModel> POINT </BirthModel>
+      <!--BirthModel> UNIFORM </BirthModel>
+      <StandardDeviation> 0.45 </StandardDeviation-->
+
+        <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
+        <BirthCoefficientExpression>
+          <NameTag name="ClassicBirth"/>
+        </BirthCoefficientExpression> 
+        <RStarExpression>
+          <NameTag name="RStarExpr"/>
+        </RStarExpression> 
+
+        </BirthExpression>
+    </MomentTransportEquation>
+    
+    <MomentTransportEquation>
+      <RealizableQMOM/>
+      <PopulationName>Calcite_2</PopulationName>
+      <NumberOfEnvironments>3</NumberOfEnvironments>   
+        
+<!-- 
+      <GrowthExpression>
+        <GrowthModel> BULK_DIFFUSION </GrowthModel>
+        <PreGrowthCoefficient> 0.0 </PreGrowthCoefficient>
+      </GrowthExpression>
+ -->
+             
+      <BirthExpression>
+        
+        <BirthModel> POINT </BirthModel>
+      <!--BirthModel> UNIFORM </BirthModel>
+      <StandardDeviation> 0.45 </StandardDeviation-->
+
+        <!--PreBirthCoefficient> 1.0e30 </PreBirthCoefficient-->
+        <BirthCoefficientExpression>
+          <NameTag name="NewBirth"/>
+        </BirthCoefficientExpression> 
+        <RStarExpression>
+          <NameTag name="RStarExpr"/>
+        </RStarExpression> 
+
+        </BirthExpression>
+    </MomentTransportEquation>
+  </Wasatch>
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <max_Timesteps> 5 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>qmom-birth-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="m_Calcite_1_0"/>
+    <save label="m_Calcite_1_1"/>
+    <save label="m_Calcite_1_2"/>    
+    <save label="m_Calcite_1_3"/>  
+    
+    <save label="S"/>   
+    <save label="m_Calcite_2_0"/>
+    <save label="m_Calcite_2_1"/>
+    <save label="m_Calcite_2_2"/>    
+    <save label="m_Calcite_2_3"/> 
+    
+    <save label="NewBirth"/>
+    <save label="ClassicBirth"/>
+    <save label="RStarExpr"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

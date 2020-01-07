@@ -1,0 +1,7 @@
+<BasicExpression type="SVOL">
+	<TaskList>initialization</TaskList>
+	<NameTag name="f" state="STATE_NONE"/>
+	<ReadFromFile>
+		<FileName>inputs/Wasatch/read-from-file-test-init.dat.gz</FileName>
+	</ReadFromFile>
+</BasicExpression>

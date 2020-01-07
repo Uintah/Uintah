@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>One Dimensional Test Case</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>.50</maxTime>
+    <max_Timesteps>25</max_Timesteps>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.2</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>OneDimTable.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <!-- Table Variables -->
+    <!-- iv's -->
+    <save label="mixture_fraction"/>
+    <!-- dv's -->
+    <save label="temperature" table_lookup="true"/>
+    <save label="linear_test" table_lookup="true"/>
+    <save label="density" table_lookup="true"/>
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[15,15,15]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-">
+        <BCType label="Wall x-" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face circle="x-" origin="0 1.5 1.5" radius=".5">
+        <BCType label="inlet" var="MassFlowInlet">
+          <value>5000</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="Outlet x+" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="Press y-" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="Press y+" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="Press z-" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="Press z+" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.001</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+      <Turbulence model="compdynamicprocedure"/>
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state iv="0.0"/>
+          <single_iv iv_label="mixture_fraction"/>
+          <cold_flow>true</cold_flow>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-9 </tolerance>
+            <solver>         cg    </solver>
+            <preconditioner> pfmg  </preconditioner>
+            <maxiterations> 250    </maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

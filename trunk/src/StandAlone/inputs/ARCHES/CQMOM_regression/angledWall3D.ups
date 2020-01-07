@@ -1,0 +1,523 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Uintah_specification>
+  <Meta>
+    <title>CQMOM 3D Angled Wall </title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <max_Timesteps> 15 </max_Timesteps>
+    <maxTime>         1.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.005     </delt_min>
+    <delt_max>        0.005        </delt_max>
+    <timestep_multiplier> 0.7     </timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <outputInitTimestep/>
+    <filebase> angledWall3D.uda </filebase>
+    <outputTimestepInterval> 1 </outputTimestepInterval>
+    <save label="cellType"/>
+    <save label="wallInteger"/>
+    <save label="m_000"/>
+    <save label="m_100"/>
+    <save label="m_010"/>
+    <save label="m_001"/>
+    <save label="m_030"/>
+    <save label="m_300"/>
+    <save label="w_0"/>
+    <save label="w_1"/>
+    <save label="w_2"/>
+    <save label="w_3"/>
+    <save label="partUVel_0"/>
+    <save label="partUVel_1"/>
+    <save label="partUVel_2"/>
+    <save label="partUVel_3"/>
+    <save label="partVVel_0"/>
+    <save label="partVVel_1"/>
+    <save label="partVVel_2"/>
+    <save label="partVVel_3"/>
+    <save label="partWVel_0"/>
+    <save label="partWVel_1"/>
+    <save label="partWVel_2"/>
+    <save label="partWVel_3"/>
+    <checkpoint cycle="2" interval="0.02"/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [1.0,1.0,1.0]   </upper>
+        <resolution>  [20,20,20]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+        <patches>     [1,1,1]   </patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-">
+        <BCType label="wallx" var="WallBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="ForcedDirichlet">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face rectangle="x-" lower="0 .6 .6" upper="0 .8 .8">
+        <BCType label="inletz" var="VelocityInlet">
+          <value> [0,0,0] </value>
+        </BCType>
+        <BCType label="m_000" var="ForcedDirichlet">
+          <value> 1.0 </value>
+        </BCType>
+        <BCType label="m_100" var="ForcedDirichlet">
+          <value> 3.0 </value>
+        </BCType>
+        <BCType label="m_200" var="ForcedDirichlet">
+          <value> 9.0 </value>
+        </BCType>
+        <BCType label="m_300" var="ForcedDirichlet">
+          <value> 27.0 </value>
+        </BCType>
+        <BCType label="m_010" var="ForcedDirichlet">
+          <value> 0.2 </value>
+        </BCType>
+        <BCType label="m_020" var="ForcedDirichlet">
+          <value> 0.04 </value>
+        </BCType>
+        <BCType label="m_030" var="ForcedDirichlet">
+          <value> 0.008 </value>
+        </BCType>
+        <BCType label="m_110" var="ForcedDirichlet">
+          <value> 0.6 </value>
+        </BCType>
+        <BCType label="m_120" var="ForcedDirichlet">
+          <value> 0.12 </value>
+        </BCType>
+        <BCType label="m_130" var="ForcedDirichlet">
+          <value> 0.024 </value>
+        </BCType>
+        <BCType label="m_001" var="ForcedDirichlet">
+          <value> 0.1 </value>
+        </BCType>
+        <BCType label="m_101" var="ForcedDirichlet">
+          <value> 0.3 </value>
+        </BCType>
+        <BCType label="m_011" var="ForcedDirichlet">
+          <value> 0.02 </value>
+        </BCType>
+        <BCType label="m_111" var="ForcedDirichlet">
+          <value> 0.06 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType label="outletx" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType label="ymout" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType label="ypout" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType label="zmout" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType label="zpout" var="OutletBC">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_000" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_100" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_200" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_300" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_010" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_020" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_030" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_110" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_120" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_130" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_001" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_101" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_011" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+        <BCType label="m_111" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>         [-9.8,0,0]    </gravity>
+    <reference_point>       [-1,-1,-1]    </reference_point>
+    <viscosity>       0.001      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <Turbulence model="none"/>
+      <Properties>
+        <table label="a_user_generated_label" type="constant">
+          <temperature>298</temperature>
+          <density>1.0</density>
+        </table>
+      </Properties>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+        <intrusions>
+          <intrusion label="diagplane">
+            <geom_object>
+              <parallelepiped label="pp">
+                <p1> [1,0,1] </p1>
+                <p2> [0,1,1] </p2>
+                <p3> [1,1,0] </p3>
+                <p4> [1,1,1] </p4>
+              </parallelepiped>
+            </geom_object>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <TransportEqns>
+
+      </TransportEqns>
+      <!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-10  </tolerance>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  75      </maxiterations>
+            <skip>           1       </skip>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+      <CQMOM partvel="true">
+        <!-- base information-->
+        <NumberInternalCoordinates> 3 </NumberInternalCoordinates>
+        <QuadratureNodes> [2,2,1] </QuadratureNodes>
+        <InternalCoordinate name="partUVel" type="uVel">
+          <Clipping>
+            <high> 4.0 </high>
+            <low> -4.0 </low>
+            <clip_zero> true </clip_zero>
+            <min_weight> 1.0e-5 </min_weight>
+          </Clipping>
+        </InternalCoordinate>
+        <InternalCoordinate name="partVVel" type="vVel">
+          <Clipping>
+            <high> 4.0 </high>
+            <low> -4.0 </low>
+            <clip_zero> true </clip_zero>
+            <min_weight> 1.0e-5 </min_weight>
+          </Clipping>
+        </InternalCoordinate>
+        <InternalCoordinate name="partWVel" type="wVel">
+          <Clipping>
+            <high> 4.0 </high>
+            <low> -4.0 </low>
+            <clip_zero> true </clip_zero>
+            <min_weight> 1.0e-5 </min_weight>
+          </Clipping>
+        </InternalCoordinate>
+        <CutOff> 1.0e-3 </CutOff>
+        <Adaptive> true </Adaptive>
+        <WeightRatio> 1.0e-5 </WeightRatio>
+        <!--transport-->
+        <doDiff> false </doDiff>
+        <doConv> true  </doConv>
+        <conv_scheme> second </conv_scheme>
+        <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
+        <molecular_diffusivity> 0.0 </molecular_diffusivity>
+        <!-- moment eqns-->
+        <Moment>
+          <m> [0,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [2,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [3,0,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,2,0] </m>
+        </Moment>
+        <Moment>
+          <m> [1,3,0] </m>
+        </Moment>
+        <Moment>
+          <m> [0,0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,0,1] </m>
+        </Moment>
+        <Moment>
+          <m> [0,1,1] </m>
+        </Moment>
+        <Moment>
+          <m> [1,1,1] </m>
+        </Moment>
+      </CQMOM>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
