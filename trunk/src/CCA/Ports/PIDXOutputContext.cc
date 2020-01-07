@@ -141,6 +141,7 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
       
       ProblemSpecP idxIoPS = flagPs->findBlock( "idxIo" );
       ProblemSpecP rawIoPS = flagPs->findBlock( "rawIo" );
+      ProblemSpecP particleIoPS = flagPs->findBlock( "particleIo" ); // TODO add to schema!
 
       if( idxIoPS != nullptr ) {
         if(flagData->compressionType == PIDX_CHUNKING_ZFP)
@@ -152,7 +153,7 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
         idxIoPS->get( "idxBlockSize",   flagData->blockSize );
         idxIoPS->get( "idxBlockCount",  flagData->blockCount );
       }
-      else { // Raw IO
+      else if( rawIoPS != nullptr ){ // Raw IO
 
         flagData->ioType = PIDX_RAW_IO;
 
@@ -162,6 +163,11 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 
         rawIoPS->get( "restructureBoxSize", flagData->restructureBoxSize );
         rawIoPS->get( "pipeSize",           flagData->pipeSize );
+      }
+      else if( particleIoPS != nullptr ){ // Particle IO
+
+        flagData->ioType = PIDX_RST_PARTICLE_IO;
+
       }
     }
   }
@@ -292,7 +298,7 @@ PIDXOutputContext::initialize( const string       & filename,
                                const unsigned int   timeStep,
                                      MPI_Comm       comm,
                                      PIDX_flags     flags,
-			             PIDX_point     dim,
+                                     PIDX_point     dim,
                                const int            typeOutput )
 {
   if(dbgPIDX.active())
@@ -319,7 +325,10 @@ PIDXOutputContext::initialize( const string       & filename,
     ioFlags = flags.d_checkpointFlags;
   }
 
-  PIDX_set_io_mode( this->file, ioFlags.ioType );
+  if (ioFlags.ioType == PIDX_RST_PARTICLE_IO)
+    PIDX_set_io_mode( this->file, PIDX_RAW_IO ); // use RAW IO to store variable non particle TODO improve metadata!!!
+  else
+    PIDX_set_io_mode( this->file, ioFlags.ioType );
 
   PIDX_set_compression_type( this->file, ioFlags.compressionType );
 
@@ -384,11 +393,14 @@ PIDXOutputContext::initializeParticles( const string       & filename,
     PIDX_set_mpi_access( this->access, comm );
     checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
+
+  // TODO add parameter for particles RST
+  PIDX_set_restructuing_factor(this->file, 2,2,2);
   
   PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
   checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
   
-  PIDX_set_io_mode( this->file, PIDX_PARTICLE_IO );
+  PIDX_set_io_mode( this->file, PIDX_RST_PARTICLE_IO );
 
   PIDX_set_first_time_step( this->file, timeStep );
   

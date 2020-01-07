@@ -672,6 +672,7 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
 {
   TimeData & timedata = getTimeData( timeIndex );
 
+  printf("reading var %s\n",name.c_str());
   //__________________________________
   //  Creating access
   PIDX_create_access( &access );
@@ -1734,6 +1735,14 @@ DataArchive::restartInitialize( const int                timestep_index,
                   d_psetDB[ key ] = psubset;
                 }
                 (static_cast<ParticleVariableBase*>(var))->allocate( psubset );
+
+                // Steve: adding this as in the uda case, not sure what's the right way
+                // if (!dw->haveParticleSubset(matl, patch)) {
+                //   dw->saveParticleSubset(psubset, matlIndex, patch);
+                // }
+                // else {
+                //   ASSERTEQ(dw->getParticleSubset(matlIndex, patch), psubset);
+                // }
 
               }
               else { // Non particle var

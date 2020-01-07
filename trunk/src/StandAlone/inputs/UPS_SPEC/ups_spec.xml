@@ -571,7 +571,7 @@
       <PIDX                   spec="OPTIONAL NO_DATA">
         <debugOutput          spec="OPTIONAL BOOLEAN" />
         <checkpoint           spec="OPTIONAL NO_DATA"
-                                children1="ONE_OF(CHILD idxIo, rawIo)" >
+                                children1="ONE_OF(CHILD idxIo, rawIo, particleIo)" >
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />
           <compressionBitrate spec="OPTIONAL DOUBLE" />
           <idxIo              spec="OPTIONAL NO_DATA">      <!-- If provided, then use IDX I/O -->
@@ -583,6 +583,10 @@
             <restructureBoxSize spec="OPTIONAL VECTOR" />
             <pipeSize           spec="OPTIONAL INTEGER" />
           </rawIo>
+	  <particleIo         spec="OPTIONAL NO_DATA"> <!-- If provided, then use particle I/O -->
+	    <restructureBoxSize spec="OPTIONAL VECTOR" />
+          </particleIo>
+        
         </checkpoint>
         <visIO                spec="OPTIONAL NO_DATA">
           <compressionType    spec="OPTIONAL STRING 'None, Chunking, Chunking_Zfp" />

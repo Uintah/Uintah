@@ -5,7 +5,7 @@
 #
 # Run makeCombinedIndex.sh in the directory containing the UDAs of interest.
 
-declare -a idx_arr=("CCVars" "SFCXVars" "SFCYVars" "SFCZVars")
+declare -a idx_arr=("CCVars" "SFCXVars" "SFCYVars" "SFCZVars" "NCVars" "ParticleVars")
 
 
 if test $# -eq 0 || test "$1" == "-h" -o "$1" == "--h" -o "$1" == "--help" -o "$1" == "-help"; then

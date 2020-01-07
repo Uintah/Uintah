@@ -3321,6 +3321,15 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     
     pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, level_size, type );
 
+    // reorder variables to have the particle position variable as first (currently an assumption in PIDX)
+    for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
+      const VarLabel* label = saveIter->label;
+      if( label->getName() == m_particlePositionName ) {
+        std::rotate(saveLabels.begin(), saveIter, saveIter+1);
+        break;
+      }
+    }
+
   }
   else {
     pidx.initializeParticles( full_idxFilename, timeStep, m_pidxComms[ levelid ], level_size, type );
@@ -3353,11 +3362,11 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
   //__________________________________
   //  PIDX Diagnostics
-  if( rank == 0 && dbgPIDX.active()) {
+  //if( rank == 0 && dbgPIDX.active()) {
     printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
     printf("[PIDX] levelExtents = %d %d %d\n", (hi.x() - lo.x()), (hi.y() - lo.y()), (hi.z() - lo.z()) );
     printf("[PIDX] Total number of variable = %d\n", nSaveItems);
-  }
+  //}
 
   //__________________________________
   //
@@ -3490,20 +3499,21 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
           size_t arraySize;
           if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {
 
-
             if( label->getName() == m_particlePositionName ) {
-              int var_index;
-              PIDX_get_current_variable_index( pidx.file, &var_index );
-              PIDX_set_particles_position_variable_index( pidx.file, var_index );
+              // int var_index;
+              // PIDX_get_current_variable_index( pidx.file, &var_index );
+              PIDX_set_particles_position_variable_index( pidx.file, vc );//var_index );
             }
-
+            
             ParticleVariableBase * pv = new_dw->getParticleVariable( label, matlIndex, patch );
             void * ptr; // Pointer to data? but we don't use it so not digging into what it is for.
             string elems; // We don't use this either.
             pv->getSizeInfo( elems, arraySize, ptr );
 
 
-            int num_particles = arraySize / ( sample_per_variable * the_size );
+            uint64_t num_particles = arraySize / ( sample_per_variable * the_size );
+
+            //printf("writing %lld particles for variable %d in file %s\n", num_particles, vc, label->getName().c_str());
 
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
 
@@ -3529,6 +3539,10 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                                                     patch_buffer[ vcm ][ p ],
                                                                     num_particles,
                                                                     PIDX_row_major );
+
+            pidx.checkReturnCode( rc,
+                                  "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure (Particles)",
+                                  __FILE__, __LINE__);
           }
           else {
 
@@ -3603,7 +3617,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       // TODO uncomment when we will use latest PIDX version
       //if(compression_type == PIDX_CHUNKING_ZFP)
       //  PIDX_set_lossy_compression_bit_rate(pidx.file, pidx.varDesc[vc][m], m_PIDX_flags.d_checkpointFlags.compressionBitrate);
-      
+
       pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure", __FILE__, __LINE__ );
       vcm++;
     }  //  Materials
@@ -3641,7 +3655,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
   free(pidx.varDesc); 
   pidx.varDesc=0;
 
-  if(dbgPIDX.active())
+  //if(dbgPIDX.active())
     dbgPIDX << "end saveLabels_PIDX()\n";
 
 #endif
