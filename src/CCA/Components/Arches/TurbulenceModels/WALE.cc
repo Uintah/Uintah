@@ -258,7 +258,7 @@ WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
     const double fvis = pow(SijdSijd,1.5)/(pow(SijSij,2.5) + pow(SijdSijd,5./4.)+SMALL);
 
     mu_sgc(i,j,k) = pow(m_Cs*delta,2.0)*fvis*rho(i,j,k)*vol_fraction(i,j,k) + m_molecular_visc;
-    IsI(i,j,k) = std::sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
+    IsI(i,j,k) = sqrt(2.0*SijSij)*vol_fraction(i,j,k) ;
     mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
   });
 
