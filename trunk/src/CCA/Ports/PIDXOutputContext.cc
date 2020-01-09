@@ -395,7 +395,7 @@ PIDXOutputContext::initializeParticles( const string       & filename,
   }
 
   // TODO add parameter for particles RST
-  PIDX_set_restructuing_factor(this->file, 2,2,2);
+  //PIDX_set_restructuing_factor(this->file, 2,2,2);
   
   PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
   checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);

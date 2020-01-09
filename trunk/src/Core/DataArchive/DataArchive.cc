@@ -1737,12 +1737,12 @@ DataArchive::restartInitialize( const int                timestep_index,
                 (static_cast<ParticleVariableBase*>(var))->allocate( psubset );
 
                 // Steve: adding this as in the uda case, not sure what's the right way
-                // if (!dw->haveParticleSubset(matl, patch)) {
-                //   dw->saveParticleSubset(psubset, matlIndex, patch);
-                // }
-                // else {
-                //   ASSERTEQ(dw->getParticleSubset(matlIndex, patch), psubset);
-                // }
+                if (!dw->haveParticleSubset(matl, patch)) {
+                  dw->saveParticleSubset(psubset, matlIndex, patch);
+                }
+                else {
+                  ASSERTEQ(dw->getParticleSubset(matlIndex, patch), psubset);
+                }
 
               }
               else { // Non particle var
