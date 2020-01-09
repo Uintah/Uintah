@@ -106,6 +106,9 @@ namespace Uintah {
       IntVector pLo = patch->getCellLowIndex();
       IntVector pHi = patch->getCellHighIndex() - IntVector(1,1,1);
       
+      pHi = Max( pHi, IntVector(1,1,1) );  // Must always have 1 cell in each dir
+                                           // Needed for 2D patches
+      
       bool test = m_lowIndx.x()  < pHi.x() &&       
                   m_lowIndx.y()  < pHi.y() &&       
                   m_lowIndx.z()  < pHi.z() &&       
