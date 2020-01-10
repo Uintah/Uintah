@@ -1555,7 +1555,7 @@ OnDemandDataWarehouse::haveParticleSubset(       int         matlIndex
   }
   const Patch* realPatch = patch->getRealPatch();
   // query subset
-  ParticleSubset* subset = queryPSetDB(m_pset_db, realPatch, matlIndex, low, high, nullptr);
+  ParticleSubset* subset = queryPSetDB( m_pset_db, realPatch, matlIndex, low, high, nullptr );
 
   // if no subset was returned there are no suitable subsets
   if (subset == nullptr) {
@@ -3274,7 +3274,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
 
         case TypeDescription::ParticleVariable : {
           if( !fromDW->m_var_DB.exists( label, matl, patch ) ) {
-            SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );
+            SCI_THROW( UnknownVariable( label->getName(), getID(), patch, matl, "in transferFrom", __FILE__, __LINE__ ) );
           }
 
           ParticleSubset* subset;
@@ -3323,7 +3323,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
       }
     }
   }
-}
+} // end transferFrom()
 
 //______________________________________________________________________
 //

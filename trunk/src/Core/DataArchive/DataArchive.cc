@@ -658,7 +658,84 @@ DataArchive::queryVariables( FILE                                   * fp,
 //
 
 #if HAVE_PIDX
-// Notes: You must free() the returned "dataPIDX" when you are done with it.
+
+// Returns the actual (real) material index.  This routine (currently) is only used for particle variables.
+// The assumption being that particle variables can exist on a (arbitrary sub) set of specific materials, while
+// grid vars must exist on all materials.
+//
+// The approach to finding the material number assumes that the PIDX vars are "in order".  [If this were not the case, we could just sort our list...]
+//
+// Note:  In the original UDA format, the material number of the variable is stored in the XML metadata.
+//        However, with PIDX, there is no (will very limited) meta data.  The only way we have to determine
+//        the material that a variable exists on is by the naming scheme created when the origina PIDX UDA
+//        was written, namely: we add "_m#" to the end of each PIDX var name to designate the material.
+//
+// So, to determine which material a given variable (as read in from PIDX) exists on, we have to parse the "..._m#".
+//
+static
+int
+findPIDXVarPosition( const string & varName, const int matlPos, PIDX_file & idxFile )
+{
+    cout << "looking for " << varName << " at pos " << matlPos << "\n";
+
+    // In order to determine the real material indices, we need to ask PIDX for this information.
+    // 1: ask PIDX how many vars there are.
+    // 2: loop through all vars asking PIDX for their actual names
+    // 3: parse name to get real matl index
+
+    int numVars;
+
+    PIDX_get_variable_count( idxFile, &numVars );
+
+    cout << "PIDX has # vars equal to: " << numVars << "\n";
+
+    vector< string > varNames( numVars );
+
+    PIDX_variable pidxVar;
+        
+    for( int i = 0; i < numVars; i++ ) {
+
+        int ret = PIDX_get_next_variable( idxFile, &pidxVar );
+        // FIXME: check ret code?
+
+        varNames[ i ] = pidxVar->var_name;
+
+        ret = PIDX_read_next_variable( idxFile, pidxVar );
+    }
+
+    int realMatlIndex = -999999; // FIXME: what should this default to?
+    int foundPos = 0;
+
+    for( int i = 0; i < numVars; i++ ) {
+
+        string & curName = varNames[ i ];
+
+        if( curName.compare( 0, varName.length(), varName ) == 0 ) {
+            if( foundPos == matlPos ) {
+
+                std::size_t pos = curName.rfind( "_m" );
+
+                if( pos == std::string::npos ) {
+                    throw InternalError( "DataArchive.cc - did not find '_m' in PIDX variable name", __FILE__, __LINE__ );                  
+                }
+
+                realMatlIndex = std::stoi( curName.substr( pos + 2 ) );
+
+                PIDX_reset_variable_counter( idxFile );
+                return realMatlIndex;
+                
+            }
+            else {
+                foundPos++;
+            }
+        }
+    }
+
+    throw InternalError( "findPIDXVarPosition did not find the variable", __FILE__, __LINE__ );
+    return realMatlIndex; // FYI, this return should never happen.
+} // end findPIDXVarPosition()
+
+// Notes: You must free() the returned "dataPIDX" when you are done with it.  [Is this comment still relevant?]
 
 bool
 DataArchive::setupQueryPIDX(       PIDX_access     & access,
@@ -667,12 +744,17 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
                              const LevelP          & level,
                              const TypeDescription * type,
                              const string          & name,
-                             const int               matlIndex,
+                             const int               matlPos, // not the real "matl index", see comment just below *
                              const int               timeIndex )
 {
+  // Originally, this routine took in "matlIndex", but it turns out that we really don't, at the point this routine is called,
+  // know the material index for the variable.  We only know whether it is the 1st (or 2nd, etc) being read from the saved
+  // data.  So we use "matlPos" to convey this information, and then further down in this function we use that position to
+  // determine the actual material index for our use.
+
   TimeData & timedata = getTimeData( timeIndex );
 
-  printf("reading var %s\n",name.c_str());
+  printf( "reading var %s for matl at position: %d\n", name.c_str(), matlPos );
   //__________________________________
   //  Creating access
   PIDX_create_access( &access );
@@ -740,10 +822,11 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
 
   //cout << Uintah::Parallel::getMPIRank() << ": pidx get var count\n";
 
-  int variable_count = 0;             ///< Number of fields in PIDX file
-  ret = PIDX_get_variable_count( idxFile, &variable_count );
-  PIDXOutputContext::checkReturnCode( ret,"DataArchive::setupQueryPIDX() - PIDX_get_variable_count failure", __FILE__, __LINE__);
 
+  // The following 4 lines are for debugging / information purposes:
+  // int variable_count = 0;             ///< Number of fields in PIDX file
+  // ret = PIDX_get_variable_count( idxFile, &variable_count );
+  // PIDXOutputContext::checkReturnCode( ret,"DataArchive::setupQueryPIDX() - PIDX_get_variable_count failure", __FILE__, __LINE__);
   // cout << Uintah::Parallel::getMPIRank() << ": pidx var count is " << variable_count << "\n";
 
   //int me;
@@ -757,12 +840,25 @@ DataArchive::setupQueryPIDX(       PIDX_access     & access,
   ret = PIDX_set_current_time_step( idxFile, timestep );
   PIDXOutputContext::checkReturnCode( ret, "DataArchive::setupQueryPIDX() - PIDX_set_current_time_step failure", __FILE__, __LINE__ );
 
+  int real_matl_index = matlPos;
+
+  if( type->getType() == TypeDescription::ParticleVariable ) {
+      // In theory, for all variable types except particles, the matlPos is the real matl index... so only need to check for particle vars...
+      // This is because non-partical variables must exist on all materials, while partical vars can exist on a sub-set of materials.
+      real_matl_index = findPIDXVarPosition( name, matlPos, idxFile );
+
+      cout << "Var: " << name << ", at matl position of " << matlPos << " is at real matl index of: " << real_matl_index << "\n";
+  }
+
   std::ostringstream mstr;
-  mstr << "_m" << matlIndex; // Add _m# to name of variable.
+  mstr << "_m" << real_matl_index; // Add _m# to name of variable.
   string full_name = name + mstr.str();
 
   // cout << Uintah::Parallel::getMPIRank() << ": setting var: " << full_name << "\n";
+
   ret = PIDX_set_current_variable_by_name( idxFile, full_name.c_str() );
+
+
   // proc0cout << "ret is " << ret << ", was looking for" << name << "\n";
     
   if( ret != PIDX_success ) {
@@ -802,12 +898,12 @@ DataArchive::queryPIDX(       BufferAndSizeTuple * data,
                         const Patch              * patch,
                         const int                  timeIndex )
 {
-  // cout << Uintah::Parallel::getMPIRank()
-  //      << ": pidx query called for        VARIABLE: " << name 
-  //      << ", material index " << matlIndex 
-  //      << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
-  //      << ", patch " << (patch ? patch->getID() : -1)
-  //      << ", time index " << timeIndex << "\n";
+  cout << Uintah::Parallel::getMPIRank()
+       << ": pidx query called for        VARIABLE: " << name 
+       << ", material index " << matlIndex 
+       << ", Level " << (patch ? patch->getLevel()->getIndex() : -1)
+       << ", patch " << (patch ? patch->getID() : -1)
+       << ", time index " << timeIndex << "\n";
 
   if( d_fileFormat != PIDX ){
     throw InternalError( "queryPIDX() called on non-PIDX data archive", __FILE__, __LINE__ );
@@ -1428,7 +1524,7 @@ void
 DataArchive::restartInitialize( const int                timestep_index,
                                 const GridP            & grid,
                                       DataWarehouse    * dw,
-                                      LoadBalancer * lb,
+                                      LoadBalancer     * lb,
                                       double           * pTime )
 {
   vector<int>    ts_indices;
@@ -1462,6 +1558,8 @@ DataArchive::restartInitialize( const int                timestep_index,
     }
     varMap[ names[i] ] = vl;
     varNameToNumMatlsMap[ names[i] ] = num_matls[ i ];
+
+    cout << "The var: " << names[i] << " has # mats: " << num_matls[i] << "\n";
   }
 
   TimeData& timedata = getTimeData( timestep_index );
@@ -1531,10 +1629,11 @@ DataArchive::restartInitialize( const int                timestep_index,
         ParticleVariableBase* particles;
         if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
           if (!dw->haveParticleSubset(matl, patch)) {
-            dw->saveParticleSubset(particles->getParticleSubset(), matl, patch);
+              cout << "UDA: Save psubset for " << label->getName() << ", matl: " << matl << "\n";
+              dw->saveParticleSubset( particles->getParticleSubset(), matl, patch );
           }
           else {
-            ASSERTEQ(dw->getParticleSubset(matl, patch), particles->getParticleSubset());
+            ASSERTEQ(dw->getParticleSubset( matl, patch), particles->getParticleSubset() );
           }
         }
 
@@ -1549,9 +1648,7 @@ DataArchive::restartInitialize( const int                timestep_index,
     // cout << "Here\n";
     createPIDXCommunicator( grid, lb );
 
-    
     // LEVEL LOOP
-    
     for( int lev_num = 0; lev_num < grid->numLevels(); lev_num++ ) {
 
       // cout << Uintah::Parallel::getMPIRank() << ":    on level: " << lev_num << "\n";
@@ -1596,12 +1693,12 @@ DataArchive::restartInitialize( const int                timestep_index,
           number_of_materials = varNameToNumMatlsMap[ var_name ];
         }
 
-        // cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << " with number of matls: " << number_of_materials << "\n";
+        cout << Uintah::Parallel::getMPIRank() << ": READING in var: " << *label << " with number of matls: " << number_of_materials << "\n";
         // MATERIAL LOOP
 
         for( int matl = 0; matl < number_of_materials; matl++ ) { // FIXME CHANGE "1" TO CORRECT VALUE!!!!!!!!!!!!!!!!
 
-          // cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << "\n";
+          cout << Uintah::Parallel::getMPIRank() << ":      looking for matl: " << matl << " for var: " << var_name << "\n";
 
           map< VarnameMatlPatch, BufferAndSizeTuple* > dataBufferMap;
 
@@ -1609,12 +1706,27 @@ DataArchive::restartInitialize( const int                timestep_index,
           PIDX_variable varDesc;
           PIDX_access   access;
 
+          int real_matl_index = -99999999; // FIXME? what should this default to?
+
           // Non-reduction and non-sole variables:
           if( type->getType() != TypeDescription::ReductionVariable &&
               type->getType() != TypeDescription::SoleVariable ) {
             // cout << Uintah::Parallel::getMPIRank() << ": calling setupQueryPIDX()\n";
-            bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index );
+            bool found = setupQueryPIDX( access, idxFile, varDesc, level, type, var_name, matl, timestep_index ); // FIXME: matl is not actual index....
             // cout << Uintah::Parallel::getMPIRank() << ": done calling setupQueryPIDX()\n";
+
+            cout << "Just read in var: " << var_name << ", which in PIDX is: " << varDesc->var_name << ".  We have matl " << matl << "\n";
+
+            string      pidxVarName = varDesc->var_name;
+            std::size_t pos = pidxVarName.rfind( "_m" );
+
+            if( pos == std::string::npos ) {
+              throw InternalError( "DataArchive.cc - did not find '_m' in PIDX variable name", __FILE__, __LINE__ );                  
+            }
+
+            real_matl_index = std::stoi( pidxVarName.substr( pos + 2 ) );
+
+            cout << "got real matl index of " << real_matl_index << "\n";
 
             if( !found ) {
               // Did not find this var/material... skipping...
@@ -1647,7 +1759,7 @@ DataArchive::restartInitialize( const int                timestep_index,
                 // cout << Uintah::Parallel::getMPIRank() << ": a) data->buffer is " << (data->buffer == nullptr ? "nullptr" : (void*)(data->buffer))
                 //      << " and size: " << data->size << "\n";
 
-                queryPIDX( data, varDesc, type, var_name, matl, patch, timestep_index );
+                queryPIDX( data, varDesc, type, var_name, real_matl_index, patch, timestep_index );
 
 #if 0
                 if( data->buffer == nullptr ) {
@@ -1664,7 +1776,7 @@ DataArchive::restartInitialize( const int                timestep_index,
 //                  continue;
 //                }
 
-                VarnameMatlPatch vmp( label->getName(), matl, patch->getID() );
+                VarnameMatlPatch vmp( label->getName(), real_matl_index, patch->getID() ); // FIXME: was matl, is this right?
                 // cout << Uintah::Parallel::getMPIRank() << ": inserting data tubple: " << data << " into dataBufferMap\n";
               
                 dataBufferMap[ vmp ] = data;
@@ -1714,9 +1826,9 @@ DataArchive::restartInitialize( const int                timestep_index,
               Variable * var = label->typeDescription()->createInstance();
               const IntVector bl( 0, 0, 0 );
 
-              if( label->typeDescription()->getType() == TypeDescription::ParticleVariable ) {
+              int matlIndex = vmp.matlIndex_;
 
-                int matlIndex = vmp.matlIndex_;
+              if( label->typeDescription()->getType() == TypeDescription::ParticleVariable ) {
 
                 psetDBType::key_type   key( matlIndex, patch );
                 ParticleSubset       * psubset  = 0;
@@ -1736,14 +1848,13 @@ DataArchive::restartInitialize( const int                timestep_index,
                 }
                 (static_cast<ParticleVariableBase*>(var))->allocate( psubset );
 
-                // Steve: adding this as in the uda case, not sure what's the right way
-                if (!dw->haveParticleSubset(matl, patch)) {
-                  dw->saveParticleSubset(psubset, matlIndex, patch);
+                if( !dw->haveParticleSubset( matl, patch ) ) {
+                    // cout << "PIDX: Save psubset for " << label->getName() << ", matl: " << matlIndex << "\n";
+                    dw->saveParticleSubset( psubset, matlIndex, patch );
                 }
                 else {
-                  ASSERTEQ(dw->getParticleSubset(matlIndex, patch), psubset);
+                  ASSERTEQ( dw->getParticleSubset( matlIndex, patch ), psubset );
                 }
-
               }
               else { // Non particle var
 
@@ -1763,7 +1874,10 @@ DataArchive::restartInitialize( const int                timestep_index,
               free( data->buffer );
               free( data );
 
-              dw->put( var, label, matl, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
+              dw->put( var, label, matlIndex, patch ); // fixme, clean up duplicate usage - (ie, fix handling of matl)
+
+              cout << "putting in dw: " << label->getName() << " for matl " << real_matl_index << "\n";
+              
               // proc0cout << "done with put\n";
             } // end for dataBufferMap iteration
 

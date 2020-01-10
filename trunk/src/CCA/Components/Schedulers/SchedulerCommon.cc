@@ -2036,8 +2036,9 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
             // it might have been created in Refine
             if (!newsub) {
               if (!newDataWarehouse->haveParticleSubset(matl, newPatch)) {
-                newsub = newDataWarehouse->createParticleSubset(oldsub->numParticles(), matl, newPatch);
-              } else {
+                newsub = newDataWarehouse->createParticleSubset( oldsub->numParticles(), matl, newPatch );
+              }
+              else {
                 newsub = newDataWarehouse->getParticleSubset(matl, newPatch);
                 ASSERT(newsub->numParticles() == 0);
                 newsub->addParticles(oldsub->numParticles());

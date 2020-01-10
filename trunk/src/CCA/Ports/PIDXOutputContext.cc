@@ -190,8 +190,8 @@ PIDXOutputContext::PIDXOutputContext()
 //
 PIDXOutputContext::~PIDXOutputContext() 
 {
-  if(d_isInitialized){
-    PIDX_close_access(this->access);
+  if( d_isInitialized ){
+    PIDX_close_access( d_access );
   }
 }
 
@@ -304,20 +304,20 @@ PIDXOutputContext::initialize( const string       & filename,
   if(dbgPIDX.active())
     dbgPIDX << "PIDXOutputContext::initialize()\n";
 
-  this->filename = filename;
-  this->timestep = timeStep;
+  d_filename = filename;
+  d_timestep = timeStep;
   string desc = "PIDXOutputContext::initialize";
   //__________________________________
   //
-  int rc = PIDX_create_access(&(this->access));
+  int rc = PIDX_create_access( &d_access );
   checkReturnCode( rc, desc + " - PIDX_create_access", __FILE__, __LINE__);
   
   if( comm != MPI_COMM_NULL ){
-    PIDX_set_mpi_access( this->access, comm );
+    PIDX_set_mpi_access( d_access, comm );
     checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
-  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
+  PIDX_file_create( d_filename.c_str(), PIDX_MODE_CREATE, d_access, dim, &d_file );
   checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
   
   PIDX_IoFlags & ioFlags = flags.d_visIoFlags;
@@ -325,12 +325,14 @@ PIDXOutputContext::initialize( const string       & filename,
     ioFlags = flags.d_checkpointFlags;
   }
 
-  if (ioFlags.ioType == PIDX_RST_PARTICLE_IO)
-    PIDX_set_io_mode( this->file, PIDX_RAW_IO ); // use RAW IO to store variable non particle TODO improve metadata!!!
-  else
-    PIDX_set_io_mode( this->file, ioFlags.ioType );
+  if (ioFlags.ioType == PIDX_RST_PARTICLE_IO) {
+    PIDX_set_io_mode( d_file, PIDX_RAW_IO ); // use RAW IO to store variable non particle TODO improve metadata!!!
+  }
+  else {
+    PIDX_set_io_mode( d_file, ioFlags.ioType );
+  }
 
-  PIDX_set_compression_type( this->file, ioFlags.compressionType );
+  PIDX_set_compression_type( d_file, ioFlags.compressionType );
 
   checkReturnCode( rc, desc + " - PIDX_set_compression_type", __FILE__, __LINE__);
 
@@ -341,32 +343,32 @@ PIDXOutputContext::initialize( const string       & filename,
                               ioFlags.restructureBoxSize[ 1 ],
                               ioFlags.restructureBoxSize[ 2 ] );
     checkReturnCode( ret,desc + " - PIDX_set_point restructure box failure", __FILE__, __LINE__ );
-    PIDX_set_restructuring_box( file, rbox );
+    PIDX_set_restructuring_box( d_file, rbox );
     checkReturnCode( rc, desc + " - checkpoint PIDX_set_restructuring_box", __FILE__, __LINE__);
   }
 
-  PIDX_set_variable_pile_length( file, ioFlags.pipeSize );
+  PIDX_set_variable_pile_length( d_file, ioFlags.pipeSize );
   checkReturnCode( rc, desc + " - checkpoint PIDX_set_variable_pile_length", __FILE__, __LINE__);
 
   if( ioFlags.ioType == PIDX_LOCAL_PARTITION_IDX_IO ) {
 
-    PIDX_set_block_size( this->file,  ioFlags.blockSize );
+    PIDX_set_block_size( d_file,  ioFlags.blockSize );
     checkReturnCode( rc, desc + " - PIDX_set_block_size", __FILE__, __LINE__);
   
-    PIDX_set_block_count( this->file, ioFlags.blockCount );
+    PIDX_set_block_count( d_file, ioFlags.blockCount );
     checkReturnCode( rc, desc + " - PIDX_set_block_count", __FILE__, __LINE__);
 
-    PIDX_set_partition_count( this->file, ioFlags.partitionCount[0], ioFlags.partitionCount[1], ioFlags.partitionCount[2] );
+    PIDX_set_partition_count( d_file, ioFlags.partitionCount[0], ioFlags.partitionCount[1], ioFlags.partitionCount[2] );
   }
 
 
   // FIXME: The 1 below represents the 1st timestep... but if we begin output on another timestep, this should be changed...
-  //PIDX_set_cache_time_step( this->file, 1 );
+  //PIDX_set_cache_time_step( d_file, 1 );
   //checkReturnCode( rc, desc + " - PIDX_enable_idx_io", __FILE__, __LINE__ );
   
-  PIDX_set_first_time_step( this->file, timeStep );
+  PIDX_set_first_time_step( d_file, timeStep );
 
-  PIDX_set_current_time_step( this->file, timeStep );
+  PIDX_set_current_time_step( d_file, timeStep );
   checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
 
   d_isInitialized = true;
@@ -381,31 +383,31 @@ PIDXOutputContext::initializeParticles( const string       & filename,
 {
   cout << "PIDXOutputContext::initializeParticles()\n";
 
-  this->filename = filename;
-  this->timestep = timeStep;
+  d_filename = filename;
+  d_timestep = timeStep;
   string desc = "PIDXOutputContext::initialize";
   //__________________________________
   //
-  int rc = PIDX_create_access(&(this->access));
+  int rc = PIDX_create_access( &d_access );
   checkReturnCode( rc, desc + " - PIDX_create_access", __FILE__, __LINE__);
   
   if( comm != MPI_COMM_NULL ){
-    PIDX_set_mpi_access( this->access, comm );
+    PIDX_set_mpi_access( d_access, comm );
     checkReturnCode( rc, desc + " - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
 
   // TODO add parameter for particles RST
-  //PIDX_set_restructuing_factor(this->file, 2,2,2);
+  // PIDX_set_restructuing_factor( d_file, 2, 2, 2 );
   
-  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, dim, &(this->file) );
+  PIDX_file_create( d_filename.c_str(), PIDX_MODE_CREATE, d_access, dim, &d_file );
   checkReturnCode( rc, desc + " - PIDX_file_create", __FILE__, __LINE__);
   
-  PIDX_set_io_mode( this->file, PIDX_RST_PARTICLE_IO );
+  PIDX_set_io_mode( d_file, PIDX_RST_PARTICLE_IO );
 
-  PIDX_set_first_time_step( this->file, timeStep );
+  PIDX_set_first_time_step( d_file, timeStep );
   
-  PIDX_set_current_time_step( this->file, timeStep );
-  checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__);
+  PIDX_set_current_time_step( d_file, timeStep );
+  checkReturnCode( rc, desc + " - PIDX_set_current_time_step", __FILE__, __LINE__ );
 
   d_isInitialized = true;
 }

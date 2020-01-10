@@ -159,7 +159,7 @@ class PIDXOutputContext {
         std::string  getCompressTypeName( const int type );
         
         std::map<std::string, int> compressMap;
-    };
+    }; // end PIDX_flags
     //______________________________________________________________________
     
     //__________________________________
@@ -190,11 +190,11 @@ class PIDXOutputContext {
                            PIDX_point     dims,
                      const int            type );
 
-  void initializeParticles( const std::string  & filename, 
-                            const unsigned int   timeStep,
-                                  MPI_Comm       comm,
-                                  PIDX_point     dim,
-                            const int            typeOutput );
+    void initializeParticles( const std::string  & filename, 
+                              const unsigned int   timeStep,
+                                    MPI_Comm       comm,
+                                    PIDX_point     dim,
+                              const int            typeOutput );
     
     void setLevelExtents( const std::string & desc, 
                                 IntVector     lo,
@@ -244,13 +244,7 @@ class PIDXOutputContext {
                       const Uintah::IntVector & hi_EC,
                       const unsigned char     * dataPIDX,
                       const size_t              arraySize ) const;
-                     
-    std::string filename;
-    unsigned int timestep;
-    PIDX_file file;
-    PIDX_variable **varDesc;    // variable descriptor array
-    PIDX_access access;
-    
+
     // this must match what is specified in DataArchiver.cc
     enum typeOutput { OUTPUT               =  0,
                       CHECKPOINT           =  1,
@@ -260,6 +254,15 @@ class PIDXOutputContext {
   //__________________________________
   //    
   private:
+    friend class DataArchiver; // FIXME: d_file (etc) is needed in DataArchiver... instead of friending, perhaps need accessor functions?
+
+    std::string      d_filename;
+    unsigned int     d_timestep;
+    PIDX_file        d_file;
+    PIDX_variable ** d_varDesc;    // variable descriptor array
+    PIDX_access      d_access;
+
+
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
     int  d_levelExtents[3];
@@ -269,7 +272,7 @@ class PIDXOutputContext {
       return levelExtents;                    
     };
     
-  };
+}; // end class PIDXOutputContext
 
 #endif //HAVE_PIDX
 

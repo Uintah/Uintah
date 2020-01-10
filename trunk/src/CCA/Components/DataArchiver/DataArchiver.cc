@@ -90,9 +90,9 @@ using namespace Uintah;
 using namespace std;
 
 namespace {
-  DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
+  DebugStream dbg( "DataArchiver", "DataArchiver", "Data archiver debug stream", false );
 #ifdef HAVE_PIDX
-  DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
+  DebugStream dbgPIDX ( "DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false );
 #endif
 }
 
@@ -510,7 +510,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     initialized = true;
   }
 #endif
-}
+} // end problemSetup()
 
 //______________________________________________________________________
 //
@@ -2888,10 +2888,12 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //__________________________________
   DataWarehouse *dw;
 
-  if( m_outputPreviousTimeStep || m_checkpointPreviousTimeStep )
+  if( m_outputPreviousTimeStep || m_checkpointPreviousTimeStep ) {
     dw = old_dw;
-  else
+  }
+  else {
     dw = new_dw;
+  }    
 
   //__________________________________
   // debugging output
@@ -3241,21 +3243,22 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 //  output only the savedLabels of a specified type description in PIDX format.
 
 size_t
-DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
-                               const PatchSubset           * patches,      
-                                     DataWarehouse         * new_dw,          
-                               int                           type,
-                               std::vector< SaveItem >     & saveLabels,
-                               const TypeDescription::Type   TD,
-                               Dir                           ldir,        // uda/timestep/levelIndex
-                               const std::string           & dirName,     // CCVars, SFC*Vars
-                               ProblemSpecP                & doc )
+DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
+                               const PatchSubset             * patches,      
+                                     DataWarehouse           * new_dw,          
+                                     int                       type,
+                                     std::vector< SaveItem > & saveLabels,
+                               const TypeDescription::Type     TD,
+                                     Dir                       ldir,        // uda/timestep/levelIndex
+                               const std::string             & dirName,     // CCVars, SFC*Vars
+                                     ProblemSpecP            & doc )
 {
 
   size_t totalBytesSaved = 0;
 #ifdef HAVE_PIDX
-  if(dbgPIDX.active())
+  if( dbgPIDX.active() ) {
     dbgPIDX << "saveLabels_PIDX()\n";
+  }
 
   const int timeStep = m_application->getTimeStep();
 
@@ -3342,22 +3345,22 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
     PIDX_set_physical_point( physical_global_size, b.max().x() - b.min().x(), b.max().y() - b.min().y(), b.max().z() - b.min().z() );
 
-    PIDX_set_physical_dims( pidx.file, physical_global_size );
+    PIDX_set_physical_dims( pidx.d_file, physical_global_size );
   }
 
   //__________________________________
   // allocate memory for pidx variable descriptor array
 
-  rc = PIDX_set_variable_count( pidx.file, actual_number_of_variables );
+  rc = PIDX_set_variable_count( pidx.d_file, actual_number_of_variables );
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX -PIDX_set_variable_count failure",__FILE__, __LINE__);
   
   size_t pidxVarSize = sizeof (PIDX_variable*);
-  pidx.varDesc = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
-  memset(pidx.varDesc, 0, pidxVarSize * nSaveItems);
+  pidx.d_varDesc = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
+  memset( pidx.d_varDesc, 0, pidxVarSize * nSaveItems );
 
   for(int i = 0 ; i < nSaveItems ; i++) {
-    pidx.varDesc[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i]);
-    memset(pidx.varDesc[i], 0, pidxVarSize * nSaveItemMatls[i]);
+    pidx.d_varDesc[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i] );
+    memset( pidx.d_varDesc[i], 0, pidxVarSize * nSaveItemMatls[i] );
   }
 
   //__________________________________
@@ -3445,8 +3448,12 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       int matlIndex = var_matls->get(m);
       string var_mat_name;
 
+      if( m != matlIndex ) {
+          cout << "This is strange, m is " << m << " and matlIndex is " << matlIndex << " for var: " << label->getName() << "\n";
+      }
+
       std::ostringstream s;
-      s << m;
+      s << matlIndex; // FIXME: originally this was just using 'm'... We think matlIndex is correct...???
       var_mat_name = label->getName() + "_m" + s.str();
     
       bool isParticle = ( label->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable );
@@ -3454,7 +3461,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
                                 /* isParticle, <- Add this to PIDX spec*/
                                 varSubType_size * 8, data_type,
-                                &(pidx.varDesc[vc][m]));
+                                &(pidx.d_varDesc[vc][m]));
       
       pidx.checkReturnCode( rc,
                             "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
@@ -3502,7 +3509,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             if( label->getName() == m_particlePositionName ) {
               // int var_index;
               // PIDX_get_current_variable_index( pidx.file, &var_index );
-              PIDX_set_particles_position_variable_index( pidx.file, vc );//var_index );
+              PIDX_set_particles_position_variable_index( pidx.d_file, vc );//var_index );
             }
             
             ParticleVariableBase * pv = new_dw->getParticleVariable( label, matlIndex, patch );
@@ -3533,7 +3540,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
                                      patch->getBox().lower().y(),
                                      patch->getBox().lower().z());
 
-            rc = PIDX_variable_write_particle_data_physical_layout( pidx.varDesc[ vc ][ m ],
+            rc = PIDX_variable_write_particle_data_physical_layout( pidx.d_varDesc[ vc ][ m ],
                                                                     physical_local_offset,
                                                                     physical_local_size,
                                                                     patch_buffer[ vcm ][ p ],
@@ -3561,7 +3568,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
             patchOffset[1] = patchOffset[1] - lo.y() - extra_cells[1];
             patchOffset[2] = patchOffset[2] - lo.z() - extra_cells[2];
 
-            rc = PIDX_variable_write_data_layout( pidx.varDesc[ vc ][ m ],
+            rc = PIDX_variable_write_data_layout( pidx.d_varDesc[ vc ][ m ],
                                                   patchOffset,
                                                   patchSize,
                                                   patch_buffer[ vcm ][ p ],
@@ -3609,10 +3616,10 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
         }  // is checkpoint?
       }  //  Patches
 
-      rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
+      rc = PIDX_append_and_write_variable( pidx.d_file, pidx.d_varDesc[vc][m] );
 
       int compression_type;
-      PIDX_get_compression_type(pidx.file, &compression_type);
+      PIDX_get_compression_type( pidx.d_file, &compression_type );
 
       // TODO uncomment when we will use latest PIDX version
       //if(compression_type == PIDX_CHUNKING_ZFP)
@@ -3625,7 +3632,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
     vc++;
   }  //  Variables
 
-  rc = PIDX_close(pidx.file);
+  rc = PIDX_close( pidx.d_file );
   pidx.checkReturnCode( rc,
                         "DataArchiver::saveLabels_PIDX - PIDX_close failure",
                         __FILE__, __LINE__);
@@ -3648,16 +3655,18 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup        * pg,
 
   //__________________________________
   //  free memory
-  for (int i=0; i<nSaveItems ; i++){
-    free(pidx.varDesc[i]);
+  for( int i=0; i<nSaveItems ; i++ ){
+    free( pidx.d_varDesc[i] );
   }
 
-  free(pidx.varDesc); 
-  pidx.varDesc=0;
+  free( pidx.d_varDesc ); 
+  pidx.d_varDesc = nullptr;
 
   //if(dbgPIDX.active())
-    dbgPIDX << "end saveLabels_PIDX()\n";
+  dbgPIDX << "end saveLabels_PIDX()\n";
 
+#else
+  throw InternalError( "Error: saveLabels_PIDX called, put PIDX not configured...", __FILE__, __LINE__ );
 #endif
   
   return totalBytesSaved;
