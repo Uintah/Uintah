@@ -462,15 +462,11 @@ main(int argc, char** argv)
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
-    if(s == "-ignoreVariable") {
-      if (++i == argc){
-        usage("-ignoreVariable, no variable given", argv[0]);
-      }else{
-        ignoreVar = argv[i];
-      }
-    }else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
+    
+    if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
       usage( "", argv[0] );
-    }else {
+    }
+    else {
       if (filebase1 != "") {
         if (filebase2 != ""){
           usage(s, argv[0]);
@@ -491,24 +487,62 @@ main(int argc, char** argv)
   DataArchive* da1 = scinew DataArchive(filebase1);
   DataArchive* da2 = scinew DataArchive(filebase2);
 
-  vector<string>                         vars,      vars2;
-  vector<int>                            num_matls, num_matls2;
-  vector<const Uintah::TypeDescription*> types,     types2;
+  vector<string> vars, vars2;
+  vector<int>    num_matls, num_matls2;
+  vector<const Uintah::TypeDescription*> types, types2;
 
-  vector< pair<string, const Uintah::TypeDescription*> > vartypes1,vartypes2;
   da1->queryVariables( vars,  num_matls,  types );
   da2->queryVariables( vars2, num_matls2, types2 );
+
+  bool do_udas_have_same_nVars = true;
+  size_t vars1_size = vars.size();
+  size_t vars2_size = vars2.size();  
+
+  //__________________________________
+  // If the number of variables in each uda
+  // differs then find a common set of variables
+  if(vars1_size != vars2_size ){
+
+    do_udas_have_same_nVars = false;
+
+    typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
+    VarTypeVec vartypes1(vars1_size);
+    VarTypeVec vartypes2(vars2_size);
+
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vartypes1[i] = make_pair(vars[i], types[i]);
+    }
+
+    for (unsigned int i = 0; i < vars2.size(); i++) {
+      vartypes2[i] = make_pair(vars2[i], types2[i]);
+    }
+
+    cerr << "\nWARNING: The udas contain a different number of variables.  Now comparing the common set of variables.\n";
+
+    VarTypeVec commonVars;     // common variables
+
+    set_intersection(vartypes1.begin(), vartypes1.end(),
+                     vartypes2.begin(), vartypes2.end(),
+                     std::back_inserter(commonVars) );
+
+    size_t size = commonVars.size();
+    vars.resize(size);
+    vars2.resize(size);
+    vartypes1.resize(size);
+    vartypes2.resize(size);
+
+    for (unsigned int i = 0; i <size; i++) {
+      vars[i]   = commonVars[i].first;
+      types[i]  = commonVars[i].second;
+      vars2[i]  = commonVars[i].first;
+      types2[i] = commonVars[i].second;
+    }
+  }
 
   //__________________________________
   // bulletproofing
   ASSERTEQ(vars.size(),  types.size());
   ASSERTEQ(vars2.size(), types2.size());
-
-  if (vars.size() != vars2.size()) {
-    cerr << filebase1 << " has " << vars.size() << " variables\n";
-    cerr << filebase2 << " has " << vars2.size() << " variables\n";
-    abort_uncomparable();
-  }
 
   for (unsigned int i = 0; i < vars.size(); i++) {
     if (vars[i] != vars2[i]) {
@@ -857,10 +891,21 @@ main(int argc, char** argv)
     }  // variables
   }
 
+  //__________________________________
+  //
+  if ( ! do_udas_have_same_nVars ) {
+    cout << "\n__________________________________\n\n";
+    cout << "  ERROR:  the udas don't have the same number of variables\n";
+    cout << "    " << filebase1 << " has " << vars1_size << " variables\n";
+    cout << "    " << filebase2 << " has " << vars2_size << " variables\n";
+    abort_uncomparable();
+  }
+
   if (times.size() != times2.size()) {
-    cout << endl;
-    cout << filebase1 << " has " << times.size() << " timesteps\n";
-    cout << filebase2 << " has " << times2.size() << " timesteps\n";
+    cout << "\n__________________________________\n\n";
+    cout << "  ERROR:  the udas don't have the same number timesteps.\n";
+    cout << "    " << filebase1 << " has " << times.size() << " timesteps\n";
+    cout << "    " << filebase2 << " has " << times2.size() << " timesteps\n";
     abort_uncomparable();
   }
   delete da1;
