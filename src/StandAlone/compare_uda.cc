@@ -1556,13 +1556,13 @@ main( int argc, char** argv )
       
       cerr << "\nWARNING: The udas contain a different number of variables.  Now comparing the common set of variables.\n";
 
-      size_t size  = min( vartypes1.size(), vartypes2.size() );
-      VarTypeVec commonVars(size); 
-
+      VarTypeVec commonVars;     // common variables  
+      
       set_intersection(vartypes1.begin(), vartypes1.end(), 
                        vartypes2.begin(), vartypes2.end(), 
-                       commonVars.begin()); 
-
+                       std::back_inserter(commonVars) ); 
+                       
+      size_t size = commonVars.size();
       vars.resize(size);
       vars2.resize(size);
       vartypes1.resize(size);
