@@ -197,7 +197,29 @@ TaskGraph::createDetailedTask(       Task           * task
 
 //______________________________________________________________________
 //
+//DS: 01042020: fix for OnDemandDW race condition
+void TaskGraph::overrideGhostCells(const std::vector<Task*> &sorted_tasks){
+  const auto number_of_tasks = sorted_tasks.size();
+  for (auto i = 0u; i < number_of_tasks; i++) {
+    Task* task = sorted_tasks[i];
 
+    // look through requires
+    for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
+      if(req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0){
+        req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
+      }
+    }
+
+    for (Task::Dependency* req = task->getModifies(); req != nullptr; req = req->m_next) {
+      if(req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0){
+        req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
 DetailedTasks*
 TaskGraph::createDetailedTasks(       bool    useInternalDeps
                               , const GridP & grid
@@ -208,6 +230,8 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   std::vector<Task*> sorted_tasks;
 
   nullSort(sorted_tasks);
+
+  overrideGhostCells(sorted_tasks);	//DS: 01042020: fix for OnDemandDW race condition
 
 //  topologicalSort(sorted_tasks);
 

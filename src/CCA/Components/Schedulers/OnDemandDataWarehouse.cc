@@ -143,7 +143,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
     , m_is_initialization_DW{ isInitializationDW }
 {
   doReserve();
-
+  varLock          = new Uintah::MasterLock{};
 
 #ifdef HAVE_CUDA
 
@@ -175,6 +175,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
   clear();
+  delete varLock;
 }
 
 //______________________________________________________________________
@@ -3019,7 +3020,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
         continue;
       }
 
-      if (m_var_DB.exists( label, matlIndex, neighbor )) {
+      if (ignoreMissingNeighbors==false && m_var_DB.exists( label, matlIndex, neighbor )) {
         std::vector<Variable*> varlist;
         // Go through the main var plus any foreign vars for this label/material/patch
         m_var_DB.getlist( label, matlIndex, neighbor, varlist );
@@ -3081,13 +3082,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const Patch            * patch
                                  ,       Ghost::GhostType   gtype
                                  ,       int                numGhostCells
-								 ,       int                scratchGhostCells/*=0*/
-								  //DS 12132019: Added scratch ghost cell layer defaulted to 0. Will allocate memory for (numGhostCells+scratchGhostCells), but will gather only numGhostCells
-								  //To avoid resizing on GPU, gpu variables need to be allocated with max ghost cell size. But changing ghost cells on host to max causes an asymmetric MPI
-								  //message generation due to bc's conditional dependencies in Arches. Hence only option now is to allocate max ghost cells on CPU and GPU both, but gather
-								  //only numGhostCells i.e., provided by user in task dependency. Extra padding will help align CPU and GPU variables which is needed for correct copying.
-								  //Logic is handled in scheduler. No need to change user tasks. Pass scratchGhostCells = max_ghost_cells - numGhostCells;
-								 )
+                                 )
 {
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
@@ -3109,18 +3104,18 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
   IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
 
   if ( gtype == Ghost::None ) {
-    if (numGhostCells != 0 || scratchGhostCells!=0) {
+    if (numGhostCells != 0) {
       SCI_THROW(InternalError("Ghost cells specified with type: None!\n", __FILE__, __LINE__));
     }
     // if this assertion fails, then it is having problems getting the
     // correct window of the data.
     USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
     ASSERT(no_realloc);
-  }   
+  }
   else {
     IntVector lowIndex, highIndex;
-    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells+scratchGhostCells, lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
-
+    //patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells+scratchGhostCells, lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
+    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, label->getMaxDeviceGhost(), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18
@@ -3128,48 +3123,85 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     // reallocation needed: Ignore this if this is the initialization dw in its old state.
     // The reason for this is that during initialization it doesn't know what ghost cells will be required of it for the next timestep.
     // (This will be an issue whenever the task graph changes to require more ghost cells from the old datawarehouse).
-    if ( !var.rewindow( lowIndex, highIndex ) && g_warnings_dbg ) {
+
+    bool copy_needed = false;
+    bool no_reallocation_needed = var.rewindow( lowIndex, highIndex );
+
+    //DS 0106202: no_reallocation_needed = false, then rewindow will allocate a new pointer and copy everything. Remember, it does not modify
+    //the pointer in m_var_DB. m_var_DB still points to old smaller pointer and same is returned if other thread requests the same variable.
+    //Thus the new pointer thus becomes after resizing becomes exclusive to the calling thread and there are no race conditions - This
+    //happens in most of the CPU tasks variable which are allocated without scratch ghost cells. In case of GPU tasks, data is allocated with
+    //scratch ghost cells. Thus rewindow returns no_reallocation_needed = false, as the requested ghost cells fall within the already allocated
+    //region. Thus all threads get the same pointer and that leads to data races. Not sure whether those data races are causing errors.
+    //Possible fix: Use same max ghost cell count if  numGhostCells>0 and also use status flags to ensure only 1 thread gathers ghosts. Rest
+    //of the threads can use those values as and when ready.
+
+    if(Parallel::usingDevice()==false){
+      copy_needed=true;
+    }
+    else{
+      if(no_reallocation_needed == false){//thread had exclusive copy of the variable
+        copy_needed=true;
+      }
+      else{//no need of reallocation. So threads might share the same memory. Use flags to determine copying right
+        if(compareAndSwapAwaitingGhostDataOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ))
+          copy_needed=true;
+      }
+    }
+
+
+    if ( no_reallocation_needed == false && g_warnings_dbg ) {
       static bool warned = false;
-             bool ignore = m_is_initialization_DW && m_finalized;
+         bool ignore = m_is_initialization_DW && m_finalized;
       if (!ignore && !warned) {
-        warned = true;
-        IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
-        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
-        if (rw.invoke()) {
-          // print out this message if the ProgressiveWarning does
-          std::ostringstream errmsg;
-          errmsg << "Rank-" << d_myworld->myRank() << " This occurrence for " << label->getName();
-          if (patch != nullptr) {
-            errmsg << " on patch " << patch->getID();
-          }
-          errmsg << " for material " << matlIndex << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
-          DOUT(true, errmsg.str());
+      warned = true;
+      IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
+      static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
+      if (rw.invoke()) {
+        // print out this message if the ProgressiveWarning does
+        std::ostringstream errmsg;
+        errmsg << "Rank-" << d_myworld->myRank() << " This occurrence for " << label->getName();
+        if (patch != nullptr) {
+        errmsg << " on patch " << patch->getID();
+        }
+        errmsg << " for material " << matlIndex << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
+        DOUT(true, errmsg.str());
+      }
+      }
+    }
+
+      if(copy_needed){
+      std::vector<ValidNeighbors> validNeighbors;
+      getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
+      for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+
+        if(iter->validNeighbor && (no_reallocation_needed == false || iter->low < low || high < iter->high)){
+        GridVariableBase* srcvar = var.cloneType();
+        GridVariableBase* tmp = iter->validNeighbor;
+        srcvar->copyPointer(*tmp);
+        if (iter->neighborPatch->isVirtual()) {
+          srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
+        }
+        try {
+          var.copyPatch(srcvar, iter->low, iter->high);
+
+        } catch (InternalError& e) {
+          std::cout << " Bad range: " << iter->low << " " << iter->high
+              << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
+              << std::endl;
+          throw e;
+        }
+        delete srcvar;
         }
       }
-    }
-
-    std::vector<ValidNeighbors> validNeighbors;
-    getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
-    for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
-
-      GridVariableBase* srcvar = var.cloneType();
-      GridVariableBase* tmp = iter->validNeighbor;
-      srcvar->copyPointer(*tmp);
-      if (iter->neighborPatch->isVirtual()) {
-        srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
+      if(no_reallocation_needed == true && Parallel::usingDevice())
+        setValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() );  //ghosts are ready
       }
-      try {
-        var.copyPatch(srcvar, iter->low, iter->high);
-
-      } catch (InternalError& e) {
-        std::cout << " Bad range: " << iter->low << " " << iter->high
-                  << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
-                  << std::endl;
-        throw e;
+      else{//threads which does not get to copy the data should wait until copy is completed.
+        while(isValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ) == false );
       }
-      delete srcvar;
+
     }
-  }
 }
 
 //______________________________________________________________________
@@ -4018,3 +4050,278 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
     DOUT(true, mesg.str());
   }
 }
+
+
+
+
+//DS: 01042020: fix for OnDemandDW race condition
+//______________________________________________________________________
+//
+bool
+OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  //assuming varLock will be already secured in allocate method
+//
+//  bool allocated = false;
+//  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+//  atomicDataStatus* status = nullptr;
+//
+//  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+//    if (it != atomicStatusInHostMemory.end()) {
+//        printf("ERROR:OnDemandDataWarehouse::compareAndSwapAllocate( ) already allocated. Possible race condition or duplicate allocation.\n");
+//        varLock->unlock();
+//        exit(-1);
+//    } else {
+//  	  //insert here
+//  	  atomicDataStatus newVarStatus = ALLOCATED;
+//  	  atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+//  	  varLock->unlock();
+//  	  return true;
+//    }
+}
+
+
+
+bool
+OnDemandDataWarehouse::isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  varLock->lock();
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  if (atomicStatusInHostMemory.find(lpml) != atomicStatusInHostMemory.end()) {
+    bool retVal = ((__sync_fetch_and_or(&(atomicStatusInHostMemory.at(lpml)), 0) & VALID) == VALID);
+    varLock->unlock();
+    return retVal;
+  } else {
+    varLock->unlock();
+    return false;
+  }
+}
+
+//______________________________________________________________________
+//TODO: This needs to be turned into a compare and swap operation
+//______________________________________________________________________
+bool
+OnDemandDataWarehouse::compareAndSwapSetValidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  varLock->lock();
+  bool settingValid = false;
+  while (!settingValid) {
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+    if (it != atomicStatusInHostMemory.end()) {
+      atomicDataStatus *status = &(it->second);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID) == VALID) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~COPYING_IN;
+        newVarStatus = newVarStatus | VALID;
+        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+  	  atomicDataStatus newVarStatus = VALID | ALLOCATED;
+  	  atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+  	  varLock->unlock();
+  	  return true;
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+//______________________________________________________________________
+bool
+OnDemandDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  varLock->lock();
+  bool settingValid = false;
+  while (!settingValid) {
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+    if (it != atomicStatusInHostMemory.end()) {
+      atomicDataStatus *status = &(it->second);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID) != VALID) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+	  atomicDataStatus newVarStatus = ALLOCATED;
+	  atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+	  varLock->unlock();
+	  return true;
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+
+//______________________________________________________________________
+// returns false if something else already claimed to copy or has copied data into the CPU.
+// returns true if we are the ones to manage this variable's ghost data.
+bool
+OnDemandDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+
+  atomicDataStatus* status = nullptr;
+
+  // get the status
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  varLock->lock();
+  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+  if (it != atomicStatusInHostMemory.end()) {
+    status = &(it->second);
+  } else {
+	  //insert here??
+	  atomicDataStatus newVarStatus = COPYING_IN;
+	  atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+	  varLock->unlock();
+	  return true;
+  }
+  varLock->unlock();
+
+  bool copyingin = false;
+  while (!copyingin) {
+    // get the address
+    atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+    if (((oldVarStatus & COPYING_IN) == COPYING_IN) ||
+       ((oldVarStatus & VALID) == VALID) ||
+       ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
+        // Something else already took care of it.  So this task won't manage it.
+        return false;
+      } else {
+      //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+      atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
+      newVarStatus = newVarStatus & ~UNKNOWN;
+      copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+    }
+  }
+  return true;
+}
+
+
+bool
+OnDemandDataWarehouse::compareAndSwapAwaitingGhostDataOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+
+  bool allocating = false;
+
+  varLock->lock();
+  while (!allocating) {
+    //get the address
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+    if (it != atomicStatusInHostMemory.end()) {
+      atomicDataStatus *status = &(it->second);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if (((oldVarStatus & AWAITING_GHOST_COPY) == AWAITING_GHOST_COPY) || ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus | AWAITING_GHOST_COPY;
+        allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+      varLock->unlock();
+      printf("ERROR:OnDemandDataWarehouse::compareAndSwapAwaitingGhostDataOnCPU( )  Variable %s not found.\n", label);
+      exit(-1);
+      return false;
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+bool
+OnDemandDataWarehouse::isValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+  varLock->lock();
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+  if (it != atomicStatusInHostMemory.end()) {
+    bool retVal = ((__sync_fetch_and_or(&(it->second), 0) & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS);
+    varLock->unlock();
+    return retVal;
+  } else {
+    varLock->unlock();
+	  printf("var not found\n");
+    return false;
+  }
+}
+
+//______________________________________________________________________
+//TODO: This needs to be turned into a compare and swap operation
+void
+OnDemandDataWarehouse::setValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+  varLock->lock();
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+  if (it != atomicStatusInHostMemory.end()) {
+    //UNKNOWN
+    //make sure the valid is still turned on
+    __sync_or_and_fetch(&(it->second ), VALID);
+
+    //turn off AWAITING_GHOST_COPY
+    __sync_and_and_fetch(&(it->second ), ~AWAITING_GHOST_COPY);
+
+    //turn on VALID_WITH_GHOSTS
+    __sync_or_and_fetch(&(it->second ), VALID_WITH_GHOSTS);
+
+    varLock->unlock();
+  } else {
+    varLock->unlock();
+    exit(-1);
+  }
+}
+
+//______________________________________________________________________
+// returns false if something else already changed a valid variable to valid awaiting ghost data
+// returns true if we are the ones to manage this variable's ghost data.
+bool
+OnDemandDataWarehouse::compareAndSwapSetInvalidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+
+  bool allocating = false;
+
+  varLock->lock();
+  while (!allocating) {
+    //get the address
+    labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+    std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+    if (it != atomicStatusInHostMemory.end()) {
+      atomicDataStatus *status = &(it->second);
+      atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
+      if ((oldVarStatus & VALID_WITH_GHOSTS) == 0) {
+        //Something else already took care of it.  So this task won't manage it.
+        varLock->unlock();
+        return false;
+      } else {
+        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        atomicDataStatus newVarStatus = oldVarStatus & ~VALID_WITH_GHOSTS;
+        allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      }
+    } else {
+      varLock->unlock();
+	  atomicDataStatus newVarStatus = ALLOCATED;
+	  atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+	  varLock->unlock();
+	  return true;
+    }
+  }
+  varLock->unlock();
+  return true;
+}
+
+

@@ -1025,6 +1025,19 @@ public:
 
   static bool s_combine_memory;
 
+
+  //DS: 01042020: fix for OnDemandDW race condition
+  bool compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
+  bool compareAndSwapSetValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool compareAndSwapSetInvalidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool isValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool compareAndSwapCopyingIntoCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool compareAndSwapAwaitingGhostDataOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool isValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  void setValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  bool compareAndSwapSetInvalidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+
+
   friend class SchedulerCommon;
   friend class KokkosScheduler;
   friend class UnifiedScheduler;
@@ -1101,18 +1114,12 @@ private:
                                               , RunningTaskInfo * info
                                               );
 
-  //DS 12132019: Added scratch ghost cell layer defaulted to 0. Will allocate memory for (numGhostCells+scratchGhostCells), but will gather only numGhostCells
-  //To avoid resizing on GPU, gpu variables need to be allocated with max ghost cell size. But changing ghost cells on host to max causes an asymmetric MPI
-  //message generation due to bc's conditional dependencies in Arches. Hence only option now is to allocate max ghost cells on CPU and GPU both, but gather
-  //only numGhostCells i.e., provided by user in task dependency. Extra padding will help align CPU and GPU variables which is needed for correct copying.
-  //Logic is handled in scheduler. No need to change user tasks. Pass scratchGhostCells = max_ghost_cells - numGhostCells;
   void getGridVar(       GridVariableBase & var
                  , const VarLabel         * label
                  ,       int                matlIndex
                  , const Patch            * patch
                  ,       Ghost::GhostType   gtype
                  ,       int                numGhostCells
-				 ,       int                scratchGhostCells=0
                  );
 
   inline Task::WhichDW getWhichDW( RunningTaskInfo * info );
@@ -1232,6 +1239,88 @@ private:
 
   // Is this the first DW -- created by the initialization timestep?
   bool  m_is_initialization_DW {false};
+
+
+
+
+
+
+
+
+
+  //using for D2H copies only as of now. ONLY values used as of now are:  COPYING_IN, VALID (and reset ~VALID for invalid).
+  //other Operations are handled by OnDemandDataWarehouse. copied from GPUDataWH
+
+  Uintah::MasterLock * varLock;
+
+
+  struct labelPatchMatlLevel {
+    std::string label;
+    int         patchID;
+    int         matlIndx;
+    int         levelIndx;
+    labelPatchMatlLevel(const char * label, int patchID, int matlIndx, int levelIndx) {
+      this->label = label;
+      this->patchID = patchID;
+      this->matlIndx = matlIndx;
+      this->levelIndx = levelIndx;
+    }
+    //This so it can be used in an STL map
+    bool operator<(const labelPatchMatlLevel& right) const {
+      if (this->label < right.label) {
+        return true;
+      } else if (this->label == right.label && (this->patchID < right.patchID)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
+        return true;
+      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx < right.levelIndx)) {
+        return true;
+      } else {
+        return false;
+      }
+
+    }
+
+  };
+
+  enum status { UNALLOCATED               = 0x00000000,
+                 ALLOCATING                = 0x00000001,
+                 ALLOCATED                 = 0x00000002,
+                 COPYING_IN                = 0x00000004,
+                 VALID                     = 0x00000008,     //For when a variable has its data, this excludes any knowledge of ghost cells.
+                 AWAITING_GHOST_COPY       = 0x00000010,     //For when when we know a variable is awaiting ghost cell data
+                                                             //It is possible for VALID bit set to 0 or 1 with this bit set,
+                                                             //meaning we can know a variable is awaiting ghost copies but we
+                                                             //don't know from this bit alone if the variable is valid yet.
+                 VALID_WITH_GHOSTS         = 0x00000020,     //For when a variable has its data and it has its ghost cells
+                                                             //Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
+                                                             //non ghost part is unknown?
+                 DEALLOCATING              = 0x00000040,     //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
+                 FORMING_SUPERPATCH        = 0x00000080,     //As the name suggests, when a number of individual patches are being formed
+                                                             //into a superpatch, there is a period of time which other threads
+                                                             //should wait until all patches have been processed.
+                 SUPERPATCH                = 0x00000100,     //Indicates this patch is allocated as part of a superpatch.
+                                                             //At the moment superpatches is only implemented for entire domain
+                                                             //levels.  But it seems to make the most sense to have another set of
+                                                             //logic in level.cc which subdivides a level into superpatches.
+                                                             //If this bit is set, you should find the lowest numbered patch ID
+                                                             //first and start with concurrency reads/writes there.  (Doing this
+                                                             //avoids the Dining Philosopher's problem.
+                 UNKNOWN                   = 0x00000200};    //Remove this when you can, unknown can be dangerous.
+                                                             //It's only here to help track some host variables
+
+  typedef volatile int atomicDataStatus;
+
+  std::map<labelPatchMatlLevel, atomicDataStatus>   atomicStatusInHostMemory;	//maintain status of the variable in the host memory
+
+
+
+
+
+
+
+
 
 }; // end class OnDemandDataWarehouse
 

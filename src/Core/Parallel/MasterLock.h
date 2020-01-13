@@ -69,10 +69,10 @@ class MasterLock
 #if defined(_OPENMP)
       if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS) {
         omp_set_lock( &m_lock );
-        mutex_locked_used = false;
+        //mutex_locked_used = false;
         return;
       }
-      mutex_locked_used = true;
+      //mutex_locked_used = true;
 #endif
       m_mutex.lock();
     }
@@ -91,6 +91,10 @@ class MasterLock
     // Initialize the locks (mutexes initialize themselves)
 #if defined(_OPENMP)
       omp_init_lock( &m_lock );
+      if (Parallel::getCpuThreadEnvironment() == Parallel::CpuThreadEnvironment::OPEN_MP_THREADS)
+    	  mutex_locked_used = false;
+      else
+    	  mutex_locked_used = true;
 #endif
     }
 

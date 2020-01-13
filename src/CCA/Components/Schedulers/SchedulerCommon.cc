@@ -882,6 +882,10 @@ SchedulerCommon::addTask(       Task        * task
   //different tasks.
   // DO NOT DELETE PLEASE PLEASE PLEASE
 //  gtask_num++;
+//  std::string taskName = task->getName();
+//  taskName = std::to_string(gtask_num) + " " + taskName;
+//  task->setName(taskName);
+//
 //  printf("%d$%d$%d$%s$", d_myworld->myRank(), gtask_num, task->usesDevice(), task->getName().c_str());
 //  for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next)
 //    std::cout << dep->m_var->getName() << ",";
@@ -893,11 +897,8 @@ SchedulerCommon::addTask(       Task        * task
 //    std::cout << dep->m_var->getName() << ",";
 //  printf("\n");
 //
-//  if(gtask_num==13 || gtask_num==17 || gtask_num==36)
-//    printf("gpu init\n");
-
 //
-//  if(gtask_num > 55 && gtask_num < 90)
+//  if(gtask_num > 73 && gtask_num < 136 && gtask_num != 73)
 //	  return;
 
   // Save the DW map
