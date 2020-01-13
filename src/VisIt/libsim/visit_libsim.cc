@@ -56,6 +56,7 @@ static std::string simExecName;
 static std::string simArgs;
 static std::string simComment("Uintah Simulation");
 static std::string simUI("uintah.ui");
+static bool        simConsole{false};
 
 Dout visitdbg("VisItLibSim", "VisIt", "Interface to VisIt's libsim", true);
 
@@ -101,6 +102,10 @@ void visit_LibSimArguments(int argc, char **argv)
     else if( strcmp( argv[i], "-visit_ui" ) == 0 )
     {
       simUI = std::string( argv[++i] );
+    }
+    else if( strcmp( argv[i], "-visit_console" ) == 0 )
+    {
+      simConsole = true;
     }
     // Save off the Uintah args.
     else
@@ -268,14 +273,14 @@ void visit_InitLibSim( visit_simulation_data *sim )
     // all_node_phyical_cores.resize(nRanks);
 
     // MPI::Allgather( &my_node_phyical_cores,        1,      MPI_INT,
-    // 		    all_node_phyical_cores.data(), nRanks, MPI_INT,
-    // 		    MPI_COMM_WORLD);
+    //              all_node_phyical_cores.data(), nRanks, MPI_INT,
+    //              MPI_COMM_WORLD);
 
     // // Get the maximum number of physical core size across all
     // // processors.
     // int max_node_phyical_cores;
     // MPI::Allreduce( &my_node_phyical_cores, &max_node_phyical_cores,
-    // 		    1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    //              1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
     // The machine layout files are in the in situ source dir
     std::string path = std::string( sci_getenv("SCIRUN_OBJDIR") ) +
@@ -424,7 +429,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
     sim->maxNodes = 1;
     sim->maxCores = std::max( (unsigned int) sim->myworld->nRanks(),
-			      sysGetNumSockets() * sysGetNumCoresPerSockets() );
+                              sysGetNumSockets() * sysGetNumCoresPerSockets() );
 
     sim->nodeStart.push_back( 0 );
     sim->nodeStop.push_back( 1 );
@@ -447,7 +452,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     for( unsigned int j=0; j<sim->nodeCores.size(); ++j )
     {
       if( sim->nodeCores[j] % i == 0 )
-	++cc;
+        ++cc;
     }
     
     if( cc == sim->nodeCores.size() )
@@ -513,7 +518,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 bool visit_CheckState( visit_simulation_data *sim )
 {
-  int err = 0;
+  bool err = false;
 
   // If the simulation is running update the time step and plots.
   if( sim->simMode == VISIT_SIMMODE_RUNNING )
@@ -567,7 +572,7 @@ bool visit_CheckState( visit_simulation_data *sim )
 
   do
   {
-    /* If running do not block */
+    // If running do not block
     int blocking = (sim->runMode == VISIT_SIMMODE_RUNNING) ? 0 : 1;
 
     // State change so update
@@ -603,29 +608,22 @@ bool visit_CheckState( visit_simulation_data *sim )
       }
     }
 
-    /* Get input from VisIt or timeout so the simulation can run. */
+    // Get input from VisIt or timeout so the simulation can run.
     int visitstate;
 
-    if(sim->isProc0)
-      visitstate = VisItDetectInput(blocking, -1);
-
+    if(sim->isProc0) // Pass -1 for no console input.
+    {
+      visitstate = VisItDetectInput(blocking,
+                                    simConsole ? fileno(stdin) : -1);
+    }
+    
     if( Parallel::usingMPI() )
       Uintah::MPI::Bcast(&visitstate, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    /* Do different things depending on the output from VisItDetectInput. */
-    if(visitstate <= -1 || 5 <= visitstate)
-    {
-      std::stringstream msg;      
-      msg << "Visit libsim - CheckState cannot recover from error ("
-          << visitstate << ") !!";
-          
-      DOUT( visitdbg, msg.str().c_str() );
+    // Do different things depending on the output from VisItDetectInput.
 
-      VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
-
-      err = 1;
-    }
-    else if(visitstate == 0)
+    // No input - timed out.
+    if(visitstate == 0)
     {
       if( sim->simMode != VISIT_SIMMODE_FINISHED &&
           sim->simMode != VISIT_SIMMODE_TERMINATED )
@@ -644,26 +642,33 @@ bool visit_CheckState( visit_simulation_data *sim )
         }
       }
 
-      /* There was no input from VisIt, return control to sim. */
+      // There was no input from VisIt, return control to sim.
       break;
     }
+    // Connecting to the simulation, listen socket input.
     else if(visitstate == 1)
     {
-      /* VisIt is trying to connect to sim. */
+      // VisIt is trying to connect to sim.
       if(VisItAttemptToCompleteConnection())
       {
         visit_Initialize( sim );
       }
       else
       {
-        std::stringstream msg;
-        msg << "Visit libsim - Can not connect.";
+        // Get the error message
+        char *error = VisItGetLastError();
 
-        // DOUT( visitdbg, msg.str().c_str() );
+        std::stringstream msg;
+        msg << "Visit libsim - Can not connect. " << error;
+
+        DOUT( visitdbg, msg.str().c_str() );
 
         VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+
+        free(error);
       }
     }
+    // Process a command from the engine socket input.
     else if(visitstate == 2)
     {
       if( !visit_ProcessVisItCommand(sim) )
@@ -676,14 +681,84 @@ bool visit_CheckState( visit_simulation_data *sim )
           VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
         }
 
-        /* Start running again if VisIt closes. */
+        // Start running again if VisIt closes.
         sim->runMode = VISIT_SIMMODE_RUNNING;
 
-        /* Disconnect on an error or closed connection. */
+        // Disconnect on an error or closed connection.
         VisItDisconnect();
       }
+    }
+    // Process a command from the console socket
+    else if(visitstate == 3)
+    {
+      // Read the command from the condole
+      char cconsoleInput[1000];
 
-      /* If in step mode return control back to the simulation. */
+      if(sim->isProc0)
+      {
+        if(VisItReadConsole(1000, cconsoleInput) == VISIT_ERROR)
+        {
+          std::stringstream msg; 
+          msg << "Visit libsim - Cannot read console input.";
+
+          DOUT( visitdbg, msg.str().c_str() );
+
+          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+          VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+        }
+      }
+
+      if( Parallel::usingMPI() )
+      {
+        // Broadcast the console input to all processors.
+        Uintah::MPI::Bcast(cconsoleInput, 1000, MPI_CHAR, 0, MPI_COMM_WORLD);
+      }
+
+      // Split the console input into the command and optional args.
+      std::string cmd = std::string(cconsoleInput);
+      std::string args;
+
+      size_t found = cmd.find_first_of(" ");
+
+      // Check to see if the command has optional arguments.
+      if( found != std::string::npos )
+      {
+        args = cmd.substr(found + 1);
+        cmd = cmd.substr(0, found);
+      }
+
+      // Process the command.
+      visit_ControlCommandCallback(cmd.c_str(), args.c_str(), sim, true);
+    }
+    // Error
+    else
+    {
+      const char *errorMsg[] =
+        {"",
+         "-1 Interrupted by EINTR in select."
+         "-2 Unknown error in select.",
+         "-3 Logic error (a socket was selected but not one we set).",
+         "-4 Logic error (no descriptors but blocking).",
+         "-5 Logic error (fell through all cases)." };
+      
+      std::stringstream msg;      
+      msg << "Visit libsim - CheckState cannot recover from error : ";
+
+      if( -5 <= visitstate && visitstate <= -1 )
+        msg << std::endl << errorMsg[abs(visitstate)];
+      else
+        msg << visitstate << " Unknown error.";
+          
+      DOUT( visitdbg, msg.str().c_str() );
+
+      VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+
+      err = true;
+    }
+
+    if(visitstate == 2 || visitstate == 3)
+    {
+      // If in step mode return control back to the simulation.
       if( sim->runMode == VISIT_SIMMODE_STEP )
       {
         sim->simMode = VISIT_SIMMODE_RUNNING;
@@ -692,7 +767,7 @@ bool visit_CheckState( visit_simulation_data *sim )
         {
           VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
 
-          std::stringstream msg;          
+          std::stringstream msg;
           msg << "Visit libsim - Continuing the simulation for one time step";
           
           // DOUT( visitdbg, msg.str().c_str() );
@@ -708,14 +783,14 @@ bool visit_CheckState( visit_simulation_data *sim )
         break;
       }
 
-      /* If finished return control back to the simulation. */
+      // If finished return control back to the simulation.
       else if( sim->runMode == VISIT_SIMMODE_FINISHED )
       {
         if(sim->isProc0)
         {
           VisItUI_setValueS("SIMULATION_MODE", "Not connected", 1);
 
-          std::stringstream msg;          
+          std::stringstream msg; 
           msg << "Visit libsim - Finished the simulation ";
 
           // DOUT( visitdbg, msg.str().c_str() );
@@ -728,7 +803,7 @@ bool visit_CheckState( visit_simulation_data *sim )
         break;
       }
     }
-  } while(err == 0);
+  } while(err == false);
 
   return (sim->simMode == VISIT_SIMMODE_TERMINATED);
 }
@@ -803,7 +878,7 @@ void visit_Initialize( visit_simulation_data *sim )
   if( Parallel::usingMPI() )
     VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
 
-  /* Register command callback */
+  // Register command callback
   VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
   // These are one time initializations.
@@ -812,12 +887,12 @@ void visit_Initialize( visit_simulation_data *sim )
   VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE",     sim->timeStep,  1);
   VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE",     sim->timeStop,  1);
 
-  /* Register data access callbacks */
+  // Register data access callbacks
   VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
   VisItSetGetMesh(    visit_SimGetMesh,     (void*) sim);
   VisItSetGetVariable(visit_SimGetVariable, (void*) sim);
 
-  /* Register AMR data access callbacks */
+  // Register AMR data access callbacks
   VisItSetGetDomainBoundaries(visit_SimGetDomainBoundaries, (void*) sim);
   VisItSetGetDomainNesting   (visit_SimGetDomainNesting,    (void*) sim);
 

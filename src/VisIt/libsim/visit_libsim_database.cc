@@ -51,6 +51,27 @@
 
 namespace Uintah {
 
+void nameCleanup( std::string &str )
+{
+  size_t found;
+  while( (found = str.find_first_of(":")) != std::string::npos)
+  {
+    str[found] = '_';
+  }  
+  // while( (found = str.find_first_of(" ")) != std::string::npos)
+  // {
+  //   str[found] = '_';
+  // }  
+  // while( (found = str.find_first_of("(")) != std::string::npos)
+  // {
+  //   str[found] = '_';
+  // }  
+  // while( (found = str.find_first_of(")")) != std::string::npos)
+  // {
+  //   str[found] = '_';
+  // }  
+}
+
 // ****************************************************************************
 //  Method: visit_SimGetCustomUIData
 //
@@ -808,10 +829,13 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
           // Add in the communication across each task pairs.
           for (auto& info: mpiScheduler->getTaskGraph(k)->getDetailedTasks()->getCommInfo()) {
-    
             std::pair< std::string, std::string > taskPair = info.first;
     
             std::string taskPairName = taskPair.first + "|" + taskPair.second;
+
+            // Comment out this code so to get all tasks.
+            if( taskPairName != "All|Tasks" )
+              continue;
 
             // Add in the communication reduction runtime stats which go
             // on to the application mesh.
