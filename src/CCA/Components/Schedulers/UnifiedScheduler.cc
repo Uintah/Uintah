@@ -4095,11 +4095,14 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
 			  for (std::vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 				  const Patch * sourcePatch = (*iter).neighborPatch;
-				  validNeighbourPatches.push_back(sourcePatch);
-				  labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), sourcePatch->getID(), matls->get(j), Task::Requires);
-				  if (vars.find(lpmd) == vars.end()){
+				  //TODO: handle virtual patch case.
+				  if(m_loadBalancer->getPatchwiseProcessorAssignment(sourcePatch) == d_myworld->myRank()){ //only if its a local patch
+				    validNeighbourPatches.push_back(sourcePatch);
+				    labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), sourcePatch->getID(), matls->get(j), Task::Requires);
+				    if (vars.find(lpmd) == vars.end()){
 					  vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
-				  }
+				    }
+			      }
 			  }
              }
 
@@ -4180,6 +4183,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     //Find the patch and level objects associated with the patchID
     const int patchID = varIter->first.m_patchID;
+    bool isNeighbor = false;
     const Patch * patch = nullptr;
     const Level * level = nullptr;
     for (int i = 0; i < numPatches; i++) {
@@ -4194,6 +4198,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 		  if (validNeighbourPatches[i]->getID() == patchID) {
 			patch = validNeighbourPatches[i];
 			level = patch->getLevel();
+			isNeighbor = true;
 		  }
 		}
     }
@@ -4210,7 +4215,23 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     const int matlID = varIter->first.m_matlIndex;
 
-    unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+    int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
+
+    if(deviceNum <0) {	//patch is not present on any of the devices.
+      if(isNeighbor){	//Sometimes getValidNeighbors returns patches out of the domain (do not know why). In such cases do not raise error. Its a hack.
+   	    continue;
+      }
+      else{
+        cerrLock.lock();
+        {
+           std::cerr << "ERROR: Could not find the assigned GPU for this patch. patch: " << patch->getID() <<
+           " " << __FILE__ << ":" << __LINE__ << std::endl;
+        }
+        cerrLock.unlock();
+        exit(-1);
+      }
+    }
+
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
     OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
