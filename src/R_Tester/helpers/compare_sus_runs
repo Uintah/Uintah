@@ -30,6 +30,7 @@ compareUda_function()
   msg_comp_ckpt="PASSED"
 
   compare_flags="-as_warnings -concise -abs_tolerance $abs_tol -rel_tolerance $rel_tol $options"
+  compute_LnormFlags="$options"
 
   inputs_differ=0
   echo
@@ -109,7 +110,10 @@ compareUda_function()
     echo
     echo "Computing the Lnorms between the two udas "
     echo "======================================"
-    $sus_dir/tools/compute_Lnorm_udas $test_uda_dir $gs_uda_dir
+    echo
+    echo "$sus_dir/tools/compute_Lnorm_udas $compute_LnormFlags $test_uda_dir $gs_uda_dir"
+    
+    $sus_dir/tools/compute_Lnorm_udas $compute_LnormFlags $test_uda_dir $gs_uda_dir
 
     failed="1"
     msg_comp_uda="FAILED"

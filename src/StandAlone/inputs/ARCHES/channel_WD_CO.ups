@@ -27,7 +27,6 @@
     <save label="wVelocitySPBC"/>
     <save label="viscosityCTS"/>
     <save label="div_q"/>
-    <save label="scalar_var"/>
     <save label="eta"/>
     <save label="CO_model"/>
     <save label="CO_model_rate"/>
@@ -443,15 +442,6 @@
           <opl>3.0</opl>
           <temperature_label>temperature</temperature_label>
           <mixture_fraction_label>eta</mixture_fraction_label>
-        </model>
-        <model type="scalsim_variance" label="scalar_var">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <mixture_fraction_label>eta</mixture_fraction_label>
-          <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient>
-          <!-- Warning: not a good default value -->
         </model>
       </PropertyModels>
       <PropertyModelsV2>

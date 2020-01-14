@@ -60,6 +60,10 @@ namespace Uintah {
   void visit_ControlCommandCallback( const char *cmd,
                                      const char *args, void *cbdata );
 
+  void visit_ControlCommandCallback( const char *cmd,
+                                     const char *args, void *cbdata,
+                                     bool console );
+
   int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
   void visit_TimeStepsMaxCallback( char *val, void *cbdata );

@@ -114,138 +114,147 @@ public:
             getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr );
         }
 
-        if (foundIterator) {
-          // --- notation ---
-          // bp1: boundary cell + 1 or the interior cell one in from the boundary
-          if (bc_kind == "Dirichlet") {
 
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector bp1(*bound_ptr - insideCellDir);
-              scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-            }
+        //__________________________________
+        // bulletproofing
+        if( !foundIterator ){
+          std::ostringstream warn;
+          warn << "ERROR: setScalarValueBC: Boundary conditions were not set or specified correctly, face:" 
+               << patch->getFaceName(face) << ", variable: " << varname << ", " << " Kind: " << bc_kind  
+               << ", child: " << child << " numChildren: " << numChildren << " \n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+        
+        // --- notation ---
+        // bp1: boundary cell + 1 or the interior cell one in from the boundary
+        if (bc_kind == "Dirichlet") {
 
-          } else if (bc_kind == "Neumann") {
-
-            IntVector axes = patch->getFaceAxes(face);
-            int P_dir = axes[0];  // principal direction
-            double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-            double dx = Dx[P_dir];
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              IntVector bp1(*bound_ptr - insideCellDir);
-              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
-            }
-          } else if (bc_kind == "FromFile") {
-
-            ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name );
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-
-              IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk;
-              CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
-              if ( iter != i_scalar_bc_storage->second.values.end() ){
-
-                double file_bc_value = iter->second;
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1];
-
-              } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){
-
-                IntVector axes = patch->getFaceAxes(face);
-                int P_dir = axes[0];  // principal direction
-                double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-                double dx = Dx[P_dir];
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * i_scalar_bc_storage->second.default_value;
-
-              } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){
-
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
-
-              }
-            }
-          } else if ( bc_kind == "Tabulated") {
-
-            MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
-
-            if ( i_face != _tabVarsMap.end() ){
-
-              DoubleMap::iterator i_var = i_face->second.find( varname );
-              double tab_bc_value = i_var->second;
-
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0 * tab_bc_value - scalar[bp1];
-              }
-
-            }
-          } else if ( bc_kind == "ForcedDirichlet") {
-            /* A Dirichlet condition to fix the cell value rather than use interpolate
-            This is required to use for cqmom with velocities as internal coordiantes,
-            and may help with some radiation physics */
-
-            //Here the extra cell should be set to the face value so that the cqmom inversion
-            //doesn't return junk, with upwinding of the abscissas this should return correct face value
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-              scalar[*bound_ptr] = bc_value;
-            }
-
-          } else if ( bc_kind == "ScalarSwirl" ){
-
-            //An implementation of a swirl condition for particle velocity (DQMOM)
-
-            int idim=9999; //normal direction
-            int jdim=9999; //1st tangential
-            int kdim=9999; //2nd tangential
-
-            double sign = 1.;
-            if ( face == Patch::xminus || face == Patch::xplus ){
-              idim = 0; jdim = 1; kdim = 2;
-            } else if ( face == Patch::yminus || face == Patch::yplus ){
-              idim = 1; jdim = 2; kdim = 0;
-            } else if ( face == Patch::zminus || face == Patch::zplus ){
-              idim = 2; jdim = 0; kdim = 1;
-            }
-
-            auto swirl_i = m_swirl_map[face_name];
-            const double swrl_no = swirl_i.swirl_no;
-            const Vector swrl_cent = swirl_i.swirl_cent;
-            const int swrl_coord = swirl_i.coord;
-
-            int* coord_pt;
-            if ( swrl_coord == 1 ){
-              coord_pt = &kdim;
-              sign = -1;
-            } else {
-              coord_pt = &jdim;
-            }
-
-            const double noise = 1e-10; //avoid divide by zero
-
-            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-
-              IntVector c  = *bound_ptr;
-              IntVector cp = *bound_ptr - insideCellDir;
-              Point p = patch->cellPosition(c);
-              Vector pp; pp[0] = p.x(); pp[1] = p.y(); pp[2] = p.z();
-              Vector pt; //translated point
-              pt[idim] = 99; //error check...
-              pt[jdim] = pp[jdim] - swrl_cent[jdim];
-              pt[kdim] = pp[kdim] - swrl_cent[kdim];
-
-              double denom = pt[jdim]*pt[jdim] + pt[kdim]*pt[kdim]; denom = std::pow(denom,0.5);
-              denom = (denom > 1e-16) ? denom : denom+noise;
-
-              // NOTE: Assuming that the <value> tag in the input is the normal component
-              const double swirl_condition = sign * pt[*coord_pt] * swrl_no * bc_value / denom;
-              scalar[c] = 2.0*swirl_condition - scalar[cp];
-
-            }
-
-          } else {
-            throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            IntVector bp1(*bound_ptr - insideCellDir);
+            scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
           }
+
+        } else if (bc_kind == "Neumann") {
+
+          IntVector axes = patch->getFaceAxes(face);
+          int P_dir = axes[0];  // principal direction
+          double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+          double dx = Dx[P_dir];
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            IntVector bp1(*bound_ptr - insideCellDir);
+            scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+          }
+        } else if (bc_kind == "FromFile") {
+
+          ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name );
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+            IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk;
+            CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
+            if ( iter != i_scalar_bc_storage->second.values.end() ){
+
+              double file_bc_value = iter->second;
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1];
+
+            } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){
+
+              IntVector axes = patch->getFaceAxes(face);
+              int P_dir = axes[0];  // principal direction
+              double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+              double dx = Dx[P_dir];
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * i_scalar_bc_storage->second.default_value;
+
+            } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){
+
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
+
+            }
+          }
+        } else if ( bc_kind == "Tabulated") {
+
+          MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
+
+          if ( i_face != _tabVarsMap.end() ){
+
+            DoubleMap::iterator i_var = i_face->second.find( varname );
+            double tab_bc_value = i_var->second;
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = 2.0 * tab_bc_value - scalar[bp1];
+            }
+
+          }
+        } else if ( bc_kind == "ForcedDirichlet") {
+          /* A Dirichlet condition to fix the cell value rather than use interpolate
+          This is required to use for cqmom with velocities as internal coordiantes,
+          and may help with some radiation physics */
+
+          //Here the extra cell should be set to the face value so that the cqmom inversion
+          //doesn't return junk, with upwinding of the abscissas this should return correct face value
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            scalar[*bound_ptr] = bc_value;
+          }
+
+        } else if ( bc_kind == "ScalarSwirl" ){
+
+          //An implementation of a swirl condition for particle velocity (DQMOM)
+
+          int idim=9999; //normal direction
+          int jdim=9999; //1st tangential
+          int kdim=9999; //2nd tangential
+
+          double sign = 1.;
+          if ( face == Patch::xminus || face == Patch::xplus ){
+            idim = 0; jdim = 1; kdim = 2;
+          } else if ( face == Patch::yminus || face == Patch::yplus ){
+            idim = 1; jdim = 2; kdim = 0;
+          } else if ( face == Patch::zminus || face == Patch::zplus ){
+            idim = 2; jdim = 0; kdim = 1;
+          }
+
+          auto swirl_i = m_swirl_map[face_name];
+          const double swrl_no = swirl_i.swirl_no;
+          const Vector swrl_cent = swirl_i.swirl_cent;
+          const int swrl_coord = swirl_i.coord;
+
+          int* coord_pt;
+          if ( swrl_coord == 1 ){
+            coord_pt = &kdim;
+            sign = -1;
+          } else {
+            coord_pt = &jdim;
+          }
+
+          const double noise = 1e-10; //avoid divide by zero
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+            IntVector c  = *bound_ptr;
+            IntVector cp = *bound_ptr - insideCellDir;
+            Point p = patch->cellPosition(c);
+            Vector pp; pp[0] = p.x(); pp[1] = p.y(); pp[2] = p.z();
+            Vector pt; //translated point
+            pt[idim] = 99; //error check...
+            pt[jdim] = pp[jdim] - swrl_cent[jdim];
+            pt[kdim] = pp[kdim] - swrl_cent[kdim];
+
+            double denom = pt[jdim]*pt[jdim] + pt[kdim]*pt[kdim]; denom = std::pow(denom,0.5);
+            denom = (denom > 1e-16) ? denom : denom+noise;
+
+            // NOTE: Assuming that the <value> tag in the input is the normal component
+            const double swirl_condition = sign * pt[*coord_pt] * swrl_no * bc_value / denom;
+            scalar[c] = 2.0*swirl_condition - scalar[cp];
+
+          }
+
+        } else {
+          throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
         }
       }
     }

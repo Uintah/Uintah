@@ -271,6 +271,18 @@ void visit_SlaveProcessCallback()
 void
 visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
+
+  visit_ControlCommandCallback(cmd, args, cbdata, false);
+}
+
+//---------------------------------------------------------------------
+// visit_ControlCommandCallback
+//     Process user commands from the viewer on all processors.
+//---------------------------------------------------------------------
+void
+visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata,
+                             bool console)
+{
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
@@ -310,9 +322,18 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       output->outputTimeStep( sim->gridP, schedulerP, strlen(cmd) > 6 );
     }
     else
-      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a timestep unless the simulation has "
-                        "run for at least one time step and is stopped.", 0);
+    {
+      std::stringstream msg;
+      msg << "Can not save a timestep unless the simulation has "
+          << "run for at least one time step and is stopped.";
+
+      if( sim->isProc0 && console )
+      {
+        DOUT( visitdbg, msg.str().c_str() );
+      }
+      
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 0);
+    }
   }
   else if(strncmp(cmd, "Checkpoint", 10) == 0)
   {
@@ -334,9 +355,18 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       output->checkpointTimeStep( sim->gridP, schedulerP, strlen(cmd) > 10 );
     }
     else
-      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-                        "Can not save a checkpoint unless the simulation has "
-                        "run for at least one time step and is stopped.", 0);
+    {
+      std::stringstream msg;
+      msg << "Can not save a checkpoint unless the simulation has "
+          << "run for at least one time step and is stopped.";
+
+      if( sim->isProc0 && console )
+      {
+        DOUT( visitdbg, msg.str().c_str() );
+      }
+
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX", msg.str().c_str(), 0);
+    }
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -427,11 +457,18 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else
   {
-    // These messages are really only helpful when debugging. 
-    // std::stringstream msg;
-    // msg << "Visit libsim - ignoring command " << cmd << "  args " << args;
-    // VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
-    // VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    // This message is helpful when debugging or bad console input.
+    std::stringstream msg;
+    msg << "Visit libsim - ignoring command: '"
+        << cmd << "' with args '" << args << "'";
+
+    if( sim->isProc0 && console )
+    {
+      DOUT( visitdbg, msg.str().c_str() );
+    }
+    
+    VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
   }
   
   if( sim->runMode == VISIT_SIMMODE_RUNNING &&
@@ -441,7 +478,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
 
-      std::stringstream msg;      
+      std::stringstream msg;
       msg << "Visit libsim - Continuing the simulation";
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
@@ -456,29 +493,34 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 {
   if( Parallel::usingMPI() )
   {
-    int command;
+    int command = VISIT_COMMAND_PROCESS;
     
     if(sim->isProc0)
     {
+      // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       int success = VisItProcessEngineCommand();
+      // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
       if(success)
       {
         command = VISIT_COMMAND_SUCCESS;
         visit_BroadcastSlaveCommand(&command);
+
         return 1;
       }
       else
       {
         command = VISIT_COMMAND_FAILURE;
         visit_BroadcastSlaveCommand(&command);
+
         return 0;
       }
     }
     else
     {
-      /* Note: only through the SlaveProcessCallback callback
-       * above can the rank 0 process send a VISIT_COMMAND_PROCESS
-       * instruction to the non-rank 0 processes. */
+      // Note: only through the SlaveProcessCallback callback
+      // above can the rank 0 process send a VISIT_COMMAND_PROCESS
+      // instruction to the non-rank 0 processes.
       while(1)
       {
         visit_BroadcastSlaveCommand(&command);
@@ -486,7 +528,9 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
         switch(command)
         {
         case VISIT_COMMAND_PROCESS:
+          // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
           VisItProcessEngineCommand();
+          // std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
           break;
         case VISIT_COMMAND_SUCCESS:
           return 1;
@@ -1453,6 +1497,5 @@ void visit_LoadVariablesCallback(int val, void *cbdata)
 
   sim->loadVariables = (LoadVariables) val;
 }
-
 
 } // End namespace Uintah
