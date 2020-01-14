@@ -83,6 +83,8 @@ void usage(const std::string& badarg, const std::string& progname)
   cout << "\nUsage: "
        << " [options] <uda1> <uda2>\n\n";
   cout << "Valid options are:\n";
+  cout << "  -ignoreVariables [var1,var2....] (Skip these variables. Comma delimited list, no spaces.)\n";
+  cout << "  -compareVariables[var1,var2....] (Only compare these variables. Comma delimited list, no spaces.)\n";
   cout << "  -h[elp]\n";
   Parallel::exitAll(1);
 }
@@ -445,7 +447,20 @@ void createFile(string& filename, const int timestep)
   }
 }
 
-
+//______________________________________________________________________
+//  parse user input and create a vector of strings.  Deliminiter is ","
+vector<string>  parseVector( const char* input)
+{
+  vector<string> result;
+  stringstream ss (input);  
+  
+  while( ss.good() ){
+    string substr;
+    getline( ss, substr, ',' );
+    result.push_back( substr );
+  }
+  return result;
+}
 //______________________________________________________________________
 // Main
 //______________________________________________________________________
@@ -454,7 +469,8 @@ main(int argc, char** argv)
 {
   Uintah::Parallel::initializeManager(argc, argv);
 
-  string ignoreVar = "none";
+  vector<string> ignoreVars;
+  vector<string> compareVars;
   string filebase1;
   string filebase2;
 
@@ -463,7 +479,23 @@ main(int argc, char** argv)
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
     
-    if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
+    if(s == "-ignoreVariables") {
+      if (++i == argc){
+        usage("-ignoreVariables, no variable given", argv[0]);
+      }
+      else{
+        ignoreVars = parseVector( argv[i] );
+      }
+    }
+    else if(s == "-compareVariables") {
+      if (++i == argc){
+        usage("-compareVariables, no variable given", argv[0]);
+      }
+      else{
+        compareVars = parseVector( argv[i] );
+      }
+    }
+    else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
       usage( "", argv[0] );
     }
     else {
@@ -490,13 +522,100 @@ main(int argc, char** argv)
   vector<string> vars, vars2;
   vector<int>    num_matls, num_matls2;
   vector<const Uintah::TypeDescription*> types, types2;
+  typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
+  VarTypeVec vartypes1;
+  VarTypeVec vartypes2;
 
   da1->queryVariables( vars,  num_matls,  types );
   da2->queryVariables( vars2, num_matls2, types2 );
 
+  vartypes1.resize( vars.size() );
+  vartypes2.resize( vars2.size() );
+    
+  //__________________________________
+  // Create a list of variables minus the ignored variables
+  // uda 1
+  for (auto i = ignoreVars.begin(); i != ignoreVars.end(); i++){
+    cout << "Ignoring variable: " << *i << endl;
+  }
+
+  int count = 0;
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    auto me = find( ignoreVars.begin(), ignoreVars.end(), vars[i] );
+    // if vars[i] is NOT in the ignore Variables list make a pair
+    if (me == ignoreVars.end()){
+      vartypes1[count] = make_pair(vars[i], types[i]);
+      count ++;
+    }
+  }
+  vars.resize(count);
+  vartypes1.resize(vars.size());
+
+  // uda 2
+  count =0;
+  for (unsigned int i = 0; i < vars2.size(); i++) {
+    auto me = find( ignoreVars.begin(), ignoreVars.end(), vars2[i] );
+
+    if (me == ignoreVars.end()){
+      vartypes2[count] = make_pair(vars2[i], types2[i]);
+      count ++;
+    }
+  }
+  vars2.resize(count);
+  vartypes2.resize(vars2.size());
+  
+  //__________________________________
+  // Create a list of variables to compare if the user wants
+  // specifies a few variables.  Default is to compare all
+
+  if( compareVars.size() > 0 ){
+    for (auto i = compareVars.begin(); i != compareVars.end(); i++){
+      cout << "Variable: " << *i << endl;
+    }
+
+    // uda 1
+    count = 0;
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      auto me = find(compareVars.begin(),compareVars.end(),vars[i]);
+
+      if (me != compareVars.end()){
+        vartypes1[count] = make_pair(vars[i], types[i]);
+        count ++;
+      }
+    }
+    vars.resize(count);
+    vartypes1.resize(vars.size());
+
+    // uda 2
+    count =0;
+    for (unsigned int i = 0; i < vars2.size(); i++) {
+      auto me = find( compareVars.begin(), compareVars.end(), vars2[i] );
+
+      if (me != compareVars.end()){
+        vartypes2[count] = make_pair(vars2[i], types2[i]);
+        count ++;
+      }
+    }
+    vars2.resize(count);
+    vartypes2.resize(vars2.size());    
+  }
+
+  size_t vars1_size = vars.size();    // needed for bullet proofing
+  size_t vars2_size = vars2.size();
+  
+  
+  //__________________________________
+  //  created vector of vars to compare
   bool do_udas_have_same_nVars = true;
-  size_t vars1_size = vars.size();
-  size_t vars2_size = vars2.size();  
+
+  if ( vartypes1.size() == vartypes2.size() )  {
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vars[i]   = vartypes1[i].first;
+      types[i]  = vartypes1[i].second;
+      vars2[i]  = vartypes2[i].first;
+      types2[i] = vartypes2[i].second;
+    }    
+  }
 
   //__________________________________
   // If the number of variables in each uda
@@ -504,10 +623,6 @@ main(int argc, char** argv)
   if(vars1_size != vars2_size ){
 
     do_udas_have_same_nVars = false;
-
-    typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
-    VarTypeVec vartypes1(vars1_size);
-    VarTypeVec vartypes2(vars2_size);
 
     for (unsigned int i = 0; i < vars.size(); i++) {
       vartypes1[i] = make_pair(vars[i], types[i]);
