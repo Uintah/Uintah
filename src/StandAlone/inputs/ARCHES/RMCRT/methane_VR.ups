@@ -86,9 +86,6 @@
         <BCType label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________-->
       <!-- Bottom Annular Ring -->
@@ -118,9 +115,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________ -->
@@ -153,9 +147,6 @@
         <BCType label="radiation_temperature" var="Tabulated">
           <value> temperature </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!-- Pressure BC's -->
       <!--__________________________________  y- -->
@@ -185,9 +176,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________  Y+ -->
       <Face side="y+">
@@ -215,9 +203,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  Z- -->
@@ -247,9 +232,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________  Z+ -->
       <Face side="z+">
@@ -277,9 +259,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  X+ -->
@@ -310,9 +289,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
     </BoundaryConditions>
   </Grid>
@@ -326,7 +302,9 @@
     <ARCHES>
       <Radiometer label="divQ_rmcrt">
         <calc_frequency>    2       </calc_frequency>
-        <absk label="gas_abskg"/>
+        <absorptionCoeffs>
+          <gas_absk> abskg </gas_absk>
+        </absorptionCoeffs>
         <RMCRT type = "float">
           <algorithm type="radiometerOnly"/> 
           <randomSeed>        false       </randomSeed>

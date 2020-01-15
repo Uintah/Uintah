@@ -154,39 +154,45 @@ private:
   // These tasks are used to "fake" out the taskgraph createDetailedDependency() logic
   // Before you can require something from the new_dw there must be a compute() for that
   // variable.
-  void restartInitializeHack( const ProcessorGroup*, 
+  void restartInitializeHack( const ProcessorGroup*,
                               const PatchSubset*,
-                              const MaterialSubset*, 
-                              DataWarehouse*,  
+                              const MaterialSubset*,
+                              DataWarehouse*,
                               DataWarehouse*){};
-                              
-  void restartInitializeHack2( const ProcessorGroup*, 
+
+  void restartInitializeHack2( const ProcessorGroup*,
                                const PatchSubset*,
-                               const MaterialSubset*, 
-                               DataWarehouse*, 
+                               const MaterialSubset*,
+                               DataWarehouse*,
                                DataWarehouse*){};
 
-  //__________________________________                     
-  /** @brief Schedule compute of blackbody intensity */    
-  void sched_sigmaT4( const LevelP& level,                 
-                      SchedulerP& sched,                   
-                      Task::WhichDW temp_dw, 
-                      Task::WhichDW which_cellType_dw,              
-                      const bool includeEC = true );       
+  //__________________________________
+  /** @brief Schedule compute of blackbody intensity */
+  void sched_sigmaT4( const LevelP  & level,
+                      SchedulerP    & sched );
 
-  //__________________________________                     
-  //                                                       
-  template< class T>                                       
-  void sigmaT4( const ProcessorGroup* pg,                  
-                const PatchSubset* patches,                
-                const MaterialSubset* matls,               
-                DataWarehouse* old_dw,                     
-                DataWarehouse* new_dw,                     
-                Task::WhichDW which_temp_dw,
-                Task::WhichDW which_cellType_dw,          
-                const bool includeEC );                    
+  //__________________________________
+  //
+  template< class T>
+  void sigmaT4( const ProcessorGroup * pg,
+                const PatchSubset    * patches,
+                const MaterialSubset * matls,
+                DataWarehouse        * old_dw,
+                DataWarehouse        * new_dw );
 
+  //__________________________________
+  /** @brief Schedule compute of blackbody intensity */
+  void sched_sumAbsk( const LevelP  & level,
+                      SchedulerP    & sched  );
 
+  //__________________________________
+  //
+  template< class T>
+  void sumAbsk( const ProcessorGroup * pg,
+                const PatchSubset    * patches,
+                const MaterialSubset * matls,
+                DataWarehouse        * old_dw,
+                DataWarehouse        * new_dw );
 
   //______________________________________________________________________
   //   Boundary Conditions
@@ -238,8 +244,8 @@ private:
   //__________________________________
   //
 
-  enum Algorithm{ dataOnion, 
-                  coarseLevel, 
+  enum Algorithm{ dataOnion,
+                  coarseLevel,
                   singleLevel,
                   radiometerOnly       // VRFlux is computed at radiometer locations
                 };
@@ -258,12 +264,10 @@ private:
   MaterialManagerP       m_materialManager;
   ProblemSpecP           m_ps;                   // needed for extraSetup()
   const MaterialSet    * m_matlSet{nullptr};       //< Arches material set
-  
-  std::string  m_absk_name;
-  std::string  m_gas_temp_name;
 
-  const VarLabel * m_abskLabel{nullptr};
-  const VarLabel * m_gasTempLabel{nullptr};
+  const VarLabel * m_gasTemp_Label{nullptr};
+  const VarLabel * m_sumAbsk_Label{nullptr};
+
   const VarLabel * m_radFluxE_Label{nullptr};
   const VarLabel * m_radFluxW_Label{nullptr};
   const VarLabel * m_radFluxN_Label{nullptr};
@@ -276,14 +280,14 @@ private:
   bool m_do_partRadiation{false};
   std::vector<std::string>       m_partGas_temp_names;
   std::vector<std::string>       m_partGas_absk_names;
-  std::vector< const VarLabel*>  m_partGas_abskLabels;
-  std::vector< const VarLabel*>  m_partGas_tempLabels;
+  std::vector< const VarLabel*>  m_partGas_absk_Labels;
+  std::vector< const VarLabel*>  m_partGas_temp_Labels;
   int m_nQn_part{0};
-  int m_nPartGasLabels{0};
+  int m_nPartGasLabels{1};                                // Always at least 1 label
 
   Ghost::GhostType m_gn{Ghost::None};
   Ghost::GhostType m_gac{Ghost::AroundCells};
-  
+
   TypeDescription::Type m_FLT_DBL{TypeDescription::double_type};        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT

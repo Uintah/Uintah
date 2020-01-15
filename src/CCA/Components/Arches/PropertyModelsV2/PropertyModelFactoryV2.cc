@@ -251,7 +251,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
             std::string radiation_model;
             db_src->getAttribute("type", radiation_model);
-            if (radiation_model == "do_radiation" || radiation_model== "rmcrt_radiation"){
+            if (radiation_model == "do_radiation" ){
               std::string task_name="sumRadiation::abskt";
               TaskInterface::TaskBuilder* tsk = scinew sumRadiation::Builder( task_name, 0 );
               register_task( task_name, tsk, db_m );

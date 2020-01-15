@@ -28,7 +28,7 @@
     <save label="radiation_temperature"/>
     <!--<save label="radiationVolq"/>-->
     <save label="mixture_fraction"/>
-    <save label="abskg"/>
+    <save label="gas_abskg"/>
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -50,9 +50,6 @@
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
-        </BCType>
         <BCType var="WallBC" label="x-wall">
           <value>0.0</value>
         </BCType>
@@ -72,9 +69,6 @@
       <Face side="x+">
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
-        </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
         </BCType>
         <BCType var="OutletBC" label="the outlet">
           <value>0.0</value>
@@ -97,9 +91,6 @@
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
-        </BCType>
         <BCType var="WallBC" label="y-pressure">
           <value>0.0</value>
         </BCType>
@@ -119,9 +110,6 @@
       <Face side="y+">
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
-        </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
         </BCType>
         <BCType var="WallBC" label="y+pressure">
           <value>0.0</value>
@@ -143,9 +131,6 @@
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
         </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
-        </BCType>
         <BCType var="WallBC" label="z-pressure">
           <value>0.0</value>
         </BCType>
@@ -165,9 +150,6 @@
       <Face side="z+">
         <BCType var="Dirichlet" label="radiation_temperature">
           <value>1500.0</value>
-        </BCType>
-        <BCType var="ForcedDirichlet" label="abskg">
-          <value> 1.0 </value>
         </BCType>
         <BCType var="WallBC" label="z+pressure">
           <value>0.0</value>
@@ -227,7 +209,9 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label="abskg"/>
+            <absorptionCoeffs>
+              <gas_absk> gas_abskg </gas_absk>
+            </absorptionCoeffs>
             <RMCRT>
               <randomSeed>         true     </randomSeed>
               <nDivQRays>          2         </nDivQRays>

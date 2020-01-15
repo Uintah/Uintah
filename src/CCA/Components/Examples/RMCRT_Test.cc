@@ -204,7 +204,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     
     d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid );
     
-    d_RMCRT->BC_bulletproofing( rmcrt_ps );
+    d_RMCRT->BC_bulletproofing( rmcrt_ps, true, true );
 
 
   }
@@ -382,6 +382,16 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   Radiometer* radiometer = d_RMCRT->getRadiometer();
   bool includeExtraCells = true;  // domain for sigmaT4 computation
 
+
+  typedef std::vector<const VarLabel*> VarLabelVec;
+
+  VarLabelVec fineLevelVarLabels = { d_RMCRT->d_divQLabel,
+                                     d_RMCRT->d_boundFluxLabel,
+                                     d_RMCRT->d_radiationVolqLabel,
+                                     d_RMCRT->d_sigmaT4Label };
+                                                      
+  VarLabelVec coarseLevelVarLabels = { d_RMCRT->d_abskgLabel,
+                                       d_RMCRT->d_sigmaT4Label };
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
@@ -408,13 +418,12 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
 
     // carry forward if it's time
-    d_RMCRT->sched_CarryForward_FineLevelLabels( fineLevel, sched );
+    d_RMCRT->sched_carryForward_VarLabels( fineLevel, sched, fineLevelVarLabels );
     
     // coarse level variables
     for (int l = 0; l < maxLevels-1; ++l) {
       const LevelP& level = grid->getLevel(l);
-      d_RMCRT->sched_CarryForward_Var ( level,  sched, d_RMCRT->d_abskgLabel,   RMCRTCommon::TG_CARRY_FORWARD );
-      d_RMCRT->sched_CarryForward_Var ( level,  sched, d_RMCRT->d_sigmaT4Label, RMCRTCommon::TG_CARRY_FORWARD );
+      d_RMCRT->sched_carryForward_VarLabels( level, sched, coarseLevelVarLabels );
     }
 
     // coarsen data to the coarser levels. Do it in reverse order,
@@ -454,7 +463,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // carry forward if it's time
     for ( int l = 0; l < maxLevels; l++ ) {
       const LevelP& level = grid->getLevel(l);
-      d_RMCRT->sched_CarryForward_FineLevelLabels ( level, sched );
+      d_RMCRT->sched_carryForward_VarLabels( level, sched, fineLevelVarLabels );
      
             // coarse level only
       if( level->hasFinerLevel() ){
@@ -513,7 +522,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     d_RMCRT->set_abskg_dw_perLevel( level, Task::NewDW );
 
     // carry forward if it's time
-    d_RMCRT->sched_CarryForward_FineLevelLabels( level, sched );
+    d_RMCRT->sched_carryForward_VarLabels( level, sched, fineLevelVarLabels );
 
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );
@@ -543,11 +552,11 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     d_RMCRT->set_abskg_dw_perLevel ( level, Task::NewDW );
     
-    d_RMCRT->sched_CarryForward_Var ( level, sched, d_RMCRT->d_sigmaT4Label,        RMCRTCommon::TG_CARRY_FORWARD ); 
-    
-    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRFluxLabel,      RMCRTCommon::TG_CARRY_FORWARD);
-    
-    d_RMCRT->sched_CarryForward_Var(  level, sched, radiometer->d_VRIntensityLabel, RMCRTCommon::TG_CARRY_FORWARD);
+    VarLabelVec varLabels = { d_RMCRT->d_sigmaT4Label,
+                              radiometer->d_VRFluxLabel,
+                              radiometer->d_VRIntensityLabel};
+                                                          
+    d_RMCRT->sched_carryForward_VarLabels( level, sched, varLabels );
 
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level, sched, notUsed );

@@ -39,8 +39,7 @@
     <save label="gas_abskg" levels="-1"/>
     <save label="radiationVolq" levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
-    <save label="abskg" levels="-1"/>
-    <save label="abskgRMCRT"/>
+    <save label="RMCRT_sumAbsk"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <!--________________________________-->
@@ -131,12 +130,6 @@
         </BCType>
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -233,12 +226,6 @@
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>-0.0</value>
         </BCType>
@@ -333,12 +320,6 @@
         </BCType>
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -435,12 +416,6 @@
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -535,12 +510,6 @@
         </BCType>
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -637,12 +606,6 @@
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -737,12 +700,6 @@
         </BCType>
         <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Neumann">
           <value>-0.0</value>
@@ -841,12 +798,6 @@
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -943,12 +894,6 @@
         </BCType>
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -1047,12 +992,6 @@
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
@@ -1149,12 +1088,6 @@
         </BCType>
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -1257,12 +1190,6 @@
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
         </BCType>
@@ -1336,12 +1263,6 @@
         </BCType>
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
@@ -1417,12 +1338,6 @@
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
         </BCType>
@@ -1496,12 +1411,6 @@
         </BCType>
         <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType label="abskgRMCRT" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
         <BCType id="all" label="max_particle_temp_qn0" var="Dirichlet">
           <value>1.0</value>
@@ -1871,7 +1780,14 @@
           <!--__________________________________-->
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>3</calc_frequency>
-            <absk label="abskg"/>
+            
+            <absorptionCoeffs>
+              <gas_absk> gas_abskg </gas_absk>
+              <includeParticleRad>
+                <particle_absk> abskp  </particle_absk>
+                <part_temp_label> temperature_coal </part_temp_label>
+              </includeParticleRad>
+            </absorptionCoeffs> 
             <RMCRT type="float">
               <randomSeed>         false           </randomSeed>
               <nDivQRays>          100             </nDivQRays>
