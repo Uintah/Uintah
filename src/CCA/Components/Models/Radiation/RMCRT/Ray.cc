@@ -1902,11 +1902,6 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
     task->requires( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
     task->requires( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
 
-    // when carryforward is needed
-    task->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
-    task->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
-    task->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
-
     task->computes( d_divQLabel );
     task->computes( d_boundFluxLabel );
     task->computes( d_radiationVolqLabel );
