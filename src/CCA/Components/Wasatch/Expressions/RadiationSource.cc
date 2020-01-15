@@ -91,7 +91,7 @@ namespace WasatchCore {
     
     rmcrt_->problemSetup(radiationSpec, radiationSpec, grid);
     
-    rmcrt_->BC_bulletproofing( radiationSpec );
+    rmcrt_->BC_bulletproofing( radiationSpec, true, true );
   }
   
   //--------------------------------------------------------------------
