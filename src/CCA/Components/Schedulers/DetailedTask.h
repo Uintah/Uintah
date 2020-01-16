@@ -197,7 +197,7 @@ public:
   void assignDevice( unsigned int device );
 
   // Most tasks will only run on one device.
-  // But some, such as the data archiver task or send old data could run on multiple devices.
+  // But some, such as the data archiver task or send_old_data could run on multiple devices.
   // This is not a good idea.  A task should only run on one device.  But the capability for a task
   // to run on multiple nodes exists.
   std::set<unsigned int> getDeviceNums() const;
