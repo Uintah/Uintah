@@ -540,6 +540,11 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
   
+    //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
+    if(event == CallBackEvent::GPU){
+      markHostAsInvalid(dtask);
+    }
+
     dtask->doit(d_myworld, m_dws, plain_old_dws, event);
 
     if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -3189,67 +3194,97 @@ UnifiedScheduler::ghostCellsProcessingReady( DetailedTask * dtask )
   return true;
 }
 
-
-//______________________________________________________________________
-//
+//TODO: Check performance. It hampered the performance by 10% for Poisson with patch size 4 cubed and 64 such patches. Ran with 2 ranks, nthreads 16
 bool
 UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
 {
-
+//  printf("allHostVarsProcessingReady %s\n", dtask->getName().c_str());
   const Task * task = dtask->getTask();
 
   dtask->clearPreparationCollections();
 
-  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
-    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
-    if (type == TypeDescription::CCVariable ||
-        type == TypeDescription::NCVariable ||
-        type == TypeDescription::SFCXVariable ||
-        type == TypeDescription::SFCYVariable ||
-        type == TypeDescription::SFCZVariable)
-    {
-      int dwIndex = dependantVar->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = m_dws[dwIndex];
-      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
-      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
-      const int numPatches = patches->size();
-      const int numMatls = matls->size();
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
-          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
-            return false;
-          }
-        }
+  std::vector<DetailedTask::labelPatchMatlLevelDw> varsNeedOnHost = dtask->getVarsNeededOnHost();
+
+  for(int i=0; i< varsNeedOnHost.size(); i++){
+	  DetailedTask::labelPatchMatlLevelDw lpmld = varsNeedOnHost[i];
+	  OnDemandDataWarehouseP dw = m_dws[lpmld.dwIndex];
+      if (!(dw->isValidOnCPU(lpmld.label.c_str(), lpmld.patchID, lpmld.matlIndx, lpmld.levelIndx ))) {
+//       printf("allHostVarsProcessingReady: returns false for requires: %s %s %d %d %d \n", dtask->getName().c_str(),
+//         		dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+         return false;
       }
-    }
+
   }
 
-  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
-    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
-    if (type == TypeDescription::CCVariable ||
-        type == TypeDescription::NCVariable ||
-        type == TypeDescription::SFCXVariable ||
-        type == TypeDescription::SFCYVariable ||
-        type == TypeDescription::SFCZVariable)
-    {
-      int dwIndex = dependantVar->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = m_dws[dwIndex];
-      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
-      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
-      const int numPatches = patches->size();
-      const int numMatls = matls->size();
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
-          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
-            return false;
-          }
-        }
-      }
-    }
-  }
-
+//  printf("allHostVarsProcessingReady: returns true %s\n", dtask->getName().c_str());
   return true;
 }
+
+
+//______________________________________________________________________
+//
+//bool
+//UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
+//{
+////  printf("allHostVarsProcessingReady %s\n", dtask->getName().c_str());
+//  const Task * task = dtask->getTask();
+//
+//  dtask->clearPreparationCollections();
+//
+//  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
+//    if (type == TypeDescription::CCVariable ||
+//        type == TypeDescription::NCVariable ||
+//        type == TypeDescription::SFCXVariable ||
+//        type == TypeDescription::SFCYVariable ||
+//        type == TypeDescription::SFCZVariable)
+//    {
+//      int dwIndex = dependantVar->mapDataWarehouse();
+//      OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
+////            printf("allHostVarsProcessingReady: returns false for requires: %s %s %d %d %d \n", dtask->getName().c_str(),
+////            		dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+//            return false;
+//          }
+//        }
+//      }
+//    }
+//  }
+//
+//  for (const Task::Dependency* dependantVar = task->getModifies(); dependantVar != 0; dependantVar = dependantVar->m_next) {
+//    const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
+//    if (type == TypeDescription::CCVariable ||
+//        type == TypeDescription::NCVariable ||
+//        type == TypeDescription::SFCXVariable ||
+//        type == TypeDescription::SFCYVariable ||
+//        type == TypeDescription::SFCZVariable)
+//    {
+//      int dwIndex = dependantVar->mapDataWarehouse();
+//      OnDemandDataWarehouseP dw = m_dws[dwIndex];
+//      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+//      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+//      const int numPatches = patches->size();
+//      const int numMatls = matls->size();
+//      for (int i = 0; i < numPatches; i++) {
+//        for (int j = 0; j < numMatls; j++) {
+//          if (!(dw->isValidOnCPU(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID()))) {
+////        	printf("allHostVarsProcessingReady: returns false for modifies: %s %s %d %d %d \n", dtask->getName().c_str(),
+////        	        dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), patches->get(i)->getLevel()->getID());
+//            return false;
+//          }
+//        }
+//      }
+//    }
+//  }
+////  printf("allHostVarsProcessingReady: returns true %s\n", dtask->getName().c_str());
+//  return true;
+//}
 
 
 //bool
@@ -4053,6 +4088,7 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
   const Task* task = dtask->getTask();
   dtask->clearPreparationCollections();
+  dtask->getVarsNeededOnHost().clear();
 
   std::vector<const Patch *> validNeighbourPatches;
   // The only thing we need to process is the requires.
@@ -4414,6 +4450,9 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
       if (!dw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
           gpudw->isAllocatedOnGPU( varName.c_str(), patchID, matlID, levelID) &&
           gpudw->isValidOnGPU( varName.c_str(), patchID, matlID, levelID)) {
+
+    	DetailedTask::labelPatchMatlLevelDw lpmld(varName.c_str(), patchID, matlID, levelID, dwIndex);
+    	dtask->getVarsNeededOnHost().push_back(lpmld);
 
         const TypeDescription::Type type = dependantVar->m_var->typeDescription()->getType();
         const TypeDescription::Type datatype = dependantVar->m_var->typeDescription()->getSubType()->getType();

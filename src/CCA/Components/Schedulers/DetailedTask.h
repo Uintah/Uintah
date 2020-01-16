@@ -126,6 +126,44 @@ public:
     return m_profile_type;
   }
 
+
+  struct labelPatchMatlLevelDw {
+    std::string label;
+    int         patchID;
+    int         matlIndx;
+    int         levelIndx;
+    int         dwIndex;
+
+    labelPatchMatlLevelDw(const char * label, int patchID, int matlIndx, int levelIndx, int dwIndex) {
+      this->label = label;
+      this->patchID = patchID;
+      this->matlIndx = matlIndx;
+      this->levelIndx = levelIndx;
+      this->dwIndex = dwIndex;
+    }
+    //This so it can be used in an STL map
+    bool operator<(const labelPatchMatlLevelDw& right) const {
+      if (this->label < right.label) {
+        return true;
+      } else if (this->label == right.label && (this->patchID < right.patchID)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
+        return true;
+      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx < right.levelIndx)) {
+        return true;
+      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx == right.levelIndx) && this->dwIndex < right.dwIndex) {
+        return true;
+      } else {
+        return false;
+      }
+
+    }
+
+  };
+
+
   void doit( const ProcessorGroup                      * pg
            ,       std::vector<OnDemandDataWarehouseP> & oddws
            ,       std::vector<DataWarehouseP>         & dws
@@ -232,6 +270,8 @@ public:
   DeviceGridVariables& getVarsToBeGhostReady() { return varsToBeGhostReady; }
 
   DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
+
+  std::vector<labelPatchMatlLevelDw>& getVarsNeededOnHost() { return varsNeededOnHost;}
 
   void clearPreparationCollections();
 
@@ -357,6 +397,8 @@ private:
 
   std::vector<gpuMemoryPoolDevicePtrItem> taskCudaMemoryPoolItems;
   std::queue<void*>                       taskHostMemoryPoolItems;
+
+  std::vector<labelPatchMatlLevelDw> varsNeededOnHost;
 
 #endif
 //-----------------------------------------------------------------------------
