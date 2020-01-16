@@ -540,10 +540,12 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
     DOUT(g_task_run, myRankThread() << " Running task:   " << *dtask);
   
+#ifdef HAVE_CUDA
     //DS: 10312019: If GPU task is going to modify any variable, mark that variable as invalid on CPU.
     if(event == CallBackEvent::GPU){
       markHostAsInvalid(dtask);
     }
+#endif
 
     dtask->doit(d_myworld, m_dws, plain_old_dws, event);
 
