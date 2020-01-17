@@ -89,8 +89,16 @@ awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/WaitTime > scratch/
 
 cat > ExecTime.summary << fin
 #----------------------------------------------------------
-#   Ave:  Time spent executing task, averaged over 10 timesteps $timesteps and $count mpi ranks.
-#   Max:  Maximum time spent executing the task averaged over over 10 timesteps $timesteps.
+#   Ave:  Time spent executing task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
+#----------------------------------------------------------
+# Processes: $count
+fin
+
+cat > WaitTime.summary << fin
+#----------------------------------------------------------
+#   Ave:  The time elapsed from when this task was marked initiated until the time it actually executed (in seconds), summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Max:  Maximum over all ranks and summed over 10 timesteps $timesteps.
 #----------------------------------------------------------
 # Processes: $count
 fin
@@ -98,14 +106,14 @@ fin
 #__________________________________
 #  Compute averages and max
 computeAve_Max_function $count ExecTime
-#computeAve_Max_function $count WaitTime
+computeAve_Max_function $count WaitTime
 
 #__________________________________
 #  Sort the times 
 sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/ExecTime.summary >> ExecTime.summary
-#sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/WaitTime.summary >> WaitTime.summary
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/WaitTime.summary >> WaitTime.summary
 
 more ExecTime.summary 
-#more WaitTime.summary
+more WaitTime.summary
 
 /bin/rm -rf scratch
