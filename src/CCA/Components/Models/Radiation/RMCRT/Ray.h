@@ -125,7 +125,9 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const bool backoutTemp = false);
 
-      void BC_bulletproofing( const ProblemSpecP& rmcrtps );
+      void BC_bulletproofing( const ProblemSpecP& rmcrtps,
+                              const bool chk_temp,
+                              const bool chk_absk );
 
       template< class T, class V >
       void setBC( CCVariable<T>& Q_CC,

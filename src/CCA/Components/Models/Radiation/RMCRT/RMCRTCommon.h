@@ -201,6 +201,19 @@ namespace Uintah{
                                           UintahParams& uintahParams,
                                           ExecutionObject<ExecSpace, MemSpace>& execObj );
 
+      void sched_carryForward_VarLabels ( const LevelP & level,
+                                          SchedulerP   & sched,
+                                          const std::vector< const VarLabel* > varLabels);
+
+      template <typename ExecSpace, typename MemSpace>
+      void carryForward_VarLabels( const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   OnDemandDataWarehouse* old_dw,
+                                   OnDemandDataWarehouse* new_dw,
+                                   UintahParams& uintahParams,
+                                   ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                   const std::vector< const VarLabel* > varLabels);
+
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
@@ -253,10 +266,10 @@ namespace Uintah{
         , NUM_GRAPHS
       };
 
-      enum Algorithm{ dataOnion,            
-                      coarseLevel, 
-                      singleLevel, 
-                      radiometerOnly 
+      enum Algorithm{ dataOnion,
+                      coarseLevel,
+                      singleLevel,
+                      radiometerOnly
                     };
 
 

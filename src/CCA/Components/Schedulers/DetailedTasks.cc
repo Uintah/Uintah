@@ -116,7 +116,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon         * sc
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
 
-  m_send_old_data = scinew Task( "send old data", Task::InitialSend );
+  m_send_old_data = scinew Task( "send_old_data", Task::InitialSend );
   m_send_old_data->m_phase = 0;
   m_send_old_data->setMapping( dwmap );
 

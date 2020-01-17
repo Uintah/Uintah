@@ -23,7 +23,7 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ" levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
-    <save label="abskg"/>
+    <save label="gas_abskg"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <checkpoint cycle="2" timestepInterval="2"/>
@@ -46,9 +46,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <Face side="x+" name="x+">
         <BCType label="x+ wall" var="WallBC">
@@ -63,9 +60,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <Face side="y-" name="y-">
@@ -82,9 +76,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <Face side="y+" name="y+">
         <BCType label="y+ wall" var="WallBC">
@@ -99,9 +90,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <Face side="z-" name="z-">
@@ -118,9 +106,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <Face side="z+" name="z+">
         <BCType label="z+ wall" var="WallBC">
@@ -135,9 +120,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0. </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -239,7 +221,9 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label="abskg"/>
+            <absorptionCoeffs>
+              <gas_absk> gas_abskg </gas_absk>
+            </absorptionCoeffs>
             <RMCRT>
               <randomSeed>          false       </randomSeed>
               <nDivQRays>           10          </nDivQRays>

@@ -735,8 +735,8 @@ RMCRTCommon::updateSumI (const Level* level,
          printf( "distanceTraveled %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
          printf( "            tDelta [%g,%g,%g] \n",tDelta.x(),tDelta.y(), tDelta.z());
 
-//         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-//         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
+         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
+         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
          printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
       }
 #endif
@@ -941,6 +941,51 @@ RMCRTCommon::carryForward_FineLevelLabels( const PatchSubset* patches,
   new_dw->transferFrom(old_dw, d_radiationVolqLabel, patches, matls, execObj, replaceVar, nullptr );
   new_dw->transferFrom(old_dw, d_sigmaT4Label,       patches, matls, execObj, replaceVar, nullptr );
 }
+
+
+//______________________________________________________________________
+//    Move all computed variables from old_dw -> new_dw
+//______________________________________________________________________
+void
+RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
+                                       SchedulerP& sched ,
+                                       const std::vector< const VarLabel* > varLabels)
+{
+  std::string schedName = "RMCRTCommon::sched_carryForward_VarLabels";
+  std::string taskName  = "RMCRTCommon::carryForward_VarLabels";
+  printSchedule( level, g_ray_dbg, schedName );
+
+  Task* tsk = scinew Task( taskName, this, &RMCRTCommon::carryForward_VarLabels<UintahSpaces::CPU, UintahSpaces::HostSpace>, varLabels );
+
+  for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
+    tsk->requires( Task::OldDW, *iter, d_gn, 0 );
+    tsk->computes( *iter );
+  }
+  
+  sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
+}
+
+//______________________________________________________________________
+//
+template <typename ExecSpace, typename MemSpace>
+void
+RMCRTCommon::carryForward_VarLabels(const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    OnDemandDataWarehouse* old_dw,
+                                    OnDemandDataWarehouse* new_dw,
+                                    UintahParams& uintahParams,
+                                    ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                    const std::vector< const VarLabel* > varLabels)
+{
+  printTask( patches, patches->get(0), g_ray_dbg, "Doing RMCRTCommon::carryForward_VarLabels" );
+
+  bool replaceVar = true;
+  for ( auto iter = varLabels.begin(); iter != varLabels.end(); iter++ ){
+    new_dw->transferFrom(old_dw, *iter, patches, matls, execObj, replaceVar, nullptr );
+  }
+}
+
+
 
 //______________________________________________________________________
 // Utility task:  move variable from old_dw -> new_dw

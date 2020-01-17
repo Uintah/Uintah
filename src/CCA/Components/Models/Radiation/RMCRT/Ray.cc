@@ -102,7 +102,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   }
 
   d_PPTimerLabel = VarLabel::create( "Ray_PPTimer", PerPatch<double>::getTypeDescription() );
-  d_dbgCells.push_back( IntVector(0,0,0));
+  d_dbgCells.push_back( IntVector(1,2,2));
 
 
   //_____________________________________________
@@ -352,7 +352,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 //           and abskg
 //______________________________________________________________________
 void
-Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
+Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps,
+                        const bool chk_temp,
+                        const bool chk_absk )
 {
   if(d_onOff_SetBCs == false ) {
    return;
@@ -375,9 +377,14 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
     proc0cout << "______________________________________________________________________\n\n" << endl;
 
   } else {
-    is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
-    is_BC_specified(root_ps, d_abskgBC_tag,              mss);
-
+    
+    if( chk_temp ){
+      is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
+    }
+    if( chk_absk ){
+      is_BC_specified(root_ps, d_abskgBC_tag,              mss);
+    }
+    
     Vector periodic;
     ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
     ProblemSpecP level_ps = grid_ps->findBlock("Level");
@@ -1900,11 +1907,6 @@ void Ray::sched_Refine_Q( SchedulerP& sched,
     task->requires( Task::NewDW, d_divQLabel,          allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
     task->requires( Task::NewDW, d_boundFluxLabel,     allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
     task->requires( Task::NewDW, d_radiationVolqLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gac,1 );
-
-    // when carryforward is needed
-    task->requires( Task::OldDW, d_divQLabel,          d_gn, 0 );
-    task->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
-    task->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
 
     task->computes( d_divQLabel );
     task->computes( d_boundFluxLabel );

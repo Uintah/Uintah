@@ -34,7 +34,7 @@
     <save label="heat_loss" levels="-1"/>
     <save label="areaFraction" levels="-1"/>
     <!-- radiation properties -->
-    <save label="abskg" levels="-1"/>
+    <save label="gas_abskg" levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
     <save label="RMCRTboundFlux" levels="-1"/>
     <save label="radiationFluxE" levels="-1"/>
@@ -108,9 +108,6 @@
         <BCType label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________-->
       <!-- Bottom Annular Ring -->
@@ -140,9 +137,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________ -->
@@ -175,9 +169,6 @@
         <BCType label="radiation_temperature" var="Tabulated">
           <value> temperature </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!-- Pressure BC's -->
       <!--__________________________________  y- -->
@@ -207,9 +198,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________  Y+ -->
       <Face side="y+">
@@ -237,9 +225,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  Z- -->
@@ -269,9 +254,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
-        </BCType>
       </Face>
       <!--__________________________________  Z+ -->
       <Face side="z+">
@@ -299,9 +281,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  X+ -->
@@ -331,9 +310,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 298 </value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -407,7 +383,9 @@
           <!--       RMCRT radiation   -->
           <src label="divQ_rmcrt" type="rmcrt_radiation">
             <calc_frequency>    2       </calc_frequency>
-            <absk label="gas_abskg"/>
+            <absorptionCoeffs>
+              <gas_absk> abskg </gas_absk>
+            </absorptionCoeffs>
             <RMCRT>
               <randomSeed>        false      </randomSeed>
               <nDivQRays>         5         </nDivQRays>

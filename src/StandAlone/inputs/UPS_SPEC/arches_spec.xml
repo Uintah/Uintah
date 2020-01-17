@@ -31,17 +31,20 @@
       </VarID>
 
       <!-- A virtual radiometer using RMCRT. RMCRT may also be used as a source term for divQ, as specified in the <Sources>
-           spec for a transport equation. These two share the same spec, with the only difference (IMPORTANT) being the 
+           spec for a transport equation. These two share the same spec, with the only difference (IMPORTANT) being the
            algorithm type specified as <RMCRT><algorithm type="radiometerOnly"/></RMCRT> -->
       <Radiometer                       spec="OPTIONAL NO_DATA"
-                                        attribute1="label REQUIRED STRING"> 
+                                        attribute1="label REQUIRED STRING">
          <calc_on_all_RKsteps           spec="OPTIONAL BOOLEAN"/>     <!-- calculate radiation every RK step, default = false -->
-                               
-        <includeParticleRad             spec="OPTIONAL BOOLEAN"/>     <!--Include particle radiation in intensity calc --> 
         <calc_frequency                 spec="OPTIONAL INTEGER"/>     <!-- calculate radiation every N steps, default = 3 -->
-        <absk                           spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
-                                      
+        <absorptionCoeffs               spec="OPTIONAL NO_DATA">
+          <gas_absk                     spec="REQUIRED STRING"/>
+          <includeParticleRad           spec="OPTIONAL NO_DATA">                        <!--Include particle radiation in intensity calc -->
+            <particle_absk              spec="REQUIRED STRING"/>
+            <part_temp_label            spec="REQUIRED STRING"/>
+          </includeParticleRad>
+        </absorptionCoeffs>
+
         <!-- RMCRT -->
         <include href="Models.xml"  section="Models/RMCRT/" need_applies_to="type rmcrt_radiation" />
       </Radiometer>
@@ -50,8 +53,8 @@
       <Utilities                        spec="OPTIONAL NO_DATA">
         <utility                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'variable_math, 
-                                                                          mass_flow_rate, 
+                                        attribute2="type REQUIRED STRING 'variable_math,
+                                                                          mass_flow_rate,
                                                                           poisson'">
 
           <!-- mass_flow_rate -->
@@ -1026,7 +1029,7 @@
 
             <!-- mass flow [kg/sec]. Must be a positive value. The resulting velocity sign depends on the face. -->
             <!--    NOTE: With mass flow, you must specify flat values of scalars which
-                        determine the density value and other property values uniformly 
+                        determine the density value and other property values uniformly
                         across the inlet. -->
             <flow_rate                  spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type massflow"/>
@@ -1352,7 +1355,7 @@
                                           attribute1="value REQUIRED DOUBLE"/>
             <!-- DQMOM ONLY: Flag added automagically to the input file. This is needed for weights -->
             <no_weight_factor             spec="OPTIONAL NO_DATA"/>
-                                          
+
 
             <!-- Allow one to unscale the the solution variable by a constant. The solution variable
                  is thus the scaled value and the unscaled value is given by the user assigned label -->
@@ -1379,7 +1382,7 @@
           <!-- pre-multiplier on the transported variable -->
           <weight_factor                spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
-          <env_number                   spec="OPTIONAL NO_DATA" 
+          <env_number                   spec="OPTIONAL NO_DATA"
                                         attribute1="number REQUIRED STRING"/> <!-- FOR DQMOM ONLY. This is automagically added by the code.  -->
 
         </eqn_group>
@@ -2065,18 +2068,22 @@
             <use_dynamic_frequency      spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- Turns on a global reduction estimate the radiation time scale then resolves that scale with the specified number of steps-->
             <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart -->
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false -->
-            <includeParticleRad         spec="OPTIONAL BOOLEAN" need_applies_to="type rmcrt_radiation" />              <!--Include particle radiation in intensity calc --> 
+
             <abskt                      spec="REQUIRED NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type do_radiation"/>                                          <!-- string label of abskg, default = abskg. NOTE: This is referenced to the
                                                                                                                             total absorption coeffient. When using particles, the abskg label defined there
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
                                         <!-- used by RMCRT  -->
-            <absk                       spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"                                              
-                                        need_applies_to="type rmcrt_radiation" />                                       
-                                        
-            
+            <absorptionCoeffs           spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation">
+              <gas_absk                 spec="REQUIRED STRING"/>
+              <includeParticleRad       spec="OPTIONAL NO_DATA">                        <!--Include particle radiation in intensity calc -->
+                <particle_absk          spec="REQUIRED STRING"/>
+                <part_temp_label        spec="REQUIRED STRING"/>
+              </includeParticleRad>
+            </absorptionCoeffs>
+
+
             <DORadiationModel           spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'linearSolve, sweepSpatiallyParallel'"
                                         need_applies_to="type do_radiation " >
@@ -2108,10 +2115,10 @@
                                          attribute1="label REQUIRED STRING"
                                          attribute2="score_number REQUIRED INTEGER"
                                          need_applies_to="type pc_transport"/>
-                                         
+
             <!-- RMCRT -->
             <include href="Models.xml"  section="Models/RMCRT/" need_applies_to="type rmcrt_radiation" />
-            
+
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
@@ -2213,7 +2220,7 @@
 
         <!-- These tags are for the new DQMOM interface -->
         <DQMOM_built                  spec="OPTIONAL NO_DATA"/> <!-- This tag will be automagically added to input.xml file in the uda for restart -->
-        
+
 
         <!--If this tag is present, diffusion is computed.-->
         <diffusion                    spec="OPTIONAL NO_DATA"
