@@ -286,7 +286,7 @@ class LoadBalancer;
       const MaterialSubset* getMaterialSubset( const Level * level ) const;
 
       const VarLabel* label;
-      std::map<int, MaterialSetP> matlSet;
+      std::map<int, MaterialSetP> matlSet; // Maps Level => MaterialSet
     };
 
   private:
@@ -298,20 +298,22 @@ class LoadBalancer;
     //         PIDX related
     //! output the all of the saveLabels in PIDX format
     size_t
-    saveLabels_PIDX( const ProcessorGroup      * pg,
-                     const PatchSubset         * patches,      
-                     DataWarehouse       * new_dw,          
-                     int                   type,
-                     std::vector< SaveItem > & saveLabels,
-                     const TypeDescription::Type TD,
-                     Dir                   ldir,        // uda/timeStep/levelIndex
-                     const std::string         & dirName,     // CCVars, SFC*Vars
-                     ProblemSpecP        & doc );
+    saveLabels_PIDX( const ProcessorGroup          * pg,
+                     const PatchSubset             * patches,      
+                           DataWarehouse           * new_dw,          
+                           int                       typeOfOutput, // ie: OUTPUT, CHECKPOINT, or CHECKPOINT_GLOBAL
+                           std::vector< SaveItem > & saveLabels,
+                     const TypeDescription::Type     TD,
+                           Dir                       ldir,        // uda/timeStep/levelIndex
+                     const std::string             & dirName,     // CCVars, SFC*Vars
+                           ProblemSpecP            & doc,
+                     const int                       matlIndex = -1 ); // -1 for non-particle vars (ie, all materials)
                            
     //! Searches through "saveLabels" and returns all the SaveItems that are of the same "type".
     std::vector<DataArchiver::SaveItem> 
     findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
-                              const TypeDescription::Type     type );
+                              const TypeDescription::Type     type,
+                              const int                       matl = -1 );
       
     //! bulletproofing so user can't save unsupported var type
     void isVarTypeSupported( const std::vector< SaveItem >              & saveLabels,

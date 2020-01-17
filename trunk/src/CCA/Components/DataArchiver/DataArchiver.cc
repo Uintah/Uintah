@@ -2693,10 +2693,12 @@ DataArchiver::indexAddGlobals()
         int matlIndex = matls->get(m);
         ostringstream href;
         href << var->getName();
-        if (matlIndex < 0)
+        if (matlIndex < 0) {
           href << ".dat\0";
-        else
+        }
+        else {
           href << "_" << matlIndex << ".dat\0";
+        }
         ProblemSpecP newElem = globals->appendChild("variable");
         newElem->setAttribute("href", href.str());
         newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName().c_str(), false ) );
@@ -2832,16 +2834,16 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
                                const MaterialSubset * /*matls*/,
                                      DataWarehouse  * old_dw,
                                      DataWarehouse  * new_dw,
-                                     int              type )
+                                     int              typeOfOutput )
 {
   // IMPORTANT - this function should only be called once per
   //   processor per level per type (files will be opened and closed,
   //   and those operations are heavy on parallel file systems)
 
   // return if not an outpoint/checkpoint timestep
-  if ((!m_isOutputTimeStep && type == OUTPUT) || 
+  if ((!m_isOutputTimeStep && typeOfOutput == OUTPUT) || 
       (!m_isCheckpointTimeStep &&
-       (type == CHECKPOINT || type == CHECKPOINT_GLOBAL))) {
+       (typeOfOutput == CHECKPOINT || typeOfOutput == CHECKPOINT_GLOBAL))) {
     return;
   }
 
@@ -2863,25 +2865,25 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
 #if SCI_ASSERTION_LEVEL >= 2
   // Double-check to make sure only called once per level.
-  int levelid = type != CHECKPOINT_GLOBAL ? getLevel( patches )->getIndex() : -1;
+  int levelid = ( typeOfOutput != CHECKPOINT_GLOBAL ) ? getLevel( patches )->getIndex() : -1;
   
-  if( type == OUTPUT ) {
+  if( typeOfOutput == OUTPUT ) {
     ASSERT( m_outputCalled[ levelid ] == false );
     m_outputCalled[ levelid ] = true;
   }
-  else if( type == CHECKPOINT ) {
+  else if( typeOfOutput == CHECKPOINT ) {
     ASSERT( m_checkpointCalled[ levelid ] == false );
     m_checkpointCalled[ levelid ] = true;
   }
-  else { // type == CHECKPOINT_GLOBAL
+  else { // typeOfOutput == CHECKPOINT_GLOBAL
     ASSERT( m_checkpointGlobalCalled == false );
     m_checkpointGlobalCalled = true;
   }
 #endif
 
-  const vector< SaveItem >& saveLabels = (type == OUTPUT ?
+  const vector< SaveItem >& saveLabels = (typeOfOutput == OUTPUT ?
                                           m_saveLabels :
-                                          (type == CHECKPOINT ?
+                                          (typeOfOutput == CHECKPOINT ?
                                            m_checkpointLabels :
                                            m_checkpointGlobalLabels));
 
@@ -2898,22 +2900,29 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //__________________________________
   // debugging output
   // this task should be called once per variable (per patch/matl subset).
+
+  cout << "saving data for type of output: " << typeOfOutput << "\n";
+
+
   if (dbg.active()) {
-    if ( type == CHECKPOINT_GLOBAL ) {
+    if ( typeOfOutput == CHECKPOINT_GLOBAL ) {
       dbg << "    global";
     }
-    else /* if (type == OUTPUT || type == CHECKPOINT) */ {
-      if ( type == CHECKPOINT ) {
+    else {
+      if( typeOfOutput == CHECKPOINT ) {
         dbg << "    checkpoint ";
       }
       dbg << "    patches: ";
-      for(int p=0;p<patches->size();p++) {
-        if(p != 0)
+      for( int p=0;p<patches->size();p++ ) {
+        if(p != 0) {
           dbg << ", ";
-        if (patches->get(p) == 0)
+        }
+        if (patches->get(p) == 0) {
           dbg << -1;
-        else
+        }
+        else {
           dbg << patches->get(p)->getID();
+        }
       }
     }
     
@@ -2922,10 +2931,10 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
   //__________________________________
   Dir dir;
-  if (type == OUTPUT) {
+  if( typeOfOutput == OUTPUT ) {
     dir = m_outputDir;
   }
-  else /* if (type == CHECKPOINT || type == CHECKPOINT_GLOBAL) */ {
+  else { // CHECKPOINT || CHECKPOINT_GLOBAL
     dir = m_checkpointsDir;
   }
   
@@ -2944,7 +2953,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // Normal globals will be handled by outputGlobal, but
   // checkpoint globals call this function, and we handle them
   // differently.
-  if (type == OUTPUT || type == CHECKPOINT) {
+  if( typeOfOutput == OUTPUT || typeOfOutput == CHECKPOINT ) {
     // find the level and level number associated with this patch
     
     ASSERT(patches->size() != 0);
@@ -2967,7 +2976,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     dataFilebase = pname.str() + ".data";
     dataFilename = ldir.getName() + "/" + dataFilebase;
   }
-  else { // type == CHECKPOINT_GLOBAL
+  else { // typeOfOutput == CHECKPOINT_GLOBAL
     xmlFilename =  tdir.getName() + "/global.xml";
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
@@ -2983,7 +2992,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
 
-  if( m_outputFileFormat == UDA || type == CHECKPOINT_GLOBAL ) {
+  if( m_outputFileFormat == UDA || typeOfOutput == CHECKPOINT_GLOBAL ) {
     m_outputLock.lock(); 
     {  
       // Make sure doc's constructor is called after the lock.
@@ -3069,16 +3078,16 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
         
         //__________________________________
         // Loop through patches and materials:
-        for( int p = 0; p < (type == CHECKPOINT_GLOBAL ? 1 : patches->size() ); ++p ) {
+        for( int p = 0; p < (typeOfOutput == CHECKPOINT_GLOBAL ? 1 : patches->size() ); ++p ) {
           const Patch* patch;
           int patchID;
           
-          if( type == CHECKPOINT_GLOBAL ) {
+          if( typeOfOutput == CHECKPOINT_GLOBAL ) {
             // to consolidate into this function, force patch = 0
             patch = nullptr;
             patchID = -1;
           }
-          else { // type == OUTPUT || type == CHECKPOINT
+          else { // OUTPUT || CHECKPOINT
             patch   = patches->get( p );
             patchID = patch->getID();
           }
@@ -3096,7 +3105,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             pdElem->appendElement( "variable", var->getName() );
             pdElem->appendElement( "index",    matlIndex );
             pdElem->appendElement( "patch",    patchID );
-            pdElem->setAttribute(  "type",     TranslateVariableType( var->typeDescription()->getName().c_str(), type != OUTPUT ) );
+            pdElem->setAttribute(  "type",     TranslateVariableType( var->typeDescription()->getName().c_str(), typeOfOutput != OUTPUT ) );
             
             if( var->getBoundaryLayer() != IntVector(0,0,0) ) {
               pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
@@ -3120,7 +3129,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
             pdElem->appendElement("start", cur);
             
             // output data to data file
-            OutputContext oc(fd, filename, cur, pdElem, m_outputDoubleAsFloat && type != CHECKPOINT);
+            OutputContext oc(fd, filename, cur, pdElem, m_outputDoubleAsFloat && typeOfOutput != CHECKPOINT);
             totalBytes += dw->emit(oc, var, matlIndex, patch);
 
             pdElem->appendElement("end", oc.cur);
@@ -3171,7 +3180,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
   //      Should we be using calloc() instead of malloc+memset
   //
-  if ( m_outputFileFormat == PIDX && type != CHECKPOINT_GLOBAL ) {
+  if ( m_outputFileFormat == PIDX && typeOfOutput != CHECKPOINT_GLOBAL ) {
   
     //__________________________________
     // create the xml dom for this variable
@@ -3183,27 +3192,62 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     }  
       
     PIDXOutputContext pidx;
-    vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
+    vector<TypeDescription::Type> vartypes = pidx.getSupportedVariableTypes();
     
     // Bulletproofing
-    isVarTypeSupported( saveLabels, GridVarTypes );
+    isVarTypeSupported( saveLabels, vartypes );
     
-    // Loop over the grid variable types.
-    for( vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter != GridVarTypes.end(); ++iter ) {
+    // Loop over the variable types to be saved...
+    for( vector<TypeDescription::Type>::iterator iter = vartypes.begin(); iter != vartypes.end(); ++iter ) {
 
       const TypeDescription::Type & TD = *iter;
-      
-      // Find all of the variables of this type only.
-      vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD );
-      
-      if( saveTheseLabels.size() > 0 ) {
-        string dirName = pidx.getDirectoryName( TD );
 
-        Dir myDir = ldir.getSubdir( dirName );
+      cout << "HANDLING VAR OF TYPE " << TypeDescription::toString( TD ) << "\n";
+      
+      if( TD == TypeDescription::ParticleVariable ) {
+
+          // Need to loop over all materials and handle them one at a time...
+          
+          // FIXME: the following loop assumes that material indices always start at 0... is that true?
+          for( unsigned int matlIndex = 0; matlIndex < m_materialManager->getNumMatls(); matlIndex++ ) { 
+
+              cout << "for particle var: handle matl: " << matlIndex << "\n";
+
+              // Find all of the variables of this type only.
+              vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD, matlIndex );
+      
+              if( saveTheseLabels.size() > 0 ) {
+                  string dirName = pidx.getDirectoryName( TD );
+
+                  Dir myDir = ldir.getSubdir( dirName );
         
-        totalBytes += saveLabels_PIDX( pg, patches, dw, type,
-                                       saveTheseLabels, TD, ldir, dirName, doc );
-      } 
+                  totalBytes += saveLabels_PIDX( pg, patches, dw, typeOfOutput,
+                                                 saveTheseLabels, TD, ldir, dirName, doc, matlIndex );
+              }
+          }
+      }
+      else { // Not Particle Variable
+          
+          cout << "save non particle var\n";
+
+          // Find all of the variables of this type only.
+          vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD );
+      
+          if( saveTheseLabels.size() > 0 ) {
+
+              string dirName = pidx.getDirectoryName( TD );
+
+              Dir myDir = ldir.getSubdir( dirName );
+        
+              totalBytes += saveLabels_PIDX( pg, patches, dw, typeOfOutput,
+                                             saveTheseLabels, TD, ldir, dirName, doc );
+
+              cout << "done save non particle var\n";
+          }
+          else { // debug...
+              cout << "no vars of type " << TypeDescription::toString( TD ) <<  " to save...\n";
+          }
+      }
     }
 
     // write the xml
@@ -3219,15 +3263,15 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   double myTime   = timer().seconds();
   double byteToMB = 1024 * 1024;
 
-  if( type == OUTPUT ) {
+  if( typeOfOutput == OUTPUT ) {
     (*m_runtimeStats)[ OutputIOTime ] += myTime;
     (*m_runtimeStats)[ OutputIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
-  else if( type == CHECKPOINT ) {
+  else if( typeOfOutput == CHECKPOINT ) {
     (*m_runtimeStats)[ CheckpointIOTime ] += myTime;
     (*m_runtimeStats)[ CheckpointIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
-  else { // type == CHECKPOINT_GLOBAL
+  else { // typeOfOutput == CHECKPOINT_GLOBAL
     (*m_runtimeStats)[ CheckpointGlobalIOTime ] += myTime;
     (*m_runtimeStats)[ CheckpointGlobalIORate ] += (double) totalBytes / (byteToMB * myTime);
   }
@@ -3246,27 +3290,32 @@ size_t
 DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
                                const PatchSubset             * patches,      
                                      DataWarehouse           * new_dw,          
-                                     int                       type,
+                                     int                       typeOfOutput,
                                      std::vector< SaveItem > & saveLabels,
                                const TypeDescription::Type     TD,
                                      Dir                       ldir,        // uda/timestep/levelIndex
                                const std::string             & dirName,     // CCVars, SFC*Vars
-                                     ProblemSpecP            & doc )
+                                     ProblemSpecP            & doc, 
+                               const int                       matl /* = -1 */ )
 {
-
   size_t totalBytesSaved = 0;
 #ifdef HAVE_PIDX
   if( dbgPIDX.active() ) {
     dbgPIDX << "saveLabels_PIDX()\n";
   }
 
+
+  cout << "saveLabels_PIDX() called for var type " << TypeDescription::toString( TD ) << "\n";
+  cout << "                  asking to save matl: " << matl << "\n";
+
+
   const int timeStep = m_application->getTimeStep();
 
   const int     levelid = getLevel( patches )->getIndex(); 
   const Level * level   = getLevel( patches );
 
-  int         nSaveItems =  saveLabels.size();
-  vector<int> nSaveItemMatls( nSaveItems );
+  int         nSaveItems = 0; // =  saveLabels.size();
+  vector<int> nSaveItemMatls; //( nSaveItems );
 
   int rank = pg->myRank();
   int rc = -9;               // PIDX return code
@@ -3276,36 +3325,62 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
   // be output. Each variable can have a different number of 
   // materials and live on a different number of levels
   
-  int count = 0;
   int actual_number_of_variables = 0;
   
   for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
+
     const MaterialSubset* var_matls = saveIter->getMaterialSubset( level );
 
     if (var_matls == nullptr) {
       continue;
     }
 
-    nSaveItemMatls[ count ] = var_matls->size();
+    cout << "                  var name is: " << saveIter->label->getName() << "\n";
+    cout << "                  matls for this var are: " << *var_matls << "\n";
 
-    ++count;
-    actual_number_of_variables += var_matls->size();
+    if( TD == TypeDescription::ParticleVariable && !var_matls->contains( matl ) ) {
+        cout << "                  skipping this var\n";
+        continue;
+    }
+
+    if( TD == TypeDescription::ParticleVariable ) {
+
+        nSaveItemMatls.push_back( 1 );
+        actual_number_of_variables++;
+    }
+    else {
+        nSaveItemMatls.push_back( var_matls->size() );
+        actual_number_of_variables += var_matls->size();
+    }
+    nSaveItems++;
   }
+
+  cout << "actual_number_of_variables is: " << actual_number_of_variables << "\n";
+  cout << "num of save items is: " << nSaveItems << "\n";
 
   if( actual_number_of_variables == 0 ) {
     // Don't actually have any variables of the specified type on this level.
     return totalBytesSaved;
   }
 
+  string particleExtensionName = "";
+  if( TD == TypeDescription::ParticleVariable ) {
+      // const MaterialSubset * mss = saveIter->getMaterialSet( level )->getUnion();
+
+      std::ostringstream s;
+      s << matl;
+      particleExtensionName = "_m" + s.str(); // For particle variables, add "_m#" to the name of PIDX file.
+  }
+
   // must use this format or else file won't be written
   // inside of uda
   Dir myDir = ldir.getSubdir( dirName );                   // uda/timestep/level/<CCVars, SFC*Vars>
   string idxFilename ( dirName + ".idx" );                 // <CCVars, SFC*Vars....>.idx
-  string full_idxFilename( myDir.getName() + ".idx" );     // uda/timestep/level/<CCVars, SFC*Vars...>.idx
+  string full_idxFilename( myDir.getName() + particleExtensionName + ".idx" ); // uda/timestep/level/<CCVars, SFC*Vars...>.idx
   
   PIDXOutputContext pidx;
 
-  pidx.setOutputDoubleAsFloat( (m_outputDoubleAsFloat && type == OUTPUT) );  
+  pidx.setOutputDoubleAsFloat( (m_outputDoubleAsFloat && typeOfOutput == OUTPUT) );  
 
   //__________________________________
   // define the level extents for this variable type
@@ -3320,9 +3395,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
   m_PIDX_flags.print();
   
-  if( TD != Uintah::TypeDescription::ParticleVariable ) {
+  if( TD != TypeDescription::ParticleVariable ) {
     
-    pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, level_size, type );
+    pidx.initialize( full_idxFilename, timeStep, /*d_myworld->getComm()*/m_pidxComms[ levelid ], m_PIDX_flags, level_size, typeOfOutput );
 
     // reorder variables to have the particle position variable as first (currently an assumption in PIDX)
     for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
@@ -3334,8 +3409,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
     }
 
   }
-  else {
-    pidx.initializeParticles( full_idxFilename, timeStep, m_pidxComms[ levelid ], level_size, type );
+  else { // Handle Particle Variable
+    pidx.initializeParticles( full_idxFilename, timeStep, m_pidxComms[ levelid ], level_size, typeOfOutput );
 
     PIDX_physical_point physical_global_size;
     IntVector zlo = { 0, 0, 0 };
@@ -3444,8 +3519,25 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
     //__________________________________
     //  materials loop
-    for( int m = 0; m < var_matls->size(); m++ ) {
+
+
+    /////////////////////
+    // qwerty FIXME... for particle vars this should only do one iteration based on "matl"
+    int num_matls = var_matls->size();
+    if( TD == TypeDescription::ParticleVariable ) {
+        num_matls = 1;
+    }
+    /////////////////////
+
+    for( int m = 0; m < num_matls; m++ ) {
       int matlIndex = var_matls->get(m);
+
+      if( TD == TypeDescription::ParticleVariable ) {
+          // cout << "handling particle var for material " << matl << " (note matlIndex was: " << matlIndex << ")\n";
+          matlIndex = matl; // FIXME: not sure if this is necessary... but it might be, need to determine.
+          // cout << "now matlIndex is " << matlIndex << "\n";
+      }
+
       string var_mat_name;
 
       if( m != matlIndex ) {
@@ -3456,7 +3548,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
       s << matlIndex; // FIXME: originally this was just using 'm'... We think matlIndex is correct...???
       var_mat_name = label->getName() + "_m" + s.str();
     
-      bool isParticle = ( label->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable );
+      // bool isParticle = ( label->typeDescription()->getType() == TypeDescription::ParticleVariable );
 
       rc = PIDX_variable_create((char*) var_mat_name.c_str(),
                                 /* isParticle, <- Add this to PIDX spec*/
@@ -3467,19 +3559,18 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
                             "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",
                             __FILE__, __LINE__);
       
-      patch_buffer[vcm] =
-        (unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
+      patch_buffer[vcm] = (unsigned char**) malloc(sizeof(unsigned char*) * patches->size());
 
       //__________________________________
       //  patch Loop
-      for( int p = 0; p < (type == CHECKPOINT_GLOBAL ? 1 : patches->size()); ++p ) {
+      for( int p = 0; p < (typeOfOutput == CHECKPOINT_GLOBAL ? 1 : patches->size()); ++p ) {
         const Patch* patch;
 
-        if (type == CHECKPOINT_GLOBAL) {
-          patch = 0;
+        if( typeOfOutput == CHECKPOINT_GLOBAL ) {
+          patch = nullptr;
         }
         else {
-          patch = patches->get(p);      
+          patch = patches->get( p );      
           PIDX_point patchOffset;
           PIDX_point patchSize;
           PIDXOutputContext::patchExtents patchExts;
@@ -3491,7 +3582,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
           //__________________________________
           // debugging
           if( dbgPIDX.active() && isProc0_macro ) {
-            proc0cout << rank <<" taskType: " << type << "  PIDX:  "
+            proc0cout << rank <<" taskType: " << typeOfOutput << "  PIDX:  "
                       << setw(15) << label->getName() << "  " << td->getName() 
                       << " Patch: " << patch->getID()
                       << " L-" << level->getIndex() 
@@ -3509,6 +3600,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
             if( label->getName() == m_particlePositionName ) {
               // int var_index;
               // PIDX_get_current_variable_index( pidx.file, &var_index );
+              cout << "taking care of particle position variable\n";
               PIDX_set_particles_position_variable_index( pidx.d_file, vc );//var_index );
             }
             
@@ -3520,7 +3612,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
             uint64_t num_particles = arraySize / ( sample_per_variable * the_size );
 
-            //printf("writing %lld particles for variable %d in file %s\n", num_particles, vc, label->getName().c_str());
+            printf( "registering for writing data for %ld particles for variable %s in file %s\n",
+                    num_particles, label->getName().c_str(), full_idxFilename.c_str() );
 
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
 
@@ -3639,18 +3732,16 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
   
   //__________________________________
   // free buffers
-  for (int i=0;i<actual_number_of_variables;i++)
-  {
-    for(int p=0;p<(type==CHECKPOINT_GLOBAL?1:patches->size());p++)
-    {
+  for( int i = 0; i < actual_number_of_variables; i++ ) {
+    for( int p = 0; p < (typeOfOutput == CHECKPOINT_GLOBAL ? 1 : patches->size() ); p++ ) {
       free( patch_buffer[i][p] );
-      patch_buffer[i][p] = 0;
+      patch_buffer[i][p] = nullptr;
     }
     free( patch_buffer[i] );
-    patch_buffer[i] = 0;
+    patch_buffer[i] = nullptr;
   }
 
-  free(patch_buffer);
+  free( patch_buffer );
   patch_buffer = 0;
 
   //__________________________________
@@ -3676,17 +3767,57 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 //  Return a vector of saveItems with a common typeDescription
 std::vector<DataArchiver::SaveItem> 
 DataArchiver::findAllVariablesWithType( const std::vector< SaveItem > & saveLabels,
-                                        const TypeDescription::Type     type )
+                                        const TypeDescription::Type     type,
+                                        const int                       matl /* = -1 */ )
 {
   std::vector< SaveItem > myItems;
+
+  cout << "findAllVariablesWithType for matl: " << matl << "\n";
 
   for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
     const VarLabel* label = saveIter->label;
 
     TypeDescription::Type myType = label->typeDescription()->getType();
-    
+
+    cout << "findAllVariablesWithType(): var " << label->getName() << " has type " << TypeDescription::toString( myType ) << "\n";
+    cout << "                            looking for type " << TypeDescription::toString( type ) << "\n";
+
     if( myType == type ){
-      myItems.push_back( *saveIter );
+
+        cout << "found correct type\n";
+
+        ////// Dd:
+        if( type == TypeDescription::ParticleVariable ) {
+
+            cout << "it is a particle var\n";
+            // For particle variables, only add it to the list if the material index also matches...
+
+            // int level = -1; // FIXME: need to know the level???
+
+            for( auto x = saveIter->matlSet.begin(); x != saveIter->matlSet.end(); x++ ) {
+                cout << "data: " << x->first << " ---- " << x->second << "\n";
+            }
+
+            cout << "HERE: " << saveIter->matlSet.size() << "\n";
+            const MaterialSet * ms = (saveIter->matlSet.begin())->second.get_rep();
+            cout << "here\n";
+            cout << "ms is " << ms << "\n";
+            const MaterialSubset * mss = ms->getUnion();
+            cout << "mss is " << *mss << "\n";
+
+            if( matl == -1 ) { throw InternalError( "matl should not be -1 for particle vars...???" , __FILE__, __LINE__); }
+
+            if( mss->contains( matl ) ) {
+                myItems.push_back( *saveIter );
+            }
+            else {
+                cout << "skipping particle var " << label->getName() << " as it does not exist for matl " << matl << "\n";
+            }
+        }
+        ////// end Dd
+        else {
+            myItems.push_back( *saveIter );
+        }
     }
   }
   return myItems;

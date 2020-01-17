@@ -150,7 +150,7 @@ MaterialManager::parseAndLookupMaterial( ProblemSpecP& params,
   // for single material problems return matl 0
   Material* result = getMaterial(0);
 
-  if (getNumMatls() > 1) {
+  if( getNumMatls() > 1 ) {
     std::string matlname;
     if (!params->get(name, matlname)) {
       throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
@@ -192,12 +192,14 @@ MaterialManager::allMaterials( std::string name ) const
 }
 
 unsigned int
-MaterialManager::getNumMatls( std::string name ) const
+MaterialManager::getNumMatls( const std::string & name ) const
 {
-  if( m_app_matls.find(name) != m_app_matls.end() )
-    return (unsigned int) m_app_matls.at(name).size();
-  else
+  if( m_app_matls.find( name ) != m_app_matls.end() ) {
+    return (unsigned int) m_app_matls.at( name ).size();
+  }
+  else {
     return 0;
+  }
 }
   
 Material*

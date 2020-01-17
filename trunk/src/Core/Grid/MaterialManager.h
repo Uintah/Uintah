@@ -85,8 +85,9 @@ public:
 
   const MaterialSet* allMaterials( std::string name ) const;
 
-  unsigned int getNumMatls( std::string name ) const;
-  
+  unsigned int getNumMatls( const std::string & name ) const;
+  unsigned int getNumMatls() const { return (unsigned int) m_all_matls.size(); }
+
   Material* getMaterial(std::string name, int idx) const;
 
   // These register return materials from all apps.
@@ -94,13 +95,7 @@ public:
   
   const MaterialSet* allMaterials() const;
 
-  unsigned int getNumMatls() const {
-    return (unsigned int) m_all_matls.size();
-  }
-
-  Material* getMaterial(int idx) const {
-    return m_all_matls[idx];
-  }
+  Material* getMaterial(int idx) const { return m_all_matls[idx]; }
 
   Material* getMaterialByName(const std::string& name) const;
 
