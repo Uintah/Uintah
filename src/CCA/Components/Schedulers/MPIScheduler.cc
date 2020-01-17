@@ -875,6 +875,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     }
     else {
       initiateTask( dtask, abort, abort_point, iteration );
+      dtask->markInitiated();
       processMPIRecvs( WAIT_ALL );
       ASSERT( m_recvs.size() == 0u );
       runTask( dtask, iteration );
