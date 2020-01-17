@@ -961,22 +961,22 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
       old_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
     }
 
-    CCVariable< T > sumAbsk;
-    new_dw->allocateAndPut( sumAbsk, m_sumAbsk_Label, m_matl, patch);
-    sumAbsk.initialize(0.0);
+    CCVariable<double> sumAbsk_tmp;
+    new_dw->allocateTemporary( sumAbsk_tmp, patch, m_gn, 0);
+    sumAbsk_tmp.initialize(0.0);
 
     //__________________________________
     //  Domain interior
     for (int i=0; i< m_nPartGasLabels; i++){
-      
+
       for ( auto iter = patch->getCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
-      
-        if (volFrac[c] > 1e-16){
-          sumAbsk[c] += (T) partGas_absk[i][c];   // gas
+
+        if (volFrac[c] > 1e-16){ 
+          sumAbsk_tmp[c] += partGas_absk[i][c];     // gas
         }   
         else{
-          sumAbsk[c] = 1.0;                       // walls  HARDWIRED
+          sumAbsk_tmp[c] = 1.0;                    // walls  HARDWIRED
         }
       }
     }
@@ -993,8 +993,18 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
 
       for( auto iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
         const IntVector& c = *iter;
-        sumAbsk[c] = 1.0;        
+        sumAbsk_tmp[c] = 1.0;        
       }
+    }
+    
+    //__________________________________
+    //  convert to double or float
+    CCVariable< T > sumAbsk;
+    new_dw->allocateAndPut( sumAbsk, m_sumAbsk_Label, m_matl, patch);
+    
+    for ( auto iter = patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      sumAbsk[c] = (T) sumAbsk_tmp[c];
     }
   }
 }
