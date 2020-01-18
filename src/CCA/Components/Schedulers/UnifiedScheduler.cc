@@ -4428,7 +4428,16 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
       hack_foundAComputes = true;
     }
 
-    // Poisson hack:
+    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
+    if ( (varName == "uVelocity_cc") ||
+         (varName == "vVelocity_cc") ||
+         (varName == "wVelocity_cc")
+       )
+    {
+      hack_foundAComputes = true;
+    }
+
+    // poisson1.ups hack:
     if ( (varName == "phi")      ||
          (varName == "residual")
        )
