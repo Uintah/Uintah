@@ -2901,7 +2901,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   // debugging output
   // this task should be called once per variable (per patch/matl subset).
 
-  cout << "saving data for type of output: " << typeOfOutput << "\n";
+  //cout << "saving data for type of output: " << typeOfOutput << "\n";
 
 
   if (dbg.active()) {
@@ -3202,7 +3202,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
       const TypeDescription::Type & TD = *iter;
 
-      cout << "HANDLING VAR OF TYPE " << TypeDescription::toString( TD ) << "\n";
+      //cout << "HANDLING VAR OF TYPE " << TypeDescription::toString( TD ) << "\n";
       
       if( TD == TypeDescription::ParticleVariable ) {
 
@@ -3211,7 +3211,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
           // FIXME: the following loop assumes that material indices always start at 0... is that true?
           for( unsigned int matlIndex = 0; matlIndex < m_materialManager->getNumMatls(); matlIndex++ ) { 
 
-              cout << "for particle var: handle matl: " << matlIndex << "\n";
+              //cout << "for particle var: handle matl: " << matlIndex << "\n";
 
               // Find all of the variables of this type only.
               vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD, matlIndex );
@@ -3228,7 +3228,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
       }
       else { // Not Particle Variable
           
-          cout << "save non particle var\n";
+          // cout << "save non particle var\n";
 
           // Find all of the variables of this type only.
           vector<SaveItem> saveTheseLabels = findAllVariablesWithType( saveLabels, TD );
@@ -3242,11 +3242,11 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
               totalBytes += saveLabels_PIDX( pg, patches, dw, typeOfOutput,
                                              saveTheseLabels, TD, ldir, dirName, doc );
 
-              cout << "done save non particle var\n";
+              // cout << "done save non particle var\n";
           }
-          else { // debug...
-              cout << "no vars of type " << TypeDescription::toString( TD ) <<  " to save...\n";
-          }
+          // else { // debug...
+          //     cout << "no vars of type " << TypeDescription::toString( TD ) <<  " to save...\n";
+          // }
       }
     }
 
@@ -3302,12 +3302,9 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 #ifdef HAVE_PIDX
   if( dbgPIDX.active() ) {
     dbgPIDX << "saveLabels_PIDX()\n";
+    cout << "saveLabels_PIDX() called for var type " << TypeDescription::toString( TD ) << "\n";
+    cout << "                  asking to save matl: " << matl << "\n";
   }
-
-
-  cout << "saveLabels_PIDX() called for var type " << TypeDescription::toString( TD ) << "\n";
-  cout << "                  asking to save matl: " << matl << "\n";
-
 
   const int timeStep = m_application->getTimeStep();
 
@@ -3335,11 +3332,11 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
       continue;
     }
 
-    cout << "                  var name is: " << saveIter->label->getName() << "\n";
-    cout << "                  matls for this var are: " << *var_matls << "\n";
+    // cout << "                  var name is: " << saveIter->label->getName() << "\n";
+    // cout << "                  matls for this var are: " << *var_matls << "\n";
 
     if( TD == TypeDescription::ParticleVariable && !var_matls->contains( matl ) ) {
-        cout << "                  skipping this var\n";
+        //cout << "                  skipping this var\n";
         continue;
     }
 
@@ -3355,8 +3352,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
     nSaveItems++;
   }
 
-  cout << "actual_number_of_variables is: " << actual_number_of_variables << "\n";
-  cout << "num of save items is: " << nSaveItems << "\n";
+  // cout << "actual_number_of_variables is: " << actual_number_of_variables << "\n";
+  // cout << "num of save items is: " << nSaveItems << "\n";
 
   if( actual_number_of_variables == 0 ) {
     // Don't actually have any variables of the specified type on this level.
@@ -3440,11 +3437,11 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
   //__________________________________
   //  PIDX Diagnostics
-  //if( rank == 0 && dbgPIDX.active()) {
+  if( rank == 0 && dbgPIDX.active()) {
     printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
     printf("[PIDX] levelExtents = %d %d %d\n", (hi.x() - lo.x()), (hi.y() - lo.y()), (hi.z() - lo.z()) );
     printf("[PIDX] Total number of variable = %d\n", nSaveItems);
-  //}
+  }
 
   //__________________________________
   //
@@ -3540,9 +3537,10 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
       string var_mat_name;
 
-      if( m != matlIndex ) {
-          cout << "This is strange, m is " << m << " and matlIndex is " << matlIndex << " for var: " << label->getName() << "\n";
-      }
+      // debug
+      // if( m != matlIndex ) {
+      //     cout << "This is strange, m is " << m << " and matlIndex is " << matlIndex << " for var: " << label->getName() << "\n";
+      // }
 
       std::ostringstream s;
       s << matlIndex; // FIXME: originally this was just using 'm'... We think matlIndex is correct...???
@@ -3600,7 +3598,7 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
             if( label->getName() == m_particlePositionName ) {
               // int var_index;
               // PIDX_get_current_variable_index( pidx.file, &var_index );
-              cout << "taking care of particle position variable\n";
+              //cout << "taking care of particle position variable\n";
               PIDX_set_particles_position_variable_index( pidx.d_file, vc );//var_index );
             }
             
@@ -3612,8 +3610,8 @@ DataArchiver::saveLabels_PIDX( const ProcessorGroup          * pg,
 
             uint64_t num_particles = arraySize / ( sample_per_variable * the_size );
 
-            printf( "registering for writing data for %ld particles for variable %s in file %s\n",
-                    num_particles, label->getName().c_str(), full_idxFilename.c_str() );
+            //printf( "registering for writing data for %ld particles for variable %s in file %s\n",
+                    // num_particles, label->getName().c_str(), full_idxFilename.c_str() );
 
             patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
 
@@ -3772,47 +3770,47 @@ DataArchiver::findAllVariablesWithType( const std::vector< SaveItem > & saveLabe
 {
   std::vector< SaveItem > myItems;
 
-  cout << "findAllVariablesWithType for matl: " << matl << "\n";
+  //cout << "findAllVariablesWithType for matl: " << matl << "\n";
 
   for( vector< SaveItem >::const_iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter) {
     const VarLabel* label = saveIter->label;
 
     TypeDescription::Type myType = label->typeDescription()->getType();
 
-    cout << "findAllVariablesWithType(): var " << label->getName() << " has type " << TypeDescription::toString( myType ) << "\n";
-    cout << "                            looking for type " << TypeDescription::toString( type ) << "\n";
+    // cout << "findAllVariablesWithType(): var " << label->getName() << " has type " << TypeDescription::toString( myType ) << "\n";
+    // cout << "                            looking for type " << TypeDescription::toString( type ) << "\n";
 
     if( myType == type ){
 
-        cout << "found correct type\n";
+        // cout << "found correct type\n";
 
         ////// Dd:
         if( type == TypeDescription::ParticleVariable ) {
 
-            cout << "it is a particle var\n";
+            // cout << "it is a particle var\n";
             // For particle variables, only add it to the list if the material index also matches...
 
             // int level = -1; // FIXME: need to know the level???
 
-            for( auto x = saveIter->matlSet.begin(); x != saveIter->matlSet.end(); x++ ) {
-                cout << "data: " << x->first << " ---- " << x->second << "\n";
-            }
+            // for( auto x = saveIter->matlSet.begin(); x != saveIter->matlSet.end(); x++ ) {
+            //     cout << "data: " << x->first << " ---- " << x->second << "\n";
+            // }
 
-            cout << "HERE: " << saveIter->matlSet.size() << "\n";
+            // cout << "HERE: " << saveIter->matlSet.size() << "\n";
             const MaterialSet * ms = (saveIter->matlSet.begin())->second.get_rep();
-            cout << "here\n";
-            cout << "ms is " << ms << "\n";
+            // cout << "here\n";
+            // cout << "ms is " << ms << "\n";
             const MaterialSubset * mss = ms->getUnion();
-            cout << "mss is " << *mss << "\n";
+            // cout << "mss is " << *mss << "\n";
 
             if( matl == -1 ) { throw InternalError( "matl should not be -1 for particle vars...???" , __FILE__, __LINE__); }
 
             if( mss->contains( matl ) ) {
                 myItems.push_back( *saveIter );
             }
-            else {
-                cout << "skipping particle var " << label->getName() << " as it does not exist for matl " << matl << "\n";
-            }
+            // else {
+            //     cout << "skipping particle var " << label->getName() << " as it does not exist for matl " << matl << "\n";
+            // }
         }
         ////// end Dd
         else {
