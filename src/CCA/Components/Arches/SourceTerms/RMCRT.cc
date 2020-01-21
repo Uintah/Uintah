@@ -266,27 +266,17 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   proc0cout << "\n __________________________________ RMCRT SETTINGS\n"
              <<"  - Temperature label:          " << m_partGas_temp_names[0] << "\n"
              <<"  - gas absorption Coeff label: " <<  m_partGas_absk_names[0] << "\n"
-             <<"  - The boundary condition for the absorption coeff used in the RMRT intensity calculation is 1.0.\n";
+             <<"  - The boundary condition for the absorption coeff used in the RMCRT intensity calculation is 1.0.\n";
 
-  //__________________________________
-  //    PHASE 1 COMMIT
- #if 1    
-  proc0cout << "  - sigmaT4 = (sigma/M_PI) * " << m_partGas_temp_names[0] << "^4\n\n";
 
-  proc0cout << "  - Absorption coefficient used in intensity calculation: (";
-  
-  for (int i=0; i < m_nPartGasLabels; i++){
-    proc0cout << m_partGas_absk_names[i] << (i<m_nPartGasLabels-1 ? " + " : ")\n");
-  }
-#endif
-
-  //__________________________________
-  //  PHASE 2 COMMIT
-#if 0    
-   // For when we use abskp_0 abskp_1 abskp_N instead of abskp
   //-----------------------------------------
-  // particle radiation
-  if( m_do_partRadiation ){
+  // Gas radiation
+  if( ! m_do_partRadiation ){
+    proc0cout << "  - sigmaT4 = (sigma/M_PI) * " << m_partGas_temp_names[0] << "^4\n\n";
+  }
+  //__________________________________
+  //  Particle radiation
+  else {
 
     // output to screen the sigmaT4 equation
     proc0cout << "  - Including the particle radiation contributions \n";
@@ -310,7 +300,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   for (int i=0; i < m_nPartGasLabels; i++){
     proc0cout << m_partGas_absk_names[i] << (i<m_nPartGasLabels-1 ? " + " : ")\n");
   }
-#endif
+
   //__________________________________
   // create RMCRT and register the labels
   m_RMCRT->registerVariables(m_matl,
@@ -800,7 +790,7 @@ RMCRT_Radiation::sched_sigmaT4( const LevelP & level,
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sigmaT4 (" +type+")");
 
-  tsk->requires( Task::NewDW, m_labels->d_cellTypeLabel, m_gn, 0 );
+  tsk->requires( Task::OldDW, m_labels->d_volFractionLabel, m_gn, 0 );
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
     tsk->requires( Task::OldDW, m_partGas_absk_Labels[i], m_gn, 0 );
@@ -828,17 +818,14 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
 
     double sigma_over_pi = (m_RMCRT->d_sigma)/M_PI;
 
-    constCCVariable<double> gasTemp;
-    constCCVariable<int>    cellType;
-    CCVariable< T > sigmaT4;             // sigma T^4/pi
+    constCCVariable<double> gasVolFrac;
+    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
-    // gas only
-    old_dw->get( gasTemp,  m_partGas_temp_Labels[0],  m_matl, patch, m_gn, 0);
-    new_dw->get( cellType, m_labels->d_cellTypeLabel, m_matl, patch, m_gn, 0);
-
+    // sigma T^4/pi
+    CCVariable< T > sigmaT4;  
     new_dw->allocateAndPut(sigmaT4, m_RMCRT->d_sigmaT4Label,m_matl, patch);
 
-    // gas and particle temperature & absk
+    // gas or  particle temperature & absk
     std::vector<constCCVariable<double> > partGas_absk( m_nPartGasLabels );
     std::vector<constCCVariable<double> > partGas_temp( m_nPartGasLabels );
 
@@ -847,24 +834,20 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
       old_dw->get( partGas_temp[i],  m_partGas_temp_Labels[i], m_matl, patch, m_gn, 0);
     }
  
+    constCCVariable<double> radTemp = partGas_temp[0];               // radiation_temperature
+ 
     //__________________________________
     //  sigmaT4: Gas radiation Only
 
-//    if( !m_do_partRadiation ){
+    if( !m_do_partRadiation ){
       for (auto iter = patch->getExtraCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
 
-/*`==========TESTING==========*/
-        //T T_sqrd = gasTemp[c] * gasTemp[c]; 
-        double T_sqrd = gasTemp[c] * gasTemp[c];          // enable once rt settles down
-/*===========TESTING==========`*/
+        double T_sqrd = radTemp[c] * radTemp[c];
         sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
       }
-//    }
+    }
 
-//__________________________________
-//  PHASE 2  COMMIT
-#if 0
     //__________________________________
     //  sigmaT4: Gas and particle radiation
     if( m_do_partRadiation ){
@@ -872,20 +855,11 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
       for (auto iter = patch->getExtraCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
 
-        if ( cellType[c] == -1){
-          const IntVector& c = *iter;
-          // T T_sqrd   = gasTemp[c] * gasTemp[c];
-          double T_sqrd   = gasTemp[c] * gasTemp[c];
-          sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
-        else {
-          //T sumT    = (T)0.0;
-          // T sumAbsk = (T)0.0;
-          
+        if ( gasVolFrac[c] > 1e-16 ){       // interior cells
           double sumT    = 0.0;
           double sumAbsk = 0.0;
-
-          for (int i=0; i< m_nPartGasLabels; i++){  // weighted average on K
-            //T T_sqrd  = partGas_temp[i][c] * partGas_temp[i][c];
+                                           // summations
+          for (int i=0; i< m_nPartGasLabels; i++){  
             double T_sqrd  = partGas_temp[i][c] * partGas_temp[i][c];
             sumT     += T_sqrd * T_sqrd * partGas_absk[i][c];
             sumAbsk  += partGas_absk[i][c];
@@ -893,18 +867,23 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
 
           sigmaT4[c] = 0.0;
           
-          if (sumAbsk>1e-16){
+          // weighted average
+          if ( sumAbsk > 1e-16 ){
             sigmaT4[c] = sigma_over_pi * sumT/sumAbsk;
-          }
-        }
-      }
+          }         
+        } 
+        else {                          // walls or intrustions
+          double T_sqrd = radTemp[c] * radTemp[c];
+          sigmaT4[c]    = sigma_over_pi * T_sqrd * T_sqrd;
+          
+        }  // intrusion or wall
+      }  // loop
     }  // particle 
-#endif
-  }
+  }  // patch
 }
 
 //______________________________________________________________________
-//    Shedule task to compute the absoprtion coefficient 
+//    Schedule task to compute the absoprtion coefficient 
 //______________________________________________________________________
 void
 RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
@@ -951,8 +930,8 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
 
     printTask(patches, patch, dbg, "Doing RMCRT_Radiation::sumAbsk");
     
-    constCCVariable<double> volFrac;
-    old_dw->get( volFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
+    constCCVariable<double> gasVolFrac;
+    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
     // gas and particle temperature & absk
     std::vector<constCCVariable<double> > partGas_absk( m_nPartGasLabels );
@@ -972,7 +951,7 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
       for ( auto iter = patch->getCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
 
-        if (volFrac[c] > 1e-16){ 
+        if (gasVolFrac[c] > 1e-16){ 
           sumAbsk_tmp[c] += partGas_absk[i][c];     // gas
         }   
         else{
