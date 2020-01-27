@@ -64,7 +64,8 @@ namespace WasatchCore
 
   void
   NestedGraphHelper::
-  set_alloc_info(const Uintah::Patch* const patch)
+  set_alloc_info(const Uintah::Patch* const patch,
+                 const bool isGPU )
   {
     // this may need to change for GPU builds
     allocInfo_ = new AllocInfo( nullptr,
@@ -73,7 +74,7 @@ namespace WasatchCore
                                 patch,
                                 nullptr,
                                 nullptr,
-                                false );
+                                isGPU );
   }
 
 //--------------------------------------------------------------------

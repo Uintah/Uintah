@@ -167,7 +167,7 @@ setup()
 
   const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
 
-  helper_.set_alloc_info(patch);
+  helper_.set_alloc_info(patch, this->is_gpu_runnable());
 
   IDSet rootIDs = register_local_expressions();
   treePtr_ = helper_.new_tree("nested_tree", rootIDs);

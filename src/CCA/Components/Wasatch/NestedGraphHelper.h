@@ -68,7 +68,8 @@ namespace WasatchCore{
        * \brief defines member allocInfo based info from Uintah::Patch
        */
       void
-      set_alloc_info(const Uintah::Patch* const patch);
+      set_alloc_info(const Uintah::Patch* const patch,
+                     const bool isGPU );
 
       /*
        * \brief Sets the memory manager of the fields owned by treePtr to SpatialOps' memory manager

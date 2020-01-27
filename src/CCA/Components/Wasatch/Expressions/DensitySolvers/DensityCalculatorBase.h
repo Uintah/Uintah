@@ -134,8 +134,8 @@ namespace WasatchCore{
         using namespace SpatialOps;
     
         const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
-    
-        helper_.set_alloc_info(patch);
+        helper_.set_alloc_info(patch, this->is_gpu_runnable());
+
         const Expr::IDSet newtonSolveIDs = register_local_expressions();
 
         Expr::IDSet dRhodPhiIDs;
