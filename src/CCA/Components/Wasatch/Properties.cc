@@ -23,16 +23,16 @@
  */
 
 //--- Local (Wasatch) includes ---//
-#include "Properties.h"
-#include "GraphHelperTools.h"
-#include "ParseTools.h"
-#include "FieldAdaptor.h"
-#include "Expressions/TabPropsEvaluator.h"
-#include "Expressions/TabPropsHeatLossEvaluator.h"
-#include "Expressions/DensityCalculator.h"
-#include "Expressions/RadPropsEvaluator.h"
-#include "Expressions/SolnVarEst.h"
-#include "TagNames.h"
+#include <CCA/Components/Wasatch/Properties.h>
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
+#include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
+#include <CCA/Components/Wasatch/Expressions/TabPropsHeatLossEvaluator.h>
+#include <CCA/Components/Wasatch/Expressions/DensityCalculator.h>
+#include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
+#include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
