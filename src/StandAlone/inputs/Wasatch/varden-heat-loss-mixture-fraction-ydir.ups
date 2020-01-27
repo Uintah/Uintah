@@ -217,11 +217,6 @@
       
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="T"/>
-      <NameTag name="f_diffusivity" state="STATE_NONE"/>
-      <NameTag name="divu" state="STATE_NONE"/>
-      <NameTag name="pressure_src" state="STATE_NONE"/>
-<!--       <NameTag name="pressure_rhs" state="STATE_NONE"/> -->
-      <NameTag name="drhodt" state="STATE_NONE"/>
     </ForceOnGraph>
     
     <ForceOnGraph tasklist="initialization">
@@ -235,18 +230,14 @@
          
       <Viscosity>
         <NameTag name="viscosity" />
-      </Viscosity>
-      <DisablePressureSolve/>
-      
+      </Viscosity>      
 
       <Pressure>
-        <!--EnforceSolvability/-->
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1e-10  </tolerance>
-<!--             <criteria>       relative</criteria> -->
             <maxiterations>  1000   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
@@ -259,8 +250,8 @@
   <Time>
     <maxTime>5000.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1.7e-6</delt_min>
-    <delt_max>1.7e-6</delt_max>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
     <max_Timesteps> 100 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
@@ -270,8 +261,8 @@
     <filebase>varden-projection-heat-loss-mixture-fraction-ydir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="100"/>
-    <compression>gzip</compression>
+    <checkpoint cycle="2" interval="5e-5"/>
+    <!-- <compression>gzip</compression> -->
     <save label="density"/>
     <save label="f"/>
     <save label="h"/>
@@ -292,9 +283,6 @@
     <save label="T"/>
     <save label="v"/>
     <save label="divu"/>
-<save label="pressure_src"/>
-<!-- <save label="pressure_rhs"/> -->
-<save label="drhodt"/>
   </DataArchiver> 
 
   <Grid>
@@ -305,18 +293,13 @@
       
       <Face side="y+" name="yPlus" type="Open">
         <BCType label="rhoh" var="Neumann" value="0.0"/>
-        <BCType label="h" var="Neumann" value="0.0"/>
-        <BCType label="f" var="Neumann" value="0.0"/>
         <BCType label="rhof" var="Neumann" value="0.0"/>
-        <BCType label="density" var="Neumann" value="0.0"/>
       </Face>
+
       
       <Face side="y-" name="yMinus" type="Open">
         <BCType label="rhoh" var="Neumann" value="0.0"/>
-        <BCType label="h" var="Neumann" value="0.0"/>
-        <BCType label="f" var="Neumann" value="0.0"/>
         <BCType label="rhof" var="Neumann" value="0.0"/>
-        <BCType label="density" var="Neumann" value="0.0"/>
       </Face>
 
       </BoundaryConditions>
@@ -328,7 +311,7 @@
         <resolution>[1,256,1]</resolution>
         <patches>[1,4,1]</patches>
       </Box>
-      <periodic>[1,1,1]</periodic>
+      <periodic>[1,0,1]</periodic>
     </Level>
   </Grid>
 

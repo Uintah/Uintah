@@ -13,7 +13,7 @@
       <NameTag name="density"/>
     </Density>
     
-    <BasicExpression type="ZVOL">
+    <BasicExpression type="XVOL">
        <TaskList>advance_solution</TaskList>
        <NameTag name="gravity"/>
        <Constant>-9.81</Constant>
@@ -21,17 +21,17 @@
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="fx"/>
+      <NameTag name="fz"/>
       <GaussianFunction amplitude="10" deviation="0.15" mean="0.0" baseline="0.00">
-          <NameTag name="XSVOL"/>
+          <NameTag name="ZSVOL"/>
       </GaussianFunction>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="fz"/>
+      <NameTag name="fx"/>
       <GaussianFunction amplitude="10" deviation="0.15" mean="-0.5" baseline="0.00">
-          <NameTag name="ZSVOL"/>
+          <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
     
@@ -265,7 +265,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       
-      <BodyForce direction="Z">
+      <BodyForce direction="X">
       	<NameTag name="gravity"/>
       </BodyForce>
          
@@ -274,7 +274,6 @@
       </Viscosity>
       
       <Pressure>
-<!--         <EnforceSolvability/> -->
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
@@ -303,8 +302,8 @@
     <filebase>varden-heat-loss-mixture-fraction-2d-xz.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="50"/>
-    <compression>gzip</compression>
+    <checkpoint cycle="2" interval="5e-4"/>
+    <!-- <compression>gzip</compression> -->
     <save label="density"/>
     <save label="f"/>
     <save label="h"/>
@@ -337,10 +336,10 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       
-      <Face side="z+" name="zPlus" type="Wall">
+      <Face side="x+" name="xPlus" type="Wall">
       </Face>
       
-      <Face side="z-" name="zMinus" type="Open">
+      <Face side="x-" name="xMinus" type="Open">
         <BCType label="rhoh" var="Neumann" value="0.0"/>
         <BCType label="rhof" var="Neumann" value="0.0"/>
       </Face>
@@ -355,7 +354,7 @@
         <resolution>[64,1,64]</resolution>
         <patches>[2,1,2]</patches>
       </Box>
-      <periodic>[1,1,0]</periodic>
+      <periodic>[0,1,1]</periodic>
     </Level>
   </Grid>
 

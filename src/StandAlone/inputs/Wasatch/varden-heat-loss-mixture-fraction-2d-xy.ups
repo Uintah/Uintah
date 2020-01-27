@@ -274,7 +274,6 @@
       </Viscosity>
       
       <Pressure>
-<!--         <EnforceSolvability/> -->
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
@@ -303,8 +302,8 @@
     <filebase>varden-heat-loss-mixture-fraction-2d-xy.uda</filebase>
     <outputTimestepInterval>20</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="50"/>
-    <compression>gzip</compression>
+    <checkpoint cycle="2" interval="5e-4"/>
+    <!-- <compression>gzip</compression> -->
     <save label="density"/>
     <save label="f"/>
     <save label="h"/>

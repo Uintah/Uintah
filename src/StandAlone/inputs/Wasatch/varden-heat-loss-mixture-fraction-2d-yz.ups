@@ -274,7 +274,6 @@
       </Viscosity>
       
       <Pressure>
-<!--         <EnforceSolvability/> -->
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
@@ -303,8 +302,8 @@
     <filebase>varden-heat-loss-mixture-fraction-2d-yz.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="50"/>
-    <compression>gzip</compression>
+    <checkpoint cycle="2" interval="5e-4"/>
+    <!-- <compression>gzip</compression> -->
     <save label="density"/>
     <save label="f"/>
     <save label="h"/>
@@ -337,10 +336,10 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       
-      <Face side="z+" name="yPlus" type="Wall">
+      <Face side="z+" name="zPlus" type="Wall">
       </Face>
       
-      <Face side="z-" name="yMinus" type="Open">
+      <Face side="z-" name="zMinus" type="Open">
         <BCType label="rhoh" var="Neumann" value="0.0"/>
         <BCType label="rhof" var="Neumann" value="0.0"/>
       </Face>
