@@ -194,19 +194,22 @@ namespace WasatchCore{
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter) );
+      // densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter) );
 
       typedef DelMe::DensFromMixfrac<SVolField>::Builder DensCalculator;
-      // delete this TagList when new density calculator expression is confirmed to work...
-      const Expr::TagList newTagList = tag_list( Expr::Tag(densityTag.name()+"_new", Expr::STATE_NONE), 
-                                                 Expr::Tag(unconvPts .name()+"_new", Expr::STATE_NONE), 
-                                                 Expr::Tag(dRhoDfTag .name()+"_new", Expr::STATE_NONE)
-
-                                                );
       const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
-      Expr::ExpressionID newDensID =                                           
-      factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
-      gh.rootIDs.insert(newDensID);
+      // delete this TagList when new density calculator expression is confirmed to work...
+      // const Expr::TagList newTagList = tag_list( Expr::Tag(densityTag.name()+"_new", Expr::STATE_NONE), 
+      //                                            Expr::Tag(unconvPts .name()+"_new", Expr::STATE_NONE), 
+      //                                            Expr::Tag(dRhoDfTag .name()+"_new", Expr::STATE_NONE)
+      //                                           );
+      // 
+      // Expr::ExpressionID newDensID = 
+      // factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
+      // gh.rootIDs.insert(newDensID);
+        
+      densCalcID =                                        
+      factory.register_expression( scinew DensCalculator(*densInterp, theTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
