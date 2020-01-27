@@ -125,7 +125,7 @@ namespace WasatchCore{
       Builder( const Expr::Tag rhoNewTag,
                const Expr::Tag dRhodFTag,
                const Expr::Tag dRhodHTag,
-               const Expr::Tag badBtsTag,
+               const Expr::Tag badPtsTag,
                const InterpT&  rhoEval,
                const InterpT&  enthEval,
                const Expr::Tag rhoOldTag,
@@ -133,7 +133,7 @@ namespace WasatchCore{
                const Expr::Tag rhoHTag,
                const Expr::Tag fOldTag,
                const Expr::Tag gammaOldTag,
-               const double rtol,
+               const double rTol,
                const unsigned maxIter );
       
       ~Builder(){ delete rhoEval_; }

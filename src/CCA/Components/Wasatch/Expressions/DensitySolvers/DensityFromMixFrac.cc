@@ -95,12 +95,13 @@ namespace WasatchCore{
     : DensityCalculatorBase<FieldT>( rTol, 
                                      maxIter,
                                      rhoOldTag, 
+                                     tag_list(fOldTag),
                                      tag_list(fOldTag) ),
       rhoEval_  ( rhoEval ),
-      fOldTag_  ( this->phiOldTags_[0] ),
-      fNewTag_  ( this->phiNewTags_[0] ),
+      fOldTag_  ( this->betaOldTags_ [0] ),
+      fNewTag_  ( this->betaNewTags_ [0] ),
       dRhodFTag_( this->dRhodPhiTags_[0] ),
-      rhoFTag_  ( this->rhoPhiTags_[0] ),
+      rhoFTag_  ( this->rhoPhiTags_  [0] ),
       bounds_   ( rhoEval.get_bounds()[0] )
   {
     assert(this->phiOldTags_  .size() == 1);
@@ -151,7 +152,7 @@ namespace WasatchCore{
     // compute d(rho)/d(f) from lookup table
     factory.register_expression( new TPEval( dRhodFTag_, 
                                              rhoEval_,
-                                             this->phiOldTags_,
+                                             this->betaOldTags_,
                                              fOldTag_
                                             )
                                 );
@@ -175,7 +176,7 @@ namespace WasatchCore{
     id = 
     factory.register_expression( new TPEval( this->densityNewTag_, 
                                              rhoEval_,
-                                             this->phiNewTags_
+                                             this->betaNewTags_
                                             )
                                 );
     rootIDs.insert(id);
@@ -221,66 +222,38 @@ namespace WasatchCore{
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
 
-    Expr::FieldManagerList* fml = this->helper_.fml_;
-
-    Expr::ExpressionTree& newtonSolveTree = *(this->newtonSolveTreePtr_);
-    newtonSolveTree.bind_fields( *fml );
-    newtonSolveTree.lock_fields( *fml ); // this is needed... why?
-
     set_initial_guesses();
 
+    const double maxError = this->newton_solve();
+
+    // copy local fields to fields visible to uintah
+    Expr::FieldManagerList* fml = this->helper_.fml_;
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
-    unsigned numIter = 0;
-    bool converged = false;
+    // copy local fields to fields visible to uintah
+    badPts <<= 0.0;
+    rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
+    dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
 
-    const double absTol = this->rTol_/get_normalization_factor(0);
-
-    while(numIter< this->maxIter_ && !converged)
+    if(maxError>this->rTol_)
     {
-      ++numIter;
-      newtonSolveTree.execute_tree();
+      const FieldT& fNew   = fieldTManager.field_ref( fNewTag_ );
+      const FieldT& rhoF   = fieldTManager.field_ref( rhoFTag_ );
+      const FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_  );
 
-      FieldT& fOld = fieldTManager.field_ref( fOldTag_ );
-      FieldT& fNew = fieldTManager.field_ref( fNewTag_ );
+      SpatFldPtr<FieldT> error = SpatialFieldStore::get<FieldT>( fNew );
+      *error <<= abs(rhoF - rhoNew*fNew)/(abs(rhoF) + this->delta_);
 
-      FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
-      FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_ );
-
-      // update fOld and rhoOld for next iteration
-      fOld   <<= fNew;
-      rhoOld <<= rhoNew;
-
-      const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
-      converged = nebo_max(abs(res)) < absTol;
-    }
-
-    if(converged)
-    {
-      Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
-      dRhodFTree.bind_fields( *fml );
-      dRhodFTree.lock_fields( *fml );
-      dRhodFTree.execute_tree();
-      // copy local fields to fields visible to uintah
-      badPts <<= 0.0;
-      rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
-      dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
-
-      dRhodFTree.unlock_fields( *fml );
-    }
-    else
-    {
-      const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
-      badPts <<= cond(abs(res) > absTol, 1)
+      badPts <<= cond(abs(*error) > this->rTol_, 1)
                      (0.0);
-      const double nbad = nebo_sum(badPts);
 
-      badPts <<= cond(badPts > 0, res)
+      const double nbad = nebo_sum(badPts);
+      badPts <<= cond(badPts > 0, *error)
                 (0.0);
       std::cout << "\tConvergence failed at " << (int)nbad << " points.\n";
     }
-    newtonSolveTree.unlock_fields( *fml );
-    
+
+    this->unlock_fields();
   }
 
   //--------------------------------------------------------------------

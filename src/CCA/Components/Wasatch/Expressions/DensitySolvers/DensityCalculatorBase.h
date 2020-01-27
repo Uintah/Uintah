@@ -78,10 +78,11 @@ namespace WasatchCore{
                              const size_t maxIter,
                              const Expr::Tag densityTag,
                              const Expr::TagList phiTags,
-                             const Expr::TagList betaTags = Expr::TagList() )
+                             const Expr::TagList betaTags )
       : Expr::Expression<FieldT>(),
         setupHasRun_  (false           ),
         nEq_          ( phiTags.size() ),
+        delta_        ( 1e-3           ),
         densityOldTag_(tag_with_prefix (densityTag  , "solver_old"     ) ),
         densityNewTag_(tag_with_prefix (densityTag  , "solver_new"     ) ),
         rhoPhiTags_   (tags_with_prefix(phiTags     , "solver_rho"     ) ),
@@ -101,6 +102,7 @@ namespace WasatchCore{
     protected:
       bool                  setupHasRun_;
       const unsigned        nEq_;
+      const double          delta_; // prevents relative error numerator from becoming zero
       const Expr::Tag       densityOldTag_, densityNewTag_;
       const Expr::TagList   rhoPhiTags_, phiOldTags_, phiNewTags_, betaOldTags_, betaNewTags_,
                             residualTags_, dRhodPhiTags_, dRhodBetaTags_;
@@ -143,6 +145,79 @@ namespace WasatchCore{
         helper_.finalize();
         setupHasRun_ = true;
         std::cout << "done \n";
+      }
+
+      //-------------------------------------------------------------------
+
+      double newton_solve()
+      {
+        using namespace SpatialOps;
+        // setup() needs to be run here because we need fields to be defined before a local patch can be created
+        if( !this->setupHasRun_ ){ this->setup();}
+
+        Expr::FieldManagerList* fml = this->helper_.fml_;
+
+        Expr::ExpressionTree& newtonSolveTree = *(this->newtonSolveTreePtr_);
+        newtonSolveTree.bind_fields( *fml );
+        newtonSolveTree.lock_fields( *fml ); // this is needed... why?
+
+        set_initial_guesses();
+
+        Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
+
+        unsigned numIter = 0;
+        bool converged = false;
+
+        double maxError = 0;
+
+        while(numIter< this->maxIter_ && !converged)
+        {
+          ++numIter;
+          newtonSolveTree.execute_tree();
+
+          maxError = 0;
+
+          // update variables for next iteration and check if residual is below tolerance
+          FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
+
+          const FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_ );
+
+          for(unsigned i=0; i<this->nEq_; i++){
+            FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
+
+            const FieldT& betaNew = fieldTManager.field_ref( this->betaNewTags_[i] );
+            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_ [i] );
+            const FieldT& rhoPhi  = fieldTManager.field_ref( this->rhoPhiTags_ [i] );
+            const FieldT& rhoNew  = fieldTManager.field_ref( this->densityNewTag_  );
+
+            betaOld <<= betaNew;
+
+            // use old density as a scratch field for computing error
+            rhoOld <<= abs(rhoPhi - rhoNew*phiNew)/(abs(rhoPhi) + delta_);
+            const double rhoPhiError = nebo_max(rhoOld);
+            maxError = std::max( maxError,rhoPhiError);
+          }
+
+          converged = (maxError <= this->rTol_);
+
+          rhoOld <<= rhoNew;
+        }
+
+        Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
+        dRhodFTree.bind_fields( *fml );
+        dRhodFTree.lock_fields( *fml );
+        dRhodFTree.execute_tree();
+
+        return maxError;
+      }
+
+      //-------------------------------------------------------------------
+
+      void unlock_fields()
+      {
+        Expr::FieldManagerList* fml = this->helper_.fml_;
+        this->newtonSolveTreePtr_->unlock_fields( *fml );
+        this->dRhodPhiTreePtr_   ->unlock_fields( *fml );
       }
 
       //-------------------------------------------------------------------

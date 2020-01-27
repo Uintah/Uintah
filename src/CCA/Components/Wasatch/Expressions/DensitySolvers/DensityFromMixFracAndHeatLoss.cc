@@ -107,7 +107,7 @@ namespace WasatchCore{
       *jacobElems[0] <<= rho + f*dRhodF;              // \f[ = \frac{\partial \rho f}{\partial f}     \f]
       *jacobElems[1] <<= f*dRhodGamma;                // \f[ = \frac{\partial \rho f}{\partial gamma} \f]
       *jacobElems[2] <<= rho*dHdF + h*dRhodF;         // \f[ = \frac{\partial \rho h}{\partial f}     \f]
-      *jacobElems[2] <<= rho*dHdGamma + h*dRhodGamma; // \f[ = \frac{\partial \rho h}{\partial gamma} \f]
+      *jacobElems[3] <<= rho*dHdGamma + h*dRhodGamma; // \f[ = \frac{\partial \rho h}{\partial gamma} \f]
 
     };
   };
@@ -150,19 +150,20 @@ namespace WasatchCore{
     assert(this->residualTags_.size() == 2);
 
     this->set_gpu_runnable(true);
+    fOld_     = this->template create_field_request<FieldT>( fOldTag     );
+    gammaOld_ = this->template create_field_request<FieldT>( gammaOldTag ); 
+    rhoF_     = this->template create_field_request<FieldT>( rhoFTag     );
+    rhoH_     = this->template create_field_request<FieldT>( rhoHTag     ); 
+    rhoOld_   = this->template create_field_request<FieldT>( rhoOldTag   ); 
 
-      fOld_     = this->template create_field_request<FieldT>( fOldTag     );
-      gammaOld_ = this->template create_field_request<FieldT>( gammaOldTag );
-      rhoF_     = this->template create_field_request<FieldT>( rhoFTag     );
-      rhoH_     = this->template create_field_request<FieldT>( rhoHTag     );
-      rhoOld_   = this->template create_field_request<FieldT>( rhoOldTag   );
+    // set taglist for Jacobian matrix elements
+    const std::string jacRowPrefix = "residual_jacobian_";
+    const std::vector<std::string> jacRowNames = {jacRowPrefix + "f", jacRowPrefix + "h"};
+    const std::vector<std::string> jacColNames = {"f", "gamma"};
 
-      // set taglist for Jacobian matrix elements
-      const std::string jacRowPrefix = "residual_jacobian_";
-      const std::vector<std::string> jacRowNames = {jacRowPrefix + "f", jacRowPrefix + "h"};
-      const std::vector<std::string> jacColNames = {"f", "gamma"};
+    jacobianTags_ = Expr::matrix::matrix_tags( jacRowNames,"_",jacColNames);
 
-      jacobianTags_ = Expr::matrix::matrix_tags( jacRowNames,"_",jacColNames);
+    std::cout << "\n\ngamma bounds: " << gammaBounds_.first << ", " << gammaBounds_.second << "\n";
   }
 
   //--------------------------------------------------------------------
@@ -186,6 +187,7 @@ namespace WasatchCore{
 
     // define tags that will only be used here
     const Expr::Tag hOldTag      (this->phiOldTags_[1]);
+    const Expr::Tag hNewTag      (this->phiNewTags_[1]);
     const Expr::Tag dRhodGammaTag("solver_d_rho_d_gamma", Expr::STATE_NONE);
     const Expr::Tag dHdGammaTag  ("solver_d_h_d_gamma"  , Expr::STATE_NONE);
     const Expr::Tag dHdFTag      ("solver_d_h_d_f"      , Expr::STATE_NONE);
@@ -208,7 +210,20 @@ namespace WasatchCore{
                                           this->densityOldTag_ )
                                 );
 
-    // compute enthalpy from lookup table
+    // compute new enthalpy from lookup table ...
+    // \todo: create a 'initialGuessGraphHelper' and a "register_inital_guess_exppressions()"
+    // method to eliminate the need for this table lookup. 
+    // Doing so will also eliminate the need to recompute residuals for relative error 
+    // calculation
+    id = 
+    factory.register_expression( new TPEval( hNewTag, 
+                                             enthEval_,
+                                             this->betaNewTags_
+                                            )
+                                );
+    rootIDs.insert(id);
+    
+    // compute new enthalpy from lookup table 
     factory.register_expression( new TPEval( hOldTag, 
                                              enthEval_,
                                              this->betaOldTags_
@@ -223,7 +238,6 @@ namespace WasatchCore{
                                             )
                                 );
 
-
     // compute \f\frac{\partial \rho}{\partial \gamma}\f$ from lookup table
     factory.register_expression( new TPEval( dRhodGammaTag, 
                                              rhoEval_,
@@ -237,6 +251,14 @@ namespace WasatchCore{
                                              enthEval_,
                                              this->betaOldTags_,
                                              fOldTag_
+                                            )
+                                );
+
+    // compute \f\frac{\partial h}{\partial f}\f$ from lookup table
+    factory.register_expression( new TPEval( dHdGammaTag, 
+                                             enthEval_,
+                                             this->betaOldTags_,
+                                             gammaOldTag_
                                             )
                                 );
 
@@ -271,14 +293,14 @@ namespace WasatchCore{
 
     // clip updated heatLoss
     const Expr::Tag gammaClipTag = Expr::Tag(gammaNewTag_.name()+"_clip", Expr::STATE_NONE);
-    factory.register_expression( new Clip( gammaClipTag, 0, 1 ));
+    factory.register_expression( new Clip( gammaClipTag, -1, 1 ));
     factory.attach_modifier_expression( gammaClipTag, gammaNewTag_ );
 
     // compute density from lookup table
     id = 
     factory.register_expression( new TPEval( this->densityNewTag_, 
                                              rhoEval_,
-                                             this->phiNewTags_
+                                             this->betaNewTags_
                                             )
                                 );
     rootIDs.insert(id);
@@ -294,7 +316,7 @@ namespace WasatchCore{
   set_initial_guesses()
   {
       Expr::UintahFieldManager<FieldT>& fieldTManager = this->helper_.fml_-> template field_manager<FieldT>();
-
+      
       FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_);
       rhoOld <<= rhoOld_->field_ref();
 
@@ -331,86 +353,29 @@ namespace WasatchCore{
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
 
-    Expr::FieldManagerList* fml = this->helper_.fml_;
-
-    Expr::ExpressionTree& newtonSolveTree = *(this->newtonSolveTreePtr_);
-    newtonSolveTree.bind_fields( *fml );
-    newtonSolveTree.lock_fields( *fml ); // this is needed... why?
-
     set_initial_guesses();
 
+    const double maxError = this->newton_solve();
+
+    Expr::FieldManagerList* fml = this->helper_.fml_;
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
-    unsigned numIter = 0;
-    bool converged = false;
+    // copy local fields to fields visible to uintah
+    badPts <<= 0.0;
+    rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
+    dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
+    dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
 
-    double maxError = 0;
+    *results[4] <<= fieldTManager.field_ref( this->betaNewTags_[0] );
+    *results[5] <<= fieldTManager.field_ref( this->betaNewTags_[1] );
 
-    while(numIter< this->maxIter_ && !converged)
+
+    if(maxError>this->rTol_)
     {
-      ++numIter;
-      newtonSolveTree.execute_tree();
-
-      maxError = 0;
-
-      // update variables for next iteration and check if residual is below tolerance
-      for(unsigned i=0; i<this->nEq_; i++){
-        FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
-        const FieldT& betaNew = fieldTManager.field_ref( this->betaNewTags_[i] );
-
-        betaOld <<= betaNew;
-
-        const FieldT& res = fieldTManager.field_ref( this->residualTags_[i] );
-        const double error_i = nebo_max(abs(res)) / get_normalization_factor(i);
-
-        maxError = std::max( maxError, error_i);
-      }
-
-      converged = maxError <= this->rTol_;
-
-      FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
-      FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_ );
-
-      // update rhoOld for next iteration
-      rhoOld <<= rhoNew;
+      proc0cout << "\tConvergence failed (max error: " << maxError << ") after " << this->maxIter_ << " iterations.\n";
     }
 
-    if(converged)
-    {
-      Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
-      dRhodFTree.bind_fields( *fml );
-      dRhodFTree.lock_fields( *fml );
-      dRhodFTree.execute_tree();
-
-      // copy local fields to fields visible to uintah
-      badPts <<= 0.0;
-      rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
-      dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
-      dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
-
-      dRhodFTree.unlock_fields( *fml );
-    }
-    else
-    {
-      // SpatFldPtr<FieldT> tmpField = SpatialFieldStore::get<FieldT>( rho );
-      // tmpField <<= 0;
-
-      // for(unsigned i=0; i<this->nEq_; i++){
-      //   const double absTol = this->rTol_/get_normalization_factor(i);
-      //   const FieldT& res = fieldTManager.field_ref( this->residualTags_[i] );
-      //   *tmpField <<= cond(abs(res) > absTol || *tmpField>0, 1)
-      //                     (0.0);
-
-      //   badPts <<= cond(abs(res) > abs(badPts) || badPts>0, res)
-      //                  (badPts); 
-      // }
-      // const double nbad = nebo_sum(*tmpField);
-
-      // std::cout << "\tConvergence failed at " << (int)nbad << " points.\n";
-      proc0cout << "\tConvergence failed after " << this->maxIter_ << " iterations.\n";
-    }
-    newtonSolveTree.unlock_fields( *fml );
-    
+    this->unlock_fields();
   }
 
   //--------------------------------------------------------------------
@@ -428,18 +393,20 @@ namespace WasatchCore{
                     const Expr::Tag rhoHTag,
                     const Expr::Tag fOldTag,
                     const Expr::Tag gammaOldTag,
-                    const double rtol,
-                    const unsigned maxIter )
-    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, dRhodHTag, badPtsTag) ),
-      rhoEval_    (rhoEval.clone() ),
-      enthEval_   (rhoEval.clone() ),
-      rhoOldTag_  (rhoOldTag       ),
-      rhoFTag_    (rhoFTag         ),
-      rhoHTag_    (rhoHTag         ),
-      fOldTag_    (fOldTag         ),
-      gammaOldTag_(gammaOldTag     ),
-      rtol_       (rtol            ),
-      maxIter_    (maxIter         )
+                    const double rTol,
+                    const unsigned maxIter)
+    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, dRhodHTag, badPtsTag, 
+                                  Expr::Tag("new_f", Expr::STATE_NONE),  
+                                  Expr::Tag("new_gamma", Expr::STATE_NONE)) ),
+      rhoEval_    (rhoEval.clone()  ),
+      enthEval_   (enthEval.clone() ),
+      rhoOldTag_  (rhoOldTag        ),
+      rhoFTag_    (rhoFTag          ),
+      rhoHTag_    (rhoHTag          ),
+      fOldTag_    (fOldTag          ),
+      gammaOldTag_(gammaOldTag      ),
+      rtol_       (rTol             ),
+      maxIter_    (maxIter          )
   {}
 
   //===================================================================
