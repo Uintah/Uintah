@@ -202,7 +202,7 @@
 
 
   <DataArchiver>
-    <filebase>varden-projection-advection-xdir.uda</filebase>
+    <filebase>varden-projection-heat-loss-mixture-fraction-xdir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="10"/>
@@ -235,7 +235,7 @@
         <lower>[-15,0,0]</lower>
         <upper>[15,1,1]</upper>
         <resolution>[128,1,1]</resolution>
-        <patches>[1,1,1]</patches>
+        <patches>[4,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
