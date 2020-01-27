@@ -1,4 +1,4 @@
-#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
  #include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
 #include <CCA/Components/Wasatch/TagNames.h>
@@ -10,122 +10,59 @@ namespace WasatchCore{
 
   using Expr::tag_list;
 
-    /**
-   * \class OneVarNewtonSolve
-   * @brief computes updated mixture fraction, \f[ f \f] given an old value of \f[ f \f],
-   *        density (\f[ \rho \f]), \f[ \frac{\rho}{f} \f], and a residual with the following
-   *        definition: 
-   *        \f[ r(f) = f G_\rho - (\rho f)\f].
-   * 
-   */
   template< typename FieldT >
-  class OneVarNewtonSolve : public Expr::Expression<FieldT>
-  {
-    DECLARE_FIELDS(FieldT, fOld_, rhoOld_, dRhodF_, residual_)
-
-    OneVarNewtonSolve( const Expr::Tag& fOldTag,
-                       const Expr::Tag& rhoOldTag,
-                       const Expr::Tag& dRhodFTag,
-                       const Expr::Tag& residualTag )
-    : Expr::Expression<FieldT>()
-    {
-       this->set_gpu_runnable(true);
-       fOld_     = this->template create_field_request<FieldT>( fOldTag     );
-       rhoOld_   = this->template create_field_request<FieldT>( rhoOldTag   );
-       dRhodF_   = this->template create_field_request<FieldT>( dRhodFTag   );
-       residual_ = this->template create_field_request<FieldT>( residualTag );
-    }
-
-  public:
-    class Builder : public Expr::ExpressionBuilder
-    {
-    public:
-      /**
-       *  @brief Build a OneVarNewtonSolve expression
-       *  @param resultTag tag to updated value of mixture fraction
-       *  @param fOldTag tag to old value of mixture fraction
-       *  @param rhoTag the tag to field for density
-       *  @param dRhodFTag tag to field for derivative of density with respect to mixture fraction
-       *  @param residualTag tag for residual \f[ r(f) = f G_\rho - (\rho f)\f]
-       */
-      Builder( const Expr::Tag& resultTag,
-               const Expr::Tag& fOldTag,
-               const Expr::Tag& rhoOldTag,
-               const Expr::Tag& dRhodFTag,
-               const Expr::Tag& residualTag )
-      : ExpressionBuilder( resultTag ),
-        fOldTag_    ( fOldTag     ),
-        rhoOldTag_  ( rhoOldTag   ),
-        dRhodFTag_  ( dRhodFTag   ),
-        residualTag_( residualTag )
-      {}
-
-      Expr::ExpressionBase* build() const{
-        return new OneVarNewtonSolve( fOldTag_, rhoOldTag_, dRhodFTag_, residualTag_ );
-      }
-
-    private:
-      const Expr::Tag fOldTag_, rhoOldTag_, dRhodFTag_, residualTag_;
-    };
-
-    ~OneVarNewtonSolve(){}
-
-    void evaluate(){
-      using namespace SpatialOps;
-      FieldT& fNew = this->value();
-
-      const FieldT& fOld   = fOld_    ->field_ref();
-      const FieldT& rhoOld = rhoOld_  ->field_ref();
-      const FieldT& dRhodF = dRhodF_  ->field_ref();
-      const FieldT& res    = residual_->field_ref();
-      fNew <<= fOld - res / (rhoOld + fOld*dRhodF);
-    };
-  };
-
-  //===================================================================
-
-  template< typename FieldT >
-  DensityFromMixFrac<FieldT>::
-  DensityFromMixFrac( const InterpT& rhoEval,
-                      const Expr::Tag& rhoOldTag,
-                      const Expr::Tag& rhoFTag,
-                      const Expr::Tag& fOldTag,
-                      const double rTol,
-                      const unsigned maxIter)
+  DensityFromMixFracAndHeatLoss<FieldT>::
+  DensityFromMixFracAndHeatLoss(  const InterpT& rhoEval,
+                                  const InterpT& enthEval,
+                                  const Expr::Tag& rhoOldTag,
+                                  const Expr::Tag& rhoFTag,
+                                  const Expr::Tag& rhoHTag,
+                                  const Expr::Tag& fOldTag,
+                                  const Expr::Tag& gammaOldTag,
+                                  const double rtol,
+                                  const unsigned maxIter )
     : DensityCalculatorBase<FieldT>( rTol, 
                                      maxIter,
                                      rhoOldTag, 
-                                     tag_list(fOldTag) ),
-      rhoEval_  ( rhoEval ),
+                                     tag_list(fOldTag, Expr::Tag('h',Expr::STATE_NONE)),
+                                     tag_list(fOldTag, gammaOldTag) ),
+      rhoEval_  ( rhoEval  ),
+      enthEval_ ( enthEval ),
       fOldTag_  ( this->phiOldTags_[0] ),
+      gammaOldTag_( this->betaOldTags_[1] ),
       fNewTag_  ( this->phiNewTags_[0] ),
+      gammaNewTag_( this->betaNewTags_[1] ),
       dRhodFTag_( this->dRhodPhiTags_[0] ),
       rhoFTag_  ( this->rhoPhiTags_[0] ),
       bounds_   ( rhoEval.get_bounds()[0] )
   {
-    assert(this->phiOldTags_  .size() == 1);
-    assert(this->phiNewTags_  .size() == 1);
-    assert(this->residualTags_.size() == 1);
+    assert(this->phiOldTags_  .size() == 2);
+    assert(this->phiNewTags_  .size() == 2);
+    assert(this->betaOldTags_ .size() == 2);
+    assert(this->betaNewTags_ .size() == 2);
+    assert(this->residualTags_.size() == 2);
 
     this->set_gpu_runnable(true);
 
-      fOld_   = this->template create_field_request<FieldT>( fOldTag   );
-      rhoF_   = this->template create_field_request<FieldT>( rhoFTag   );
-      rhoOld_ = this->template create_field_request<FieldT>( rhoOldTag );
+      fOld_     = this->template create_field_request<FieldT>( fOldTag     );
+      gammaOld_ = this->template create_field_request<FieldT>( gammaOldTag );
+      rhoF_     = this->template create_field_request<FieldT>( rhoFTag     );
+      rhoH_     = this->template create_field_request<FieldT>( rhoHTag     );
+      rhoOld_   = this->template create_field_request<FieldT>( rhoOldTag   );
   }
 
   //--------------------------------------------------------------------
 
   template< typename FieldT >
-  DensityFromMixFrac<FieldT>::
-  ~DensityFromMixFrac()
+  DensityFromMixFracAndHeatLoss<FieldT>::
+  ~DensityFromMixFracAndHeatLoss()
   {}
 
   //--------------------------------------------------------------------
 
   template< typename FieldT >
   Expr::IDSet 
-  DensityFromMixFrac<FieldT>::
+  DensityFromMixFracAndHeatLoss<FieldT>::
   register_local_expressions()
   {
     Expr::IDSet rootIDs;
@@ -133,14 +70,21 @@ namespace WasatchCore{
 
     Expr::ExpressionID id;
 
+    // define tags that will only be used here
+    const Expr::Tag dRhodGammaTag("solver_d_rho_d_gamma", Expr::STATE_NONE);
+    const Expr::Tag dHdGammaTag  ("solver_d_h_d_gamma"  , Expr::STATE_NONE);
+    const Expr::Tag dHdFTag      ("solver_d_h_d_f"      , Expr::STATE_NONE);
+
     typedef typename Expr::PlaceHolder<FieldT>::Builder PlcHldr;
     typedef typename TabPropsEvaluator<FieldT>::Builder TPEval;
 
     factory.register_expression(new PlcHldr( rhoFTag_            ));
+    factory.register_expression(new PlcHldr( rhoHTag_            ));
     factory.register_expression(new PlcHldr( fOldTag_            ));
+    factory.register_expression(new PlcHldr( gammaOldTag_        ));
     factory.register_expression(new PlcHldr( this->densityOldTag_));
 
-    // compute residual
+    // compute residuals
     factory.register_expression( new typename Residual<FieldT>::
                                  Builder( this->residualTags_,
                                           this->rhoPhiTags_,
@@ -148,13 +92,37 @@ namespace WasatchCore{
                                           this->densityOldTag_ )
                                 );
 
-    // compute d(rho)/d(f) from lookup table
+    // compute \f\frac{\partial \rho}{\partial f}\f$ from lookup table
     factory.register_expression( new TPEval( dRhodFTag_, 
                                              rhoEval_,
-                                             this->phiOldTags_,
+                                             this->betaOldTags_,
                                              fOldTag_
                                             )
                                 );
+
+
+    // compute \f\frac{\partial \rho}{\partial \gamma}\f$ from lookup table
+    factory.register_expression( new TPEval( dRhodGammaTag, 
+                                             rhoEval_,
+                                             this->betaOldTags_,
+                                             gammaOldTag_
+                                            )
+                                );
+
+    // compute \f\frac{\partial h}{\partial f}\f$ from lookup table
+    factory.register_expression( new TPEval( dHdFTag, 
+                                             enthEval_,
+                                             this->betaOldTags_,
+                                             fOldTag_
+                                            )
+                                );
+
+    // compute \f\frac{\partial \rho}{\partial \h}\f$
+    //
+    // here
+    // 
+
+    // compute \f\frac{\partial \rho}{\partial \gamma}\f$ from lookup table
 
     factory.register_expression( new typename OneVarNewtonSolve<FieldT>::
                                  Builder( fNewTag_,
@@ -187,7 +155,7 @@ namespace WasatchCore{
 
   template< typename FieldT >
   void 
-  DensityFromMixFrac<FieldT>::
+  DensityFromMixFracAndHeatLoss<FieldT>::
   set_initial_guesses()
   {
       Expr::UintahFieldManager<FieldT>& fieldTManager = this->helper_.fml_-> template field_manager<FieldT>();
@@ -207,7 +175,7 @@ namespace WasatchCore{
 
   template< typename FieldT >
   void
-  DensityFromMixFrac<FieldT>::
+  DensityFromMixFracAndHeatLoss<FieldT>::
   evaluate()
   {
     using namespace SpatialOps;
@@ -286,23 +254,30 @@ namespace WasatchCore{
   //--------------------------------------------------------------------
 
   template< typename FieldT >
-  DensityFromMixFrac<FieldT>::
+  DensityFromMixFracAndHeatLoss<FieldT>::
   Builder::Builder( const Expr::Tag rhoNewTag,
                     const Expr::Tag dRhodFTag,
-                    const Expr::Tag badPtsTag,
+                    const Expr::Tag dRhodHTag,
+                    const Expr::Tag badBtsTag,
                     const InterpT&  rhoEval,
+                    const InterpT&  enthEval,
                     const Expr::Tag rhoOldTag,
                     const Expr::Tag rhoFTag,
+                    const Expr::Tag rhoHTag,
                     const Expr::Tag fOldTag,
+                    const Expr::Tag gammaOldTag,
                     const double rtol,
                     const unsigned maxIter )
-    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, badPtsTag) ),
-      rhoEval_  (rhoEval.clone() ),
-      rhoOldTag_(rhoOldTag       ),
-      rhoFTag_  (rhoFTag         ),
-      fOldTag_  (fOldTag         ),
-      rtol_     (rtol            ),
-      maxIter_  (maxIter         )
+    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, dRhodHTag, badPtsTag) ),
+      rhoEval_    (rhoEval.clone() ),
+      enthEval_   (rhoEval.clone() ),
+      rhoOldTag_  (rhoOldTag       ),
+      rhoFTag_    (rhoFTag         ),
+      rhoHTag_    (rhoHTag         ),
+      fOldTag_    (fOldTag         ),
+      gammaOldTag_(gammaOldTag     ),
+      rtol_       (rtol            ),
+      maxIter_    (maxIter         )
   {}
 
   //===================================================================
@@ -310,6 +285,6 @@ namespace WasatchCore{
 
   // explicit template instantiation
   #include <spatialops/structured/FVStaggeredFieldTypes.h>
-  template class DensityFromMixFrac<SpatialOps::SVolField>;
+  template class DensityFromMixFracAndHeatLoss<SpatialOps::SVolField>;
 
 }
