@@ -222,7 +222,7 @@ namespace WasatchCore{
     FieldT& rho    = *results[0];
     FieldT& dRhodF = *results[1];
 
-    const double maxError = this->newton_solve();
+    this->newton_solve();
 
     // copy local fields to fields visible to uintah
     Expr::FieldManagerList* fml = this->helper_.fml_;

@@ -19,16 +19,6 @@
 
 
 namespace WasatchCore{
-  
-  Expr::TagList append_tag_lists( const Expr::TagList Tags1,
-                                  const Expr::TagList Tags2)
-      {
-        Expr::TagList newTags = Tags1;
-        newTags.insert(newTags.end(), Tags2.begin(), Tags2.end());
-        return newTags;
-      }
-
-  const Expr::Tag atBoundsTag("atBounds", Expr::STATE_NONE);
 
   using Expr::tag_list;
   typedef std::pair<double, double> BoundsT;
@@ -144,7 +134,6 @@ namespace WasatchCore{
       {
         Expr::TagList resultTags = jacTags;
         resultTags.insert(resultTags.end(), resTags.begin(), resTags.end());
-        resultTags.push_back(atBoundsTag);
         return resultTags;
       }
     };
@@ -191,8 +180,6 @@ namespace WasatchCore{
       // mixture fraction residual
       *results[5] <<= cond( *atBounds > 0, 0 )
                           ( rho*h - rhoH  );
-
-     *results[6] <<= *atBounds;
     };
   };
 
@@ -422,60 +409,18 @@ namespace WasatchCore{
     FieldT& gamma  = *results[1];
     FieldT& dRhodF = *results[2];
     FieldT& dRhodH = *results[3];
-    // -------------------------------------
-    // ----------REMOVE --------------------
-    FieldT& badF     = *results[4];
-    FieldT& badGamma = *results[5];
-    FieldT& atBounds = *results[6];
-    badF <<= 0;
-    badGamma <<= 0;
-    
-    // ----------REMOVE --------------------
-    // -------------------------------------
 
-    const double maxError = this->newton_solve();
+    this->newton_solve();
 
     Expr::FieldManagerList* fml = this->helper_.fml_;
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
-
-// -------------------------------------
-// ----------REMOVE --------------------
-    unsigned k = 7;
-    for(unsigned j=0; j<2; ++j){
-      FieldT& resOut = *results[k+j];   
-      resOut <<= fieldTManager.field_ref( this->residualTags_[j] );
-      }
-// ----------REMOVE --------------------
-// -------------------------------------
 
     // copy local fields to fields visible to uintah
     rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
     gamma  <<= fieldTManager.field_ref( this->gammaNewTag_   );
     dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
     dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
-
-// -------------------------------------
-// ----------REMOVE --------------------
-    if(maxError > this->rTol_){
-      const FieldT& f = fieldTManager.field_ref( this->fNewTag_ );
-      FieldT error = fieldTManager.field_ref( this->densityOldTag_ );
-
-      error <<= f - fieldTManager.field_ref( this->fOldTag_ );
-      badF <<= abs(error);
-      badF <<= cond(badF <= this->rTol_ * (this->get_normalization_factor(0)), 0)
-                 (error);
-
-      error <<= gamma - fieldTManager.field_ref( this->gammaOldTag_ );
-      badGamma <<= abs(error);
-      badGamma <<= cond(badGamma <= this->rTol_ * (this->get_normalization_factor(1)), 0)
-                       (error);
-    }
-    
-    atBounds <<= fieldTManager.field_ref( atBoundsTag );
-    this->unlock_fields();
   }
-  // ----------REMOVE --------------------
-  // -------------------------------------
 
   //--------------------------------------------------------------------
 
@@ -495,24 +440,10 @@ namespace WasatchCore{
                     const Expr::Tag gammaOldTag,
                     const double rTol,
                     const unsigned maxIter)
-    : ExpressionBuilder( append_tag_lists(
-                                          tag_list( rhoNewTag, 
-                                                    gammaNewTag, 
-                                                    dRhodFTag, 
-                                                    dRhodHTag,
-                                                    Expr::Tag("badPts_f"    , Expr::STATE_NONE),
-                                                    Expr::Tag("badPts_gamma", Expr::STATE_NONE) 
-                                                  ),
-                                          tag_list( atBoundsTag,
-                                                    // Expr::Tag("residual_jacobian_f_f"    , Expr::STATE_NONE),
-                                                    // Expr::Tag("residual_jacobian_f_gamma", Expr::STATE_NONE),
-                                                    // Expr::Tag("residual_jacobian_h_f"    , Expr::STATE_NONE),
-                                                    // Expr::Tag("residual_jacobian_h_gamma", Expr::STATE_NONE),
-                                                    Expr::Tag("solver_residual_f", Expr::STATE_NONE),
-                                                    Expr::Tag("solver_residual_h", Expr::STATE_NONE) 
-                                                  )
-                                          )
-                        ),
+    : ExpressionBuilder( tag_list( rhoNewTag, 
+                                   gammaNewTag, 
+                                   dRhodFTag, 
+                                   dRhodHTag  ) ),
       rhoEval_    (rhoEval.clone()  ),
       enthEval_   (enthEval.clone() ),
       rhoOldTag_  (rhoOldTag        ),

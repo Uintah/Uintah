@@ -154,7 +154,33 @@ namespace WasatchCore{
         std::cout << "done \n";
       }
 
-      //-------------------------------------------------------------------
+      
+
+    //-------------------------------------------------------------------
+
+      double compute_error( Expr::UintahFieldManager<FieldT>& fm,
+                            FieldT& error, 
+                            Expr::Tag& worstFieldTag )
+      {
+        double maxError = 0;
+        for(unsigned i=0; i<this->nEq_; i++){
+
+          const FieldT& betaOld = fm.field_ref( this->betaOldTags_[i] );
+          const FieldT& betaNew = fm.field_ref( this->betaNewTags_[i] );
+
+          error <<= abs(betaNew - betaOld);
+
+          const double betaError = nebo_max(error)/get_normalization_factor(i);
+
+          if(betaError > maxError){
+            maxError = betaError;
+            worstFieldTag = this->betaNewTags_[i];
+          }
+        }
+        return maxError;
+      }
+
+    //-------------------------------------------------------------------
 
       double newton_solve()
       {
@@ -170,8 +196,6 @@ namespace WasatchCore{
         newtonSolveTree.bind_fields( *fml );
         newtonSolveTree.lock_fields( *fml ); // this is needed... why?
 
-        // set_initial_guesses();
-
         Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
         unsigned numIter = 0;
@@ -179,6 +203,7 @@ namespace WasatchCore{
 
         double maxError = 0;
 
+        // get a scratch field for error computation
         SpatFldPtr<FieldT> error = SpatialFieldStore::get<FieldT>( fieldTManager.field_ref( this->densityOldTag_ ) );
 
         Expr::Tag badTag;
@@ -187,65 +212,33 @@ namespace WasatchCore{
           ++numIter;
           newtonSolveTree.execute_tree();
 
-          maxError = 0;
-
-          // update variables for next iteration and check if residual is below tolerance
-          FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
-
-          const FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_ );
+          maxError = compute_error(fieldTManager, *error, badTag);
+          converged = (maxError <= this->rTol_);
 
           for(unsigned i=0; i<this->nEq_; i++){
             FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
-
-            const FieldT& betaNew = fieldTManager.field_ref( this->betaNewTags_[i] );
-            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_ [i] );
-            const FieldT& rhoPhi  = fieldTManager.field_ref( this->rhoPhiTags_ [i] );
-
-            // rhoOld <<= abs(betaNew - betaOld);
-            // const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
-
-            *error <<= abs(betaNew - betaOld);
-            const double rhoPhiError = nebo_max(*error)/get_normalization_factor(i);
-
-            // *error <<= abs(rhoNew*phiNew - rhoPhi)/(abs(rhoPhi) + 1e-1);
-            // maxError = std::max(maxError, rhoPhiError);
-
-            if(rhoPhiError > maxError){
-              maxError = rhoPhiError;
-              badTag = this->phiNewTags_[i];
-            }
-            std::cout << "\tIteration: " << numIter 
-                      << " error: " << rhoPhiError 
-                      << " norm factor: " << get_normalization_factor(i) 
-                      <<" field: " << betaNewTags_[i] 
-                      << "\n";
-
-            // update old variable
-            betaOld <<= betaNew;
+            betaOld <<= fieldTManager.field_ref( this->betaNewTags_[i] );
           }
           
           for(const unsigned& i : phiUpdateIndecices_){
-            std::cout << "\t\tUpdating  " << this->phiOldTags_[i] << "\n";
             FieldT&       phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
-            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_[i] );
-
-            phiOld <<= phiNew;
+            phiOld <<= fieldTManager.field_ref( this->phiNewTags_[i] );
           }
 
-          converged = (maxError <= this->rTol_);
-
-          rhoOld <<= rhoNew;
-
+          // update variables for next iteration and check if error is below tolerance
+          FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
+          rhoOld <<= fieldTManager.field_ref( this->densityNewTag_ );
         }
 
         if(!converged){
           std::cout << "\tSolve for density FAILED (max error = " << maxError << " field: "<< badTag.name() << ") after " 
                     << numIter << " iterations.\n";
-          newtonSolveTree.execute_tree();//
         }
+        #ifndef NDEBUG
         else{
           std::cout << "\tSolve for density completed (max error = " << maxError << ") after " << numIter << " iterations.\n";
         }
+        #endif
 
 
         Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
