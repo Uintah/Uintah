@@ -122,19 +122,22 @@ namespace WasatchCore{
                                   const Expr::Tag& rhoFTag,
                                   const Expr::Tag& rhoHTag,
                                   const Expr::Tag& fOldTag,
+                                  const Expr::Tag& hOldTag,
                                   const Expr::Tag& gammaOldTag,
                                   const double rTol,
                                   const unsigned maxIter )
     : DensityCalculatorBase<FieldT>( rTol, 
                                      maxIter,
                                      rhoOldTag, 
-                                     tag_list(fOldTag, Expr::Tag("h", Expr::STATE_NONE)),
+                                     tag_list(fOldTag, hOldTag),
                                      tag_list(fOldTag, gammaOldTag) ),
       rhoEval_    ( rhoEval                 ),
       enthEval_   ( enthEval                ),
       fOldTag_    ( this->betaOldTags_ [0]  ),
+      hOldTag_    ( this->phiOldTags_  [1]  ),
       gammaOldTag_( this->betaOldTags_ [1]  ),
       fNewTag_    ( this->betaNewTags_ [0]  ),
+      hNewTag_    ( this->phiNewTags_  [1]  ),
       gammaNewTag_( this->betaNewTags_ [1]  ),
       dRhodFTag_  ( this->dRhodPhiTags_[0]  ),
       dRhodHTag_  ( this->dRhodPhiTags_[1]  ),
@@ -151,6 +154,7 @@ namespace WasatchCore{
 
     this->set_gpu_runnable(true);
     fOld_     = this->template create_field_request<FieldT>( fOldTag     );
+    hOld_     = this->template create_field_request<FieldT>( hOldTag     );
     gammaOld_ = this->template create_field_request<FieldT>( gammaOldTag ); 
     rhoF_     = this->template create_field_request<FieldT>( rhoFTag     );
     rhoH_     = this->template create_field_request<FieldT>( rhoHTag     ); 
@@ -184,8 +188,6 @@ namespace WasatchCore{
     Expr::ExpressionID id;
 
     // define tags that will only be used here
-    const Expr::Tag hOldTag      (this->phiOldTags_[1]);
-    const Expr::Tag hNewTag      (this->phiNewTags_[1]);
     const Expr::Tag dRhodGammaTag("solver_d_rho_d_gamma", Expr::STATE_NONE);
     const Expr::Tag dHdGammaTag  ("solver_d_h_d_gamma"  , Expr::STATE_NONE);
     const Expr::Tag dHdFTag      ("solver_d_h_d_f"      , Expr::STATE_NONE);
@@ -197,6 +199,7 @@ namespace WasatchCore{
     factory.register_expression(new PlcHldr( rhoFTag_            ));
     factory.register_expression(new PlcHldr( rhoHTag_            ));
     factory.register_expression(new PlcHldr( fOldTag_            ));
+    factory.register_expression(new PlcHldr( hOldTag_            ));
     factory.register_expression(new PlcHldr( gammaOldTag_        ));
     factory.register_expression(new PlcHldr( this->densityOldTag_));
 
@@ -208,25 +211,14 @@ namespace WasatchCore{
                                           this->densityOldTag_ )
                                 );
 
-    // compute new enthalpy from lookup table ...
-    // \todo: create a 'initialGuessGraphHelper' and a "register_inital_guess_exppressions()"
-    // method to eliminate the need for this table lookup. 
-    // Doing so will also eliminate the need to recompute residuals for relative error 
-    // calculation
     id = 
-    factory.register_expression( new TPEval( hNewTag, 
+    factory.register_expression( new TPEval( hNewTag_, 
                                              enthEval_,
                                              this->betaNewTags_
                                             )
                                 );
     rootIDs.insert(id);
     
-    // compute new enthalpy from lookup table 
-    factory.register_expression( new TPEval( hOldTag, 
-                                             enthEval_,
-                                             this->betaOldTags_
-                                            )
-                                );
 
     // compute \f\frac{\partial \rho}{\partial f}\f$ from lookup table
     factory.register_expression( new TPEval( dRhodFTag_, 
@@ -271,7 +263,7 @@ namespace WasatchCore{
                                      Builder( jacobianTags_,
                                               this->densityOldTag_,
                                               fOldTag_,
-                                              hOldTag,
+                                              hOldTag_,
                                               dRhodFTag_,
                                               dRhodGammaTag,
                                               dHdFTag,
@@ -320,6 +312,9 @@ namespace WasatchCore{
 
       FieldT& fOld = fieldTManager.field_ref( fOldTag_ );
       fOld <<= fOld_->field_ref();
+
+      FieldT& hOld = fieldTManager.field_ref( hOldTag_ );
+      hOld <<= hOld_->field_ref();
 
       FieldT& gammaOld = fieldTManager.field_ref( gammaOldTag_ );
       gammaOld <<= gammaOld_->field_ref();
@@ -380,6 +375,7 @@ namespace WasatchCore{
                     const Expr::Tag rhoFTag,
                     const Expr::Tag rhoHTag,
                     const Expr::Tag fOldTag,
+                    const Expr::Tag hOldTag,
                     const Expr::Tag gammaOldTag,
                     const double rTol,
                     const unsigned maxIter)
@@ -390,6 +386,7 @@ namespace WasatchCore{
       rhoFTag_    (rhoFTag          ),
       rhoHTag_    (rhoHTag          ),
       fOldTag_    (fOldTag          ),
+      hOldTag_    (hOldTag          ),
       gammaOldTag_(gammaOldTag      ),
       rtol_       (rTol             ),
       maxIter_    (maxIter          )

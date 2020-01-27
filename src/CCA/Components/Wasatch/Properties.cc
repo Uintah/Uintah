@@ -230,10 +230,12 @@ namespace WasatchCore{
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag fTag       = parse_nametag( modelParams->findBlock("MixtureFraction"               )->findBlock("NameTag") );
+      Expr::Tag hTag       = parse_nametag( modelParams->findBlock("Enthalpy"                      )->findBlock("NameTag") );
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy"       )->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss"                      )->findBlock("NameTag") );
 
       persistentFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
+      persistentFields.insert( hTag       .name() );
 
       // modify name & context when we are calculating density at newer time
       // levels since this will be using STATE_NONE information as opposed to
@@ -244,12 +246,14 @@ namespace WasatchCore{
 
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       const Expr::Tag rhoOldTag     ( densityTag .name(), Expr::STATE_N );
+      const Expr::Tag fOldTag       ( fTag       .name(), Expr::STATE_N );
+      const Expr::Tag hOldTag       ( hTag       .name(), Expr::STATE_N );
       const Expr::Tag heatLossOldTag( heatLossTag.name(), Expr::STATE_N );
       factory.register_expression( new PlcHolder::Builder(rhoOldTag     ), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
 
-      const Expr::Tag dRhodHTag = tagNames.derivative_tag(densityTag,tagNames.enthalpy);
+      const Expr::Tag dRhodHTag = tagNames.derivative_tag(densityTag,hTag);
       const Expr::Tag dRhodFTag = tagNames.derivative_tag(densityTag,fTag);
       persistentFields.insert( dRhodHTag.name() );
       persistentFields.insert( dRhodFTag.name() );
@@ -258,7 +262,6 @@ namespace WasatchCore{
     
       typedef DensityFromMixFracAndHeatLoss<SVolField>::Builder DensCalculator;
 
-      const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
       const Expr::Tag newDensTag(densityTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodFTag(dRhodFTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodHTag(dRhodHTag.name()+"_new", Expr::STATE_NONE);
@@ -274,6 +277,7 @@ namespace WasatchCore{
                                                           rhofTag,
                                                           rhohTag,
                                                           fOldTag,
+                                                          hOldTag,
                                                           heatLossOldTag,
                                                           rtol,
                                                           (unsigned)maxIter ));

@@ -1246,9 +1246,12 @@
           enthalpy are being transported.
         -->
         <ModelBasedOnMixtureFractionAndHeatLoss spec="OPTIONAL NO_DATA">
-	  <MixtureFraction  spec="REQUIRED NO_DATA">
+          <MixtureFraction  spec="REQUIRED NO_DATA">
             <NameTag        spec="REQUIRED"/>
-	  </MixtureFraction>
+          </MixtureFraction>
+          <Enthalpy  spec="REQUIRED NO_DATA">
+            <NameTag        spec="REQUIRED"/>
+          </Enthalpy>
           <DensityWeightedMixtureFraction spec="REQUIRED NO_DATA">
             <NameTag                      spec="REQUIRED" />
           </DensityWeightedMixtureFraction>

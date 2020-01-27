@@ -97,7 +97,8 @@
         <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
           <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_NP1"/></DensityWeightedMixtureFraction>  
-          <MixtureFraction><NameTag name="f"/></MixtureFraction>    
+          <MixtureFraction><NameTag name="f"/></MixtureFraction>  
+          <Enthalpy><NameTag name="h"/></Enthalpy>    
           <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_NP1"/></DensityWeightedEnthalpy>
           <HeatLoss>                      <NameTag name="gamma"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
@@ -213,7 +214,7 @@
     <save label="gamma"/>
     <save label="lambda"/>
     <save label="d_density_d_f"/>
-    <save label="d_density_d_enthalpy"/>
+    <save label="d_density_d_h"/>
     <save label="cp"/>
     <save label="rhoh_diffusivity"/>
     <save label="f_EOS_Coupling"/>

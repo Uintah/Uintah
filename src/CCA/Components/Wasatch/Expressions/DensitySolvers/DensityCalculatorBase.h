@@ -95,7 +95,13 @@ namespace WasatchCore{
         dRhodBetaTags_(density_derivative_tags_with_prefix(betaTags)     ),
         rTol_   ( rTol    ),
         maxIter_( maxIter )
-        {};
+        {
+          for(unsigned i = 0; i < nEq_; ++i){
+            if(phiNewTags_[i] != betaNewTags_[i]){
+              phiUpdateIndecices_.push_back(i);
+            }
+          }
+        };
 
     //-------------------------------------------------------------------
 
@@ -111,6 +117,7 @@ namespace WasatchCore{
       NestedGraphHelper     helper_;
       UintahPatchContainer* patchContainer_;
       Expr::ExpressionTree *newtonSolveTreePtr_, *dRhodPhiTreePtr_;
+
 
       virtual Expr::IDSet register_local_expressions() = 0;
       virtual void set_initial_guesses() = 0;
@@ -186,7 +193,6 @@ namespace WasatchCore{
             FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
 
             const FieldT& betaNew = fieldTManager.field_ref( this->betaNewTags_[i] );
-            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_ [i] );
             const FieldT& rhoPhi  = fieldTManager.field_ref( this->rhoPhiTags_ [i] );
             const FieldT& rhoNew  = fieldTManager.field_ref( this->densityNewTag_  );
 
@@ -194,29 +200,27 @@ namespace WasatchCore{
             rhoOld <<= abs(betaNew - betaOld);
 
             const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
-            
-            #ifndef NDEBUG
-            error = std::max(error,rhoPhiError);
-            proc0cout << "\nIteration: " << i  <<", error: " << error << "\n";  
-            #endif
 
             // update old variable
             betaOld <<= betaNew;
+          }
+          
+          for(const unsigned& i : phiUpdateIndecices_){
+            FieldT&       phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
+            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_[i] );
+
+            phiOld <<= phiNew;
           }
 
           converged = (error <= this->rTol_);
 
           rhoOld <<= rhoNew;
+
         }
 
-            if(!converged){
-              proc0cout << "\tSolve for density FAILED (max error = " << error << ") after " << numIter << " iterations.\n";
-            }
-            #ifndef NDEBUG
-            else{
-              proc0cout << "\tSolve for density completed in " << numIter << " iterations.\n";
-            }
-            #endif
+        if(!converged){
+          std::cout << "\tSolve for density FAILED (max error = " << error << ") after " << numIter << " iterations.\n";
+        }
 
 
         Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
@@ -273,8 +277,15 @@ namespace WasatchCore{
      //-------------------------------------------------------------------
 
      virtual double get_normalization_factor(const unsigned i) const =0;
-  };
 
+    private:
+      // These are indecies of transported scalars that are computed from betaValues
+      // and not from the Newton update directly, i.e., h = h(T, Y) where h is 
+      // enthalpy, T is temperature and Y is composition. Because of this, computed  
+      // values of these scalars need to be copied to old values in order to  compute
+      // all residuals required for the Newton solve.
+      std::vector<unsigned> phiUpdateIndecices_;
+  };
 }
 
 #endif // WasatchDensityCalculatorBase_h

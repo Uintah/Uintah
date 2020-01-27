@@ -644,10 +644,7 @@ struct EnthalpyBoundaryTyper
       }
 
       const Expr::Tag scalEOSTag = Expr::Tag(primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
-
-      // tagNames.enthalpy is used here to remove the need to parse the enthalpy primitive variable
-      // name when using dRhoDhTag elsewhere See Properties.cc for an example.
-      const Expr::Tag dRhoDhTag  = tagNames.derivative_tag( densityTag_, tagNames.enthalpy );
+      const Expr::Tag dRhoDhTag  = tagNames.derivative_tag( densityTag_, primVarTag_.name() );
 
       // register an expression for divu. divu is just a constant expression to which we add the
       // necessary couplings from the scalars that represent the equation of state.

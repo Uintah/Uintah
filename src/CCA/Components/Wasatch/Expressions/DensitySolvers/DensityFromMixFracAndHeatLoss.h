@@ -74,8 +74,10 @@ namespace WasatchCore{
     const InterpT& rhoEval_;
     const InterpT& enthEval_;
     const Expr::Tag& fOldTag_;
+    const Expr::Tag& hOldTag_;
     const Expr::Tag& gammaOldTag_;
     const Expr::Tag& fNewTag_;
+    const Expr::Tag& hNewTag_;
     const Expr::Tag& gammaNewTag_;
     const Expr::Tag& dRhodFTag_;
     const Expr::Tag& dRhodHTag_;
@@ -85,7 +87,7 @@ namespace WasatchCore{
 
     Expr::TagList jacobianTags_;
 
-    DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, rhoH_, fOld_, gammaOld_)
+    DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, rhoH_, fOld_, hOld_, gammaOld_)
     
     DensityFromMixFracAndHeatLoss( const InterpT& rhoEval,
                                    const InterpT& enthEval,
@@ -93,6 +95,7 @@ namespace WasatchCore{
                                    const Expr::Tag& rhoFTag,
                                    const Expr::Tag& rhoHTag,
                                    const Expr::Tag& fOldTag,
+                                   const Expr::Tag& hOldTag,
                                    const Expr::Tag& gammaOldTag,
                                    const double rtol,
                                    const unsigned maxIter );
@@ -119,7 +122,8 @@ namespace WasatchCore{
        *  @param rhoEval   reference to an enthalpy evaluation table
        *  @param rhoOldTag the density from the previous timestep (used as a guess)
        *  @param fOldTag the density from the previous timestep (used as a guess)
-       *  @param fOldTag the heat loss from the previous timestep (used as a guess)
+       *  @param hOldTag the enthalpy from the previous timestep (used as a guess)
+       *  @param gammaOldTag the heat loss from the previous timestep (used as a guess)
        *  @param rhoFTag the density weighted mixture fraction
        *  @param rhoHTag the density weighted enthalpy
        *  @param rTol the relative solver tolerance
@@ -135,6 +139,7 @@ namespace WasatchCore{
                const Expr::Tag rhoFTag,
                const Expr::Tag rhoHTag,
                const Expr::Tag fOldTag,
+               const Expr::Tag hOldTag,
                const Expr::Tag gammaOldTag,
                const double rTol,
                const unsigned maxIter );
@@ -142,13 +147,13 @@ namespace WasatchCore{
       ~Builder(){ delete rhoEval_;  delete enthEval_;  }
       Expr::ExpressionBase* build() const{
         return new DensityFromMixFracAndHeatLoss<FieldT>( *rhoEval_, *enthEval_, rhoOldTag_, rhoFTag_, rhoHTag_, 
-                                                          fOldTag_, gammaOldTag_, rtol_, maxIter_ );
+                                                          fOldTag_, hOldTag_, gammaOldTag_, rtol_, maxIter_ );
       }
 
     private:
       const InterpT* const rhoEval_;
       const InterpT* const enthEval_;
-      const Expr::Tag rhoOldTag_, rhoFTag_, rhoHTag_, fOldTag_, gammaOldTag_;
+      const Expr::Tag rhoOldTag_, rhoFTag_, rhoHTag_, fOldTag_, hOldTag_, gammaOldTag_;
       const double rtol_;    ///< relative error tolerance
       const unsigned maxIter_; ///< maximum number of iterations    
     };
