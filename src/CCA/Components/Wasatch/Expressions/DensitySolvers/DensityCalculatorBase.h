@@ -168,14 +168,14 @@ namespace WasatchCore{
         unsigned numIter = 0;
         bool converged = false;
 
-        double maxError = 0;
+        double error = 0;
 
         while(numIter< this->maxIter_ && !converged)
         {
           ++numIter;
           newtonSolveTree.execute_tree();
 
-          maxError = 0;
+          error = 0;
 
           // update variables for next iteration and check if residual is below tolerance
           FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
@@ -190,25 +190,36 @@ namespace WasatchCore{
             const FieldT& rhoPhi  = fieldTManager.field_ref( this->rhoPhiTags_ [i] );
             const FieldT& rhoNew  = fieldTManager.field_ref( this->densityNewTag_  );
 
-            betaOld <<= betaNew;
-
             // use old density as a scratch field for computing error
-            rhoOld <<= abs(rhoPhi - rhoNew*phiNew)/(abs(rhoPhi) + delta_);
-            const double rhoPhiError = nebo_max(rhoOld);
-            maxError = std::max( maxError,rhoPhiError);
+            rhoOld <<= abs(betaNew - betaOld);
+
+            const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
+            error = std::max(error,rhoPhiError);
+            proc0cout << "\nIteration: " << i  <<", error: " << error << "\n";  
+
+            // update old variable
+            betaOld <<= betaNew;
           }
 
-          converged = (maxError <= this->rTol_);
+          converged = (error <= this->rTol_);
 
           rhoOld <<= rhoNew;
         }
+
+            if(converged){
+              proc0cout << "\tSolve for density completed in " << numIter << " iterations.\n";
+            }
+            else{
+              proc0cout << "\tSolve for density FAILED (max error = " << error << ") after " << numIter << " iterations.\n";
+            }
+
 
         Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
         dRhodFTree.bind_fields( *fml );
         dRhodFTree.lock_fields( *fml );
         dRhodFTree.execute_tree();
 
-        return maxError;
+        return error;
       }
 
       //-------------------------------------------------------------------
@@ -254,7 +265,9 @@ namespace WasatchCore{
         return newTags;
       }
 
-    // virtual ~DensityCalculatorBase(){};
+     //-------------------------------------------------------------------
+
+     virtual double get_normalization_factor(const unsigned i) const =0;
   };
 
 }

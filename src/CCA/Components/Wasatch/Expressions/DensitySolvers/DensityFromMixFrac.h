@@ -86,8 +86,6 @@ namespace WasatchCore{
       /**
        *  @param rhoNewTag density computed by this expression
        *  @param dRhodFTag derivative of density w.r.t. mixture fraction computed by this expression
-       *  @param badPtsTag tag to a field whose nonzero values correspond to locations where residual
-       *                   tolerance is above rTol.
        *  @param rhoEval   reference to a density evaluation table
        *  @param rhoOldTag the density from the previous timestep (used as a guess)
        *  @param fOldTag the density from the previous timestep (used as a guess)
@@ -97,7 +95,6 @@ namespace WasatchCore{
        */
       Builder( const Expr::Tag rhoNewTag,
                const Expr::Tag dRhodFTag,
-               const Expr::Tag badBtsTag,
                const InterpT&  rhoEval,
                const Expr::Tag rhoOldTag,
                const Expr::Tag rhoFTag,

@@ -185,7 +185,6 @@ namespace WasatchCore{
       rhofTag.reset_context( Expr::STATE_NP1 );
       if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
       
-      const Expr::Tag badPtsTag = tagNames.unconvergedpts;
       const Expr::Tag dRhodFTag = tagNames.derivative_tag(densityTag, fTag);
       
       // register placeholder for the old density
@@ -213,7 +212,6 @@ namespace WasatchCore{
         densCalcID =                                        
         factory.register_expression( scinew DensCalculator( densityTag, 
                                                             dRhodFTag, 
-                                                            badPtsTag, 
                                                             *densInterp, 
                                                             rhoOldTag, 
                                                             rhofTag, 
@@ -265,7 +263,6 @@ namespace WasatchCore{
       const Expr::Tag newDensTag(densityTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodFTag(dRhodFTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodHTag(dRhodHTag.name()+"_new", Expr::STATE_NONE);
-      const Expr::Tag badPtsTag("badPoints_new", Expr::STATE_NONE);
 
       densCalcID = 
       factory.register_expression( scinew DensCalculator( densityTag,

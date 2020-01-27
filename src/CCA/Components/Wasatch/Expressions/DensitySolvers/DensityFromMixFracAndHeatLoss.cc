@@ -162,8 +162,6 @@ namespace WasatchCore{
     const std::vector<std::string> jacColNames = {"f", "gamma"};
 
     jacobianTags_ = Expr::matrix::matrix_tags( jacRowNames,"_",jacColNames);
-
-    std::cout << "\n\ngamma bounds: " << gammaBounds_.first << ", " << gammaBounds_.second << "\n";
   }
 
   //--------------------------------------------------------------------
@@ -364,11 +362,6 @@ namespace WasatchCore{
     gamma  <<= fieldTManager.field_ref( this->gammaNewTag_   );
     dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
     dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
-
-    if(maxError>this->rTol_)
-    {
-      proc0cout << "\tConvergence failed (max error: " << maxError << ") after " << this->maxIter_ << " iterations.\n";
-    }
 
     this->unlock_fields();
   }

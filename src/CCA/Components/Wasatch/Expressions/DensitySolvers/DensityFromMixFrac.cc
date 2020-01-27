@@ -217,7 +217,6 @@ namespace WasatchCore{
 
     FieldT& rho    = *results[0];
     FieldT& dRhodF = *results[1];
-    FieldT& badPts = *results[2];
 
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
@@ -231,27 +230,8 @@ namespace WasatchCore{
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
     // copy local fields to fields visible to uintah
-    badPts <<= 0.0;
     rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
     dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
-
-    if(maxError>this->rTol_)
-    {
-      const FieldT& fNew   = fieldTManager.field_ref( fNewTag_ );
-      const FieldT& rhoF   = fieldTManager.field_ref( rhoFTag_ );
-      const FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_  );
-
-      SpatFldPtr<FieldT> error = SpatialFieldStore::get<FieldT>( fNew );
-      *error <<= abs(rhoF - rhoNew*fNew)/(abs(rhoF) + this->delta_);
-
-      badPts <<= cond(abs(*error) > this->rTol_, 1)
-                     (0.0);
-
-      const double nbad = nebo_sum(badPts);
-      badPts <<= cond(badPts > 0, *error)
-                (0.0);
-      std::cout << "\tConvergence failed at " << (int)nbad << " points.\n";
-    }
 
     this->unlock_fields();
   }
@@ -262,14 +242,13 @@ namespace WasatchCore{
   DensityFromMixFrac<FieldT>::
   Builder::Builder( const Expr::Tag rhoNewTag,
                     const Expr::Tag dRhodFTag,
-                    const Expr::Tag badPtsTag,
                     const InterpT&  rhoEval,
                     const Expr::Tag rhoOldTag,
                     const Expr::Tag rhoFTag,
                     const Expr::Tag fOldTag,
                     const double rtol,
                     const unsigned maxIter )
-    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, badPtsTag) ),
+    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag) ),
       rhoEval_  (rhoEval.clone() ),
       rhoOldTag_(rhoOldTag       ),
       rhoFTag_  (rhoFTag         ),
