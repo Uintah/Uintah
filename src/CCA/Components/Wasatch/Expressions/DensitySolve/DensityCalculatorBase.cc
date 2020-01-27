@@ -36,16 +36,18 @@ namespace DelMe{
   setup()
   {
     using namespace SpatialOps;
+    std::cout << "\ncalling DensityCalculatorBase::setup()...";
 
     const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
 
     helper_.set_alloc_info(patch);
-
+    std::cout << "\ncalling register_local_expressions()...";
     Expr::IDSet rootIDs = register_local_expressions();
-    treePtr_ = helper_.new_tree(treeName_, rootIDs);
+    newtonSolveTreePtr_ = helper_.new_tree(treeName_, rootIDs);
 
     helper_.finalize();
     setupHasRun_ = true;
+    std::cout << "done \n";
   }
 
   //-------------------------------------------------------------------

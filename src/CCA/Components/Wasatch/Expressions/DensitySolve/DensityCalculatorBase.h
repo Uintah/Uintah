@@ -66,7 +66,7 @@ namespace DelMe{
       const unsigned        maxIter_;
       NestedGraphHelper     helper_;
       UintahPatchContainer* patchContainer_;
-      Expr::ExpressionTree* treePtr_;
+      Expr::ExpressionTree* newtonSolveTreePtr_;
 
       virtual Expr::IDSet register_local_expressions() = 0;
       virtual void set_initial_guesses() = 0;

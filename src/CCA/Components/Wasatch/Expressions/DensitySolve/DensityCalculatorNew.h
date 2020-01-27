@@ -39,25 +39,27 @@ namespace DelMe{
    *
    * Given \f$G_\rho(f)\f$ and \f$\rho f\f$, find \f$f\f$ and \f$\rho\f$.  This is
    * done by defining the residual equation
-   *  \f[ r(f) = f G_\rho - (\rho f)\f]
+   *  \f[ r(f) = (\rho f) - f G_\rho\f]
    * with
-   *  \f[ r^\prime(f) = \frac{\partial r}{\partial f} = G_\rho + f\frac{\partial G_\rho}{\partial f} \f]
+   *  \f[ r^\prime(f) = \frac{\partial r}{\partial f} = -(G_\rho + f\frac{\partial G_\rho}{\partial f}) \f]
    * so that the newton update is
    *  \f[ f^{new}=f - \frac{r(f)}{r^\prime(f)} \f].
+   * 
+   * See <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h> for the residual expression.
    */
   template< typename FieldT >
   class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalculatorBase
   {
     const InterpT& rhoEval_;
-    const Expr::Tag dRhodFTag_, dResidualdFTag_;
+    const Expr::Tag dRhodFTag_;
     const std::pair<double,double> bounds_;
     const bool weak_;
-    DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, f_)
+    DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, fOld_)
     
     DensFromMixfrac( const InterpT& rhoEval,
                      const Expr::Tag& rhoOldTag,
                      const Expr::Tag& rhoFTag,
-                     const Expr::Tag& fTag,
+                     const Expr::Tag& fOldTag,
                      const bool weakForm,
                      const double rtol,
                      const unsigned maxIter);
@@ -83,27 +85,28 @@ namespace DelMe{
        *  @param rhoEval calculates density given mixture fraction
        *  @param resultsTag the tag for the value that this expression computes
        *  @param rhoOldTag the density from the previous timestep (used as a guess)
+       *  @param fOldTag the density from the previous timestep (used as a guess)
        *  @param rhoFTag the density weighted mixture fraction
-       *  @param rtol the relative solver tolerance
+       *  @param rTol the relative solver tolerance
        *  @param maxIter maximum number of solver iterations allowed
        */
       Builder( const InterpT& rhoEval,
                const Expr::TagList& resultsTag,
                const Expr::Tag& rhoOldTag,
                const Expr::Tag& rhoFTag,
-               const Expr::Tag& fTag,
+               const Expr::Tag& fOldTag,
                const bool weakForm,
                const double rtol,
                const unsigned maxIter );
       
       ~Builder(){ delete rhoEval_; }
       Expr::ExpressionBase* build() const{
-        return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, fTag_, weakForm_, rtol_, maxIter_ );
+        return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, fOldTag_, weakForm_, rtol_, maxIter_ );
       }
 
     private:
       const InterpT* const rhoEval_;
-      const Expr::Tag rhoOldTag_, rhoFTag_, fTag_;
+      const Expr::Tag rhoOldTag_, rhoFTag_, fOldTag_;
       const bool weakForm_;
       const double rtol_;    ///< relative error tolerance
       const unsigned maxIter_; ///< maximum number of iterations    
