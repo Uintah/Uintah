@@ -268,8 +268,8 @@
   <Time>
     <maxTime>5000.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-4</delt_min>
-    <delt_max>1e-4</delt_max>
+    <delt_min>1.7e-4</delt_min>
+    <delt_max>1.7e-4</delt_max>
     <max_Timesteps> 100 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
@@ -301,13 +301,6 @@
     <save label="T"/>
     <save label="u"/>
     <save label="divu"/>
-    <save label="badPts_f"/>
-    <save label="badPts_gamma"/>
-    <save label="badPts_f"/>
-    <save label="badPts_gamma"/>
-    <save label="atBounds"/>
-<save label="solver_residual_f"/>
-<save label="solver_residual_h"/>
 <save label="pressure_src"/>
 <!-- <save label="pressure_rhs"/> -->
 <save label="drhodt"/>
@@ -320,8 +313,6 @@
       <DefaultMaterial>all</DefaultMaterial>
       
       <Face side="x+" name="xPlus" type="Open">
-<!--         <BCType label="f" var="Dirichlet" value="gaussian-inlet"/> -->
-<!--         <BCType label="gamma" var="Dirichlet" value="parabolic-inlet"/> -->
         <BCType label="rhoh" var="Neumann" value="0.0"/>
         <BCType label="h" var="Neumann" value="0.0"/>
         <BCType label="f" var="Neumann" value="0.0"/>
@@ -330,8 +321,6 @@
       </Face>
       
       <Face side="x-" name="xMinus" type="Open">
-<!--         <BCType label="f" var="Dirichlet" value="gaussian-inlet"/> -->
-<!--         <BCType label="gamma" var="Dirichlet" value="parabolic-inlet"/> -->
         <BCType label="rhoh" var="Neumann" value="0.0"/>
         <BCType label="h" var="Neumann" value="0.0"/>
         <BCType label="f" var="Neumann" value="0.0"/>
