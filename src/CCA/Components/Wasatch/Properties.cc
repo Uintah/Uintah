@@ -33,6 +33,7 @@
 #include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolve/DensityCalculatorNew.h>
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
@@ -194,6 +195,16 @@ namespace WasatchCore{
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
       densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter) );
+
+      typedef DelMe::DensFromMixfrac<SVolField>::Builder DensCalculator;
+      // delete this TagList when new density calculator expression is confirmed to work...
+      const Expr::TagList newTagList = tag_list( Expr::Tag(densityTag.name()+"_new", Expr::STATE_NONE), 
+                                                 Expr::Tag(unconvPts .name()+"_new", Expr::STATE_NONE), 
+                                                 Expr::Tag(dRhoDfTag .name()+"_new", Expr::STATE_NONE)
+                                                );
+      Expr::ExpressionID newDensID =                                           
+      factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter));
+      gh.rootIDs.insert(newDensID);
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
