@@ -132,12 +132,10 @@ namespace WasatchCore{
       void setup()
       {
         using namespace SpatialOps;
-        std::cout << "\ncalling DensityCalculatorBase::setup()...";
     
         const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
     
         helper_.set_alloc_info(patch);
-        std::cout << "\ncalling register_local_expressions()...";
         const Expr::IDSet newtonSolveIDs = register_local_expressions();
 
         Expr::IDSet dRhodPhiIDs;
@@ -151,7 +149,6 @@ namespace WasatchCore{
 
         helper_.finalize();
         setupHasRun_ = true;
-        std::cout << "done \n";
       }
 
       
