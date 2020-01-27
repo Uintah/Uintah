@@ -34,6 +34,7 @@
 #include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
 
 //--- ExprLib includes ---//
@@ -244,18 +245,41 @@ namespace WasatchCore{
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
 
-      const Expr::Tag dRhoDhTag = tagNames.derivative_tag(densityTag,tagNames.enthalpy);
-      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag,fTag);
-      persistentFields.insert( dRhoDhTag.name() );
-      persistentFields.insert( dRhoDfTag.name() );
+      const Expr::Tag dRhodHTag = tagNames.derivative_tag(densityTag,tagNames.enthalpy);
+      const Expr::Tag dRhodFTag = tagNames.derivative_tag(densityTag,fTag);
+      persistentFields.insert( dRhodHTag.name() );
+      persistentFields.insert( dRhodFTag.name() );
       
       factory.cleave_from_parents(factory.get_id(heatLossOldTag));
 
       typedef OldDensityCalculator::DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc(densityTag, heatLossTag, dRhoDfTag, dRhoDhTag,
+      densCalcID = factory.register_expression( scinew DensCalc(densityTag, heatLossTag, dRhodFTag, dRhodHTag,
                                                                 rhoOldTag, heatLossOldTag, rhofTag, rhohTag,
-                                                                *densInterp, *enthInterp ) );
+                                                                *densInterp, *enthInterp, rtol, (unsigned)maxIter ) );
     
+      typedef DensityFromMixFracAndHeatLoss<SVolField>::Builder DensCalculator;
+      const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
+      const Expr::Tag newDensTag(densityTag.name()+"_new", Expr::STATE_NONE);
+      const Expr::Tag newdRhodFTag(dRhodFTag.name()+"_new", Expr::STATE_NONE);
+      const Expr::Tag newdRhodHTag(dRhodHTag.name()+"_new", Expr::STATE_NONE);
+      const Expr::Tag badPtsTag("badPoints_new", Expr::STATE_NONE);
+
+      Expr::ExpressionID newDensID = 
+      factory.register_expression( scinew DensCalculator( newDensTag,
+                                                          newdRhodFTag,
+                                                          newdRhodHTag,
+                                                          badPtsTag,
+                                                          *densInterp, 
+                                                          *enthInterp,
+                                                          rhoOldTag,
+                                                          rhofTag,
+                                                          rhohTag,
+                                                          fOldTag,
+                                                          heatLossOldTag,
+                                                          rtol,
+                                                          (unsigned)maxIter ));
+    gh.rootIDs.insert(newDensID);
+
     gh.rootIDs.insert(densCalcID);
     }
     

@@ -83,9 +83,11 @@ DensHeatLossMixfrac( const Expr::Tag& rhoOldTag,
                      const Expr::Tag& rhofTag,
                      const Expr::Tag& rhohTag,
                      const InterpT& densEvaluator,
-                     const InterpT& enthEvaluator )
+                     const InterpT& enthEvaluator,
+                     const double rTol,
+                     const unsigned maxIter  )
   : Expr::Expression<FieldT>(),
-    DensityCalculatorBase( 2, 1e-6, 5 ),
+    DensityCalculatorBase( 2, rTol, maxIter ),
     densEval_( densEvaluator ),
     enthEval_( enthEvaluator ),
     bounds_( densEvaluator.get_bounds() )
@@ -210,14 +212,18 @@ Builder::Builder( const Expr::Tag& rhoTag,
                   const Expr::Tag& rhofTag,
                   const Expr::Tag& rhohTag,
                   const InterpT& densEvaluator,
-                  const InterpT& enthEvaluator )
+                  const InterpT& enthEvaluator,
+                  const double rTol,
+                  const unsigned maxIter )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag, dRhodFTag, dRhodHTag) ),
     rhoOldTag_   ( rhoOldTag             ),
     gammaOldTag_ ( gammaOldTag           ),
     rhofTag_     ( rhofTag               ),
     rhohTag_     ( rhohTag               ),
     densEval_    ( densEvaluator.clone() ),
-    enthEval_    ( enthEvaluator.clone() )
+    enthEval_    ( enthEvaluator.clone() ),
+    rTol_( rTol ),
+    maxIter_( maxIter )
 {}
 
 //====================================================================

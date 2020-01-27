@@ -123,7 +123,9 @@ class DensHeatLossMixfrac
                        const Expr::Tag& rhofTag,
                        const Expr::Tag& rhohTag,
                        const InterpT& densEvaluator,
-                       const InterpT& enthEvaluator );
+                       const InterpT& enthEvaluator,
+                       const double rTol,
+                       const unsigned maxIter  );
 
   void calc_jacobian_and_res( const DoubleVec& passThrough,
                               const DoubleVec& soln,
@@ -166,16 +168,21 @@ public:
              const Expr::Tag& rhofTag,
              const Expr::Tag& rhohTag,
              const InterpT& densEvaluator,
-             const InterpT& enthEvaluator );
+             const InterpT& enthEvaluator,
+             const double rTol,
+             const unsigned maxIter );
+
     ~Builder(){ delete densEval_; delete enthEval_; }
     Expr::ExpressionBase* build() const{
-      return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+      return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_, rTol_, maxIter_ );
     }
 
 
   private:
     const Expr::Tag rhoOldTag_, gammaOldTag_, rhofTag_, rhohTag_;
     const InterpT * const densEval_, * const enthEval_;
+    const double rTol_;
+    const unsigned maxIter_;
   };
 
   ~DensHeatLossMixfrac();
