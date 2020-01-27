@@ -1,3 +1,7 @@
+#ifdef __CUDACC__
+#define ENABLE_CUDA
+#endif
+
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/NewtonUpdate.h>
@@ -13,34 +17,56 @@
 
 #include <sci_defs/uintah_defs.h>
 
+
 namespace WasatchCore{
+  
+  Expr::TagList append_tag_lists( const Expr::TagList Tags1,
+                                  const Expr::TagList Tags2)
+      {
+        Expr::TagList newTags = Tags1;
+        newTags.insert(newTags.end(), Tags2.begin(), Tags2.end());
+        return newTags;
+      }
+
+  const Expr::Tag atBoundsTag("atBounds", Expr::STATE_NONE);
 
   using Expr::tag_list;
+  typedef std::pair<double, double> BoundsT;
 
       /**
-   * \class MixFracHeatLossJacobian
-   * \brief computes elements of the Jacobian matrix needed to iteratively solve for
+   * \class MixFracHeatLossJacobianAndResidual
+   * \brief computes elements of the Jacobian matrix and residual needed to iteratively solve for
    *        density from mixture fraction and heat loss
    * 
    */
   template< typename FieldT >
-  class MixFracHeatLossJacobian : public Expr::Expression<FieldT>
+  class MixFracHeatLossJacobianAndResidual : public Expr::Expression<FieldT>
   {
-    DECLARE_FIELDS(FieldT, rho_, f_, h_, dRhodF_, dRhodGamma_, dHdF_, dHdGamma_)
+    const double fMin_, fMax_, fTol_;
+    DECLARE_FIELDS(FieldT, rho_, f_, h_, rhoF_, rhoH_)
+    DECLARE_FIELDS(FieldT, dRhodF_, dRhodGamma_, dHdF_, dHdGamma_)
 
-    MixFracHeatLossJacobian( const Expr::Tag& rhoTag,
-                             const Expr::Tag& fTag,
-                             const Expr::Tag& hTag,
-                             const Expr::Tag& dRhodFTag,
-                             const Expr::Tag& dRhodGammaTag,
-                             const Expr::Tag& dHdFTag,
-                             const Expr::Tag& dHdGammaTag )
-    : Expr::Expression<FieldT>()
-    {
+    MixFracHeatLossJacobianAndResidual( const Expr::Tag& rhoTag,
+                                        const Expr::Tag& fTag,
+                                        const Expr::Tag& hTag,
+                                        const Expr::Tag& rhoFTag,
+                                        const Expr::Tag& rhoHTag,
+                                        const Expr::Tag& dRhodFTag,
+                                        const Expr::Tag& dRhodGammaTag,
+                                        const Expr::Tag& dHdFTag,
+                                        const Expr::Tag& dHdGammaTag,
+                                        const BoundsT&   fBounds  )
+    : Expr::Expression<FieldT>(),
+      fMin_( fBounds.first  ),
+      fMax_( fBounds.second ),
+      fTol_( 1e-4 )
+        {
        this->set_gpu_runnable(true);
        rho_        = this->template create_field_request<FieldT>( rhoTag        );
        f_          = this->template create_field_request<FieldT>( fTag          );
        h_          = this->template create_field_request<FieldT>( hTag          );
+       rhoF_       = this->template create_field_request<FieldT>( rhoFTag       );
+       rhoH_       = this->template create_field_request<FieldT>( rhoHTag       );
        dRhodF_     = this->template create_field_request<FieldT>( dRhodFTag     );
        dRhodGamma_ = this->template create_field_request<FieldT>( dRhodGammaTag );
        dHdF_       = this->template create_field_request<FieldT>( dHdFTag       );
@@ -53,62 +79,120 @@ namespace WasatchCore{
     public:
       /**
        *  @brief Build a MixFracHeatLossJacobian expression
-       *  @param jacobianTags tags to Jacobian elements to be computed
+       *  @param jacobianTags tags to Jacobian elements (result elements[0-3]) to be computed 
+       *  @param residualTags tags to residuals (result elements[4-5]) to be computed 
        *  @param rhoTag tag to density
        *  @param fTag the tag to mixture fraction
        *  @param hTag the tag to enthalpy
+       *  @param rhoFTag the tag to density-weighted mixture fraction
+       *  @param rhoHTag the tag to density-weighted enthalpy
        *  @param dRhodFTag tag to \f[ \frac{\partial \rho}{\partial f} \f]
        *  @param dRhodGammaTag tag to \f[ \frac{\partial \rho}{\partial \gamma} \f]
        *  @param dRhodFTag tag to \f[ \frac{\partial h}{\partial f} \f]
        *  @param dRhodGammaTag tag to \f[ \frac{\partial h}{\partial \gamma} \f]
+       *  @param fBounds a pair with the min/max of mixture fraction
        */
-      Builder( const Expr::TagList& jacobianTags,
-               const Expr::Tag&     rhoTag,
-               const Expr::Tag&     fTag,
-               const Expr::Tag&     hTag,
-               const Expr::Tag&     dRhodFTag,
-               const Expr::Tag&     dRhodGammaTag,
-               const Expr::Tag&     dHdFTag,
-               const Expr::Tag&     dHdGammaTag )
-      : ExpressionBuilder( jacobianTags ),
+      Builder( const Expr::TagList jacobianTags,
+               const Expr::TagList residualTags,
+               const Expr::Tag     rhoTag,
+               const Expr::Tag     fTag,
+               const Expr::Tag     hTag,
+               const Expr::Tag     rhoFTag,
+               const Expr::Tag     rhoHTag,
+               const Expr::Tag     dRhodFTag,
+               const Expr::Tag     dRhodGammaTag,
+               const Expr::Tag     dHdFTag,
+               const Expr::Tag     dHdGammaTag,
+               const  BoundsT      fBounds )
+      : ExpressionBuilder( result_tags(jacobianTags, residualTags) ),
         rhoTag_       ( rhoTag      ),
         fTag_         ( fTag        ),
         hTag_         ( hTag        ),
+        rhoFTag_      ( rhoFTag     ),
+        rhoHTag_      ( rhoHTag     ),
         dRhodFTag_    ( dRhodFTag   ),
         dRhodGammaTag_( dRhodFTag   ),
         dHdFTag_      ( dHdFTag     ),
-        dHdGammaTag_  ( dHdGammaTag )
+        dHdGammaTag_  ( dHdGammaTag ),
+        fBounds_      ( fBounds     )
       {
         assert(jacobianTags.size() == 4);
+        assert(residualTags.size() == 2);
       }
 
       Expr::ExpressionBase* build() const{
-        return new MixFracHeatLossJacobian( rhoTag_, fTag_, hTag_, dRhodFTag_, dRhodGammaTag_, dHdFTag_, dHdGammaTag_ );
+        return new MixFracHeatLossJacobianAndResidual( rhoTag_, 
+                                                       fTag_, 
+                                                       hTag_, 
+                                                       rhoFTag_, 
+                                                       rhoHTag_,
+                                                       dRhodFTag_, 
+                                                       dRhodGammaTag_, 
+                                                       dHdFTag_, 
+                                                       dHdGammaTag_, 
+                                                       fBounds_ );
       }
 
     private:
-      const Expr::Tag rhoTag_, fTag_, hTag_, dRhodFTag_, dRhodGammaTag_, dHdFTag_, dHdGammaTag_;
+      const Expr::Tag rhoTag_, fTag_, hTag_, rhoFTag_, rhoHTag_,
+                  dRhodFTag_, dRhodGammaTag_, dHdFTag_, dHdGammaTag_;
+                  
+      const BoundsT fBounds_;
+
+      static Expr::TagList result_tags( const Expr::TagList jacTags,
+                                        const Expr::TagList resTags)
+      {
+        Expr::TagList resultTags = jacTags;
+        resultTags.insert(resultTags.end(), resTags.begin(), resTags.end());
+        resultTags.push_back(atBoundsTag);
+        return resultTags;
+      }
     };
 
-    ~MixFracHeatLossJacobian(){}
+    ~MixFracHeatLossJacobianAndResidual(){}
 
     void evaluate(){
       using namespace SpatialOps;
-      typename Expr::Expression<FieldT>::ValVec&  jacobElems = this->get_value_vec();
+      typename Expr::Expression<FieldT>::ValVec&  results = this->get_value_vec();
 
       const FieldT& rho       = rho_        ->field_ref();
       const FieldT& f          = f_         ->field_ref();
       const FieldT& h          = h_         ->field_ref();
+      const FieldT& rhoF       = rhoF_      ->field_ref();
+      const FieldT& rhoH       = rhoH_      ->field_ref();
       const FieldT& dRhodF     = dRhodF_    ->field_ref();
       const FieldT& dRhodGamma = dRhodGamma_->field_ref();
       const FieldT& dHdF       = dHdF_      ->field_ref();
       const FieldT& dHdGamma   = dHdGamma_  ->field_ref();
-      
-      *jacobElems[0] <<= rho + f*dRhodF;              // \f[ = \frac{\partial \rho f}{\partial f}     \f]
-      *jacobElems[1] <<= f*dRhodGamma;                // \f[ = \frac{\partial \rho f}{\partial gamma} \f]
-      *jacobElems[2] <<= rho*dHdF + h*dRhodF;         // \f[ = \frac{\partial \rho h}{\partial f}     \f]
-      *jacobElems[3] <<= rho*dHdGamma + h*dRhodGamma; // \f[ = \frac{\partial \rho h}{\partial gamma} \f]
 
+      SpatFldPtr<FieldT> atBounds = SpatialFieldStore::get<FieldT>( rho );
+      *atBounds <<= cond( abs(f-fMin_) < fTol_, 1 )
+                        ( abs(f-fMax_) < fTol_, 1 )
+                        ( 0 );
+      
+      // \f[ J_{f,f} = \frac{\partial \rho f}{\partial f}     \f]
+      *results[0] <<= rho + f*dRhodF;              
+      
+      // \f[ J_{f,\gamma} = \frac{\partial \rho f}{\partial gamma} \f]
+      *results[1] <<= cond( *atBounds > 0, 0 )
+                          ( f*dRhodGamma );
+
+      // \f[ J_{h,f}      = \frac{\partial \rho h}{\partial f}     \f]
+      *results[2] <<= cond( *atBounds > 0, 0 )
+                          ( rho*dHdF + h*dRhodF );
+
+      // \f[ J_{h,\gamma} = \frac{\partial \rho h}{\partial gamma} \f]
+      *results[3] <<= cond( *atBounds > 0, 1 )
+                         ( rho*dHdGamma + h*dRhodGamma );
+
+      // mixture fraction residual
+      *results[4] <<= rho*f - rhoF;
+
+      // mixture fraction residual
+      *results[5] <<= cond( *atBounds > 0, 0 )
+                          ( rho*h - rhoH  );
+
+     *results[6] <<= *atBounds;
     };
   };
 
@@ -203,14 +287,6 @@ namespace WasatchCore{
     factory.register_expression(new PlcHldr( gammaOldTag_        ));
     factory.register_expression(new PlcHldr( this->densityOldTag_));
 
-    // compute residuals
-    factory.register_expression( new typename Residual<FieldT>::
-                                 Builder( this->residualTags_,
-                                          this->rhoPhiTags_,
-                                          this->phiOldTags_,
-                                          this->densityOldTag_ )
-                                );
-
     id = 
     factory.register_expression( new TPEval( hNewTag_, 
                                              enthEval_,
@@ -258,16 +334,20 @@ namespace WasatchCore{
                                               dRhodGammaTag,
                                               dHdGammaTag ));
 
-    // compute jacobian elements
-    factory.register_expression( new typename MixFracHeatLossJacobian<FieldT>::
+    // compute jacobian elements and residuals
+    factory.register_expression( new typename MixFracHeatLossJacobianAndResidual<FieldT>::
                                      Builder( jacobianTags_,
+                                              this->residualTags_,
                                               this->densityOldTag_,
                                               fOldTag_,
                                               hOldTag_,
+                                              rhoFTag_,
+                                              rhoHTag_,
                                               dRhodFTag_,
                                               dRhodGammaTag,
                                               dHdFTag,
-                                              dHdGammaTag ));
+                                              dHdGammaTag,
+                                              fBounds_ ));
 
     factory.register_expression( new typename NewtonUpdate<FieldT>::
                                      Builder( this->betaNewTags_,
@@ -342,15 +422,31 @@ namespace WasatchCore{
     FieldT& gamma  = *results[1];
     FieldT& dRhodF = *results[2];
     FieldT& dRhodH = *results[3];
-    // setup() needs to be run here because we need fields to be defined before a local patch can be created
-    if( !this->setupHasRun_ ){ this->setup();}
-
-    set_initial_guesses();
+    // -------------------------------------
+    // ----------REMOVE --------------------
+    FieldT& badF     = *results[4];
+    FieldT& badGamma = *results[5];
+    FieldT& atBounds = *results[6];
+    badF <<= 0;
+    badGamma <<= 0;
+    
+    // ----------REMOVE --------------------
+    // -------------------------------------
 
     const double maxError = this->newton_solve();
 
     Expr::FieldManagerList* fml = this->helper_.fml_;
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
+
+// -------------------------------------
+// ----------REMOVE --------------------
+    unsigned k = 7;
+    for(unsigned j=0; j<2; ++j){
+      FieldT& resOut = *results[k+j];   
+      resOut <<= fieldTManager.field_ref( this->residualTags_[j] );
+      }
+// ----------REMOVE --------------------
+// -------------------------------------
 
     // copy local fields to fields visible to uintah
     rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
@@ -358,8 +454,28 @@ namespace WasatchCore{
     dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
     dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
 
+// -------------------------------------
+// ----------REMOVE --------------------
+    if(maxError > this->rTol_){
+      const FieldT& f = fieldTManager.field_ref( this->fNewTag_ );
+      FieldT error = fieldTManager.field_ref( this->densityOldTag_ );
+
+      error <<= f - fieldTManager.field_ref( this->fOldTag_ );
+      badF <<= abs(error);
+      badF <<= cond(badF <= this->rTol_ * (this->get_normalization_factor(0)), 0)
+                 (error);
+
+      error <<= gamma - fieldTManager.field_ref( this->gammaOldTag_ );
+      badGamma <<= abs(error);
+      badGamma <<= cond(badGamma <= this->rTol_ * (this->get_normalization_factor(1)), 0)
+                       (error);
+    }
+    
+    atBounds <<= fieldTManager.field_ref( atBoundsTag );
     this->unlock_fields();
   }
+  // ----------REMOVE --------------------
+  // -------------------------------------
 
   //--------------------------------------------------------------------
 
@@ -379,7 +495,24 @@ namespace WasatchCore{
                     const Expr::Tag gammaOldTag,
                     const double rTol,
                     const unsigned maxIter)
-    : ExpressionBuilder( tag_list(rhoNewTag, gammaNewTag, dRhodFTag, dRhodHTag ) ),
+    : ExpressionBuilder( append_tag_lists(
+                                          tag_list( rhoNewTag, 
+                                                    gammaNewTag, 
+                                                    dRhodFTag, 
+                                                    dRhodHTag,
+                                                    Expr::Tag("badPts_f"    , Expr::STATE_NONE),
+                                                    Expr::Tag("badPts_gamma", Expr::STATE_NONE) 
+                                                  ),
+                                          tag_list( atBoundsTag,
+                                                    // Expr::Tag("residual_jacobian_f_f"    , Expr::STATE_NONE),
+                                                    // Expr::Tag("residual_jacobian_f_gamma", Expr::STATE_NONE),
+                                                    // Expr::Tag("residual_jacobian_h_f"    , Expr::STATE_NONE),
+                                                    // Expr::Tag("residual_jacobian_h_gamma", Expr::STATE_NONE),
+                                                    Expr::Tag("solver_residual_f", Expr::STATE_NONE),
+                                                    Expr::Tag("solver_residual_h", Expr::STATE_NONE) 
+                                                  )
+                                          )
+                        ),
       rhoEval_    (rhoEval.clone()  ),
       enthEval_   (enthEval.clone() ),
       rhoOldTag_  (rhoOldTag        ),

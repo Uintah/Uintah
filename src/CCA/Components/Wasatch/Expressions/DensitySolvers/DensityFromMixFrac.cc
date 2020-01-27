@@ -1,3 +1,7 @@
+#ifdef __CUDACC__
+#define ENABLE_CUDA
+#endif
+
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
@@ -217,11 +221,6 @@ namespace WasatchCore{
 
     FieldT& rho    = *results[0];
     FieldT& dRhodF = *results[1];
-
-    // setup() needs to be run here because we need fields to be defined before a local patch can be created
-    if( !this->setupHasRun_ ){ this->setup();}
-
-    set_initial_guesses();
 
     const double maxError = this->newton_solve();
 

@@ -17,19 +17,45 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f"/>
-      <GaussianFunction amplitude="0.1" deviation="2.0" mean="0.0" baseline="0.1">
+      <GaussianFunction amplitude="1.1" deviation="0.4" mean="0.0" baseline="-0.1">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression>
+        
+    <FieldClipping tasklist="initialization">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
 
     <!-- Set the initial condition expression for heat loss -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="gamma"/>
-      <SineFunction amplitude="0.5" frequency="0.2" offset="0.0">
-        <NameTag name="XSVOL"/>
-      </SineFunction> 
+      <ParabolicFunction type="GENERAL">
+         <General a="-1" b="1" c="0.0"/>
+         <NameTag name="f"/>
+       </ParabolicFunction>
     </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="1-2f"/>
+      <LinearFunction slope="-2" intercept="1">
+        <NameTag name="f"/>
+      </LinearFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="nothing"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="f*[1-f]"/>
+        <NameTag name="1-2f"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+
     
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
@@ -38,6 +64,37 @@
        <Constant>0.0</Constant>
     </BasicExpression>
     
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Lewis_number"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Lewis_number"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- set mixture fraction diffusivity based on a Lewis Number and enthalpy diffusivity-->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f_diffusivity" state="STATE_NONE"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="Lewis_number"/>
+        <NameTag name="rhoh_diffusivity"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="f_diffusivity" state="STATE_NONE"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="Lewis_number"/>
+        <NameTag name="rhoh_diffusivity"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+     
     <!-- Set up a tabular property evaluation to extract density for initialization-->
     <TabProps>
       <FileNamePrefix>inputs/Wasatch/h2_equil</FileNamePrefix>
@@ -93,7 +150,7 @@
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
             
-      <ExtractDensity>
+      <ExtractDensity tolerance="1e-6" maxiter="5">
         <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
           <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_NP1"/></DensityWeightedMixtureFraction>  
@@ -127,7 +184,11 @@
     <TransportEquation equation="generic">
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
-      <DiffusiveFlux direction="X" coefficient="1.0e-4"/>
+      <DiffusiveFlux direction="X" isvelocity="false">
+        <DiffusionCoefficient>
+         <NameTag name="f_diffusivity"/>
+       </DiffusionCoefficient>
+      </DiffusiveFlux>
       
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
@@ -165,6 +226,15 @@
       
     <ForceOnGraph tasklist="advance_solution">
       <NameTag name="T"/>
+      <NameTag name="f_diffusivity" state="STATE_NONE"/>
+      <NameTag name="divu" state="STATE_NONE"/>
+      <NameTag name="pressure_src" state="STATE_NONE"/>
+<!--       <NameTag name="pressure_rhs" state="STATE_NONE"/> -->
+      <NameTag name="drhodt" state="STATE_NONE"/>
+    </ForceOnGraph>
+    
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="T"/>
     </ForceOnGraph>
         
     <!-- Momentum transport equations -->
@@ -175,15 +245,18 @@
       <Viscosity>
         <NameTag name="viscosity" />
       </Viscosity>
+      <DisablePressureSolve/>
       
+
       <Pressure>
-        <EnforceSolvability/>
+<!--         <EnforceSolvability/> -->
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1e-10  </tolerance>
-            <maxiterations>  100   </maxiterations>
+<!--             <criteria>       relative</criteria> -->
+            <maxiterations>  1000   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
       </Pressure>
@@ -195,18 +268,18 @@
   <Time>
     <maxTime>5000.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.01</delt_min>
-    <delt_max>0.01</delt_max>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
     <max_Timesteps> 100 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>varden-projection-advection-xdir.uda</filebase>
+    <filebase>varden-projection-heat-loss-mixture-fraction-xdir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="10"/>
+    <checkpoint cycle="2" interval="100"/>
     <compression>gzip</compression>
     <save label="density"/>
     <save label="f"/>
@@ -228,14 +301,51 @@
     <save label="T"/>
     <save label="u"/>
     <save label="divu"/>
+    <save label="badPts_f"/>
+    <save label="badPts_gamma"/>
+    <save label="badPts_f"/>
+    <save label="badPts_gamma"/>
+    <save label="atBounds"/>
+<save label="solver_residual_f"/>
+<save label="solver_residual_h"/>
+<save label="pressure_src"/>
+<!-- <save label="pressure_rhs"/> -->
+<save label="drhodt"/>
   </DataArchiver> 
 
   <Grid>
+  
+    <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+      
+      <Face side="x+" name="xPlus" type="Open">
+<!--         <BCType label="f" var="Dirichlet" value="gaussian-inlet"/> -->
+<!--         <BCType label="gamma" var="Dirichlet" value="parabolic-inlet"/> -->
+        <BCType label="rhoh" var="Neumann" value="0.0"/>
+        <BCType label="h" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+      </Face>
+      
+      <Face side="x-" name="xMinus" type="Open">
+<!--         <BCType label="f" var="Dirichlet" value="gaussian-inlet"/> -->
+<!--         <BCType label="gamma" var="Dirichlet" value="parabolic-inlet"/> -->
+        <BCType label="rhoh" var="Neumann" value="0.0"/>
+        <BCType label="h" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+      </Face>
+
+      </BoundaryConditions>
+  
     <Level>
       <Box label="1">
-        <lower>[-15,0,0]</lower>
-        <upper>[15,1,1]</upper>
-        <resolution>[128,1,1]</resolution>
+        <lower>[-1,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[256,1,1]</resolution>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

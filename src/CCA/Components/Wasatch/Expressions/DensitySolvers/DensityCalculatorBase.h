@@ -162,27 +162,32 @@ namespace WasatchCore{
         // setup() needs to be run here because we need fields to be defined before a local patch can be created
         if( !this->setupHasRun_ ){ this->setup();}
 
+        set_initial_guesses();
+
         Expr::FieldManagerList* fml = this->helper_.fml_;
 
         Expr::ExpressionTree& newtonSolveTree = *(this->newtonSolveTreePtr_);
         newtonSolveTree.bind_fields( *fml );
         newtonSolveTree.lock_fields( *fml ); // this is needed... why?
 
-        set_initial_guesses();
+        // set_initial_guesses();
 
         Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
         unsigned numIter = 0;
         bool converged = false;
 
-        double error = 0;
+        double maxError = 0;
 
+        SpatFldPtr<FieldT> error = SpatialFieldStore::get<FieldT>( fieldTManager.field_ref( this->densityOldTag_ ) );
+
+        Expr::Tag badTag;
         while(numIter< this->maxIter_ && !converged)
         {
           ++numIter;
           newtonSolveTree.execute_tree();
 
-          error = 0;
+          maxError = 0;
 
           // update variables for next iteration and check if residual is below tolerance
           FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
@@ -193,33 +198,53 @@ namespace WasatchCore{
             FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
 
             const FieldT& betaNew = fieldTManager.field_ref( this->betaNewTags_[i] );
+            const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_ [i] );
             const FieldT& rhoPhi  = fieldTManager.field_ref( this->rhoPhiTags_ [i] );
-            const FieldT& rhoNew  = fieldTManager.field_ref( this->densityNewTag_  );
 
-            // use old density as a scratch field for computing error
-            rhoOld <<= abs(betaNew - betaOld);
+            // rhoOld <<= abs(betaNew - betaOld);
+            // const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
 
-            const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
+            *error <<= abs(betaNew - betaOld);
+            const double rhoPhiError = nebo_max(*error)/get_normalization_factor(i);
+
+            // *error <<= abs(rhoNew*phiNew - rhoPhi)/(abs(rhoPhi) + 1e-1);
+            // maxError = std::max(maxError, rhoPhiError);
+
+            if(rhoPhiError > maxError){
+              maxError = rhoPhiError;
+              badTag = this->phiNewTags_[i];
+            }
+            std::cout << "\tIteration: " << numIter 
+                      << " error: " << rhoPhiError 
+                      << " norm factor: " << get_normalization_factor(i) 
+                      <<" field: " << betaNewTags_[i] 
+                      << "\n";
 
             // update old variable
             betaOld <<= betaNew;
           }
           
           for(const unsigned& i : phiUpdateIndecices_){
+            std::cout << "\t\tUpdating  " << this->phiOldTags_[i] << "\n";
             FieldT&       phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
             const FieldT& phiNew  = fieldTManager.field_ref( this->phiNewTags_[i] );
 
             phiOld <<= phiNew;
           }
 
-          converged = (error <= this->rTol_);
+          converged = (maxError <= this->rTol_);
 
           rhoOld <<= rhoNew;
 
         }
 
         if(!converged){
-          std::cout << "\tSolve for density FAILED (max error = " << error << ") after " << numIter << " iterations.\n";
+          std::cout << "\tSolve for density FAILED (max error = " << maxError << " field: "<< badTag.name() << ") after " 
+                    << numIter << " iterations.\n";
+          newtonSolveTree.execute_tree();//
+        }
+        else{
+          std::cout << "\tSolve for density completed (max error = " << maxError << ") after " << numIter << " iterations.\n";
         }
 
 
@@ -228,7 +253,7 @@ namespace WasatchCore{
         dRhodFTree.lock_fields( *fml );
         dRhodFTree.execute_tree();
 
-        return error;
+        return maxError;
       }
 
       //-------------------------------------------------------------------

@@ -155,7 +155,7 @@ namespace WasatchCore
     if(allocInfo_->patch->getID() == 0){
       for( Expr::ExpressionTree* tree : treeList_){
         std::ofstream ofile(tree->name() + ".dot");
-        tree->write_tree(ofile);
+        tree->write_tree(ofile, false, true);
       }
     }
   }
