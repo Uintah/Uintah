@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
@@ -199,14 +199,14 @@ struct EnthalpyBoundaryTyper
     if( flowTreatment_ == LOWMACH ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if(enableTurbulence_){
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, info    , primVarTag_, Expr::STATE_NONE, ""               );
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_, primVarTag_, Expr::STATE_NONE,  "-NP1-estimate" );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, info    , primVarTag_, densityTag_, Expr::STATE_NONE, ""               );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_, primVarTag_, densityTag_, Expr::STATE_NONE,  "-NP1-estimate" );
       }
 
       else{
         Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION]->exprFactory;
-        register_diffusive_flux_expressions( INITIALIZATION  , infoInit_, primVarInitTag_, Expr::STATE_NONE, "" );
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_ , primVarNP1Tag_ , Expr::STATE_NP1 , "" );
+        register_diffusive_flux_expressions( INITIALIZATION  , infoInit_, primVarInitTag_, densityInitTag_, Expr::STATE_NONE, "" );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_ , primVarNP1Tag_ , densityNP1Tag_ , Expr::STATE_NP1 , "" );
 
         const std::set<FieldSelector> fsSet = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
         for( FieldSelector fs : fsSet ){
@@ -227,7 +227,7 @@ struct EnthalpyBoundaryTyper
     }// if( flowTreatment_ == LOWMACH )
 
     else{
-      register_diffusive_flux_expressions( ADVANCE_SOLUTION, info, primVarTag_, Expr::STATE_NONE, "" );
+      register_diffusive_flux_expressions( ADVANCE_SOLUTION, info, primVarTag_, densityTag_, Expr::STATE_NONE, "" );
     }
   }
 
@@ -238,6 +238,7 @@ struct EnthalpyBoundaryTyper
   register_diffusive_flux_expressions( const Category      cat,
                                        FieldTagInfo&       info,
                                        Expr::Tag           primVarTag,
+                                       Expr::Tag           densityTag,
                                        const Expr::Context context,
                                        const std::string   suffix )
   {
@@ -257,29 +258,32 @@ struct EnthalpyBoundaryTyper
       // jcs how will we determine if we have each direction on???
       doX=true, doY=true, doZ=true;
 
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFluxConstLe;
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFluxConstLe;
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFluxConstLe;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFlux;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFlux;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFlux;
 
       if( doX ){
-        factory.register_expression( new XFluxConstLe( xDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new XFlux( xDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
       }
       if( doY ){
-        factory.register_expression( new YFluxConstLe( yDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new YFlux( yDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
       }
       if( doZ ){
-        factory.register_expression( new ZFluxConstLe( zDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new ZFlux( zDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
       }
     }
