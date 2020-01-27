@@ -50,13 +50,14 @@ class NestedExpression : public Expr::Expression<FieldT>
   NestedGraphHelper     helper_;
   UintahPatchContainer* patchContainer_;
   Expr::ExpressionTree* treePtr_;
-  const unsigned numIter_; // maximum number of iterations
 
   bool setupHasRun_;
 
   const Expr::Tag& resultTag_;
   const Expr::Tag intermediateTag_;
   Expr::TagList inputTags_;
+
+  const unsigned numIter_; // maximum number of iterations
 
   NestedExpression( const Expr::Tag&     resultTag,
                     const Expr::TagList& inputTags,
