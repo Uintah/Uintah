@@ -38,8 +38,9 @@ SRCDIR := CCA/Components/Wasatch
 
 # Do not put the extension on files in this list as the .cc or .cu will
 # be added automatically as needed.
-CUDA_ENABLED_SRCS := \
-      TimeStepper    \
+CUDA_ENABLED_SRCS :=    \
+      TimeStepper       \
+      NestedGraphHelper \
       Wasatch
 
 ifeq ($(HAVE_CUDA),yes)
@@ -59,7 +60,6 @@ SRCS +=                                              \
         $(SRCDIR)/CoordinateHelper.cc                \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
-        $(SRCDIR)/NestedGraphHelper.cc               \
         $(SRCDIR)/OldVariable.cc                     \
         $(SRCDIR)/ParticlesHelper.cc                 \
         $(SRCDIR)/ParseTools.cc                      \
