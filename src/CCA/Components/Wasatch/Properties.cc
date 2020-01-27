@@ -31,6 +31,7 @@
 #include <CCA/Components/Wasatch/Expressions/TabPropsHeatLossEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
+#include <CCA/Components/Wasatch/Expressions/SpeciesDiffusivityFromLewisNumber.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
@@ -234,17 +235,49 @@ namespace WasatchCore{
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy"       )->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss"                      )->findBlock("NameTag") );
 
+      typedef Expr::PlaceHolder<SVolField>  PlcHolder; 
+
+      // If specified, set mixture fraction diffusivity Lewis number
+      const Uintah::ProblemSpecP lewisNoParams = params->findBlock("LewisNumber");
+      if(lewisNoParams){
+        double lewisNo = 1;
+
+        assert(lewisNoParams->findAttribute("value"));
+        lewisNoParams->getAttribute("value",lewisNo);
+
+        Expr::Tag diffusivityTag = parse_nametag( lewisNoParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+        Expr::Tag thermCondTag   = parse_nametag( lewisNoParams->findBlock("ThermalConductivity" )->findBlock("NameTag") );
+        Expr::Tag cpTag          = parse_nametag( lewisNoParams->findBlock("HeatCapacity"        )->findBlock("NameTag") );
+
+        diffusivityTag.reset_context( Expr::STATE_NP1 );
+        thermCondTag  .reset_context( Expr::STATE_NP1 );
+        cpTag         .reset_context( Expr::STATE_NP1 );
+
+        // todo: more might need to be done for cases with a turbulence model..
+        factory.register_expression( scinew typename SpeciesDiffusivityFromLewisNumber<SVolField>::
+                                     Builder( diffusivityTag,
+                                              densityTag,
+                                              thermCondTag,
+                                              cpTag,
+                                              lewisNo ));
+
+        const Expr::Tag oldDiffusivityTag = Expr::Tag(diffusivityTag.name(), Expr::STATE_N);
+        factory.register_expression( scinew PlcHolder::
+                                     Builder(oldDiffusivityTag) );
+ 
+        persistentFields.insert( diffusivityTag.name() );
+      }
+
       persistentFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
       persistentFields.insert( hTag       .name() );
 
       // modify name & context when we are calculating density at newer time
-      // levels since this will be using STATE_NONE information as opposed to
+      // levels since this will be using STATE_NP1 information as opposed to
       // potentially STATE_N information.
       rhofTag.reset_context( Expr::STATE_NP1 );
       rhohTag.reset_context( Expr::STATE_NP1 );
       heatLossTag.reset_context( Expr::STATE_NP1 );
 
-      typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       const Expr::Tag rhoOldTag     ( densityTag .name(), Expr::STATE_N );
       const Expr::Tag fOldTag       ( fTag       .name(), Expr::STATE_N );
       const Expr::Tag hOldTag       ( hTag       .name(), Expr::STATE_N );
@@ -261,10 +294,6 @@ namespace WasatchCore{
       factory.cleave_from_parents(factory.get_id(heatLossOldTag));
     
       typedef DensityFromMixFracAndHeatLoss<SVolField>::Builder DensCalculator;
-
-      const Expr::Tag newDensTag(densityTag.name()+"_new", Expr::STATE_NONE);
-      const Expr::Tag newdRhodFTag(dRhodFTag.name()+"_new", Expr::STATE_NONE);
-      const Expr::Tag newdRhodHTag(dRhodHTag.name()+"_new", Expr::STATE_NONE);
 
       densCalcID = 
       factory.register_expression( scinew DensCalculator( densityTag,
