@@ -1,8 +1,7 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolve/DensityCalculatorNew.h>
-// #include <CCA/Components/Wasatch/Expressions/DensitySolve/NewtonUpdate.h>
-#include <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h>
-// #include <CCA/Components/Wasatch/Expressions/DensitySolve/RelativeError.h>
+ #include <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <expression/ClipValue.h>
 
 #include <sci_defs/uintah_defs.h>
@@ -95,9 +94,16 @@ namespace DelMe{
                   const bool weakForm,
                   const double rTol,
                   const unsigned maxIter)
-    : DensityCalculatorBase<FieldT>( "DensFromMixFrac", tag_list(fOldTag), rTol, maxIter ),
+    : DensityCalculatorBase<FieldT>( rhoOldTag, 
+                                     tag_list(TagNames::self().derivative_tag(rhoOldTag,fOldTag)),
+                                     tag_list(fOldTag), 
+                                     rTol, 
+                                     maxIter ),
       rhoEval_  ( rhoEval ),
-      dRhodFTag_( "solver_d_rho_d_f" , Expr::STATE_NONE ),
+      fOldTag_  ( this->phiOldTags_[0] ),
+      fNewTag_  ( this->phiNewTags_[0] ),
+      dRhodFTag_( this->dRhodPhiTags_[0] ),
+      rhoFTag_  ( this->rhoPhiTags_[0] ),
       bounds_   ( rhoEval.get_bounds()[0] ),
       weak_     ( weakForm )
   {
@@ -138,53 +144,52 @@ namespace DelMe{
 
     Expr::ExpressionID id;
 
-    const Expr::Tag& fOldTag = this->phiOldTags_[0];
-    const Expr::Tag& fNewTag = this->phiNewTags_[0];
-    const Expr::Tag& rhoFTag = this->rhoPhiTags_[0];
-
     typedef typename Expr::PlaceHolder<FieldT>::Builder PlcHldr;
     typedef typename TabPropsEvaluator<FieldT>::Builder TPEval;
 
-    factory.register_expression(new PlcHldr( rhoFTag ));
-    factory.register_expression(new PlcHldr( fOldTag ));
+    factory.register_expression(new PlcHldr( rhoFTag_            ));
+    factory.register_expression(new PlcHldr( fOldTag_            ));
+    factory.register_expression(new PlcHldr( this->densityOldTag_));
 
     // compute residual
     factory.register_expression( new typename Residual<FieldT>::
                                  Builder( this->residualTags_,
                                           this->rhoPhiTags_,
                                           this->phiOldTags_,
-                                          this->densityTag_ )
+                                          this->densityOldTag_ )
                                 );
 
-    // compute density from lookup table
-    factory.register_expression( new TPEval( this->densityTag_, 
-                                             rhoEval_,
-                                             this->phiOldTags_
-                                            )
-                                );
     // compute d(rho)/d(f) from lookup table
     factory.register_expression( new TPEval( dRhodFTag_, 
                                              rhoEval_,
                                              this->phiOldTags_,
-                                             fOldTag
+                                             fOldTag_
                                             )
                                 );
-    id = 
+
     factory.register_expression( new typename OneVarNewtonSolve<FieldT>::
-                                 Builder( fNewTag,
-                                          fOldTag,
-                                          this->densityTag_,
+                                 Builder( fNewTag_,
+                                          fOldTag_,
+                                          this->densityOldTag_,
                                           dRhodFTag_,
                                           this->residualTags_[0] )
                             );
-    rootIDs.insert(id);
 
       // clip updated mixture fraction
-    const Expr::Tag fClipTag = Expr::Tag(fNewTag.name()+"_clip", Expr::STATE_NONE);
+    const Expr::Tag fClipTag = Expr::Tag(fNewTag_.name()+"_clip", Expr::STATE_NONE);
     factory.register_expression( new typename Expr::ClipValue<FieldT>::
-                                 Builder( fClipTag, bounds_.second, bounds_.first ) 
+                                 Builder( fClipTag, 0, 1 ) 
                                 );
-     factory.attach_modifier_expression( fClipTag, fNewTag );
+     factory.attach_modifier_expression( fClipTag, fNewTag_ );
+
+    // compute density from lookup table
+    id = 
+    factory.register_expression( new TPEval( this->densityNewTag_, 
+                                             rhoEval_,
+                                             this->phiNewTags_
+                                            )
+                                );
+    rootIDs.insert(id);
 
     return rootIDs;
   }
@@ -197,10 +202,14 @@ namespace DelMe{
   set_initial_guesses()
   {
       Expr::UintahFieldManager<FieldT>& fieldTManager = this->helper_.fml_-> template field_manager<FieldT>();
-      FieldT& fOld = fieldTManager.field_ref( this->phiOldTags_[0] );
+
+      FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_);
+      rhoOld <<= rhoOld_->field_ref();
+
+      FieldT& fOld = fieldTManager.field_ref( fOldTag_ );
       fOld <<= fOld_->field_ref();
 
-      FieldT& rhoF = fieldTManager.field_ref( this->rhoPhiTags_[0] );
+      FieldT& rhoF = fieldTManager.field_ref( rhoFTag_ );
       rhoF <<= rhoF_->field_ref();
   }
 
@@ -222,14 +231,14 @@ namespace DelMe{
     FieldT& badPts = *results[1];
     FieldT& drhodf = *results[2];
 
-    std::cout<< "\nIn DensFromMixfrac::evaluate()...";
-
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
 
     Expr::FieldManagerList* fml = this->helper_.fml_;
-    this->newtonSolveTreePtr_->bind_fields( *fml );
-    this->newtonSolveTreePtr_->lock_fields( *fml ); // is this needed?
+
+    Expr::ExpressionTree& newtonSolveTree = *(this->newtonSolveTreePtr_);
+    newtonSolveTree.bind_fields( *fml );
+    newtonSolveTree.lock_fields( *fml ); // this is needed... why?
 
     set_initial_guesses();
 
@@ -243,54 +252,49 @@ namespace DelMe{
     while(numIter< this->maxIter_ && !converged)
     {
       ++numIter;
-      this->newtonSolveTreePtr_->execute_tree();
+      newtonSolveTree.execute_tree();
 
-      FieldT& fOld = fieldTManager.field_ref( this->phiOldTags_[0] );
-      FieldT& fNew = fieldTManager.field_ref( this->phiNewTags_[0] );
+      FieldT& fOld = fieldTManager.field_ref( fOldTag_ );
+      FieldT& fNew = fieldTManager.field_ref( fNewTag_ );
 
-      // update fOld for next iteration
-      fOld <<= fNew;
+      FieldT& rhoOld = fieldTManager.field_ref( this->densityOldTag_ );
+      FieldT& rhoNew = fieldTManager.field_ref( this->densityNewTag_ );
+
+      // update fOld and rhoOld for next iteration
+      fOld   <<= fNew;
+      rhoOld <<= rhoNew;
 
       const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
       converged = nebo_max(abs(res)) < absTol;
     }
 
-    // copy local fields to fields visible to uintah
-    rho    <<= fieldTManager.field_ref( this->densityTag_ );
-    drhodf <<= fieldTManager.field_ref( dRhodFTag_ );
     if(converged)
     {
+      Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);
+      dRhodFTree.bind_fields( *fml );
+      dRhodFTree.lock_fields( *fml );
+      dRhodFTree.execute_tree();
+      // copy local fields to fields visible to uintah
       badPts <<= 0.0;
+      rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
+      drhodf <<= fieldTManager.field_ref( dRhodFTag_ );
+
+      dRhodFTree.unlock_fields( *fml );
     }
     else
     {
       const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
-      badPts <<= cond(abs(res) > absTol, res)
+      badPts <<= cond(abs(res) > absTol, 1)
                      (0.0);
+      const double nbad  = nebo_sum(badPts);
+
+      badPts <<= cond(badPts > 0, res)
+                (0.0);
+      std::cout << "\tConvergence failed at " << (int)nbad << " points.\n";
     }
+    newtonSolveTree.unlock_fields( *fml );
     
-    
-    // if( nbad>0 && maxIter_ != 0){
-    //   std::cout << "\tConvergence failed at " << nbad << " points.\n";
-    // }
   }
-
-  //--------------------------------------------------------------------
-
-  // template<typename FieldT>
-  // void
-  // DensFromMixfrac<FieldT>::
-  // calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
-  //                        const DensityCalculatorBase::DoubleVec& soln,
-  //                        DensityCalculatorBase::DoubleVec& jac,
-  //                        DensityCalculatorBase::DoubleVec& res )
-  // {
-  //   const double rhoF = passThrough[0];
-  //   const double& f = soln[0];
-  //   const double rhoCalc = rhoEval_.value( &f );
-  //   jac[0] = rhoCalc + f * rhoEval_.derivative( &f, 0 );
-  //   res[0] = f * rhoCalc - rhoF;
-  // }
 
   //--------------------------------------------------------------------
 

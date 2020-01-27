@@ -59,9 +59,10 @@ namespace WasatchCore{
       /*
        * brief  creates  a new ExpressionTree* given a name for the tree and rootIds and inserts
        */
+      template <typename IDType>
       Expr::ExpressionTree*
       new_tree(const std::string treeName,
-                    const Expr::IDSet& rootIDs);
+                    const IDType& rootIDs);
 
       /*
        * \brief defines member allocInfo based info from Uintah::Patch

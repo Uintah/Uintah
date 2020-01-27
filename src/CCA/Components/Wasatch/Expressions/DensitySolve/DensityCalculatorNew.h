@@ -51,7 +51,10 @@ namespace DelMe{
   class DensFromMixfrac : protected DensityCalculatorBase<FieldT>
   {
     const InterpT& rhoEval_;
-    const Expr::Tag dRhodFTag_;
+    const Expr::Tag& fOldTag_;
+    const Expr::Tag& fNewTag_;
+    const Expr::Tag& dRhodFTag_;
+    const Expr::Tag& rhoFTag_;
     const std::pair<double,double> bounds_;
     const bool weak_;
     DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, fOld_)

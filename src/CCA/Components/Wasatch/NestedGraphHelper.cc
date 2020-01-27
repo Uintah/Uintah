@@ -78,6 +78,26 @@ namespace WasatchCore
 
 //--------------------------------------------------------------------
 
+  template<>
+  Expr::ExpressionTree*
+  NestedGraphHelper::
+  new_tree(const std::string treeName, const Expr::ExpressionID& rootID)
+  {
+    assert(allocInfo_!=nullptr);
+
+    Expr::ExpressionTree*
+    newTree = new Expr::ExpressionTree( rootID,
+                                        *factory_,
+                                        allocInfo_->patch->getID(),
+                                        treeName );
+    treeList_.insert(newTree);
+
+    return newTree;
+}
+
+//--------------------------------------------------------------------
+
+  template<>
   Expr::ExpressionTree*
   NestedGraphHelper::
   new_tree(const std::string treeName, const Expr::IDSet& rootIDs)

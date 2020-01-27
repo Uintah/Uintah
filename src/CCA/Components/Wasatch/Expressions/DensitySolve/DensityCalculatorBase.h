@@ -45,23 +45,25 @@ namespace DelMe{
     public:
        /**
        *  @brief Base class for expressions that compute density for Wasatch's low-Mach NSE solver
-       *  @param treeName name of the nested expression tree used to compute density
+       *  @param densityTag tag to the density which will be calculated
        *  @param phiTags tags to primitive (transported) scalars 
        *  @param rTol relative tolerance
        *  @param maxIter maximum number of iterations for Newton solve used to compute density
        */
-      DensityCalculatorBase( const std::string treeName,
+      DensityCalculatorBase( const Expr::Tag densityTag,
+                             const Expr::TagList dRhodPhiTags,
                              const Expr::TagList phiTags,
                              const double rTol,
                              const size_t maxIter=20 )
       : Expr::Expression<FieldT>(),
         setupHasRun_(false),
-        treeName_(treeName),
-        rhoPhiTags_  (tags_with_prefix(phiTags, "solver_rho"     )),
-        phiOldTags_  (tags_with_prefix(phiTags, "solver_old"     )),
-        phiNewTags_  (tags_with_prefix(phiTags, "solver_new"     )),
-        residualTags_(tags_with_prefix(phiTags, "solver_residual")),
-        densityTag_("solver_density", Expr::STATE_NONE),
+        densityOldTag_(tag_with_prefix (densityTag  , "solver_old"     )),
+        densityNewTag_(tag_with_prefix (densityTag  , "solver_new"     )),
+        dRhodPhiTags_ (tags_with_prefix(dRhodPhiTags, "solver_old"     )),
+        rhoPhiTags_   (tags_with_prefix(phiTags     , "solver_rho"     )),
+        phiOldTags_   (tags_with_prefix(phiTags     , "solver_old"     )),
+        phiNewTags_   (tags_with_prefix(phiTags     , "solver_new"     )),
+        residualTags_ (tags_with_prefix(phiTags     , "solver_residual")),
         rTol_(rTol),
         maxIter_(maxIter)
         {};
@@ -70,24 +72,19 @@ namespace DelMe{
 
     protected:
       bool                  setupHasRun_;
-      const std::string     treeName_;
-      const Expr::TagList   rhoPhiTags_;
-      const Expr::TagList   phiOldTags_;
-      const Expr::TagList   phiNewTags_;
-      const Expr::TagList   residualTags_;
-      const Expr::Tag densityTag_;
+      const Expr::Tag       densityOldTag_, densityNewTag_;
+      const Expr::TagList   dRhodPhiTags_, rhoPhiTags_, phiOldTags_, phiNewTags_, residualTags_;
       const double          rTol_;
       const unsigned        maxIter_;
       NestedGraphHelper     helper_;
       UintahPatchContainer* patchContainer_;
-      Expr::ExpressionTree* newtonSolveTreePtr_;
+      Expr::ExpressionTree *newtonSolveTreePtr_, *dRhodPhiTreePtr_;
 
       virtual Expr::IDSet register_local_expressions() = 0;
       virtual void set_initial_guesses() = 0;
 
       void bind_operators( const SpatialOps::OperatorDatabase& opDB )
       {
-        proc0cout << "\nCalling DensityCalculatorBase::bind_operators.\n";
         patchContainer_ = opDB.retrieve_operator<UintahPatchContainer>();
       }
 
@@ -102,9 +99,17 @@ namespace DelMe{
     
         helper_.set_alloc_info(patch);
         std::cout << "\ncalling register_local_expressions()...";
-        Expr::IDSet rootIDs = register_local_expressions();
-        newtonSolveTreePtr_ = helper_.new_tree(treeName_, rootIDs);
-    
+        const Expr::IDSet newtonSolveIDs = register_local_expressions();
+
+        Expr::IDSet dRhodPhiIDs;
+        for(const Expr::Tag& tag : dRhodPhiTags_)
+        {
+          dRhodPhiIDs.insert(helper_.factory_->get_id(tag));
+        }
+
+        newtonSolveTreePtr_ = helper_.new_tree("density_newton_iteration", newtonSolveIDs);
+        dRhodPhiTreePtr_    = helper_.new_tree("d_rho_d_phi_eval"        , dRhodPhiIDs   );
+
         helper_.finalize();
         setupHasRun_ = true;
         std::cout << "done \n";
