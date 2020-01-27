@@ -112,20 +112,23 @@ namespace WasatchCore{
     public:
       /**
        *  @param rhoNewTag density computed by this expression
+       *  @param gammaNewTag heat loss computed by this expression
        *  @param dRhodFTag derivative of density w.r.t. mixture fraction computed by this expression
-       *  @param badPtsTag tag to a field whose nonzero values correspond to locations where residual
-       *                   tolerance is above rTol.
+       *  @param dRhodFTag derivative of density w.r.t.enthalpy computed by this expression
        *  @param rhoEval   reference to a density evaluation table
+       *  @param rhoEval   reference to an enthalpy evaluation table
        *  @param rhoOldTag the density from the previous timestep (used as a guess)
        *  @param fOldTag the density from the previous timestep (used as a guess)
+       *  @param fOldTag the heat loss from the previous timestep (used as a guess)
        *  @param rhoFTag the density weighted mixture fraction
+       *  @param rhoHTag the density weighted enthalpy
        *  @param rTol the relative solver tolerance
        *  @param maxIter maximum number of solver iterations allowed
        */
       Builder( const Expr::Tag rhoNewTag,
+               const Expr::Tag gammaNewTag,
                const Expr::Tag dRhodFTag,
                const Expr::Tag dRhodHTag,
-               const Expr::Tag badPtsTag,
                const InterpT&  rhoEval,
                const InterpT&  enthEval,
                const Expr::Tag rhoOldTag,
@@ -136,7 +139,7 @@ namespace WasatchCore{
                const double rTol,
                const unsigned maxIter );
       
-      ~Builder(){ delete rhoEval_; }
+      ~Builder(){ delete rhoEval_;  delete enthEval_;  }
       Expr::ExpressionBase* build() const{
         return new DensityFromMixFracAndHeatLoss<FieldT>( *rhoEval_, *enthEval_, rhoOldTag_, rhoFTag_, rhoHTag_, 
                                                           fOldTag_, gammaOldTag_, rtol_, maxIter_ );

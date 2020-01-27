@@ -346,10 +346,9 @@ namespace WasatchCore{
     SVolFieldVec& results = this->get_value_vec();
 
     FieldT& rho    = *results[0];
-    FieldT& dRhodF = *results[1];
-    FieldT& dRhodH = *results[2];
-    FieldT& badPts = *results[3];
-
+    FieldT& gamma  = *results[1];
+    FieldT& dRhodF = *results[2];
+    FieldT& dRhodH = *results[3];
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
 
@@ -361,14 +360,10 @@ namespace WasatchCore{
     Expr::UintahFieldManager<FieldT>& fieldTManager = fml-> template field_manager<FieldT>();
 
     // copy local fields to fields visible to uintah
-    badPts <<= 0.0;
     rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
+    gamma  <<= fieldTManager.field_ref( this->gammaNewTag_   );
     dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
     dRhodH <<= fieldTManager.field_ref( dRhodHTag_ );
-
-    *results[4] <<= fieldTManager.field_ref( this->betaNewTags_[0] );
-    *results[5] <<= fieldTManager.field_ref( this->betaNewTags_[1] );
-
 
     if(maxError>this->rTol_)
     {
@@ -383,9 +378,9 @@ namespace WasatchCore{
   template< typename FieldT >
   DensityFromMixFracAndHeatLoss<FieldT>::
   Builder::Builder( const Expr::Tag rhoNewTag,
+                    const Expr::Tag gammaNewTag,
                     const Expr::Tag dRhodFTag,
                     const Expr::Tag dRhodHTag,
-                    const Expr::Tag badPtsTag,
                     const InterpT&  rhoEval,
                     const InterpT&  enthEval,
                     const Expr::Tag rhoOldTag,
@@ -395,9 +390,7 @@ namespace WasatchCore{
                     const Expr::Tag gammaOldTag,
                     const double rTol,
                     const unsigned maxIter)
-    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, dRhodHTag, badPtsTag, 
-                                  Expr::Tag("new_f", Expr::STATE_NONE),  
-                                  Expr::Tag("new_gamma", Expr::STATE_NONE)) ),
+    : ExpressionBuilder( tag_list(rhoNewTag, gammaNewTag, dRhodFTag, dRhodHTag ) ),
       rhoEval_    (rhoEval.clone()  ),
       enthEval_   (enthEval.clone() ),
       rhoOldTag_  (rhoOldTag        ),

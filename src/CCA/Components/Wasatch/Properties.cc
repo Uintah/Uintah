@@ -211,8 +211,15 @@ namespace WasatchCore{
         const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
           
         densCalcID =                                        
-        factory.register_expression( scinew DensCalculator( densityTag, dRhodFTag, badPtsTag, *densInterp, 
-                                                            rhoOldTag, rhofTag, fOldTag, rtol, (unsigned)maxIter ));
+        factory.register_expression( scinew DensCalculator( densityTag, 
+                                                            dRhodFTag, 
+                                                            badPtsTag, 
+                                                            *densInterp, 
+                                                            rhoOldTag, 
+                                                            rhofTag, 
+                                                            fOldTag, 
+                                                            rtol, 
+                                                            (unsigned)maxIter ));
       }
 
     }
@@ -251,24 +258,20 @@ namespace WasatchCore{
       persistentFields.insert( dRhodFTag.name() );
       
       factory.cleave_from_parents(factory.get_id(heatLossOldTag));
-
-      typedef OldDensityCalculator::DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc(densityTag, heatLossTag, dRhodFTag, dRhodHTag,
-                                                                rhoOldTag, heatLossOldTag, rhofTag, rhohTag,
-                                                                *densInterp, *enthInterp, rtol, (unsigned)maxIter ) );
     
       typedef DensityFromMixFracAndHeatLoss<SVolField>::Builder DensCalculator;
+
       const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
       const Expr::Tag newDensTag(densityTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodFTag(dRhodFTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag newdRhodHTag(dRhodHTag.name()+"_new", Expr::STATE_NONE);
       const Expr::Tag badPtsTag("badPoints_new", Expr::STATE_NONE);
 
-      Expr::ExpressionID newDensID = 
-      factory.register_expression( scinew DensCalculator( newDensTag,
-                                                          newdRhodFTag,
-                                                          newdRhodHTag,
-                                                          badPtsTag,
+      densCalcID = 
+      factory.register_expression( scinew DensCalculator( densityTag,
+                                                          heatLossTag,
+                                                          dRhodFTag,
+                                                          dRhodHTag,
                                                           *densInterp, 
                                                           *enthInterp,
                                                           rhoOldTag,
@@ -278,8 +281,6 @@ namespace WasatchCore{
                                                           heatLossOldTag,
                                                           rtol,
                                                           (unsigned)maxIter ));
-    gh.rootIDs.insert(newDensID);
-
     gh.rootIDs.insert(densCalcID);
     }
     
