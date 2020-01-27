@@ -60,7 +60,7 @@ namespace WasatchCore{
   radiationsource    ( "RadiationSource"  , Expr::STATE_NONE ),
   radvolq            ( "radiationVolq"    , Expr::STATE_NONE ),
   radvrflux          ( "VRFlux"           , Expr::STATE_NONE ),
-  enthalpy           ( "h"                , Expr::STATE_NONE ),
+  enthalpy           ( "enthalpy"         , Expr::STATE_NONE ),
   xHeatFlux          ( "HeatFlux_X"       , Expr::STATE_NONE ),
   yHeatFlux          ( "HeatFlux_Y"       , Expr::STATE_NONE ),
   zHeatFlux          ( "HeatFlux_Z"       , Expr::STATE_NONE ),

@@ -380,7 +380,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "X";
               typedef EnthalpyBoundaryTyper<XFaceT, SpatialOps::GradientX> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -400,7 +399,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "Y";
               typedef EnthalpyBoundaryTyper<YFaceT, SpatialOps::GradientY> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -420,7 +418,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "Z";
               typedef EnthalpyBoundaryTyper<ZFaceT, SpatialOps::GradientZ> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -593,10 +590,10 @@ struct EnthalpyBoundaryTyper
 
     if(isLowMach){
       const Category initCat = INITIALIZATION;
-//      const Expr::Context initContext = Expr::STATE_NONE;
-//      bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
-//      bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
-//      bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
+     const Expr::Context initContext = Expr::STATE_NONE;
+     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
+     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
+     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
     }
   }
 
@@ -661,19 +658,9 @@ struct EnthalpyBoundaryTyper
         initFactory.register_expression( scinew ConstBuilder(tagNames.divu, 0.0));
       }
 
-      // For enthalpy transport, we treat derivative, DP/Dt as a source term. Because DP/Dt depends on velocity divergence (divu),
-      // which is calculated from non-convective scalar RHSs, we need to split DP/Dt into 2 parts:
-      //    - a divergence-free portion (with associated tag 'partialDPDtTag')
-      //    - the part that depends on divu, which is not explicitly calculated
-      //
-      // 'partialDPDtTag' is included in scalarEOSsrcTags, but is not added the RHS of the enthalpy transport equation. Instead,
-      // DP/Dt is calculated from the divergence-free part of DP/Dt at STATE_NP1, and added to the enthalpy RHS during the
-      // subsequent time step, so a placeholder for DP/Dt is registered for STATE_N. For now, we assume DP/Dt is zero unless we
-      // are transporting species (rather than mixture fraction).
-
       Expr::TagList scalarEOSsrcTags = srcTags;
 
-      //#ifdef HAVE_POKITT stuff here
+      //#ifdef HAVE_POKITT stuff here for low-Mach species transport
 
       solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , scalarEOSsrcTags, densityNP1Tag_ , dRhoDhTag, isStrong_) );
       initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, scalarEOSsrcTags, densityInitTag_, dRhoDhTag, isStrong_) );
@@ -692,7 +679,7 @@ struct EnthalpyBoundaryTyper
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // initial condition for enthalpy
-   //#ifdef HAVE_POKITT stuff here
+    //#ifdef HAVE_POKITT stuff here for low-Mach species transport
     {
       return ScalarTransportEquation<FieldT>::initial_condition(icFactory);
     }

@@ -529,7 +529,7 @@
                         
       <!-- Interpolate fields from different locations -->
       <InterpolateExpression  spec="OPTIONAL NO_DATA"
-                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL, PARTICLE">
+                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL,SSURFX,SSURFY,SSURFZ, PARTICLE">
           <ParticleInfo spec="OPTIONAL NO_DATA" need_applies_to="type PARTICLE"
                         attribute1="size REQUIRED STRING"
                         attribute2="px REQUIRED STRING"
@@ -1247,7 +1247,7 @@
         -->
         <ModelBasedOnMixtureFractionAndHeatLoss spec="OPTIONAL NO_DATA">
           <MixtureFraction  spec="REQUIRED NO_DATA">
-            <NameTag        spec="REQUIRED"/>
+            <NameTag        spec="REQUIRED"/>z
           </MixtureFraction>
           <Enthalpy  spec="REQUIRED NO_DATA">
             <NameTag        spec="REQUIRED"/>
@@ -1261,20 +1261,6 @@
           <HeatLoss                       spec="REQUIRED NO_DATA">
             <NameTag                      spec="REQUIRED" />
           </HeatLoss>
-          <!-- If specified, set mixture fraction diffusivity Lewis number -->                                                                                                                                                                                                                                                            
-          <LewisNumber spec="OPTIONAL NO_DATA"
-                        attribute1="value REQUIRED DOUBLE">
-            <!-- tag to diffusivity computed based on Lewis number -->  
-            <DiffusionCoefficient spec="REQUIRED NO_DATA"> 
-              <NameTag spec="REQUIRED"/> 
-            </DiffusionCoefficient>
-            <ThermalConductivity spec="REQUIRED NO_DATA"> 
-              <NameTag spec="REQUIRED"/> 
-            </ThermalConductivity>
-            <HeatCapacity spec="REQUIRED NO_DATA"> 
-              <NameTag spec="REQUIRED"/>
-            </HeatCapacity>         
-          </LewisNumber>
         </ModelBasedOnMixtureFractionAndHeatLoss>
 
       </ExtractDensity>
