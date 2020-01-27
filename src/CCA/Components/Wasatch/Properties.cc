@@ -33,7 +33,8 @@
 #include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/DensitySolve/DensityCalculatorNew.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
@@ -182,34 +183,36 @@ namespace WasatchCore{
 
       rhofTag.reset_context( Expr::STATE_NP1 );
       if (weakForm) fTag.reset_context( Expr::STATE_NP1 );
-
-      typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
-      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name(), tagNames.unconvergedpts.context() );
-      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag, fTag);
-      const Expr::TagList theTagList( tag_list( densityTag, unconvPts, dRhoDfTag ) );
+      const Expr::Tag badPtsTag = tagNames.unconvergedpts;
+      const Expr::Tag dRhodFTag = tagNames.derivative_tag(densityTag, fTag);
       
       // register placeholder for the old density
       const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
+
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
-      // densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter) );
+      // if weak-form mixture fraction is being transported, density can be evaluated from a lookup table directly
+      if(weakForm)
+      {
+        typedef TabPropsEvaluator<SVolField>::Builder TPEval;
 
-      typedef DelMe::DensFromMixfrac<SVolField>::Builder DensCalculator;
-      const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
-      // delete this TagList when new density calculator expression is confirmed to work...
-      // const Expr::TagList newTagList = tag_list( Expr::Tag(densityTag.name()+"_new", Expr::STATE_NONE), 
-      //                                            Expr::Tag(unconvPts .name()+"_new", Expr::STATE_NONE), 
-      //                                            Expr::Tag(dRhoDfTag .name()+"_new", Expr::STATE_NONE)
-      //                                           );
-      // 
-      // Expr::ExpressionID newDensID = 
-      // factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
-      // gh.rootIDs.insert(newDensID);
-        
-      densCalcID =                                        
-      factory.register_expression( scinew DensCalculator(*densInterp, theTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
+        // density
+        factory.register_expression( new TPEval( densityTag, *densInterp, tag_list(fTag) ) );
+
+        // \f[  \frac{d \rho}{df} \f].
+        factory.register_expression( new TPEval( dRhodFTag, *densInterp, tag_list(fTag), fTag  ) );
+      }
+      else // strong-form transport 
+      {
+        typedef DensityFromMixFrac<SVolField>::Builder DensCalculator;
+        const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
+          
+        densCalcID =                                        
+        factory.register_expression( scinew DensCalculator( densityTag, dRhodFTag, badPtsTag, *densInterp, 
+                                                            rhoOldTag, rhofTag, fOldTag, rtol, (unsigned)maxIter ));
+      }
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
@@ -248,7 +251,7 @@ namespace WasatchCore{
       
       factory.cleave_from_parents(factory.get_id(heatLossOldTag));
 
-      typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
+      typedef OldDensityCalculator::DensHeatLossMixfrac<SVolField>::Builder DensCalc;
       densCalcID = factory.register_expression( scinew DensCalc(densityTag, heatLossTag, dRhoDfTag, dRhoDhTag,
                                                                 rhoOldTag, heatLossOldTag, rhofTag, rhohTag,
                                                                 *densInterp, *enthInterp ) );

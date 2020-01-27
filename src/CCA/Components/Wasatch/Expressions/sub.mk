@@ -105,7 +105,7 @@ endif
 
 SUBDIRS := \
         $(SRCDIR)/BoundaryConditions   \
-        $(SRCDIR)/DensitySolve         \
+        $(SRCDIR)/DensitySolvers       \
         $(SRCDIR)/EmbeddedGeometry     \
         $(SRCDIR)/MMS                  \
         $(SRCDIR)/PBE                  \

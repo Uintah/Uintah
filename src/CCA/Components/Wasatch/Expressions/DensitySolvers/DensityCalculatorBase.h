@@ -37,7 +37,6 @@
 #include <spatialops/structured/FieldHelper.h>
 
 namespace WasatchCore{
-namespace DelMe{
 
   template< typename FieldT >
   class DensityCalculatorBase : public Expr::Expression<FieldT>
@@ -138,7 +137,6 @@ namespace DelMe{
     // virtual ~DensityCalculatorBase(){};
   };
 
-}
 }
 
 #endif // WasatchDensityCalculatorBase_h

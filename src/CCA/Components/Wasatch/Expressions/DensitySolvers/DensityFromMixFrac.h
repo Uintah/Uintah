@@ -22,20 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef WasatchDensityCalculator_Expr_h
-#define WasatchDensityCalculator_Expr_h
+#ifndef Wasatch_DensityFromMixFrac_h
+#define Wasatch_DensityFromMixFrac_h
 
 #include <tabprops/TabProps.h>
 
 #include <expression/Expression.h>
 
-#include <CCA/Components/Wasatch/Expressions/DensitySolve/DensityCalculatorBase.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityCalculatorBase.h>
 
 namespace WasatchCore{
-namespace DelMe{
 
   /**
-   * \class DensFromMixfrac
+   * \class DensityFromMixFrac
    *
    * Given \f$G_\rho(f)\f$ and \f$\rho f\f$, find \f$f\f$ and \f$\rho\f$.  This is
    * done by defining the residual equation
@@ -45,10 +44,10 @@ namespace DelMe{
    * so that the newton update is
    *  \f[ f^{new}=f - \frac{r(f)}{r^\prime(f)} \f].
    * 
-   * See <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h> for the residual expression.
+   * See <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h> for the residual expression.
    */
   template< typename FieldT >
-  class DensFromMixfrac : protected DensityCalculatorBase<FieldT>
+  class DensityFromMixFrac : protected DensityCalculatorBase<FieldT>
   {
     const InterpT& rhoEval_;
     const Expr::Tag& fOldTag_;
@@ -56,16 +55,14 @@ namespace DelMe{
     const Expr::Tag& dRhodFTag_;
     const Expr::Tag& rhoFTag_;
     const std::pair<double,double> bounds_;
-    const bool weak_;
     DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, fOld_)
     
-    DensFromMixfrac( const InterpT& rhoEval,
-                     const Expr::Tag& rhoOldTag,
-                     const Expr::Tag& rhoFTag,
-                     const Expr::Tag& fOldTag,
-                     const bool weakForm,
-                     const double rtol,
-                     const unsigned maxIter);
+    DensityFromMixFrac( const InterpT& rhoEval,
+                        const Expr::Tag& rhoOldTag,
+                        const Expr::Tag& rhoFTag,
+                        const Expr::Tag& fOldTag,
+                        const double rtol,
+                        const unsigned maxIter );
 
     inline double get_normalization_factor( const unsigned i ) const{
       return 0.5; // nominal value for mixture fraction
@@ -85,47 +82,48 @@ namespace DelMe{
     {
     public:
       /**
-       *  @param rhoEval calculates density given mixture fraction
-       *  @param resultsTag the tag for the value that this expression computes
+       *  @param rhoNewTag density computed by this expression
+       *  @param dRhodFTag derivative of density w.r.t. mixture fraction computed by this expression
+       *  @param badPtsTag tag to a field whose nonzero values correspond to locations where residual
+       *                   tolerance is above rTol.
+       *  @param rhoEval   reference to a density evaluation table
        *  @param rhoOldTag the density from the previous timestep (used as a guess)
        *  @param fOldTag the density from the previous timestep (used as a guess)
        *  @param rhoFTag the density weighted mixture fraction
        *  @param rTol the relative solver tolerance
        *  @param maxIter maximum number of solver iterations allowed
        */
-      Builder( const InterpT& rhoEval,
-               const Expr::TagList& resultsTag,
-               const Expr::Tag& rhoOldTag,
-               const Expr::Tag& rhoFTag,
-               const Expr::Tag& fOldTag,
-               const bool weakForm,
+      Builder( const Expr::Tag rhoNewTag,
+               const Expr::Tag dRhodFTag,
+               const Expr::Tag badBtsTag,
+               const InterpT&  rhoEval,
+               const Expr::Tag rhoOldTag,
+               const Expr::Tag rhoFTag,
+               const Expr::Tag fOldTag,
                const double rtol,
                const unsigned maxIter );
       
       ~Builder(){ delete rhoEval_; }
       Expr::ExpressionBase* build() const{
-        return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, fOldTag_, weakForm_, rtol_, maxIter_ );
+        return new DensityFromMixFrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, fOldTag_, rtol_, maxIter_ );
       }
 
     private:
       const InterpT* const rhoEval_;
       const Expr::Tag rhoOldTag_, rhoFTag_, fOldTag_;
-      const bool weakForm_;
       const double rtol_;    ///< relative error tolerance
       const unsigned maxIter_; ///< maximum number of iterations    
     };
 
     // void bind_operators( const SpatialOps::OperatorDatabase& opDB );
 
-    ~DensFromMixfrac();
+    ~DensityFromMixFrac();
     void set_initial_guesses();
     Expr::IDSet register_local_expressions();
     void evaluate();
   };
 
-
-}
 }
 
 
-#endif // WasatchDensityCalculator_Expr_h
+#endif // Wasatch_DensityFromMixFrac_h

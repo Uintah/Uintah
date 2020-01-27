@@ -24,7 +24,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolve
+SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers
 
 #
 # These are files that if CUDA is enabled (via configure), must be
@@ -34,7 +34,8 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolve
 # as needed.
 #
 CUDA_ENABLED_SRCS :=       \
-     DensityCalculatorNew
+     DensityFromMixFrac    \
+     TwoStreamMixingDensity
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of

@@ -1,5 +1,5 @@
-#include <CCA/Components/Wasatch/Expressions/DensitySolve/DensityCalculatorNew.h>
- #include <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
+ #include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <expression/ClipValue.h>
@@ -7,7 +7,6 @@
 #include <sci_defs/uintah_defs.h>
 
 namespace WasatchCore{
-namespace DelMe{
 
   using Expr::tag_list;
 
@@ -86,14 +85,13 @@ namespace DelMe{
   //===================================================================
 
   template< typename FieldT >
-  DensFromMixfrac<FieldT>::
-  DensFromMixfrac( const InterpT& rhoEval,
-                  const Expr::Tag& rhoOldTag,
-                  const Expr::Tag& rhoFTag, //rhoFTag will NOT be used if weakform is true.
-                  const Expr::Tag& fOldTag,
-                  const bool weakForm,
-                  const double rTol,
-                  const unsigned maxIter)
+  DensityFromMixFrac<FieldT>::
+  DensityFromMixFrac( const InterpT& rhoEval,
+                      const Expr::Tag& rhoOldTag,
+                      const Expr::Tag& rhoFTag,
+                      const Expr::Tag& fOldTag,
+                      const double rTol,
+                      const unsigned maxIter)
     : DensityCalculatorBase<FieldT>( rhoOldTag, 
                                      tag_list(TagNames::self().derivative_tag(rhoOldTag,fOldTag)),
                                      tag_list(fOldTag), 
@@ -104,8 +102,7 @@ namespace DelMe{
       fNewTag_  ( this->phiNewTags_[0] ),
       dRhodFTag_( this->dRhodPhiTags_[0] ),
       rhoFTag_  ( this->rhoPhiTags_[0] ),
-      bounds_   ( rhoEval.get_bounds()[0] ),
-      weak_     ( weakForm )
+      bounds_   ( rhoEval.get_bounds()[0] )
   {
     assert(this->phiOldTags_  .size() == 1);
     assert(this->phiNewTags_  .size() == 1);
@@ -119,24 +116,17 @@ namespace DelMe{
   }
 
   //--------------------------------------------------------------------
-  // template< typename FieldT >
-  // void
-  // DensFromMixfrac<FieldT>::
-  // bind_operators( const SpatialOps::OperatorDatabase& opDB )
-  // { 
-  //   DensityCalculatorBase::bind_operators(opDB); 
-  // };
 
   template< typename FieldT >
-  DensFromMixfrac<FieldT>::
-  ~DensFromMixfrac()
+  DensityFromMixFrac<FieldT>::
+  ~DensityFromMixFrac()
   {}
 
   //--------------------------------------------------------------------
 
   template< typename FieldT >
   Expr::IDSet 
-  DensFromMixfrac<FieldT>::
+  DensityFromMixFrac<FieldT>::
   register_local_expressions()
   {
     Expr::IDSet rootIDs;
@@ -198,7 +188,7 @@ namespace DelMe{
 
   template< typename FieldT >
   void 
-  DensFromMixfrac<FieldT>::
+  DensityFromMixFrac<FieldT>::
   set_initial_guesses()
   {
       Expr::UintahFieldManager<FieldT>& fieldTManager = this->helper_.fml_-> template field_manager<FieldT>();
@@ -218,18 +208,16 @@ namespace DelMe{
 
   template< typename FieldT >
   void
-  DensFromMixfrac<FieldT>::
+  DensityFromMixFrac<FieldT>::
   evaluate()
   {
     using namespace SpatialOps;
     typedef typename Expr::Expression<FieldT>::ValVec SVolFieldVec;
     SVolFieldVec& results = this->get_value_vec();
 
-    FieldT& rho = *results[0];
-    rho <<= rhoOld_->field_ref();
-    
-    FieldT& badPts = *results[1];
-    FieldT& drhodf = *results[2];
+    FieldT& rho    = *results[0];
+    FieldT& drhodf = *results[1];
+    FieldT& badPts = *results[2];
 
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
     if( !this->setupHasRun_ ){ this->setup();}
@@ -286,7 +274,7 @@ namespace DelMe{
       const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
       badPts <<= cond(abs(res) > absTol, 1)
                      (0.0);
-      const double nbad  = nebo_sum(badPts);
+      const double nbad = nebo_sum(badPts);
 
       badPts <<= cond(badPts > 0, res)
                 (0.0);
@@ -299,21 +287,21 @@ namespace DelMe{
   //--------------------------------------------------------------------
 
   template< typename FieldT >
-  DensFromMixfrac<FieldT>::
-  Builder::Builder( const InterpT& rhoEval,
-                    const Expr::TagList& resultsTag,
-                    const Expr::Tag& rhoOldTag,
-                    const Expr::Tag& rhoFTag,
-                    const Expr::Tag& fOldTag,
-                    const bool weakForm,
+  DensityFromMixFrac<FieldT>::
+  Builder::Builder( const Expr::Tag rhoNewTag,
+                    const Expr::Tag dRhodFTag,
+                    const Expr::Tag badPtsTag,
+                    const InterpT&  rhoEval,
+                    const Expr::Tag rhoOldTag,
+                    const Expr::Tag rhoFTag,
+                    const Expr::Tag fOldTag,
                     const double rtol,
-                    const unsigned maxIter)
-    : ExpressionBuilder( resultsTag ),
+                    const unsigned maxIter )
+    : ExpressionBuilder( tag_list(rhoNewTag, dRhodFTag, badPtsTag) ),
       rhoEval_  (rhoEval.clone() ),
       rhoOldTag_(rhoOldTag       ),
       rhoFTag_  (rhoFTag         ),
       fOldTag_  (fOldTag         ),
-      weakForm_ (weakForm        ),
       rtol_     (rtol            ),
       maxIter_  (maxIter         )
   {}
@@ -323,7 +311,6 @@ namespace DelMe{
 
   // explicit template instantiation
   #include <spatialops/structured/FVStaggeredFieldTypes.h>
-  template class DensFromMixfrac       <SpatialOps::SVolField>;
+  template class DensityFromMixFrac<SpatialOps::SVolField>;
 
-}
 }
