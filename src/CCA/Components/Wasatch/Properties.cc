@@ -29,7 +29,6 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsHeatLossEvaluator.h>
-#include <CCA/Components/Wasatch/Expressions/DensityCalculator.h>
 #include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
 #include <CCA/Components/Wasatch/TagNames.h>

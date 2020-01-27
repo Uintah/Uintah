@@ -194,8 +194,11 @@ namespace WasatchCore{
             rhoOld <<= abs(betaNew - betaOld);
 
             const double rhoPhiError = nebo_max(rhoOld)/get_normalization_factor(i);
+            
+            #ifndef NDEBUG
             error = std::max(error,rhoPhiError);
             proc0cout << "\nIteration: " << i  <<", error: " << error << "\n";  
+            #endif
 
             // update old variable
             betaOld <<= betaNew;
@@ -206,12 +209,14 @@ namespace WasatchCore{
           rhoOld <<= rhoNew;
         }
 
-            if(converged){
-              proc0cout << "\tSolve for density completed in " << numIter << " iterations.\n";
-            }
-            else{
+            if(!converged){
               proc0cout << "\tSolve for density FAILED (max error = " << error << ") after " << numIter << " iterations.\n";
             }
+            #ifndef NDEBUG
+            else{
+              proc0cout << "\tSolve for density completed in " << numIter << " iterations.\n";
+            }
+            #endif
 
 
         Expr::ExpressionTree& dRhodFTree = *(this->dRhodPhiTreePtr_);

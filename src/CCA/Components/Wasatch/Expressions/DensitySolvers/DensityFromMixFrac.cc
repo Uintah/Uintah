@@ -102,7 +102,7 @@ namespace WasatchCore{
       fNewTag_  ( this->betaNewTags_ [0] ),
       dRhodFTag_( this->dRhodPhiTags_[0] ),
       rhoFTag_  ( this->rhoPhiTags_  [0] ),
-      bounds_   ( rhoEval.get_bounds()[0] )
+      fBounds_   ( rhoEval.get_bounds()[0] )
   {
     assert(this->phiOldTags_  .size() == 1);
     assert(this->phiNewTags_  .size() == 1);
@@ -168,7 +168,7 @@ namespace WasatchCore{
       // clip updated mixture fraction
     const Expr::Tag fClipTag = Expr::Tag(fNewTag_.name()+"_clip", Expr::STATE_NONE);
     factory.register_expression( new typename Expr::ClipValue<FieldT>::
-                                 Builder( fClipTag, 0, 1 ) 
+                                 Builder( fClipTag, fBounds_.first, fBounds_.second ) 
                                 );
      factory.attach_modifier_expression( fClipTag, fNewTag_ );
 

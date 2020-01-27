@@ -286,12 +286,12 @@ namespace WasatchCore{
 
     // clip updated mixture fraction
     const Expr::Tag fClipTag = Expr::Tag(fNewTag_.name()+"_clip", Expr::STATE_NONE);
-    factory.register_expression( new Clip( fClipTag, 0, 1 ));
+    factory.register_expression( new Clip( fClipTag, fBounds_.first, fBounds_.second ));
     factory.attach_modifier_expression( fClipTag, fNewTag_ );
 
     // clip updated heatLoss
     const Expr::Tag gammaClipTag = Expr::Tag(gammaNewTag_.name()+"_clip", Expr::STATE_NONE);
-    factory.register_expression( new Clip( gammaClipTag, -1, 1 ));
+    factory.register_expression( new Clip( gammaClipTag, gammaBounds_.first, gammaBounds_.second ));
     factory.attach_modifier_expression( gammaClipTag, gammaNewTag_ );
 
     // compute density from lookup table

@@ -56,7 +56,7 @@ namespace WasatchCore{
     const Expr::Tag& fNewTag_;
     const Expr::Tag& dRhodFTag_;
     const Expr::Tag& rhoFTag_;
-    const std::pair<double,double> bounds_;
+    const std::pair<double,double> fBounds_;
     DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, fOld_)
     
     DensityFromMixFrac( const InterpT& rhoEval,
@@ -71,7 +71,7 @@ namespace WasatchCore{
     }
 
     inline const std::pair<double,double>& get_bounds( const unsigned i ) const{
-      return bounds_;
+      return fBounds_;
     }
 
 

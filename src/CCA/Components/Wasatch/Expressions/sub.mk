@@ -36,7 +36,6 @@ SRCDIR := CCA/Components/Wasatch/Expressions
 CUDA_ENABLED_SRCS :=      \
      BasicExprBuilder     \
      ConvectiveFlux       \
-     DensityCalculator    \
      DiffusiveFlux        \
      DiffusiveVelocity    \
      Dilatation           \
