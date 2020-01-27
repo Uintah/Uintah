@@ -24,7 +24,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR := CCA/Components/Wasatch/Expressions
+SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolve
 
 #
 # These are files that if CUDA is enabled (via configure), must be
@@ -33,30 +33,9 @@ SRCDIR := CCA/Components/Wasatch/Expressions
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=      \
-     BasicExprBuilder     \
-     ConvectiveFlux       \
-     DensityCalculator    \
-     DiffusiveFlux        \
-     DiffusiveVelocity    \
-     Dilatation           \
-     ExprAlgebra          \
-     FanModel             \
-     MomentumPartialRHS   \
-     MomentumRHS          \
-     MonolithicRHS        \
-     PoissonExpression    \
-     Pressure             \
-     PressureSource       \
-     PrimVar              \
-     ScalabilityTestSrc   \
-     ScalarEOSCoupling    \
-     ScalarRHS            \
-     SimpleEmission       \
-     SolnVarEst           \
-     Strain               \
-     TimeAdvance          \
-     TestNestedExpression
+CUDA_ENABLED_SRCS :=       \
+     DensityCalculatorBase \
+     DensityCalculatorNew
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -73,16 +52,8 @@ endif
 # Non-CUDA Dependent src files... can be specified the old fashioned
 # way:
 #
-SRCS += \
-        $(SRCDIR)/DORadSolver.cc          \
-        $(SRCDIR)/RadPropsEvaluator.cc    \
-        $(SRCDIR)/StableTimestep.cc       \
-        $(SRCDIR)/Reduction.cc            \
-        $(SRCDIR)/ReductionBase.cc        \
-        $(SRCDIR)/Coordinate.cc           \
-        $(SRCDIR)/RadiationSource.cc      \
-        $(SRCDIR)/CellType.cc      \
-        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+
+# SRCS += \
 
 ########################################################################
 #
@@ -97,22 +68,4 @@ ifeq ($(HAVE_CUDA),yes)
   $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif
-
-########################################################################
-#
-# Recursively build subdirectories...
-#
-
-SUBDIRS := \
-        $(SRCDIR)/BoundaryConditions   \
-        $(SRCDIR)/DensitySolve         \
-        $(SRCDIR)/EmbeddedGeometry     \
-        $(SRCDIR)/MMS                  \
-        $(SRCDIR)/PBE                  \
-        $(SRCDIR)/Particles            \
-        $(SRCDIR)/PostProcessing       \
-        $(SRCDIR)/TarAndSoot           \
-        $(SRCDIR)/Turbulence
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
 
