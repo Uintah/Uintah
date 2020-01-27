@@ -95,16 +95,15 @@ namespace DelMe{
                   const bool weakForm,
                   const double rTol,
                   const unsigned maxIter)
-    : Expr::Expression<FieldT>(),
-      DensityCalculatorBase( "DensFromMixFrac", tag_list(fOldTag), rTol, maxIter ),
+    : DensityCalculatorBase<FieldT>( "DensFromMixFrac", tag_list(fOldTag), rTol, maxIter ),
       rhoEval_  ( rhoEval ),
       dRhodFTag_( "solver_d_rho_d_f" , Expr::STATE_NONE ),
       bounds_   ( rhoEval.get_bounds()[0] ),
       weak_     ( weakForm )
   {
-    assert(phiOldTags_  .size() == 1);
-    assert(phiNewTags_  .size() == 1);
-    assert(residualTags_.size() == 1);
+    assert(this->phiOldTags_  .size() == 1);
+    assert(this->phiNewTags_  .size() == 1);
+    assert(this->residualTags_.size() == 1);
 
     this->set_gpu_runnable(true);
 
@@ -114,6 +113,13 @@ namespace DelMe{
   }
 
   //--------------------------------------------------------------------
+  // template< typename FieldT >
+  // void
+  // DensFromMixfrac<FieldT>::
+  // bind_operators( const SpatialOps::OperatorDatabase& opDB )
+  // { 
+  //   DensityCalculatorBase::bind_operators(opDB); 
+  // };
 
   template< typename FieldT >
   DensFromMixfrac<FieldT>::
@@ -128,13 +134,13 @@ namespace DelMe{
   register_local_expressions()
   {
     Expr::IDSet rootIDs;
-    Expr::ExpressionFactory& factory = *helper_.factory_;
+    Expr::ExpressionFactory& factory = *(this->helper_.factory_);
 
     Expr::ExpressionID id;
 
-    const Expr::Tag& fOldTag = phiOldTags_[0];
-    const Expr::Tag& fNewTag = phiOldTags_[0];
-    const Expr::Tag& rhoFTag = rhoPhiTags_[0];
+    const Expr::Tag& fOldTag = this->phiOldTags_[0];
+    const Expr::Tag& fNewTag = this->phiNewTags_[0];
+    const Expr::Tag& rhoFTag = this->rhoPhiTags_[0];
 
     typedef typename Expr::PlaceHolder<FieldT>::Builder PlcHldr;
     typedef typename TabPropsEvaluator<FieldT>::Builder TPEval;
@@ -144,22 +150,22 @@ namespace DelMe{
 
     // compute residual
     factory.register_expression( new typename Residual<FieldT>::
-                                 Builder( residualTags_,
-                                          rhoPhiTags_,
-                                          phiOldTags_,
-                                          densityTag_ )
+                                 Builder( this->residualTags_,
+                                          this->rhoPhiTags_,
+                                          this->phiOldTags_,
+                                          this->densityTag_ )
                                 );
 
     // compute density from lookup table
-    factory.register_expression( new TPEval( densityTag_, 
+    factory.register_expression( new TPEval( this->densityTag_, 
                                              rhoEval_,
-                                             phiOldTags_
+                                             this->phiOldTags_
                                             )
                                 );
     // compute d(rho)/d(f) from lookup table
     factory.register_expression( new TPEval( dRhodFTag_, 
                                              rhoEval_,
-                                             phiOldTags_,
+                                             this->phiOldTags_,
                                              fOldTag
                                             )
                                 );
@@ -167,9 +173,9 @@ namespace DelMe{
     factory.register_expression( new typename OneVarNewtonSolve<FieldT>::
                                  Builder( fNewTag,
                                           fOldTag,
-                                          densityTag_,
+                                          this->densityTag_,
                                           dRhodFTag_,
-                                          residualTags_[0] )
+                                          this->residualTags_[0] )
                             );
     rootIDs.insert(id);
 
@@ -190,11 +196,11 @@ namespace DelMe{
   DensFromMixfrac<FieldT>::
   set_initial_guesses()
   {
-      Expr::UintahFieldManager<FieldT>& fieldManager = helper_.fml_ -> template field_manager<FieldT>();
-      FieldT& fOld = fieldManager.field_ref( phiOldTags_[0] );
+      Expr::UintahFieldManager<FieldT>& fieldTManager = this->helper_.fml_-> template field_manager<FieldT>();
+      FieldT& fOld = fieldTManager.field_ref( this->phiOldTags_[0] );
       fOld <<= fOld_->field_ref();
 
-      FieldT& rhoF = fieldManager.field_ref( rhoPhiTags_[0] );
+      FieldT& rhoF = fieldTManager.field_ref( this->rhoPhiTags_[0] );
       rhoF <<= rhoF_->field_ref();
   }
 
@@ -219,11 +225,11 @@ namespace DelMe{
     std::cout<< "\nIn DensFromMixfrac::evaluate()...";
 
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
-    if( !setupHasRun_ ){ setup();}
+    if( !this->setupHasRun_ ){ this->setup();}
 
-    Expr::FieldManagerList* fml = helper_.fml_;
-    newtonSolveTreePtr_->bind_fields( *fml );
-    newtonSolveTreePtr_->lock_fields( *fml ); // is this needed?
+    Expr::FieldManagerList* fml = this->helper_.fml_;
+    this->newtonSolveTreePtr_->bind_fields( *fml );
+    this->newtonSolveTreePtr_->lock_fields( *fml ); // is this needed?
 
     set_initial_guesses();
 
@@ -232,25 +238,25 @@ namespace DelMe{
     unsigned numIter = 0;
     bool converged = false;
 
-    const double absTol = rTol_/get_normalization_factor(0);
+    const double absTol = this->rTol_/get_normalization_factor(0);
 
-    while(numIter< maxIter_ && !converged)
+    while(numIter< this->maxIter_ && !converged)
     {
       ++numIter;
-      newtonSolveTreePtr_->execute_tree();
+      this->newtonSolveTreePtr_->execute_tree();
 
-      FieldT& fOld = fieldTManager.field_ref( phiOldTags_  [0] );
-      FieldT& fNew = fieldTManager.field_ref( phiNewTags_  [0] );
+      FieldT& fOld = fieldTManager.field_ref( this->phiOldTags_[0] );
+      FieldT& fNew = fieldTManager.field_ref( this->phiNewTags_[0] );
 
       // update fOld for next iteration
       fOld <<= fNew;
 
-      const FieldT& res  = fieldTManager.field_ref( residualTags_[0] );
+      const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
       converged = nebo_max(abs(res)) < absTol;
     }
 
     // copy local fields to fields visible to uintah
-    rho    <<= fieldTManager.field_ref( densityTag_ );
+    rho    <<= fieldTManager.field_ref( this->densityTag_ );
     drhodf <<= fieldTManager.field_ref( dRhodFTag_ );
     if(converged)
     {
@@ -258,7 +264,7 @@ namespace DelMe{
     }
     else
     {
-      const FieldT& res  = fieldTManager.field_ref( residualTags_[0] );
+      const FieldT& res  = fieldTManager.field_ref( this->residualTags_[0] );
       badPts <<= cond(abs(res) > absTol, res)
                      (0.0);
     }

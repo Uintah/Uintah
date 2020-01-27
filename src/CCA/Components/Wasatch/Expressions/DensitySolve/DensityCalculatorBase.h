@@ -39,7 +39,8 @@
 namespace WasatchCore{
 namespace DelMe{
 
-  class DensityCalculatorBase
+  template< typename FieldT >
+  class DensityCalculatorBase : public Expr::Expression<FieldT>
   {
     public:
        /**
@@ -52,7 +53,20 @@ namespace DelMe{
       DensityCalculatorBase( const std::string treeName,
                              const Expr::TagList phiTags,
                              const double rTol,
-                             const size_t maxIter=20 );
+                             const size_t maxIter=20 )
+      : Expr::Expression<FieldT>(),
+        setupHasRun_(false),
+        treeName_(treeName),
+        rhoPhiTags_  (tags_with_prefix(phiTags, "solver_rho"     )),
+        phiOldTags_  (tags_with_prefix(phiTags, "solver_old"     )),
+        phiNewTags_  (tags_with_prefix(phiTags, "solver_new"     )),
+        residualTags_(tags_with_prefix(phiTags, "solver_residual")),
+        densityTag_("solver_density", Expr::STATE_NONE),
+        rTol_(rTol),
+        maxIter_(maxIter)
+        {};
+
+    //-------------------------------------------------------------------
 
     protected:
       bool                  setupHasRun_;
@@ -71,17 +85,44 @@ namespace DelMe{
       virtual Expr::IDSet register_local_expressions() = 0;
       virtual void set_initial_guesses() = 0;
 
-      void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-      void setup();
+      void bind_operators( const SpatialOps::OperatorDatabase& opDB )
+      {
+        proc0cout << "\nCalling DensityCalculatorBase::bind_operators.\n";
+        patchContainer_ = opDB.retrieve_operator<UintahPatchContainer>();
+      }
+
+      //-------------------------------------------------------------------
+
+      void setup()
+      {
+        using namespace SpatialOps;
+        std::cout << "\ncalling DensityCalculatorBase::setup()...";
+    
+        const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
+    
+        helper_.set_alloc_info(patch);
+        std::cout << "\ncalling register_local_expressions()...";
+        Expr::IDSet rootIDs = register_local_expressions();
+        newtonSolveTreePtr_ = helper_.new_tree(treeName_, rootIDs);
+    
+        helper_.finalize();
+        setupHasRun_ = true;
+        std::cout << "done \n";
+      }
+
+      //-------------------------------------------------------------------
 
       static Expr::Tag tag_with_prefix( const Expr::Tag& tag,
-                                        const std::string prefix ){
-                                          
+                                        const std::string prefix )
+      {                                   
         return Expr::Tag(prefix + "_" + tag.name(), Expr::STATE_NONE);
       }
 
+      //-------------------------------------------------------------------
+
       static Expr::TagList tags_with_prefix( const Expr::TagList& tags,
-                                             const std::string prefix ){
+                                             const std::string prefix )
+      {
         Expr::TagList resTags;
         for (const Expr::Tag& tag : tags){
           resTags.push_back( tag_with_prefix(tag, prefix) );
@@ -89,10 +130,8 @@ namespace DelMe{
         return resTags;
       }
 
-    virtual ~DensityCalculatorBase();
+    // virtual ~DensityCalculatorBase(){};
   };
-
-  //------------------------------------------------------------------
 
 }
 }

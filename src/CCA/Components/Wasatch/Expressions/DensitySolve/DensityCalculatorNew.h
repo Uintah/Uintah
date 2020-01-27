@@ -48,7 +48,7 @@ namespace DelMe{
    * See <CCA/Components/Wasatch/Expressions/DensitySolve/Residual.h> for the residual expression.
    */
   template< typename FieldT >
-  class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalculatorBase
+  class DensFromMixfrac : protected DensityCalculatorBase<FieldT>
   {
     const InterpT& rhoEval_;
     const Expr::Tag dRhodFTag_;
@@ -111,6 +111,8 @@ namespace DelMe{
       const double rtol_;    ///< relative error tolerance
       const unsigned maxIter_; ///< maximum number of iterations    
     };
+
+    // void bind_operators( const SpatialOps::OperatorDatabase& opDB );
 
     ~DensFromMixfrac();
     void set_initial_guesses();

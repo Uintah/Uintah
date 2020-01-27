@@ -201,9 +201,11 @@ namespace WasatchCore{
       const Expr::TagList newTagList = tag_list( Expr::Tag(densityTag.name()+"_new", Expr::STATE_NONE), 
                                                  Expr::Tag(unconvPts .name()+"_new", Expr::STATE_NONE), 
                                                  Expr::Tag(dRhoDfTag .name()+"_new", Expr::STATE_NONE)
+
                                                 );
+      const Expr::Tag fOldTag(fTag.name(), Expr::STATE_N);
       Expr::ExpressionID newDensID =                                           
-      factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fTag, weakForm, rtol, (size_t) maxIter));
+      factory.register_expression( scinew DensCalculator(*densInterp, newTagList, rhoOldTag, rhofTag, fOldTag, weakForm, rtol, (size_t) maxIter));
       gh.rootIDs.insert(newDensID);
 
     }

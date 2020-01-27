@@ -34,7 +34,6 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolve
 # as needed.
 #
 CUDA_ENABLED_SRCS :=       \
-     DensityCalculatorBase \
      DensityCalculatorNew
 
 ifeq ($(HAVE_CUDA),yes)
