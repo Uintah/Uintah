@@ -49,7 +49,7 @@ namespace WasatchCore{
     : Expr::Expression<FieldT>(),
       fMin_( fBounds.first  ),
       fMax_( fBounds.second ),
-      fTol_( 1e-4 )
+      fTol_( 1e-3 )
         {
        this->set_gpu_runnable(true);
        rho_        = this->template create_field_request<FieldT>( rhoTag        );
