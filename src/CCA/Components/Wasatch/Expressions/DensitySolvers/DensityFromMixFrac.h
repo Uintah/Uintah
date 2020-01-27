@@ -35,12 +35,14 @@ namespace WasatchCore{
 
   /**
    * \class DensityFromMixFrac
+   *  \author James C. Sutherland, Josh McConnell
+   *  \date January 2020
    *
    * Given \f$G_\rho(f)\f$ and \f$\rho f\f$, find \f$f\f$ and \f$\rho\f$.  This is
    * done by defining the residual equation
-   *  \f[ r(f) = (\rho f) - f G_\rho\f]
+   *  \f[ r(f) = f G_\rho - (\rho f) \f]
    * with
-   *  \f[ r^\prime(f) = \frac{\partial r}{\partial f} = -(G_\rho + f\frac{\partial G_\rho}{\partial f}) \f]
+   *  \f[ r^\prime(f) = \frac{\partial r}{\partial f} = G_\rho + f\frac{\partial G_\rho}{\partial f} \f]
    * so that the newton update is
    *  \f[ f^{new}=f - \frac{r(f)}{r^\prime(f)} \f].
    * 

@@ -115,7 +115,7 @@ evaluate()
   {
     const FieldT& rhoPhi = rhoPhi_[i]->field_ref();
     const FieldT& phi    = phi_   [i]->field_ref();
-    *result[i] <<= rhoPhi - rho*phi;
+    *result[i] <<= rho*phi - rhoPhi;
   }
 }
 //--------------------------------------------------------------------

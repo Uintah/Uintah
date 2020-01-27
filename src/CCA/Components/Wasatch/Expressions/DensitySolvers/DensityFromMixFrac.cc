@@ -15,7 +15,7 @@ namespace WasatchCore{
    * @brief computes updated mixture fraction, \f[ f \f] given an old value of \f[ f \f],
    *        density (\f[ \rho \f]), \f[ \frac{\rho}{f} \f], and a residual with the following
    *        definition: 
-   *        \f[ r(f) = (\rho f) - f G_\rho\f].
+   *        \f[ r(f) = f G_\rho - (\rho f)\f].
    * 
    */
   template< typename FieldT >
@@ -46,7 +46,7 @@ namespace WasatchCore{
        *  @param fOldTag tag to old value of mixture fraction
        *  @param rhoTag the tag to field for density
        *  @param dRhodFTag tag to field for derivative of density with respect to mixture fraction
-       *  @param residualTag tag for residual \f[ r(f) = (\rho f) - f G_\rho \f]
+       *  @param residualTag tag for residual \f[ r(f) = f G_\rho - (\rho f)\f]
        */
       Builder( const Expr::Tag& resultTag,
                const Expr::Tag& fOldTag,
@@ -78,7 +78,7 @@ namespace WasatchCore{
       const FieldT& rhoOld = rhoOld_  ->field_ref();
       const FieldT& dRhodF = dRhodF_  ->field_ref();
       const FieldT& res    = residual_->field_ref();
-      fNew <<= fOld + res / (rhoOld + fOld*dRhodF);
+      fNew <<= fOld - res / (rhoOld + fOld*dRhodF);
     };
   };
 
