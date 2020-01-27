@@ -1,5 +1,5 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
- #include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/Residual.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <expression/ClipValue.h>
@@ -215,7 +215,7 @@ namespace WasatchCore{
     SVolFieldVec& results = this->get_value_vec();
 
     FieldT& rho    = *results[0];
-    FieldT& drhodf = *results[1];
+    FieldT& dRhodF = *results[1];
     FieldT& badPts = *results[2];
 
     // setup() needs to be run here because we need fields to be defined before a local patch can be created
@@ -264,7 +264,7 @@ namespace WasatchCore{
       // copy local fields to fields visible to uintah
       badPts <<= 0.0;
       rho    <<= fieldTManager.field_ref( this->densityNewTag_ );
-      drhodf <<= fieldTManager.field_ref( dRhodFTag_ );
+      dRhodF <<= fieldTManager.field_ref( dRhodFTag_ );
 
       dRhodFTree.unlock_fields( *fml );
     }

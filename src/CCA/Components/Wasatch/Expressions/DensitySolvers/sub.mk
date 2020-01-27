@@ -33,8 +33,9 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=       \
-     DensityFromMixFrac    \
+CUDA_ENABLED_SRCS :=               \
+     DensityFromMixFrac            \
+     DensityFromMixFracAndHeatLoss \
      TwoStreamMixingDensity
 
 ifeq ($(HAVE_CUDA),yes)

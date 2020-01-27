@@ -80,28 +80,30 @@ namespace WasatchCore{
                              const Expr::TagList phiTags,
                              const Expr::TagList betaTags = Expr::TagList() )
       : Expr::Expression<FieldT>(),
-        setupHasRun_(false),
-        densityOldTag_(tag_with_prefix (densityTag  , "solver_old"     )),
-        densityNewTag_(tag_with_prefix (densityTag  , "solver_new"     )),
-        rhoPhiTags_   (tags_with_prefix(phiTags     , "solver_rho"     )),
-        phiOldTags_   (tags_with_prefix(phiTags     , "solver_old"     )),
-        phiNewTags_   (tags_with_prefix(phiTags     , "solver_new"     )),
-        betaOldTags_  (tags_with_prefix(betaTags    , "solver_old"     )),
-        betaNewTags_  (tags_with_prefix(betaTags    , "solver_new"     )),
-        residualTags_ (tags_with_prefix(phiTags     , "solver_residual")),
-        dRhodPhiTags_ (density_derivative_tags_with_prefix(phiTags)     ),
-        dRhodBetaTags_(density_derivative_tags_with_prefix(betaTags)    ),
-        rTol_(rTol),
-        maxIter_(maxIter)
+        setupHasRun_  (false           ),
+        nEq_          ( phiTags.size() ),
+        densityOldTag_(tag_with_prefix (densityTag  , "solver_old"     ) ),
+        densityNewTag_(tag_with_prefix (densityTag  , "solver_new"     ) ),
+        rhoPhiTags_   (tags_with_prefix(phiTags     , "solver_rho"     ) ),
+        phiOldTags_   (tags_with_prefix(phiTags     , "solver_old"     ) ),
+        phiNewTags_   (tags_with_prefix(phiTags     , "solver_new"     ) ),
+        betaOldTags_  (tags_with_prefix(betaTags    , "solver_old"     ) ),
+        betaNewTags_  (tags_with_prefix(betaTags    , "solver_new"     ) ),
+        residualTags_ (tags_with_prefix(phiTags     , "solver_residual") ),
+        dRhodPhiTags_ (density_derivative_tags_with_prefix(phiTags)      ),
+        dRhodBetaTags_(density_derivative_tags_with_prefix(betaTags)     ),
+        rTol_   ( rTol    ),
+        maxIter_( maxIter )
         {};
 
     //-------------------------------------------------------------------
 
     protected:
       bool                  setupHasRun_;
+      const unsigned        nEq_;
       const Expr::Tag       densityOldTag_, densityNewTag_;
       const Expr::TagList   rhoPhiTags_, phiOldTags_, phiNewTags_, betaOldTags_, betaNewTags_,
-                            residualTags_, dRhodPhiTags_, dRhodBetaTags;
+                            residualTags_, dRhodPhiTags_, dRhodBetaTags_;
       const double          rTol_;
       const unsigned        maxIter_;
       NestedGraphHelper     helper_;
@@ -172,7 +174,7 @@ namespace WasatchCore{
       {
         Expr::TagList newTags;
         for (const Expr::Tag& tag : tags){
-          newTags.push_back( "solver_d_rho_d_" + tag.name(), Expr::STATE_NONE );
+          newTags.push_back( Expr::Tag("solver_d_rho_d_" + tag.name(), Expr::STATE_NONE) );
         }
         return newTags;
       }

@@ -21,13 +21,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-s
+
 #ifndef Wasatch_DensityFromMixFracAndHeatLossAndHeatLoss_h
 #define Wasatch_DensityFromMixFracAndHeatLossAndHeatLoss_h
 
 #include <tabprops/TabProps.h>
 
-#include <expression/Expression.h>
+// #include <expression/Expression.h>
 
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityCalculatorBase.h>
 
@@ -80,7 +80,11 @@ namespace WasatchCore{
     const Expr::Tag& dRhodFTag_;
     const Expr::Tag& dRhodHTag_;
     const Expr::Tag& rhoFTag_;
-    const std::pair<double,double> bounds_;
+    const Expr::Tag& rhoHTag_;
+    const std::pair<double,double> fBounds_, gammaBounds_;
+
+    Expr::TagList jacobianTags_;
+
     DECLARE_FIELDS(FieldT, rhoOld_, rhoF_, rhoH_, fOld_, gammaOld_)
     
     DensityFromMixFracAndHeatLoss( const InterpT& rhoEval,
@@ -94,11 +98,7 @@ namespace WasatchCore{
                                    const unsigned maxIter );
 
     inline double get_normalization_factor( const unsigned i ) const{
-      return 0.5; // nominal value for mixture fraction
-    }
-
-    inline const std::pair<double,double>& get_bounds( const unsigned i ) const{
-      return bounds_;
+      return 0.5; // nominal value for mixture fraction and heat loss
     }
 
 
