@@ -271,7 +271,8 @@ VARDENTESTS=[
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
-  ("varden-projection-advection-xdir-analytic-dens","varden-projection-advection-xdir-analytic-dens.ups", 3, "All", ["exactComparison","no_restart"] )
+  ("varden-projection-advection-xdir-analytic-dens","varden-projection-advection-xdir-analytic-dens.ups", 3, "All", ["exactComparison","no_restart"] ),
+  ("varden-projection-heat-loss-mixture-fraction-xdir","varden-projection-heat-loss-mixture-fraction-xdir.ups", 1, "All", ["exactComparison","no_restart"] )
 ]
 
 MISCTESTS=[

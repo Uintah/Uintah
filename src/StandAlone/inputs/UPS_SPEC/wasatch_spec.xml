@@ -1471,6 +1471,18 @@
       </FieldExpression>                    
     </FieldClipping>
 
+   <!-- ================== -->
+   <!-- Test epression tree execution within an expression -->
+   <!-- ================== -->
+
+   <TestNestedExpression spec="OPTIONAL NO_DATA">
+       <NameTag spec="REQUIRED"/>
+       <numIterations      spec="REQUIRED INTEGER"/>
+       <dependentVariables spec="REQUIRED NO_DATA">
+         <NameTag spec="MULTIPLE" />
+       </dependentVariables>
+   </TestNestedExpression>
+
   </Wasatch>
 
 

@@ -59,6 +59,7 @@ SRCS +=                                              \
         $(SRCDIR)/CoordinateHelper.cc                \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
+        $(SRCDIR)/NestedGraphHelper.cc               \
         $(SRCDIR)/OldVariable.cc                     \
         $(SRCDIR)/ParticlesHelper.cc                 \
         $(SRCDIR)/ParseTools.cc                      \

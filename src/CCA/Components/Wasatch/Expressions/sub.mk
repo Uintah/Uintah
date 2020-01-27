@@ -55,7 +55,8 @@ CUDA_ENABLED_SRCS :=      \
      SimpleEmission       \
      SolnVarEst           \
      Strain               \
-     TimeAdvance          
+     TimeAdvance          \
+     TestNestedExpression
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
