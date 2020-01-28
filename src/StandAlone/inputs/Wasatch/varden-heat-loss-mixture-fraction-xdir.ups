@@ -1,0 +1,318 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Enthalpy transport (heat loss)</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+    
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
+    </Density>
+    
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <GaussianFunction amplitude="1.1" deviation="0.4" mean="0.0" baseline="-0.1">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+        
+    <FieldClipping tasklist="initialization">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
+
+    <!-- Set the initial condition expression for heat loss -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="gamma"/>
+      <ParabolicFunction type="GENERAL">
+         <General a="-1" b="1" c="0.0"/>
+         <NameTag name="f"/>
+       </ParabolicFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="1-2f"/>
+      <LinearFunction slope="-2" intercept="1">
+        <NameTag name="f"/>
+      </LinearFunction>
+    </BasicExpression>
+
+    
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="Lewis_number"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Lewis_number"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- set mixture fraction diffusivity based on a Lewis Number and enthalpy diffusivity-->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f_diffusivity" state="STATE_NONE"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="Lewis_number"/>
+        <NameTag name="rhoh_diffusivity"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="f_diffusivity" state="STATE_NONE"/>
+      <ExprAlgebra algebraicOperation="PRODUCT">
+        <NameTag name="Lewis_number"/>
+        <NameTag name="rhoh_diffusivity"/>        
+      </ExprAlgebra>
+    </BasicExpression>
+     
+    <!-- Set up a tabular property evaluation to extract density for initialization-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/h2_equil</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="gamma"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="density"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Enthalpy</NameInTable>
+        <NameTag name="h"/>
+      </ExtractVariable>
+
+      <ExtractVariable>
+        <NameInTable>Conductivity</NameInTable>
+        <NameTag name="lambda"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="T"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Viscosity</NameInTable>
+        <NameTag name="viscosity"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>SpecificHeat</NameInTable>
+        <NameTag name="cp"/>
+      </ExtractVariable>
+    </TabProps>
+    
+    <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/h2_equil</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f" state="STATE_NP1"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <IndependentVariable>
+        <NameTag name="gamma"  state="STATE_NP1"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+            
+      <ExtractDensity tolerance="1e-6" maxiter="5">
+        <NameTag name="density"/>
+        <ModelBasedOnMixtureFractionAndHeatLoss>
+          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_NP1"/></DensityWeightedMixtureFraction>  
+          <MixtureFraction>               <NameTag name="f"/>                     </MixtureFraction>    
+          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_NP1"/></DensityWeightedEnthalpy>
+          <Enthalpy>                      <NameTag name="h"/>                     </Enthalpy>  
+          <HeatLoss>                      <NameTag name="gamma"/>                 </HeatLoss>
+        </ModelBasedOnMixtureFractionAndHeatLoss>
+      </ExtractDensity>
+
+      <ExtractVariable>
+        <NameInTable>Conductivity</NameInTable>
+        <NameTag name="lambda"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="T"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Viscosity</NameInTable>
+        <NameTag name="viscosity"/>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>SpecificHeat</NameInTable>
+        <NameTag name="cp"/>
+      </ExtractVariable>
+            
+    </TabProps>  
+    
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      <DiffusiveFlux direction="X" isvelocity="false">
+        <DiffusionCoefficient>
+         <NameTag name="f_diffusivity"/>
+       </DiffusionCoefficient>
+      </DiffusiveFlux>
+      
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    </TransportEquation>
+    <!-- Build an equation for the enthalpy -->
+    <TransportEquation equation="enthalpy">
+
+      <SolutionVariable>rhoh</SolutionVariable>
+      <PrimitiveVariable>h</PrimitiveVariable>
+
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+      <ThermalConductivity><NameTag name="lambda"/></ThermalConductivity>
+      <HeatCapacity><NameTag name="cp"/></HeatCapacity>
+      
+    </TransportEquation>   
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="-1.0" max="1.0">
+        <NameTag name="gamma"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+      
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="T"/>
+    </ForceOnGraph>
+    
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="T"/>
+    </ForceOnGraph>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity" />
+      </Viscosity>      
+
+      <Pressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  1000   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5000.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-5</delt_min>
+    <delt_max>1e-5</delt_max>
+    <max_Timesteps> 100 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-heat-loss-mixture-fraction-xdir.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="5e-5"/>
+    <!-- <compression>gzip</compression> -->
+    <save label="density"/>
+    <save label="f"/>
+    <save label="h"/>
+    <save label="gamma"/>
+    <save label="lambda"/>
+    <save label="d_density_d_f"/>
+    <save label="d_density_d_h"/>
+    <save label="cp"/>
+    <save label="rhoh_diffusivity"/>
+    <save label="f_EOS_Coupling"/>
+    <save label="h_EOS_Coupling"/>
+    <save label="rhof"/>
+    <save label="h_diffFlux_X"/>
+    <save label="f_diffFlux_X"/>
+    <save label="rhoh_rhs"/>
+    <save label="rhof_rhs"/>
+    <save label="rhoh"/>
+    <save label="T"/>
+    <save label="u"/>
+    <save label="divu"/>
+  </DataArchiver> 
+
+  <Grid>
+  
+    <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+      
+      <Face side="x+" name="xPlus" type="Open">
+        <BCType label="rhoh" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+      </Face>
+
+      
+      <Face side="x-" name="xMinus" type="Open">
+        <BCType label="rhoh" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+      </Face>
+
+      </BoundaryConditions>
+  
+    <Level>
+      <Box label="1">
+        <lower>[-1,-1,-1]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[256,1,1]</resolution>
+        <patches>[4,1,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

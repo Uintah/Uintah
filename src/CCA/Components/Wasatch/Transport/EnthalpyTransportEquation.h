@@ -122,6 +122,7 @@ namespace WasatchCore {
     void register_diffusive_flux_expressions( const Category cat,
                                               FieldTagInfo& info,
                                               Expr::Tag primVarTag,
+                                              Expr::Tag densityTag,
                                               const Expr::Context context,
                                               const std::string suffix );
     void setup_source_terms( FieldTagInfo&, Expr::TagList& );

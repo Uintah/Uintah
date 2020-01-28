@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
@@ -199,14 +199,14 @@ struct EnthalpyBoundaryTyper
     if( flowTreatment_ == LOWMACH ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if(enableTurbulence_){
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, info    , primVarTag_, Expr::STATE_NONE, ""               );
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_, primVarTag_, Expr::STATE_NONE,  "-NP1-estimate" );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, info    , primVarTag_, densityTag_, Expr::STATE_NONE, ""               );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_, primVarTag_, densityTag_, Expr::STATE_NONE,  "-NP1-estimate" );
       }
 
       else{
         Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION]->exprFactory;
-        register_diffusive_flux_expressions( INITIALIZATION  , infoInit_, primVarInitTag_, Expr::STATE_NONE, "" );
-        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_ , primVarNP1Tag_ , Expr::STATE_NP1 , "" );
+        register_diffusive_flux_expressions( INITIALIZATION  , infoInit_, primVarInitTag_, densityInitTag_, Expr::STATE_NONE, "" );
+        register_diffusive_flux_expressions( ADVANCE_SOLUTION, infoNP1_ , primVarNP1Tag_ , densityNP1Tag_ , Expr::STATE_NP1 , "" );
 
         const std::set<FieldSelector> fsSet = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
         for( FieldSelector fs : fsSet ){
@@ -227,7 +227,7 @@ struct EnthalpyBoundaryTyper
     }// if( flowTreatment_ == LOWMACH )
 
     else{
-      register_diffusive_flux_expressions( ADVANCE_SOLUTION, info, primVarTag_, Expr::STATE_NONE, "" );
+      register_diffusive_flux_expressions( ADVANCE_SOLUTION, info, primVarTag_, densityTag_, Expr::STATE_NONE, "" );
     }
   }
 
@@ -238,6 +238,7 @@ struct EnthalpyBoundaryTyper
   register_diffusive_flux_expressions( const Category      cat,
                                        FieldTagInfo&       info,
                                        Expr::Tag           primVarTag,
+                                       Expr::Tag           densityTag,
                                        const Expr::Context context,
                                        const std::string   suffix )
   {
@@ -257,29 +258,32 @@ struct EnthalpyBoundaryTyper
       // jcs how will we determine if we have each direction on???
       doX=true, doY=true, doZ=true;
 
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFluxConstLe;
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFluxConstLe;
-      typedef DiffusiveVelocity< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFluxConstLe;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFlux;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFlux;
+      typedef DiffusiveFlux< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFlux;
 
       if( doX ){
-        factory.register_expression( new XFluxConstLe( xDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new XFlux( xDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
       }
       if( doY ){
-        factory.register_expression( new YFluxConstLe( yDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new YFlux( yDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
       }
       if( doZ ){
-        factory.register_expression( new ZFluxConstLe( zDiffFluxTag,
-                                                       primVarTag,
-                                                       diffCoeffTag_,
-                                                       turbDiffTag_ ) );
+        factory.register_expression( new ZFlux( zDiffFluxTag,
+                                                primVarTag,
+                                                diffCoeffTag_,
+                                                turbDiffTag_,
+                                                densityTag ) );
         info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
       }
     }
@@ -376,7 +380,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "X";
               typedef EnthalpyBoundaryTyper<XFaceT, SpatialOps::GradientX> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -396,7 +399,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "Y";
               typedef EnthalpyBoundaryTyper<YFaceT, SpatialOps::GradientY> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -416,7 +418,6 @@ struct EnthalpyBoundaryTyper
             {
               std::string dir = "Z";
               typedef EnthalpyBoundaryTyper<ZFaceT, SpatialOps::GradientZ> BCTypes;
-              BCTypes bcTypes;
 
               normalConvFluxName = normalConvFluxNameBase + dir;
               normalDiffFluxName = normalDiffFluxNameBase + dir;
@@ -582,17 +583,17 @@ struct EnthalpyBoundaryTyper
     // if the flow treatment is low-Mach, diffusive fluxes for STATE_NP1 are used to estimate div(u) so we must
     // set boundary conditions at STATE_NP1 as well as STATE_NONE when initial conditions are set
     const Expr::Context diffFluxContext = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
-    const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
+    const std::string normalDiffFluxName_nodir = this->solnVarTag_.name() + "_diffFlux_";
     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', diffFluxContext ), taskCat, setOnExtraOnly);
 
     if(isLowMach){
       const Category initCat = INITIALIZATION;
-//      const Expr::Context initContext = Expr::STATE_NONE;
-//      bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
-//      bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
-//      bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
+     const Expr::Context initContext = Expr::STATE_NONE;
+     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
+     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
+     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
     }
   }
 
@@ -644,10 +645,7 @@ struct EnthalpyBoundaryTyper
       }
 
       const Expr::Tag scalEOSTag = Expr::Tag(primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
-
-      // tagNames.enthalpy is used here to remove the need to parse the enthalpy primitive variable
-      // name when using dRhoDhTag elsewhere See Properties.cc for an example.
-      const Expr::Tag dRhoDhTag  = tagNames.derivative_tag( densityTag_, tagNames.enthalpy );
+      const Expr::Tag dRhoDhTag  = tagNames.derivative_tag( densityTag_, primVarTag_.name() );
 
       // register an expression for divu. divu is just a constant expression to which we add the
       // necessary couplings from the scalars that represent the equation of state.
@@ -660,19 +658,9 @@ struct EnthalpyBoundaryTyper
         initFactory.register_expression( scinew ConstBuilder(tagNames.divu, 0.0));
       }
 
-      // For enthalpy transport, we treat derivative, DP/Dt as a source term. Because DP/Dt depends on velocity divergence (divu),
-      // which is calculated from non-convective scalar RHSs, we need to split DP/Dt into 2 parts:
-      //    - a divergence-free portion (with associated tag 'partialDPDtTag')
-      //    - the part that depends on divu, which is not explicitly calculated
-      //
-      // 'partialDPDtTag' is included in scalarEOSsrcTags, but is not added the RHS of the enthalpy transport equation. Instead,
-      // DP/Dt is calculated from the divergence-free part of DP/Dt at STATE_NP1, and added to the enthalpy RHS during the
-      // subsequent time step, so a placeholder for DP/Dt is registered for STATE_N. For now, we assume DP/Dt is zero unless we
-      // are transporting species (rather than mixture fraction).
-
       Expr::TagList scalarEOSsrcTags = srcTags;
 
-      //#ifdef HAVE_POKITT stuff here
+      //#ifdef HAVE_POKITT stuff here for low-Mach species transport
 
       solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , scalarEOSsrcTags, densityNP1Tag_ , dRhoDhTag, isStrong_) );
       initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, scalarEOSsrcTags, densityInitTag_, dRhoDhTag, isStrong_) );
@@ -691,7 +679,7 @@ struct EnthalpyBoundaryTyper
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // initial condition for enthalpy
-   //#ifdef HAVE_POKITT stuff here
+    //#ifdef HAVE_POKITT stuff here for low-Mach species transport
     {
       return ScalarTransportEquation<FieldT>::initial_condition(icFactory);
     }

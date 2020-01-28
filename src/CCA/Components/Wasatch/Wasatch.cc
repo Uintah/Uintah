@@ -94,6 +94,7 @@
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
+#include <CCA/Components/Wasatch/Expressions/TestNestedExpression.h>
 
 #ifdef HAVE_POKITT
 //-- includes for coal models --//
@@ -795,6 +796,16 @@ namespace WasatchCore{
 
     if( buildTimeIntegrator_ ){
       timeStepper_ = scinew TimeStepper( graphCategories_, timeIntegrator_ );
+    }
+
+    // -----------------------------------------------------------------------
+    // nested expression tester
+    //
+    if( wasatchSpec_->findBlock("TestNestedExpression") ){
+      Uintah::ProblemSpecP testParams = wasatchSpec_->findBlock("TestNestedExpression");
+      test_nested_expression( testParams,
+                              graphCategories_,
+                              persistentFields_ );
     }    
     
     //
