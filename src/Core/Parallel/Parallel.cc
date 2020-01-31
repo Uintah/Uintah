@@ -29,17 +29,18 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  #include <Kokkos_Macros.hpp>
+#endif
 
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <thread>
 #include <string>
-
-#ifdef _OPENMP
-  #include <omp.h>
-#endif
 
 using namespace Uintah;
 
@@ -96,7 +97,6 @@ MpiError( char * what, int errorcode )
   std::exit(1);
 }
 
-
 //_____________________________________________________________________________
 //
 void
@@ -108,7 +108,8 @@ Parallel::setCpuThreadEnvironment( CpuThreadEnvironment threadType )
 //_____________________________________________________________________________
 //
 Parallel::CpuThreadEnvironment
-Parallel::getCpuThreadEnvironment() {
+Parallel::getCpuThreadEnvironment()
+{
   return s_cpu_thread_environment;
 }
 
@@ -297,44 +298,29 @@ Parallel::initializeManager( int& argc , char**& argv )
     // it only displays the usage to the root process.
   }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+  // TODO: Set sensible defaults after deprecating use of Kokkos::OpenMP with the Unified Scheduler
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   if ( s_num_partitions <= 0 ) {
-    const char* num_cores = getenv("HPCBIND_NUM_CORES");
-    if ( num_cores != nullptr ) {
-      s_num_partitions = atoi(num_cores);
-    }
-    else {
-#ifdef _OPENMP
-      s_num_partitions = omp_get_max_threads();
-#else
-      s_num_partitions = 1;
-#endif
-    }
+    s_num_partitions = 1;
   }
   if ( s_threads_per_partition <= 0 ) {
-#ifdef _OPENMP
-    s_threads_per_partition = omp_get_max_threads() / getNumPartitions();
-#else
     s_threads_per_partition = 1;
-#endif
   }
-#endif // UINTAH_ENABLE_KOKKOS
+#endif
 
   // Set CUDA parameters (NOTE: This could be autotuned if we grab knowledge of how many patches are assigned to this MPI rank and
   // how many SMs are on this particular machine.)
   // TODO, only display if gpu mode is turned on and if these values weren't set.
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   if ( s_using_device ) {
     if ( s_cuda_threads_per_block <= 0 ) {
       s_cuda_threads_per_block = 256;
-      std::cout << "Using " << s_cuda_threads_per_block  << " CUDA threads per Streaming Multiprocessor (SM)." << std::endl;
-      std::cout << "  This value can be adjusted through the -cuda_threads_per_block command line parameter." << std::endl;
     }
     if ( s_cuda_blocks_per_loop <= 0 ) {
       s_cuda_blocks_per_loop = 1;
-      std::cout << "Using " << s_cuda_blocks_per_loop << " Streaming Multiprocessor(s) per CUDA loop." << std::endl;
-      std::cout << "  This value can be adjusted through the -cuda_blocks_per_loop command line parameter." << std::endl;
     }
   }
+#endif
 
 #ifdef THREADED_MPI_AVAILABLE
   int provided = -1;
@@ -383,7 +369,7 @@ Parallel::initializeManager( int& argc , char**& argv )
   Uintah::AllocatorMallocStatsAppendNumber( s_world_rank );
 #endif
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_partitions);
 #else
     s_root_context = scinew ProcessorGroup(nullptr, Uintah::worldComm_, s_world_rank, s_world_size, s_num_threads);
@@ -395,18 +381,32 @@ Parallel::initializeManager( int& argc , char**& argv )
 
 #ifdef THREADED_MPI_AVAILABLE
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     if ( s_num_partitions > 0 ) {
       std::string plural = (s_num_partitions > 1) ? "partitions" : "partition";
-      std::cout << "Parallel: " << s_num_partitions << " OMP thread " << plural << " per MPI process\n";
+      std::cout << "Parallel: " << s_num_partitions << " OpenMP thread " << plural << " per MPI process\n";
     }
     if ( s_threads_per_partition > 0 ) {
       std::string plural = (s_threads_per_partition > 1) ? "threads" : "thread";
-      std::cout << "Parallel: " << s_threads_per_partition << " OMP " << plural << " per partition\n";
+      std::cout << "Parallel: " << s_threads_per_partition << " OpenMP " << plural << " per partition\n";
     }
 #else
     if (s_num_threads > 0) {
-      std::cout << "Parallel: " << s_num_threads << " threads per MPI process\n";
+      std::string plural = (s_num_threads > 1) ? "threads" : "thread";
+      std::cout << "Parallel: " << s_num_threads << " std::" << plural << " per MPI process\n";
+    }
+#endif
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    if ( s_using_device ) {
+      if ( s_cuda_blocks_per_loop > 0 ) {
+        std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";
+        std::cout << "Parallel: " << s_cuda_blocks_per_loop << " CUDA " << plural << " per loop\n";
+      }
+      if ( s_cuda_threads_per_block > 0 ) {
+        std::string plural = (s_cuda_threads_per_block > 1) ? "threads" : "thread";
+        std::cout << "Parallel: " << s_cuda_threads_per_block << " CUDA " << plural << " per block\n";
+      }
     }
 #endif
 
