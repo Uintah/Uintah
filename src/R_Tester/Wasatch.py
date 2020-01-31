@@ -272,12 +272,12 @@ VARDENTESTS=[
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-advection-xdir-analytic-dens","varden-projection-advection-xdir-analytic-dens.ups", 3, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-xdir","varden-heat-loss-mixture-fraction-xdir.ups", 4, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-ydir","varden-heat-loss-mixture-fraction-ydir.ups", 4, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-zdir","varden-heat-loss-mixture-fraction-zdir.ups", 4, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-2d-xy","varden-heat-loss-mixture-fraction-2d-xy.ups", 4, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-2d-xz","varden-heat-loss-mixture-fraction-2d-xz.ups", 4, "All", ["exactComparison","no_restart"] ),
-  ("varden-heat-loss-mixture-fraction-2d-yz","varden-heat-loss-mixture-fraction-2d-yz.ups", 4, "All", ["exactComparison","no_restart"] ),
+  ("varden-heat-loss-mixture-fraction-xdir","varden-heat-loss-mixture-fraction-xdir.ups"  , 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("varden-heat-loss-mixture-fraction-ydir","varden-heat-loss-mixture-fraction-ydir.ups"  , 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("varden-heat-loss-mixture-fraction-zdir","varden-heat-loss-mixture-fraction-zdir.ups"  , 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("varden-heat-loss-mixture-fraction-2d-xy","varden-heat-loss-mixture-fraction-2d-xy.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("varden-heat-loss-mixture-fraction-2d-xz","varden-heat-loss-mixture-fraction-2d-xz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
+  ("varden-heat-loss-mixture-fraction-2d-yz","varden-heat-loss-mixture-fraction-2d-yz.ups", 4, "All", ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 ]
 
 MISCTESTS=[
