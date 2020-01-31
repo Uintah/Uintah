@@ -173,23 +173,31 @@ namespace Uintah{
   void
     MultifractalSGS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-      // Unused - creating a compiler warning
-      // SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_xSgsStress");
-      // SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_ySgsStress");
-      // SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_zSgsStress");
-      // SFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_xSgsStress");
-      // SFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_ySgsStress");
-      // SFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_zSgsStress");
-      // SFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_xSgsStress");
-      // SFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_ySgsStress");
-      // SFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_zSgsStress");
-
+      SFCXVariable<double>& ucell_xSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_xSgsStress");
+      SFCXVariable<double>& ucell_ySgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_ySgsStress");
+      SFCXVariable<double>& ucell_zSgsStress = tsk_info->get_field<SFCXVariable<double> >("ucell_zSgsStress");
+      SFCYVariable<double>& vcell_xSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_xSgsStress");
+      SFCYVariable<double>& vcell_ySgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_ySgsStress");
+      SFCYVariable<double>& vcell_zSgsStress = tsk_info->get_field<SFCYVariable<double> >("vcell_zSgsStress");
+      SFCZVariable<double>& wcell_xSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_xSgsStress");
+      SFCZVariable<double>& wcell_ySgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_ySgsStress");
+      SFCZVariable<double>& wcell_zSgsStress = tsk_info->get_field<SFCZVariable<double> >("wcell_zSgsStress");
+      ucell_xSgsStress.initialize(0.0);
+      ucell_ySgsStress.initialize(0.0);
+      ucell_zSgsStress.initialize(0.0);
+      vcell_xSgsStress.initialize(0.0);
+      vcell_ySgsStress.initialize(0.0);
+      vcell_zSgsStress.initialize(0.0);
+      wcell_xSgsStress.initialize(0.0);
+      wcell_ySgsStress.initialize(0.0);
+      wcell_zSgsStress.initialize(0.0);
     }
 
   //---------------------------------------------------------------------------------
   void
     MultifractalSGS::register_timestep_eval( std::vector<AFC::VariableInformation>&
         variable_registry, const int time_substep , const bool packed_tasks){
+
       register_variable( Ux_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( Uy_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
       register_variable( Uz_face_name,    ArchesFieldContainer::REQUIRES, 2, ArchesFieldContainer::NEWDW, variable_registry,time_substep);
