@@ -179,6 +179,23 @@ namespace Uintah{
                                           void* stream,
                                           int deviceID );
 
+      void sched_carryForward_VarLabels ( const LevelP & level,
+                                          SchedulerP   & sched,
+                                          const std::vector< const VarLabel* > varLabels);
+
+      void carryForward_VarLabels(DetailedTask* dtask,
+                                  Task::CallBackEvent event,
+                                  const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw,
+                                  void* old_TaskGpuDW,
+                                  void* new_TaskGpuDW,
+                                  void* stream,
+                                  int deviceID,
+                                  const std::vector< const VarLabel* > varLabels);
+
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable,
@@ -235,10 +252,10 @@ namespace Uintah{
         , NUM_GRAPHS
       };
 
-      enum Algorithm{ dataOnion,            
-                      coarseLevel, 
-                      singleLevel, 
-                      radiometerOnly 
+      enum Algorithm{ dataOnion,
+                      coarseLevel,
+                      singleLevel,
+                      radiometerOnly
                     };
 
 

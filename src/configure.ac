@@ -3770,9 +3770,9 @@ EOF
 
   # for a static build, use the static CUDA runtime lib
   if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-     _cudart_lib="cudart_static dl rt pthread"
+     _cudart_lib="cudart_static cublas_static dl rt pthread"
   else
-     _cudart_lib="cudart"
+     _cudart_lib="cudart cublas"
   fi
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,

@@ -183,26 +183,9 @@ private:
       vp_f.initialize(0.0);
       wp_f.initialize(0.0);
 
-      ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
-      ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );
-      ArchesCore::OneDInterpolator my_interpolant_wp( wp_f, wp, 0, 0, -1 );
-
-      if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-        ArchesCore::SecondCentral ci;
-        Uintah::parallel_for( range, my_interpolant_up, ci );
-        Uintah::parallel_for( range, my_interpolant_vp, ci );
-        Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-      } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-        ArchesCore::FourthCentral ci;
-        Uintah::parallel_for( range, my_interpolant_up, ci );
-        Uintah::parallel_for( range, my_interpolant_vp, ci );
-        Uintah::parallel_for( range, my_interpolant_wp, ci );
-
-      }
-
+      ArchesCore::doInterpolation( range, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range, wp_f, wp,  0,  0, -1, m_int_scheme );
 
     }
   }

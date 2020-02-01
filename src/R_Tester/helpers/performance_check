@@ -13,7 +13,6 @@ test_timefile=$3   # filename
 compare_root=$4
 helperpath=$5
 sus_output=$6
-svn_revision=$7
 
 comparison_timefile="$compare_root/$test/$test_timefile"
 gs_dir="$compare_root/$test"
@@ -106,7 +105,8 @@ elif [ $percent -lt "0" ]; then
       # keep around the old output for analysis
       mv $gs_dir/$sus_output* $gs_dir/oldOutput/ >/dev/null 2>&1
 
-      me="$sus_output.$svn_revision"
+      date=`date +%m%d%y`          
+      me="$sus_output.$date"
       cp $sus_output $gs_dir/$me
 
       chgrp -R $COMMON_GROUP $gs_dir

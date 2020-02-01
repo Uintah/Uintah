@@ -6,6 +6,7 @@
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
+
   <Time>
     <maxTime>       5.0     </maxTime>
     <initTime>      0.0     </initTime>
@@ -14,6 +15,7 @@
     <max_Timesteps> 4       </max_Timesteps>
     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
+
   <AMR type="StaticGridML">
     <useLockStep> true </useLockStep>
   </AMR>
@@ -31,7 +33,7 @@
     <save label="radiationFluxB" levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
     <save label="radiationVolq"/>
-    <save label="abskg"/>
+    <save label="RMCRT_sumAbsk"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <checkpoint cycle="2" timestepInterval="2"/>
@@ -50,12 +52,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <Face side="x+" name="X+">
@@ -68,12 +67,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <Face side="y-" name="Y-">
@@ -86,12 +82,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <Face side="y+" name="Y+">
@@ -104,12 +97,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <Face side="z-" name="Z-">
@@ -122,12 +112,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <Face side="z+" name="Z+">
@@ -140,12 +127,9 @@
         <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <!-- for RMCRT-->
+        <!-- for RMCRT need for multi level problems -->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 0.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -224,7 +208,9 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>2</calc_frequency>
-            <absk label="abskg"/>
+            <absorptionCoeffs>
+              <gas_absk> gas_abskg </gas_absk>           <!-- Used in the intensity calculation -->
+            </absorptionCoeffs>
             <RMCRT>
               <randomSeed>        false     </randomSeed>
               <nDivQRays>          5         </nDivQRays>

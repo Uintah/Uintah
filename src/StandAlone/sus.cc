@@ -184,9 +184,10 @@ static void usage( const std::string& message,
     std::cerr << "\n";
     std::cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
     std::cerr << "-visit_connect           : Wait for a visit connection before executing the simulation\n";
+    std::cerr << "-visit_console           : Allow for console input while executing the simulation\n";
     std::cerr << "-visit_comment <comment> : A comment about the simulation\n";
     std::cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
-    std::cerr << "-visit_options <string>   : Optional args for the VisIt launch script\n";
+    std::cerr << "-visit_options <string>  : Optional args for the VisIt launch script\n";
     std::cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
     std::cerr << "-visit_ui <file>         : Use the named Qt GUI file instead of the default\n";
 #endif
@@ -444,6 +445,9 @@ int main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-visit_connect" ) {
       do_VisIt = VISIT_SIMMODE_STOPPED;
+    }
+    else if (arg == "-visit_console" ) {
+      do_VisIt = VISIT_SIMMODE_RUNNING;
     }
     else if (arg == "-visit_comment" ) {
       if (++i == argc) {

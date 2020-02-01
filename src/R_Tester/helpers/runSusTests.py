@@ -294,6 +294,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     abs_tolerance   = 1e-9        # defaults used in compare_uda
     rel_tolerance   = 1e-6
     sus_options     = ""
+    compareUda_options = ""
     startFrom       = "inputFile"
     create_gs0      = "no"           #create the gold standard
     
@@ -349,6 +350,8 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
         tmp = flags[i].rsplit('=')
         if tmp[0] == "sus_options":
            sus_options      = tmp[1]
+        if tmp[0] == "compareUda_options":
+           compareUda_options = tmp[1]
         if tmp[0] == "abs_tolerance":
           abs_tolerance     = tmp[1]
         if tmp[0] == "rel_tolerance":
@@ -394,7 +397,7 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
-    varBucket   = [sus_options, do_plots]
+    varBucket   = [sus_options, do_plots, compareUda_options]
 
     ran_any_tests = 1
 
@@ -596,6 +599,7 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
   sus_options             = varBucket[0]
   do_plots                = varBucket[1]
+  compareUda_options      = varBucket[2]
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
@@ -819,8 +823,8 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
     if do_performance_test == 1:
       print( "\tPerforming performance test on %s" % (date()) )
 
-      performance_RC = system("performance_check %s %s %s %s %s %s %s > performance_check.log.txt 2>&1" %
-                             (testname, do_plots, ts_file, compare_root, helperspath, "sus.log.txt", svn_revision))
+      performance_RC = system("performance_check %s %s %s %s %s %s > performance_check.log.txt 2>&1" %
+                             (testname, do_plots, ts_file, compare_root, helperspath, "sus.log.txt"))
       try:
         short_message_file = open("performance_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
@@ -893,9 +897,9 @@ def runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_p
 
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
-      
-      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s > compare_sus_runs.log.txt 2>&1" % 
-                          (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs))
+
+      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s %s \"%s\"> compare_sus_runs.log.txt 2>&1" % 
+                          (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol, create_gs, compareUda_options))
       
       if compUda_RC != 0:
         if compUda_RC == 10 * 256:

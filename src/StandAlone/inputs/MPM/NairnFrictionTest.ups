@@ -39,6 +39,7 @@
        <filebase>NairnTest.uda</filebase>
        <outputInterval>5.e-4</outputInterval>
        <save label = "TotalMomentum"/>
+       <save label = "KineticEnergy"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.velocity"/>
@@ -57,6 +58,7 @@
        <use_load_curves> true </use_load_curves>
        <XPIC2>           true </XPIC2>
        <DoPressureStabilization> true </DoPressureStabilization>
+       <withColor> true </withColor>
     </MPM>
 
 
@@ -82,6 +84,7 @@
                   <res>[2,2,1]</res>
                   <velocity>[0.0,0.0,0]</velocity>
                   <temperature>10</temperature>
+                  <color>0</color>
                </geom_object>
            </material>
 
@@ -101,6 +104,7 @@
                   <res>[2,2,1]</res>
                   <velocity>[0.0,0.0,0]</velocity>
                   <temperature>10</temperature>
+                  <color>1</color>
                </geom_object>
            </material>
 

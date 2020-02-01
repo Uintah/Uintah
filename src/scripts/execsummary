@@ -1,57 +1,119 @@
 #!/bin/bash
 #______________________________________________________________________
-#  This script takes a folder of exectime.* files and summarizes them so
-#  the user can see what task is taking the most time.  Below is an example:
+#  This script takes a folder of TaskStats.* files and summarizes them so
+#  the user can see what task is taking the most time.  Below is an example of what is in the TaskStats*.* files
 #
-# Processors=4
-# Total(s)=784.726
-# Task:send   Avg(s)=0.001259   Max(s)=0.001602
-# Task:RMCRT_Test::initProperties   Avg(s)=0.450059   Max(s)=0.683893
-# Task:RMCRT_Test::initialize   Avg(s)=0.0510892   Max(s)=0.076248
-# Task:RMCRT_Test::computeStableTimestep   Avg(s)=1.17948   Max(s)=1.680541
-# Task:RMCRTCommon::sigmaT4   Avg(s)=0.462538   Max(s)=0.575988
-# Task:reduceSysVar   Avg(s)=0.839146   Max(s)=1.548100
-# Task:Ray::setBoundaryConditions   Avg(s)=0.596272   Max(s)=0.753568
-# Task:Ray::rayTrace   Avg(s)=779.806   Max(s)=797.282158
-# Task:   Avg(s)=1.34021   Max(s)=1.404592
+#   TaskStats.8.0
+# Reported values are cumulative over 10 timesteps (1 through 10)
+# --Rank: 0  TaskStats stats for time step 10 at time=0.000361991
+#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 ExecTime  [seconds] : 0.00243167     
+#   Rank: 0  Task: ApplicationCommon::reduceSystemVars                 WaitTime  [seconds] : 15.4305        
+#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 ExecTime  [seconds] : 8.8556e-05     
+#   Rank: 0  Task: ApplicationCommon::updateSystemVars                 WaitTime  [seconds] : 17.3495        
+#   Rank: 0  Task: BirthDeath::computeModel                            ExecTime  [seconds] : 0.138191       
+#   Rank: 0  Task: BirthDeath::computeModel                            WaitTime  [seconds] : 207.923        
+#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     ExecTime  [seconds] : 0.00397551     
+#   Rank: 0  Task: BoundaryCondition::create_radiation_temperature     WaitTime  [seconds] : 2.63334        
+#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  ExecTime  [seconds] : 0.00704061     
+#   Rank: 0  Task: BoundaryCondition::setAreaFraction                  WaitTime  [seconds] : 2.51305        
+#   Rank: 0  Task: BoundaryCondition::setIntrusionDensity              ExecTime  [seconds] : 0.00242956     
+#   Rank: 0  Task: BoundaryCondition::setIntrusionDensity              WaitTime  [seconds] : 88.9903
 #
 #  To output the exectime files set the environmental variable
-#     SCI_DEBUG ExecTimes:+
+#     SCI_DEBUG ExecOut:+
 #
-#            -- The Ghost of Justin
+#   Note that the 
+#
 #______________________________________________________________________
 
-count=`ls -1 exectimes.* | wc -l`
-timesteps=`cat exectimes.* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}'`
 
-echo "----------------------------------------------------------"
-echo "  Reported values are cumulative over:"
-echo "       1) 10 timesteps $timesteps"
-echo "       2) $count processors"
-echo "      3a) nthreads when using the UnifiedScheduler"
-echo "      3b) nthreads-1 when using the ThreadedMPIScheduler"
-echo "----------------------------------------------------------"
+computeAve_Max_function()
+{
+  count=$1         # number of mpi ranks
+  fname=$2         # base file name
 
-echo "Processors=$count"
-cat exectimes.* | grep -Ev "Reported" > .exectimes.tmp
-cat .exectimes.tmp | awk -v count=$count -- \
-  'BEGIN{
-           total=0
-         }
-         {
-           ave[$4] += $3;
-           total   += $3;
-           if (max[$4] < $3)
-             max[$4]=$3
-         }
+  awk  -F " " -v count=$count -v fname=$fname.summary \
+  '{
+    ave[$1] += $2
+    
+    if( max[$1] < $2 )
+      max[$1]=$2
+  }
   END\
   {
-    print "Total(s)="total/count;
-    printf ("%20s %30s %10s","Task",  "Ave(s)", "Max(s)\n")
+    # __________________________________
+    #  Write out a header
+    printf ("#%20s %40s %10s","Task",  "Ave(sec)", "Max(sec)\n") >> fname
+    
+    # Write out individual task and times
     for (i in ave)
-     printf "%-40s|  %-10g|  %g \n", i, ave[i]/count, max[i] > ".exectimes.tmp2"
-  }'
-  
-sort --general-numeric-sort --field-separator="|" --key=2 --reverse .exectimes.tmp2
+      printf "%-50s|  %-10g|  %g\n", i, ave[i]/count, max[i]
+  }' scratch/$fname.clean > scratch/$fname.summary
+}
 
-rm -f .exectimes.tmp
+#______________________________________________________________________
+
+
+/bin/rm ExecTime.summary WaitTime.summary
+
+/bin/rm -rf scratch
+mkdir scratch
+
+fname=TaskStats
+count=`ls -1 $fname* | wc -l`
+timesteps=`cat $fname* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}'`
+
+cat $fname.* > scratch/$fname.all
+
+#__________________________________
+#   Clean up the task file so it's easier to parse
+#     1) Replace "Task :" with "|"
+sed -i s/"Task: "/\|/g scratch/$fname.all
+
+#     2) clean out the header lines and squeeze the repeative spaces
+sed /"Reported values are cumulative"/,+1d scratch/$fname.all >  scratch/$fname.clean
+grep ExecTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/ExecTime
+grep WaitTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/WaitTime
+
+#     3) Replace "<Exec/Wait>Time [seconds] :" with "|"
+sed -i s/" ExecTime \[seconds\] : "/\|/g scratch/ExecTime
+sed -i s/" WaitTime \[seconds\] : "/\|/g scratch/WaitTime
+
+#     4) Replace " " with "_" in any of the task names
+awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/ExecTime > scratch/ExecTime.clean
+awk -F "|" '{ gsub(/ /, "_", $2); print $2 " " $3 }' scratch/WaitTime > scratch/WaitTime.clean
+
+
+#__________________________________
+# Write out the header
+
+cat > ExecTime.summary << fin
+#----------------------------------------------------------
+#   Ave:  Time spent executing task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
+#----------------------------------------------------------
+# Processes: $count
+fin
+
+cat > WaitTime.summary << fin
+#----------------------------------------------------------
+#   Ave:  The time elapsed from when this task was marked initiated until the time it actually executed (in seconds), summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Max:  Maximum over all ranks and summed over 10 timesteps $timesteps.
+#----------------------------------------------------------
+# Processes: $count
+fin
+
+#__________________________________
+#  Compute averages and max
+computeAve_Max_function $count ExecTime
+computeAve_Max_function $count WaitTime
+
+#__________________________________
+#  Sort the times 
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/ExecTime.summary >> ExecTime.summary
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse scratch/WaitTime.summary >> WaitTime.summary
+
+more ExecTime.summary 
+more WaitTime.summary
+
+/bin/rm -rf scratch

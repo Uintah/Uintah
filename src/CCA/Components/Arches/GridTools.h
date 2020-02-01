@@ -437,6 +437,37 @@ namespace Uintah{ namespace ArchesCore{
 
   };
 
+
+  ///  @brief Generic interface to grid interpolators.
+  template <typename grid_T, typename grid_CT>
+  void doInterpolation( Uintah::BlockRange& range, grid_T& v_i, grid_CT& v,
+                        const int &ioff, const int &joff, const int &koff,
+                        unsigned int interpScheme ){
+
+    if (interpScheme == FOURTHCENTRAL ){
+
+      Uintah::parallel_for( range, [&](int i, int j, int k) {
+
+        v_i(i,j,k) = (9./16.)*(v(i,j,k) + v(i+ioff,j+joff,k+koff))
+                   - (1./16.)*(v(i+2*ioff,j+2*joff,k+2*koff) + v(i-ioff,j-joff,k-koff)) ;
+
+      });
+
+    } else if ( interpScheme == SECONDCENTRAL ){
+
+      Uintah::parallel_for(range, [&](int i, int j, int k) {
+
+        v_i(i,j,k) = 0.5 * ( v(i,j,k) + v(i+ioff,j+joff,k+koff) );
+
+      });
+
+    } else {
+
+      throw InvalidValue("Error: Interpolator scheme not valid.", __FILE__, __LINE__);
+
+    }
+  }
+
   /**
       @brief Returns the value (currently 0 or 1) of the volume/area fraction of gas on
              at the location specified.

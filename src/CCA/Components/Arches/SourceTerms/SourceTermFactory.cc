@@ -131,7 +131,7 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 //---------------------------------------------------------------------------
 // Method: Activate all source terms here
 //---------------------------------------------------------------------------
-void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
+void SourceTermFactory::commonSrcProblemSetup( ProblemSpecP& db )
 {
   for (ProblemSpecP src_db = db->findBlock("src"); src_db != nullptr; src_db = src_db->findNextBlock("src")){
 
@@ -151,6 +151,24 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
       _active_sources.push_back( this_src );
     }
 
+  }
+
+  //Making provisions for the radiometer model.
+  //The RMCRT radiatometer model (not RMCRT as divQ) was implemeted originally as a src,
+  // which has an abstraction problem from the user point of view and creates an implementation
+  // issue, specifically with some inputs overiding others due to input file ordering of specs.
+  // As such, to avoid clashes with two radiation models (say DO specifying
+  // the divQ and RMCRT acting as a radiometer) we need to look for it separately
+  // here and put it into the src factory. This avoids a potential bug where
+  // one radiation model may cancel out settings with the other. It also preserves how the code
+  // actually operates without a rewrite of the model.
+  ProblemSpecP db_radiometer = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Radiometer");
+  if ( db_radiometer != nullptr ){
+    std::string label;
+    db_radiometer->getAttribute("label", label);
+    SourceContainer this_src;
+    this_src.name = label;
+    _active_sources.push_back(this_src);
   }
 }
 
@@ -367,8 +385,17 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if ( src_type == "rmcrt_radiation" ) {
 
-        SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, my_world );
-        factory.register_source_term( src_name, srcBuilder );
+        std::string algoType = "somethingElse";
+        if ( source_db->findBlock("RMCRT")->findBlock("algorithm") != nullptr ){
+          source_db->findBlock("RMCRT")->findBlock("algorithm")->getAttribute("type",algoType);
+        }
+
+        if ( algoType != "radiometerOnly" ){
+          SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, my_world );
+          factory.register_source_term( src_name, srcBuilder );
+        } else {
+          throw InvalidValue("Error: The RMCRT radiometer cannot be handled as a src. Please specify it as an <ARCHES><Radiometer> instead.", __FILE__, __LINE__ );
+        }
 
       } else if ( src_type == "pc_transport" ) {
 
@@ -409,6 +436,29 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
   } else {
     proc0cout << "No sources found for transport equations." << endl;
   }
+
+  //Extra Check for the RMCRT Radiometer:
+  // This was added to deal with some ambiguous logic with source terms, DO, and RMCRT with the radiometer
+  ProblemSpecP db_radiometer = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Radiometer");
+  if ( db_radiometer != nullptr ){
+
+    // Check to make sure radiometerOnly is specified for the algorithm type.
+    if ( db_radiometer->findBlock("RMCRT")->findBlock("algorithm") ){
+      std::string type;
+      db_radiometer->findBlock("RMCRT")->findBlock("algorithm")->getAttribute("type", type);
+      if ( type != "radiometerOnly") {
+        throw InvalidValue("Error: <Radiometer><RMCRT><algorithm> must have type=\"radiometerOnly\" specified", __FILE__, __LINE__);
+      }
+    } else {
+      throw InvalidValue("Error: <Radiometer><RMCRT><algorithm> is missing and must have type=\"radiometerOnly\" specified", __FILE__, __LINE__); 
+    }
+    std::string label;
+    std::vector<std::string> required_varLabels;
+    db_radiometer->getAttribute("label", label);
+    SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( label, required_varLabels, lab, my_world );
+    factory.register_source_term( label, srcBuilder );
+  }
+
 }
 //---------------------------------------------------------------------------
 // Method: Register developer specific source terms

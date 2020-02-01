@@ -68,7 +68,8 @@
 
 using namespace std;
 using namespace Uintah;
-
+//______________________________________________________________________
+//
 // serr Vector specialization below
 template <class T>
 void
@@ -76,21 +77,24 @@ print(std::ostream& out, const T& t)
 {
   out << t;
 }
-
+//______________________________________________________________________
+//
 // must override Vector's output in order to use the ostream's precision
 void
 print(std::ostream& out, const Uintah::Vector& t)
 {
   out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
 }
-
+//______________________________________________________________________
+//
 // must override Vector's output in order to use the ostream's precision
 void
 print(std::ostream& out, const Uintah::Point& t)
 {
   out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
 }
-
+//______________________________________________________________________
+//
 void
 usage(const std::string& badarg, const std::string& progname)
 {
@@ -100,15 +104,16 @@ usage(const std::string& badarg, const std::string& progname)
        << " [options] <UDA archive directory 1> <UDA archive directory 2>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
-  cerr << "  -abs_tolerance [double]  (Allowable absolute difference of any number, default: 1e-9)\n";
-  cerr << "  -rel_tolerance [double]  (Allowable relative difference of any number, default: 1e-6)\n";
-  cerr << "  -exact                   (Perform an exact comparison, absolute/relative tolerance = 0)\n";
-  cerr << "  -levels     [int int]    (Optional:  level index for uda 1 and uda 2)\n";
-  cerr << "  -as_warnings             (Treat tolerance errors as warnings and continue)\n";
-  cerr << "  -concise                 (With '-as_warnings', only print first incidence of error per var.)\n";
-  cerr << "  -skip_unknown_types      (Skip variable comparisons of unknown types without error)\n";
-  cerr << "  -ignoreVariable [string] (Skip this variable)\n";
-  cerr << "  -dont_sort               (Don't sort the variable names before comparing them)";
+  cerr << "  -abs_tolerance [double]          (Allowable absolute difference of any number, default: 1e-9)\n";
+  cerr << "  -rel_tolerance [double]          (Allowable relative difference of any number, default: 1e-6)\n";
+  cerr << "  -exact                           (Perform an exact comparison, absolute/relative tolerance = 0)\n";
+  cerr << "  -levels     [int int]            (Optional:  level index for uda 1 and uda 2)\n";
+  cerr << "  -as_warnings                     (Treat tolerance errors as warnings and continue)\n";
+  cerr << "  -concise                         (With '-as_warnings', only print first incidence of error per var.)\n";
+  cerr << "  -skip_unknown_types              (Skip variable comparisons of unknown types without error)\n";
+  cerr << "  -ignoreVariables [var1,var2....] (Skip these variables. Comma delimited list, no spaces.)\n";
+  cerr << "  -compareVariables[var1,var2....] (Only these variables are compared. Comma delimited list, no spaces.)\n";
+  cerr << "  -dont_sort                       (Don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
   cerr << "  Exit values:\n";
@@ -131,6 +136,8 @@ bool d_tolerance_error       = false;
 bool d_concise               = false; // If true (and d_tolerance_error), only print 1st error per var.
 bool d_strict_types          = true;
 
+//______________________________________________________________________
+//
 void
 abort_uncomparable(std::ostringstream& warn)
 {
@@ -151,7 +158,8 @@ abort_uncomparable(std::ostringstream& warn)
   cerr << "\n_______________ERROR:compare_uda___________________\n";
   Parallel::exitAll(error);
 }
-
+//______________________________________________________________________
+//
 void
 tolerance_failure()
 {
@@ -162,7 +170,8 @@ tolerance_failure()
   else
     Parallel::exitAll(2);
 }
-
+//______________________________________________________________________
+//
 void
 displayProblemLocation( std::ostream& out,
                         const string& var,
@@ -177,7 +186,8 @@ displayProblemLocation( std::ostream& out,
     out << "Patch: " << patch->getID() << "\n";
   }
 }
-
+//______________________________________________________________________
+//
 void
 displayProblemLocation( std::ostream& out,
                         const string& var,
@@ -193,7 +203,8 @@ displayProblemLocation( std::ostream& out,
     "Material: " << matl << " " <<
     "Variable: " << var << endl;
 }
-
+//______________________________________________________________________
+//
 bool
 compare( double a, double b, double abs_tolerance, double rel_tolerance )
 {
@@ -217,7 +228,8 @@ compare( double a, double b, double abs_tolerance, double rel_tolerance )
     return true;
   }
 }
-
+//______________________________________________________________________
+//
 bool
 compare( float a, float b, double abs_tolerance, double rel_tolerance )
 {
@@ -227,7 +239,8 @@ compare( float a, float b, double abs_tolerance, double rel_tolerance )
 
   return compare((double)a, (double)b, abs_tolerance, rel_tolerance);
 }
-
+//______________________________________________________________________
+//
 bool
 compare( long64 a,
          long64 b,
@@ -240,7 +253,8 @@ compare( long64 a,
 
   return (a == b); // longs should use an exact comparison
 }
-
+//______________________________________________________________________
+//
 bool
 compare( int a, int b,
          double /* abs_tolerance */,
@@ -252,7 +266,8 @@ compare( int a, int b,
 
   return (a == b); // int should use an exact comparison
 }
-
+//______________________________________________________________________
+//
 bool
 compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
 {
@@ -264,7 +279,8 @@ compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
          compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
          compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
 }
-
+//______________________________________________________________________
+//
 bool
 compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
 {
@@ -278,14 +294,16 @@ compare( IntVector a, IntVector b, double abs_tolerance, double rel_tolerance )
          compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
          compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
 }
-
+//______________________________________________________________________
+//
 bool
 compare( Point a, Point b, double abs_tolerance, double rel_tolerance )
 {
   return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance);
 }
 
-
+//______________________________________________________________________
+//
 bool
 compare( Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance )
 {
@@ -297,7 +315,8 @@ compare( Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance )
          compare(a.t, b.t, abs_tolerance, rel_tolerance)  &&
          compare(a.b, b.b, abs_tolerance, rel_tolerance);
 }
-
+//______________________________________________________________________
+//
 bool
 compare( const Matrix3 & a,
          const Matrix3 & b,
@@ -384,6 +403,8 @@ private:
   MaterialParticleVarData* d_particleIDData;
   map<long64, const Patch*>* d_patchMap;
 };
+//______________________________________________________________________
+//______________________________________________________________________
 
 class MaterialParticleData
 {
@@ -776,8 +797,8 @@ replaceChar( const string & s, char old, char newch )
   return result;
 }
 
-//__________________________________
-
+//______________________________________________________________________
+//
 void
 addParticleData( MaterialParticleDataMap                & matlParticleDataMap,
                  DataArchive                            * da,
@@ -844,8 +865,8 @@ addParticleData( MaterialParticleDataMap                & matlParticleDataMap,
   }
 } // end addParticleData()
 
-//__________________________________
-
+//______________________________________________________________________
+//
 template <class T>
 void
 compareParticles( DataArchive  * da1,
@@ -899,8 +920,8 @@ compareParticles( DataArchive  * da1,
   ASSERT( iter1 == pset1->end() && iter2 == pset2->end() );
 }
 
-//__________________________________
-
+//______________________________________________________________________
+//
 template <class T>
 void
 comparePerPatch( DataArchive  * da1,
@@ -970,6 +991,8 @@ comparePerPatch( DataArchive  * da1,
   ASSERT(iter1.done() && iter2.done());
   }
 */
+//______________________________________________________________________
+//______________________________________________________________________
 
 class FieldComparator
 {
@@ -1016,7 +1039,8 @@ private:
   Iterator d_begin;
 };
 
-//__________________________________
+//______________________________________________________________________
+//
 FieldComparator*
 FieldComparator::makeFieldComparator( const Uintah::TypeDescription * td,
                                       const Uintah::TypeDescription * subtype,
@@ -1111,7 +1135,8 @@ FieldComparator::makeFieldComparator( const Uintah::TypeDescription * td,
   return nullptr;
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 template <class Field, class Iterator>
 void
 SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive                * da1,
@@ -1267,28 +1292,46 @@ buildPatchMap( LevelP                 level,
 }
 
 //______________________________________________________________________
+//  parse user input and create a vector of strings.  Deliminiter is ","
+vector<string>  parseVector( const char* input)
+{
+  vector<string> result;
+  stringstream ss (input);  
+  
+  while( ss.good() ){
+    string substr;
+    getline( ss, substr, ',' );
+    result.push_back( substr );
+  }
+  return result;
+}
+//______________________________________________________________________
 
 int
 main( int argc, char** argv )
 {
   Uintah::Parallel::initializeManager(argc, argv);
 
+  vector<string> ignoreVars;
+  vector<string> compareVars;
   double rel_tolerance  = 1e-6; // Default
   double abs_tolerance  = 1e-9; //   values...
-  string ignoreVar      = "none";
   bool sortVariables    = true;
   int  udaLevels[2];                // user can override and specify the levels to compare.  Useful for 1L vs N level comparison
   udaLevels[0]          =-9;
   udaLevels[1]          =-9;
 
+  //__________________________________
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
     if(s == "-abs_tolerance"){
-      if (++i == argc)
+      if (++i == argc){
         usage("-abs_tolerance, no value given", argv[0]);
-      else
+      }
+      else{
         abs_tolerance = atof(argv[i]);
+      }
     }
     else if(s == "-rel_tolerance"){
       if (++i == argc)
@@ -1318,11 +1361,20 @@ main( int argc, char** argv )
       udaLevels[1] = atoi(argv[++i]);
       cout << "  " << udaLevels[1];
     }
-    else if(s == "-ignoreVariable") {
+    else if(s == "-ignoreVariables") {
       if (++i == argc){
-        usage("-ignoreVariable, no variable given", argv[0]);
-      }else{
-        ignoreVar = argv[i];
+        usage("-ignoreVariables, no variable given", argv[0]);
+      }
+      else{
+        ignoreVars = parseVector( argv[i] );
+      }
+    }
+    else if(s == "-compareVariables") {
+      if (++i == argc){
+        usage("-compareVariables, no variable given", argv[0]);
+      }
+      else{
+        compareVars = parseVector( argv[i] );
       }
     }
     else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
@@ -1346,6 +1398,8 @@ main( int argc, char** argv )
     }
   }
 
+  //__________________________________
+  //  bulletproofing
   if( d_filebase2 == "" ){
     cerr << "\nYou must specify two archive directories.\n";
     usage("", argv[0]);
@@ -1372,6 +1426,7 @@ main( int argc, char** argv )
     Parallel::exitAll(1);
   }
 
+  //__________________________________
   // default to 16 digits of precision when using exact comparison (i.e. rel_tolerance = 0)
   int digits_precision = (rel_tolerance > 0 ) ? (int)ceil(-log10(rel_tolerance)) + 1 : 16;
   cerr << setprecision(digits_precision);
@@ -1381,10 +1436,12 @@ main( int argc, char** argv )
     DataArchive* da1 = scinew DataArchive(d_filebase1);
     DataArchive* da2 = scinew DataArchive(d_filebase2);
 
-    vector<string>                                         vars,      vars2;
-    vector<int>                                            num_matls, num_matls2;
-    vector<const Uintah::TypeDescription*>                 types,     types2;
-    vector< pair<string, const Uintah::TypeDescription*> > vartypes1, vartypes2;
+    typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
+    vector<string> vars, vars2;
+    vector<int>    num_matls, num_matls2;
+    vector<const Uintah::TypeDescription*> types, types2;
+    VarTypeVec vartypes1;
+    VarTypeVec vartypes2;
 
     da1->queryVariables( vars, num_matls, types );
     ASSERTEQ(vars.size(), types.size());
@@ -1392,28 +1449,22 @@ main( int argc, char** argv )
     da2->queryVariables( vars2, num_matls2, types2 );
     ASSERTEQ(vars2.size(), types2.size());
 
-    if (vars.size() != vars2.size() && ignoreVar.size() == 0) {
-      ostringstream warn;
-      warn << "    " << d_filebase1 << " has " << vars.size() << " variables\n";
-      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable( warn );
-    }
-
     vartypes1.resize( vars.size() );
     vartypes2.resize( vars2.size() );
-    int count = 0;
+      
     //__________________________________
-    //  eliminate the variable to be ignored
-    // Create a list of ignored variables
+    // Create a list of variables
+    // minus the ignored variables
     // uda 1
-    stringstream iV(ignoreVar);
-    vector<string> vs;
-    copy(istream_iterator<string>(iV), istream_iterator<string>(), back_inserter(vs));
+    for (auto i = ignoreVars.begin(); i != ignoreVars.end(); i++){
+      cout << "Ignoring variable: " << *i << endl;
+    }
 
+    int count = 0;
     for (unsigned int i = 0; i < vars.size(); i++) {
-      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars[i]);
+      auto me = find( ignoreVars.begin(), ignoreVars.end(), vars[i] );
       // if vars[i] is NOT in the ignore Variables list make a pair
-      if (fs == vs.end()){
+      if (me == ignoreVars.end()){
         vartypes1[count] = make_pair(vars[i], types[i]);
         count ++;
       }
@@ -1424,23 +1475,56 @@ main( int argc, char** argv )
     // uda 2
     count =0;
     for (unsigned int i = 0; i < vars2.size(); i++) {
-      vector<string>::iterator fs = find(vs.begin(),vs.end(),vars2[i]);
-      // if vars[i] is NOT in the ignore Variables list make a pair
-      if (fs == vs.end()){
+      auto me = find( ignoreVars.begin(), ignoreVars.end(), vars2[i] );
+      
+      if (me == ignoreVars.end()){
         vartypes2[count] = make_pair(vars2[i], types2[i]);
         count ++;
       }
     }
     vars2.resize(count);
     vartypes2.resize(vars2.size());
+    
 
-    if (vartypes1.size() != vartypes2.size() )  {
-      ostringstream warn;
-      warn << "    " << d_filebase1 << " has " << vars.size()  << " variables\n";
-      warn << "    " << d_filebase2 << " has " << vars2.size() << " variables\n";
-      abort_uncomparable(warn);
+    //__________________________________
+    // Create a list of variables to compare if the user wants
+    // to compare a few variables.  Default is to compare all
+    
+    if( compareVars.size() > 0 ){
+      for (auto i = compareVars.begin(); i != compareVars.end(); i++){
+        cout << "Variable: " << *i << endl;
+      }
+
+      // uda 1
+      count = 0;
+      for (unsigned int i = 0; i < vars.size(); i++) {
+        auto me = find(compareVars.begin(),compareVars.end(),vars[i]);
+
+        if (me != compareVars.end()){
+          vartypes1[count] = make_pair(vars[i], types[i]);
+          count ++;
+        }
+      }
+      vars.resize(count);
+      vartypes1.resize(vars.size());
+
+      // uda 2
+      count =0;
+      for (unsigned int i = 0; i < vars2.size(); i++) {
+        auto me = find( compareVars.begin(), compareVars.end(), vars2[i] );
+
+        if (me != compareVars.end()){
+          vartypes2[count] = make_pair(vars2[i], types2[i]);
+          count ++;
+        }
+      }
+      vars2.resize(count);
+      vartypes2.resize(vars2.size());    
     }
 
+    size_t vars1_size = vars.size();    // needed for bullet proofing
+    size_t vars2_size = vars2.size();
+    
     //__________________________________
     // sort vars so uda's can be compared if their index files have
     // different orders of variables.
@@ -1450,13 +1534,50 @@ main( int argc, char** argv )
       sort(vartypes1.begin(), vartypes1.end());
       sort(vartypes2.begin(), vartypes2.end());
     }
-    for (unsigned int i = 0; i < vars.size(); i++) {
-      vars[i]   = vartypes1[i].first;
-      types[i]  = vartypes1[i].second;
-      vars2[i]  = vartypes2[i].first;
-      types2[i] = vartypes2[i].second;
+
+    //__________________________________
+    //  created vector of vars to compare
+    bool do_udas_have_same_nVars = true;
+
+    if ( vartypes1.size() == vartypes2.size() )  {
+      for (unsigned int i = 0; i < vars.size(); i++) {
+        vars[i]   = vartypes1[i].first;
+        types[i]  = vartypes1[i].second;
+        vars2[i]  = vartypes2[i].first;
+        types2[i] = vartypes2[i].second;
+      }    
+    }
+    //__________________________________
+    // If the number of variables in each uda 
+    // differs then find a common set of variables
+    else {
+      
+      do_udas_have_same_nVars = false;
+      
+      cerr << "\nWARNING: The udas contain a different number of variables.  Now comparing the common set of variables.\n";
+
+      VarTypeVec commonVars;     // common variables  
+      
+      set_intersection(vartypes1.begin(), vartypes1.end(), 
+                       vartypes2.begin(), vartypes2.end(), 
+                       std::back_inserter(commonVars) ); 
+                       
+      size_t size = commonVars.size();
+      vars.resize(size);
+      vars2.resize(size);
+      vartypes1.resize(size);
+      vartypes2.resize(size);
+      
+      for (unsigned int i = 0; i <size; i++) {
+        vars[i]   = commonVars[i].first;
+        types[i]  = commonVars[i].second;
+        vars2[i]  = commonVars[i].first;
+        types2[i] = commonVars[i].second;
+      }
     }
 
+    //__________________________________
+    //  bulletproofing
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
         ostringstream warn;
@@ -1534,7 +1655,6 @@ main( int argc, char** argv )
       bool hasParticleData = false;
       bool hasPerPatchData = false;
 
-#if 1
       // Bullet proofing checks for each variable:
       for( int v = 0; v < (int)vars.size();v++ ){
         std::string var = vars[v];
@@ -1632,7 +1752,6 @@ main( int argc, char** argv )
           }
         }
       }
-#endif
 
       //______________________________________________________________________
       // Compare Particle and PerPatch Variables
@@ -1949,6 +2068,15 @@ main( int argc, char** argv )
       warn << "\n";
       warn << "    " << d_filebase1 << " has " << times.size() << " timesteps\n";
       warn << "    " << d_filebase2 << " has " << times2.size() << " timesteps\n";
+      abort_uncomparable(warn);
+    }
+    
+    //__________________________________
+    //
+    if ( ! do_udas_have_same_nVars ) {
+      ostringstream warn;
+      warn << "    " << d_filebase1 << " has " << vars1_size << " variables\n";
+      warn << "    " << d_filebase2 << " has " << vars2_size << " variables\n";
       abort_uncomparable(warn);
     }
 

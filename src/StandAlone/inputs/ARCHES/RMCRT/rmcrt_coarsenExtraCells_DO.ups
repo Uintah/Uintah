@@ -31,7 +31,7 @@
     <save label="radiationFluxB" levels="-1"/>
     <save label="radiation_temperature" levels="-1"/>
     <save label="radiationVolq" levels="-1"/>
-    <save label="abskg"/>
+    <save label="gas_abskg"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
     <checkpoint cycle="2" timestepInterval="2"/>
@@ -54,9 +54,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>100.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="x-" origin="0.0 0.5 0.5 " radius="0.2">
         <BCType label="x- wall" var="WallBC">
@@ -71,9 +68,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <!--__________________________________-->
@@ -91,9 +85,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>110.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="x+" origin="1.0 0.5 0.5 " radius="0.2">
         <BCType label="x+ wall" var="WallBC">
@@ -108,9 +99,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <!--__________________________________-->
@@ -128,9 +116,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 120.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="y-" origin="0.5 0.0 0.5 " radius="0.2">
         <BCType label="y- wall" var="WallBC">
@@ -145,9 +130,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <!--__________________________________-->
@@ -165,9 +147,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>130.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="y+" origin="0.5 1.0 0.5 " radius="0.2">
         <BCType label="y+ wall" var="WallBC">
@@ -182,9 +161,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <!--__________________________________-->
@@ -202,9 +178,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 140.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="z-" origin="0.5 0.5 0.0 " radius="0.2">
         <BCType label="z- wall" var="WallBC">
@@ -219,9 +192,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
       <!--__________________________________-->
@@ -239,9 +209,6 @@
         <BCType label="radiation_temperature" var="Dirichlet">
           <value> 150.0</value>
         </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
-        </BCType>
       </Face>
       <Face circle="z+" origin="0.5 0.5 1.0 " radius="0.2">
         <BCType label="z+ wall" var="WallBC">
@@ -256,9 +223,6 @@
         <!-- for RMCRT-->
         <BCType label="radiation_temperature" var="Dirichlet">
           <value>50.0</value>
-        </BCType>
-        <BCType label="abskg" var="ForcedDirichlet">
-          <value>1.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -326,7 +290,9 @@
         <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
-            <abskg label="abskg"/>
+            <absorptionCoeffs>
+              <gas_absk> gas_abskg </gas_absk>
+            </absorptionCoeffs>
             <RMCRT>
               <randomSeed>        false      </randomSeed>
               <nDivQRays>          0         </nDivQRays>

@@ -27,7 +27,6 @@
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Core/ICELabel.h>
-#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>

@@ -61,6 +61,7 @@
  *
  *
  */
+
 class MTRand; // forward declaration for use in updateSumI
 
 class ApplicationInterface;
@@ -71,9 +72,8 @@ namespace Uintah{
 
     public:
 
-      Ray( TypeDescription::Type FLT_DBL );         // This class can  Float or Double
+      Ray( TypeDescription::Type FLT_DBL );         // This class can be Float or Double
       ~Ray();
-
 
       //__________________________________
       //  public variables
@@ -105,13 +105,12 @@ namespace Uintah{
                                      Task::WhichDW celltype_dw,
                                      bool modifies_divQ );
 
-
       /** @brief Schedule filtering of q and divQ */
       void sched_filter( const LevelP& level,
-                          SchedulerP& sched,
-                          Task::WhichDW which_divQ_dw,
-                          const bool includeEC = true,
-                          bool modifies_divQFilt = false);
+                         SchedulerP& sched,
+                         Task::WhichDW which_divQ_dw,
+                         const bool includeEC = true,
+                         bool modifies_divQFilt = false);
 
       //__________________________________
       //  Boundary condition related
@@ -126,14 +125,15 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const bool backoutTemp = false);
 
-      void BC_bulletproofing( const ProblemSpecP& rmcrtps );
-
+      void BC_bulletproofing( const ProblemSpecP& rmcrtps,
+                              const bool chk_temp,
+                              const bool chk_absk );
 
       template< class T, class V >
-      void setBC(CCVariable<T>& Q_CC,
-                 const std::string& desc,
-                 const Patch* patch,
-                 const int mat_id);
+      void setBC( CCVariable<T>& Q_CC,
+                  const std::string& desc,
+                  const Patch* patch,
+                  const int mat_id);
 
       //__________________________________
       //  Multilevel tasks
@@ -172,7 +172,7 @@ namespace Uintah{
       IntVector d_haloCells{IntVector(-9,-9,-9)}; // Number of cells a ray will traverse after it exceeds a fine patch boundary before
                                                   // it moves to a coarser level
       double  d_haloLength{-9};                   // Physical length a ray will traverse after it exceeds a fine patch boundary before
-                                                  // it moves to a coarser level. 
+                                                  // it moves to a coarser level.
 
       std::vector <double>  _maxLengthFlux;
       std::vector <double>  _maxLength;
@@ -189,16 +189,16 @@ namespace Uintah{
                                   LATIN_HYPER_CUBE
                                 };
 
-      enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box
-                      dynamic,              // user specifies thresholds that are used to dynamically determine ROI
-                      patch_based,          // The patch extents + halo are the ROI
-                      boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
-                      entireDomain          // The ROI is the entire computatonal Domain
+      enum ROI_algo{ fixed,                // user specifies fixed low and high point for a bounding box
+                     dynamic,              // user specifies thresholds that are used to dynamically determine ROI
+                     patch_based,          // The patch extents + halo are the ROI
+                     boundedRayLength,     // the patch extents + boundedRayLength/Dx are the ROI
+                     entireDomain          // The ROI is the entire computatonal Domain
                     };
 
       int d_cellTypeCoarsenLogic{ROUNDUP};           // how to coarsen a cell type
 
-      enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
+      enum cellTypeCoarsenLogic{ROUNDUP, ROUNDDOWN};
 
       ROI_algo  d_ROI_algo{entireDomain};
       Point d_ROI_minPt;
@@ -212,7 +212,7 @@ namespace Uintah{
       std::map <int,IntVector> d_dirSignSwap;
 
       const VarLabel* m_timeStepLabel {nullptr};
-      
+
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
@@ -221,7 +221,7 @@ namespace Uintah{
       const VarLabel* d_PPTimerLabel;        // perPatch timer
 
       ApplicationInterface* m_application{nullptr};
-    
+
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
@@ -234,7 +234,7 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
-                     Task::WhichDW whichd_sigmaT4_dw,
+                     Task::WhichDW which_sigmaT4_dw,
                      Task::WhichDW which_celltype_dw );
 
       //__________________________________
@@ -253,7 +253,7 @@ namespace Uintah{
                         bool modifies_divQ,
                         int timeStep,
                         Task::WhichDW which_abskg_dw,
-                        Task::WhichDW whichd_sigmaT4_dw,
+                        Task::WhichDW which_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw);
 
       //__________________________________
@@ -265,7 +265,7 @@ namespace Uintah{
                                DataWarehouse* new_dw,
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
-                               Task::WhichDW whichd_sigmaT4_dw,
+                               Task::WhichDW which_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw );
 
       //__________________________________
@@ -284,7 +284,7 @@ namespace Uintah{
                                  bool modifies_divQ,
                                  int timeStep,
                                  Task::WhichDW which_abskg_dw,
-                                 Task::WhichDW whichd_sigmaT4_dw,
+                                 Task::WhichDW which_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw );
       //__________________________________
       template<class T>
@@ -319,13 +319,13 @@ namespace Uintah{
 
       //__________________________________
       void filter( const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    Task::WhichDW which_divQ_dw,
-                    const bool includeEC,
-                    bool modifies_divQFilt);
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
+                   Task::WhichDW which_divQ_dw,
+                   const bool includeEC,
+                   bool modifies_divQFilt);
 
       //__________________________________
       inline bool containsCell( const IntVector &low,
@@ -372,9 +372,9 @@ namespace Uintah{
 
 
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
-      bool has_a_boundary(const IntVector &c,
-                          constCCVariable<int> &celltype,
-                          std::vector<int> &boundaryFaces);
+      bool has_a_boundary( const IntVector &c,
+                           constCCVariable<int> &celltype,
+                           std::vector<int> &boundaryFaces);
 
       //______________________________________________________________________
       //   Boundary Conditions

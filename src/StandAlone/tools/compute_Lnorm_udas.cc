@@ -83,6 +83,8 @@ void usage(const std::string& badarg, const std::string& progname)
   cout << "\nUsage: "
        << " [options] <uda1> <uda2>\n\n";
   cout << "Valid options are:\n";
+  cout << "  -ignoreVariables [var1,var2....] (Skip these variables. Comma delimited list, no spaces.)\n";
+  cout << "  -compareVariables[var1,var2....] (Only compare these variables. Comma delimited list, no spaces.)\n";
   cout << "  -h[elp]\n";
   Parallel::exitAll(1);
 }
@@ -445,7 +447,20 @@ void createFile(string& filename, const int timestep)
   }
 }
 
-
+//______________________________________________________________________
+//  parse user input and create a vector of strings.  Deliminiter is ","
+vector<string>  parseVector( const char* input)
+{
+  vector<string> result;
+  stringstream ss (input);  
+  
+  while( ss.good() ){
+    string substr;
+    getline( ss, substr, ',' );
+    result.push_back( substr );
+  }
+  return result;
+}
 //______________________________________________________________________
 // Main
 //______________________________________________________________________
@@ -454,7 +469,8 @@ main(int argc, char** argv)
 {
   Uintah::Parallel::initializeManager(argc, argv);
 
-  string ignoreVar = "none";
+  vector<string> ignoreVars;
+  vector<string> compareVars;
   string filebase1;
   string filebase2;
 
@@ -462,15 +478,27 @@ main(int argc, char** argv)
   // Parse Args:
   for( int i = 1; i < argc; i++ ) {
     string s = argv[i];
-    if(s == "-ignoreVariable") {
+    
+    if(s == "-ignoreVariables") {
       if (++i == argc){
-        usage("-ignoreVariable, no variable given", argv[0]);
-      }else{
-        ignoreVar = argv[i];
+        usage("-ignoreVariables, no variable given", argv[0]);
       }
-    }else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
+      else{
+        ignoreVars = parseVector( argv[i] );
+      }
+    }
+    else if(s == "-compareVariables") {
+      if (++i == argc){
+        usage("-compareVariables, no variable given", argv[0]);
+      }
+      else{
+        compareVars = parseVector( argv[i] );
+      }
+    }
+    else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
       usage( "", argv[0] );
-    }else {
+    }
+    else {
       if (filebase1 != "") {
         if (filebase2 != ""){
           usage(s, argv[0]);
@@ -491,24 +519,145 @@ main(int argc, char** argv)
   DataArchive* da1 = scinew DataArchive(filebase1);
   DataArchive* da2 = scinew DataArchive(filebase2);
 
-  vector<string>                         vars,      vars2;
-  vector<int>                            num_matls, num_matls2;
-  vector<const Uintah::TypeDescription*> types,     types2;
+  vector<string> vars, vars2;
+  vector<int>    num_matls, num_matls2;
+  vector<const Uintah::TypeDescription*> types, types2;
+  typedef vector< pair<string, const Uintah::TypeDescription*> > VarTypeVec;
+  VarTypeVec vartypes1;
+  VarTypeVec vartypes2;
 
-  vector< pair<string, const Uintah::TypeDescription*> > vartypes1,vartypes2;
   da1->queryVariables( vars,  num_matls,  types );
   da2->queryVariables( vars2, num_matls2, types2 );
+
+  vartypes1.resize( vars.size() );
+  vartypes2.resize( vars2.size() );
+    
+  //__________________________________
+  // Create a list of variables minus the ignored variables
+  // uda 1
+  for (auto i = ignoreVars.begin(); i != ignoreVars.end(); i++){
+    cout << "Ignoring variable: " << *i << endl;
+  }
+
+  int count = 0;
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    auto me = find( ignoreVars.begin(), ignoreVars.end(), vars[i] );
+    // if vars[i] is NOT in the ignore Variables list make a pair
+    if (me == ignoreVars.end()){
+      vartypes1[count] = make_pair(vars[i], types[i]);
+      count ++;
+    }
+  }
+  vars.resize(count);
+  vartypes1.resize(vars.size());
+
+  // uda 2
+  count =0;
+  for (unsigned int i = 0; i < vars2.size(); i++) {
+    auto me = find( ignoreVars.begin(), ignoreVars.end(), vars2[i] );
+
+    if (me == ignoreVars.end()){
+      vartypes2[count] = make_pair(vars2[i], types2[i]);
+      count ++;
+    }
+  }
+  vars2.resize(count);
+  vartypes2.resize(vars2.size());
+  
+  //__________________________________
+  // Create a list of variables to compare if the user wants
+  // specifies a few variables.  Default is to compare all
+
+  if( compareVars.size() > 0 ){
+    for (auto i = compareVars.begin(); i != compareVars.end(); i++){
+      cout << "Variable: " << *i << endl;
+    }
+
+    // uda 1
+    count = 0;
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      auto me = find(compareVars.begin(),compareVars.end(),vars[i]);
+
+      if (me != compareVars.end()){
+        vartypes1[count] = make_pair(vars[i], types[i]);
+        count ++;
+      }
+    }
+    vars.resize(count);
+    vartypes1.resize(vars.size());
+
+    // uda 2
+    count =0;
+    for (unsigned int i = 0; i < vars2.size(); i++) {
+      auto me = find( compareVars.begin(), compareVars.end(), vars2[i] );
+
+      if (me != compareVars.end()){
+        vartypes2[count] = make_pair(vars2[i], types2[i]);
+        count ++;
+      }
+    }
+    vars2.resize(count);
+    vartypes2.resize(vars2.size());    
+  }
+
+  size_t vars1_size = vars.size();    // needed for bullet proofing
+  size_t vars2_size = vars2.size();
+  
+  
+  //__________________________________
+  //  created vector of vars to compare
+  bool do_udas_have_same_nVars = true;
+
+  if ( vartypes1.size() == vartypes2.size() )  {
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vars[i]   = vartypes1[i].first;
+      types[i]  = vartypes1[i].second;
+      vars2[i]  = vartypes2[i].first;
+      types2[i] = vartypes2[i].second;
+    }    
+  }
+
+  //__________________________________
+  // If the number of variables in each uda
+  // differs then find a common set of variables
+  if(vars1_size != vars2_size ){
+
+    do_udas_have_same_nVars = false;
+
+    for (unsigned int i = 0; i < vars.size(); i++) {
+      vartypes1[i] = make_pair(vars[i], types[i]);
+    }
+
+    for (unsigned int i = 0; i < vars2.size(); i++) {
+      vartypes2[i] = make_pair(vars2[i], types2[i]);
+    }
+
+    cerr << "\nWARNING: The udas contain a different number of variables.  Now comparing the common set of variables.\n";
+
+    VarTypeVec commonVars;     // common variables
+
+    set_intersection(vartypes1.begin(), vartypes1.end(),
+                     vartypes2.begin(), vartypes2.end(),
+                     std::back_inserter(commonVars) );
+
+    size_t size = commonVars.size();
+    vars.resize(size);
+    vars2.resize(size);
+    vartypes1.resize(size);
+    vartypes2.resize(size);
+
+    for (unsigned int i = 0; i <size; i++) {
+      vars[i]   = commonVars[i].first;
+      types[i]  = commonVars[i].second;
+      vars2[i]  = commonVars[i].first;
+      types2[i] = commonVars[i].second;
+    }
+  }
 
   //__________________________________
   // bulletproofing
   ASSERTEQ(vars.size(),  types.size());
   ASSERTEQ(vars2.size(), types2.size());
-
-  if (vars.size() != vars2.size()) {
-    cerr << filebase1 << " has " << vars.size() << " variables\n";
-    cerr << filebase2 << " has " << vars2.size() << " variables\n";
-    abort_uncomparable();
-  }
 
   for (unsigned int i = 0; i < vars.size(); i++) {
     if (vars[i] != vars2[i]) {
@@ -857,10 +1006,21 @@ main(int argc, char** argv)
     }  // variables
   }
 
+  //__________________________________
+  //
+  if ( ! do_udas_have_same_nVars ) {
+    cout << "\n__________________________________\n\n";
+    cout << "  ERROR:  the udas don't have the same number of variables\n";
+    cout << "    " << filebase1 << " has " << vars1_size << " variables\n";
+    cout << "    " << filebase2 << " has " << vars2_size << " variables\n";
+    abort_uncomparable();
+  }
+
   if (times.size() != times2.size()) {
-    cout << endl;
-    cout << filebase1 << " has " << times.size() << " timesteps\n";
-    cout << filebase2 << " has " << times2.size() << " timesteps\n";
+    cout << "\n__________________________________\n\n";
+    cout << "  ERROR:  the udas don't have the same number timesteps.\n";
+    cout << "    " << filebase1 << " has " << times.size() << " timesteps\n";
+    cout << "    " << filebase2 << " has " << times2.size() << " timesteps\n";
     abort_uncomparable();
   }
   delete da1;

@@ -147,39 +147,16 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   // bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   // bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  ArchesCore::OneDInterpolator my_interpolant_ucellx( ucell_xvel, uVel, -1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_ucelly( ucell_yvel, vVel, -1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_ucellz( ucell_zvel, wVel, -1, 0, 0 );
-
-  ArchesCore::OneDInterpolator my_interpolant_vcellx( vcell_xvel, uVel,0,-1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_vcelly( vcell_yvel, vVel,0,-1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_vcellz( vcell_zvel, wVel,0,-1, 0 );
-
-  ArchesCore::OneDInterpolator my_interpolant_wcellx( wcell_xvel, uVel,0, 0, -1);
-  ArchesCore::OneDInterpolator my_interpolant_wcelly( wcell_yvel, vVel,0, 0, -1);
-  ArchesCore::OneDInterpolator my_interpolant_wcellz( wcell_zvel, wVel,0, 0, -1);
-
   IntVector low = patch->getCellLowIndex();
   IntVector high = patch->getCellHighIndex();
 
   //x-direction:
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,1,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
-    if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
 
-      ArchesCore::SecondCentral ci;
-      Uintah::parallel_for( x_range, my_interpolant_ucellx, ci );
-      Uintah::parallel_for( x_range, my_interpolant_ucelly, ci );
-      Uintah::parallel_for( x_range, my_interpolant_ucellz, ci );
-
-    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-      ArchesCore::FourthCentral ci;
-      Uintah::parallel_for( x_range, my_interpolant_ucellx, ci );
-      Uintah::parallel_for( x_range, my_interpolant_ucelly, ci );
-      Uintah::parallel_for( x_range, my_interpolant_ucellz, ci );
-
-  }
+  ArchesCore::doInterpolation( x_range, ucell_xvel, uVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( x_range, ucell_yvel, vVel, -1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation( x_range, ucell_zvel, wVel, -1, 0, 0, m_int_scheme );
 
   //y-direction:
   low = patch->getCellLowIndex();
@@ -188,22 +165,9 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,1,1,0,1);
   Uintah::BlockRange y_range(low, high);
 
-  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-      ArchesCore::SecondCentral ci;
-      Uintah::parallel_for( y_range, my_interpolant_vcellx, ci );
-      Uintah::parallel_for( y_range, my_interpolant_vcelly, ci );
-      Uintah::parallel_for( y_range, my_interpolant_vcellz, ci );
-
-    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-      //std::cout<<"fourth order face"<<std::endl;
-      ArchesCore::FourthCentral ci;
-      Uintah::parallel_for( y_range, my_interpolant_vcellx, ci );
-      Uintah::parallel_for( y_range, my_interpolant_vcelly, ci );
-      Uintah::parallel_for( y_range, my_interpolant_vcellz, ci );
-
-  }
+  ArchesCore::doInterpolation( y_range, vcell_xvel, uVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( y_range, vcell_yvel, vVel, 0, -1, 0, m_int_scheme );
+  ArchesCore::doInterpolation( y_range, vcell_zvel, wVel, 0, -1, 0, m_int_scheme );
 
   //z-direction:
   low = patch->getCellLowIndex();
@@ -212,20 +176,8 @@ void FaceVelocities::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   GET_WALL_BUFFERED_PATCH_RANGE(low,high,0,1,0,1,1,1);
   Uintah::BlockRange z_range(low, high);
 
-  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-      ArchesCore::SecondCentral ci;
-      Uintah::parallel_for( z_range, my_interpolant_wcellx, ci );
-      Uintah::parallel_for( z_range, my_interpolant_wcelly, ci );
-      Uintah::parallel_for( z_range, my_interpolant_wcellz, ci );
-
-    } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-      ArchesCore::FourthCentral ci;
-      Uintah::parallel_for( z_range, my_interpolant_wcellx, ci );
-      Uintah::parallel_for( z_range, my_interpolant_wcelly, ci );
-      Uintah::parallel_for( z_range, my_interpolant_wcellz, ci );
-
-  }
+  ArchesCore::doInterpolation( z_range, wcell_xvel, uVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( z_range, wcell_yvel, vVel, 0, 0, -1, m_int_scheme );
+  ArchesCore::doInterpolation( z_range, wcell_zvel, wVel, 0, 0, -1, m_int_scheme );
 
 }

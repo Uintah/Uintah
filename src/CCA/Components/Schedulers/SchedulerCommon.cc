@@ -709,10 +709,22 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
 
     const PatchSubset* patches = dtask->getPatches();
 
-    // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-    if (dtask->getTask()->getType() != Task::OncePerProc && dtask->getTask()->getType() != Task::Hypre && (!patches || getLevel(patches)->getIndex() != levelnum)) {
+    //__________________________________
+    // bulletproofing
+    // a once-per-proc or hypre task could execute on multiple levels, and thus calls to getLevel(patches) will fail
+    // The task could also run on a different level (coarse or fine).
+    const Task::TaskType TT    = dtask->getTask()->getType();
+    const bool not_oncePerProc = ( TT != Task::OncePerProc );
+    const bool not_hypre       = ( TT != Task::Hypre );
+    const int Lindx            = getLevel(patches)->getIndex();
+    const bool not_rightLevel  = (!patches || Lindx != levelnum);
+    
+    if ( not_oncePerProc && not_hypre && not_rightLevel ) {
+      const std::string name = dtask->getTask()->getName();
       std::ostringstream mesg;
-      mesg << "WARNING: VarTracker: Not printing requested variable (" << m_tracking_vars[i] << ") because patch is non-standard.\n";
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << m_tracking_vars[i] << "), for task ("<<name<<"). Reasons:\n"
+           << "  - The task is not running on the requested level ("<<levelnum<<")\n"
+           << "  - The task is either a oncePerProc or hypre task, which can span multiple levels\n";
       handleError(2, mesg.str(), m_tracking_vars[i]);
       continue;
     }
@@ -755,7 +767,10 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
         }
 
         const TypeDescription::Type subType = td->getSubType()->getType();
-        if (subType != TypeDescription::double_type && subType != TypeDescription::int_type && subType != TypeDescription::Vector) {
+        if (subType != TypeDescription::double_type &&
+            subType != TypeDescription::float_type  &&
+            subType != TypeDescription::int_type    && 
+            subType != TypeDescription::Vector) {
 
           // Only allow *Variable<double>, *Variable<int> and *Variable<Vector> for now.
           std::ostringstream mesg;
@@ -814,6 +829,11 @@ SchedulerCommon::printTrackedVars( DetailedTask * dtask
           case TypeDescription::double_type : {
             GridVariable<double>* var = dynamic_cast<GridVariable<double>*>(v);
             printTrackedValues<double>(var, start, end);
+          }
+            break;
+          case TypeDescription::float_type : {
+            GridVariable<float>* var = dynamic_cast<GridVariable<float>*>(v);
+            printTrackedValues<float>(var, start, end);
           }
             break;
           case TypeDescription::int_type : {

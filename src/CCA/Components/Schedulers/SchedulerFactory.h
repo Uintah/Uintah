@@ -39,8 +39,8 @@ namespace Uintah {
     
     // This function has a switch for all known schedulers
     static SchedulerCommon* create( const ProblemSpecP   & ps
-				  , const ProcessorGroup * world
-				    );
+                                  , const ProcessorGroup * world
+                                  );
   };
 
 }  // namespace Uintah

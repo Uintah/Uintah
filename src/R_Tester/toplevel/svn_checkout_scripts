@@ -19,4 +19,9 @@ foreach X ( $files[*] )
   svn export  --force $svn_path/$X $scriptsDir --username=anonymous --password=""
 end
 
+# uncomment when we've completely switched over to git.
+#foreach X ( $files[*] )
+#  wget https://github.com/Uintah/Uintah/blob/master/src/R_Tester/toplevel/$X
+#end
+
 exit(0)

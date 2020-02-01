@@ -42,7 +42,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/InternalError.h>
 
 using namespace std;
 using namespace Uintah;

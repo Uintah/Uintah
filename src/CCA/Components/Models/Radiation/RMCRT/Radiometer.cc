@@ -391,14 +391,14 @@ Radiometer::radiometerTask( const ProcessorGroup  * pg,
                             DataWarehouse         * old_dw,
                             DataWarehouse         * new_dw,
                             Task::WhichDW which_abskg_dw,
-                            Task::WhichDW whichd_sigmaT4_dw,
+                            Task::WhichDW which_sigmaT4_dw,
                             Task::WhichDW which_celltype_dw )
 {
   const Level* level = getLevel(patches);
   MTRand mTwister;
 
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   constCCVariable< T > sigmaT4OverPi;

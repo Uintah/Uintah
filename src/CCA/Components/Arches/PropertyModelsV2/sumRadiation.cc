@@ -93,27 +93,6 @@ sumRadiation::problemSetup( ProblemSpecP& db ){
         m_absk_names.push_back("scatkt");
       }
     }
-
-    //__________________________________
-    //  This is confusing
-    if ( radiation_model == "rmcrt_radiation" ){
-      ProblemSpecP db_absk = db_src->findBlock("absk");
-
-      if ( db_absk ){
-        std::string my_absk_name;
-        db_absk->getAttribute("label", my_absk_name);
-
-        // only define the name if it is unique in the absk_names vector.
-        auto it = find( m_absk_names.begin(),  m_absk_names.end(), my_absk_name);
-        
-        if (it == m_absk_names.end() ){
-          m_abskt_name = my_absk_name;
-        }
-      }
-      else{
-        throw ProblemSetupException("ERROR: SumRadiation:rmcrt_radiation: Absorption coefficient not specified.",__FILE__, __LINE__);
-      }
-    }
   }
   
   //__________________________________

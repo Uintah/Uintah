@@ -34,22 +34,23 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #  OS:  Linux, Darwin, or ALL
 #
 #  flags:
-#       gpu:                    - run test if machine is gpu enabled
-#       no_uda_comparison:      - skip the uda comparisons
-#       no_memoryTest:          - skip all memory checks
-#       no_restart:             - skip the restart tests
-#       no_dbg:                 - skip all debug compilation tests
-#       no_opt:                 - skip all optimized compilation tests
-#       no_cuda:                - skip test if this is a cuda enable build
-#       do_performance_test:    - Run the performance test, log and plot simulation runtime.
-#                                 (You cannot perform uda comparsions with this flag set)
-#       doesTestRun:            - Checks if a test successfully runs
-#       abs_tolerance=[double]  - absolute tolerance used in comparisons
-#       rel_tolerance=[double]  - relative tolerance used in comparisons
-#       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       postProcessRun          - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
-#       startFromCheckpoint     - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
-#       sus_options="string"    - Additional command line options for sus command
+#       gpu:                        - run test if machine is gpu enabled
+#       no_uda_comparison:          - skip the uda comparisons
+#       no_memoryTest:              - skip all memory checks
+#       no_restart:                 - skip the restart tests
+#       no_dbg:                     - skip all debug compilation tests
+#       no_opt:                     - skip all optimized compilation tests
+#       no_cuda:                    - skip test if this is a cuda enable build
+#       do_performance_test:        - Run the performance test, log and plot simulation runtime.
+#                                     (You cannot perform uda comparsions with this flag set)
+#       doesTestRun:                - Checks if a test successfully runs
+#       abs_tolerance=[double]      - absolute tolerance used in comparisons
+#       rel_tolerance=[double]      - relative tolerance used in comparisons
+#       exactComparison             - set absolute/relative tolerance = 0  for uda comparisons
+#       postProcessRun              - start test from an existing uda in the checkpoints directory.  Compute new quantities and save them in a new uda
+#       startFromCheckpoint         - start test from checkpoint. (/home/rt/CheckPoints/..../testname.uda.000)
+#       sus_options="string"        - Additional command line options for sus command
+#       compareUda_options="string" - Additional command line options for compare_uda
 #
 #  Notes:
 #  1) The "folder name" must be the same as input file without the extension.
@@ -66,17 +67,17 @@ NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", [
                    ("impHotBlob",         "impHotBlob.ups",          1, "All", ["exactComparison"]),
                    ("hotBlob2mat8patch",  "hotBlob2mat8patch.ups",   8, "All", ["exactComparison"]),
                    ("waterAirOscillator", "waterAirOscillator.ups",  4, "All", ["exactComparison"]),
-                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"])  # dat file comparsion not working on restart   
+                   ("constantPress_BC",   "constantPress_BC.ups",    8, "All", ["exactComparison", "no_restart"])  # dat file comparsion not working on restart
               ]
-              
-DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]), 
-                   ("Poiseuille_ZX",      "CouettePoiseuille/ZX.ups", 1, "All", ["exactComparison"]), 
-                   ("Poiseuille_YZ",      "CouettePoiseuille/YZ.ups", 1, "All", ["exactComparison"]), 
-                   ("rayleigh_dx",        "rayleigh_dx.ups",          1, "All", ["exactComparison"]),      
-                   ("rayleigh_dy",        "rayleigh_dy.ups",          1, "All", ["exactComparison"]),      
-                   ("rayleigh_dz",        "rayleigh_dz.ups",          1, "All", ["exactComparison"])      
+
+DIFFUSION  = [     ("Poiseuille_XY",      "CouettePoiseuille/XY.ups", 1, "All", ["exactComparison"]),
+                   ("Poiseuille_ZX",      "CouettePoiseuille/ZX.ups", 1, "All", ["exactComparison"]),
+                   ("Poiseuille_YZ",      "CouettePoiseuille/YZ.ups", 1, "All", ["exactComparison"]),
+                   ("rayleigh_dx",        "rayleigh_dx.ups",          1, "All", ["exactComparison"]),
+                   ("rayleigh_dy",        "rayleigh_dy.ups",          1, "All", ["exactComparison"]),
+                   ("rayleigh_dz",        "rayleigh_dz.ups",          1, "All", ["exactComparison"])
               ]
-              
+
 LODI        = [    ("Lodi_pulse",        "Lodi_pulse.ups",         8, "All", ["exactComparison"])
               ]
 

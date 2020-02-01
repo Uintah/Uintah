@@ -22,7 +22,7 @@
        <delt_init>          1.0e-6      </delt_init>
        <max_delt_increase>    2         </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-   <!--    <max_Timesteps>      100           </max_Timesteps> -->
+       <max_Timesteps>      110           </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -118,12 +118,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [-0.5,-0.5,-0.5]    </lower>
-              <upper>        [0.5,0.5,0.5]       </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [3,3,3]    </patches>
+              <lower>        [-0.6,-0.6,-0.6]    </lower>
+              <upper>        [0.6,0.6,0.6]       </upper>
+              <extraCells>   [1,1,1]     </extraCells>
+              <patches>      [3,3,3]     </patches>
+              <resolution> [60,60,60]    </resolution>
            </Box>
-           <spacing>         [0.05,0.05,0.05]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
@@ -131,7 +131,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>constantPress_BC.uda</filebase>
-      <outputInterval>5e-3</outputInterval>
+      <outputInterval>5e-4</outputInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -142,7 +142,7 @@
       <save label="vel_CC"/>         
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
-      <checkpoint interval="0.0051" cycle="1"/>
+      <checkpoint timestepInterval="40" cycle="1"/>
    </DataArchiver>
     
     <!--____________________________________________________________________-->
@@ -233,18 +233,18 @@
 
         <lines>
           <line name="X_line"> 
-                <startingPt>  [-0.5, 0., 0.]   </startingPt>
-                <endingPt>    [ 0.5, 0., 0.]   </endingPt>
+                <startingPt>  [-0.6, 0., 0.]   </startingPt>
+                <endingPt>    [ 0.6, 0., 0.]   </endingPt>
                 <stepSize> 0.1 </stepSize>
           </line>
           <line name="Y_line"> 
-                <startingPt>  [0., -0.5, 0.]   </startingPt>
-                <endingPt>    [0.,  0.5, 0.]   </endingPt>
+                <startingPt>  [0., -0.6, 0.]   </startingPt>
+                <endingPt>    [0.,  0.6, 0.]   </endingPt>
                 <stepSize> 0.1 </stepSize>
           </line>
           <line name="Z_line"> 
-                <startingPt>  [0., 0., -0.5]   </startingPt>
-                <endingPt>    [0., 0., 0.5]   </endingPt>
+                <startingPt>  [0., 0., -0.6]   </startingPt>
+                <endingPt>    [0., 0., 0.6]   </endingPt>
                 <stepSize> 0.1 </stepSize>
           </line>
         </lines>
@@ -277,28 +277,62 @@
         <material>    atmosphere </material>
             
         <controlVolumes>
-        
-        <!--
-          <box label="cv1">
-              <min>  [-0.4, -0.4, -0.4] </min>
-              <max>  [-0.3, -0.3, -0.3] </max>
+          <!--__________________________________-->
+          <!-- bottom corners -->
+          <box label="cv_left_bot_back">
+              <min>  [ -1,   -1,   -1]    </min>
+              <max>  [ -0.2, -0.2, -0.2]  </max>
           </box>
-        -->
 
+          <box label="cv_right_bot_back">
+              <min>  [ 0.2, -1,   -1]     </min>
+              <max>  [ 1,   -0.2, -0.2]   </max>
+          </box>
+          <box label="cv_left_bot_frnt">
+              <min>  [ -1,   -1,   0.2]   </min>
+              <max>  [ -0.2, -0.2, 1]     </max>
+          </box>
+          <box label="cv_right_bot_frnt">
+              <min>  [ 0.2, -1,   0.2]    </min>
+              <max>  [ 1,   -0.2, 1]      </max>
+          </box>
+
+          <!--__________________________________-->
+          <!-- Top corners  -->
+
+          <box label="cv_left_top_back">
+              <min>  [ -1, 0.2, -1]        </min>
+              <max>  [ -0.2, 1, -0.2]      </max>
+          </box>
+
+          <box label="cv_right_top_back">
+              <min>  [ 0.2, 0.2, -1]       </min>
+              <max>  [ 1,   1,   -0.2]     </max>
+          </box>
+          <box label="cv_left_top_frnt">
+              <min>  [ -1,   0.2, 0.2]   </min>
+              <max>  [ -0.2, 1,   1]     </max>
+          </box>
+          <box label="cv_right_top_frnt">
+              <min>  [ 0.2, 0.2, 0.2]    </min>
+              <max>  [ 1,   1,   1]      </max>
+          </box>
+          
+          <!--__________________________________-->
+          <!-- centered about the origin -->
           <box label="cv1">
               <min>  [-0.1, -0.1, -0.1] </min>
               <max>  [ 0.1,  0.1,  0.1] </max>
           </box>
           <box label="cv2">
-              <min>  [-0.25, -0.25, -0.25] </min>
-              <max>  [ 0.25,  0.25,  0.25] </max>
+              <min>  [-0.2, -0.2, -0.2] </min>
+              <max>  [ 0.2,  0.2,  0.2] </max>
           </box>
-          
           <box label="cv3">
               <min>  [-1,-1,-1] </min>
               <max>  [ 1, 1, 1] </max>
           </box>
-          
+
         </controlVolumes>
 
       </Module>

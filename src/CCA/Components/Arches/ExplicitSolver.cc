@@ -407,7 +407,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     }
 
-
     // Now go through sources and initialize all defined sources and call
     // their respective problemSetup
     if (sources_db) {
@@ -427,12 +426,29 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
     }
 
-  }
-  else {
+  } else {
 
     proc0cout << "No defined transport equations found." << endl;
 
   }
+
+  //The RMCRT radiatometer model (not RMCRT as divQ) was implemeted originally as a src,
+  // which has an abstraction problem from the user point of view and creates an implementation
+  // issue, specifically with some inputs overiding others due to input file ordering of specs.
+  // As such, to avoid clashes with two radiation models (say DO specifying
+  // the divQ and RMCRT acting as a radiometer) we need to look for it separately
+  // here and put it into the src factory. This avoids a potential bug where
+  // one radiation model may cancel out settings with the other. It also preserves how the code
+  // actually operates without a rewrite of the model.  
+  ProblemSpecP db_radiometer = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Radiometer");
+  if ( db_radiometer != nullptr ){
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+    std::string label;
+    db_radiometer->getAttribute("label", label);
+    SourceTermBase& the_src = src_factory.retrieve_source_term( label );
+    the_src.problemSetup( db_radiometer );
+  }
+
 
   if ( db->findBlock("PropertyModels") ) {
 

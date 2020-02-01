@@ -329,12 +329,13 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
   Task* t0 = scinew Task( "controlVolFluxes::integrate_Q_overCV",
                      this,&controlVolFluxes::integrate_Q_overCV );
 
-  Ghost::GhostType  gn  = Ghost::None;
+  Ghost::GhostType gn  = Ghost::None;
+  Ghost::GhostType gac = Ghost::AroundCells;
 
   sched_TimeVars( t0, level, m_lb->lastCompTime, false );
 
-  t0->requires( Task::NewDW, m_lb->vel_CC,    m_matl, gn );
-  t0->requires( Task::NewDW, m_lb->rho_CC,    m_matl, gn );
+//  t0->requires( Task::NewDW, m_lb->vel_CC,    m_matl, gn );
+  t0->requires( Task::NewDW, m_lb->rho_CC,    m_matl, gac, 1 );
 
   t0->requires( Task::NewDW, m_lb->uvel_FC,   m_matl, gn );
   t0->requires( Task::NewDW, m_lb->vvel_FC,   m_matl, gn );
@@ -404,6 +405,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch,cout_doing,"Doing controlVolFluxes::integrate_Q_overCV");
+    cout_dbg << "     Patch: " << patch->getCellLowIndex() << " " << patch->getCellHighIndex() << "\n";
 
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
@@ -411,9 +413,10 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
     constSFCYVariable<double> vvel_FC;
     constSFCZVariable<double> wvel_FC;
 
-    Ghost::GhostType gn = Ghost::None;
-    new_dw->get(rho_CC,  m_lb->rho_CC,   m_matIdx, patch, gn,0);
-    new_dw->get(vel_CC,  m_lb->vel_CC,   m_matIdx, patch, gn,0);
+    Ghost::GhostType gn  = Ghost::None;
+    Ghost::GhostType gac = Ghost::AroundCells;
+    new_dw->get(rho_CC,  m_lb->rho_CC,   m_matIdx, patch, gac,1);
+  //  new_dw->get(vel_CC,  m_lb->vel_CC,   m_matIdx, patch, gn,0);
     new_dw->get(uvel_FC, m_lb->uvel_FC,  m_matIdx, patch, gn,0);
     new_dw->get(vvel_FC, m_lb->vvel_FC,  m_matIdx, patch, gn,0);
     new_dw->get(wvel_FC, m_lb->wvel_FC,  m_matIdx, patch, gn,0);

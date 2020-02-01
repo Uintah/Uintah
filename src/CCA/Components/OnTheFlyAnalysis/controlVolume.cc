@@ -43,7 +43,6 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
                               const GridP& grid )
 {
   ProblemSpecP box_ps = boxps;
-  allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};  // must define allFaces here for clang ccmpilers
 
   if( box_ps == nullptr ){
     throw ProblemSetupException("ERROR: OnTheFlyAnalysis/Control Volume:  Couldn't find <controlVolumes> -> <box> tag", __FILE__, __LINE__);
@@ -98,12 +97,15 @@ controlVolume::controlVolume( const ProblemSpecP& boxps,
 //
 controlVolume::~controlVolume(){};
 
+
 //______________________________________________________________________
 //
 void controlVolume::initialize( const Level* level)
-{
-  m_lowIndx  = level->getCellIndex( m_box.lower() );
-  m_highIndx = level->getCellIndex( m_box.upper() );
+{  
+  m_lowIndx = findCell( level, m_box.lower() );
+  m_highIndx = findCell( level, m_box.upper() );
+  
+  proc0cout << " ControlVolume: " << m_CV_name << " " << m_lowIndx << " " << m_highIndx << "\n";
 
   // bulletproofing
   IntVector diff = m_highIndx - m_lowIndx;
@@ -166,8 +168,21 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
       throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
   }
 
-  IntVector lo = Max(lowPt,  patch->getExtraCellLowIndex());
-  IntVector hi = Min(highPt, patch->getExtraCellHighIndex());
+  IntVector pLo = patch->getExtraCellLowIndex();
+  IntVector pHi = patch->getExtraCellHighIndex();
+  
+  IntVector lo = Max(lowPt,  pLo);
+  IntVector hi = Min(highPt, pHi);
+
+  IntVector diff = hi - lo;
+  if ( diff.x() < 1 || diff.y() < 1 || diff.z() < 1 ){
+    std::ostringstream warn;
+    warn << "\nERROR: OnTheFlyAnalysis/Control Volume: getFaceIterator ("<< m_CV_name
+         << ") There must be at least one computational cell in each direction ("<< diff << ")"
+         << "\n p_lo " << pLo << " pHi: " << pHi
+         << "\n lo:  " << lo  << " hi:  " << hi;
+   throw InternalError(warn.str(), __FILE__, __LINE__);
+  }
 
   return CellIterator(lo, hi);
 
@@ -203,8 +218,8 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
 {
   faces.clear();
 
-  IntVector p_lo =  patch->getCellLowIndex();
-  IntVector p_hi =  patch->getCellHighIndex();
+  IntVector p_lo =  patch->getExtraCellLowIndex();
+  IntVector p_hi =  patch->getExtraCellHighIndex();
 
   bool doesIntersect_XY = (m_highIndx.x() > p_lo.x() &&
                            m_lowIndx.x()  < p_hi.x() &&
@@ -220,25 +235,38 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
                            m_lowIndx.y()  < p_hi.y() &&
                            m_highIndx.z() > p_lo.z() &&
                            m_lowIndx.z()  < p_hi.z() );
-
+       
   if( m_lowIndx.x()  >= p_lo.x()  && doesIntersect_YZ ) {
     faces.push_back( xminus );
   }
-  if( m_highIndx.x()  <= p_hi.x() && doesIntersect_YZ ) {
+  if( m_highIndx.x()  < p_hi.x() && doesIntersect_YZ ) {
     faces.push_back( xplus );
   }
   if( m_lowIndx.y()  >= p_lo.y()  && doesIntersect_XZ ) {
     faces.push_back( yminus );
   }
-  if( m_highIndx.y()  <= p_hi.y() && doesIntersect_XZ ) {
+  if( m_highIndx.y()  < p_hi.y() && doesIntersect_XZ ) {
     faces.push_back( yplus );
   }
   if( m_lowIndx.z()  >= p_lo.z()  && doesIntersect_XY ) {
     faces.push_back( zminus );
   }
-  if( m_highIndx.z()  <= p_hi.z() && doesIntersect_XY ) {
+  if( m_highIndx.z()  < p_hi.z() && doesIntersect_XY ) {
     faces.push_back( zplus );
   }
+}
+
+//______________________________________________________________________
+//
+IntVector controlVolume::findCell( const Level * level, 
+                                   const Point & p)
+{
+  Vector  dx     = level->dCell();
+  Point   anchor = level->getAnchor();
+  Vector  v( (p - anchor) / dx);
+  
+  IntVector cell (roundNearest(v));  // This is slightly different from Level implementation
+  return cell;
 }
 
 //______________________________________________________________________

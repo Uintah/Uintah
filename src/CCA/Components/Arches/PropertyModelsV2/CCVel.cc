@@ -159,23 +159,8 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
-  ArchesCore::OneDInterpolator my_interpolant_centerx(u_cc, u , 1, 0, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_centery(v_cc, v , 0, 1, 0 );
-  ArchesCore::OneDInterpolator my_interpolant_centerz(w_cc, w , 0, 0, 1 );
+  ArchesCore::doInterpolation(range, u_cc, u , 1, 0, 0, m_int_scheme );
+  ArchesCore::doInterpolation(range, v_cc, v , 0, 1, 0, m_int_scheme );
+  ArchesCore::doInterpolation(range, w_cc, w , 0, 0, 1, m_int_scheme );
 
-  if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
-
-    ArchesCore::SecondCentral ci;
-    Uintah::parallel_for( range, my_interpolant_centerx, ci );
-    Uintah::parallel_for( range, my_interpolant_centery, ci );
-    Uintah::parallel_for( range, my_interpolant_centerz, ci );
-
-  } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-    ArchesCore::FourthCentral ci;
-    Uintah::parallel_for( range, my_interpolant_centerx, ci );
-    Uintah::parallel_for( range, my_interpolant_centery, ci );
-    Uintah::parallel_for( range, my_interpolant_centerz, ci );
-
-  }
 }
