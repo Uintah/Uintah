@@ -2,7 +2,7 @@
 
 from sys import argv,exit
 from os import environ
-from helpers.runSusTests import runSusTests, ignorePerformanceTests
+from helpers.runSusTests_git import runSusTests, ignorePerformanceTests
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])

@@ -2,7 +2,7 @@
 
 from os import symlink,environ, system
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
+from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS
 
 the_dir = "%s/%s" % ( getInputsDir(),"ARCHES" )

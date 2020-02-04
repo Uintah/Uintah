@@ -155,8 +155,8 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
   max_parallelism = float(argv[5])
 
   global git_revision
-  myHash = getoutput("cd ../src; git log -1 --pretty=format:%H: )
-  myDate = getoutput("cd ../src; git log -1 --pretty=format:%cd: )
+  myHash = getoutput("cd ../src; git log -1 --pretty=format:%H:" )
+  myDate = getoutput("cd ../src; git log -1 --pretty=format:%cd:" )
   git_revision = "%s %s" % (myHash, myDate)
   
   #check sus for CUDA capabilities

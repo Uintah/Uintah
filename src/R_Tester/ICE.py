@@ -2,7 +2,7 @@
 
 from sys import argv, exit
 from os import environ, system
-from helpers.runSusTests import runSusTests, ignorePerformanceTests, getInputsDir
+from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, getInputsDir
 from helpers.modUPS import modUPS, modUPS2
 
 
