@@ -276,30 +276,24 @@ else
   unlink ${BUILD_DIR}/last_ran.lock
   ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
 
-  echo "Cloning the latest version of Uintah at `date` to $BUILDROOT" |tee "$BUILDROOT"/log
-
   echo $PATH
 
   #__________________________________
   # clone src tree
-  # You need to filter so src/* will be in the correct directory
   
   cd "$BUILDROOT"
   gitLog="$BUILDROOT"/git_clone.log
-  
-  echo -e "\n git clone  --verbose --depth 100 --branch $GIT_branch $GIT_url src\n"> $gitLog 2>&1
-  git clone  --verbose --depth 100 --branch $GIT_branch $GIT_url src       >> $gitLog 2>&1
-  rc=$?
 
-  cd src
+  git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/git_clone.log 2>&1
+  rc=$?
  
-  echo -e "\n git filter-branch --prune-empty --subdirectory-filter src HEAD\n" >> $gitLog 2>&1
-  git filter-branch --prune-empty --subdirectory-filter src HEAD        >> $gitLog 2>&1
-  rc1=$?
-  rc2=$(($rc + $rc1))
+  mv /tmp/git_clone.log $gitLog
+  
+  echo "Cloning the latest version of Uintah at `date` to $BUILDROOT" |tee "$BUILDROOT"/log
+  echo -e "\n git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .\n">> $gitLog 2>&1
  
-  if [ $rc2 -ne 0 ]; then
-    echo -e "ERROR: There was a problem with git clone.\n  See $BUILDROOT/git_clone.log.   Now exiting...." |tee "$BUILDROOT"/log
+  if [ $rc -ne 0 ]; then
+    echo -e "ERROR: There was a problem with git clone.\n  See $BUILDROOT/git_clone.log.   Now exiting...." |tee --append "$BUILDROOT"/log
     exit -1
   fi
 
