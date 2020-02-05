@@ -3,7 +3,7 @@
 from sys import argv, exit
 from os import environ, system, path
 from subprocess import getoutput
-from helpers.runSusTests import runSusTests, ignorePerformanceTests, build_root, getInputsDir
+from helpers.runSusTests_git import runSusTests, ignorePerformanceTests, build_root, getInputsDir
 from helpers.modUPS import modUPS
 
 
