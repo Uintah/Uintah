@@ -270,7 +270,7 @@ Dir::copy( const Dir & destDir ) const
    bsys::error_code ec;
    bfs::create_directories(new_to,ec);
    
-   if (ec != 0) {
+   if ( ec.failed() ) {
      cout << "error code: " << ec << endl;
      cout << "error message: " << ec.message() << endl;
      throw InternalError(string("Dir::copy failed to copy: ") + name_, __FILE__, __LINE__);
@@ -293,7 +293,7 @@ Dir::copy( const Dir & destDir ) const
      
        bfs::copy(*it, new_entry, ec);
 
-       if (ec != 0) {
+       if ( ec.failed() ) {
          cout << "  ERROR: from: " << it_string << " to " << new_entry.c_str() << endl;
          cout << "  error code: " << ec << endl;
          cout << "  error message: " << ec.message() << endl;
@@ -319,7 +319,7 @@ Dir::move( const Dir & destDir )
    bsys::error_code ec;
    
    bfs::rename( from, to, ec );
-   if( ec != 0 ) {
+   if( ec.failed() ) {
       throw InternalError( string( "Dir::move failed to move: " ) + name_, __FILE__, __LINE__ );
    }
    return;
@@ -339,7 +339,7 @@ Dir::copy( const string & filename, const Dir & destDir ) const
   }
   bfs::copy(from,to,ec);
 
-  if( ec != 0 ) {
+  if( ec.failed() ) {
     throw InternalError(string("Dir::copy failed to copy: ") + filepath + " to " + destDir.name_, __FILE__, __LINE__);
   }
   return;
@@ -354,7 +354,7 @@ Dir::move( const string & filename, Dir & destDir )
    bfs::path to(destDir.name_);
    bsys::error_code ec;
    bfs::rename(from,to,ec);
-   if (ec != 0)
+   if ( ec.failed() )
       throw InternalError(string("Dir::move failed to move: ") + filepath, __FILE__, __LINE__);
    return;
 }
