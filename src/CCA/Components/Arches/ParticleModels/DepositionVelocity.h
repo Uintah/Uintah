@@ -73,6 +73,14 @@ private:
       std::string _ratedepy_name;
       std::string _ratedepz_name;
       std::string _ash_mass_src;
+      std::string _impact_mass_src;
+      std::string _impact_velocity_name;
+      std::string _rateImpactx_name;
+      std::string _rateImpacty_name;
+      std::string _rateImpactz_name;
+      std::string _impact_ash_wall_flow;
+      std::string _impact_org_wall_flow;
+
       double _user_specified_rho;
       double _relaxation_coe;
       std::vector<double> _mass_ash;

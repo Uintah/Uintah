@@ -721,8 +721,10 @@
                               need_applies_to="var VelocityFileInput FromFile"/> 
          
           <!-- Swirl No. -->
+          <!-- swirl_no = 2/3*vel_tangential/vel_axial -->
+          <!-- This definition is from Combustion Aerodynamics J.M. BEER and N.A. 1983 equation 5.14 -->
+          <!-- assumes: constant density, constant tangential and axial components of velocity  -->
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl, ScalarSwirl"/>
-
           <!-- swirl_centriod is only required for geometries that don't have "origin" set.  See BoundaryCondition.cc for details.-->
           <swirl_centroid   spec="OPTIONAL VECTOR"  need_applies_to="var Swirl, ScalarSwirl"/>
 
