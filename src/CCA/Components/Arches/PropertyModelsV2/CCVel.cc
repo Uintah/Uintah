@@ -66,6 +66,10 @@ void CCVel::create_local_labels(){
   register_new_variable<CCVariable<double> >( m_v_vel_name_cc);
   register_new_variable<CCVariable<double> >( m_w_vel_name_cc);
 
+  register_new_variable<CCVariable<double> >( "x_vorticity" );
+  register_new_variable<CCVariable<double> >( "y_vorticity" );
+  register_new_variable<CCVariable<double> >( "z_vorticity" );
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -80,12 +84,18 @@ void CCVel::register_initialize( AVarInfo& variable_registry , const bool pack_t
   register_variable( m_v_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
   register_variable( m_w_vel_name_cc, AFC::COMPUTES, variable_registry, m_task_name );
 
+  register_variable( "x_vorticity", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "y_vorticity", AFC::COMPUTES, variable_registry, m_task_name );
+  register_variable( "z_vorticity", AFC::COMPUTES, variable_registry, m_task_name );
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void CCVel::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_velocities( patch, tsk_info );
+
+  compute_vorticity( patch, tsk_info );
 
 }
 
@@ -134,12 +144,18 @@ void CCVel::register_timestep_eval( VIVec& variable_registry, const int time_sub
   register_variable( m_v_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
   register_variable( m_w_vel_name_cc, AFC::MODIFIES, variable_registry, time_substep , m_task_name );
 
+  register_variable( "x_vorticity", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "y_vorticity", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+  register_variable( "z_vorticity", AFC::COMPUTES, variable_registry, time_substep , m_task_name );
+
 }
 
 //--------------------------------------------------------------------------------------------------
 void CCVel::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   compute_velocities( patch, tsk_info );
+
+  compute_vorticity( patch, tsk_info );
 
 }
 
@@ -149,6 +165,7 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
   constSFCXVariable<double>& u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
   constSFCYVariable<double>& v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
   constSFCZVariable<double>& w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+
   CCVariable<double>& u_cc = tsk_info->get_field<CCVariable<double> >(m_u_vel_name_cc);
   CCVariable<double>& v_cc = tsk_info->get_field<CCVariable<double> >(m_v_vel_name_cc);
   CCVariable<double>& w_cc = tsk_info->get_field<CCVariable<double> >(m_w_vel_name_cc);
@@ -163,4 +180,38 @@ void CCVel::compute_velocities( const Patch* patch, ArchesTaskInfoManager* tsk_i
   ArchesCore::doInterpolation(range, v_cc, v , 0, 1, 0, m_int_scheme );
   ArchesCore::doInterpolation(range, w_cc, w , 0, 0, 1, m_int_scheme );
 
+}
+
+//--------------------------------------------------------------------------------------------------
+void CCVel::compute_vorticity( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  auto& u = tsk_info->get_field<constSFCXVariable<double> >(m_u_vel_name);
+  auto& v = tsk_info->get_field<constSFCYVariable<double> >(m_v_vel_name);
+  auto& w = tsk_info->get_field<constSFCZVariable<double> >(m_w_vel_name);
+
+  auto& w_x = tsk_info->get_field<CCVariable<double>>("x_vorticity");
+  auto& w_y = tsk_info->get_field<CCVariable<double>>("y_vorticity");
+  auto& w_z = tsk_info->get_field<CCVariable<double>>("z_vorticity");
+
+  Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+  Vector DX = patch->dCell();
+  const double Fdx = 4*DX[0];
+  const double Fdy = 4*DX[1];
+  const double Fdz = 4*DX[2];
+
+  Uintah::parallel_for(range, [&](int i, int j, int k){
+
+    const double dudy = ((u(i,j+1,k) + u(i+1,j+1,k)) - (u(i,j-1,k)+u(i+1,j-1,k))) / Fdy;
+    const double dudz = ((u(i,j,k+1) + u(i+1,j,k+1)) - (u(i,j,k-1)+u(i+1,j,k-1))) / Fdz;
+    const double dvdx = ((v(i+1,j,k) + v(i+1,j+1,k)) - (v(i-1,j,k)+v(i-1,j+1,k))) / Fdx;
+    const double dvdz = ((v(i,j,k+1) + v(i,j+1,k+1)) - (v(i,j,k-1)+v(i,j+1,k-1))) / Fdz;
+    const double dwdx = ((w(i+1,j,k) + w(i+1,j,k+1)) - (w(i-1,j,k)+w(i-1,j,k+1))) / Fdx;
+    const double dwdy = ((w(i,j+1,k) + w(i,j+1,k+1)) - (w(i,j-1,k)+w(i,j-1,k+1))) / Fdy;
+
+    // Here are the actual vorticity components
+    w_x(i,j,k) = dudy - dudz;
+    w_y(i,j,k) = dvdz - dvdx;
+    w_z(i,j,k) = dwdx - dwdy;
+
+  });
 }
