@@ -209,9 +209,9 @@ void CCVel::compute_vorticity( const Patch* patch, ArchesTaskInfoManager* tsk_in
     const double dwdy = ((w(i,j+1,k) + w(i,j+1,k+1)) - (w(i,j-1,k)+w(i,j-1,k+1))) / Fdy;
 
     // Here are the actual vorticity components
-    w_x(i,j,k) = dudy - dudz;
-    w_y(i,j,k) = dvdz - dvdx;
-    w_z(i,j,k) = dwdx - dwdy;
+    w_x(i,j,k) = dwdy - dvdz;
+    w_y(i,j,k) = dudz - dwdx;
+    w_z(i,j,k) = dvdx - dudy;
 
   });
 }
