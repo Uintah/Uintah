@@ -1299,7 +1299,7 @@
         </SmithChar>
         <ksi>0.97266</ksi>
         <LinearSwelling>
-          <Fsw>1.05</Fsw>
+          <Fsw>0.05</Fsw>
         </LinearSwelling>
       </ParticleProperties>
       <EulerianParticles>
