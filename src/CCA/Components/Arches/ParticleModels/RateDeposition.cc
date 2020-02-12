@@ -31,10 +31,6 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
   }
 
   _Tmelt = coal_helper.get_coal_db().T_hemisphere;
-  //db->getWithDefault("CaO",_CaO,26.49/100.0);
-  //db->getWithDefault("MgO",_MgO,4.47/100.0);
-  //db->getWithDefault("AlO",_AlO,14.99/100.0);
-  //db->getWithDefault("SiO",_SiO,38.9/100.0);
 
   _ParticleTemperature_base_name  = ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_TEMPERATURE);
   _MaxParticleTemperature_base_name= ArchesCore::parse_for_particle_role_to_label(db,ArchesCore::P_MAXTEMPERATURE);
@@ -51,9 +47,9 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
   _RateDepositionY_base_name= "RateDepositionY";
   _RateDepositionZ_base_name= "RateDepositionZ";
 
-  _RateImpactX_base_name= "RateImpactX";
-  _RateImpactY_base_name= "RateImpactY";
-  _RateImpactZ_base_name= "RateImpactZ";
+  _RateImpactX_base_name= "RateImpactLossX";
+  _RateImpactY_base_name= "RateImpactLossY";
+  _RateImpactZ_base_name= "RateImpactLossZ";
 
   _ProbSurfaceX_name = "ProbSurfaceX";
   _ProbSurfaceY_name = "ProbSurfaceY";

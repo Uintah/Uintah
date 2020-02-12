@@ -55,7 +55,7 @@ BirthDeath::BirthDeath( std::string           modelName,
 
   string name_1    = modelName.substr(0, modelName.find(delimiter));
 
-  std::string modelImpactName = name_1+"impact_"+delimiter;
+  std::string modelImpactName = name_1+"impact_loss_"+delimiter;
   d_model_impactLabel = VarLabel::create( modelImpactName, CCVariable<double>::getTypeDescription() );
 
 
@@ -163,9 +163,9 @@ BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
     std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
     _particle_density_varlabel = VarLabel::find(density_name);
 
-    std::string rate_impact_base_nameX = "RateImpactX";
-    std::string rate_impact_base_nameY = "RateImpactY";
-    std::string rate_impact_base_nameZ = "RateImpactZ";
+    std::string rate_impact_base_nameX = "RateImpactLossX";
+    std::string rate_impact_base_nameY = "RateImpactLossY";
+    std::string rate_impact_base_nameZ = "RateImpactLossZ";
 
     std::string rate_impact_X = ArchesCore::append_env( rate_impact_base_nameX, d_quadNode );
     std::string rate_impact_Y = ArchesCore::append_env( rate_impact_base_nameY, d_quadNode );

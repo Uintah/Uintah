@@ -17,9 +17,9 @@
     <filebase>AtikokanU1.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <save label="MassImpact" />
+    <save label="MassImpactLoss" />
     <save label="dep_velocity_impact" />
-    <save label="OrganicFlowImpWall" />
+    <save label="OrganicFlowImpLossWall" />
     <save label="length_0"/>
     <save label="length_1"/>
     <save label="length_2"/>
@@ -50,9 +50,6 @@
     <save label="NO_ps_src_running_sum"/>
     <save label="HCN_ps_src_running_sum"/>
     <save label="NH3_ps_src_running_sum"/>
-    <save label="conv_scheme_x"/>
-    <save label="conv_scheme_y"/>
-    <save label="conv_scheme_z"/>
     <save label="momentum_eta_source1"/>
     <save label="momentum_eta_source2"/>
     <save label="dep_velocity"/>
@@ -2334,7 +2331,7 @@ Fuels-->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <model label="weight_os_src"/>
-          <model label="weight_os_src_impact" />
+          <model label="weight_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="6.97218065992e-08"/>
             <env_constant qn="1" value="9.22174000536e-08"/>
@@ -2355,7 +2352,7 @@ Fuels-->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <model label="length_os_src"/>
-          <model label="length_os_src_impact" />
+          <model label="length_os_src_impact_loss" />
           <model label="swelling"/>
           <model label="shrinkage"/>
           <initialization type="env_constant">
@@ -2374,7 +2371,7 @@ Fuels-->
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <model label="RCmass_os_src"/>
-          <model label="RCmass_os_src_impact" />
+          <model label="RCmass_os_src_impact_loss" />
           <model label="devol"/>
           <initialization type="env_constant">
             <env_constant qn="0" value="1.54319644426e-11"/>
@@ -2393,7 +2390,7 @@ Fuels-->
           <doConv>true</doConv>
           <model label="char"/>
           <model label="Charmass_os_src"/>
-          <model label="Charmass_os_src_impact" />
+          <model label="Charmass_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0"/>
             <env_constant qn="1" value="0.0"/>
@@ -2411,7 +2408,7 @@ Fuels-->
           <doConv>true</doConv>
           <model label="heat"/>
           <model label="pE_os_src"/>
-          <model label="pE_os_src_impact" />
+          <model label="pE_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="-8.42119142765e-05"/>
             <env_constant qn="1" value="-0.000389869973502"/>
@@ -2430,7 +2427,7 @@ Fuels-->
           <model label="xdragforce"/>
           <model label="xthermophoresis"/>
           <model label="ux_os_src"/>
-          <model label="ux_os_src_impact" />
+          <model label="ux_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0"/>
             <env_constant qn="1" value="0.0"/>
@@ -2449,7 +2446,7 @@ Fuels-->
           <model label="ydragforce"/>
           <model label="ythermophoresis"/>
           <model label="uy_os_src"/>
-          <model label="uy_os_src_impact" />
+          <model label="uy_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0"/>
             <env_constant qn="1" value="0.0"/>
@@ -2468,7 +2465,7 @@ Fuels-->
           <model label="zdragforce"/>
           <model label="zthermophoresis"/>
           <model label="uz_os_src"/>
-          <model label="uz_os_src_impact" />
+          <model label="uz_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="0.0"/>
             <env_constant qn="1" value="0.0"/>
@@ -2486,7 +2483,7 @@ Fuels-->
           <doConv>true</doConv>
           <model label="max_T_rate"/>
           <model label="max_T_os_src"/>
-          <model label="max_T_os_src_impact" />
+          <model label="max_T_os_src_impact_loss" />
           <initialization type="env_constant">
             <env_constant qn="0" value="370.74"/>
             <env_constant qn="1" value="370.74"/>

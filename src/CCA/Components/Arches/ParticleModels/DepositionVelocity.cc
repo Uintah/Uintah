@@ -24,17 +24,17 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _ash_mass_src="AshMassSrc";
   _cellType_name="cellType";
   _impact_velocity_name = m_task_name + "_impact";
-  _impact_mass_src = "MassImpact";
-  _impact_org_wall_flow ="OrganicFlowImpWall";
-  _impact_ash_wall_flow ="AshFlowImpWall";
+  _impact_mass_src = "MassImpactLoss";
+  _impact_org_wall_flow ="OrganicFlowImpLossWall";
+  _impact_ash_wall_flow ="AshFlowImpLossWall";
 
   _ratedepx_name="RateDepositionX";
   _ratedepy_name="RateDepositionY";
   _ratedepz_name="RateDepositionZ";
 
-  _rateImpactx_name="RateImpactX";
-  _rateImpacty_name="RateImpactY";
-  _rateImpactz_name="RateImpactZ";
+  _rateImpactx_name="RateImpactLossX";
+  _rateImpacty_name="RateImpactLossY";
+  _rateImpactz_name="RateImpactLossZ";
 
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT") ){
     ProblemSpecP wallht_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("BoundaryConditions")->findBlock("WallHT");
