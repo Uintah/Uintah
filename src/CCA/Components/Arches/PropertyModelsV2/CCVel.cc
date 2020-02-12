@@ -201,12 +201,26 @@ void CCVel::compute_vorticity( const Patch* patch, ArchesTaskInfoManager* tsk_in
 
   Uintah::parallel_for(range, [&](int i, int j, int k){
 
-    const double dudy = ((u(i,j+1,k) + u(i+1,j+1,k)) - (u(i,j-1,k)+u(i+1,j-1,k))) / Fdy;
-    const double dudz = ((u(i,j,k+1) + u(i+1,j,k+1)) - (u(i,j,k-1)+u(i+1,j,k-1))) / Fdz;
-    const double dvdx = ((v(i+1,j,k) + v(i+1,j+1,k)) - (v(i-1,j,k)+v(i-1,j+1,k))) / Fdx;
-    const double dvdz = ((v(i,j,k+1) + v(i,j+1,k+1)) - (v(i,j,k-1)+v(i,j+1,k-1))) / Fdz;
-    const double dwdx = ((w(i+1,j,k) + w(i+1,j,k+1)) - (w(i-1,j,k)+w(i-1,j,k+1))) / Fdx;
-    const double dwdy = ((w(i,j+1,k) + w(i,j+1,k+1)) - (w(i,j-1,k)+w(i,j-1,k+1))) / Fdy;
+    // Cell-centered values for cell-centered vorticity - but has the negative
+    //  behavior of decaying the vorticity in the higher wavenumbers. 
+    // const double dudy = ((u(i,j+1,k) + u(i+1,j+1,k)) - (u(i,j-1,k)+u(i+1,j-1,k))) / Fdy;
+    // const double dudz = ((u(i,j,k+1) + u(i+1,j,k+1)) - (u(i,j,k-1)+u(i+1,j,k-1))) / Fdz;
+    // const double dvdx = ((v(i+1,j,k) + v(i+1,j+1,k)) - (v(i-1,j,k)+v(i-1,j+1,k))) / Fdx;
+    // const double dvdz = ((v(i,j,k+1) + v(i,j+1,k+1)) - (v(i,j,k-1)+v(i,j+1,k-1))) / Fdz;
+    // const double dwdx = ((w(i+1,j,k) + w(i+1,j,k+1)) - (w(i-1,j,k)+w(i-1,j,k+1))) / Fdx;
+    // const double dwdy = ((w(i,j+1,k) + w(i,j+1,k+1)) - (w(i,j-1,k)+w(i,j-1,k+1))) / Fdy;
+
+    //Vorticity is 'edge-centered' to avoid artificial decay in
+    // higher wave numbers due to numerics. Uncomment the above lines
+    // to get cell-centered vorticity.
+    const double dudy = (u(i,j,k) - u(i,j-1,k)) / DX[1];
+    const double dudz = (u(i,j,k) - u(i,j,k-1)) / DX[2];
+
+    const double dvdx = (v(i,j,k) - v(i-1,j,k)) / DX[0];
+    const double dvdz = (v(i,j,k) - v(i,j,k-1)) / DX[2];
+
+    const double dwdx = (w(i,j,k) - w(i-1,j,k)) / DX[0];
+    const double dwdy = (w(i,j,k) - w(i,j-1,k)) / DX[1];
 
     // Here are the actual vorticity components
     w_x(i,j,k) = dwdy - dvdz;
