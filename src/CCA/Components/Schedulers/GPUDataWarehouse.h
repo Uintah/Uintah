@@ -509,6 +509,7 @@ public:
   __host__ bool compareAndSwapSetInvalidOnGPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx);
   __host__ bool compareAndSwapSetValidOnGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool dwEntryExistsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool dwEntryExists(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
   __host__ bool compareAndSwapSetValidOnCPU(char const* const label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapSetInvalidOnCPU(char const* const label, int patchID, int matlIndx, int levelIndx);

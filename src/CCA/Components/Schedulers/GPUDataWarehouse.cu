@@ -3022,6 +3022,22 @@ __host__ bool GPUDataWarehouse::dwEntryExistsOnCPU(char const* label, int patchI
 }
 
 //______________________________________________________________________
+// We have an entry for this item in the GPU DW. status does not matter.
+__host__ bool GPUDataWarehouse::dwEntryExists(char const* label, int patchID, int matlIndx, int levelIndx) {
+
+   varLock->lock();
+   bool retVal = false;
+   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+   if (it != varPointers->end()) {
+     retVal = true;
+   }
+   varLock->unlock();
+   return retVal;
+
+}
+
+//______________________________________________________________________
 //
 __host__ bool
 GPUDataWarehouse::isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)

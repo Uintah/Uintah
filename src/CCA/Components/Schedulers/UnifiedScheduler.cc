@@ -3835,7 +3835,8 @@ UnifiedScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        if(!gpudw->dwEntryExists(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx))
+        	gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
         m_dws[dwIndex]->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
         m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
@@ -4132,7 +4133,17 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 			  dw->getValidNeighbors(dependantVar->m_var, matls->get(j), patches->get(i), dependantVar->m_gtype, dependantVar->m_num_ghost_cells, validNeighbors, true);
 
 			  for (std::vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
-				  const Patch * sourcePatch = (*iter).neighborPatch;
+				  const Patch * sourcePatch;
+
+	              if (iter->neighborPatch->getID() >= 0) {
+	                sourcePatch = iter->neighborPatch;
+	              } else {
+	                // This occurs on virtual patches.  They can be "wrap around" patches, meaning if you go to one end of a domain
+	                // you will show up on the other side.  Virtual patches have negative patch IDs, but they know what real patch they
+	                // are referring to.
+	                sourcePatch = iter->neighborPatch->getRealPatch();
+	              }
+
 				  //TODO: handle virtual patch case.
 				  if(m_loadBalancer->getPatchwiseProcessorAssignment(sourcePatch) == d_myworld->myRank()){ //only if its a local patch
 				    validNeighbourPatches.push_back(sourcePatch);
