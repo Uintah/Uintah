@@ -2687,8 +2687,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
             	  //DS 01022019: set CPU status to valid for the variable to be copied. Otherwise picks up default status of Unknown on host and
             	  //copies it back for the next requires CPU.
-                  if (it->second.m_dep->m_dep_type == Task::Requires)
-                	  gpudw->compareAndSwapSetValidOnCPU(label_cstr, patchID, matlIndx, levelID);
+//                  if (it->second.m_dep->m_dep_type == Task::Requires)
+//                	  gpudw->compareAndSwapSetValidOnCPU(label_cstr, patchID, matlIndx, levelID);
 
             	}
                 gpudw->allocateAndPut(*device_var, label_cstr, patchID, matlIndx, levelID, staging,
