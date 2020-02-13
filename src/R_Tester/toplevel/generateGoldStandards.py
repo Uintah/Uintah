@@ -15,11 +15,11 @@ import socket
 import resource
 import subprocess # needed to accurately get return codes
 
-from os import system
-from optparse import OptionParser
-from sys import argv, exit
-from helpers.runSusTests import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
-from helpers.modUPS      import modUPS
+from os                       import system
+from optparse                 import OptionParser
+from sys                      import argv, exit
+from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags
+from helpers.modUPS           import modUPS
 
 ####################################################################################
 
