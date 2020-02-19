@@ -2010,6 +2010,12 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                                       curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
                                       make_int3(low.x(), low.y(), low.z()),
                                       make_int3(host_size.x(), host_size.y(), host_size.z()));
+      //correctSize allocating allocated copyingIn validOnGPU gatheringGhostCells validWithGhostCellsOnGPU deallocating formingSuperPatch superPatch
+     /*printf("%d %d %s %s %d %d %d: flags: %d %d %d %d %d %d %d %d %d %d\n",
+			 Uintah::Parallel::getMPIRank(), Impl::t_tid, dtask->getName().c_str(), curDependency->m_var->getName().c_str(), patchID, matlID, levelID,
+			 (int)correctSize, (int)allocating, (int)allocated, (int)copyingIn, (int)validOnGPU, (int)gatheringGhostCells, (int)validWithGhostCellsOnGPU,
+			 (int)deallocating, (int)formingSuperPatch, (int)superPatch
+    		 );*/
 
 
       if (gpu_stats.active()) {
@@ -2763,7 +2769,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                                                      make_int3(size.x(), size.y(), size.z()));
               }
 
-              if (performCopy) {
+              if (performCopy || numGhostCells>0) {
                 //This thread is doing the H2D copy for this simulation variable.
 
                 //Start by getting the host pointer.
@@ -3203,7 +3209,7 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
 //  printf("allHostVarsProcessingReady %s\n", dtask->getName().c_str());
   const Task * task = dtask->getTask();
 
-  dtask->clearPreparationCollections();
+  //dtask->clearPreparationCollections();
 
   std::vector<DetailedTask::labelPatchMatlLevelDw> varsNeedOnHost = dtask->getVarsNeededOnHost();
 
@@ -3219,6 +3225,7 @@ UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
   }
 
 //  printf("allHostVarsProcessingReady: returns true %s\n", dtask->getName().c_str());
+  dtask->getVarsNeededOnHost().clear();
   return true;
 }
 
@@ -3414,13 +3421,13 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
 
   const Task* task = dtask->getTask();
 
-  dtask->clearPreparationCollections();
+  //dtask->clearPreparationCollections();
 
   // Gather up all possible dependents from requires and computes and remove duplicates (we don't want to
   // transfer some variables twice).
   // Note: A task can only run on one level at a time.  It could run multiple patches and multiple
   // materials, but a single task will never run multiple levels.
-  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*> vars;
   for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->m_next) {
     constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
@@ -3429,15 +3436,16 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-        if (vars.find(lpmd) == vars.end()) {
-          vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
+        std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter = vars.find(lpmd);
+        if (varIter == vars.end() || varIter->second->mapDataWarehouse() != dependantVar->mapDataWarehouse()) {
+          vars.insert(std::multimap<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }
       }
     }
   }
 
   // Go through each var, see if it's valid or valid with ghosts.
-  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+  std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
   for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
     const Task::Dependency* curDependency = varIter->second;
 
@@ -3759,7 +3767,8 @@ void UnifiedScheduler::markDeviceAsInvalidHostAsValid( DetailedTask * dtask ){
                 gpudw->compareAndSwapSetInvalidWithGhostsOnGPU(var_name, patchID, matlID, levelID);
 
                 //modified on CPU. mark host as valid, but host ghost as invalid
-                //gpudw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
+                if(gpudw->dwEntryExists(var_name, patchID, matlID, levelID))
+                	gpudw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
                 dw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
                 dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
             }
