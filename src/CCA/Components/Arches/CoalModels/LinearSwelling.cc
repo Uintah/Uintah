@@ -132,7 +132,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
 
   if (db_coal_props->findBlock("LinearSwelling")) {
     ProblemSpecP db_LS = db_coal_props->findBlock("LinearSwelling");
-    db_LS->getWithDefault("Fsw",m_Fsw,1.05); //swelling factor
+    db_LS->getWithDefault("Fsw",m_Fsw,0.05); //swelling factor
   } else {
     throw ProblemSetupException("Error: LinearSwelling block missing in <ParticleProperties>.", __FILE__, __LINE__);
   }

@@ -670,10 +670,10 @@
                                           need_applies_to="type coal">
             <Fsw                          spec="OPTIONAL DOUBLE"/> <!-- swelling factor - default is 1.05.-->
           <!--Assuming a constant devolatilization rate, and a linear swelling the analytical solution for this model is   -->
-          <!-- df = Fsw*dix -->
-          <!-- Then, Fsw = 1 particle diameter is constant  -->
-          <!-- Fsw bigger than 1 will increase the diameter -->
-          <!-- Fsw lower than 1 will decrease the diameter -->
+          <!-- df = (Fsw+1)*di -->
+          <!-- Then, Fsw = 0 particle diameter is constant  -->
+          <!-- Fsw bigger than 0 will increase the diameter -->
+          <!-- Fsw lower than 0 will decrease the diameter -->
           </LinearSwelling>
 
           <SmithCharConstLv0                     spec="OPTIONAL NO_DATA"
