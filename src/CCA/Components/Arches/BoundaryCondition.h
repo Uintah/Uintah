@@ -324,6 +324,11 @@ void setIntrusionDensity( const ProcessorGroup*,
                           const MaterialSubset*,
                           DataWarehouse*,
                           DataWarehouse* new_dw);
+                          
+void sched_computeAlphaG( SchedulerP& sched,
+                          const LevelP& level,
+                          const MaterialSet* matls,
+                          const bool carry_forward );
 
 // wall closure models:
 void
@@ -633,7 +638,7 @@ struct BCInfo {
   std::string partName;
   std::string faceName;
   bool lHasPartMassFlow;
-  Patch::FaceType face; 
+  Patch::FaceType face;
 
   // Inlets:
   Vector velocity;

@@ -111,6 +111,8 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, 
   _do_energy_exchange  = false;
   _mpm_energy_exchange = false;
 
+  m_alpha_geom_label = VarLabel::create("alpha_geom", CCVariable<double>::getTypeDescription());
+
 }
 
 //_________________________________________
@@ -119,12 +121,16 @@ IntrusionBC::~IntrusionBC()
 
   delete localPatches_;
 
+  VarLabel::destroy(m_alpha_geom_label);
+
   if ( _intrusion_on ) {
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){
 
       if ( (iIntrusion->second).type == INLET ){
-        VarLabel::destroy(iIntrusion->second.bc_area);
+        VarLabel::destroy(iIntrusion->second.inlet_bc_area);
       }
+
+      VarLabel::destroy(iIntrusion->second.wetted_surface_area);
 
       if ( iIntrusion->second.has_velocity_model )  {
         delete(iIntrusion->second.velocity_inlet_generator);
@@ -158,6 +164,24 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
       intrusion.name = name;
       intrusion.velocity = Vector(0,0,0);
       intrusion.thin_wall = false;
+      intrusion.physical_area = 0;
+      intrusion.alpha_g = 1;
+
+      if ( db_intrusion->findBlock("area_model") ){
+        ProblemSpecP db_area_model = db_intrusion->findBlock("area_model");
+        if ( db_area_model->findBlock("physical_area")){
+          db_area_model->require("physical_area", intrusion.physical_area);
+          intrusion.alpha_g = 0;  // need to set this to zero so it doesnt override the alpha_geom field variable
+        } else if ( db_area_model->findBlock("alpha_g")){
+          db_area_model->require("alpha_g", intrusion.alpha_g);
+        } else {
+          throw ProblemSetupException("Error: For intrusion area_model, specify <physical_area> or <alpha_g> for intrusion: "+name, __FILE__, __LINE__);
+        }
+        //just check to make sure both aren't specified:
+        if ( db_area_model->findBlock("physical_area") && db_area_model->findBlock("alpha_g") ){
+          throw ProblemSetupException("Error: For intrusion area_model, specify ONLY <physical_area> or <alpha_g> (not both) for intrusion: "+name, __FILE__, __LINE__);
+        }
+      }
 
       if ( db_intrusion->findBlock("ignore_missing_bc") ){
         intrusion.ignore_missing_bc = true;
@@ -319,7 +343,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
           } else if ( my_dir == "z-" || my_dir == "Z-"){
 
             intrusion.directions[4] = 1;
-            intrusion.mass_flow_rate *= -1; 
+            intrusion.mass_flow_rate *= -1;
 
           } else if ( my_dir == "z+" || my_dir == "Z+"){
 
@@ -332,9 +356,15 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
 
         //make an area varlable
         std::string level_index = std::to_string(ilvl);
-        intrusion.bc_area = VarLabel::create( name + "_bc_area_"+level_index, sum_vartype::getTypeDescription() );
+        intrusion.inlet_bc_area = VarLabel::create( name + "_inlet_bc_area_" +
+                                                    level_index, sum_vartype::getTypeDescription() );
 
       }
+
+      //make an area variable for the solid surface area:
+      std::string level_index = std::to_string(ilvl);
+      intrusion.wetted_surface_area = VarLabel::create( name + "_wetted_bc_area_" + level_index,
+                                                        sum_vartype::getTypeDescription() );
 
       //temperature of the intrusion
       // Either choose constant T or an integrated T from MPM
@@ -377,25 +407,22 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
 
   Task* tsk = scinew Task("IntrusionBC::computeBCArea", this, &IntrusionBC::computeBCArea);
 
-  bool found_inlet_intrusion = false;
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( (i->second).type == INLET ){
-      tsk->computes( i->second.bc_area );
-      found_inlet_intrusion = true;
+      tsk->computes( i->second.inlet_bc_area );
     }
+
+    tsk->computes( i->second.wetted_surface_area );
 
     tsk->requires( Task::NewDW, _lab->d_volFractionLabel, Ghost::AroundCells, 1 );
 
   }
 
-  if ( found_inlet_intrusion ){
-    sched->addTask(tsk, level->eachPatch(), matls);
-  } else {
-    delete tsk;
-  }
+  sched->addTask(tsk, level->eachPatch(), matls);
 
 }
+
 void
 IntrusionBC::computeBCArea( const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -418,9 +445,11 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
+      double total_wetted_area = 0.;
+      double total_inlet_area = 0.;
+
       if ( (iter->second).type == INLET ){
 
-        double total_area = 0.;
 
         for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){
 
@@ -458,7 +487,7 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
                     if ( !neighbor_cell ) {
 
                       if ( eps[n] != 0.0 ){
-                        total_area += darea;
+                        total_inlet_area += darea;
                       }
 
                     }
@@ -469,13 +498,196 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
           }
         } // geometry loop
 
-        new_dw->put( sum_vartype( total_area ), iter->second.bc_area );
+        new_dw->put( sum_vartype( total_inlet_area ), iter->second.inlet_bc_area );
 
-      } // if INLET
+      }
 
+      // compute the area that is not an inlet:
+
+      for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){
+
+        GeometryPieceP piece = iter->second.geometry[i];
+        Box geometry_box  = piece->getBoundingBox();
+        Box intersect_box = geometry_box.intersect( patch_box );
+
+        if ( !(intersect_box.degenerate()) ) {
+
+          for ( CellIterator icell = patch->getCellIterator(); !icell.done(); icell++ ) {
+
+            IntVector c = *icell;
+
+            bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted );
+
+            if ( curr_cell ){
+              //check neighbor in the direction of the boundary
+              for ( int idir = 0; idir < 6; idir++ ){
+
+                double darea;
+                if ( idir == 0 || idir == 1 ) {
+                  darea = Dx.y()*Dx.z();
+                } else if ( idir == 2 || idir == 3 ) {
+                  darea = Dx.x()*Dx.z();
+                } else {
+                  darea = Dx.x()*Dx.y();
+                }
+
+                IntVector n = c + _dHelp[idir];
+
+                bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );
+
+                if ( !neighbor_cell ) {
+
+                  if ( eps[n] != 0.0 ){
+                    total_wetted_area += darea;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Total wetted area would include inlet area. If the inlet area is equal to the total wetted
+        // area for this patch, then the area is only inlet area.
+        total_wetted_area = total_wetted_area >  total_inlet_area ? total_wetted_area - total_inlet_area : 0;
+
+        new_dw->put( sum_vartype( total_wetted_area ), iter->second.wetted_surface_area, patch->getLevel(), 0 );
+
+      } // Common wall - wetted surface area
     }   // intrusion loop
   }     // patch loop
 }
+
+//_________________________________________
+void
+IntrusionBC::sched_setAlphaG( SchedulerP& sched,
+                              const LevelP& level,
+                              const MaterialSet* matls,
+                              const bool carryForward )
+{
+
+  Task* tsk = scinew Task("IntrusionBC::setAlphaG", this, &IntrusionBC::setAlphaG, carryForward);
+  tsk->computes( m_alpha_geom_label );
+
+  if ( carryForward ){
+    tsk->requires( Task::OldDW, m_alpha_geom_label, Ghost::None, 0 );
+  } else {
+    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
+      tsk->requires( Task::OldDW, iter->second.wetted_surface_area );
+    }
+  }
+
+  sched->addTask(tsk, level->eachPatch(), matls);
+
+}
+
+void
+IntrusionBC::setAlphaG( const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        const bool carryForward )
+{
+
+  for ( int p = 0; p < patches->size(); p++ ){
+
+    const Patch* patch = patches->get(p);
+    Box patch_box = patch->getBox();
+    int archIndex = 0;
+
+    CCVariable<double> alphaG;
+    new_dw->allocateAndPut( alphaG, m_alpha_geom_label, archIndex, patch);
+    alphaG.initialize(0.0);
+
+    if (carryForward){
+
+      constCCVariable<double> old_alphaG;
+      old_dw->get(old_alphaG, m_alpha_geom_label, archIndex, patch, Ghost::None, 0);
+      alphaG.copyData(old_alphaG);
+
+    } else {
+
+      for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
+
+        sum_vartype sum_area;
+        new_dw->get( sum_area, iter->second.wetted_surface_area, patch->getLevel(), archIndex );
+        double wetted_area = sum_area;
+        const double geom_ratio = iter->second.physical_area/wetted_area;
+        const double alpha_spec = iter->second.alpha_g;
+
+        for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){
+
+          GeometryPieceP piece = iter->second.geometry[i];
+          Box geometry_box  = piece->getBoundingBox();
+          Box intersect_box = geometry_box.intersect( patch_box );
+
+          if ( !(intersect_box.degenerate()) ) {
+
+            for ( CellIterator icell = patch->getCellIterator(); !icell.done(); icell++ ) {
+
+              IntVector c = *icell;
+
+              // check current cell:
+              bool is_cell_in = in_or_out( c, piece, patch, iter->second.inverted );
+
+              if ( is_cell_in ){
+
+                alphaG[c] = std::max( alpha_spec, geom_ratio );
+
+              }
+
+            }
+          }
+        }
+      }
+
+      // Apply boundary conditions on domain faces:
+      std::vector<Patch::FaceType>::const_iterator bf_iter;
+      std::vector<Patch::FaceType> bf;
+      patch->getBoundaryFaces(bf);
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
+
+        Patch::FaceType face = *bf_iter;
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(archIndex); //assumed one material
+
+        for (int child = 0; child < numChildren; child++) {
+          double bc_value = 0;
+          std::string bc_kind = "NotSet";
+          Iterator bound_ptr;
+          bool foundIterator = false;
+          foundIterator = getIteratorBCValueBCKind<double>( patch, face, child,
+                                                            "alpha_geom", archIndex,
+                                                            bc_value, bound_ptr, bc_kind);
+          // NOTE: Ignoring the bc_kind value here since it doesn't make sense in this context.
+          if ( foundIterator ){
+
+            // user specified
+            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              alphaG[*bound_ptr] = bc_value;
+            }
+
+          } else {
+
+            // default: Set alphaG = 1 in all boundaries if not otherwise specified
+            const BCDataArray* bcDataArray = patch->getBCDataArray(face);
+            Iterator bndIter;
+            bcDataArray->getCellFaceIterator( archIndex, bndIter, child );
+
+            for ( bndIter.reset(); !bndIter.done(); bndIter++ ) {
+              alphaG[*bndIter] = 1.;
+            }
+
+          }
+        }
+      }
+
+    } // carry forward
+  }
+}
+
+
 
 //-----------------------------------------
 Vector IntrusionBC::getMaxVelocity(){
@@ -726,7 +938,7 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( (i->second).type == INLET ){
-      tsk->requires( Task::NewDW, i->second.bc_area );
+      tsk->requires( Task::NewDW, i->second.inlet_bc_area );
       found_inlet_intrusion = true;
     }
 
@@ -761,7 +973,7 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         // get the velocity value for the normal component based on total area
         double V = 0.0;
         sum_vartype area_var;
-        new_dw->get( area_var, iter->second.bc_area );
+        new_dw->get( area_var, iter->second.inlet_bc_area );
         double area = area_var;
 
         if ( iter->second.velocity_inlet_type == MASSFLOW ){
@@ -1123,8 +1335,10 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( i->second.type == INLET ){
-      tsk->requires( Task::NewDW, i->second.bc_area );
+      tsk->requires( Task::NewDW, i->second.inlet_bc_area );
     }
+
+    tsk->requires( Task::NewDW, i->second.wetted_surface_area );
 
   }
 
@@ -1147,25 +1361,37 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
     for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
 
-      double area = 0.;
       if (iter->second.type == SIMPLE_WALL) {
 
+        double area = 0.;
+        sum_vartype area_var;
+        new_dw->get(area_var, iter->second.wetted_surface_area);
+        area = area_var;
+
         proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+        proc0cout << "         wetted area = " << area << " (based on cell area)" << std::endl;
 
       } else if (iter->second.type == INLET) {
 
+        double area = 0;
+        double wetted_area = 0;
+
         sum_vartype area_var;
-        new_dw->get(area_var, iter->second.bc_area);
+        new_dw->get(area_var, iter->second.inlet_bc_area);
         area = area_var;
 
-        proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
+        sum_vartype wetted_area_var;
+        new_dw->get(wetted_area_var, iter->second.wetted_surface_area);
+        wetted_area = wetted_area_var;
+
+        proc0cout << " Intrusion name/type: " << iter->first << " / Intrusion Inlet " << std::endl;
         proc0cout << "         inlet area = " << area << " (based on cell area)" << std::endl;
+        proc0cout << "         wetted area = " << wetted_area << " (based on cell area)" << std::endl;
         if ( iter->second.velocity_inlet_type == IntrusionBC::MASSFLOW ){
           proc0cout << "         density  = " << iter->second.density << std::endl;
         } else {
           proc0cout << "         density  = " << iter->second.density << std::endl;
           proc0cout << "         (note: note that density may vary over the face of the inlet)" << std::endl;
-
         }
 
         proc0cout << "   Active inlet directions (normals): " << std::endl;
@@ -1763,7 +1989,7 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
   for ( auto it = intrusion_map_idx.begin(); it != intrusion_map_idx.end(); ++it ){
 
     if ( _intrusion_map[*it].type == INLET ){
-      VarLabel::destroy(_intrusion_map[*it].bc_area);
+      VarLabel::destroy(_intrusion_map[*it].inlet_bc_area);
     }
     if ( _intrusion_map[*it].has_velocity_model )  {
       delete(_intrusion_map[*it].velocity_inlet_generator);
