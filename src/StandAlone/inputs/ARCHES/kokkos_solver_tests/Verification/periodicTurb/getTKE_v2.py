@@ -82,17 +82,17 @@ args = parser.parse_args()
 
 if args.hardcleanup: 
     if args.uda is not None: 
-        print 'Resetting your cleanup flag because you specified -uda'
+        print('Resetting your cleanup flag because you specified -uda')
         args.hardcleanup = False
 
 if args.cleanup: 
     if args.uda is not None: 
-        print 'Resetting your cleanup flag because you specified -uda'
+        print('Resetting your cleanup flag because you specified -uda')
         args.hardcleanup = False        
 
 if args.uda is None:
     if args.ups is None:
-        print 'You need to specify the uda OR the ups file to run.'
+        print('You need to specify the uda OR the ups file to run.')
         sys.exit()
         
 if args.cleanup: 
@@ -146,15 +146,15 @@ for node in xmldoc.getElementsByTagName('delt_max'):
     dt_max = str(node.firstChild.data)
 
 if float(dt_min) != float(dt_max):
-  print 'DT min and DT max in the UPS must be equal and be either 1e-2 or 1e-3.'
+  print('DT min and DT max in the UPS must be equal and be either 1e-2 or 1e-3.')
   sys.exit()
 
-print 'Going to query UDA: ', uda_name
+print('Going to query UDA: ', uda_name)
     
 L = U0 - L0
 #L = 2.0*np.pi*9.0/100.0
 
-print 'DT = '+dt_min
+print('DT = '+dt_min)
 if float(dt_min) < 5.0e-3:
   # compatible with a dt=0.001 timestep and output every 2 steps. 
   TS = [0,28,66]
@@ -204,7 +204,7 @@ for element in TS:
     count += 1    
 
 
-print 'All velocity results have been put in directory: '+this_dir
+print('All velocity results have been put in directory: '+this_dir)
 
 plt.xlabel(r'k, 1/$\it{m}$')
 plt.ylabel(r'E, $m^3/s2$')    

@@ -1,7 +1,7 @@
 C 
 C The MIT License
 C
-C Copyright (c) 1997-2019 The University of Utah
+C Copyright (c) 1997-2020 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
