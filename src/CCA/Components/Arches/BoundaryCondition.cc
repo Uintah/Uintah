@@ -454,6 +454,18 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
   }
 }
 
+void
+BoundaryCondition::sched_computeAlphaG( SchedulerP& sched,
+                                        const LevelP& level,
+                                        const MaterialSet* matls,
+                                        const bool carry_forward )
+{
+  if ( _using_new_intrusion ) {
+    const int ilvl = level->getID();
+    _intrusionBC[ilvl]->sched_setAlphaG( sched, level, matls, carry_forward );
+  }
+}
+
 //______________________________________________________________________
 // compute multimaterial wall bc
 void
@@ -3989,6 +4001,7 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched,
     _intrusionBC[i]->sched_setIntrusionVelocities( sched, level, matls );
     _intrusionBC[i]->sched_printIntrusionInformation( sched, level, matls );
     _intrusionBC[i]->prune_per_patch_intrusions( sched, level, matls );
+    _intrusionBC[i]->sched_setAlphaG(sched, level, matls, false);
   }
 
 }

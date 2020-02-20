@@ -76,6 +76,18 @@ namespace Uintah{
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw );
 
+      void setAlphaG( const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const bool carryForward );
+
+      void sched_setAlphaG( SchedulerP& sched,
+                            const LevelP& level,
+                            const MaterialSet* matls,
+                            const bool carryForward );
+
       /** @brief finds intrusions intersecting with the local to the patch and prunes the rest */
       void prune_per_patch_intrusions( SchedulerP& sched,
                                    const LevelP& level,
@@ -926,7 +938,27 @@ namespace Uintah{
         std::map<IntVector, double> density_map;
 
         //geometric information:
-        const VarLabel* bc_area;
+        // This area is for inlet's only - used to compute velocity for massflow inlets
+        const VarLabel* inlet_bc_area;
+        const VarLabel* wetted_surface_area;
+
+        // The user defined value for the actual physical surface area
+        double physical_area;
+
+        // There are two options for modeling the surface area of a cell face:
+        // Option A) The local area on a cell face is modeled as:
+        // dA = dx_i * dx_j * physical_area / wetted_surface_area
+        // The physical area is specified in the input file.
+        // Option B) The local area on a cell face is modeled as:
+        // dA = dx_i * dx_j * alpha_g
+        // The constant alpha_g is specified in the input file.
+        // Clearly alpha_g = physical_area / wetted_surface_area.
+        // In one case, the physical area may be well known (Option A) while in the other,
+        // the physical area may be hard to determine.
+        // The value of alpha_g will be a CC field which one can visualize and is used in the
+        // heat transfer model and any other place that might be relevant to a surface area.
+        // The CC variable will apply to all exposed faces of the intrusion.
+        double alpha_g;
 
         //inlet generator
         IntrusionBC::VelInletBase* velocity_inlet_generator;
@@ -986,6 +1018,7 @@ namespace Uintah{
       Uintah::PatchSet* localPatches_{nullptr};
       const ArchesLabel* _lab;
       const MPMArchesLabel* _mpmlab;
+      const VarLabel* m_alpha_geom_label;                  ///< Geometry modification factor
       Properties* _props;
       TableLookup* _table_lookup;
       int _WALL;

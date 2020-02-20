@@ -57,7 +57,7 @@ _materialManager( materialManager )
 
   // Time Step
 
-  _simulationTimeLabel = VarLabel::find(simTime_name); 
+  _simulationTimeLabel = VarLabel::find(simTime_name);
 
   // delta t
   VarLabel* nonconstDelT =
@@ -199,7 +199,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 void
 WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_subset )
 {
-  int Rad_TG=1; // solve radiation in this taskgraph 
+  int Rad_TG=1; // solve radiation in this taskgraph
   int no_Rad_TG=0; // don't solve radiation in this taskgraph
 
   m_arches = sched->getApplication();
@@ -239,7 +239,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   }
 
   task->modifies(_T_label);
-
+  task->requires( Task::NewDW, VarLabel::find("alpha_geom"), Ghost::AroundCells, 1 );
 
   if ( time_subset == 0 ) {
 
@@ -290,7 +290,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
        _lastRadSolveLabel=VarLabel::find( "last_radiation_solve_timestep_index");
        if (_lastRadSolveLabel!=nullptr){ // Dynamic radiation solve.  Normalize relaxation factor so wall averaging rate isn't affected (as much)
          task->requires( Task::OldDW, _lastRadSolveLabel, Ghost::None,0);
-         task->requires(Task::OldDW, VarLabel::find(timeStep_name),Ghost::None,0 ); 
+         task->requires(Task::OldDW, VarLabel::find(timeStep_name),Ghost::None,0 );
        }
   } else {
 
@@ -378,6 +378,8 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     vars.time = simTime;
     vars.delta_t = delT;
 
+    new_dw->get( vars.alpha_geom, VarLabel::find("alpha_geom"), m_matl_index, patch, Ghost::AroundCells, 1 );
+
     // Note: The local T_copy is necessary because boundary conditions
     // are being applied in the table lookup to T based on the
     // conditions for the independent variables. These BCs are being
@@ -386,7 +388,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     if( time_subset == 0 ) {
       if (_lastRadSolveLabel!=nullptr){
         SoleVariable< int > lastSolve= 0;
-        old_dw->get( lastSolve, _lastRadSolveLabel); 
+        old_dw->get( lastSolve, _lastRadSolveLabel);
         timeStep_vartype timeStep(0);
         old_dw->get(timeStep, VarLabel::find(timeStep_name) ); // For this to be totally correct, should have corresponding requires.
         vars.relax*= ( (double) ( timeStep - lastSolve) / (double) _calc_freq );
@@ -630,18 +632,6 @@ WallModelDriver::noRadUpdate( const ProcessorGroup* my_world,
     } // end RK step logic
   } // end patch loop
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 //_________________________________________
 void
@@ -939,10 +929,10 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars, CCV
                 q = get_flux( container_flux_ind[pp], vars );
 
                 // The total watts contribution:
-                rad_q += (*q)[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]];
+                rad_q += (*q)[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]]*vars.alpha_geom[c];
 
                 // The total cell surface area exposed to radiation:
-                total_area_face += area_face[container_flux_ind[pp]];
+                total_area_face += area_face[container_flux_ind[pp]]*vars.alpha_geom[c];
 
               }
 
@@ -1275,10 +1265,10 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 q = get_flux( container_flux_ind[pp], vars );
 
                 // The total watts contribution:
-                rad_q += (*q)[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]];
+                rad_q += (*q)[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]] * vars.alpha_geom[c];
 
                 // The total cell surface area exposed to radiation:
-                total_area_face += area_face[container_flux_ind[pp]];
+                total_area_face += area_face[container_flux_ind[pp]] * vars.alpha_geom[c];
 
               }
 
@@ -1341,7 +1331,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 newton_solve( TW_new, wi.T_inner, T_old, R_tot, rad_q, Emiss, extra_src_sum );
               } else if (rad_q>=rad_q_melt && rad_q<rad_q_max){
                 // regime 2
-                dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,(dsb_l_max/(rad_q_max-rad_q_melt+1e-20))*(rad_q-rad_q_melt))); // 0.0 <= dy_dep_sb_l <= dsb_l_max (if radqmax-radqmelt is small) 
+                dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,(dsb_l_max/(rad_q_max-rad_q_melt+1e-20))*(rad_q-rad_q_melt))); // 0.0 <= dy_dep_sb_l <= dsb_l_max (if radqmax-radqmelt is small)
                 R_tot = dy_dep_sb_l/k_sb_l;
                 newton_solve( TW_new, wi.T_slag, T_old, R_tot, rad_q, Emiss, extra_src_sum );
                 // now we can solve for the solid layer thickness given the new surface temperature.
@@ -1363,7 +1353,7 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                   urbain_viscosity(visc, T_i, wi.x_ash);
                   kin_visc = visc/wi.deposit_density;
                   dy_dep_sb_l = a_p*std::pow(kin_visc*kin_visc/9.8,1./3.)*std::pow(4.*(mdot/cell_width)/visc,b_p);
-                  dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,dy_dep_sb_l)); // 0.0 <= dy_dep_sb_l <= dsb_l_max(@ Tfluid) 
+                  dy_dep_sb_l = std::max(0.0,std::min(dsb_l_max,dy_dep_sb_l)); // 0.0 <= dy_dep_sb_l <= dsb_l_max(@ Tfluid)
                   residual = std::abs(dy_dep_sb_l_old - dy_dep_sb_l)/(dy_dep_sb_l+1e-100);
                   if (residual < 1e-4){
                     break;

@@ -992,6 +992,23 @@
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
 
+           <!-- Some models will allow you to adjust the area that is used in the model calculation from the 
+                stair stepped area provided by the mesh (e.g. wall heat transfer). Use the area_model to specify 
+                the modification to the area. The modified area is computed as: 
+                  A_mod = A_face * factor 
+                where the factor can be computed one of two ways. A_mod would then be used in the physical model 
+                See just below for the details of each option. 
+                Note that domain edge boundary conditions are set in the <Grid><BoundaryCondition> section
+                using the Dirichlet option. -->
+           <area_model                  spec="OPTIONAL NO_DATA">
+            <!-- physical_area will compute the factor as:  
+                 factor = physical_area / wetted_stairstepped_geometry_area --> 
+            <physical_area              spec="OPTIONAL DOUBLE 'positive'"/>
+            <!-- alpha_g is simply a constant: 
+                 factor = alpha_g -->
+            <alpha_g                    spec="OPTIONAL DOUBLE 'positive'"/>
+           </area_model>
+
            <thin_wall                   spec="OPTIONAL NO_DATA"
                                         attribute1="delta REQUIRED DOUBLE"/>      <!-- [false] Look for thin walls between cells. If the
                                                                                        thin geometry cuts between, then make the cell a wall cell.
