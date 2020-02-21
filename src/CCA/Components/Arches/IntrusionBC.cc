@@ -572,7 +572,7 @@ IntrusionBC::sched_setAlphaG( SchedulerP& sched,
     tsk->requires( Task::OldDW, m_alpha_geom_label, Ghost::None, 0 );
   } else {
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
-      tsk->requires( Task::OldDW, iter->second.wetted_surface_area );
+      tsk->requires( Task::NewDW, iter->second.wetted_surface_area );
     }
   }
 
@@ -1991,6 +1991,9 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
     if ( _intrusion_map[*it].type == INLET ){
       VarLabel::destroy(_intrusion_map[*it].inlet_bc_area);
     }
+
+    VarLabel::destroy(_intrusion_map[*it].wetted_surface_area);
+
     if ( _intrusion_map[*it].has_velocity_model )  {
       delete(_intrusion_map[*it].velocity_inlet_generator);
     }
