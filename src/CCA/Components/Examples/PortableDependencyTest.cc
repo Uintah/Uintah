@@ -185,10 +185,8 @@ void PortableDependencyTest::scheduleTask4Requires( const LevelP     & level
                                                   ,       SchedulerP & sched
                                                   )
 {
-  const Uintah::PatchSubset* const localPatches = level->allPatches()->getSubset( Uintah::Parallel::getMPIRank());
-
   auto Task4Dependencies = [&](Task* task4) {
-	  task4->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+    task4->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   };
 
   create_portable_tasks(Task4Dependencies, this,
@@ -270,7 +268,6 @@ void PortableDependencyTest::task1Computes( const PatchSubset                   
     const Patch* patch = patches->get(p);
 
     // Prepare the ranges for both boundary conditions and main loop
-    double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
@@ -294,7 +291,7 @@ void PortableDependencyTest::task1Computes( const PatchSubset                   
     // Perform the main loop
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
       //newphi(i, j, k) = i + j * 0.17 + k * 0.42;
-    	newphi(i, j, k) = phi(i,j,k);
+      newphi(i, j, k) = phi(i,j,k);
     });
   }
 }
@@ -315,7 +312,6 @@ void PortableDependencyTest::task2Modifies( const PatchSubset                   
     const Patch* patch = patches->get(p);
 
     // Prepare the ranges for both boundary conditions and main loop
-    double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
@@ -420,7 +416,6 @@ void PortableDependencyTest::task4Requires( const PatchSubset                   
     const Patch* patch = patches->get(p);
 
     // Prepare the ranges for both boundary conditions and main loop
-    double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
