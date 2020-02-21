@@ -1208,7 +1208,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
 //_____________________________________________________________________________
 //
 bool
-DetailedTasks::getDeviceValidateRequiresCopiesTask(DetailedTask *& dtask)
+DetailedTasks::getDeviceValidateRequiresAndModifiesCopiesTask(DetailedTask *& dtask)
 {
   //This function should ONLY be called within runTasks() part 1.
   //This is all done as one atomic unit as we're seeing if we should get an item and then we get it.
@@ -1216,12 +1216,12 @@ DetailedTasks::getDeviceValidateRequiresCopiesTask(DetailedTask *& dtask)
   dtask = nullptr;
 
   auto ready_request = [](DetailedTask *& dtask)->bool { return dtask->checkAllCudaStreamsDoneForThisTask(); };
-  TaskPool::iterator device_validateRequiresCopies_pool_iter = device_validateRequiresCopies_pool.find_any(ready_request);
+  TaskPool::iterator device_validateRequiresAndModifiesCopies_pool_iter = device_validateRequiresAndModifiesCopies_pool.find_any(ready_request);
 
-  if (device_validateRequiresCopies_pool_iter) {
-    dtask = *device_validateRequiresCopies_pool_iter;
-    device_validateRequiresCopies_pool.erase(device_validateRequiresCopies_pool_iter);
-    //printf("device_validateRequiresCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_validateRequiresCopies_pool.size());
+  if (device_validateRequiresAndModifiesCopies_pool_iter) {
+    dtask = *device_validateRequiresAndModifiesCopies_pool_iter;
+    device_validateRequiresAndModifiesCopies_pool.erase(device_validateRequiresAndModifiesCopies_pool_iter);
+    //printf("device_validateRequiresAndModifiesCopies_pool - Erased %s size of pool %lu\n", dtask->getName().c_str(), device_validateRequiresAndModifiesCopies_pool.size());
     retVal = true;
   }
 
@@ -1425,9 +1425,9 @@ DetailedTasks::getHostReadyToExecuteTask(DetailedTask *& dtask)
 
 //_____________________________________________________________________________
 //
-void DetailedTasks::addDeviceValidateRequiresCopies(DetailedTask * dtask)
+void DetailedTasks::addDeviceValidateRequiresAndModifiesCopies(DetailedTask * dtask)
 {
-  device_validateRequiresCopies_pool.insert(dtask);
+  device_validateRequiresAndModifiesCopies_pool.insert(dtask);
 }
 
 //_____________________________________________________________________________

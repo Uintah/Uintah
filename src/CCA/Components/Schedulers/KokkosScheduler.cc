@@ -823,7 +823,7 @@ KokkosScheduler::runTasks( int thread_id )
          * gpuVerifyDataTransferCompletion = true
          */
         if (usingDevice
-            && m_detailed_tasks->getDeviceValidateRequiresCopiesTask(readyTask)) {
+            && m_detailed_tasks->getDeviceValidateRequiresAndModifiesCopiesTask(readyTask)) {
             gpuValidateRequiresCopies = true;
             havework = true;
             break;
@@ -895,7 +895,7 @@ KokkosScheduler::runTasks( int thread_id )
          * Check if a CPU task needs data into host memory from GPU memory
          * If so, copies data D2H.  Also checks if all data has arrived and is ready to process.
          *
-         * cpuValidateRequiresCopies = true
+         * cpuValidateRequiresAndModifiesCopies = true
          */
         else if (usingDevice
             && m_detailed_tasks->getHostValidateRequiresAndModifiesCopiesTask(readyTask)) {
@@ -1009,7 +1009,7 @@ KokkosScheduler::runTasks( int thread_id )
 
         //Determine which queue it should go into.
         //TODO: Skip queues if possible, not all tasks performed copies or ghost cell gathers
-        m_detailed_tasks->addDeviceValidateRequiresCopies(readyTask);
+        m_detailed_tasks->addDeviceValidateRequiresAndModifiesCopies(readyTask);
 
       } else if (gpuValidateRequiresCopies) {
         //Mark all requires vars this task is responsible for copying in as valid.

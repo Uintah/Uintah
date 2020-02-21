@@ -236,7 +236,7 @@ public:
 
 #ifdef HAVE_CUDA
 
-  void addDeviceValidateRequiresCopies( DetailedTask * dtask );
+  void addDeviceValidateRequiresAndModifiesCopies( DetailedTask * dtask );
 
   void addDevicePerformGhostCopies( DetailedTask * dtask );
 
@@ -254,7 +254,7 @@ public:
 
   void addHostReadyToExecute( DetailedTask * dtask );
 
-  bool getDeviceValidateRequiresCopiesTask( DetailedTask *& dtask );
+  bool getDeviceValidateRequiresAndModifiesCopiesTask( DetailedTask *& dtask );
 
   bool getDevicePerformGhostCopiesTask( DetailedTask *& dtask );
 
@@ -405,7 +405,7 @@ private:
                                  , std::allocator
                                  >;
 
-  TaskPool             device_validateRequiresCopies_pool{};
+  TaskPool             device_validateRequiresAndModifiesCopies_pool{};
   TaskPool             device_performGhostCopies_pool{};
   TaskPool             device_validateGhostCopies_pool{};
   TaskPool             device_checkIfExecutable_pool{};
