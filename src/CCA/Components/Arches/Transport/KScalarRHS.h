@@ -186,57 +186,57 @@ doConvection(       ExecutionObject<ExecSpace, MemSpace> & execObj
     }
 }
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void>::type
-doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
-            , Uintah::BlockRange                           & range_conv
-            , KokkosView3<const double, Kokkos::HostSpace>   phi
-            , KokkosView3<const double, Kokkos::HostSpace>   rho_phi
-            , KokkosView3<const double, Kokkos::HostSpace>   xyzVel
-            , KokkosView3<double, Kokkos::HostSpace>         xyzFlux
-            , KokkosView3<const double, Kokkos::HostSpace>   eps
-            , unsigned int                                   xyzDir
-            , int                                          & ieqn
+doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
+            , Uintah::BlockRange                   & range_conv
+            , KokkosView3<const double, MemSpace>    phi
+            , KokkosView3<const double, MemSpace>    rho_phi
+            , KokkosView3<const double, MemSpace>    xyzVel
+            , KokkosView3<      double, MemSpace>    xyzFlux
+            , KokkosView3<const double, MemSpace>    eps
+            , unsigned int                           xyzDir
+            , int                                  & ieqn
             )
 {
   if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, Kokkos::HostSpace>, KokkosView3<const double, Kokkos::HostSpace>, Cscheme> partiallySpecializedTemplatedStruct;
+    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, MemSpace>, KokkosView3<const double, MemSpace>, Cscheme> partiallySpecializedTemplatedStruct;
     partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );
   }
   else {
-    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, Kokkos::HostSpace>, KokkosView3<const double, Kokkos::HostSpace>, Cscheme> partiallySpecializedTemplatedStruct;
+    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, MemSpace>, KokkosView3<const double, MemSpace>, Cscheme> partiallySpecializedTemplatedStruct;
     partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir );
   }
 }
+#endif
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void>::type
-doConvection( ExecutionObject<ExecSpace, MemSpace>         & execObj
-            , Uintah::BlockRange                           & range_conv
-            , KokkosView3<const double, Kokkos::CudaSpace>   phi
-            , KokkosView3<const double, Kokkos::CudaSpace>   rho_phi
-            , KokkosView3<const double, Kokkos::CudaSpace>   xyzVel
-            , KokkosView3<double, Kokkos::CudaSpace>         xyzFlux
-            , KokkosView3<const double, Kokkos::CudaSpace>   eps
-            , unsigned int                                   xyzDir
-            , int                                          & ieqn
+doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
+            , Uintah::BlockRange                   & range_conv
+            , KokkosView3<const double, MemSpace>    phi
+            , KokkosView3<const double, MemSpace>    rho_phi
+            , KokkosView3<const double, MemSpace>    xyzVel
+            , KokkosView3<      double, MemSpace>    xyzFlux
+            , KokkosView3<const double, MemSpace>    eps
+            , unsigned int                           xyzDir
+            , int                                  & ieqn
             )
 {
   if ( m_transported_eqn_names[ieqn] != m_eqn_names[ieqn] ) {
-    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme > partiallySpecializedTemplatedStruct;
+    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, MemSpace>, KokkosView3<const double, MemSpace>, Cscheme> partiallySpecializedTemplatedStruct;
     partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv, rho_phi, xyzVel, xyzFlux, eps, xyzDir );
   }
   else {
-    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace,KokkosView3<double, Kokkos::CudaSpace>,KokkosView3<const double, Kokkos::CudaSpace>, Cscheme > partiallySpecializedTemplatedStruct;
+    Uintah::ComputeConvectiveFlux1D<ExecSpace, MemSpace, KokkosView3<double, MemSpace>, KokkosView3<const double, MemSpace>, Cscheme> partiallySpecializedTemplatedStruct;
     partiallySpecializedTemplatedStruct.get_flux( execObj, range_conv, phi, xyzVel, xyzFlux, eps, xyzDir );
   }
 }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif
 
   };
 

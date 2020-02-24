@@ -66,7 +66,7 @@ namespace Uintah {
     IntegrateFlux(T& rhs, CFXT& flux_x,
                   CFYT& flux_y, CFZT& flux_z,
                   const Vector& Dx) :
-#if defined ( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     rhs(rhs.getKokkosView()), flux_x(flux_x.getKokkosView()), flux_y(flux_y.getKokkosView()),
     flux_z(flux_z.getKokkosView()),
 #else
