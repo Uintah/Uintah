@@ -48,6 +48,16 @@ BirthDeath::BirthDeath( std::string           modelName,
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+  // Create a label for source of particle that are implacting the wall
+  stringstream ss;
+  ss << qn; 
+  string delimiter = "qn"+ss.str()  ;
+
+  string name_1    = modelName.substr(0, modelName.find(delimiter));
+
+  std::string modelImpactName = name_1+"impact_loss_"+delimiter;
+  d_model_impactLabel = VarLabel::create( modelImpactName, CCVariable<double>::getTypeDescription() );
+
 
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
@@ -59,7 +69,9 @@ BirthDeath::BirthDeath( std::string           modelName,
 }
 
 BirthDeath::~BirthDeath()
-{}
+{
+  VarLabel::destroy(d_model_impactLabel); 
+}
 
 
 
@@ -151,6 +163,18 @@ BirthDeath::problemSetup(const ProblemSpecP& inputdb, int qn)
     std::string density_name = ArchesCore::append_env( density_root, d_quadNode );
     _particle_density_varlabel = VarLabel::find(density_name);
 
+    std::string rate_impact_base_nameX = "RateImpactLossX";
+    std::string rate_impact_base_nameY = "RateImpactLossY";
+    std::string rate_impact_base_nameZ = "RateImpactLossZ";
+
+    std::string rate_impact_X = ArchesCore::append_env( rate_impact_base_nameX, d_quadNode );
+    std::string rate_impact_Y = ArchesCore::append_env( rate_impact_base_nameY, d_quadNode );
+    std::string rate_impact_Z = ArchesCore::append_env( rate_impact_base_nameZ, d_quadNode );
+    _rate_impactX_varlabel = VarLabel::find(rate_impact_X);
+    _rate_impactY_varlabel = VarLabel::find(rate_impact_Y);
+    _rate_impactZ_varlabel = VarLabel::find(rate_impact_Z);
+
+
   }
   _pi = acos(-1.0);
 }
@@ -165,6 +189,7 @@ BirthDeath::sched_initVars( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &BirthDeath::initVars);
 
   tsk->computes(d_modelLabel);
+  tsk->computes(d_model_impactLabel);
   tsk->computes(d_gasLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_materialManager->allMaterials( "Arches" ));
@@ -187,12 +212,20 @@ BirthDeath::initVars( const ProcessorGroup * pc,
     int matlIndex = d_materialManager->getMaterial( "Arches", archIndex)->getDWIndex();
 
     CCVariable<double> model;
+
     CCVariable<double> gas_source;
 
     new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
     model.initialize(0.0);
     new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
     gas_source.initialize(0.0);
+
+    //if ( _deposition ){
+    CCVariable<double> model_impact;
+    new_dw->allocateAndPut( model_impact, d_model_impactLabel, matlIndex, patch );
+    model_impact.initialize(0.0);
+    //}
+
   }
 }
 
@@ -218,6 +251,7 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   if (timeSubStep == 0) {
     tsk->computes(d_modelLabel);
+    tsk->computes(d_model_impactLabel);
     tsk->computes(d_gasLabel);
     tsk->requires(Task::OldDW, _w_label, Ghost::None, 0);
     if ( _deposition ){
@@ -226,11 +260,17 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
       tsk->requires(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
       tsk->requires(Task::OldDW, _length_varlabel, gn, 0 );
       tsk->requires(Task::OldDW, _particle_density_varlabel, gn, 0 );
+
+      tsk->requires(Task::OldDW, _rate_impactX_varlabel, gaf, 1);
+      tsk->requires(Task::OldDW, _rate_impactY_varlabel, gaf, 1);
+      tsk->requires(Task::OldDW, _rate_impactZ_varlabel, gaf, 1);
+
     }
     if ( !_is_weight )
       tsk->requires(Task::OldDW, _abscissa_label, Ghost::None, 0);
   } else {
     tsk->modifies(d_modelLabel);
+    tsk->modifies(d_model_impactLabel);
     tsk->modifies(d_gasLabel);
     tsk->requires(Task::NewDW, _w_label, Ghost::None, 0);
     if ( _deposition ){
@@ -239,6 +279,10 @@ BirthDeath::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
       tsk->requires(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
       tsk->requires(Task::NewDW, _length_varlabel, gn, 0 );
       tsk->requires(Task::NewDW, _particle_density_varlabel, gn, 0 );
+
+      tsk->requires(Task::NewDW, _rate_impactX_varlabel, gaf, 1);
+      tsk->requires(Task::NewDW, _rate_impactY_varlabel, gaf, 1);
+      tsk->requires(Task::NewDW, _rate_impactZ_varlabel, gaf, 1);
     }
     if ( !_is_weight )
       tsk->requires(Task::NewDW, _abscissa_label, Ghost::None, 0);
@@ -284,20 +328,25 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
     double dt = DT;
 
     CCVariable<double> model;
+    CCVariable<double> model_impact;
     CCVariable<double> gas_source;
     DataWarehouse* which_dw;
 
     if ( timeSubStep == 0 ){
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( model_impact, d_model_impactLabel, matlIndex, patch );
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
       gas_source.initialize(0.0);
       model.initialize(0.0);
+      model_impact.initialize(0.0);
       which_dw = old_dw;
     } else {
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( model_impact, d_model_impactLabel, matlIndex, patch );
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch );
       gas_source.initialize(0.0);
       model.initialize(0.0);
+      model_impact.initialize(0.0);
       which_dw = new_dw;
     }
 
@@ -311,6 +360,11 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
     constSFCYVariable<double> rate_Y;
     constSFCZVariable<double> rate_Z;
 
+    constSFCXVariable<double> rate_impact_X;
+    constSFCYVariable<double> rate_impact_Y;
+    constSFCZVariable<double> rate_impact_Z;
+
+
     which_dw->get( w, _w_label, matlIndex, patch, Ghost::None, 0 );
     new_dw->get( w_rhs, _w_rhs_label, matlIndex, patch, Ghost::None, 0 );
     old_dw->get( vol_fraction, VarLabel::find("volFraction"), matlIndex, patch, Ghost::None, 0 );
@@ -321,6 +375,12 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
       which_dw->get( rate_X, _rate_depX_varlabel, matlIndex, patch, gaf, 1 );
       which_dw->get( rate_Y, _rate_depY_varlabel, matlIndex, patch, gaf, 1 );
       which_dw->get( rate_Z, _rate_depZ_varlabel, matlIndex, patch, gaf, 1 );
+
+      //particles impacting the wall but not getting deposited
+      which_dw->get( rate_impact_X, _rate_impactX_varlabel, matlIndex, patch, gaf, 1 );
+      which_dw->get( rate_impact_Y, _rate_impactY_varlabel, matlIndex, patch, gaf, 1 );
+      which_dw->get( rate_impact_Z, _rate_impactZ_varlabel, matlIndex, patch, gaf, 1 );
+
     }
     if ( !_is_weight ){
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 );
@@ -331,6 +391,23 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
       Uintah::parallel_for(range,  [&](int i, int j, int k) {
 
         double vol_p = (_pi/6.0) * diam(i,j,k) * diam(i,j,k) * diam(i,j,k);
+
+
+        // particles impacting the wall but not getting deposited
+
+        const double dimpact_src =( abs(rate_impact_X(i,j,k))*area_x
+                               + abs(rate_impact_Y(i,j,k))*area_y
+                               + abs(rate_impact_Z(i,j,k))*area_z
+                               + abs(rate_impact_X(i+1,j,k))*area_x
+                               + abs(rate_impact_Y(i,j+1,k))*area_y
+                               + abs(rate_impact_Z(i,j,k+1))*area_z )
+                               / ( -1.0*rhop(i,j,k)*vol_p*vol*_w_scale );// scaled #/s/m^3
+
+        // here we add the birth rate to the destruction rate
+        model_impact(i,j,k) = dimpact_src ; // scaled #/s/m^3
+        // note here w and w_rhs are already scaled.
+        model_impact(i,j,k) *=  _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight
+        model_impact(i,j,k) *= vol_fraction(i,j,k);
 
         const double dstrc_src =( abs(rate_X(i,j,k))*area_x
                                + abs(rate_Y(i,j,k))*area_y
@@ -347,6 +424,7 @@ BirthDeath::computeModel( const ProcessorGroup* pc,
         model(i,j,k)*= _is_weight ? 1.0 : a(i,j,k)/_a_scale; // if weight
 
         model(i,j,k)*= vol_fraction(i,j,k);
+
 
       });
     } else {
