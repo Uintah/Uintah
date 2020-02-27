@@ -172,10 +172,14 @@ HTConvection::computeSource( const ProcessorGroup* pc,
     const double dy = Dx.y();
     const double dz = Dx.z();
 
+    double cellvol = dx*dy*dz;
+    double total_area_face;
+
     Uintah::parallel_for(range, [&](int i, int j, int k) {
 
         rate(i,j,k)=0.0;
         ConWallHT_src(i,j,k)=0.0;
+        total_area_face = 0;
 
         if ( volFraction(i,j,k) > 0. ){
 
@@ -251,6 +255,82 @@ HTConvection::computeSource( const ProcessorGroup* pc,
           }
         }// end for fluid cell
 
+        if(volFraction(i,j,k) < 1.0){
+
+          // wall cells(i,j,k)
+          // x+ direction
+          //  std::cout<<i<<j<<k<<"\n";
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i+1,j,k) )){
+            delta_n=Dx.x();
+            f_T_p=gasT(i+1,j,k);
+            f_T_m=gasT(i,j,k);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i+1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i+1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+          }
+
+
+          // x- direction
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i-1,j,k) )) {
+            delta_n=Dx.x();
+            f_T_p=gasT(i,j,k);
+            f_T_m=gasT(i-1,j,k);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i-1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i-1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+          }
+
+
+          // Next for the Y+ direction
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j+1,k) )){
+            delta_n=Dx.y();
+            f_T_p=gasT(i,j+1,k);
+            f_T_m=gasT(i,j,k);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i,j+1,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j+1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+          }
+
+
+          // Next for the Y- direction
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j-1,k) )){
+            delta_n=Dx.y();
+            f_T_p=gasT(i,j,k);
+            f_T_m=gasT(i,j-1,k);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i,j-1,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j-1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+          }
+
+          // Next for the z direction
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k+1) )){
+            delta_n=Dx.z();
+            f_T_p=gasT(i,j,k+1);
+            f_T_m=gasT(i,j,k);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i,j,k+1) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j,k+1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+          }
+
+
+          if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j,k-1) )) {
+            delta_n=Dx.z();
+            f_T_p=gasT(i,j,k);
+            f_T_m=gasT(i,j,k-1);
+            dT_dn = (f_T_p - f_T_m) / delta_n;
+            rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
+            ConWallHT_src(i,j,k) = volFraction(i,j,k-1) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j,k-1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+          }
+
+          ConWallHT_src(i,j,k) =total_area_face>0.0 ?  ConWallHT_src(i,j,k)/total_area_face*cellvol :0.0;//W/m2
+
+        }
     }); // end fluid cell loop for computing the
 
   }// end patch loop
