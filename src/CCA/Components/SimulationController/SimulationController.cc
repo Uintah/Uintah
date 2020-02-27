@@ -252,14 +252,14 @@ SimulationController::releaseComponents( void )
 
 void
 SimulationController::doRestart( const std::string & restartFromDir
-                               ,       int           timeStep
+                               ,       int           index
                                ,       bool          fromScratch
                                ,       bool          removeOldDir
                                )
 {
   m_restarting             = true;
   m_from_dir               = restartFromDir;
-  m_restart_timestep       = timeStep;
+  m_restart_index          = index;
   m_restart_from_scratch   = fromScratch;
   m_restart_remove_old_dir = removeOldDir;
 }
@@ -301,34 +301,28 @@ SimulationController::restartArchiveSetup( void )
       Parallel::exitAll(1);
     }
 
-    // Find the right time to query the grid
-    if (m_restart_timestep == 0) {
-      m_restart_index    = 0;          // timestep == 0 means use the first timestep
-      m_restart_timestep = indices[0]; // reset m_restart_timestep to what it really is
-    }
-    else if (m_restart_timestep == -1 && indices.size() > 0) {
-      m_restart_index    = (unsigned int)(indices.size() - 1);
-      m_restart_timestep = indices[indices.size() - 1]; // reset m_restart_timestep to what it really is
-    }
-    else {
-      for (int index = 0; index < (int)indices.size(); index++) {
-        if (indices[index] == m_restart_timestep) {
-          m_restart_index = index;
-          break;
-        }
-      }
-    }
-      
-    // timestep not found
-    if (m_restart_index == (int)indices.size()) {
+    // Find the right checkpoint timestep to query the grid
+    if( indices.size() == 0) {
       std::ostringstream message;
-      message << "Restart time step " << m_restart_timestep << " not found";
+      message << "No restart checkpoints found.";
+      throw InternalError(message.str(), __FILE__, __LINE__);
+    }
+    else if (m_restart_index < 0 ) {
+      m_restart_index = (unsigned int) (indices.size() - 1);
+    }
+    else if (m_restart_index >= indices.size() ) {
+      std::ostringstream message;
+      message << "Invalid restart checkpoint index " << m_restart_index << ". "
+              << "Found " << indices.size() << " checkpoints";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
 
+    m_restart_timestep = indices[m_restart_index];
+
     // Do this call before calling DataArchive::restartInitialize,
     // because problemSetup() creates VarLabels the DataArchive needs.
-    m_restart_ps = m_restart_archive->getTimestepDocForComponent( m_restart_index );
+    m_restart_ps =
+      m_restart_archive->getTimestepDocForComponent( m_restart_index );
 
     proc0cout << "Restart directory: \t'" << restartFromDir.getName() << "'\n"
               << "Restart time step: \t" << m_restart_timestep << "\n";
