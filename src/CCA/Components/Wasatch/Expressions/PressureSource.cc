@@ -12,8 +12,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const Expr::TagList& velTags,
                                 const Expr::Tag& divuTag,
                                 const bool isConstDensity,
-                                const Expr::Tag& rhoTag,
-                                const Expr::Tag& rhoStarTag)
+                                const Expr::Tag& rhoOldTag,
+                                const Expr::Tag& rhoNewTag )
 : Expr::Expression<SVolField>(),
   isConstDensity_( isConstDensity ),
   doX_      ( momTags[0]!=Expr::Tag() ),
@@ -33,20 +33,20 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
     if( doY_ ) yMom_ = create_field_request<YVolField>(momTags[1]);
     if( doZ_ ) zMom_ = create_field_request<ZVolField>(momTags[2]);
     
-    rhoStar_ = create_field_request<SVolField>(rhoStarTag);
-    divu_ = create_field_request<SVolField>(divuTag);
+    rhoOld_ = create_field_request<SVolField>(rhoOldTag);
+    divu_   = create_field_request<SVolField>(divuTag  );
   } else {
-    const Expr::Tag dilt = WasatchCore::TagNames::self().dilatation;
-    dil_ = create_field_request<SVolField>(dilt);
+    const Expr::Tag dilTag = WasatchCore::TagNames::self().dilatation;
+    dil_ = create_field_request<SVolField>(dilTag);
   }
   
-  rho_ = create_field_request<SVolField>(rhoTag);
+  rhoNew_ = create_field_request<SVolField>(rhoNewTag);
   
-  const Expr::Tag dtt = WasatchCore::TagNames::self().dt;
-  dt_ = create_field_request<TimeField>(dtt);
+  const Expr::Tag dtTag = WasatchCore::TagNames::self().dt;
+  dt_ = create_field_request<TimeField>(dtTag);
   
-  const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;
-  rkStage_ = create_field_request<TimeField>(rkst);
+  const Expr::Tag rksTag = WasatchCore::TagNames::self().rkstage;
+  rkStage_ = create_field_request<TimeField>(rksTag);
 }
 
 //------------------------------------------------------------------
@@ -67,17 +67,17 @@ void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if (!isConstDensity_) {
     if( doX_ ){
       s2XInterpOp_ = opDB.retrieve_operator<S2XInterpOpT>();
-      gradXOp_    = opDB.retrieve_operator<GradXT>();
+      gradXOp_     = opDB.retrieve_operator<GradXT>();
       x2SInterpOp_ = opDB.retrieve_operator<X2SInterpOpT>();
     }
     if( doY_ ){
       s2YInterpOp_ = opDB.retrieve_operator<S2YInterpOpT>();
-      gradYOp_    = opDB.retrieve_operator<GradYT>();
+      gradYOp_     = opDB.retrieve_operator<GradYT>();
       y2SInterpOp_ = opDB.retrieve_operator<Y2SInterpOpT>();
     }
     if( doZ_ ){
       s2ZInterpOp_ = opDB.retrieve_operator<S2ZInterpOpT>();
-      gradZOp_    = opDB.retrieve_operator<GradZT>();
+      gradZOp_     = opDB.retrieve_operator<GradZT>();
       z2SInterpOp_ = opDB.retrieve_operator<Z2SInterpOpT>();
     }
   }
@@ -93,7 +93,7 @@ void PressureSource::evaluate()
   
   const TimeField& dt = dt_->field_ref();
   const TimeField& rkStage = rkStage_->field_ref();
-  const SVolField& rho = rho_->field_ref();
+  const SVolField& rhoNew = rhoNew_->field_ref();
   
   SVolField& psrc = *results[0];
   
@@ -121,18 +121,18 @@ void PressureSource::evaluate()
       if( doZ_ ) psrc <<= psrc + (*gradZOp_)( zMomOld_->field_ref() );
     } // 1D, 2D cases
 
-    psrc <<= cond( rkStage == 1.0,                  rho * dil  / dt        )
-                 ( rkStage == 2.0, (a2* psrc + b2 * rho * dil) / (b2 * dt) )
-                 ( rkStage == 3.0, (a3* psrc + b3 * rho * dil) / (b3 * dt) )
+    psrc <<= cond( rkStage == 1.0,                  rhoNew * dil  / dt        )
+                 ( rkStage == 2.0, (a2* psrc + b2 * rhoNew * dil) / (b2 * dt) )
+                 ( rkStage == 3.0, (a3* psrc + b3 * rhoNew * dil) / (b3 * dt) )
                  ( 0.0 ); // should never get here.
     
   } else { // variable density
     
-    SVolField& drhodtstar = *results[1];
+    SVolField& drhodtNew = *results[1];
     const SVolField& divu       = divu_->field_ref();    
-    const SVolField& rhoStar = rhoStar_->field_ref();
+    const SVolField& rhoOld = rhoOld_->field_ref();
     
-    drhodtstar <<= (rhoStar - rho)/dt;
+    drhodtNew <<= (rhoNew - rhoOld)/dt;
     
     SpatFldPtr<SVolField> divmomlatest_ = SpatialFieldStore::get<SVolField>( psrc );
     SVolField& divmomlatest = *divmomlatest_;
@@ -157,18 +157,18 @@ void PressureSource::evaluate()
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
       if( doX_ ) {
         // always add the divergence of momentum from the old timestep div(r u)^n
-        psrc <<= (*gradXOp_)( xMomOld_->field_ref()/ (*s2XInterpOp_)(rhoStar) );
+        psrc <<= (*gradXOp_)( xMomOld_->field_ref()/ (*s2XInterpOp_)(rhoNew) );
         if (timeIntInfo_->nStages > 1) divmomlatest <<= (*gradXOp_)(xMom_->field_ref());
       }
       else       psrc <<= 0.0;
       if( doY_ )
       {
-        psrc <<= psrc + (*gradYOp_)( yMomOld_->field_ref()/ (*s2YInterpOp_)(rhoStar) );
+        psrc <<= psrc + (*gradYOp_)( yMomOld_->field_ref()/ (*s2YInterpOp_)(rhoNew) );
         if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradYOp_)(yMom_->field_ref());
       }
       if( doZ_ )
       {
-        psrc <<= psrc + (*gradZOp_)( zMomOld_->field_ref() / (*s2ZInterpOp_)(rhoStar) );
+        psrc <<= psrc + (*gradZOp_)( zMomOld_->field_ref() / (*s2ZInterpOp_)(rhoNew) );
         if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradZOp_)(zMom_->field_ref());
       }
       
@@ -196,15 +196,15 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
                                   const Expr::TagList& velTags,
                                   const Expr::Tag& divuTag,
                                   const bool isConstDensity,
-                                  const Expr::Tag& rhoTag,
-                                  const Expr::Tag& rhoStarTag)
+                                  const Expr::Tag& rhoOldTag,
+                                  const Expr::Tag& rhoNewTag)
 : ExpressionBuilder(results),
   isConstDens_( isConstDensity ),
-  momTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : momTags ),
+  momTags_    ( rhoOldTag==Expr::Tag() ? Expr::TagList() : momTags ),
   oldMomTags_ ( oldMomTags ),
-  velTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : velTags ),
-  rhot_       ( rhoTag     ),
-  rhoStart_   ( rhoStarTag ),
+  velTags_    ( rhoOldTag==Expr::Tag() ? Expr::TagList() : velTags ),
+  rhoOldTag_  ( rhoOldTag  ),
+  rhoNewTag_  ( rhoNewTag  ),
   divuTag_    ( divuTag    )
 {}
 
@@ -213,7 +213,7 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
 Expr::ExpressionBase*
 PressureSource::Builder::build() const
 {
-  return new PressureSource( momTs_, oldMomTags_, velTs_, divuTag_, isConstDens_, rhot_, rhoStart_ );
+  return new PressureSource( momTags_, oldMomTags_, velTags_, divuTag_, isConstDens_, rhoOldTag_, rhoNewTag_ );
 }
 //------------------------------------------------------------------
 

@@ -28,7 +28,7 @@
 #include <expression/Expression.h>
 
 /**
- *  @class SinFunction
+ *  @class TanhFunction
  *  @author Josh McConnell
  *  @date February, 2020
  *  @brief Implements a hyperbolic tangent function of a single independent variable,

@@ -799,7 +799,7 @@
       <Constant spec="OPTIONAL NO_DATA"
                 attribute1="value REQUIRED DOUBLE"
                 attribute2="name REQUIRED STRING" />          
-      <NameTag  spec="OPTIONAL" need_applies_to="method LOWMACH COMPRESSIBLE" />
+      <NameTag  spec="OPTIONAL" need_applies_to="method CONSTANT LOWMACH COMPRESSIBLE" />
     </Density>   
         
     <!-- ============================ -->
@@ -1183,6 +1183,24 @@
         <NameTag        spec="REQUIRED"/>
       </DensityWeightedMixtureFraction>
     </TwoStreamMixing>
+
+    <TwoFluidModel      spec="OPTIONAL NO_DATA"
+                        attribute1="transitionMidPoint REQUIRED DOUBLE"
+                        attribute2="transitionRange REQUIRED DOUBLE">>
+      <Density          spec="REQUIRED NO_DATA"
+                        attribute1="val0 REQUIRED DOUBLE"
+                        attribute2="val1 REQUIRED DOUBLE">
+        <NameTag        spec="REQUIRED"/>
+      </Density>
+      <Viscosity        spec="REQUIRED NO_DATA"
+                        attribute1="val0 REQUIRED DOUBLE"
+                        attribute2="val1 REQUIRED DOUBLE">
+        <NameTag        spec="REQUIRED"/>
+      </Viscosity>
+      <MixtureFraction  spec="REQUIRED NO_DATA">
+        <NameTag        spec="REQUIRED"/>
+      </MixtureFraction>
+    </TwoFluidModel>
     
     <!--
         Tabular property specification.  Use this to specify property

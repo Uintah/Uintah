@@ -448,7 +448,6 @@ namespace WasatchCore{
     // and perform error handling
     //
     Expr::Tag densityTag = Expr::Tag();
-    bool isConstDensity = true;
     {
       Uintah::ProblemSpecP momEqnParams      = wasatchSpec_->findBlock("MomentumEquations");
       Uintah::ProblemSpecP particleEqnParams = wasatchSpec_->findBlock("ParticleTransportEquations");
@@ -467,18 +466,40 @@ namespace WasatchCore{
         
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-          if     ( Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE ) densityTag.reset_context(Expr::STATE_DYNAMIC);
-          else if( Wasatch::flow_treatment() == WasatchCore::LOWMACH      ) densityTag.reset_context(Expr::STATE_N      );
-          isConstDensity = false;
+          // if     ( Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE   ) densityTag.reset_context(Expr::STATE_DYNAMIC);
+          // else if( Wasatch::flow_treatment() == WasatchCore::LOWMACH        ) densityTag.reset_context(Expr::STATE_N      );
+          // else if( Wasatch::flow_treatment() == WasatchCore::INCOMPRESSIBLE ) densityTag.reset_context(Expr::STATE_N      );
+          switch(Wasatch::flow_treatment())
+          {
+            case WasatchCore::COMPRESSIBLE  : {densityTag.reset_context(Expr::STATE_DYNAMIC); break; }
+            case WasatchCore::LOWMACH       : {densityTag.reset_context(Expr::STATE_N      ); break; }
+            case WasatchCore::INCOMPRESSIBLE: {densityTag.reset_context(Expr::STATE_N      ); break; }
+            default: { assert(false); break; }
+          }
         }
         else{
-          double densVal = 1.0; std::string densName;
+          assert(Wasatch::flow_treatment() == WasatchCore::INCOMPRESSIBLE);
           Uintah::ProblemSpecP constDensParam = densityParams->findBlock("Constant");
-          constDensParam->getAttribute( "value", densVal );
-          constDensParam->getAttribute( "name", densName );
-          densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
-          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+          // register an expression for the density value if provided. Otherwise, 
+          if (constDensParam){ 
+            double densVal = 1.0; std::string densName;
+            constDensParam->getAttribute( "value", densVal );
+            constDensParam->getAttribute( "name", densName );
+            densityTag                     = Expr::Tag( densName, Expr::STATE_N    );
+            const Expr::Tag initDensityTag = Expr::Tag( densName, Expr::STATE_NONE );
+            const Expr::Tag newDensityTag  = Expr::Tag( densName, Expr::STATE_NP1  );
+
+            Expr::ExpressionID densID = 
+            graphCategories_[INITIALIZATION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(initDensityTag, densVal) );
+            graphCategories_[INITIALIZATION]->rootIDs.insert(densID);
+
+            densID = 
+            graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(newDensityTag, densVal) );
+            graphCategories_[ADVANCE_SOLUTION]->rootIDs.insert(densID);
+
+            graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::PlaceHolder <SVolField>::Builder(densityTag) );
+
+          }
         }
       }
     }

@@ -60,7 +60,7 @@ class PressureSource : public Expr::Expression<SVolField>
   DECLARE_FIELDS(XVolField, xMom_, xMomOld_, xVel_)
   DECLARE_FIELDS(YVolField, yMom_, yMomOld_, yVel_)
   DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, zVel_)
-  DECLARE_FIELDS(SVolField, dil_, rho_, rhoStar_, divu_)
+  DECLARE_FIELDS(SVolField, dil_, rhoOld_, rhoNew_, divu_)
   DECLARE_FIELDS(TimeField, dt_, rkStage_)
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
@@ -83,8 +83,8 @@ class PressureSource : public Expr::Expression<SVolField>
                   const Expr::TagList& velTags,
                   const Expr::Tag& divuTag,
                   const bool isConstDensity,
-                  const Expr::Tag& rhoTag,
-                  const Expr::Tag& rhoStarTag);
+                  const Expr::Tag& rhoOldTag,
+                  const Expr::Tag& rhoNewTag);
 public:
   
   /**
@@ -109,9 +109,9 @@ public:
      *  \param velTags the TagList for velocity components
      *  \param divuTag the dilatation
      *  \param isConstDensity
-     *  \param rhoTag a tag to hold density in constant density cases, which is
-     *         needed to obtain drhodt 
-     *  \param rhoStarTag a tag for estimation of density at the time stage "*"
+     *  \param rhoOldTag a tag for density computed at the last time update
+     *         needed to obtain drhodt
+     *  \param rhoNewTag a tag for the most recent density
      *         which is needed to obtain momentum at that stage.
      */
     Builder( const Expr::TagList& results,
@@ -120,8 +120,8 @@ public:
              const Expr::TagList& velTags,
              const Expr::Tag& divuTag,
              const bool isConstDensity,
-             const Expr::Tag& rhoTag,
-             const Expr::Tag& rhoStarTag );
+             const Expr::Tag& rhoOldTag,
+             const Expr::Tag& rhoNewTag );
     
     ~Builder(){}
     
@@ -129,8 +129,8 @@ public:
     
   private:
     const bool isConstDens_;
-    const Expr::TagList momTs_, oldMomTags_, velTs_;
-    const Expr::Tag rhot_, rhoStart_, divuTag_;
+    const Expr::TagList momTags_, oldMomTags_, velTags_;
+    const Expr::Tag rhoOldTag_, rhoNewTag_, divuTag_;
   };
   
   ~PressureSource();

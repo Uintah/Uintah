@@ -68,11 +68,9 @@ namespace WasatchCore{
     typedef typename TimeAdvance<FieldT>::Builder TimeAdvBuilder;
     typedef typename std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
-      if (!gh->exprFactory->have_entry(ifld->solnVarTag)) {
-        const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ) );
-        gh->rootIDs.insert(id);
-        if(cleaveSolnVarFromChildren) gh->exprFactory->cleave_from_children(id);
-      }
+      const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ), true);
+      gh->rootIDs.insert(id);
+      if(cleaveSolnVarFromChildren) gh->exprFactory->cleave_from_children(id);
     }
   }
   

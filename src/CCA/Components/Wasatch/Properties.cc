@@ -36,9 +36,12 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoFluidModelDensity.h>
+#include <CCA/Components/Wasatch/Expressions/TanhFunction.h>
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
+#include <expression/ClipValue.h>
 
 //--- TabProps includes ---//
 #include <tabprops/StateTable.h>
@@ -53,6 +56,7 @@
 
 #include <fstream>
 #include <iterator>
+#include <math.h>
 
 using std::endl;
 using std::flush;
@@ -136,6 +140,66 @@ namespace WasatchCore{
                                                               parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
                                                               spMap,fileName) );
   }
+
+  //====================================================================
+
+    void
+    parse_two_fluid_model( const Uintah::ProblemSpecP& params,
+                           GraphCategories& gc )
+    {
+      GraphHelper& icgh = *gc[INITIALIZATION  ];
+      GraphHelper& asgh = *gc[ADVANCE_SOLUTION];
+
+      Expr::ExpressionFactory& icFactory = *icgh.exprFactory;
+      Expr::ExpressionFactory& asFactory = *asgh.exprFactory;
+
+      double transitionMidPoint; // mixture fraction at which fluid transition occurs
+      double transitionRange;    // mixure fraction range over which properties change linearly 
+      params->getAttribute("transitionMidPoint", transitionMidPoint);
+      params->getAttribute("transitionRange"   , transitionRange   );
+
+      Expr::Tag fTag = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
+      fTag.reset_context(Expr::STATE_N);
+      const Expr::Tag fInitTag(fTag.name(), Expr::STATE_NONE);
+      const Expr::Tag fNP1Tag (fTag.name(), Expr::STATE_NP1 ); 
+
+      const Uintah::ProblemSpecP densParams = params->findBlock("Density");
+      const Expr::Tag densityTag = parse_nametag( densParams->findBlock("NameTag") );
+      const Expr::Tag densityInitTag(densityTag.name(), Expr::STATE_NONE);
+      const Expr::Tag densityNP1Tag (densityTag.name(), Expr::STATE_NP1 );
+      double density0, density1; // density values corresponding to MixtureFraction = [0,1], respectively 
+      densParams->getAttribute("val0", density0);
+      densParams->getAttribute("val1", density1);
+
+      const Uintah::ProblemSpecP viscParams = params->findBlock("Viscosity");
+      const Expr::Tag viscosityTag = parse_nametag( viscParams->findBlock("NameTag") );
+      double viscosity0, viscosity1; // viscosity values corresponding to MixtureFraction = [0,1], respectively 
+      viscParams->getAttribute("val0", viscosity0);
+      viscParams->getAttribute("val1", viscosity1);
+
+      typedef TanhFunction<SVolField>::Builder       TanhFcn;
+      typedef Expr::PlaceHolder<SVolField>::Builder  PlaceHolder;
+
+      const double tanhF0 = tanh(-transitionMidPoint/transitionRange);
+      const double tanhF1 = tanh((1-transitionMidPoint)/transitionRange);
+      const double deltaTanhF = tanhF1 - tanhF0;
+      
+      const double aDens = (density1   - density0  )/deltaTanhF;
+      const double aVisc = (viscosity1 - viscosity0)/deltaTanhF;
+      const double b     = 1./transitionRange;
+      const double dDens = density0   - aDens*tanhF0;
+      const double dVisc = viscosity0 - aVisc*tanhF0;
+
+      icFactory.register_expression( new TanhFcn(densityInitTag, fInitTag, aDens, b, transitionMidPoint, dDens ) );
+
+      asFactory.register_expression( new TanhFcn(densityNP1Tag, fNP1Tag, aDens, b, transitionMidPoint, dDens ) );
+      asFactory.register_expression( new TanhFcn(viscosityTag , fTag   , aVisc, b, transitionMidPoint, dVisc ) );
+
+      asFactory.register_expression( new PlaceHolder(Expr::Tag( densityTag.name(), Expr::STATE_N)) );
+
+      // Expr::ExpressionID id =
+      asFactory.register_expression( new PlaceHolder( fNP1Tag) );
+    }
 
   //====================================================================
 
@@ -603,6 +667,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP tabPropsParams = wasatchSpec->findBlock("TabProps");
     Uintah::ProblemSpecP radPropsParams = wasatchSpec->findBlock("RadProps");
     Uintah::ProblemSpecP twoStreamParams= wasatchSpec->findBlock("TwoStreamMixing");
+    Uintah::ProblemSpecP twoFluidParams = wasatchSpec->findBlock("TwoFluidModel");
 
     if( radPropsParams ){
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
@@ -629,6 +694,9 @@ namespace WasatchCore{
     
     if( twoStreamParams ){
       parse_twostream_mixing( twoStreamParams, doDenstPlus, gc, persistentFields, weakForm );
+    }
+    if( twoFluidParams ){
+      parse_two_fluid_model( twoFluidParams, gc );
     }
 
     // TabProps
