@@ -4,7 +4,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/HTConvection.h>
+#include <CCA/Components/Arches/SourceTerms/ConductiveHT.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
 
@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Uintah;
 
-HTConvection::HTConvection( std::string src_name, ArchesLabel* field_labels,
+ConductiveHT::ConductiveHT( std::string src_name, ArchesLabel* field_labels,
     vector<std::string> req_label_names, std::string type )
 : SourceTermBase(src_name, field_labels->d_materialManager, req_label_names, type), _field_labels(field_labels)
 {
@@ -24,7 +24,7 @@ HTConvection::HTConvection( std::string src_name, ArchesLabel* field_labels,
 
 }
 
-HTConvection::~HTConvection()
+ConductiveHT::~ConductiveHT()
 {
   VarLabel::destroy(ConWallHT_src_label);
 }
@@ -32,7 +32,7 @@ HTConvection::~HTConvection()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void
-HTConvection::problemSetup(const ProblemSpecP& inputdb)
+ConductiveHT::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb;
@@ -54,10 +54,10 @@ HTConvection::problemSetup(const ProblemSpecP& inputdb)
       ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
       db_phys->require("viscosity", _visc);
       if( _visc == 0 ) {
-      throw InvalidValue("ERROR: HTConvection: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
+      throw InvalidValue("ERROR: ConductiveHT: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
       }
       } else {
-      throw InvalidValue("ERROR: HTConvection: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
+      throw InvalidValue("ERROR: ConductiveHT: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
       }
       */
 
@@ -66,11 +66,11 @@ HTConvection::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term
 //---------------------------------------------------------------------------
 void
-HTConvection::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ConductiveHT::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
 
-  std::string taskname = "HTConvection::eval";
-  Task* tsk = scinew Task(taskname, this, &HTConvection::computeSource, timeSubStep);
+  std::string taskname = "ConductiveHT::eval";
+  Task* tsk = scinew Task(taskname, this, &ConductiveHT::computeSource, timeSubStep);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
@@ -111,7 +111,7 @@ HTConvection::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-HTConvection::computeSource( const ProcessorGroup* pc,
+ConductiveHT::computeSource( const ProcessorGroup* pc,
     const PatchSubset*    patches,
     const MaterialSubset* matls,
     DataWarehouse*  old_dw,
@@ -344,11 +344,11 @@ HTConvection::computeSource( const ProcessorGroup* pc,
 // Method: Schedule initialization
 //---------------------------------------------------------------------------
 void
-HTConvection::sched_initialize( const LevelP& level, SchedulerP& sched )
+ConductiveHT::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "HTConvection::initialize";
+  string taskname = "ConductiveHT::initialize";
 
-  Task* tsk = scinew Task(taskname, this, &HTConvection::initialize);
+  Task* tsk = scinew Task(taskname, this, &ConductiveHT::initialize);
 
   tsk->computes(_src_label);
   tsk->computes(ConWallHT_src_label);
@@ -357,7 +357,7 @@ HTConvection::sched_initialize( const LevelP& level, SchedulerP& sched )
 
 }
 void
-HTConvection::initialize( const ProcessorGroup* pc,
+ConductiveHT::initialize( const ProcessorGroup* pc,
     const PatchSubset* patches,
     const MaterialSubset* matls,
     DataWarehouse* old_dw,
@@ -382,7 +382,7 @@ HTConvection::initialize( const ProcessorGroup* pc,
 
 
 double
-HTConvection::ThermalConductGas(double Tg, double Tp){
+ConductiveHT::ThermalConductGas(double Tg, double Tp){
 
   double tg0[10] = {300.,  400.,   500.,   600.,  700.,  800.,  900.,  1000., 1100., 1200. };
   double kg0[10] = {.0262, .03335, .03984, .0458, .0512, .0561, .0607, .0648, .0685, .07184};
