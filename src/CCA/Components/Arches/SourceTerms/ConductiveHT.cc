@@ -8,7 +8,27 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
 
-
+// DEV NOTES:
+// This model was originally formulated to account for wall heat transfer with
+// convection. The evolution of the model led the original developers to, in the
+// end, only consider a conductive flux between the wall and the fluid through
+// the cell face. The reasoning for turning to conduction from convection was that
+// 1) For the fluid cell next to the wall, it isn't clear where that point lies in the boundary layer
+// 2) A conversion of kg (thermal conductivity) to h (convective coefficient) requires Nu (Nusselt number)
+//    Which correlation should be used and with what length-scale?
+// 3) The best "simple" approach was to estimate the temperature profile as linear.
+// With these observations and the move to condution, the convection notion was still retained in memory.
+// In an effort to make things clear, it is now explicitly listed as a simple
+// conduction model.
+//
+// Two constants are added to the conduction model:
+// 1) A modifier on the temperature gradient. (default = 1)
+// 2) A modifier on the representative area. (default = 1)
+// For 1), this is currently a universal constant applied everywhere. One may want to modify this
+// with a better model in the future.
+// For 2), this is a property of the wall and is meant to represent "subgrid" geometry effects.
+// For both, these parameters could be learned from data (e.g.) Bayes law.
+//
 //===========================================================================
 
 using namespace std;
@@ -38,28 +58,13 @@ ConductiveHT::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb;
   const ProblemSpecP params_root = db->getRootNode();
 
-  db->getWithDefault("dTCorrectionFactor", _dTCorrectionFactor,     2.0);
-  //db->getWithDefault("temperature_label", _gas_temperature_name,    "temperature");
-  //  db->getWithDefault("density_label",        _rho_name,                "density");
+  db->getWithDefault("temperatureGradientModifier", m_temperatureGradientModifier, 1.0);
 
-  std::string vol_frac= "volFraction";
-  _volFraction_varlabel = VarLabel::find(vol_frac);
-  //source terms name,and ...
+  _volFraction_varlabel = VarLabel::find("volFraction");
+
   db->findBlock("ConWallHT_src")->getAttribute( "label", ConWallHT_src_name );
   _mult_srcs.push_back( ConWallHT_src_name );
   ConWallHT_src_label = VarLabel::create( ConWallHT_src_name, CCVariable<double>::getTypeDescription() );
-
-
-  /*  if (params_root->findBlock("PhysicalConstants")) {
-      ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
-      db_phys->require("viscosity", _visc);
-      if( _visc == 0 ) {
-      throw InvalidValue("ERROR: ConductiveHT: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
-      }
-      } else {
-      throw InvalidValue("ERROR: ConductiveHT: problemSetup(): Missing <PhysicalConstants> section in input file!",__FILE__,__LINE__);
-      }
-      */
 
 }
 //---------------------------------------------------------------------------
@@ -191,7 +196,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i+1,j,k) < 1.0 ?
-              rate(i,j,k) + alpha_geom(i+1,j,k) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) + 2.* alpha_geom(i+1,j,k) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
 
@@ -202,7 +207,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i-1,j,k) < 1.0 ?
-              rate(i,j,k) - alpha_geom(i-1,j,k) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) - 2.* alpha_geom(i-1,j,k) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
 
@@ -215,7 +220,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i,j+1,k) < 1.0 ?
-              rate(i,j,k) + alpha_geom(i,j+1,k) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) + 2.* alpha_geom(i,j+1,k) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
 
@@ -226,7 +231,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i,j-1,k) < 1.0 ?
-              rate(i,j,k) - alpha_geom(i,j-1,k) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) - 2.*alpha_geom(i,j-1,k) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
 
@@ -238,7 +243,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i,j,k+1) < 1.0 ?
-              rate(i,j,k) + alpha_geom(i,j,k+1) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) + 2.* alpha_geom(i,j,k+1) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
 
@@ -250,7 +255,7 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
             rate(i,j,k) = volFraction(i,j,k-1) < 1.0 ?
-              rate(i,j,k) - alpha_geom(i,j,k-1) * rkg * dT_dn * _dTCorrectionFactor / delta_n :
+              rate(i,j,k) - 2.*alpha_geom(i,j,k-1) * rkg * dT_dn * m_temperatureGradientModifier / delta_n :
               rate(i,j,k);// w/m^3
           }
         }// end for fluid cell
@@ -266,8 +271,8 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i,j,k);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i+1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i+1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i+1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)+2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i+1,j,k) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.y()*Dx.z() : total_area_face;// w/m^3
           }
 
 
@@ -278,8 +283,8 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i-1,j,k);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i-1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i-1,j,k) > 0.0 ?  total_area_face+Dx.y()*Dx.z() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i-1,j,k) > 0.0 ?  ConWallHT_src(i,j,k)-2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i-1,j,k) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.y()*Dx.z() :total_area_face;// w/m^3
           }
 
 
@@ -290,10 +295,9 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i,j,k);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i,j+1,k) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i,j+1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i,j+1,k) > 0.0 ?  ConWallHT_src(i,j,k)+2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j+1,k) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.x()*Dx.z() :total_area_face;// w/m^3
           }
-
 
           // Next for the Y- direction
           if (patch->containsIndex(lowPindex, highPindex, IntVector(i,j-1,k) )){
@@ -302,8 +306,8 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i,j-1,k);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i,j-1,k) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i,j-1,k) > 0.0 ?  total_area_face+Dx.x()*Dx.z() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i,j-1,k) > 0.0 ?  ConWallHT_src(i,j,k)-2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j-1,k) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.x()*Dx.z() :total_area_face;// w/m^3
           }
 
           // Next for the z direction
@@ -313,8 +317,8 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i,j,k);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i,j,k+1) > 0.0 ?  ConWallHT_src(i,j,k)+rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i,j,k+1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i,j,k+1) > 0.0 ?  ConWallHT_src(i,j,k)+2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j,k+1) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.x()*Dx.y() :total_area_face;// w/m^3
           }
 
 
@@ -324,8 +328,8 @@ ConductiveHT::computeSource( const ProcessorGroup* pc,
             f_T_m=gasT(i,j,k-1);
             dT_dn = (f_T_p - f_T_m) / delta_n;
             rkg = ThermalConductGas(f_T_p, f_T_m); // [=] J/s/m/K
-            ConWallHT_src(i,j,k) = volFraction(i,j,k-1) > 0.0 ?  ConWallHT_src(i,j,k)-rkg*dT_dn*_dTCorrectionFactor/delta_n :ConWallHT_src(i,j,k);// w/m^3
-            total_area_face =      volFraction(i,j,k-1) > 0.0 ?  total_area_face+Dx.x()*Dx.y() :total_area_face;// w/m^3
+            ConWallHT_src(i,j,k) = volFraction(i,j,k-1) > 0.0 ?  ConWallHT_src(i,j,k)-2.*rkg*dT_dn*m_temperatureGradientModifier/delta_n :ConWallHT_src(i,j,k);// w/m^3
+            total_area_face =      volFraction(i,j,k-1) > 0.0 ?  total_area_face+alpha_geom(i,j,k)*Dx.x()*Dx.y() :total_area_face;// w/m^3
           }
 
           ConWallHT_src(i,j,k) =total_area_face>0.0 ?  ConWallHT_src(i,j,k)/total_area_face*cellvol :0.0;//W/m2
@@ -379,7 +383,6 @@ ConductiveHT::initialize( const ProcessorGroup* pc,
     ConWallHT_src.initialize(0.0);
   }
 }
-
 
 double
 ConductiveHT::ThermalConductGas(double Tg, double Tp){

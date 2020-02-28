@@ -2146,7 +2146,6 @@ Fuels-->
             <heat_BirthDeath/>
           </src>
           <src label="forgas_ConHT_loss" type="ht_convection">
-            <dTCorrectionFactor>2</dTCorrectionFactor>
             <ConWallHT_src label="forwall_convht_src"/>
           </src>
           <src label="coal_gas_momentum" type="coal_gas_momentum">

@@ -410,10 +410,10 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( (i->second).type == INLET ){
-      tsk->computes( i->second.inlet_bc_area );
+      tsk->computes( i->second.inlet_bc_area);
     }
 
-    tsk->computes( i->second.wetted_surface_area );
+    tsk->computes( i->second.wetted_surface_area);
 
     tsk->requires( Task::NewDW, _lab->d_volFractionLabel, Ghost::AroundCells, 1 );
 
@@ -449,7 +449,6 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
       double total_inlet_area = 0.;
 
       if ( (iter->second).type == INLET ){
-
 
         for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){
 
@@ -548,7 +547,10 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
 
         // Total wetted area would include inlet area. If the inlet area is equal to the total wetted
         // area for this patch, then the area is only inlet area.
-        total_wetted_area = total_wetted_area >  total_inlet_area ? total_wetted_area - total_inlet_area : 0;
+        if ( (iter->second).type == INLET ){
+          total_wetted_area = total_wetted_area >  total_inlet_area ?
+                              total_wetted_area - total_inlet_area : 0;
+        }
 
         new_dw->put( sum_vartype( total_wetted_area ), iter->second.wetted_surface_area, patch->getLevel(), 0 );
 
@@ -612,6 +614,7 @@ IntrusionBC::setAlphaG( const ProcessorGroup*,
         sum_vartype sum_area;
         new_dw->get( sum_area, iter->second.wetted_surface_area, patch->getLevel(), archIndex );
         double wetted_area = sum_area;
+
         const double geom_ratio = iter->second.physical_area/wetted_area;
         const double alpha_spec = iter->second.alpha_g;
 
@@ -686,8 +689,6 @@ IntrusionBC::setAlphaG( const ProcessorGroup*,
     } // carry forward
   }
 }
-
-
 
 //-----------------------------------------
 Vector IntrusionBC::getMaxVelocity(){
@@ -1357,13 +1358,15 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {
 
+    const Patch* patch = patches->get(p);
+
     proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
     for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
 
       if (iter->second.type == SIMPLE_WALL) {
 
-        double area = 0.;
+        double area;
         sum_vartype area_var;
         new_dw->get(area_var, iter->second.wetted_surface_area);
         area = area_var;
@@ -1373,8 +1376,8 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
       } else if (iter->second.type == INLET) {
 
-        double area = 0;
-        double wetted_area = 0;
+        double area;
+        double wetted_area;
 
         sum_vartype area_var;
         new_dw->get(area_var, iter->second.inlet_bc_area);

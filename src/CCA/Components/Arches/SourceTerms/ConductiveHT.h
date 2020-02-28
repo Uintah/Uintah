@@ -72,7 +72,7 @@ private:
 
   const VarLabel* ConWallHT_src_label;
 
-  double  _dTCorrectionFactor; /// The correction factor for the thermal layer
+  double  m_temperatureGradientModifier; /// The correction factor for the thermal layer
   std::string _gas_temperature_name;    ///< string name for temperature (from table)
 
 }; // end ConductiveHT

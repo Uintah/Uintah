@@ -1100,7 +1100,7 @@
         </TurbulentInlet>
 
       <WallHT                           spec="OPTIONAL NO_DATA">
-        <relaxation_coef               spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
+         <relaxation_coef               spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
                                                                                    because we have assumed (with this model) that the wall comes to
                                                                                    instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
                                                                                    for wall with large thermal resistance, recommend relaxation_coef=0.1-0.8,
@@ -2043,23 +2043,23 @@
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
 
              <!-- Spec for dTcorrectionFractor for the gas phase convection heat flux near the wall -->
-            <dTCorrectionFactor         spec="OPTIONAL STRING" need_applies_to="type ht_convection" />
+            <temperatureGradientModifier       spec="OPTIONAL STRING" need_applies_to="type ht_convection" /> <!-- A model constant that multiplies dt/dn, the gas-to-wall thermal gradient profile. Applied uniformly everywhere! -->
             <ConWallHT_src                     spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
+                                               attribute1="label REQUIRED STRING"
+                                               need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
 
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
             <!-- Spec for using multiply by variable for constant source term model -->
-            <multiply_by_variable       spec="OPTIONAL NO_DATA" need_applies_to="type constant_src">
+            <multiply_by_variable         spec="OPTIONAL NO_DATA" need_applies_to="type constant_src">
               <variable_string_name       spec="REQUIRED STRING"/>
               <NewDW_only                 spec="OPTIONAL BOOLEAN"/>
             </multiply_by_variable>
 
             <!-- Spec for the char oxidation source -->
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
-            <char_src_label_for_nox    spec="OPTIONAL STRING" need_applies_to="type coal_gas_oxi"/>
+            <char_src_label_for_nox     spec="OPTIONAL STRING" need_applies_to="type coal_gas_oxi"/>
             <bd_char_src_label          spec="OPTIONAL STRING" need_applies_to="type coal_gas_oxi"/>
             <char_BirthDeath            spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
             </char_BirthDeath>
