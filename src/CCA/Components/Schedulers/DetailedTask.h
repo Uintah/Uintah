@@ -163,6 +163,22 @@ public:
 
   };
 
+  struct delayedCopyingInfo{
+	  delayedCopyingInfo(GpuUtilities::LabelPatchMatlLevelDw lpmld_,
+	                     DeviceGridVariableInfo              devGridVarInfo_,
+	                     void *                              device_ptr_,
+	                     void *                              host_ptr_,
+	                     size_t                              size_):
+	                     lpmld(lpmld_), devGridVarInfo(devGridVarInfo_), device_ptr(device_ptr_), host_ptr(host_ptr_), size(size_){
+
+	  }
+	  GpuUtilities::LabelPatchMatlLevelDw lpmld;
+	  DeviceGridVariableInfo              devGridVarInfo;
+	  void *                              device_ptr;
+	  void *                              host_ptr;
+	  size_t                              size;
+  };
+
 
   void doit( const ProcessorGroup                      * pg
            ,       std::vector<OnDemandDataWarehouseP> & oddws
@@ -271,7 +287,10 @@ public:
 
   DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
 
-  std::vector<labelPatchMatlLevelDw>& getVarsNeededOnHost() { return varsNeededOnHost;}
+  inline std::vector<labelPatchMatlLevelDw>& getVarsNeededOnHost() { return varsNeededOnHost;}
+  inline std::vector<delayedCopyingInfo>& getDelayedCopyingVars() { return delayedCopyingVars;}
+  inline int getDelayedCopy(){return delayedCopy;}
+  inline void setDelayedCopy(int val){delayedCopy = val;}
 
   void clearPreparationCollections();
 
@@ -399,6 +418,8 @@ private:
   std::queue<void*>                       taskHostMemoryPoolItems;
 
   std::vector<labelPatchMatlLevelDw> varsNeededOnHost;
+  std::vector<delayedCopyingInfo> delayedCopyingVars;
+  int delayedCopy{0};
 
 #endif
 //-----------------------------------------------------------------------------

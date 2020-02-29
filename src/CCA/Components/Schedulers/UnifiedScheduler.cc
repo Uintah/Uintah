@@ -956,6 +956,7 @@ UnifiedScheduler::runTasks( int thread_id )
     bool usingDevice = Uintah::Parallel::usingDevice();
     bool gpuInitReady = false;
     bool gpuValidateRequiresAndModifiesCopies = false;
+    bool gpuValidateRequiresDelayedCopies = false;
     bool gpuPerformGhostCopies = false;
     bool gpuValidateGhostCopies = false;
     bool gpuCheckIfExecutable = false;
@@ -1082,7 +1083,14 @@ UnifiedScheduler::runTasks( int thread_id )
          */
         if (usingDevice
             && m_detailed_tasks->getDeviceValidateRequiresAndModifiesCopiesTask(readyTask)) {
-            gpuValidateRequiresAndModifiesCopies = true;
+            if(readyTask->getDelayedCopy()){
+                gpuValidateRequiresDelayedCopies = true;
+                gpuValidateRequiresAndModifiesCopies = false;
+            }
+            else{
+                gpuValidateRequiresDelayedCopies = false;
+                gpuValidateRequiresAndModifiesCopies = true;
+            }
             havework = true;
             break;
         }
@@ -1272,7 +1280,17 @@ UnifiedScheduler::runTasks( int thread_id )
       } else if (gpuValidateRequiresAndModifiesCopies) {
         //Mark all requires and modifies vars this task is responsible for copying in as valid.
         markDeviceRequiresAndModifiesDataAsValid(readyTask);
-        m_detailed_tasks->addDevicePerformGhostCopies(readyTask);
+        if(delayedDeviceVarsValid(readyTask)){
+          //initiate delayed copy of variables which needs larger ghost cells. We have to wait untill origianal copy is completed to avoid race conditions
+          readyTask->setDelayedCopy(1);    //set delayed copy flag to indicate next round of getDeviceValidateRequiresAndModifiesCopiesTask will be for delayed copies
+          copyDelayedDeviceVars(readyTask);
+        }
+        m_detailed_tasks->addDeviceValidateRequiresAndModifiesCopies(readyTask);
+      } else if (gpuValidateRequiresDelayedCopies){
+          readyTask->setDelayedCopy(0);    //reset delayed copy flag
+          //marked delayed vars to be valid and mark ready for the next stage
+          markDeviceRequiresAndModifiesDataAsValid(readyTask);
+          m_detailed_tasks->addDevicePerformGhostCopies(readyTask);
       } else if (gpuPerformGhostCopies) {
         //make sure all staging vars are valid before copying ghost cells in
         if (ghostCellsProcessingReady(readyTask)) {
@@ -2069,7 +2087,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           gatherGhostCells = gpudw->compareAndSwapAwaitingGhostDataOnGPU(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
         }
 
-        if ( allocated && correctSize && ( copyingIn || validOnGPU )) {
+        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
+        if ( allocated && correctSize && ( /*copyingIn ||*/ validOnGPU )) {
           //This variable exists or soon will exist on the destination.  So the non-ghost cell part of this
           //variable doesn't need any more work.
 
@@ -2476,8 +2495,9 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
         } else if (( !allocated )
-                   || ( allocated && correctSize && !validOnGPU && !copyingIn )) {
-
+                   || ( allocated && correctSize && !validOnGPU /*&& !copyingIn*/ )) {
+        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
+        
           // It's either not on the GPU, or space exists on the GPU for it but it is invalid.
           // Either way, gather all ghost cells host side (if needed), then queue the data to be
           // copied in H2D.  If the data doesn't exist in the GPU, then the upcoming allocateAndPut
@@ -2758,9 +2778,9 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
               //Figure out which thread gets to copy data H2D.  First touch wins.  In case of a superpatch,
               //the patch vars were shallow copied so they all patches in the superpatch refer to the same atomic status.
-              bool performCopy = false;
+              bool performCopy = false, delayedCopy=false;
               if (!staging) {
-                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID);
+                performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
               }
               else {
                 performCopy = gpudw->compareAndSwapCopyingIntoGPUStaging(label_cstr, patchID, matlIndx, levelID,
@@ -2768,7 +2788,16 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                                                                      make_int3(size.x(), size.y(), size.z()));
               }
 
-              if (performCopy || numGhostCells>0) {
+
+              if(performCopy==false && !staging && numGhostCells>0){
+                //delayedCopy: call if gpudw->delayedCopyNeeded. It is needed if current patch on GPU (either valid or being copied) has lesser number of ghost cells than current)
+                //delayed copy is needed to avoid race conditions and avoid the current copy with larger ghost layer being overwritten by those queued earlier with smaller
+                //ghost layer. This race condition was observed due to using different streams.
+                delayedCopy = gpudw->isDelayedCopyingNeededOnGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
+              }
+
+
+              if (performCopy || delayedCopy) { //delayedCopy: use performCopy || delayedCopy
                 //This thread is doing the H2D copy for this simulation variable.
 
                 //Start by getting the host pointer.
@@ -2935,13 +2964,22 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //  }
                   //}
 
-                  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
+                  if(delayedCopy){
+//                      printf("%s task: %s, prepareDeviceVars - mark for delayed copying %s %d %d %d %d: %d\n",myRankThread().c_str(), dtask->getName().c_str(), it->first.m_label.c_str(),
+//                              it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->first.m_dataWarehouse, numGhostCells);
+                    dtask->getDelayedCopyingVars().push_back(DetailedTask::delayedCopyingInfo(it->first, it->second, device_ptr, host_ptr, it->second.m_varMemSize));
+//                    while(gpudw->isValidOnGPU(label_cstr, patchID, matlIndx, levelID)==false);
+                  }
+                  else{
+//                      printf("%s task: %s, prepareDeviceVars - copying %s %d %d %d %d: %d\n",myRankThread().c_str(), dtask->getName().c_str(), it->first.m_label.c_str(),
+//                                                    it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx, it->first.m_dataWarehouse, numGhostCells);
+                    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, it->second.m_varMemSize, cudaMemcpyHostToDevice, *stream));
 
-                  // Tell this task that we're managing the copies for this variable.
+                    // Tell this task that we're managing the copies for this variable.
 
-                  dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
+                    dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
                                                                 DeviceGridVariableInfo>(it->first, it->second));
-
+                  }
                 }
               }
             } else if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank || it->second.m_dest == GpuUtilities::anotherMpiRank) {
@@ -2961,6 +2999,51 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
   //} end for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin() - this is commented out for now until multi-device support is added
 }
 
+//______________________________________________________________________
+//
+void
+UnifiedScheduler::copyDelayedDeviceVars( DetailedTask * dtask ){
+
+  dtask->getVarsBeingCopiedByTask().getMap().clear();
+  for(auto it=dtask->getDelayedCopyingVars().begin(); it != dtask->getDelayedCopyingVars().end(); it++){
+      GpuUtilities::LabelPatchMatlLevelDw lpmld = it->lpmld;
+      DeviceGridVariableInfo              devGridVarInfo = it->devGridVarInfo;
+      cudaStream_t* stream = dtask->getCudaStreamForThisTask(devGridVarInfo.m_whichGPU);
+      void *                              device_ptr = it->device_ptr;
+      void *                              host_ptr = it->host_ptr;
+      size_t                              size = it->size;
+
+//      printf("%s task: %s, delayed copying %s %d %d %d %d\n",myRankThread().c_str(), dtask->getName().c_str(), lpmld.m_label.c_str(),
+//              lpmld.m_patchID, lpmld.m_matlIndx, lpmld.m_levelIndx, lpmld.m_dataWarehouse);
+      CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, size, cudaMemcpyHostToDevice, *stream));
+
+      // Tell this task that we're managing the copies for this variable.
+
+      dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
+                                                  DeviceGridVariableInfo>(lpmld, devGridVarInfo));
+  }
+  dtask->getDelayedCopyingVars().clear();
+}
+
+bool
+UnifiedScheduler::delayedDeviceVarsValid( DetailedTask * dtask ){
+
+  for(auto it=dtask->getDelayedCopyingVars().begin(); it != dtask->getDelayedCopyingVars().end(); it++){
+      GpuUtilities::LabelPatchMatlLevelDw lpmld = it->lpmld;
+      DeviceGridVariableInfo              devGridVarInfo = it->devGridVarInfo;
+
+      int whichGPU = devGridVarInfo.m_whichGPU;
+      int dwIndex = devGridVarInfo.m_dep->mapDataWarehouse();
+
+      OnDemandDataWarehouseP dw = m_dws[dwIndex];
+      GPUDataWarehouse* gpudw = dw->getGPUDW(whichGPU);
+
+      if(!(gpudw->isValidOnGPU(lpmld.m_label.c_str(), lpmld.m_patchID, lpmld.m_matlIndx, lpmld.m_levelIndx ))){
+          return false;
+      }
+  }
+  return true;
+}
 
 //______________________________________________________________________
 //
@@ -3491,7 +3574,9 @@ UnifiedScheduler::allGPUVarsProcessingReady( DetailedTask * dtask )
     if (curDependency->m_dep_type == Task::Requires || curDependency->m_dep_type == Task::Modifies) {
       if (curDependency->m_gtype != Ghost::None && curDependency->m_num_ghost_cells > 0) {
         // it has ghost cells.
-        if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))) {
+        if (!(gpudw->isValidWithGhostsOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID)) ||
+            !(gpudw->isValidOnGPU(curDependency->m_var->getName().c_str(),patchID, matlID, levelID))
+        ) {
           return false;
         } else {
           if (gpu_stats.active()) {
@@ -3870,7 +3955,7 @@ UnifiedScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
           }
           cerrLock.unlock();
         }
-        if(!gpudw->dwEntryExists(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx)){
+        if(gpudw->dwEntryExists(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx)){
           gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
         }
         m_dws[dwIndex]->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);

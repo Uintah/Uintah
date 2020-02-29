@@ -199,6 +199,10 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void prepareDeviceVars( DetailedTask * dtask );
 
+    void copyDelayedDeviceVars( DetailedTask * dtask );
+
+    bool delayedDeviceVarsValid( DetailedTask * dtask );	//check if the main patch is valid, not ghost cells.
+
     void prepareTaskVarsIntoTaskDW( DetailedTask * dtask );
 
     void prepareGhostCellsIntoTaskDW( DetailedTask * dtask );

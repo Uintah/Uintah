@@ -312,6 +312,8 @@ public:
     unsigned int    sizeOfDataType {0};
     GhostType       gtype;
     unsigned int    numGhostCells {0};
+    int             curGhostCells {-1};		//To check what's current number of ghost cells being copied.
+
     atomicDataStatus   atomicStatusInHostMemory;  //Shared_ptr because patches in a superpatch share the pointer.
     atomicDataStatus   atomicStatusInGpuMemory;   //TODO, merge into the one above it.
 
@@ -513,9 +515,10 @@ public:
   __host__ bool isValidOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
   __host__ bool compareAndSwapSetValidOnCPU(char const* const label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapSetInvalidOnCPU(char const* const label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isDelayedCopyingNeededOnGPU(char const* const label, int patchID, int matlIndx, int levelIndx, int numGhosts);
 
   __host__ bool compareAndSwapAwaitingGhostDataOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  __host__ bool compareAndSwapCopyingIntoGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool compareAndSwapCopyingIntoGPU(char const* label, int patchID, int matlIndx, int levelIndx, int numGhosts=0);
   __host__ bool compareAndSwapCopyingIntoCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool compareAndSwapCopyingIntoGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
   __host__ bool isValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);

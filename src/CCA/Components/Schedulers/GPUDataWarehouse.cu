@@ -2931,14 +2931,19 @@ GPUDataWarehouse::compareAndSwapSetInvalidOnGPU(char const* const label, const i
     if (it != varPointers->end()) {
       atomicDataStatus *status = &(it->second.var->atomicStatusInGpuMemory);
       atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if ((oldVarStatus & VALID) != VALID) {
+      //somehow COPYING_IN flag is not getting reset at some places while setting VALID (or getting set by mistake). Which causes race conditions and hangs
+      //so reset COPYING_IN and VALID_WITH_GHOSTS flags here
+      if ((oldVarStatus & VALID) != VALID && (oldVarStatus & COPYING_IN) != COPYING_IN && (oldVarStatus & VALID_WITH_GHOSTS) != VALID_WITH_GHOSTS ) {
         //Something else already took care of it.  So this task won't manage it.
         varLock->unlock();
         return false;
       } else {
         //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
         atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        newVarStatus = newVarStatus & ~VALID_WITH_GHOSTS;
+        newVarStatus = newVarStatus & ~COPYING_IN;
         settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+        it->second.var->curGhostCells = -1;
       }
     } else {
     	varLock->unlock();
@@ -3103,13 +3108,17 @@ GPUDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const i
     if (it != varPointers->end()) {
       atomicDataStatus *status = &(it->second.var->atomicStatusInHostMemory);
       atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      if ((oldVarStatus & VALID) != VALID) {
+      //somehow COPYING_IN flag is not getting reset at some places while setting VALID (or getting set by mistake). Which causes race conditions and hangs
+      //so reset COPYING_IN and VALID_WITH_GHOSTS flags here      
+      if ((oldVarStatus & VALID) != VALID && (oldVarStatus & COPYING_IN) != COPYING_IN && (oldVarStatus & VALID_WITH_GHOSTS) != VALID_WITH_GHOSTS ) {
         //Something else already took care of it.  So this task won't manage it.
         varLock->unlock();
         return false;
       } else {
         //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
         atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
+        newVarStatus = newVarStatus & ~VALID_WITH_GHOSTS;
+        newVarStatus = newVarStatus & ~COPYING_IN;
         settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
       }
     } else {
@@ -3161,7 +3170,7 @@ GPUDataWarehouse::compareAndSwapAwaitingGhostDataOnGPU(char const* label, int pa
 // returns false if something else already claimed to copy or has copied data into the GPU.
 // returns true if we are the ones to manage this variable's ghost data.
 __host__ bool
-GPUDataWarehouse::compareAndSwapCopyingIntoGPU(char const* label, int patchID, int matlIndx, int levelIndx)
+GPUDataWarehouse::compareAndSwapCopyingIntoGPU(char const* label, int patchID, int matlIndx, int levelIndx, int numGhosts/*=0*/)
 {
 
   atomicDataStatus* status = nullptr;
@@ -3178,27 +3187,55 @@ GPUDataWarehouse::compareAndSwapCopyingIntoGPU(char const* label, int patchID, i
     exit(-1);
     return false;
   }
-  varLock->unlock();
 
   bool copyingin = false;
   while (!copyingin) {
     atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
     if (oldVarStatus == UNALLOCATED) {
+     varLock->unlock();
      printf("ERROR:\nGPUDataWarehouse::compareAndSwapCopyingIntoGPU( )  Variable %s is unallocated.\n", label);
      exit(-1);
     }
     if (((oldVarStatus & COPYING_IN) == COPYING_IN) ||
-        ((oldVarStatus & VALID) == VALID) ||
-        ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
+        ((oldVarStatus & VALID) == VALID) /*||
+        ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)*/) {
       // Something else already took care of it.  So this task won't manage it.
+      varLock->unlock();
       return false;
     } else {
       // Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
       atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
       copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+      it->second.var->curGhostCells = numGhosts;
     }
   }
+  varLock->unlock();
   return true;
+}
+
+//______________________________________________________________________
+// returns false if delayed copy not needed i.e. current ghost cell is less than or equal to incoming ghost cells.
+// returns true otherwise
+__host__ bool
+GPUDataWarehouse::isDelayedCopyingNeededOnGPU(char const* const label, int patchID, int matlIndx, int levelIndx, int numGhosts)
+{
+  bool retval=false;
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  varLock->lock();
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+  if (it != varPointers->end()) {
+    if(it->second.var->curGhostCells < numGhosts){
+      it->second.var->curGhostCells = numGhosts;
+      retval = true;
+    }
+  } else {
+    varLock->unlock();
+    printf("ERROR:\nGPUDataWarehouse::isDelayedCopyingNeededOnGPU( )  Variable %s not found.\n", label);
+    exit(-1);
+  }
+
+  varLock->unlock();
+  return retval;
 }
 
 //______________________________________________________________________
@@ -3333,7 +3370,11 @@ GPUDataWarehouse::setValidWithGhostsOnGPU(char const* label, int patchID, int ma
   if (it != varPointers->end()) {
     //UNKNOWN
     //make sure the valid is still turned on
-    __sync_or_and_fetch(&(it->second.var->atomicStatusInGpuMemory), VALID);
+    //do not set VALID here because one thread can gather the main patch and other gathers ghost cells
+    //if ghost cells is finished first, setting valid here causes task to start even though other thread 
+    //copying the main patch is not completed. race condition. Removed VALID_WITH_GHOSTS with from compareAndSwapCopyingInto*
+    //add extra condition to check valid AND valid with ghost both in UnifiedSchedular::allGPUProcessingVarsReady
+    //__sync_or_and_fetch(&(it->second.var->atomicStatusInGpuMemory), VALID);
 
     //turn off AWAITING_GHOST_COPY
     __sync_and_and_fetch(&(it->second.var->atomicStatusInGpuMemory), ~AWAITING_GHOST_COPY);
@@ -3361,7 +3402,8 @@ GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU(char const* label, int
   while (!allocating) {
     //get the address
     labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-    if (varPointers->find(lpml) != varPointers->end()) {
+    auto it = varPointers->find(lpml);
+    if (it != varPointers->end()) {
       atomicDataStatus *status = &(varPointers->at(lpml).var->atomicStatusInGpuMemory);
       atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
       if ((oldVarStatus & VALID_WITH_GHOSTS) == 0) {
@@ -3372,6 +3414,7 @@ GPUDataWarehouse::compareAndSwapSetInvalidWithGhostsOnGPU(char const* label, int
         //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
         atomicDataStatus newVarStatus = oldVarStatus & ~VALID_WITH_GHOSTS;
         allocating = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
+        it->second.var->curGhostCells = -1;
       }
     } else {
       varLock->unlock();
