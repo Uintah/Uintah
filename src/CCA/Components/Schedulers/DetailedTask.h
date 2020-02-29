@@ -163,6 +163,7 @@ public:
 
   };
 
+#ifdef HAVE_CUDA
   struct delayedCopyingInfo{
 	  delayedCopyingInfo(GpuUtilities::LabelPatchMatlLevelDw lpmld_,
 	                     DeviceGridVariableInfo              devGridVarInfo_,
@@ -178,7 +179,7 @@ public:
 	  void *                              host_ptr;
 	  size_t                              size;
   };
-
+#endif
 
   void doit( const ProcessorGroup                      * pg
            ,       std::vector<OnDemandDataWarehouseP> & oddws
