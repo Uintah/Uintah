@@ -109,6 +109,7 @@ PRODUCTION_TESTS_NO_COAL = [
    ("cloudBM48LS"                       , "cloudBM48LS.ups"                                         , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("cloudBM80GLC"                      , "cloudBM80GLC.ups"                                        , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
    ("cloudBM80LS"                       , "cloudBM80LS.ups"                                         , 8   , "All"   , ["exactComparison"     , "no_restart"]) ,
+   ("heated_plate"                      , "heated_plate.ups"                                        , 1   , "All"   , ["exactComparison"]) ,
 ]
 
 PRODUCTION_COAL_TESTS = [
@@ -136,6 +137,7 @@ PRODUCTION_COAL_TESTS = [
    ("BrownSoot_spectral"                , "Coal/BrownSoot_spectral.ups"                             , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("BrownSoot_spectral_orthog"         ,  BrownSoot_spectral_orthog_ups                            , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
    ("Coal_Nox"                          , "Coal/Coal_Nox.ups"                                       , 8   , "All"   , ["exactComparison"     , "no_cuda"]) ,
+   ("AtikokanU1"                        , "Coal/AtikokanU1.ups"                                     , 6   , "All"   , ["exactComparison"     , "no_cuda"]) ,
 ]
 
 KOKKOS_TESTS = [
