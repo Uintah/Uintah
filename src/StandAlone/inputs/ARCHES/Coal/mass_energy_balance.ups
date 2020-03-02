@@ -1982,7 +1982,7 @@
         <ksi>0.97266</ksi>
         <Tar_fraction>0.279</Tar_fraction>
         <LinearSwelling>
-          <Fsw>1.05</Fsw>
+          <Fsw>0.05</Fsw>
         </LinearSwelling>
       </ParticleProperties>
       <Python_BC>

@@ -462,6 +462,7 @@ BoundaryCondition::sched_computeAlphaG( SchedulerP& sched,
 {
   if ( _using_new_intrusion ) {
     const int ilvl = level->getID();
+    //if carry_forward = true, we are simply moving the computed value forward in time. 
     _intrusionBC[ilvl]->sched_setAlphaG( sched, level, matls, carry_forward );
   }
 }
@@ -2147,6 +2148,14 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
           my_info.mass_flow_rate = 0.0;
           db_BCType->require("swirl_no", my_info.swirl_no);
 
+          my_info.swirl_no *= 3./2.;
+          // swirl number definition as equation 5.14 from Combustion Aerodynamics
+          // J.M. BEER and N.A. CHIGIER 1983 pag 107
+          // assuming:
+          // constant axial velocity
+          // constant density
+          // constant tangential velocity
+          //
           std::string str_vec; // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
           bool Luse_origin =   db_face->getAttribute("origin", str_vec);
           if( Luse_origin ) {

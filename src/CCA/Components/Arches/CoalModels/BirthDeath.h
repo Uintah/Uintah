@@ -93,6 +93,12 @@ private:
   const VarLabel* _length_varlabel;
   const VarLabel* _particle_density_varlabel;
 
+  const VarLabel* _rate_impactX_varlabel;
+  const VarLabel* _rate_impactY_varlabel;
+  const VarLabel* _rate_impactZ_varlabel;
+
+  VarLabel* d_model_impactLabel;
+
   double _small_weight;
   double _a_scale;
   double _w_scale;

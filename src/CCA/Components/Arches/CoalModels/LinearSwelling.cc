@@ -91,6 +91,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
   double ash_mass_frac = coal_helper.get_coal_db().ash_mf;
   double p_volume = M_PI/6.*m_init_diam*m_init_diam*m_init_diam; // particle volme [m^3]
   m_init_rc = p_volume*init_particle_density*(1.-ash_mass_frac);
+  m_minimum_particle_diameter = coal_helper.get_coal_db().min_particle_size[qn]; //min particle size when particle is ash 
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
@@ -131,7 +132,7 @@ LinearSwelling::problemSetup(const ProblemSpecP& params, int qn)
 
   if (db_coal_props->findBlock("LinearSwelling")) {
     ProblemSpecP db_LS = db_coal_props->findBlock("LinearSwelling");
-    db_LS->getWithDefault("Fsw",m_Fsw,1.05); //swelling factor
+    db_LS->getWithDefault("Fsw",m_Fsw,0.05); //swelling factor
   } else {
     throw ProblemSetupException("Error: LinearSwelling block missing in <ParticleProperties>.", __FILE__, __LINE__);
   }
@@ -274,16 +275,26 @@ LinearSwelling::computeModel( const ProcessorGroup * pc,
       lambdaBirth = [&]( int i, int j, int k)-> double   { return 0.0;};
     }
 
+    // if Fsw is bigger than 1 diameter of particle will increase, and maximum diameter will be m_Fsw*m_init_diam
+    double sign = 1. ;
+    double min_diameter = m_Fsw*m_init_diam;
+    if (m_Fsw < 1) {
+      // if Fsw is lower than 1 diamter of particle will decrease, but char oxidation model is also decreasing size, thus, min diameter is when the particle is only ash.
+      sign = -1.;
+      min_diameter = m_minimum_particle_diameter; 
+    }
+
     double rate = 0.0;
     double max_rate = 0.0;
     double updated_weight = 0.0;
     Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
     Uintah::parallel_for( range, [&](int i, int j, int k) {
-      rate = - m_init_diam * m_Fsw * devol_rate(i,j,k) * m_scaling_const_rc / m_v_hiT / m_init_rc / m_scaling_const_length; // [1/m^2/s] - negative sign makes this source-term positive
+      rate = - m_init_diam * (m_Fsw-1.0) * devol_rate(i,j,k) * m_scaling_const_rc / m_v_hiT / m_init_rc / m_scaling_const_length; // [1/m^2/s] - negative sign makes this source-term positive if m_Fsw is bigger than 1, otherwise source-term is negavite and particle will decrease in size 
       // particle size won't increase above m_Fsw*m_init_diam
       updated_weight = std::max(scaled_weight(i,j,k) + dt / vol * ( RHS_weight(i,j,k) ) , 1e-15);
-      max_rate = (updated_weight * m_Fsw*m_init_diam / m_scaling_const_length - weighted_length(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambdaBirth(i,j,k));
-      ls_rate(i,j,k) = std::min(rate,max_rate);
+      max_rate = (updated_weight * min_diameter / m_scaling_const_length - weighted_length(i,j,k) ) / dt - ( RHS_source(i,j,k) / vol + lambdaBirth(i,j,k));
+      ls_rate(i,j,k) = std::min(sign*rate,sign*max_rate); // if Fsw < 1 m_sign is -
+      ls_rate(i,j,k) *= sign; // add sign back to source  
     });
 
   }//end patch loop
