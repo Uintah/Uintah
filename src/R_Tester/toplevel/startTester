@@ -60,8 +60,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
       "ahumphrey@sci.utah.edu,"            \
       "t.harman@utah.edu,"                 \
       "jholmen@sci.utah.edu,"              \
-      "jeremy.thornock@utah.edu,"          \
-      "allen@sci.utah.edu" )
+      "jeremy.thornock@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     export TEST_COMPONENTS="Examples ARCHES"
