@@ -1200,6 +1200,9 @@
       <MixtureFraction  spec="REQUIRED NO_DATA">
         <NameTag        spec="REQUIRED"/>
       </MixtureFraction>
+      <DensityWeightedMixtureFraction  spec="REQUIRED NO_DATA">
+        <NameTag        spec="REQUIRED"/>
+      </DensityWeightedMixtureFraction>
     </TwoFluidModel>
     
     <!--

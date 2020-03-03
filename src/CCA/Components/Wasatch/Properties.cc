@@ -37,7 +37,6 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoFluidModelDensity.h>
-#include <CCA/Components/Wasatch/Expressions/TanhFunction.h>
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
@@ -158,8 +157,10 @@ namespace WasatchCore{
       params->getAttribute("transitionMidPoint", transitionMidPoint);
       params->getAttribute("transitionRange"   , transitionRange   );
 
-      Expr::Tag fTag = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
-      fTag.reset_context(Expr::STATE_N);
+      Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction"               )->findBlock("NameTag") );
+      Expr::Tag rhoFTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      fTag   .reset_context(Expr::STATE_N);
+      rhoFTag.reset_context(Expr::STATE_NP1);
       const Expr::Tag fInitTag(fTag.name(), Expr::STATE_NONE);
       const Expr::Tag fNP1Tag (fTag.name(), Expr::STATE_NP1 ); 
 
@@ -177,23 +178,14 @@ namespace WasatchCore{
       viscParams->getAttribute("val0", viscosity0);
       viscParams->getAttribute("val1", viscosity1);
 
-      typedef TanhFunction<SVolField>::Builder       TanhFcn;
-      typedef Expr::PlaceHolder<SVolField>::Builder  PlaceHolder;
+      typedef TwoFluidDensityfromMixFrac<SVolField>::Builder  PropertyFromF;
+      typedef TwoFluidDensityfromRhoF   <SVolField>::Builder  PropertyFromRhoF;
+      typedef Expr::PlaceHolder         <SVolField>::Builder  PlaceHolder;
 
-      const double tanhF0 = tanh(-transitionMidPoint/transitionRange);
-      const double tanhF1 = tanh((1-transitionMidPoint)/transitionRange);
-      const double deltaTanhF = tanhF1 - tanhF0;
-      
-      const double aDens = (density1   - density0  )/deltaTanhF;
-      const double aVisc = (viscosity1 - viscosity0)/deltaTanhF;
-      const double b     = 1./transitionRange;
-      const double dDens = density0   - aDens*tanhF0;
-      const double dVisc = viscosity0 - aVisc*tanhF0;
+      icFactory.register_expression( new PropertyFromF(densityInitTag, fInitTag, density0, density1, transitionMidPoint, transitionRange ) );
 
-      icFactory.register_expression( new TanhFcn(densityInitTag, fInitTag, aDens, b, transitionMidPoint, dDens ) );
-
-      asFactory.register_expression( new TanhFcn(densityNP1Tag, fNP1Tag, aDens, b, transitionMidPoint, dDens ) );
-      asFactory.register_expression( new TanhFcn(viscosityTag , fTag   , aVisc, b, transitionMidPoint, dVisc ) );
+      asFactory.register_expression( new PropertyFromRhoF(densityNP1Tag, fNP1Tag,  density0 , density1  , transitionMidPoint, transitionRange ) );
+      asFactory.register_expression( new PropertyFromF   (viscosityTag , fTag   , viscosity0, viscosity1, transitionMidPoint, transitionRange ) );
 
       asFactory.register_expression( new PlaceHolder(Expr::Tag( densityTag.name(), Expr::STATE_N)) );
 

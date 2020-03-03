@@ -498,6 +498,10 @@ namespace WasatchCore{
       const Expr::Tag icPrimVarTag = Expr::Tag( primVarTag_.name(), Expr::STATE_NONE );
       const Expr::Tag icDensityTag = Expr::Tag( densityTag_.name(), Expr::STATE_NONE );
 
+      std::cout << "\nInitial density tag: " << icDensityTag
+                << "\nInitial primVar tag: " << icPrimVarTag
+                << "\n";
+
       return icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
                                                                              tag_list( icPrimVarTag, icDensityTag ),
                                                                              ExprAlgbr::PRODUCT ) );
