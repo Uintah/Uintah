@@ -89,31 +89,38 @@ namespace WasatchCore{
     } // if(enableTurbulence_)
 
     // define the primitive variable and solution variable tags and trap errors
-    std::string form = flowTreatment_ == INCOMPRESSIBLE ?
-                       "weak"    // default to weak form for incompressible cases
-                     : "strong";  // and strong for other flow treatments
-
+    std::string form = "strong"; // default to strong form
     // get attribute for form. if none provided, then use default    
     if( params->findAttribute("form") ) params->getAttribute("form",form);
 
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
-    if( !isConstDensity_ && isStrong_ && !existPrimVar ){
-      std::ostringstream msg;
-      msg << "ERROR: When you are solving a transport equation with variable density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-    else if( isStrong_ && existPrimVar ){
-      const std::string primVarName = get_primvar_name( params );
-      primVarTag_ = Expr::Tag( primVarName, flowTreatment_ != COMPRESSIBLE ? Expr::STATE_N : Expr::STATE_NONE );
-    }
-    else if( !isStrong_ && existPrimVar ){
-      std::ostringstream msg;
-      msg << "ERROR: When solving a transport equation in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    } else {
+    if( isConstDensity_ ){
       primVarTag_ = solution_variable_tag();
+      if( existPrimVar ){
+        std::ostringstream msg;
+        msg << "ERROR: For constant density cases the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    else{
+      if( isStrong_ && !existPrimVar ){
+        std::ostringstream msg;
+        msg << "ERROR: When you are solving a transport equation with variable density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      else if( isStrong_ && existPrimVar ){
+        const std::string primVarName = get_primvar_name( params );
+        primVarTag_ = Expr::Tag( primVarName, flowTreatment_==LOWMACH ? Expr::STATE_N : Expr::STATE_NONE );
+      }
+      else if( !isStrong_ && existPrimVar ){
+        std::ostringstream msg;
+        msg << "ERROR: When solving a transport equation in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      } else {
+        primVarTag_ = solution_variable_tag();
+      }
     }
     assert( primVarTag_ != Expr::Tag() );
 
@@ -415,7 +422,7 @@ namespace WasatchCore{
       const std::string& bndName = bndPair.first;
       const BndSpec& myBndSpec = bndPair.second;
       
-      if ( !(isConstDensity_ && !isStrong_) ) {
+      if (!isConstDensity_) {
         // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
         // rhof_{n+1}. Since we apply bcs on rhof at the bottom of the graph, we can't apply
         // the same bcs on rhof (time advanced). Hence, we set rhof_rhs to zero always :)
@@ -433,7 +440,7 @@ namespace WasatchCore{
           // for constant density problems, on all types of boundary conditions, set the scalar rhs
           // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
           // and is handled in the code above.
-          if( isConstDensity_ && !isStrong_ ){
+          if( isConstDensity_ ){
             if( myBndSpec.has_field(rhs_name()) ){
               std::ostringstream msg;
               msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
@@ -469,7 +476,7 @@ namespace WasatchCore{
   {
     // Should we always apply BCs to STATE_NP1 or STATE_N? Does it even matter?
     const Category taskCat = ADVANCE_SOLUTION;
-    const Expr::Tag solnVarTag = flowTreatment_ != COMPRESSIBLE ? solnvar_np1_tag() : solution_variable_tag();
+    const Expr::Tag solnVarTag = flowTreatment_==LOWMACH ? solnvar_np1_tag() : solution_variable_tag();
     bcHelper.apply_boundary_condition<FieldT>( solnVarTag, taskCat );
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
@@ -478,8 +485,8 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<SpatialOps::SSurfYField>(Expr::Tag(normalDiffVelName_nodir + 'Y', Expr::STATE_NONE), taskCat);
     bcHelper.apply_boundary_condition<SpatialOps::SSurfZField>(Expr::Tag(normalDiffVelName_nodir + 'Z', Expr::STATE_NONE), taskCat);
 
-    if( !(isConstDensity_ && !isStrong_) && hasConvection_ ){
-      const Expr::Tag primVarTag = flowTreatment_ != COMPRESSIBLE ? primVarNP1Tag_ : primVarTag_;
+    if( !isConstDensity_ && hasConvection_ ){
+      const Expr::Tag primVarTag = flowTreatment_==LOWMACH ? primVarNP1Tag_ : primVarTag_;
       bcHelper.apply_boundary_condition<FieldT>( primVarTag, taskCat );
     }
   }
@@ -491,16 +498,12 @@ namespace WasatchCore{
   ScalarTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    if( isStrong_ ){
+    if( isStrong_ && !is_constant_density() ){
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef ExprAlgebra<SVolField> ExprAlgbr;
       const Expr::Tag icPrimVarTag = Expr::Tag( primVarTag_.name(), Expr::STATE_NONE );
       const Expr::Tag icDensityTag = Expr::Tag( densityTag_.name(), Expr::STATE_NONE );
-
-      std::cout << "\nInitial density tag: " << icDensityTag
-                << "\nInitial primVar tag: " << icPrimVarTag
-                << "\n";
 
       return icFactory.register_expression( new typename ExprAlgbr::Builder( initial_condition_tag(),
                                                                              tag_list( icPrimVarTag, icDensityTag ),

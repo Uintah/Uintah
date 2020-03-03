@@ -273,7 +273,7 @@ void ScalarRHS<FieldT>::evaluate()
 
   for( size_t i=0; i<srcTerms_.size(); ++i ) {
     // for constant density cases, scale by density
-    if( isConstDensity_ && !strongForm_ ){
+    if( isConstDensity_ ){
       if( haveVolFrac_ )  rhs <<= rhs + srcTerms_[i]->field_ref() * (*volFracInterpOp_)(volfrac_->field_ref()) / rho_->field_ref();
       else                rhs <<= rhs + srcTerms_[i]->field_ref() / rho_->field_ref();
     }
@@ -374,7 +374,7 @@ void ScalarRHS<FieldT>::sensitivity( const Expr::Tag& varTag )
     }
 
     for( size_t i=0; i<srcTerms_.size(); ++i ) {
-      if( isConstDensity_ && !strongForm_ ){
+      if( isConstDensity_ ){
         if( haveVolFrac_ )  drhsdvar <<= drhsdvar + srcTerms_[i]->sens_field_ref( varTag ) * (*volFracInterpOp_)(volfrac_->field_ref()) / rho_->field_ref();
         else                drhsdvar <<= drhsdvar + srcTerms_[i]->sens_field_ref( varTag ) / rho_->field_ref();
       }
