@@ -76,7 +76,9 @@ BASETESTS   =  [   ("RMCRT_test_1L",    "RMCRT_bm1_1L.ups",            1, "ALL",
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",           1, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat_LHC", RMCRT_isoScat_LHC_ups,        1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups",        1, "ALL", ["exactComparison"]),
-                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"])
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",           1, "ALL", ["exactComparison","no_restart"]),
+                   ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",           1, "ALL", ["do_performance_test"]),
+                   ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",           1, "ALL", ["do_performance_test"])
                 ]
 
 FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_bm1_1L.ups",     1,   "ALL", ["exactComparison"]),

@@ -87,6 +87,9 @@ private:
     template <typename ExecSpace, typename MemSpace>
     void compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
+    template <typename ExecSpace, typename MemSpace>
+    void compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
+
   };
 }
 

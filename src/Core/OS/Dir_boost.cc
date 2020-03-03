@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,6 +42,7 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #if defined( UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3)
@@ -269,8 +270,12 @@ Dir::copy( const Dir & destDir ) const
       
    bsys::error_code ec;
    bfs::create_directories(new_to,ec);
-   
-   if (ec != 0) {
+
+#if BOOST_VERSION >= 106900
+   if ( ec.failed() ) {
+#else
+   if ( ec != 0 ) {
+#endif
      cout << "error code: " << ec << endl;
      cout << "error message: " << ec.message() << endl;
      throw InternalError(string("Dir::copy failed to copy: ") + name_, __FILE__, __LINE__);
@@ -293,7 +298,11 @@ Dir::copy( const Dir & destDir ) const
      
        bfs::copy(*it, new_entry, ec);
 
-       if (ec != 0) {
+#if BOOST_VERSION >= 106900
+       if ( ec.failed() ) {
+#else
+       if ( ec != 0 ) {
+#endif
          cout << "  ERROR: from: " << it_string << " to " << new_entry.c_str() << endl;
          cout << "  error code: " << ec << endl;
          cout << "  error message: " << ec.message() << endl;
@@ -319,8 +328,12 @@ Dir::move( const Dir & destDir )
    bsys::error_code ec;
    
    bfs::rename( from, to, ec );
-   if( ec != 0 ) {
-      throw InternalError( string( "Dir::move failed to move: " ) + name_, __FILE__, __LINE__ );
+#if BOOST_VERSION >= 106900
+  if ( ec.failed() ) {
+#else
+  if ( ec != 0 ) {
+#endif
+    throw InternalError( string( "Dir::move failed to move: " ) + name_, __FILE__, __LINE__ );
    }
    return;
 }
@@ -339,7 +352,11 @@ Dir::copy( const string & filename, const Dir & destDir ) const
   }
   bfs::copy(from,to,ec);
 
-  if( ec != 0 ) {
+#if BOOST_VERSION >= 106900
+  if ( ec.failed() ) {
+#else
+  if ( ec != 0 ) {
+#endif
     throw InternalError(string("Dir::copy failed to copy: ") + filepath + " to " + destDir.name_, __FILE__, __LINE__);
   }
   return;
@@ -354,8 +371,13 @@ Dir::move( const string & filename, Dir & destDir )
    bfs::path to(destDir.name_);
    bsys::error_code ec;
    bfs::rename(from,to,ec);
-   if (ec != 0)
-      throw InternalError(string("Dir::move failed to move: ") + filepath, __FILE__, __LINE__);
+#if BOOST_VERSION >= 106900
+  if ( ec.failed() ) {
+#else
+  if ( ec != 0 ){
+#endif
+    throw InternalError( string( "Dir::move failed to move: " ) + filepath, __FILE__, __LINE__ );
+  }
    return;
 }
 //______________________________________________________________________

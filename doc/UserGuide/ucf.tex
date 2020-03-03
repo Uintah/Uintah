@@ -244,19 +244,16 @@ new uda directory.
 Here are some examples:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-./sus -mpm -restart disks.uda.000 -nocopy
-./sus -mpm -restart disks.uda.000 -t 29
+./sus -restart disks.uda.000 -nocopy
+./sus -restart disks.uda.000 -t 29
 \end{Verbatim}
 %
 %__________________________________
 
 \section{Simulation Options} \label{Sec:SimulationOptions}
 
-
-There are many options available when running MPM simulations.  These
-are generally specified in the \tt <MPM> \normalfont section of the input file.
-A list of these options taken from
-\tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont  is given in section \ref{Sec:UintahImp}.
+Each of the simulation components has many options, these are described
+below in each respective component's section of this document.
 
 \section{Geometry objects} \label{Sec:GeometryObjects}
 
@@ -316,68 +313,6 @@ right circular cone/frustum.
 
 \tt cylinder \normalfont has a tag for the top and bottom origins
 (vector) plus a tag for the radius (float).
-
-\tt smoothcyl \normalfont is a geomtry object designed for use with
-the cpdi algorithm, which uses a body fit particle spatial
-distribution.  This eliminates ``stair-stepped'' boundaries typical of
-the standard, grid-based, discretization scheme.  Thus {\it it is
-  important to note that this geometry is only designed to work with
-  \tt <interpolator>cpdi</interpolator>\normalfont. \it Other
-  algorithms may give erroneous answers.}
-
-This geometry has the following tags:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-	   <smoothcyl label = "label name">
-	     <discretization_scheme> string </discretization_scheme>
-	     <bottom> vector </bottom>
-	     <top> vector </top>
-	     <outer_radius> float </outer_radius>
-	     <inner_radius> float </inner_radius>
-	     <num_radial> integer </num_radial>
-	     <num_axial> integer </num_axial>
-	     <num_angular> integer </num_angular>
-	     <arc_start_angle> double (in degrees) </arc_start_angle>
-	     <arc_angle> double (in degrees) </arc_angle>
-	   </smoothcyl>
-\end{Verbatim}
-
-The complete or partial annulus or cylinder specified by inner
-(optional, defaulting to zero) and outer radii, cylinder axis bottom
-and top (all required) and start and final angle (both optional,
-defaulting to 0 and 360) will be discretized using planes of
-concentric rings of particles.  Particle density is specified by \tt
-num\_axial \normalfont and \tt num\_radial\normalfont, the number of
-particles in the axial and radial dimensions, respectively
-\normalfont.  Note that these particle density specifications
-supercede those specified in the \tt <geom\_object> <res> \normalfont
-tag, which is ignored.
-
-The required discretization scheme may be either \tt pie\_slices
-\normalfont or \tt constant\_particle\_volumes\normalfont.  For the
-\tt pie\_slices \normalfont discretization, \tt num\_angular
-\normalfont is required to specify the number of particles between \tt
-arc\_start \normalfont and \tt arc\_angle \normalfont.  For the \tt
-constant\_particle\_volumes \normalfont discretization, the number of
-particles between \tt arc\_start \normalfont and \tt arc\_angle
-\normalfont is determined individually for each ring of particles by
-attempting to keep particle spacings approximately equal in the radial
-and angular directions, and thus particle volumes approximately
-constant.
-
-End caps may be added to the smoothcyl using the optional \tt
-<endcap\_thickness> \normalfont tag, which specifies the axial
-dimension of cylinders which are appended to each end of the specified
-\tt smoothcyl\normalfont (the radii are the same as the \tt smoothcyl
-\normalfont).  Presently, the end cap body fit discretization uses a
-legacy scheme.
-
-Note: At the time of writing, multiple \tt smoothcyl \normalfont
-geometries within a \tt <geom\_object> \normalfont tag were not
-discretized using a body fit particle distribution as described here
-(rather the default discretization scheme is used).  This will be
-fixed eventually, at which point it may be possible to create more
-general endcaps using unions of \tt smoothcyl \normalfont.
 
 \tt ellipsoid \normalfont has an origin tag specified as a vector.  There are
 two ways to assign axis lengths depending on the orientation of the ellipsoid.
@@ -451,80 +386,6 @@ are placed in each cell in each coordinate direction.  For multi-material ICE
 simulations, the \tt <res> \normalfont serves a similar purpose in that one
 can specify the subgrid resolution of the initial material distribution
 of mixed cells at the interface of geometry objects.
-
-In addition to the above, it is also possible in MPM simulations to describe
-geometry by providing a file containing a series of particle locations.  These
-can be in either ASCII or binary format.  In addition, it is also possible to
-provide initial data for certain variables on the particles, including
-volume, temperature, external force, fiber direction (used in material models
-with transverse isotropy) and velocity.  The following is an example in which
-external force and fiber direction are specified:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-          <file>
-              <name>LVcoarse.pts</name>
-              <var>p.externalforce</var>
-              <var>p.fiberdir</var>
-          </file>
-\end{Verbatim}
-
-where the text file LVcoarse.pts looks like:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-0.0385 0.0335 0.0015 0 0 0 0.248865 -0.0593421 -0.966718
-0.0395 0.0335 0.0015 0 0 0 0.254892 -0.0220365 -0.966718
-0.0405 0.0335 0.0015 0 0 0 0.267002 0.0197728 -0.963493
-0.0415 0.0335 0.0015 0 0 0 0.261177 0.0588869 -0.963493
-	.
-	.
-	.
-\end{Verbatim}
-Because these files can be arbitrarily large, an additional preprocessing step
-must be taken before issuing the \tt sus \normalfont command.
-\tt pfs \normalfont for ``Particle File Splitter" is a utility that splits the
-data in the \tt .pts \normalfont file into a series of files
-(\tt file.pts.0, file.pts.1, \normalfont, etc), one for each
-patch.  By doing this, each processor needs only read in the data for the
-patches that it contains, rather than each processor reading in the entire file,
-which can be hard on the file system.  Note, that this step is required,
-even if only using a single patch, and must be reissued any time the patch
-configuration is changed.  Usage of this utility, which is compiled
-into the \tt StandAlone/tools/pfs \normalfont directory, is:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-   pfs input.ups
-\end{Verbatim}
-
-One final option is available for initializing particle positions in MPM
-simulations, and that is through the use of three dimensional image data,
-such as might be collected via CT scans or confocal microscopy.  The image data are provided as 8-bit raw files, and usage in the input file is given as:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-        <image>
-          <name>spheres.raw</name>
-          <res>[1600, 1600, 1600]</res>
-          <threshold>[1, 25]</threshold>
-        </image>
-        <file>
-          <name>spheres.pts</name>
-          <format>bin</format>
-        </file>
-\end{Verbatim}
-
-The \tt <image> \normalfont section gives the name of the file, the resolution, in pixels,
-in the various coordinate directions, and threshold range.  Particles will be
-generated at voxels within the specified range.  The \tt <file> \normalfont
-section is the same as that described above.  A different preprocessing utility
-is provided when using image data (for the same reasons described previously).
-Usage is as follows:
-
-\begin{Verbatim}[fontsize=\footnotesize]
-   pfs2 -b input.ups
-\end{Verbatim}
-
-The -b indicates that binary \tt spheres.pts.\# \normalfont files will be created, which
-saves considerable disk space when performing large simulations.
-
 
 %__________________________________
 \section{Boundary conditions}\label{sec:ucf_bc}

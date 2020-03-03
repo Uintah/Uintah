@@ -1,0 +1,78 @@
+%______________________________________________________________________
+%   Notes to authors
+% Please disable your editor's auto newline wrapping feature.  
+% Please format \itemize sections 
+%______________________________________________________________________
+
+
+
+\chapter{Uda Management } \label{Chapter:UDA}
+Uintah offers a number of tools for managing Uintah Data Archives (``UDAs''). These tools are especially useful for large simulations with large output.  These tools are used for quickly moving data, reducing the size and number of variables within your UDA and combining multiple UDAs. 
+
+
+%______________________________________________________________________
+\section{pscp2}
+pscp2 is a tool to quickly transfer data in parallel between two machines. In order for this to work there must be an password-less connection between the two machines. pscp2 is located in /src/scripts/udaTransferScripts/
+\\
+The usage is 
+\begin{Verbatim}[fontsize=\footnotesize]
+ ./pscp2 <# processors> 
+         <transfer entire uda (y/n)> 
+         <remove remote directory (y/n)> 
+         < name of local directory> 
+         <login@remote machine>:<remote path>
+\end{Verbatim}
+
+The following example shows the usage of pscp2 for transferring 1.uda.000 from the local machine to the home directory on ember using 8 processors. It will remove any files in the home directory on ember with the same title of 1.uda.000 but the original copy on the local machine will not be removed.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+ ./pscp2 8 y n 1.uda.000 username@ember.chpc.utah.edu:/home/
+\end{Verbatim}
+
+%______________________________________________________________________
+\section{Make Master Uda}
+makeMasterUda\_index.csh is a script used to combine multiple udas. This is useful when a simulation must be restarted multiple times and post processing is required. Instead of having to do post processing on each individual uda, makeMasterUda\_index.csh will combine all of the udas to allow for continuous analysis of the simulation start to finish.  The script is located at:
+%
+\begin{Verbatim}[fontsize=\footnotesize] 
+    src/scripts/makeMasterUda_index.csh 
+\end{Verbatim} 
+%
+ and it depends on the helper script: 
+%
+\begin{Verbatim}[fontsize=\footnotesize] 
+    src/scripts/makeCombinedIndex.sh.
+\end{Verbatim} 
+%
+The original udas must not be moved or the symbolic links in \verb|masterUda| will not find the udas. No changes will be made to the original udas.
+\\
+The usage is 
+\begin{enumerate}
+  \item mkdir $<$masterUda$>$ This is where all of the udas will be linked together
+  \item cd $<$masterUda$>$
+  \item makeMasterUda\_index.csh ../uda.000 ../uda.001 ../uda.00N
+\end{enumerate}
+
+%______________________________________________________________________
+\section{pTarUda}
+pTarUda is a tool used to create/extract compressed tar files of each timestep in a UDA, including the checkpoints directory. pTarUda was designed to run in parallel and works well on udas with a large number of files and/or uncompressed data.  What it will buy you is faster moves, copies and transfers since the OS doesn't have to process as many files.  For uncompressed UDAs you may see up to a 30\% reduction in size. The original timestep directories are not deleted unless the -deleteOrgTimesteps option is used. This tool is found in:
+\begin{Verbatim}[fontsize=\footnotesize]
+    /src/scripts/udaTransferScripts.
+\end{Verbatim}
+%
+Usage:
+\begin{Verbatim}[fontsize=\footnotesize]
+pTarUda -<create/extract> -uda <UDA directory name>
+
+  Options:
+  -np <int>:                 Number of processors. Default is 10                           
+  -allTimesteps <y/n>:       Operate on all directories in uda? Default is yes.            
+                             If "n" then a vi window will open allowing you                
+                             to edit a list of timesteps to archive/extract.               
+  -deleteOrgTimesteps        Delete original timestep directories after they have          
+                             been tarred/untarred.                                         
+  -continueTarring:          Continue tarring/untarring if previous attempts failed        
+  -help:                     Display options summary                                       
+\end{Verbatim}
+\normalsize
+
+

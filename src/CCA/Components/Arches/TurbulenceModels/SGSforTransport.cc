@@ -109,9 +109,9 @@ namespace Uintah{
   void
     SGSforTransport::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>&
         variable_registry , const bool packed_tasks){
-      for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      }
+      register_variable("FractalXSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable("FractalYSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable("FractalZSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
     }
 
@@ -130,15 +130,22 @@ namespace Uintah{
   void
     SGSforTransport::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>&
         variable_registry , const bool packed_tasks){
-      for (auto iter = m_fmom_source_names.begin(); iter != m_fmom_source_names.end(); iter++ ){
-        register_variable( *iter, ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
-      }
+      register_variable("FractalXSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable("FractalYSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
+      register_variable("FractalZSrc", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 
     }
 
   //--------------------------------------------------------------------------------------------------
   template <typename ExecSpace, typename MemSpace>
   void SGSforTransport::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+      SFCXVariable<double>& FractalXSrc= tsk_info->get_field<SFCXVariable<double> >("FractalXSrc");
+      SFCYVariable<double>& FractalYSrc= tsk_info->get_field<SFCYVariable<double> >("FractalYSrc");
+      SFCZVariable<double>& FractalZSrc= tsk_info->get_field<SFCZVariable<double> >("FractalZSrc");
+
+      FractalXSrc.initialize(0.0);
+      FractalYSrc.initialize(0.0);
+      FractalZSrc.initialize(0.0);
     }
 
   //--------------------------------------------------------------------------------------------------

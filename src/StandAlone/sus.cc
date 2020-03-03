@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -179,7 +179,7 @@ static void usage( const std::string& message,
     std::cerr << "-restart                    : Give the checkpointed uda directory as the input file\n";
     std::cerr << "-postProcessUda             : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
     std::cerr << "-uda_suffix <number>        : Make a new uda dir with <number> as the default suffix\n";
-    std::cerr << "-t <timestep>               : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
+    std::cerr << "-t <index>                  : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
     std::cerr << "-svnDiff                    : runs svn diff <src/...../Packages/Uintah \n";
     std::cerr << "-svnStat                    : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
     std::cerr << "-copy                       : Copy from old uda when restarting\n";
@@ -260,7 +260,7 @@ int main( int argc, char *argv[], char *env[] )
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
 
-  int    restartTimestep     = -1;
+  int    restartCheckpointIndex     = -1;
   int    udaSuffix           = -1;
   int    numThreads          =  0;
   int    numPartitions       =  0;
@@ -474,7 +474,7 @@ int main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-t") {
       if (i < argc - 1) {
-        restartTimestep = atoi(argv[++i]);
+        restartCheckpointIndex = atoi(argv[++i]);
       }
     }
     else if (arg == "-layout") {
@@ -912,7 +912,8 @@ int main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
-      simController->doRestart( udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir );
+      simController->doRestart( udaDir, restartCheckpointIndex,
+                                restartFromScratch, restartRemoveOldDir );
     }
     
     // This gives memory held by the 'ups' back before the simulation

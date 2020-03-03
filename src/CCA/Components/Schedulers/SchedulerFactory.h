@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,8 +39,8 @@ namespace Uintah {
     
     // This function has a switch for all known schedulers
     static SchedulerCommon* create( const ProblemSpecP   & ps
-				  , const ProcessorGroup * world
-				    );
+                                  , const ProcessorGroup * world
+                                  );
   };
 
 }  // namespace Uintah

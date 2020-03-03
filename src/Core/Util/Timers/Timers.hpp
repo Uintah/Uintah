@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 1997-2019 The University of Utah
+// Copyright (c) 1997-2020 The University of Utah
 // Copyright (c) 2016 Daniel Sunderland
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

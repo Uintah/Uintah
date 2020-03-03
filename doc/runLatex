@@ -65,7 +65,6 @@ if [ $user = "yes" ]; then
   cd ..
 fi
 
-
 if [ $install = "yes" ]; then
    echo
    echo 
@@ -108,6 +107,7 @@ find . -name "*.aux" -exec /bin/rm -f {} \;
 find . -name "*.log" -exec /bin/rm -r {} \;
 find . -name "*.bbl" -exec /bin/rm -r {} \;
 find . -name "*.blg" -exec /bin/rm -r {} \;
+find . -name "*.toc" -exec /bin/rm -r {} \;
 
 echo "User error = " ${user_error}
 echo "Install error = " ${install_error}
