@@ -233,13 +233,13 @@ void CCVel::compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, co
 template <typename ExecSpace, typename MemSpace>
 void CCVel::compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-  auto& u = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
-  auto& v = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
-  auto& w = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
+  auto u = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace>(m_u_vel_name);
+  auto v = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace>(m_v_vel_name);
+  auto w = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>(m_w_vel_name);
 
-  auto& w_x = tsk_info->get_field<CCVariable<double>, double, MemSpace>("x_vorticity");
-  auto& w_y = tsk_info->get_field<CCVariable<double>, double, MemSpace>("y_vorticity");
-  auto& w_z = tsk_info->get_field<CCVariable<double>, double, MemSpace>("z_vorticity");
+  auto w_x = tsk_info->get_field<CCVariable<double>, double, MemSpace>("x_vorticity");
+  auto w_y = tsk_info->get_field<CCVariable<double>, double, MemSpace>("y_vorticity");
+  auto w_z = tsk_info->get_field<CCVariable<double>, double, MemSpace>("z_vorticity");
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Vector DX = patch->dCell();
