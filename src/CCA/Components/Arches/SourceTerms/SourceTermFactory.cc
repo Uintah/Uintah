@@ -18,7 +18,7 @@
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
-#include <CCA/Components/Arches/SourceTerms/HTConvection.h>
+#include <CCA/Components/Arches/SourceTerms/ConductiveHT.h>
 #include <CCA/Components/Arches/SourceTerms/ZZNoxSolid.h>
 #include <CCA/Components/Arches/SourceTerms/psNox.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
@@ -317,7 +317,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "ht_convection") {
-        SourceTermBase::Builder* srcBuilder = scinew HTConvection::Builder(src_name, required_varLabels, lab);
+        SourceTermBase::Builder* srcBuilder = scinew ConductiveHT::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "zzNox_Solid") {
@@ -450,7 +450,7 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         throw InvalidValue("Error: <Radiometer><RMCRT><algorithm> must have type=\"radiometerOnly\" specified", __FILE__, __LINE__);
       }
     } else {
-      throw InvalidValue("Error: <Radiometer><RMCRT><algorithm> is missing and must have type=\"radiometerOnly\" specified", __FILE__, __LINE__); 
+      throw InvalidValue("Error: <Radiometer><RMCRT><algorithm> is missing and must have type=\"radiometerOnly\" specified", __FILE__, __LINE__);
     }
     std::string label;
     std::vector<std::string> required_varLabels;

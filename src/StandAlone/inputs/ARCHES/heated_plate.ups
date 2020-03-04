@@ -1,0 +1,385 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Heated plate</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>0.1</delt_max>
+    <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>21</max_Timesteps>
+  </Time>
+  <DataArchiver>
+    <filebase>heated_plate.uda</filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="volFraction"/>
+    <save label="CCVelocity"/>
+    <save label="densityCP"/>
+    <save label="continuityResidual"/>
+    <save label="pressurePS"/>
+    <save label="cellType"/>
+    <save label="temperature"/>
+    <save label="enthalpy"/>
+    <save label="heat_loss"/>
+    <save label="alpha_geom"/>
+    <save label="gas-sideWallConduction"/>
+    <save label="wall-sideConduction"/>
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <MPM>
+    <time_integrator>explicit</time_integrator>
+    <interpolator>linear</interpolator>
+  </MPM>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <Face side="x-" name="x- face">
+        <BCType label="xmwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="x+" name="x+ wall">
+        <BCType label="the outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-" name="y- wall">
+        <BCType label="ymwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+" name="y+ wall">
+        <BCType label="ypwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-" name="z- wall">
+        <BCType label="zmwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+" name="z+ wall">
+        <BCType label="zpwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType label="enthalpy" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Dirichlet" label="radiation_temperature">
+          <value>298</value>
+        </BCType>
+        <BCType var="Neumann" label="scalar_var">
+          <value>0.0</value>
+        </BCType>
+        <BCType var="Neumann" label="heat_loss">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[20,20,20]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.001000</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <!-- ARCHES specification -->
+    <ARCHES>
+      <!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <Turbulence model="compdynamicprocedure"/>
+      <!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <determines_properties/>
+          <D_mol_constant value="0.001"/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="constant">
+            <constant>.001</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <determines_properties/>
+          <D_mol_constant value="0.001"/>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <src label="gas-sideWallConduction"/>
+          <src label="divQ"/>
+        </Eqn>
+        <Sources> 
+          <src label="gas-sideWallConduction" type="ht_convection">
+            <ConWallHT_src label="wall-sideConduction"/>
+            <temperatureGradientModifier>10</temperatureGradientModifier>
+          </src>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>2</calc_frequency>
+            <abskt label="abskg"/>
+            <DORadiationModel type="sweepSpatiallyParallel">
+              <ordinates>8</ordinates>
+              <initialGuess>prevRadSolve</initialGuess>
+            </DORadiationModel>
+          </src>
+        </Sources>
+      </TransportEqns>
+      <Properties>
+        <table label="a_user_generated_label" type="classic">
+          <reference_state f="0.0" hl="0.0" var="0.0"/>
+          <standard_equilibrium f_label="mixture_fraction" hl_label="heat_loss" var_label="scalar_var"/>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic_new.mix.gz</inputfile>
+        </table>
+      </Properties>
+      <PropertyModelsV2>
+        <model type="gasRadProperties" label="gas_abskg">
+          <calculator type="hottel_sarofim">
+            <opl>1.5</opl>
+          </calculator>
+        </model>
+      </PropertyModelsV2>
+      <PropertyModels>
+        <model type="empirical_soot" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <opl>3</opl>
+          <carbon_content_fuel>0.75</carbon_content_fuel>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <E_st>0.08</E_st>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+        </model>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <noisy_hl_warning/>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+        <model type="scalsim_variance" label="scalar_var">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <density_label>density</density_label>
+          <variance_coefficient>0.14</variance_coefficient>
+        </model>
+      </PropertyModels>
+      <BoundaryConditions>
+        <WallHT>
+          <model type="region_ht">
+            <region>
+              <!-- plate -->
+              <k>.2</k>
+              <wall_thickness>.1</wall_thickness>
+              <tube_side_T>1300.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[.25,.4,.4]</min>
+                  <max>[.5,.6,.6]</max>
+                </box>
+              </geom_object>
+            </region>
+            <!-- Outer Walls: -->
+            <!-- Yminus -->
+            <region>
+              <k>.2</k>
+              <wall_thickness>1e10</wall_thickness>
+              <tube_side_T>298.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[-1,-1,-1]</min>
+                  <max>[10,.1,10]</max>
+                </box>
+              </geom_object>
+            </region>
+            <!-- Yplus -->
+            <region>
+              <k>.2</k>
+              <wall_thickness>1e10</wall_thickness>
+              <tube_side_T>298.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[-1,.9,-1]</min>
+                  <max>[10,10,10]</max>
+                </box>
+              </geom_object>
+            </region>
+            <!-- Zminus -->
+            <region>
+              <k>.2</k>
+              <wall_thickness>1e10</wall_thickness>
+              <tube_side_T>298.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[-1,-1,-1]</min>
+                  <max>[10,10,.1]</max>
+                </box>
+              </geom_object>
+            </region>
+            <!-- Yplus -->
+            <region>
+              <k>.2</k>
+              <wall_thickness>1e10</wall_thickness>
+              <tube_side_T>298.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[-1,-1,.9]</min>
+                  <max>[10,10,10]</max>
+                </box>
+              </geom_object>
+            </region>
+            <!-- Xminus -->
+            <region>
+              <k>.2</k>
+              <wall_thickness>1e10</wall_thickness>
+              <tube_side_T>298.</tube_side_T>
+              <geom_object>
+                <box>
+                  <min>[-1,-1,-1]</min>
+                  <max>[.1,10,10]</max>
+                </box>
+              </geom_object>
+            </region>
+          </model>
+        </WallHT>
+        <intrusions> 
+          <intrusion label="plate">
+            <area_model>
+              <alpha_g>1.1</alpha_g>
+            </area_model>
+            <geom_object>
+              <box>
+                <min>[.25,.4,.4]</min>
+                <max>[.4,.6,.6]</max>
+              </box>
+            </geom_object>
+            <constant_temperature T="1300"/>
+          </intrusion>
+        </intrusions>
+      </BoundaryConditions>
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>1.0e-16</tolerance>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
+            <maxiterations>250</maxiterations>
+            <relax_type>2</relax_type>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

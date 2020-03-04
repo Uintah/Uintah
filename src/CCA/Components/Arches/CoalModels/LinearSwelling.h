@@ -105,7 +105,7 @@ private:
   double m_init_rc;   ///< initial raw coal mass 
   double m_scaling_const_length;   ///< scaling constant for length transport 
   double m_scaling_const_rc;   ///< scaling constant for raw coal transport 
-
+  double m_minimum_particle_diameter;
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif
