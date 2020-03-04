@@ -7,7 +7,7 @@
 
 set scriptsDir = $argv
 
-set files      = (startTester startTester.git killTester svn_checkout_scripts cleanup)
+set files      = (startTester startTester.git killTester checkout_scripts cleanup)
 
 if( ! -d $scriptsDir ) then
   echo " The directory $scriptsDir does not exist."  
@@ -24,7 +24,7 @@ endif
 
 # Git
 foreach X ( $files[*] )
-  wget --timestamping https://github.com/Uintah/Uintah/blob/master/src/R_Tester/toplevel/$X
+  wget --timestamping https://raw.githubusercontent.com/Uintah/Uintah/master/src/R_Tester/toplevel/$X
 end
 
 exit(0)
