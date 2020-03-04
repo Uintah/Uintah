@@ -149,6 +149,8 @@ namespace WasatchCore{
       GraphHelper& icgh = *gc[INITIALIZATION  ];
       GraphHelper& asgh = *gc[ADVANCE_SOLUTION];
 
+      const TagNames& tagNames = TagNames::self();
+
       Expr::ExpressionFactory& icFactory = *icgh.exprFactory;
       Expr::ExpressionFactory& asFactory = *asgh.exprFactory;
 
@@ -157,10 +159,10 @@ namespace WasatchCore{
       params->getAttribute("transitionMidPoint", transitionMidPoint);
       params->getAttribute("transitionRange"   , transitionRange   );
 
-      Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction"               )->findBlock("NameTag") );
-      Expr::Tag rhoFTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      fTag   .reset_context(Expr::STATE_N);
-      rhoFTag.reset_context(Expr::STATE_NP1);
+      Expr::Tag fTag       = parse_nametag( params->findBlock("MixtureFraction"               )->findBlock("NameTag") );
+      Expr::Tag rhoFNP1Tag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      fTag      .reset_context(Expr::STATE_N);
+      rhoFNP1Tag.reset_context(Expr::STATE_NP1);
       const Expr::Tag fInitTag(fTag.name(), Expr::STATE_NONE);
       const Expr::Tag fNP1Tag (fTag.name(), Expr::STATE_NP1 ); 
 
@@ -178,19 +180,40 @@ namespace WasatchCore{
       viscParams->getAttribute("val0", viscosity0);
       viscParams->getAttribute("val1", viscosity1);
 
+      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag, fTag);
+
       typedef TwoFluidDensityfromMixFrac<SVolField>::Builder  PropertyFromF;
       typedef TwoFluidDensityfromRhoF   <SVolField>::Builder  PropertyFromRhoF;
       typedef Expr::PlaceHolder         <SVolField>::Builder  PlaceHolder;
 
-      icFactory.register_expression( new PropertyFromF(densityInitTag, fInitTag, density0, density1, transitionMidPoint, transitionRange ) );
+      icFactory.register_expression( new PropertyFromF( densityInitTag, 
+                                                        dRhoDfTag,
+                                                        fInitTag, 
+                                                        density0, 
+                                                        density1, 
+                                                        transitionMidPoint, 
+                                                        transitionRange ) );
 
-      asFactory.register_expression( new PropertyFromRhoF(densityNP1Tag, fNP1Tag,  density0 , density1  , transitionMidPoint, transitionRange ) );
-      asFactory.register_expression( new PropertyFromF   (viscosityTag , fTag   , viscosity0, viscosity1, transitionMidPoint, transitionRange ) );
+      asFactory.register_expression( new PropertyFromRhoF( densityNP1Tag, 
+                                                           dRhoDfTag, 
+                                                           rhoFNP1Tag,  
+                                                           density0, 
+                                                           density1, 
+                                                           transitionMidPoint, 
+                                                           transitionRange ) );
+
+      asFactory.register_expression( new PropertyFromF( viscosityTag, 
+                                                        fTag, 
+                                                        viscosity0, 
+                                                        viscosity1, 
+                                                        transitionMidPoint, 
+                                                        transitionRange ) );
 
       asFactory.register_expression( new PlaceHolder(Expr::Tag( densityTag.name(), Expr::STATE_N)) );
 
       // Expr::ExpressionID id =
-      asFactory.register_expression( new PlaceHolder( fNP1Tag) );
+      
+      // asFactory.register_expression( new PlaceHolder( fNP1Tag) );
     }
 
   //====================================================================
