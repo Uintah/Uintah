@@ -84,6 +84,13 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
             // NOTE: this will use the "value" entry as the normal component of the velocity
             swirlInfo my_info;
             db_BCType->require("swirl_no", my_info.swirl_no);
+            my_info.swirl_no *= 3./2.;
+            // swirl number definition as equation 5.14 from Combustion Aerodynamics 
+            // J.M. BEER and N.A. CHIGIER 1983 pag 107 
+            // assuming: 
+            // constant axial velocity
+            // constant density 
+            // constant tangential velocity 
 
             std::string str_vec; // This block sets the default centroid to the origin unless otherwise specified by swirl_cent
             bool Luse_origin =   db_face->getAttribute("origin", str_vec);

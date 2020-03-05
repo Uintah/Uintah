@@ -72,6 +72,7 @@ namespace Uintah{
       CCVariable<double> thermal_cond_sb_s;
       CCVariable<double> thermal_cond_sb_l;
       CCVariable<double> deposit_velocity;
+      constCCVariable<double> alpha_geom; 
       constCCVariable<double> deposit_velocity_old;
       constCCVariable<double> ave_deposit_velocity;
       std::vector< constCCVariable<double> > extra_src;
@@ -145,7 +146,7 @@ namespace Uintah{
     const VarLabel* _thermal_cond_sb_l_label;
 
     ApplicationInterface* m_arches{nullptr};
-    
+
     void doWallHT( const ProcessorGroup* my_world,
 		   const PatchSubset* patches,
 		   const MaterialSubset* matls,
@@ -163,7 +164,7 @@ namespace Uintah{
 		      const PatchSubset* patches,
 		      const MaterialSubset* matls,
 		      DataWarehouse* old_dw,
-		      DataWarehouse* new_dw, 
+		      DataWarehouse* new_dw,
 		      int time_substep );
 
 
@@ -769,7 +770,7 @@ namespace Uintah{
 	    throw ProblemSetupException("Error: PokludaVisc requires specification of ash viscosity parameters.", __FILE__, __LINE__);
 	  }
 	  if (ash_type == "indonesian"){
-	    emiss_coeff = {0.42210472, -0.29718513, 0.52847460, -0.66785780, 0.36898482, -0.13952110, -0.00351870, 0.07376239, 0.20998621, -0.26403539, 0.07380761, 0.08677416, -0.05871292, 0.08181048, -0.07999015, 0.02236591, -0.03759233, 0.04154652, -0.03584659, 0.01244171, 0.00649477, -0.00330030, 0.00378924, 0.01575434, -0.00453514, 0.56640113, -0.00770423, -0.07205439};                
+	    emiss_coeff = {0.42210472, -0.29718513, 0.52847460, -0.66785780, 0.36898482, -0.13952110, -0.00351870, 0.07376239, 0.20998621, -0.26403539, 0.07380761, 0.08677416, -0.05871292, 0.08181048, -0.07999015, 0.02236591, -0.03759233, 0.04154652, -0.03584659, 0.01244171, 0.00649477, -0.00330030, 0.00378924, 0.01575434, -0.00453514, 0.56640113, -0.00770423, -0.07205439};
 	    xmean = {9.50000000e+02, 2.90527950e-04};
 	    xstd = {4.15013986e+02, 2.96789673e-04};
 	    ymean = 6.90652085e-01;
@@ -778,14 +779,14 @@ namespace Uintah{
 	    pokluda={-4.77523025e-02, 1.26741073e+00};
 	    fresnel={9.67076543e-01, -1.09397153e-06, -1.60576835e-01, -5.52272718e-03};
 	  } else if (ash_type == "german_lignite"){
-	    emiss_coeff = {0.44599557, -0.30478529, 0.51486973, -0.61507071, 0.32793017, -0.19859028, 0.02383266, 0.07590513, 0.17344142, -0.23015802, 0.06493135, 0.11102434, -0.05095981, 0.06994493, -0.07454708, 0.02110421, -0.03606207, 0.03776718, -0.03850843, 0.01366592, 0.00309512, -0.00582621, 0.00553658, 0.01637788, -0.00343548, 0.52336435, -0.00782776, -0.06257533};                
+	    emiss_coeff = {0.44599557, -0.30478529, 0.51486973, -0.61507071, 0.32793017, -0.19859028, 0.02383266, 0.07590513, 0.17344142, -0.23015802, 0.06493135, 0.11102434, -0.05095981, 0.06994493, -0.07454708, 0.02110421, -0.03606207, 0.03776718, -0.03850843, 0.01366592, 0.00309512, -0.00582621, 0.00553658, 0.01637788, -0.00343548, 0.52336435, -0.00782776, -0.06257533};
 	    xmean = {9.50000000e+02, 2.90527950e-04};
 	    xstd = {4.15013986e+02, 2.96789673e-04};
 	    ymean = 6.69825177e-01;
 	    ystd = 2.32511918e-01;
-	    surfT = {5.71301560e-01,-8.13809376e-05};                
+	    surfT = {5.71301560e-01,-8.13809376e-05};
 	    pokluda={-4.77182710e-02, 1.26365363e+00};
-	    fresnel={9.66134618e-01, -1.15469725e-06, -1.64480775e-01, -5.70890613e-03};                
+	    fresnel={9.66134618e-01, -1.15469725e-06, -1.64480775e-01, -5.70890613e-03};
 	  } else if (ash_type == "sufco"){
 	    emiss_coeff = {0.47442630, -0.29968346, 0.47644786, -0.55391767, 0.29175602, -0.28389067, 0.05335562, 0.07140902, 0.13505376, -0.18947381, 0.05381933, 0.14227344, -0.04835121, 0.06211569, -0.07001087, 0.01996109, -0.03701543, 0.03863498, -0.04071644, 0.01457128, -0.00181829, -0.00665984, 0.00636716, 0.01892057, -0.00372373, 0.46096096, -0.00824010, -0.05533698};
 	    xmean = {9.50000000e+02, 2.90527950e-04};
@@ -805,23 +806,23 @@ namespace Uintah{
 	    pokluda={-4.76777178e-02, 1.26619132e+00};
 	    fresnel={9.64367875e-01, -2.43995449e-06, -1.65558767e-01, -6.51558072e-03};
 	  } else if (ash_type == "illinois_no6"){
-	    emiss_coeff = {0.28116197, -0.04796234, 0.44878875, -1.02871474, 0.70791090, -0.02938925, -0.11651905, 0.15951265, 0.27031796, -0.36712175, 0.10457104, 0.02109516, -0.03796620, 0.10692939, -0.11639365, 0.03423059, -0.02731009, 0.04638226, -0.04060291, 0.01387486, 0.01275071, -0.00413343, 0.00258171, 0.01089748, -0.00413871, 0.67618414, -0.00648648, -0.15473454};                
+	    emiss_coeff = {0.28116197, -0.04796234, 0.44878875, -1.02871474, 0.70791090, -0.02938925, -0.11651905, 0.15951265, 0.27031796, -0.36712175, 0.10457104, 0.02109516, -0.03796620, 0.10692939, -0.11639365, 0.03423059, -0.02731009, 0.04638226, -0.04060291, 0.01387486, 0.01275071, -0.00413343, 0.00258171, 0.01089748, -0.00413871, 0.67618414, -0.00648648, -0.15473454};
 	    xmean = {9.50000000e+02, 2.90527950e-04};
 	    xstd = {4.15013986e+02, 2.96789673e-04};
 	    ymean = 7.26042062e-01;
 	    ystd = 2.16751507e-01;
-	    surfT = {4.03907696e-01,-1.27139046e-05}; 
+	    surfT = {4.03907696e-01,-1.27139046e-05};
 	    pokluda={-5.14762513e-02, 1.26612415e+00};
-	    fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};                
+	    fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};
 	  } else if (ash_type == "polish_coal"){
 	    emiss_coeff = {0.48614013, -0.52506995, 0.67895992, -0.46501249, 0.13443785, -0.05815506, -0.08908543, 0.15646069, 0.23721181, -0.34574423, 0.10183021, 0.06647438, -0.07050489, 0.08788616, -0.07187695, 0.01902046, -0.04944071, 0.04988776, -0.02755827, 0.00713287, 0.01706380, -0.00479225, 0.00217505, 0.01252978, -0.00357129, 0.58671155, -0.00761589, -0.01163714};
 	    xmean = {9.50000000e+02, 1.66304348e-04};
 	    xstd = {4.15013986e+02, 1.63118380e-04};
 	    ymean = 7.03899649e-01;
 	    ystd = 2.04027127e-01;
-	    surfT = {4.20659229e-01,-2.36884087e-05}; 
+	    surfT = {4.20659229e-01,-2.36884087e-05};
 	    pokluda={-5.10314026e-02, 1.26264329e+00};
-	    fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};                
+	    fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};
 	  } else {
 	    throw InvalidValue("Error, coal_name wasn't recognized in pokluda ash emissivity data-base. ", __FILE__, __LINE__);
 	  }
@@ -832,7 +833,7 @@ namespace Uintah{
 	std::vector<double> coeff_den;
 	std::vector<double> xstd;
 	std::vector<double> xmean;
-	std::vector<double> pokluda; 
+	std::vector<double> pokluda;
 	std::vector<double> emiss_coeff;
 	std::vector<double> fresnel;
 	std::vector<double> surfT;
@@ -849,7 +850,7 @@ namespace Uintah{
 	double x2;
 	void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
 	  e = 0;
-	  vdot_sum = 0; 
+	  vdot_sum = 0;
 	  // for each size compute the effective size and the effective emissivity
 	  double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
 	  for(int env = 0; env != Nenv; env++) {
@@ -868,14 +869,14 @@ namespace Uintah{
 	    //vdot[4] = 2.36355e-11;
 	    //First obtain the effective particle size for the current environment.
 	    visc = 0.1*std::exp(std::log(T) + 1000.0*B/T + lnA); // kg / m / s
-	    surface_tension = surfT[0] + surfT[1]*T; // kg / s^2 
+	    surface_tension = surfT[0] + surfT[1]*T; // kg / s^2
 	    log10tau = std::log10(tau*surface_tension/visc/Dp_vec[env]); // non-dimensionalized time
 	    d_eff =  Dp_vec[env] + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env]) + 0.5*(Dp_vec[env]*std::cbrt(6.)-Dp_vec[env])*std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1]));
 	    d_eff = std::max(5e-6,std::min(400e-6,d_eff)); // limit size to the bounds of the regression
 	    //std::cout << "surface_tension " << surface_tension << std::endl;
 	    //std::cout << "visc " << visc << std::endl;
-	    //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl; 
-	    //std::cout << "erf: " << (log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])  << " " << std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])) << std::endl; 
+	    //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl;
+	    //std::cout << "erf: " << (log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])  << " " << std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])) << std::endl;
 	    x1 = (T-xmean[0])/xstd[0];
 	    x2 = (d_eff-xmean[1])/xstd[1];
 	    double xv_e[28]={x2, x2*x2, x2*x2*x2, x2*x2*x2*x2, x2*x2*x2*x2*x2, x1, x1*x2, x1*x2*x2, x1*x2*x2*x2, x1*x2*x2*x2*x2, x1*x2*x2*x2*x2*x2, x1*x1, x1*x1*x2, x1*x1*x2*x2, x1*x1*x2*x2*x2, x1*x1*x2*x2*x2*x2, x1*x1*x1, x1*x1*x1*x2, x1*x1*x1*x2*x2, x1*x1*x1*x2*x2*x2, x1*x1*x1*x1, x1*x1*x1*x1*x2, x1*x1*x1*x1*x2*x2, x1*x1*x1*x1*x1, x1*x1*x1*x1*x1*x2, 1., x1*x1*x1*x1*x1*x1, x2*x2*x2*x2*x2*x2};
@@ -883,20 +884,20 @@ namespace Uintah{
 	    for ( int I=0; I < 28; I++ ) {
 	      e_sc_c+=emiss_coeff[I]*xv_e[I];
 	    }
-	    double e_i = e_sc_c*ystd + ymean; 
+	    double e_i = e_sc_c*ystd + ymean;
 	    e_i = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
 	      (T>=T_fluid || d_eff >= 400e-6) ? ef :  // if slagging use fresnel emissivity.
 	      std::min(ef,e_i);  // predicted emissivity.
 	    e += (vdot[env]+1e-100)*e_i; // sum in this environments emissivity weighted by flow rate
 	    //std::cout << "env " << env << std::endl;
-	    //std::cout << "e_i: " << e_i << std::endl; 
+	    //std::cout << "e_i: " << e_i << std::endl;
 	    vdot_sum+=vdot[env]+1e-100; // sum in this environments volumetric flow rate
 	  }
 	  e = e/vdot_sum;
 	  //std::cout << "T_fluid: " << T_fluid << std::endl;
 	  //std::cout << "d_eff: " << d_eff << std::endl;
 	  e = std::max(0.0,std::min(1.0,e)); // emissivity safety
-	  //std::cout << "e after clipping: " << e << std::endl; 
+	  //std::cout << "e after clipping: " << e << std::endl;
 	}
 	~pokluda_v(){}
       };
@@ -957,7 +958,7 @@ namespace Uintah{
 	    xstd = {5.50448260e-01, 1.86569621e+00};
 	    ymean = 8.89969016e-01;
 	    ystd = 1.06294410e-01;
-	    surfT = {6.63743742e-01,-1.01194510e-04}; 
+	    surfT = {6.63743742e-01,-1.01194510e-04};
 	    pokluda={6.01022212e-02, 9.40458444e+00};
 	    fresnel={9.55982979e-01, -2.90032853e-06, -1.27422302e-01, -4.30770374e-03};
 	  } else if (ash_type == "river_basin"){
@@ -984,7 +985,7 @@ namespace Uintah{
 	    xstd = {4.15013986e+02, 1.63118380e-04};
 	    ymean = 7.03899649e-01;
 	    ystd = 2.04027127e-01;
-	    surfT = {4.20659229e-01,-2.36884087e-05}; 
+	    surfT = {4.20659229e-01,-2.36884087e-05};
 	    pokluda={-5.10314026e-02, 1.26264329e+00};
 	    fresnel={9.58939398e-01, -1.94306615e-06, -1.52516593e-01, -5.40993057e-03};
 	  }else if (ash_type == "WhitePellet"){ //Biomass
@@ -993,7 +994,7 @@ namespace Uintah{
 	    xstd = {5.50448260e-01, 1.86569621e+00};
 	    ymean = 9.17399422e-01;
 	    ystd = 8.39992472e-02;
-	    surfT = {8.56973828e-01,-2.17260491e-04}; 
+	    surfT = {8.56973828e-01,-2.17260491e-04};
 	    pokluda={1.17513321e+00, 8.40208406e+00};
 	    fresnel={9.34421576e-01, -1.55312099e-06, -3.28581917e-02, -6.25204166e-03};
 	  } else {
@@ -1006,7 +1007,7 @@ namespace Uintah{
 	std::vector<double> coeff_den;
 	std::vector<double> xstd;
 	std::vector<double> xmean;
-	std::vector<double> pokluda; 
+	std::vector<double> pokluda;
 	std::vector<double> emiss_coeff;
 	std::vector<double> fresnel;
 	std::vector<double> surfT;
@@ -1031,10 +1032,10 @@ namespace Uintah{
 	double rast;
 	double tst;
 	double Sf;
-	    
+
 	void model(double &e, const double &C, double &T, double &Dp, double &tau, std::vector<double> Dp_vec, std::vector<double> vdot) {
 	  e = 0;
-	  vdot_sum = 0; 
+	  vdot_sum = 0;
 	  // for each size compute the effective size and the effective emissivity
 	  double ef=fresnel[0]*std::exp(fresnel[1]*T) + fresnel[2]*std::exp(fresnel[3]*T);
 	  for(int env = 0; env != Nenv; env++) {
@@ -1067,7 +1068,7 @@ namespace Uintah{
 	    // Sintering time at arrival size
 	    tst = tau - (stage - 1)*tmax;
 	    // Obtain the non-dimensionalized time
-	    log10tau = std::log10(tst*surface_tension/visc/rast); 
+	    log10tau = std::log10(tst*surface_tension/visc/rast);
 	    // Obtain the surface area of the sintered particles and the effective size
 	    smin = M_PI*std::pow((std::exp2(1./3.)*Dp_vec[env]),2.);
 	    smax = M_PI*2*(Dp_vec[env]*Dp_vec[env]);
@@ -1076,8 +1077,8 @@ namespace Uintah{
 	    d_eff = std::max(10e-6,std::min(p_volume*NP/Sf,4000e-6));
 	    //std::cout << "surface_tension " << surface_tension << std::endl;
 	    //std::cout << "visc " << visc << std::endl;
-	    //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl; 
-	    //std::cout << "erf: " << (log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])  << " " << std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])) << std::endl; 
+	    //std::cout << "T: " << T << " tau: " << tau << " Dp_vec[env]: " << Dp_vec[env] << " d_eff: " << d_eff << std::endl;
+	    //std::cout << "erf: " << (log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])  << " " << std::erf((log10tau-pokluda[0])/(std::sqrt(2.)*pokluda[1])) << std::endl;
 	    x1 = (std::log(T)-xmean[0])/xstd[0];
 	    x2 = (std::log(d_eff)-xmean[1])/xstd[1];
 	    double xv_e[28]={x2, x2*x2, x2*x2*x2, x2*x2*x2*x2, x2*x2*x2*x2*x2, x1, x1*x2, x1*x2*x2, x1*x2*x2*x2, x1*x2*x2*x2*x2, x1*x2*x2*x2*x2*x2, x1*x1, x1*x1*x2, x1*x1*x2*x2, x1*x1*x2*x2*x2, x1*x1*x2*x2*x2*x2, x1*x1*x1, x1*x1*x1*x2, x1*x1*x1*x2*x2, x1*x1*x1*x2*x2*x2, x1*x1*x1*x1, x1*x1*x1*x1*x2, x1*x1*x1*x1*x2*x2, x1*x1*x1*x1*x1, x1*x1*x1*x1*x1*x2, 1., x1*x1*x1*x1*x1*x1, x2*x2*x2*x2*x2*x2};
@@ -1085,23 +1086,23 @@ namespace Uintah{
 	    for ( int I=0; I < 28; I++ ) {
 	      e_sc_c+=emiss_coeff[I]*xv_e[I];
 	    }
-	    double e_i = e_sc_c*ystd + ymean; 
+	    double e_i = e_sc_c*ystd + ymean;
 	    e_i = (tau>=8640000.) ? C : // if no deposition use wall emissivity. This corresponds to a replacement time-scale of 100 days.
 	      (T>=T_fluid || d_eff >= 3999e-6) ? ef :  // if slagging or big particles, use fresnel emissivity.
 	      std::min(ef,e_i);  // predicted emissivity.
 	    e += (vdot[env]+1e-100)*e_i; // sum in this environments emissivity weighted by flow rate
 	    //std::cout << "env " << env << std::endl;
-	    //std::cout << "e_i: " << e_i << std::endl; 
+	    //std::cout << "e_i: " << e_i << std::endl;
 	    vdot_sum+=vdot[env]+1e-100; // sum in this environments volumetric flow rate
 	  }
 	  e = e/vdot_sum;
 	  //std::cout << "T_fluid: " << T_fluid << std::endl;
 	  //std::cout << "d_eff: " << d_eff << std::endl;
 	  e = std::max(0.0,std::min(1.0,e)); // emissivity safety
-	  //std::cout << "e after clipping: " << e << std::endl; 
+	  //std::cout << "e after clipping: " << e << std::endl;
 	}
 	~pokluda_NP(){}
-      };	
+      };
     };
 
     std::vector<HTModelBase*> _all_ht_models;

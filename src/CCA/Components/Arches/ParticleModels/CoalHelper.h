@@ -42,12 +42,14 @@ namespace Uintah{
         double T_porosity;          ///< Ash porosity temperature
         double visc_pre_exponential_factor; ///< Ash viscosity pre-exponential factor [poise/K] -Urbain viscosity model
         double visc_activation_energy; ///< Ash viscosity pre-exponential factor [poise/K] -Urbain viscosity model
+        double initial_temperature;
 
         std::vector<double> init_ash;
         std::vector<double> init_rawcoal;
         std::vector<double> init_char;
         std::vector<double> sizes;
         std::vector<double> denom;
+        std::vector<double> min_particle_size;
 
         std::string rawcoal_base_name;
         std::string char_base_name;
@@ -67,6 +69,9 @@ namespace Uintah{
 
       };
 
+      double _p_void0;
+      double _v_hiT;
+      double _rho_ash_bulk;
       /** @brief Parse coal information for use later **/
       void parse_for_coal_info( ProblemSpecP& db ){
 
@@ -87,7 +92,22 @@ namespace Uintah{
             db_coal_props->require("char_enthalpy", _coal_db.h_ch0);
             db_coal_props->require("ash_enthalpy", _coal_db.h_a0);
             db_coal_props->getWithDefault( "ksi",_coal_db.ksi,1.0); // Fraction of the heat released by char oxidation that goes to the particle
+            db_coal_props->require("temperature", _coal_db.initial_temperature);
+            db_coal_props->getWithDefault( "rho_ash_bulk",_rho_ash_bulk,2300.0);
+            db_coal_props->getWithDefault( "void_fraction",_p_void0,0.3);
+            if (_p_void0 == 1.) {
+              throw ProblemSetupException("Error: CoalHelper, Given initial conditions for particles p_void0 is 1!! This will give NaN.", __FILE__, __LINE__);
+            }
+            if (_p_void0 <= 0.) {
+              throw ProblemSetupException("Error: CoalHelper, Given initial conditions for particles p_void0 <= 0 !! ", __FILE__, __LINE__);
+            }
 
+            if (db_coal_props->findBlock("FOWYDevol")) {
+              ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
+              db_BT->require("v_hiT", _v_hiT); //
+            } else {
+              throw ProblemSetupException("Error: CoalHelper requires FOWY v_hiT.", __FILE__, __LINE__);
+            }
 
 
 
@@ -124,6 +144,7 @@ namespace Uintah{
 
               for ( unsigned int i = 0; i < _coal_db.sizes.size(); i++ ){
 
+                double p_volume = (pi/6.0) * pow(_coal_db.sizes[i],3); // particle volme [m^3]
                 double mass_dry = (pi/6.0) * pow(_coal_db.sizes[i],3) * _coal_db.rhop_o;     // kg/particle
                 _coal_db.init_ash.push_back(mass_dry  * _coal_db.ash_mf);                    // kg_ash/particle (initial)
                 _coal_db.init_char.push_back(mass_dry * _coal_db.char_mf);                   // kg_char/particle (initial)
@@ -132,6 +153,10 @@ namespace Uintah{
                     _coal_db.init_char[i] +
                     _coal_db.init_rawcoal[i] );
 
+               double rho_org_bulk = _coal_db.init_rawcoal[i] / (p_volume*(1-_p_void0) - _coal_db.init_ash[i]/_rho_ash_bulk) ; // bulk density of char [kg/m^3]
+               double p_voidmin = 1. - (1./p_volume)*(_coal_db.init_rawcoal[i]*(1.-_v_hiT)/rho_org_bulk + _coal_db.init_ash[i]/_rho_ash_bulk); // bulk density of char [kg/m^3]
+               double min_p_diam = std::pow( _coal_db.init_ash[i] * 6 / _rho_ash_bulk / (1- p_voidmin) / pi ,1./3.);
+               _coal_db.min_particle_size.push_back(min_p_diam);
               }
               _coal_db.pi = pi;
 
@@ -164,7 +189,7 @@ namespace Uintah{
                                         0.025*Vol*Vol-90.0*Pres*Hc-462.5*Oc*Hc+4.8*Oc*Vol-17.8*Hc*Vol);
 
               db_coal_props->getWithDefault( "Tar_fraction",_coal_db.Tar_fraction,ytar);  // user can specify their own Tar_fraction
-              if  (ytar < 0.025 || ytar > .975){
+              if  (_coal_db.Tar_fraction < 0.025 || _coal_db.Tar_fraction > .975){
                 throw ProblemSetupException("Something went terribly wrong with the empirical coal tar model.  Please notify David Lignell immediately at 801-422-1772.", __FILE__, __LINE__);
               }
 

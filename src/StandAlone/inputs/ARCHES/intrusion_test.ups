@@ -17,6 +17,7 @@
   <DataArchiver>
     <filebase>intrusion_test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="alpha_geom"/>
     <save label="uVelocitySPBC"/>
     <save label="uvelRhoHat"/>
     <save label="vVelocitySPBC"/>
@@ -52,6 +53,9 @@
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType label="alpha_geom" var="Dirichlet">
+          <value>.96</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -184,6 +188,9 @@
             </scalars>
           </intrusion>
           <intrusion label="the blower">
+            <area_model>
+              <physical_area>5</physical_area>
+            </area_model>
             <geom_object>
               <box>
                 <min>[1.5,-1,1]</min>
@@ -200,6 +207,17 @@
               </scalar>
             </scalars>
             <constant_temperature T="600"/>
+          </intrusion>
+          <intrusion label="dumb block">
+            <area_model> 
+              <alpha_g>.89</alpha_g>
+            </area_model>
+            <geom_object>
+              <box>
+                <min>[.5,2,1]</min>
+                <max>[1,2.5,2]</max>
+              </box>
+            </geom_object>
           </intrusion>
         </intrusions>
       </BoundaryConditions>
