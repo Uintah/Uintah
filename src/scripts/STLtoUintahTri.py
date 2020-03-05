@@ -54,7 +54,8 @@ class STL2UintahTri(object):
         with open('%s.pts' % filenameprefix,'w') as ser:
             for nid in range(numberOfPoints):
                 pt = (np.array(self.newSurf.GetPoint(nid))+self.offset)*scaleVerticesBy
-                print >>ser,pt[0],' ',pt[1],' ',pt[2]
+                #print >>ser,pt[0],' ',pt[1],' ',pt[2]
+                ser.write(np.str(pt[0])+' '+np.str(pt[1])+' '+np.str(pt[2])+'\n')
         
         with open('%s.tri' % filenameprefix,'w') as ser:
             for eid in range(numberOfCells):
@@ -66,10 +67,11 @@ class STL2UintahTri(object):
                     p1 = points.GetId(0)
                     p2 = points.GetId(1)
                     p3 = points.GetId(2)
-                    print >>ser, p1,' ',p2,' ',p3
-        print 'Number of vertices : ',numberOfPoints
-        print 'Number of Faces    : ',numberOfCells
-        print "Bounds ",(self.getBounds()+self.offset)*scaleVerticesBy
+                    #print >>ser, p1,' ',p2,' ',p3
+                    ser.write(np.str(p1)+' '+np.str(p2)+' '+np.str(p3)+'\n')
+        print('Number of vertices : ',numberOfPoints)
+        print('Number of Faces    : ',numberOfCells)
+        print("Bounds ",(self.getBounds()+self.offset)*scaleVerticesBy)
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -82,12 +84,12 @@ if __name__ == '__main__':
     task = STL2UintahTri(args['stlfile'])
     if args['zerolower']:
         bounds = task.getBounds()
-        print 'Vertex Bounds prior to resetting the lower bounds to 0,0,0 :',bounds
+        print('Vertex Bounds prior to resetting the lower bounds to 0,0,0 :',bounds)
         offset = np.array(-bounds[0])
         task.setOffset(offset)
     scale = 1.0
     if not args['scale'] is None:
         scale = float(args['scale'])
     task.outputTriFiles(args['uintah'],scale)
-    print 'Completed'
+    print('Completed')
         
