@@ -171,7 +171,7 @@ public:
   //! Notifies (before calling run) the SimulationController
   //! that this is simulation is a restart.
   void doRestart( const std::string & restartFromDir
-                ,       int           index
+                ,       int           timeStep
                 ,       bool          fromScratch
                 ,       bool          removeOldDir
                 );

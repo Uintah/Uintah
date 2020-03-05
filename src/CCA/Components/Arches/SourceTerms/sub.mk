@@ -33,7 +33,7 @@ SRCS += \
          $(SRCDIR)/CoalGasMomentum.cc          \
          $(SRCDIR)/CoalGasOxi.cc               \
          $(SRCDIR)/CoalGasOxiMom.cc            \
-         $(SRCDIR)/ConductiveHT.cc             \
+         $(SRCDIR)/HTConvection.cc             \
          $(SRCDIR)/ZZNoxSolid.cc               \
          $(SRCDIR)/psNox.cc                    \
          $(SRCDIR)/DORadiation.cc              \

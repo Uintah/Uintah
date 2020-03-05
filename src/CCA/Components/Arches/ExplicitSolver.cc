@@ -439,7 +439,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   // the divQ and RMCRT acting as a radiometer) we need to look for it separately
   // here and put it into the src factory. This avoids a potential bug where
   // one radiation model may cancel out settings with the other. It also preserves how the code
-  // actually operates without a rewrite of the model.
+  // actually operates without a rewrite of the model.  
   ProblemSpecP db_radiometer = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Radiometer");
   if ( db_radiometer != nullptr ){
     SourceTermFactory& src_factory = SourceTermFactory::self();
@@ -1283,6 +1283,7 @@ ExplicitSolver::sched_initialize( const LevelP& level,
     // initialize hypre variables
     d_pressSolver->scheduleInitialize( level, sched, matls);
 
+
     //------------------ New Task Interface (start) ------------------------------------------------
 
     typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
@@ -1804,9 +1805,6 @@ int ExplicitSolver::sched_nonlinearSolve(const LevelP& level,
     eqn->sched_initializeVariables(level, sched);
 
   }
-
-  //-------- carry forward the geometry modifier variable --------
-  d_boundaryCondition->sched_computeAlphaG( sched, level, matls, true );
 
   //copy the temperature into a radiation temperature variable:
   d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false, true );

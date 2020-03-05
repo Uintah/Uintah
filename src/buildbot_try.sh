@@ -161,7 +161,7 @@ buildbot --verbose try \
          --master=uintah-build.chpc.utah.edu:8031 \
          --username=buildbot_try \
          --passwd=try_buildbot \
-         --vc=git \
+         --vc=svn \
          --topdir=. \
          --who=`whoami` \
          $PATCH $BUILDERS

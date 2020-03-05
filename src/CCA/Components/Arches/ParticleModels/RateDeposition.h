@@ -94,11 +94,6 @@ namespace Uintah{
     std::string _RateDepositionX_base_name;
     std::string _RateDepositionY_base_name;
     std::string _RateDepositionZ_base_name;
-
-    std::string _RateImpactX_base_name;
-    std::string _RateImpactY_base_name;
-    std::string _RateImpactZ_base_name;
-
     std::string _diameter_base_name;
 
     std::string _ProbSurfaceX_name;
