@@ -189,8 +189,9 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<K
         for(int j=0;j<s.y();j++){
           T* ddd=dd;
           T* sss=ss;
-          for(int k=0;k<s.x();k++)
+          for(int k=0;k<s.x();k++){
             ddd[k]=sss[k];
+          }
           dd+=d_size.x();
           ss+=from->d_size.x();
         }

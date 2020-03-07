@@ -71,7 +71,7 @@ namespace Uintah {
 
 namespace {
 
-  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for the UnifiedScheduler"  , false );
+  Dout g_dbg(         "Unified_DBG"        , "UnifiedScheduler", "general debugging info for the UnifiedScheduler"      , false );
   Dout g_queuelength( "Unified_QueueLength", "UnifiedScheduler", "report the task queue length for the UnifiedScheduler", false );
 
   Dout g_thread_stats     ( "Unified_ThreadStats",    "UnifiedScheduler", "Aggregated MPI thread stats for the UnifiedScheduler", false );
@@ -89,10 +89,12 @@ namespace {
 extern Uintah::MasterLock cerrLock;
 
 namespace Uintah {
+
   DebugStream gpu_stats(              "GPUStats"             , "UnifiedScheduler", "detailed GPU statistics on H2D and D2H data movement"                  , false );
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
   Dout gpu_ids( "GPUIDs", "UnifiedScheduler", "detailed information to identify GPU(s) used when using multiple per node"                                  , false );
+
 }
 
 namespace {
@@ -483,7 +485,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
     m_thread_info.insert( Affinity  , std::string("Affinity")  , "CPU"     );
     m_thread_info.insert( NumTasks  , std::string("NumTasks")  , "tasks"   );
     m_thread_info.insert( NumPatches, std::string("NumPatches"), "patches" );
-    
+
     m_thread_info.calculateMinimum(true);
     m_thread_info.calculateStdDev (true);
   }
@@ -501,7 +503,7 @@ UnifiedScheduler::createSubScheduler()
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::runTask( DetailedTask*         dtask
+UnifiedScheduler::runTask( DetailedTask        * dtask
                          , int                   iteration
                          , int                   thread_id /* = 0 */
                          , Task::CallBackEvent   event
@@ -513,8 +515,8 @@ UnifiedScheduler::runTask( DetailedTask*         dtask
 
     if( g_thread_stats || g_thread_indv_stats ) {
       m_thread_info[thread_id][NumTasks] += 1;
-      
-      const PatchSubset *patches = dtask->getPatches();      
+
+      const PatchSubset *patches = dtask->getPatches();
       if (patches)
         m_thread_info[thread_id][NumPatches] += patches->size();
     }
@@ -2753,7 +2755,6 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                         dw->getGridVar(*gridVar, label, matlIndx, patch, ghosttype, numGhostCells);
                         host_ptr = gridVar->getBasePointer();
                         it->second.m_tempVarToReclaim = gridVar;  //This will be held onto so it persists, and then cleaned up after the device-to-host copy
-
                       }
                     }
                     break;
@@ -2833,7 +2834,6 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
                   dtask->getVarsBeingCopiedByTask().getMap().insert(std::pair<GpuUtilities::LabelPatchMatlLevelDw,
                                                                 DeviceGridVariableInfo>(it->first, it->second));
-
                 }
               }
             } else if (it->second.m_dest == GpuUtilities::anotherDeviceSameMpiRank || it->second.m_dest == GpuUtilities::anotherMpiRank) {
@@ -3101,7 +3101,7 @@ bool
 UnifiedScheduler::allHostVarsProcessingReady( DetailedTask * dtask )
 {
 
-  const Task* task = dtask->getTask();
+  const Task * task = dtask->getTask();
 
   dtask->clearPreparationCollections();
 
@@ -3812,20 +3812,22 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
-    //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
-    //There currently exists a race condition.  Suppose cellType is in both host and GPU 
-    //memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
-    //know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
-    //Thread 2 - Task A requests a requires var for cellType for the host newDW, and get sit.  .
-    //Thread 3 - Task B invokes the initiateD2H check, thinks there is no host isntance of cellType, 
-   //             so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
-    //           deletes the old entry and creates a new entry.
-    //Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
-    //A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
+
+    // TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
+    // There currently exists a race condition.  Suppose cellType is in both host and GPU 
+    // memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
+    // know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
+    // Thread 2 - Task A requests a requires var for cellType for the host newDW, and gets it.
+    // Thread 3 - Task B invokes the initiateD2H check, thinks there is no host instance of cellType,
+    //            so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
+    //            deletes the old entry and creates a new entry.
+    // Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
+    // A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
 
     //if (varName != "divQ" && varName != "RMCRTboundFlux" && varName != "radiationVolq" ) {
     //  continue;
     //}
+
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
       if (!gpudw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID) &&
@@ -4411,7 +4413,7 @@ UnifiedScheduler::findIntAndExtGpuDependencies( DetailedTask * dtask
 
   dtask->clearPreparationCollections();
 
-  // Prepare internal dependencies.  Only makes sense if we have GPUs that we are using.
+  // Prepare internal dependencies.  Only makes sense if we have multiple GPUs that we are using.
   if (Uintah::Parallel::usingDevice()) {
 
     // Prepare external dependencies.  The only thing that needs to be

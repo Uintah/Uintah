@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 #ifndef UINTAH_HOMEBREW_ListOfCellsIterator_H
 #define UINTAH_HOMEBREW_ListOfCellsIterator_H
 
@@ -37,7 +36,6 @@
 
 namespace Uintah {
 
-  
   /**************************************
 
     CLASS
@@ -72,14 +70,15 @@ namespace Uintah {
 
     public:
 
+    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1)
+    {
+      listOfCells_[mySize] = IntVector(INT_MAX,INT_MAX,INT_MAX);
+    }
 
-    ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_(size+1) { listOfCells_[mySize]=IntVector(INT_MAX,INT_MAX,INT_MAX);}
-
-    ListOfCellsIterator(const ListOfCellsIterator &copy) :
-                                                           mySize(copy.mySize),
-                                                           index_(0),
-                                                            listOfCells_(copy.listOfCells_)
-                                                                   {   reset(); }
+    ListOfCellsIterator(const ListOfCellsIterator &copy) : mySize(copy.mySize), index_(0), listOfCells_(copy.listOfCells_)
+    {
+      reset();
+    }
 
   //ListOfCellsIterator(const Iterator &copy){
 
@@ -95,42 +94,42 @@ namespace Uintah {
     /**
      * prefix operator to move the iterator forward
      */
-    ListOfCellsIterator& operator++() {index_++; return *this;} 
+    ListOfCellsIterator& operator++() { index_++; return *this; }
 
     /**
      * postfix operator to move the iterator forward
      * does not return the iterator because of performance issues
      */
-    void operator++(int) {index_++;} 
+    void operator++( int ) { index_++; }
 
     /**
      * returns true if the iterator is done
      */    
-    bool done() const { return index_==mySize; }
+    bool done() const { return index_ == mySize; }
 
     /**
      * returns the IntVector that the current iterator is pointing at
      */
     IntVector operator*() const { ASSERT(index_<mySize); return listOfCells_[index_]; }
 
-      /**
-       * Assignment operator - this is expensive as we have to allocate new memory
-       */
-      inline Uintah::ListOfCellsIterator& operator=( Uintah::Iterator& copy ) 
-      {
-        //delete old iterator
+    /**
+     * Assignment operator - this is expensive as we have to allocate new memory
+     */
+    inline Uintah::ListOfCellsIterator& operator=( Uintah::Iterator& copy )
+    {
+      // delete old iterator
+      int i = 0;
 
-       int i=0; 
-       for (copy.reset(); !copy.done(); copy++) { // copy iterator into portable container
-          
-         listOfCells_[i]=(*copy);
-         i++;
-       }
-       mySize=i;
-
-
-        return *this;
+      // copy iterator into portable container
+      for ( copy.reset(); !copy.done(); copy++ ) {
+        listOfCells_[i] = (*copy);
+        i++;
       }
+
+      mySize=i;
+      return *this;
+    }
+
     /**
      * Return the first element of the iterator
      */
@@ -144,34 +143,30 @@ namespace Uintah {
     /**
      * Return the number of cells in the iterator
      */
-    inline unsigned int size() const {return mySize;};
+    inline unsigned int size() const { return mySize; }
 
     /**
      * adds a cell to the list of cells
      */
-    inline void add(const IntVector& c) 
+    inline void add( const IntVector& c )
     {
-      //place at back of list
+      // place at back of list
       listOfCells_[mySize]=c;
-      mySize++; 
-      //readd sentinal to list
+      mySize++;
+
+      // read sentinal to list
       listOfCells_[mySize]=IntVector(INT_MAX,INT_MAX,INT_MAX);
     }
-
 
     /**
      * resets the iterator
      */
-    inline void reset()
-    {
-      index_=0;
-    }
+    inline void reset() { index_ = 0; }
 
-    inline std::vector<IntVector>& get_ref_to_iterator(){
-      return listOfCells_;
-    }
+    inline std::vector<IntVector>& get_ref_to_iterator(){ return listOfCells_; }
 
     protected:
+
     /**
      * Returns a pointer to a deep copy of the virtual class
      * this should be used only by the Iterator class
@@ -181,7 +176,7 @@ namespace Uintah {
       return scinew ListOfCellsIterator(*this);
 
     };
-    
+
     virtual std::ostream& put(std::ostream& out) const
     {
       out << *this;
@@ -194,24 +189,22 @@ namespace Uintah {
       return out;
     }
 
-//#if defined( UINTAH_ENABLE_KOKKOS )
-    //Kokkos::View<IntVector*> listOfCells_;
-//#else
-//#endif
     unsigned int mySize{0};
-    //index into the iterator
-    unsigned int index_{0};
+    unsigned int index_{0}; // index into the iterator
+
     std::vector<IntVector> listOfCells_{};
 
     private:
-     // This old constructor has a static size for portability reasons.  It should be avoided since .
-  ListOfCellsIterator() : mySize(0), index_(0), listOfCells_(10000) { listOfCells_[mySize]=IntVector(INT_MAX,INT_MAX,INT_MAX);
-            std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
-         }
 
-    }; // end class ListOfCellsIterator
+    // This old constructor has a static size for portability reasons. It should be avoided since.
+    ListOfCellsIterator() : mySize(0), index_(0), listOfCells_(10000)
+    {
+      listOfCells_[mySize] = IntVector(INT_MAX,INT_MAX,INT_MAX);
+      std::cout<< "Unsupported constructor, use at your own risk, in Core/Grid/Variables/ListOfCellsIterator.h \n";
+    }
 
+  }; // end class ListOfCellsIterator
 
-} // End namespace Uintah
-  
+} // end namespace Uintah
+
 #endif

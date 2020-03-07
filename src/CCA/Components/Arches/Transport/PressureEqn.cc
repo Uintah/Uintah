@@ -229,6 +229,7 @@ PressureEqn::timestep_init( const Patch* patch, ATIM* tsk_info ){
   constCCVariable<Stencil7>& old_Apress = tsk_info->get_field<constCCVariable<Stencil7> >("A_press");
   CCVariable<double>& x = tsk_info->get_field<CCVariable<double> >(m_pressure_name);
   CCVariable<double>& guess = tsk_info->get_field<CCVariable<double> >("guess_press");
+
   Apress.copyData( old_Apress );
   x.initialize(0.0);
   guess.initialize(0.0);
