@@ -105,7 +105,9 @@ public:
   /** @brief Input file interface **/
   virtual void problemSetup( ProblemSpecP& db ) = 0;
 
-  //------begin portability support members--------------------------------------------------
+  //--------------------------------------------------------------------------------------------------
+  // Begin Portability Support Members
+  //--------------------------------------------------------------------------------------------------
 
   /** @brief Tells TaskFactoryBase which execution space this Arches task was assigned to.**/
   virtual TaskAssignedExecutionSpace loadTaskComputeBCsFunctionPointers()   = 0;
@@ -303,8 +305,11 @@ private:
   std::map<std::type_index, archesFunctionPtr<UintahSpaces::CPU, UintahSpaces::HostSpace> > timestepInitFunctionPtrs;
   std::map<std::type_index, archesFunctionPtr<UintahSpaces::CPU, UintahSpaces::HostSpace> > restartInitFunctionPtrs;
 
+  //--------------------------------------------------------------------------------------------------
+  // End Portability Support Members
+  //--------------------------------------------------------------------------------------------------
+
 public:
-  //------end portability support members----------------------------------------------------
 
   /** @brief Create local labels for the task **/
   virtual void create_local_labels() = 0;

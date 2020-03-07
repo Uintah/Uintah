@@ -228,19 +228,23 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    // Prepare the ranges for both boundary conditions and main loop
     double residual = 0;
+
+    // Prepare the ranges for both boundary conditions and main loop
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
 
     Uintah::BlockRange rangeBoundary( l, h);
 
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                  patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                  patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                  patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                  patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+    l += IntVector( patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1
+                  );
+
+    h -= IntVector( patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1
+                  );
 
     Uintah::BlockRange range( l, h );
     auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
@@ -253,16 +257,17 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
 
     // Perform the main loop
     Uintah::parallel_reduce_sum(execObj, range, KOKKOS_LAMBDA (int i, int j, int k, double& residual){
-      newphi(i, j, k) = (1. / 6)
-          * (phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
-              phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1));
-//        printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-//            phi.m_view.data(), &(phi(i,j,k)),
-//            phi(i,j,k),
-//            phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-//            phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-//            newphi(i,j,k));
-//
+      newphi(i, j, k) = ( 1. / 6 ) *
+                        ( phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
+                          phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) );
+
+//      printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+//             phi.m_view.data(), &(phi(i,j,k)),
+//             phi(i,j,k),
+//             phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+//             phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+//             newphi(i,j,k));
+
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
     }, residual);

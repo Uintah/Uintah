@@ -552,7 +552,9 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
+
     const int imax=1; 
+
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
       double scalar_init_value = m_init_value[ieqn];

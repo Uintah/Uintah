@@ -32,33 +32,33 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/Examples
 
 SRCS += \
-        $(SRCDIR)/AMRHeat.cpp               \
-        $(SRCDIR)/AMRWave.cc                \
-        $(SRCDIR)/Benchmark.cc              \
-        $(SRCDIR)/Burger.cc                 \
-        $(SRCDIR)/DOSweep.cc                \
-        $(SRCDIR)/ExamplesLabel.cc          \
-        $(SRCDIR)/Interpolator.cc           \
-        $(SRCDIR)/Heat.cpp                  \
-        $(SRCDIR)/ParticleTest1.cc          \
-        $(SRCDIR)/Poisson1.cc               \
-        $(SRCDIR)/Poisson2.cc               \
-        $(SRCDIR)/Poisson3.cc               \
-        $(SRCDIR)/Poisson4.cc               \
-        $(SRCDIR)/PortableDependencyTest.cc \
+        $(SRCDIR)/AMRHeat.cpp      \
+        $(SRCDIR)/AMRWave.cc       \
+        $(SRCDIR)/Benchmark.cc     \
+        $(SRCDIR)/Burger.cc        \
+        $(SRCDIR)/DOSweep.cc       \
+        $(SRCDIR)/ExamplesLabel.cc \
+        $(SRCDIR)/Interpolator.cc  \
+        $(SRCDIR)/Heat.cpp         \
+        $(SRCDIR)/ParticleTest1.cc \
+        $(SRCDIR)/Poisson1.cc      \
+        $(SRCDIR)/Poisson2.cc      \
+        $(SRCDIR)/Poisson3.cc      \
+        $(SRCDIR)/Poisson4.cc      \
+        $(SRCDIR)/PortableDependencyTest.cc  \
         $(SRCDIR)/PortableDependencyTest1.cc \
-        $(SRCDIR)/GPUResizeTest1.cc					\
-        $(SRCDIR)/RegionDB.cc               \
-        $(SRCDIR)/RegridderTest.cc          \
-        $(SRCDIR)/SolverTest1.cc            \
+        $(SRCDIR)/GPUResizeTest1.cc          \
+        $(SRCDIR)/RegionDB.cc      \
+        $(SRCDIR)/RegridderTest.cc \
+        $(SRCDIR)/SolverTest1.cc   \
         $(SRCDIR)/Wave.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/SolverTest2.cc     
+  SRCS += $(SRCDIR)/SolverTest2.cc
 endif
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
-  SRCS += $(SRCDIR)/RMCRT_Test.cc       
+  SRCS += $(SRCDIR)/RMCRT_Test.cc
 endif
 
 ifneq ($(HAVE_KOKKOS),yes)
@@ -66,7 +66,7 @@ ifneq ($(HAVE_KOKKOS),yes)
     SRCS += $(SRCDIR)/UnifiedSchedulerTest.cc
     SRCS += $(SRCDIR)/UnifiedSchedulerTestKernel.cu
     DLINK_FILES += CCA/Components/Examples/UnifiedSchedulerTestKernel.o
-  endif          
+  endif
 endif
 
 PSELIBS := \

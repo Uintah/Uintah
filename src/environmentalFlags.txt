@@ -91,7 +91,6 @@ GPUIDs            SCI_DEBUG     Reports detailed information to identify GPU(s) 
 
 
 
-
 ICE:
 __________________________________
 ICE_DOING_COUT    SCI_DEBUG     Outputs the name of each task as it's being scheduled and executed.

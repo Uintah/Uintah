@@ -862,6 +862,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   string taskname = "";
 
   Task::WhichDW NotUsed = Task::None;
+
 #ifdef HAVE_CUDA
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";

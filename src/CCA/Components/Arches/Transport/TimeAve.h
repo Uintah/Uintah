@@ -408,31 +408,30 @@ private:
   template <typename ExecSpace, typename MemSpace>
   void TimeAve<T >::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-  ArchesCore::VariableHelper<T> helper;
-  typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
+    const BndMapT& bc_info = m_bcHelper->get_boundary_information();
+    ArchesCore::VariableHelper<T> helper;
+    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
+    auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
+    for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
+      auto phi = tsk_info->get_field<CT, const double, MemSpace>(ieqn->first);
+      auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>((ieqn->second).unscaled_var);
 
-  for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
-    auto phi = tsk_info->get_field<CT, const double, MemSpace>(ieqn->first);
-    auto phi_unscaled = tsk_info->get_field<T, double, MemSpace>((ieqn->second).unscaled_var);
+      for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+        const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+        //Get the iterator
 
-    for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-      const bool on_this_patch = i_bc->second.has_patch(patch->getID());
-      //Get the iterator
+        if ( on_this_patch ){
+          Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-      if ( on_this_patch ){
-        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+          const double scalConstant=(ieqn->second).constant;
 
-        const double scalConstant=(ieqn->second).constant;
-
-        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
-          phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
-        });
+          parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+            phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
+          });
         }
+      }
     }
-  }
   }
 }
 #endif

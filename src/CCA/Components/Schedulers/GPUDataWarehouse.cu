@@ -523,15 +523,15 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
 
   varLock->lock();
 
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+
   // If it's a normal non-staging variable, check if doesn't exist.  If so, add an "unallocated" entry.
   // If it's a staging variable, then still check if the non-staging part exists.  A staging must exist within a non-staging variable.
   // A scenario where this can get a staging variable without a non-staging variable is receiving data from neighbor nodes.
   // For example, suppose node A has patch 0, and node B has patch 1, and A's patch 0 needs ghost cells from B's patch 1.  Node A will
   // receive those ghost cells, but they will be marked as belonging to patch 1.  Since A doesn't have the regular non-staging var
   // for patch 1, we make an empty placeholder for patch 1 so A can have a staging var to hold the ghost cell for patch 1.
-
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
 
   if ( it == varPointers->end()) {
     // Do not place size information.  The Data Warehouse should not declare its current size until after the allocation is complete.
@@ -2116,40 +2116,38 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 
          int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
-         //if (threadID == 0) {
-//            printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) at index %d pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
-//                d_varDB[i].ghostItem.sharedLowCoordinates.x,
-//                d_varDB[i].ghostItem.sharedLowCoordinates.y,
-//                d_varDB[i].ghostItem.sharedLowCoordinates.z,
-//                sourceOffset,
-//                destOffset,
-//                d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-//                d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-//                i,
-//                d_varDB[i].var_ptr,
-//                d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
-//                d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
-
-          //}
+//         if (threadID == 0) {
+//           printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) at index %d pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
+//                  d_varDB[i].ghostItem.sharedLowCoordinates.x,
+//                  d_varDB[i].ghostItem.sharedLowCoordinates.y,
+//                  d_varDB[i].ghostItem.sharedLowCoordinates.z,
+//                  sourceOffset,
+//                  destOffset,
+//                  d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+//                  d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+//                  i,
+//                  d_varDB[i].var_ptr,
+//                  d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
+//                  d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
+//         }
 
          //copy all 8 bytes of a double in one shot
          if (d_varDB[i].sizeOfDataType == sizeof(double)) {
            *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
 
            //Note: Every now and then I've seen this printf statement get confused, a line will print with the wrong variables/offset variables...
-//             printf("Thread %d - %s At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
-//                 threadID, d_varDB[destIndex].label, x, y, z, x_source_real, y_source_real, z_source_real,
-//                 d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
-//                 d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
-//                 x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
-//                 y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
-//                 z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
-//                 d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-//                 d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
-//                 d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-//                 sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
-//                 destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
-
+//           printf("Thread %d - %s At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
+//                  threadID, d_varDB[destIndex].label, x, y, z, x_source_real, y_source_real, z_source_real,
+//                  d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
+//                  d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
+//                  x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
+//                  y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
+//                  z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
+//                  d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+//                  d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
+//                  d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+//                  sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
+//                  destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
          }
          //or copy all 4 bytes of an int in one shot.
          else if (d_varDB[i].sizeOfDataType == sizeof(int)) {
@@ -3630,9 +3628,8 @@ HOST_DEVICE void
 GPUDataWarehouse::printError(const char* msg, const char* methodName, char const* label, const int patchID, int8_t matlIndx, int8_t levelIndx )
 {
 #ifdef __CUDA_ARCH__
-
   __syncthreads();
-  
+
   if ( isThread0() ) {
     if (label[0] == '\0') {
       printf("  \nERROR GPU-side: GPUDataWarehouse::%s() - %s\n", methodName, msg );
@@ -3646,7 +3643,7 @@ GPUDataWarehouse::printError(const char* msg, const char* methodName, char const
     //for ( int i = 0; i < d_numLevelItems; i++ ) {
     //  printf("   Available levelDB labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_levelDB[i].matlIndx, d_levelDB[i].levelIndx);
     // }
-    
+
     __syncthreads();
 
     printThread();
@@ -3675,9 +3672,8 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int8_t levelIndx, int8_t matlIndx)
 {
 #ifdef __CUDA_ARCH__
-
   __syncthreads();
-  
+
   if ( isThread0() ) {
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, matlIndx);
     //Should this just loop through the variable database and print out only items with a
@@ -3705,9 +3701,8 @@ HOST_DEVICE void
 GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t levelIndx, const int patchID, int8_t matlIndx)
 {
 #ifdef __CUDA_ARCH__
-
   __syncthreads();
-  
+
   if ( isThread0() ) {
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, patchID, matlIndx);
 
@@ -3719,7 +3714,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
         printf("   Available varDB labels(%i of %i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", i, d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx, d_varDB[i].domainID, d_varDB[i].levelIndx);
       }
     }
-    
+
     __syncthreads();
 
     printThread();
@@ -3734,7 +3729,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
   //__________________________________
   //  CPU code
   printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable in DW %s\n", msg, label, levelIndx, patchID, matlIndx, _internalName);
-  
+
   if ( d_numVarDBItems == 0 ) {
     printf("\tEmpty GPU-DW\n");
   }
@@ -3743,7 +3738,6 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
       printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx, d_varDB[i].domainID, d_varDB[i].levelIndx);
     }
   }
-  
 #endif
 }
 

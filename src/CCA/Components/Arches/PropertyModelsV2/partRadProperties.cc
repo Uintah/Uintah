@@ -487,7 +487,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       const double geomFactor=M_PI/4.0*_Qabs;
       
       Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k) {
-        double particle_absorption=geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*portable_absorption_modifier;
+        double particle_absorption = geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*portable_absorption_modifier;
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp[0](i,j,k)     += abskpQuad[ix](i,j,k);
       });
@@ -496,8 +496,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     //
     }else if(_particle_calculator_type == "constantCIF" &&  _p_planck_abskp ){
 
-      Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
-        double particle_absorption=_part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*portable_absorption_modifier;
+      Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
+        double particle_absorption = _part_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*portable_absorption_modifier;
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp[0](i,j,k)     += abskpQuad[ix](i,j,k);
       });
@@ -505,20 +505,20 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       //______________
       //
       if (_scatteringOn){
-        Uintah::parallel_for(execObj, range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k) {
           //double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
           // New line
-          double particle_scattering=_part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
+          double particle_scattering = _part_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt[0](i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm[0](i,j,k)   =_constAsymmFact;
+          asymm[0](i,j,k)   = _constAsymmFact;
         });
       }
     //__________________________________
     //
     }else if(_particle_calculator_type == "constantCIF" &&  _p_ros_abskp ){
 
-      Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
-        double particle_absorption=_part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*portable_absorption_modifier;
+      Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
+        double particle_absorption = _part_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*portable_absorption_modifier;
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
         abskp[0](i,j,k)     += abskpQuad[ix](i,j,k);
       });
@@ -526,12 +526,12 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       //______________
       //
       if (_scatteringOn){
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
           //double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k);
           // New line
-          double particle_scattering=_part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
+          double particle_scattering = _part_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k))*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt[0](i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm[0](i,j,k)   =_constAsymmFact;
+          asymm[0](i,j,k)   = _constAsymmFact;
         });
       }
 #endif
@@ -559,12 +559,12 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       //______________
       //
       if (_scatteringOn){
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
           //double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k);
           // New line
-          double particle_scattering=abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k)*_scattering_modifier;
+          double particle_scattering = abs_scat_coeff[sca_coef](i,j,k)*weightQuad[ix](i,j,k)*_scattering_modifier;
           scatkt[0](i,j,k) += (vol_fraction(i,j,k) > 1e-16) ? particle_scattering : 0.0;
-          asymm[0](i,j,k)   =_constAsymmFact;
+          asymm[0](i,j,k)   = _constAsymmFact;
         });
       }
     } // End calc_type if
@@ -578,10 +578,10 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
         auto abskpQuad = tsk_info->get_field<CCVariable<double>, double, MemSpace>(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
 
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
             double total_mass          = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
             double complexReal         = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
-            double particle_absorption =_3Dpart_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*portable_absorption_modifier;
+            double particle_absorption = _3Dpart_radprops->planck_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*portable_absorption_modifier;
             abskpQuad(i,j,k)           = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
             abskp[0](i,j,k)           += abskpQuad(i,j,k);
         });
@@ -590,17 +590,17 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       //______________
       //
       if (_scatteringOn){
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
           std::vector<double> total_mass(_nQn_part);
           std::vector<double> scatQuad(_nQn_part);
 
           for (int ix=0; ix<_nQn_part; ix++){
             total_mass[ix]     = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
-            double complexReal =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
+            double complexReal = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
             //scatQuad[ix]       =_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
             // New line
-            scatQuad[ix]=_3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
-            scatkt[0](i,j,k)      = (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
+            scatQuad[ix]     = _3Dpart_radprops->planck_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
+            scatkt[0](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
           }
 
           for (int ix=0; ix<_nQn_part; ix++){
@@ -615,10 +615,10 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
         CCVariable<double>& abskpQuad = tsk_info->get_field<CCVariable<double> >(_abskp_name_vector[ix]);  // ConstCC and CC behave differently
         abskpQuad.initialize(0.0);
 
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
           double total_mass          = RC_mass[ix](i,j,k)+Char_mass[ix](i,j,k)+_ash_mass_v[ix];
-          double complexReal         =  (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
-          double particle_absorption =_3Dpart_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*portable_absorption_modifier;
+          double complexReal         = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass;
+          double particle_absorption = _3Dpart_radprops->ross_abs_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*portable_absorption_modifier;
           abskpQuad(i,j,k)           = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;
           abskp[0](i,j,k)           += abskpQuad(i,j,k);
          });
@@ -627,7 +627,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
       //______________
       //
       if (_scatteringOn){
-        Uintah::parallel_for( execObj,range,  KOKKOS_LAMBDA(int i, int j, int k) {
+        Uintah::parallel_for( execObj,range, KOKKOS_LAMBDA(int i, int j, int k) {
           std::vector<double> total_mass(_nQn_part);
           std::vector<double> scatQuad(_nQn_part);
 
@@ -636,8 +636,8 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
             double complexReal = (Char_mass[ix](i,j,k)*_charReal+RC_mass[ix](i,j,k)*_rawCoalReal+_ash_mass_v[ix]*_ashReal)/total_mass[ix];
             //scatQuad[ix]        = _3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k);
             // New line
-            scatQuad[ix]=_3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
-            scatkt[0](i,j,k)   = (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
+            scatQuad[ix]     = _3Dpart_radprops->ross_sca_coeff( sizeQuad[ix](i,j,k)/2.0, temperatureQuad[ix](i,j,k),complexReal)*weightQuad[ix](i,j,k)*_scattering_modifier;
+            scatkt[0](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? scatkt[0](i,j,k)+scatQuad[ix] : 0.0;
           }
 
           for (int ix=0; ix<_nQn_part; ix++){

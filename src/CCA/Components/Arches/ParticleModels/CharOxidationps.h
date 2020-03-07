@@ -612,8 +612,8 @@ void CharOxidationps<T>::initialize( const Patch                                
    T& reaction_rate = tsk_info->get_field< T >( m_reaction_rate_names[r] );
    reaction_rate.initialize( 0.0 );
   }
-
 }
+
 //--------------------------------------------------------------------------------------------------
 template<typename T> void
 CharOxidationps<T>::register_timestep_init(       std::vector<ArchesFieldContainer::VariableInformation> & variable_registry
@@ -785,7 +785,6 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   auto char_birth    = tsk_info->get_empty_field<CT, const double, MemSpace>();
   auto length_birth  = tsk_info->get_empty_field<CT, const double, MemSpace>();
 
-
   if (m_add_rawcoal_birth) {
     rawcoal_birth = tsk_info->get_field<CT, const double, MemSpace>(m_rawcoal_birth_qn_name);
   }
@@ -853,6 +852,8 @@ CharOxidationps<T>::eval( const Patch                                     * patc
 
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
+    // initialize all temporary variables which are use in the cell loop.
+    //if ( weight(i,j,k) / m_weight_scaling_constant[l] < _weight_small ) {
     if ( volFraction(i,j,k) > 0 ) {
 
       double D_oxid_mix_l     [ reactions_count ];
@@ -1183,10 +1184,8 @@ CharOxidationps<T>::eval( const Patch                                     * patc
       particle_Size_rate(i,j,k) = fmax( max_Size_rate, Size_rate ); // [m/s] -- these source terms are negative.
       surface_rate(i,j,k)       = char_mass_rate / p_area;               // in [kg/(s # m^2)]
 
-    } // end if ( volFraction(i,j,k) > 0 ) {
-  });
-
+    } // end if (volFraction(i,j,k) > 0 ) else
+  }); // end Uintah::parallel_for
 }
-//--------------------------------------------------------------------------------------------------
-} // End namespace Uintah
+}
 #endif

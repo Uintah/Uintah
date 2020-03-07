@@ -507,10 +507,10 @@ UnifiedScheduler::createSubScheduler()
 //______________________________________________________________________
 //
 void
-UnifiedScheduler::runTask( DetailedTask*         dtask
-                         , int                   iteration
-                         , int                   thread_id /* = 0 */
-                         , CallBackEvent         event
+UnifiedScheduler::runTask( DetailedTask  * dtask
+                         , int             iteration
+                         , int             thread_id /* = 0 */
+                         , CallBackEvent   event
                          )
 {
   // end of per-thread wait time - how long has a thread waited before executing another task
@@ -4407,21 +4407,23 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
 
     const std::string varName = dependantVar->m_var->getName();
 
-    bool hack_foundAComputes{false};
-    //TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
-    //There currently exists a race condition.  Suppose cellType is in both host and GPU 
-    //memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
-    //know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
-    //Thread 2 - Task A requests a requires var for cellType for the host newDW, and gets it.
-    //Thread 3 - Task B invokes the initiateD2H check, thinks there is no host instance of cellType,
-   //             so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
-    //           deletes the old entry and creates a new entry.
+    // TODO: Titan production hack.  A clean hack, but should be fixed. Brad P Dec 1 2016
+    // There currently exists a race condition.  Suppose cellType is in both host and GPU 
+    // memory.  Currently the GPU data warehouse knows it is in GPU memory, but it doesn't
+    // know if it's in host memory (the GPU DW doesn't track lifetimes of host DW vars).  
+    // Thread 2 - Task A requests a requires var for cellType for the host newDW, and gets it.
+    // Thread 3 - Task B invokes the initiateD2H check, thinks there is no host instance of cellType,
+    //            so it initiates a D2H, which performs another host allocateAndPut, and the subsequent put
+    //            deletes the old entry and creates a new entry.
     // Race condition is that thread 2's pointer has been cleaned up, while thread 3 has a new one.
     // A temp fix could be to check if all host vars exist in the host dw prior to launching the task.
     // For now, the if statement's job is to ignore a GPU task's *requires* that nay get pulled D2H
     // by subsequent CPU tasks.  For example, RMCRT computes divQ, RMCRTboundFlux, and radiationVolq.
     // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
     // don't need to copy it back D2H"
+
+    bool hack_foundAComputes{false};
+
     // RMCRT hack:
     if ( (varName == "divQ")           ||
          (varName == "RMCRTboundFlux") ||

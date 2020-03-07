@@ -131,7 +131,7 @@ public:
   }
 
   void copyPointer(const Array3& copy) {
-    if(copy.d_window) {
+    if(copy.d_window){
       copy.d_window->addReference();
     }
     if(d_window && d_window->removeReference())

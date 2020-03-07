@@ -92,10 +92,10 @@ template<class T> class Array3Window : public RefCounted {
 
       void copy(const Array3Window<T>*);
       void copy(const Array3Window<T>*, const IntVector& low, const IntVector& high);
-      
-      void initialize(const T&);
 
+      void initialize(const T&);
       void initialize(const T&, const IntVector& s, const IntVector& e);
+
       inline IntVector getLowIndex() const {
          return lowIndex;
       }
@@ -134,15 +134,16 @@ template<class T> class Array3Window : public RefCounted {
       inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
       getKokkosView() const
       {
-        return KokkosView3<U, Kokkos::HostSpace>(  Kokkos::subview(   data->getKokkosData()
-                                 , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
-                                 , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
-                                 , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )
-                              , offset.x()
-                              , offset.y()
-                              , offset.z()
-                              , data
-                            );
+        return KokkosView3<U, Kokkos::HostSpace>( Kokkos::subview( data->getKokkosData()
+                                                                 , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x() )
+                                                                 , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y() )
+                                                                 , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z() )
+                                                                 )
+                                                , offset.x()
+                                                , offset.y()
+                                                , offset.z()
+                                                , data
+                                                );
       }
 
       template< typename U = T >

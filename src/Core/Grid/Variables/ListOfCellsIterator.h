@@ -142,11 +142,12 @@ namespace Uintah {
      */
     inline Uintah::ListOfCellsIterator& operator=( Uintah::Iterator& copy )
     {
-      //delete old iterator
-
+      // delete old iterator
       int i = 0;
-      for ( copy.reset(); !copy.done(); copy++ ) { // copy iterator into portable container
-        listOfCells_[i]=int_3((*copy)[0],(*copy)[1],(*copy)[2]);
+
+      // copy iterator into portable container
+      for ( copy.reset(); !copy.done(); copy++ ) {
+        listOfCells_[i] = int_3((*copy)[0],(*copy)[1],(*copy)[2]);
         i++;
       }
 
@@ -174,10 +175,11 @@ namespace Uintah {
      */
     inline void add( const IntVector& c )
     {
+      // place at back of list
       listOfCells_[mySize] = int_3( c[0], c[1], c[2] );
-      //place at back of list
-      mySize++; 
-      //read sentinal to list
+      mySize++;
+
+      // read sentinal to list
       listOfCells_[mySize]=int_3( INT_MAX, INT_MAX, INT_MAX );
     }
 
@@ -245,7 +247,7 @@ namespace Uintah {
     }
 
     unsigned int mySize{0};
-    unsigned int index_{0}; //index into the iterator
+    unsigned int index_{0}; // index into the iterator
 
 #if defined( UINTAH_ENABLE_KOKKOS )
     Kokkos::View<int_3*, Kokkos::HostSpace> listOfCells_;

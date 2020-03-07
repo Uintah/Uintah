@@ -241,11 +241,8 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
            {-0.0157408, 0.0130244 ,  0.0062981, -0.0084152 ,  0.0020110},
            {-0.0028205, 0.0079966 , -0.0079084,  0.003387  , -0.0005364}}};
 
-
-
         int nrows=4;
         int n_coeff=5;
-
 
         double T_r=std::min(std::max(T_ref/1200.0,0.01),4.0); // 0.01 to 4.0
         std::vector<std::vector<double> > b_vec(nrows,std::vector<double>(n_coeff,0.0)); // minus 1 for transparent band
@@ -277,7 +274,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
       } // end if
     } // end model loop
   } // end spec-check
-
 
   for (int qn=0; qn < m_nQn_part; qn++){
     std::stringstream absorp;
@@ -319,8 +315,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   else {
     throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
   }
-
-
 
   computeOrdinatesOPL();
 
@@ -383,7 +377,6 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _radiationFluxLabels.push_back( VarLabel::find("radiationFluxT"));
   _radiationFluxLabels.push_back( VarLabel::find("radiationFluxB"));
 
-
    // this was added with the hope that it could be extended to one-sided ghost cell requirements
   _gv =std::vector< std::vector < std::vector < Ghost::GhostType > > >   (2,  std::vector < std::vector < Ghost::GhostType > > (2, std::vector < Ghost::GhostType > (2) ));
   _gv[0][0][0] = Ghost::xpypzp;
@@ -396,6 +389,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   _gv[1][1][1] = Ghost::xmymzm;
 
 }
+
 //______________________________________________________________________
 //  Insert the orthogonal cosine dirs every nthElement
 void
@@ -677,20 +671,20 @@ struct computeAMatrix{
        KokkosView3<double, Kokkos::HostSpace> fluxY;
        KokkosView3<double, Kokkos::HostSpace> fluxZ;
 #else
-       constCCVariable<int>      &cellType;
-       constCCVariable<double>   &wallTemp;
-       constCCVariable<double>   &abskt;
+       constCCVariable<int>    & cellType;
+       constCCVariable<double> & wallTemp;
+       constCCVariable<double> & abskt;
 
-       CCVariable<double>   &srcIntensity;
-       CCVariable<double>   &matrixB;
-       CCVariable<double>   &west;
-       CCVariable<double>   &south;
-       CCVariable<double>   &bottom;
-       CCVariable<double>   &center;
-       CCVariable<double>   &scatSource;
-       CCVariable<double>   &fluxX;
-       CCVariable<double>   &fluxY;
-       CCVariable<double>   &fluxZ;
+       CCVariable<double> & srcIntensity;
+       CCVariable<double> & matrixB;
+       CCVariable<double> & west;
+       CCVariable<double> & south;
+       CCVariable<double> & bottom;
+       CCVariable<double> & center;
+       CCVariable<double> & scatSource;
+       CCVariable<double> & fluxX;
+       CCVariable<double> & fluxY;
+       CCVariable<double> & fluxZ;
 #endif
 
        double SB;
@@ -737,12 +731,9 @@ struct compute4Flux{
                    fluxZ(i,j,k) += oxi*intensity(i,j,k);
                    volQ(i,j,k)  += intensity(i,j,k)*wt;
 
-
-
        }
 
   private:
-
 
        double  omu;    ///< x-directional component
        double  oeta;   ///< y-directional component
@@ -751,12 +742,14 @@ struct compute4Flux{
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
        KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
+
        KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
        KokkosView3<double, Kokkos::HostSpace> fluxY;   ///< y-directional flux ( positive or negative direction)
        KokkosView3<double, Kokkos::HostSpace> fluxZ;   ///< z-directional flux ( positive or negative direction)
        KokkosView3<double, Kokkos::HostSpace> volQ;    ///< Incident radiation
 #else
        constCCVar_or_CCVar& intensity; ///< intensity solution from linear solve
+
        CCVariable<double>& fluxX;  ///< x-directional flux ( positive or negative direction)
        CCVariable<double>& fluxY;  ///< y-directional flux ( positive or negative direction)
        CCVariable<double>& fluxZ;  ///< z-directional flux ( positive or negative direction)

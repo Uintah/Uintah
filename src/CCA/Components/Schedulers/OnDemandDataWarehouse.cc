@@ -143,7 +143,8 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
     , m_is_initialization_DW{ isInitializationDW }
 {
   doReserve();
-  varLock          = new Uintah::MasterLock{};
+
+  varLock = new Uintah::MasterLock{};
 
 #ifdef HAVE_CUDA
 
@@ -3020,7 +3021,7 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
         continue;
       }
 
-      if (ignoreMissingNeighbors==false && m_var_DB.exists( label, matlIndex, neighbor )) {
+      if ( ignoreMissingNeighbors == false && m_var_DB.exists( label, matlIndex, neighbor ) ) {
         std::vector<Variable*> varlist;
         // Go through the main var plus any foreign vars for this label/material/patch
         m_var_DB.getlist( label, matlIndex, neighbor, varlist );
@@ -4323,5 +4324,3 @@ OnDemandDataWarehouse::compareAndSwapSetInvalidWithGhostsOnCPU(char const* label
   varLock->unlock();
   return true;
 }
-
-

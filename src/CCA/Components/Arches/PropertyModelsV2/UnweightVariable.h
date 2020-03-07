@@ -600,7 +600,6 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
     auto un_var = tsk_info->get_field<T, double, MemSpace>(m_un_eqn_names[ieqn]);
     auto var = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
 
@@ -610,13 +609,13 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
     });
-
   }
 
   // unscaling
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
     const double ScalingConst = info.constant;
+
     auto un_var = tsk_info->get_field<T, double, MemSpace>(info.unscaled_var);
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       un_var(i,j,k) *= ScalingConst;
@@ -630,19 +629,17 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     auto rho_var = tsk_info->get_field<T, double, MemSpace>(ieqn->first);
     const double cHigh =info.high;
     const double cLow =info.low;
+
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-    if ( var(i,j,k) > cHigh ) {
-
-      var(i,j,k)     = cHigh;
-      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
-
-    } else if ( var(i,j,k) < cLow ) {
-      var(i,j,k) = cLow;
-      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
-    }
+      if ( var(i,j,k) > cHigh ) {
+        var(i,j,k)     = cHigh;
+        rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
+      } else if ( var(i,j,k) < cLow ) {
+        var(i,j,k) = cLow;
+        rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
+      }
     });
   }
-
 }
 }
 #endif

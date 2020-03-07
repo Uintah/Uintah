@@ -111,7 +111,6 @@ typedef int atomicDataStatus;
 //Superpatch                = bit 24 - 0x00000080
 //Unknown                   = bit 23 - 0x00000100
 
-
 class DataWarehouse : public RefCounted {
 
 public:

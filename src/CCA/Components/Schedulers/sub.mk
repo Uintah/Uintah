@@ -49,10 +49,10 @@ SRCS += \
         $(SRCDIR)/UnifiedScheduler.cc
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \
-          $(SRCDIR)/GPUGridVariableInfo.cc      \
-          $(SRCDIR)/GPUGridVariableGhosts.cc    \
-          $(SRCDIR)/GPUMemoryPool.cc    
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cu       \
+          $(SRCDIR)/GPUGridVariableInfo.cc    \
+          $(SRCDIR)/GPUGridVariableGhosts.cc  \
+          $(SRCDIR)/GPUMemoryPool.cc
           
   DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
 endif
@@ -69,7 +69,7 @@ PSELIBS := \
         Core/OS          \
         Core/Parallel    \
         Core/ProblemSpec \
-        Core/Util        
+        Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(CUDA_LIBRARY)
 
