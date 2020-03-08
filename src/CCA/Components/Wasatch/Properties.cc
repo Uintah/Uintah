@@ -30,7 +30,7 @@
 #include <CCA/Components/Wasatch/Expressions/TabPropsEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/TabPropsHeatLossEvaluator.h>
 #include <CCA/Components/Wasatch/Expressions/RadPropsEvaluator.h>
-#include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
+#include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/SpeciesDiffusivityFromLewisNumber.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFrac.h>
@@ -167,7 +167,9 @@ namespace WasatchCore{
       const Expr::Tag fNP1Tag (fTag.name(), Expr::STATE_NP1 ); 
 
       const Uintah::ProblemSpecP densParams = params->findBlock("Density");
-      const Expr::Tag densityTag = parse_nametag( densParams->findBlock("NameTag") );
+      Expr::Tag densityTag = parse_nametag( densParams->findBlock("NameTag") );
+      densityTag.reset_context(Expr::STATE_N);
+
       const Expr::Tag densityInitTag(densityTag.name(), Expr::STATE_NONE);
       const Expr::Tag densityNP1Tag (densityTag.name(), Expr::STATE_NP1 );
       double density0, density1; // density values corresponding to MixtureFraction = [0,1], respectively 
@@ -175,16 +177,22 @@ namespace WasatchCore{
       densParams->getAttribute("val1", density1);
 
       const Uintah::ProblemSpecP viscParams = params->findBlock("Viscosity");
+      const Expr::Tag nuTag         = Expr::Tag("kinematic_viscosity", Expr::STATE_NONE);
       const Expr::Tag viscosityTag = parse_nametag( viscParams->findBlock("NameTag") );
       double viscosity0, viscosity1; // viscosity values corresponding to MixtureFraction = [0,1], respectively 
       viscParams->getAttribute("val0", viscosity0);
       viscParams->getAttribute("val1", viscosity1);
+
+      const double nu0 = viscosity0/density0;
+      const double nu1 = viscosity1/density1;
 
       const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag, fTag);
 
       typedef TwoFluidDensityfromMixFrac<SVolField>::Builder  PropertyFromF;
       typedef TwoFluidDensityfromRhoF   <SVolField>::Builder  PropertyFromRhoF;
       typedef Expr::PlaceHolder         <SVolField>::Builder  PlaceHolder;
+      typedef ExprAlgebra               <SVolField>           Algebra;
+      typedef ExprAlgebra               <SVolField>::Builder  AlgBuilder;
 
       icFactory.register_expression( new PropertyFromF( densityInitTag, 
                                                         dRhoDfTag,
@@ -202,14 +210,18 @@ namespace WasatchCore{
                                                            transitionMidPoint, 
                                                            transitionRange ) );
 
-      asFactory.register_expression( new PropertyFromF( viscosityTag, 
+      asFactory.register_expression( new PropertyFromF( nuTag, 
                                                         fTag, 
-                                                        viscosity0, 
-                                                        viscosity1, 
+                                                        nu0, 
+                                                        nu1, 
                                                         transitionMidPoint, 
                                                         transitionRange ) );
 
-      asFactory.register_expression( new PlaceHolder(Expr::Tag( densityTag.name(), Expr::STATE_N)) );
+      asFactory.register_expression( new AlgBuilder( viscosityTag, 
+                                                     Expr::tag_list(densityTag,nuTag),
+                                                     Algebra::PRODUCT ) );
+
+      asFactory.register_expression( new PlaceHolder( densityTag ) );
 
       // Expr::ExpressionID id =
       
