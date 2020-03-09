@@ -170,7 +170,6 @@ void Poisson1::initialize( const ProcessorGroup *
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
             phi[*nbound_ptr] = value;
-
           }
           delete bcb;
         }
@@ -207,14 +206,11 @@ struct TimeAdvanceFunctor {
   {
   }
 
-  void operator()(int i,
-                  int j,
-                  int k,
-                  double & residual) const
+  void operator()(int i, int j, int k, double & residual) const
   {
-    m_newphi(i, j, k) = (1. / 6)
-        * (m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
-           m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1));
+    m_newphi(i, j, k) = ( 1. / 6 ) *
+                        ( m_phi(i + 1, j, k) + m_phi(i - 1, j, k) + m_phi(i, j + 1, k) +
+                          m_phi(i, j - 1, k) + m_phi(i, j, k + 1) + m_phi(i, j, k - 1) );
 
     double diff = m_newphi(i, j, k) - m_phi(i, j, k);
     residual += diff * diff;
@@ -244,15 +240,19 @@ void Poisson1::timeAdvance( const ProcessorGroup *
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
     double residual = 0;
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
 
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+    // Prepare the ranges for both boundary conditions and main loop
+    IntVector l = patch->getNodeLowIndex();
+    l += IntVector( patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1
+                  );
+
+    IntVector h = patch->getNodeHighIndex();
+    h -= IntVector( patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1
+                  , patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1
+                  );
 
     Uintah::BlockRange range(l, h);
 

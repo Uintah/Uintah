@@ -129,7 +129,6 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   GET_WALL_BUFFERED_PATCH_RANGE(low, high,0,1,0,1,0,1);
   Uintah::BlockRange x_range(low, high);
 
-
   Uintah::parallel_for( x_range, [&](int i, int j, int k){
 
     double dudy = 0.0;

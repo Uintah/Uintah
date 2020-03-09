@@ -175,7 +175,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
       string type="nullptr";
       alg_ps->getAttribute("type", type);
 
-      if (type == "dataOnion" ) {
+      if (type == "dataOnion" ) {                   // Data Onion
         d_whichAlgo = dataOnion;
 
         //__________________________________
@@ -189,7 +189,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
         }
       } else if ( type == "RMCRT_coarseLevel" ) {   // 2 Level
         d_whichAlgo = coarseLevel;
-      } else if ( type == "singleLevel" ) {         // 1 LEVEL
+      } else if ( type == "singleLevel" ) {         // 1 Level
         d_whichAlgo = singleLevel;
       } else if ( type == "radiometerOnly" ) {      // Only when radiometer is used
         d_whichAlgo = radiometerOnly;

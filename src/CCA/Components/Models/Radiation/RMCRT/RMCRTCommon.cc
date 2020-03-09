@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
 #include <Core/Util/DOUT.hpp>
+
 #include <fstream>
 
 #define DEBUG -9            // 1: divQ, 2: boundFlux, 3: scattering
@@ -49,11 +50,11 @@ using namespace Uintah;
 // outside this unit
 Dout g_ray_dbg("Ray",     "Radiation Models", "RMCRT Ray general debug stream", false);
 Dout g_ray_BC ("Ray_BC",  "Radiation Models", "RMCRT RayBC debug stream", false);
+
 //______________________________________________________________________
 // Static variable declarations
 // This class is instantiated by ray() and radiometer().
-// You only want 1 instance of each of these variables thus we use
-// static variables
+// You only want 1 instance of each of these variables thus we use static variables
 //______________________________________________________________________
 
 double      RMCRTCommon::d_threshold;
@@ -156,7 +157,7 @@ RMCRTCommon::registerVariables(int   matlIndex,
   // define the abskg VarLabel
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-  
+
   auto double_type = TypeDescription::double_type;
   auto float_type = TypeDescription::float_type;
   

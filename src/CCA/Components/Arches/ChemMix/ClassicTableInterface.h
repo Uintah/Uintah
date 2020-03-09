@@ -159,7 +159,6 @@ private:
 
   std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
 
-
   std::string d_enthalpy_name;
 
   IndexMap d_depVarIndexMap;                      ///< Reference to the integer location of the variable

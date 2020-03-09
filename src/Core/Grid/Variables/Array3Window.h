@@ -118,7 +118,6 @@ struct KokkosView3
 };
 #endif //UINTAH_ENABLE_KOKKOS
 
-
 template<class T> class Array3Window : public RefCounted {
    public:
       Array3Window(Array3Data<T>*);
@@ -136,8 +135,10 @@ template<class T> class Array3Window : public RefCounted {
 
       void copy(const Array3Window<T>*);
       void copy(const Array3Window<T>*, const IntVector& low, const IntVector& high);
+
       void initialize(const T&);
       void initialize(const T&, const IntVector& s, const IntVector& e);
+
       inline IntVector getLowIndex() const {
          return lowIndex;
       }
@@ -173,14 +174,15 @@ template<class T> class Array3Window : public RefCounted {
 #ifdef UINTAH_ENABLE_KOKKOS
       inline KokkosView3<T> getKokkosView() const
       {
-        return KokkosView3<T>(  Kokkos::subview(   data->getKokkosData()
-                                 , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
-                                 , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
-                                 , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )
-                              ,offset.x()
-                              ,offset.y()
-                              ,offset.z()
-                            );
+        return KokkosView3<T>( Kokkos::subview( data->getKokkosData()
+                                              , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x() )
+                                              , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y() )
+                                              , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z() )
+                                              )
+                             , offset.x()
+                             , offset.y()
+                             , offset.z()
+                             );
       }
 #endif //UINTAH_ENABLE_KOKKOS
 

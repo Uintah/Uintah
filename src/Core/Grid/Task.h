@@ -178,8 +178,6 @@ private: // class Task
 
   };  // end CPU Action class
 
-
-
   // GPU (device) Action constructor
   template<typename T, typename... Args>
   class ActionDevice : public ActionBase {
@@ -263,7 +261,6 @@ private: // class Task
       }
 
   };  // end GPU (device) Action constructor
-
 
 
 public: // class Task

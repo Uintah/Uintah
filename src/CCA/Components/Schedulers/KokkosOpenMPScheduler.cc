@@ -63,15 +63,17 @@ namespace Uintah {
 //______________________________________________________________________
 //
 namespace {
+
   Dout g_dbg(         "KokkosOMP_DBG"        , "KokkosOpenMPScheduler", "general debugging info for KokkosOpenMPScheduler"  , false );
   Dout g_queuelength( "KokkosOMP_QueueLength", "KokkosOpenMPScheduler", "report task queue length for KokkosOpenMPScheduler", false );
 
   Uintah::MasterLock g_scheduler_mutex{}; // main scheduler lock for multi-threaded task selection
 
   volatile int  g_num_tasks_done{0};
-  
+
   bool g_have_hypre_task{false};
   DetailedTask* g_HypreTask;
+
 }
 
 
