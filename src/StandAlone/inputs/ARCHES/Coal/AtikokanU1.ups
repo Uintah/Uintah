@@ -161,14 +161,14 @@
     <save label="mixture_molecular_weight" table_lookup="true"/>
     <checkpoint cycle="2" timestepInterval="3"/>
     <compression>gzip</compression>
-    <save label="mdot_g_in_oulet_permeable"/>
-    <save label="mdot_p_organics_in_oulet_permeable"/>
-    <save label="mdot_g_in"/>
-    <save label="mdot_p_organics_in"/>
-    <save label="mdot_g_in_Secondary_L2_A_y+_y+"/>
-    <save label="mdot_p_organics_in_Secondary_L2_A_y+_y+"/>
-    <save label="mdot_g_in_Biomass_Feeder_L2_A_y+_y+"/>
-    <save label="mdot_p_organics_in_Biomass_Feeder_L2_A_y+_y+"/>
+    <save label="MB_mdot_g_in_oulet_permeable"/>
+    <save label="MB_mdot_p_organics_in_oulet_permeable"/>
+    <save label="MB_mdot_g_in"/>
+    <save label="MB_mdot_p_organics_in"/>
+    <save label="MB_mdot_g_in_Secondary_L2_A_y+_y+"/>
+    <save label="MB_mdot_p_organics_in_Secondary_L2_A_y+_y+"/>
+    <save label="MB_mdot_g_in_Biomass_Feeder_L2_A_y+_y+"/>
+    <save label="MB_mdot_p_organics_in_Biomass_Feeder_L2_A_y+_y+"/>
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
@@ -2232,7 +2232,7 @@ Fuels-->
             <op label="O2_op2"/>
           </exe_order>
         </utility>
-        <utility label="compute_mass_flow_rate" type="mass_flow_rate"/>
+        <utility label="MB" type="mass_flow_rate"/>
       </Utilities>
       <TurbulenceModels>
         <model label="DS" type="dynamic_smagorinsky">
