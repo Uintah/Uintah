@@ -1025,7 +1025,6 @@ public:
 
   static bool s_combine_memory;
 
-
   //DS: 01042020: fix for OnDemandDW race condition
   bool compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
   bool compareAndSwapSetValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
@@ -1036,7 +1035,6 @@ public:
   bool isValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   void setValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   bool compareAndSwapSetInvalidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
-
 
   friend class SchedulerCommon;
   friend class KokkosScheduler;
@@ -1240,31 +1238,24 @@ private:
   // Is this the first DW -- created by the initialization timestep?
   bool  m_is_initialization_DW {false};
 
-
-
-
-
-
-
-
-
   //using for D2H copies only as of now. ONLY values used as of now are:  COPYING_IN, VALID (and reset ~VALID for invalid).
   //other Operations are handled by OnDemandDataWarehouse. copied from GPUDataWH
 
   Uintah::MasterLock * varLock;
-
 
   struct labelPatchMatlLevel {
     std::string label;
     int         patchID;
     int         matlIndx;
     int         levelIndx;
+
     labelPatchMatlLevel(const char * label, int patchID, int matlIndx, int levelIndx) {
       this->label = label;
       this->patchID = patchID;
       this->matlIndx = matlIndx;
       this->levelIndx = levelIndx;
     }
+
     //This so it can be used in an STL map
     bool operator<(const labelPatchMatlLevel& right) const {
       if (this->label < right.label) {
@@ -1273,15 +1264,12 @@ private:
         return true;
       } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
         return true;
-      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx < right.levelIndx)) {
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx < right.levelIndx)) {
         return true;
       } else {
         return false;
       }
-
     }
-
   };
 
   enum status { UNALLOCATED               = 0x00000000,
@@ -1313,14 +1301,6 @@ private:
   typedef volatile int atomicDataStatus;
 
   std::map<labelPatchMatlLevel, atomicDataStatus>   atomicStatusInHostMemory;	//maintain status of the variable in the host memory
-
-
-
-
-
-
-
-
 
 }; // end class OnDemandDataWarehouse
 

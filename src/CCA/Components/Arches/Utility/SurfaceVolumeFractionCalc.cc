@@ -169,6 +169,7 @@ void SurfaceVolumeFractionCalc::initialize( const Patch* patch, ArchesTaskInfoMa
   std::vector<IntrusionBoundary> intrusions;
 
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+
   for ( auto i = m_intrusions.begin(); i != m_intrusions.end(); i++ ){
 
     std::vector<GeometryPieceP> intersecting_geometry;
@@ -274,8 +275,9 @@ SurfaceVolumeFractionCalc::timestep_init( const Patch* patch, ArchesTaskInfoMana
 
   auto fz_vol_frac = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>("volFractionZ");
   auto fz_vol_frac_old = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace>("volFractionZ");
-  
+
   Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+
   parallel_for( execObj, range, KOKKOS_LAMBDA (int i,int j,int k){
     cc_vol_frac(i,j,k) = cc_vol_frac_old(i,j,k);
     fx_vol_frac(i,j,k) = fx_vol_frac_old(i,j,k);

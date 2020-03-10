@@ -97,6 +97,7 @@ WARNING
 
     SFCZVariable(SFCZVariable<T>&&);
     SFCZVariable(const SFCZVariable<T>&);
+
   protected:
 
   private:

@@ -156,6 +156,7 @@ WALE::register_timestep_eval( std::vector<AFC::VariableInformation>&
   register_variable( m_cc_w_vel_name, AFC::REQUIRES, Nghost_cells, AFC::NEWDW, variable_registry, time_substep);
   register_variable( m_density_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep);
   register_variable( m_volFraction_name, AFC::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+
   register_variable( m_IsI_name, AFC::COMPUTES ,  variable_registry, time_substep );
   if (m_create_labels_IsI_t_viscosity) {
     register_variable( m_total_vis_name, AFC::COMPUTES ,  variable_registry, time_substep );
@@ -184,15 +185,15 @@ void WALE::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
   auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_density_name);
   auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(m_volFraction_name);
 
-  parallel_initialize(execObj,0.0,IsI,mu_sgc);
+  parallel_initialize(execObj, 0.0, IsI, mu_sgc);
   const Vector Dx = patch->dCell();
   const double delta = pow(Dx.x()*Dx.y()*Dx.z(),1./3.);
 
 //  Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   const double SMALL = 1e-16;
-  const double local_Cs=m_Cs;
-  const double local_molecular_visc=m_molecular_visc;
+  const double local_Cs = m_Cs;
+  const double local_molecular_visc = m_molecular_visc;
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
     double uep = 0.0;

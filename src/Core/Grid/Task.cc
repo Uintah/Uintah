@@ -193,8 +193,10 @@ Task::usesThreads(bool state)
 
 //______________________________________________________________________
 //
-void Task::setExecutionAndMemorySpace( const TaskAssignedExecutionSpace& executionSpaceTypeName,
-                                       const TaskAssignedMemorySpace& memorySpaceTypeName ) {
+void Task::setExecutionAndMemorySpace( const TaskAssignedExecutionSpace & executionSpaceTypeName
+                                     , const TaskAssignedMemorySpace    & memorySpaceTypeName
+                                     )
+{
   m_execution_space = executionSpaceTypeName;
   m_memory_space = memorySpaceTypeName;
 }
@@ -205,6 +207,7 @@ void
 Task::usesDevice(bool state, int maxStreamsPerTask /* = -1 */ )
 {
   m_uses_device = state;
+
   if (maxStreamsPerTask == -1) {
     // The default case, get it from a command line argument
     m_max_streams_per_task = Uintah::Parallel::getCudaStreamsPerTask();
@@ -212,7 +215,6 @@ Task::usesDevice(bool state, int maxStreamsPerTask /* = -1 */ )
     // Let the user override it
     m_max_streams_per_task = maxStreamsPerTask;
   }
-
 }
 
 //______________________________________________________________________
@@ -648,20 +650,19 @@ void Task::modifiesWithScratchGhost( const VarLabel           * var
                                    )
 {
   if (matls == nullptr && var->typeDescription()->isReductionVariable()) {
-	// default material for a reduction variable is the global material (-1)
-	matls = getGlobalMatlSubset();
-	matls_dom = OutOfDomain;
-	ASSERT(patches == nullptr);
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+    matls_dom = OutOfDomain;
+    ASSERT(patches == nullptr);
   }
 
-  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls,
-		                              patches_dom, matls_dom, gtype, numGhostCells);
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls, patches_dom, matls_dom, gtype, numGhostCells);
   dep->m_next = nullptr;
   if (m_mod_tail) {
-	m_mod_tail->m_next = dep;
+    m_mod_tail->m_next = dep;
   }
   else {
-	m_mod_head = dep;
+    m_mod_head = dep;
   }
   m_mod_tail = dep;
 

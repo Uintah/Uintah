@@ -96,10 +96,10 @@ WARNING
     static TypeDescription::Register registerMe;
 
     NCVariable(NCVariable<T>&&);
-
     NCVariable(const NCVariable<T>&);
 
   protected:
+
   private:
     static TypeDescription* td;
 

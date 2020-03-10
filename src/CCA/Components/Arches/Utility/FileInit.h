@@ -171,6 +171,8 @@ private:
 
     auto phi = tsk_info->get_field<T, double, MemSpace>(m_var_name);
 
+    Uintah::parallel_initialize( execObj, 0.0, phi );
+
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
       phi(i,j,k) = m_data[i*ny*nz+j*nz+k];

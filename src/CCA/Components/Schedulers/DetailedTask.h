@@ -126,7 +126,6 @@ public:
     return m_profile_type;
   }
 
-
   struct labelPatchMatlLevelDw {
     std::string label;
     int         patchID;
@@ -141,6 +140,7 @@ public:
       this->levelIndx = levelIndx;
       this->dwIndex = dwIndex;
     }
+
     //This so it can be used in an STL map
     bool operator<(const labelPatchMatlLevelDw& right) const {
       if (this->label < right.label) {
@@ -149,35 +149,36 @@ public:
         return true;
       } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
         return true;
-      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx < right.levelIndx)) {
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx < right.levelIndx)) {
         return true;
-      } else if (    this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx == right.levelIndx) && this->dwIndex < right.dwIndex) {
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx == right.levelIndx) && this->dwIndex < right.dwIndex) {
         return true;
       } else {
         return false;
       }
-
     }
-
   };
 
 #ifdef HAVE_CUDA
-  struct delayedCopyingInfo{
-	  delayedCopyingInfo(GpuUtilities::LabelPatchMatlLevelDw lpmld_,
-	                     DeviceGridVariableInfo              devGridVarInfo_,
-	                     void *                              device_ptr_,
-	                     void *                              host_ptr_,
-	                     size_t                              size_):
-	                     lpmld(lpmld_), devGridVarInfo(devGridVarInfo_), device_ptr(device_ptr_), host_ptr(host_ptr_), size(size_){
+  struct delayedCopyingInfo {
+    delayedCopyingInfo( GpuUtilities::LabelPatchMatlLevelDw   lpmld_
+                      , DeviceGridVariableInfo                devGridVarInfo_
+                      , void                                * device_ptr_
+                      , void                                * host_ptr_
+                      , size_t                                size_
+                      )
+      : lpmld(lpmld_)
+      , devGridVarInfo(devGridVarInfo_)
+      , device_ptr(device_ptr_)
+      , host_ptr(host_ptr_)
+      , size(size_)
+    {}
 
-	  }
-	  GpuUtilities::LabelPatchMatlLevelDw lpmld;
-	  DeviceGridVariableInfo              devGridVarInfo;
-	  void *                              device_ptr;
-	  void *                              host_ptr;
-	  size_t                              size;
+    GpuUtilities::LabelPatchMatlLevelDw lpmld;
+    DeviceGridVariableInfo              devGridVarInfo;
+    void *                              device_ptr;
+    void *                              host_ptr;
+    size_t                              size;
   };
 #endif
 
@@ -290,8 +291,8 @@ public:
 
   inline std::vector<labelPatchMatlLevelDw>& getVarsNeededOnHost() { return varsNeededOnHost;}
   inline std::vector<delayedCopyingInfo>& getDelayedCopyingVars() { return delayedCopyingVars;}
-  inline int getDelayedCopy(){return delayedCopy;}
-  inline void setDelayedCopy(int val){delayedCopy = val;}
+  inline int getDelayedCopy(){ return delayedCopy; }
+  inline void setDelayedCopy(int val){ delayedCopy = val; }
 
   void clearPreparationCollections();
 

@@ -97,6 +97,7 @@ WARNING
 
     SFCYVariable(SFCYVariable<T>&&);
     SFCYVariable(const SFCYVariable<T>&);
+
   protected:
 
   private:

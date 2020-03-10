@@ -33,10 +33,9 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#if defined( UINTAH_ENABLE_KOKKOS )
-#include <Kokkos_Core.hpp>
-#include <Core/Grid/Variables/KokkosViews.h>
-
+#ifdef UINTAH_ENABLE_KOKKOS
+  #include <Kokkos_Core.hpp>
+  #include <Core/Grid/Variables/KokkosViews.h>
 #endif //UINTAH_ENABLE_KOKKOS
 
 namespace Uintah {
@@ -66,10 +65,11 @@ namespace Uintah {
     WARNING
 
    ****************************************/
+
 template <typename T>
 class Array3Data;
 
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   template <typename T, typename MemSpace>
   using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 #endif
@@ -115,11 +115,11 @@ class Array3Data;
         return d_data;
       }
 
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
       inline KokkosData<T, Kokkos::HostSpace> getKokkosData() const {
         return KokkosData<T, Kokkos::HostSpace>(d_data, d_size.x(), d_size.y(), d_size.z());
       }
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 
     private:

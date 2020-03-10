@@ -150,6 +150,7 @@ namespace Uintah {
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
       VarLabel::destroy(m_hypre_solver_label);
+
       //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
       if(m_buff){
@@ -183,28 +184,29 @@ namespace Uintah {
     }
 
     //---------------------------------------------------------------------------------------------
-    double * getBuffer(size_t buff_size){
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-            if(m_buff_size < buff_size){
-              m_buff_size = buff_size;
-              if(m_buff){
-                cudaErrorCheck(cudaFree((void*)m_buff));
-              }
-              cudaErrorCheck(cudaMalloc((void**)&m_buff, buff_size));
-            }
-#else
-            if(m_buff_size < buff_size){
-              m_buff_size = buff_size;
-              if(m_buff){
-                free(m_buff);
-              }
-              m_buff = (double *)malloc(buff_size);
-            }
-#endif
+    double * getBuffer( size_t buff_size )
+    {
+      if (m_buff_size < buff_size) {
+        m_buff_size = buff_size;
 
-            return m_buff;  //although m_buff is a member of the class and can be accessed inside task, it can not be directly
-                            //accessed inside parallel_for on device (even though its a device pointer, value is not passed by reference)
-                            //So return explicitly to a local variable. The local variable gets passed by copy.
+#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+        if (m_buff) {
+          cudaErrorCheck(cudaFree((void*)m_buff));
+        }
+
+        cudaErrorCheck(cudaMalloc((void**)&m_buff, buff_size));
+#else
+        if (m_buff) {
+          free(m_buff);
+        }
+
+        m_buff = (double *)malloc(buff_size);
+#endif
+      }
+
+      return m_buff; // although m_buff is a member of the class and can be accessed inside task, it can not be directly
+                     // accessed inside parallel_for on device (even though its a device pointer, value is not passed by reference)
+                     // So return explicitly to a local variable. The local variable gets passed by copy.
     }
 
 
@@ -558,7 +560,7 @@ namespace Uintah {
             HYPRE_StructMatrixSetBoxValues(*HA,
                                            l.get_pointer(), hh.get_pointer(),
                                            stencil_point, stencil_indices,
-										   d_buff);
+                                           d_buff);
           }
           if (timeStep == 1 || recompute || do_setup){
             HYPRE_StructMatrixAssemble(*HA);

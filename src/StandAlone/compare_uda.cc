@@ -247,7 +247,6 @@ compare( long64 a,
          double /* abs_tolerance */,
          double /* rel_tolerance */)
 {
-
 //  Commenting out, integers can't be nan
 //  if(std::isnan(a) || std::isnan(b)){
 //    return false;

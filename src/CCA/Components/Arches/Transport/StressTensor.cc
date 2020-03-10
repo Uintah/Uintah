@@ -112,12 +112,7 @@ void StressTensor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_in
   auto sigma23 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[4]);
   auto sigma33 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
 
-  parallel_initialize(execObj,0.0,sigma11
-                               ,sigma12
-                               ,sigma13
-                               ,sigma22
-                               ,sigma23
-                               ,sigma33);
+  parallel_initialize(execObj, 0.0, sigma11, sigma12, sigma13, sigma22, sigma23, sigma33);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -155,7 +150,7 @@ void StressTensor::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto sigma33 = tsk_info->get_field<CCVariable<double>, double, MemSpace>(m_sigma_t_names[5]);
 
   // initialize all velocities
-  parallel_initialize(execObj,0.0, sigma11, sigma12, sigma13, sigma22, sigma23,sigma33);
+  parallel_initialize(execObj, 0.0, sigma11, sigma12, sigma13, sigma22, sigma23, sigma33);
 
   Vector Dx = patch->dCell();
 

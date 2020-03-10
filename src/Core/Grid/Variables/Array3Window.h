@@ -31,8 +31,13 @@
 #include <Core/Geometry/IntVector.h>
 
 #include <sci_defs/kokkos_defs.h>
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
-#include <Core/Grid/Variables/KokkosViews.h>
+
+#ifdef UINTAH_ENABLE_KOKKOS
+  #include <Kokkos_Macros.hpp>
+#endif
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  #include <Core/Grid/Variables/KokkosViews.h>
 #endif
 
 #if SCI_ASSERTION_LEVEL >= 3
@@ -128,8 +133,7 @@ template<class T> class Array3Window : public RefCounted {
         return data->get(i-offset.x(), j-offset.y(), k-offset.z());
       }
 
-#if defined( UINTAH_ENABLE_KOKKOS ) && defined( KOKKOS_ENABLE_OPENMP )
-
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
       template< typename U = T >
       inline typename std::enable_if<!std::is_same<U, const Uintah::Patch*>::value, KokkosView3<U, Kokkos::HostSpace>>::type
       getKokkosView() const

@@ -508,9 +508,9 @@ private:
 
       const double scalar_init_value = m_init_value[ieqn];
 
-      auto u    = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
-      auto phi    = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
-      auto rhs    = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+      auto u = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
       auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");
       auto y_flux = tsk_info->get_field<FYT, double, MemSpace>(m_eqn_names[ieqn]+"_y_flux");
       auto z_flux = tsk_info->get_field<FZT, double, MemSpace>(m_eqn_names[ieqn]+"_z_flux");
@@ -551,11 +551,11 @@ private:
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
-      auto u    = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
-      auto phi  = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn] );
-      auto rhs  = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn]+"_RHS" );
+      auto u = tsk_info->get_field<T, double, MemSpace>(m_vel_name[ieqn]);
+      auto phi = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn] );
+      auto rhs = tsk_info->get_field<T, double, MemSpace>( m_eqn_names[ieqn]+"_RHS" );
       auto old_phi = tsk_info->get_field<CT, const double, MemSpace>( m_eqn_names[ieqn]);
-      auto old_u   = tsk_info->get_field<CT, const double, MemSpace>(m_vel_name[ieqn]);
+      auto old_u = tsk_info->get_field<CT, const double, MemSpace>(m_vel_name[ieqn]);
 
       Uintah::BlockRange init_range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
 
@@ -615,14 +615,14 @@ private:
     Uintah::IntVector low_patch_range = patch->getCellLowIndex();
     Uintah::IntVector high_patch_range = patch->getCellHighIndex();
 
-    auto eps     = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
+    auto eps = tsk_info->get_field<CT, const double, MemSpace>(m_eps_name);
 
     const int istart = 0;
     const int iend = m_eqn_names.size();
     for (int ieqn = istart; ieqn < iend; ieqn++ ){
 
-      auto phi     = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
-      auto rhs      = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
+      auto phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
+      auto rhs = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]+"_RHS");
 
       //Convection:
       auto x_flux = tsk_info->get_field<FXT, double, MemSpace>(m_eqn_names[ieqn]+"_x_flux");

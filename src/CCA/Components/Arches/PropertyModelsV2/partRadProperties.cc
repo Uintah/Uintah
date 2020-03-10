@@ -453,7 +453,7 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
     weightQuad[ix] = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(_weight_name_v[ix]);
     temperatureQuad[ix] = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(_temperature_name_v[ix]);
     sizeQuad[ix] = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(_size_name_v[ix]);
-    
+
     if (_isCoal){
       RC_mass[ix]  =tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(_RC_name_v[ix]  );
       Char_mass[ix]=tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(_Char_name_v[ix]);
@@ -481,11 +481,11 @@ partRadProperties::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   //
   for (int ix=0; ix< _nQn_part ; ix++){
 
-    //______________________________________________________________________
+    //__________________________________
     //
     if(_particle_calculator_type == "basic"){
       const double geomFactor=M_PI/4.0*_Qabs;
-      
+
       Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k) {
         double particle_absorption = geomFactor*weightQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*sizeQuad[ix](i,j,k)*portable_absorption_modifier;
         abskpQuad[ix](i,j,k) = (vol_fraction(i,j,k) > 1e-16) ? particle_absorption : 0.0;

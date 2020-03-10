@@ -27,7 +27,7 @@
 SRCDIR := CCA/Components/Models/Radiation/RMCRT
 
   SRCS += $(SRCDIR)/RMCRTCommon.cc \
-          $(SRCDIR)/Radiometer.cc 
+          $(SRCDIR)/Radiometer.cc
 
 ifeq ($(HAVE_KOKKOS),yes)
   SRCS += $(SRCDIR)/RayKokkos.cc

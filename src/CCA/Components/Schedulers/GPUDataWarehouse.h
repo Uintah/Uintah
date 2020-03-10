@@ -35,10 +35,12 @@
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Parallel/MasterLock.h>
 
+#include <sci_defs/kokkos_defs.h>
+
 #ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#include <Core/Grid/Variables/KokkosViews.h>
-#endif //UINTAH_ENABLE_KOKKOS
+  #include <Kokkos_Core.hpp>
+  #include <Core/Grid/Variables/KokkosViews.h>
+#endif
 
 #include <map> //for host code only.
 #include <string>
@@ -312,7 +314,7 @@ public:
     unsigned int    sizeOfDataType {0};
     GhostType       gtype;
     unsigned int    numGhostCells {0};
-    int             curGhostCells {-1};		//To check what's current number of ghost cells being copied.
+    int             curGhostCells {-1};  //To check what's current number of ghost cells being copied.
 
     atomicDataStatus   atomicStatusInHostMemory;  //Shared_ptr because patches in a superpatch share the pointer.
     atomicDataStatus   atomicStatusInGpuMemory;   //TODO, merge into the one above it.
@@ -365,7 +367,8 @@ public:
   };
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-  //methods for Kokkos
+  //______________________________________________________________________
+  // Kokkos methods
   template <typename T>
   __host__ inline KokkosView3<T, Kokkos::CudaSpace> getKokkosView(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx)
   {
@@ -402,7 +405,6 @@ public:
                                             , var_offset.z
                                             , nullptr
                                             );
-
   }
 #endif
 

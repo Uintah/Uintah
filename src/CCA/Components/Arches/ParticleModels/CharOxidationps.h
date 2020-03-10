@@ -589,8 +589,8 @@ CharOxidationps<T>::register_initialize(       std::vector<ArchesFieldContainer:
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template <typename ExecSpace, typename MemSpace>
-void CharOxidationps<T>::initialize( const Patch                                     * patch
-                                   ,       ArchesTaskInfoManager                     * tsk_info
+void CharOxidationps<T>::initialize( const Patch                                * patch
+                                   ,       ArchesTaskInfoManager                * tsk_info
                                    ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                                    )
 {
@@ -625,8 +625,8 @@ CharOxidationps<T>::register_timestep_init(       std::vector<ArchesFieldContain
 //--------------------------------------------------------------------------------------------------
 template<typename T>
 template <typename ExecSpace, typename MemSpace> void
-CharOxidationps<T>::timestep_init( const Patch                                     * patch
-                                 ,       ArchesTaskInfoManager                     * tsk_info
+CharOxidationps<T>::timestep_init( const Patch                                * patch
+                                 ,       ArchesTaskInfoManager                * tsk_info
                                  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                                  )
 {
@@ -710,15 +710,14 @@ CharOxidationps<T>::register_timestep_eval(       std::vector<ArchesFieldContain
 template<typename T>
 template <typename ExecSpace, typename MemSpace>
 void
-CharOxidationps<T>::eval( const Patch                                     * patch
-                        ,       ArchesTaskInfoManager                     * tsk_info
+CharOxidationps<T>::eval( const Patch                                * patch
+                        ,       ArchesTaskInfoManager                * tsk_info
                         ,       ExecutionObject<ExecSpace, MemSpace> & execObj
                         )
 {
-
-  const int _time_substep = tsk_info->get_time_substep();
   // For now, the GPU var for reaction_rate must always come from the new data warehouse
   // So the ternary condition in here is to say that it's never timestep 0 to trigger the new dw.
+  const int _time_substep = tsk_info->get_time_substep();
   const int _new_dw_time_substep = (_time_substep == 0) ? 1 : _time_substep;
   const int _patch        = tsk_info->get_patch_id();
 
@@ -845,8 +844,7 @@ CharOxidationps<T>::eval( const Patch                                     * patc
   double local_add_length_birth        = this->m_add_length_birth;
   double local_add_char_birth          = this->m_add_char_birth;
 
-  parallel_initialize(execObj, 0.0,
-      char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
+  parallel_initialize(execObj, 0.0, char_rate, gas_char_rate, particle_temp_rate, particle_Size_rate, surface_rate, reaction_rate);
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
@@ -949,7 +947,6 @@ CharOxidationps<T>::eval( const Patch                                     * patc
         double sum_x   = 0;
 
         for ( int ns = 0; ns < species_count; ns++ ) {
-
           if ( ns != local_oxidizer_indices[r] ) {
             sum_x_D = sum_x_D + species_mass_frac[ns] / ( local_MW_species[ns] * local_D_mat[local_oxidizer_indices[r]][ns] );
             sum_x   = sum_x   + species_mass_frac[ns] / ( local_MW_species[ns] );
@@ -1000,7 +997,6 @@ CharOxidationps<T>::eval( const Patch                                     * patc
           Sfactor = 1 + effectivenessF[l] * p_diam * p_rho * local_Sg0 * Sj / ( 6. * ( 1. - p_void ) );
           F[l]    = rh_l[l] - ( local_Mh * MW * phi_l[l] * k_r[l] * mtc_r * Sfactor * co_r[l] * cg ) /
                     ( ( MW * cg * ( k_r[l] * x_org * ( 1. - p_void ) * Sfactor + mtc_r ) ) + rtot ); // [kg-char/m^3/s]
-
         }
 
         for ( int j = 0; j < reactions_count; j++ ) {

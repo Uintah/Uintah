@@ -233,7 +233,6 @@ namespace Uintah{
       wcell_xSgsStress.initialize(0.0);
       wcell_ySgsStress.initialize(0.0);
       wcell_zSgsStress.initialize(0.0);
-
     }
 
   //---------------------------------------------------------------------------------

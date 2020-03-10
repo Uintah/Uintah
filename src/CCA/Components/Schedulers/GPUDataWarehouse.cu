@@ -1651,7 +1651,7 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
     //only one thread will ever match this.
     //And nobody on the device side should ever access "staging" variables.
     if (strmatch == 0) {
-        if (patchID ==-99999999                            //Only getLevel calls should hit this (note,
+        if (patchID ==-99999999                            //Only getLevel calls should hit this
                 && d_varDB[i].matlIndx == matlIndx
                 && d_varDB[i].levelIndx == levelIndx
                 && d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
@@ -1660,7 +1660,7 @@ GPUDataWarehouse::getItem(char const* label, const int patchID, const int8_t mat
         }
         else if(d_varDB[i].domainID == patchID
                 && d_varDB[i].matlIndx == matlIndx
-                /*&& d_varDB[i].levelIndx == levelIndx*/  //No need for level lookups, label + patchID + matl is a unique tuple.
+                /*&& d_varDB[i].levelIndx == levelIndx*/  // No need for level lookups, label + patchID + matl is a unique tuple.
                 && d_varDB[i].varItem.staging == false
                 && d_varDB[i].ghostItem.dest_varDB_index == -1) {
                 index = i; //we found it.
@@ -2602,7 +2602,7 @@ GPUDataWarehouse::getStatusFlagsForVariableOnGPU(bool& correctSize, bool& alloca
     allVarPointersInfo vp = varPointers->at(lpml);
     int3 device_offset = vp.var->device_offset;
     int3 device_size = vp.var->device_size;
-    //DS 12132019: GPU Resize fix. Changed condition == to <= (and >=). If device variable is greater than host, its ok. 
+    //DS 12132019: GPU Resize fix. Changed condition == to <= (and >=). If device variable is greater than host, its ok.
     correctSize = (device_offset.x <= offset.x && device_offset.y <= offset.y && device_offset.z <= offset.z
                    && device_size.x >= size.x && device_size.y >= size.y && device_size.z >= size.z);
 
@@ -2926,17 +2926,20 @@ GPUDataWarehouse::compareAndSwapSetInvalidOnGPU(char const* const label, const i
   while (!settingValid) {
     labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
     std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+
     if (it != varPointers->end()) {
+
       atomicDataStatus *status = &(it->second.var->atomicStatusInGpuMemory);
       atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
-      //somehow COPYING_IN flag is not getting reset at some places while setting VALID (or getting set by mistake). Which causes race conditions and hangs
-      //so reset COPYING_IN and VALID_WITH_GHOSTS flags here
+
+      // somehow COPYING_IN flag is not getting reset at some places while setting VALID (or getting set by mistake). Which causes race conditions and hangs
+      // so reset COPYING_IN and VALID_WITH_GHOSTS flags here
       if ((oldVarStatus & VALID) != VALID && (oldVarStatus & COPYING_IN) != COPYING_IN && (oldVarStatus & VALID_WITH_GHOSTS) != VALID_WITH_GHOSTS ) {
         //Something else already took care of it.  So this task won't manage it.
         varLock->unlock();
         return false;
       } else {
-        //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
+        // Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
         atomicDataStatus newVarStatus = oldVarStatus & ~VALID;
         newVarStatus = newVarStatus & ~VALID_WITH_GHOSTS;
         newVarStatus = newVarStatus & ~COPYING_IN;
@@ -2944,8 +2947,8 @@ GPUDataWarehouse::compareAndSwapSetInvalidOnGPU(char const* const label, const i
         it->second.var->curGhostCells = -1;
       }
     } else {
-    	varLock->unlock();
-    	return false;
+      varLock->unlock();
+      return false;
     }
   }
   varLock->unlock();
@@ -3026,18 +3029,17 @@ __host__ bool GPUDataWarehouse::dwEntryExistsOnCPU(char const* label, int patchI
 
 //______________________________________________________________________
 // We have an entry for this item in the GPU DW. status does not matter.
-__host__ bool GPUDataWarehouse::dwEntryExists(char const* label, int patchID, int matlIndx, int levelIndx) {
-
-   varLock->lock();
-   bool retVal = false;
-   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
-   if (it != varPointers->end()) {
-     retVal = true;
-   }
-   varLock->unlock();
-   return retVal;
-
+__host__ bool GPUDataWarehouse::dwEntryExists(char const* label, int patchID, int matlIndx, int levelIndx)
+{
+  varLock->lock();
+  bool retVal = false;
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+  if (it != varPointers->end()) {
+    retVal = true;
+  }
+  varLock->unlock();
+  return retVal;
 }
 
 //______________________________________________________________________
@@ -3095,6 +3097,7 @@ GPUDataWarehouse::compareAndSwapSetValidOnCPU(char const* const label, const int
 }
 
 //______________________________________________________________________
+//
 __host__ bool
 GPUDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const int patchID, const int matlIndx, const int levelIndx)
 {
@@ -3120,8 +3123,8 @@ GPUDataWarehouse::compareAndSwapSetInvalidOnCPU(char const* const label, const i
         settingValid = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
       }
     } else {
-    	varLock->unlock();
-    	return false;
+      varLock->unlock();
+      return false;
     }
   }
   varLock->unlock();
@@ -3231,7 +3234,6 @@ GPUDataWarehouse::isDelayedCopyingNeededOnGPU(char const* const label, int patch
     printf("ERROR:\nGPUDataWarehouse::isDelayedCopyingNeededOnGPU( )  Variable %s not found.\n", label);
     exit(-1);
   }
-
   varLock->unlock();
   return retval;
 }
@@ -3707,7 +3709,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int8_t level
     printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n", msg,  label, levelIndx, patchID, matlIndx);
 
     if ( d_numVarDBItems == 0 ) {
-    printf("\tEmpty GPU-DW\n");
+      printf("\tEmpty GPU-DW\n");
     }
     else {
       for ( int i = 0; i < d_numVarDBItems; i++ ) {
@@ -3751,47 +3753,47 @@ GPUDataWarehouse::getPlacementNewBuffer()
 }
 
 //______________________________________________________________________
- //  Returns true if threadID and blockID are 0.
- //  Useful in conditional statements for limiting output.
- //
- __device__
- bool
- GPUDataWarehouse::isThread0_Blk0(){
-   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
-   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+//  Returns true if threadID and blockID are 0.
+//  Useful in conditional statements for limiting output.
+//
+__device__ bool
+GPUDataWarehouse::isThread0_Blk0()
+{
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
 
-   bool test (blockID == 0 && threadID == 0);
-   return test;
- }
+  bool test (blockID == 0 && threadID == 0);
+  return test;
+}
 
- //______________________________________________________________________
- //  Returns true if threadID = 0 for this block
- //  Useful in conditional statements for limiting output.
- //
- __device__
- bool
- GPUDataWarehouse::isThread0(){
-   int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
-   bool test (threadID == 0 );
-   return test;
- }
+//______________________________________________________________________
+//  Returns true if threadID = 0 for this block
+//  Useful in conditional statements for limiting output.
+//
+__device__ bool
+GPUDataWarehouse::isThread0()
+{
+  int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
+  bool test (threadID == 0 );
+  return test;
+}
 
- //______________________________________________________________________
- // Output the threadID
- //
- __device__
- void
- GPUDataWarehouse::printThread(){
-   int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
-   printf( "Thread [%i,%i,%i], ID: %i\n", threadIdx.x,threadIdx.y,threadIdx.z, threadID);
- }
+//______________________________________________________________________
+// Output the threadID
+//
+__device__ void
+GPUDataWarehouse::printThread()
+{
+  int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
+  printf( "Thread [%i,%i,%i], ID: %i\n", threadIdx.x,threadIdx.y,threadIdx.z, threadID);
+}
 
- //______________________________________________________________________
- // Output the blockID
- //
- __device__
- void
- GPUDataWarehouse::printBlock(){
-   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
-   printf( "Block  [%i,%i,%i], ID: %i\n", blockIdx.x,blockIdx.y,blockIdx.z, blockID);
- }
+//______________________________________________________________________
+// Output the blockID
+//
+__device__ void
+GPUDataWarehouse::printBlock()
+{
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+  printf( "Block  [%i,%i,%i], ID: %i\n", blockIdx.x,blockIdx.y,blockIdx.z, blockID);
+}

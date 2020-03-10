@@ -47,10 +47,11 @@ using namespace Uintah;
 
 class DetailedTask;
 
-//A sample supporting three modes of execution:
-//Kokkos CPU (UINTAH_ENABLE_KOKKOS is defined, but HAVE_CUDA is not defined)
-//Kokkos GPU (UINTAH_ENABLE_KOKKOS is defined and HAVE_CUDA is defined)
-//Legacy Uintah CPU (UINTAH_ENABLE_KOKKOS is not defined and HAVE_CUDA is not defined)
+//______________________________________________________________________
+// A sample implementation supporting three modes of execution:
+//   &Poisson1::timeAdvance<UINTAH_CPU_TAG>    // Task supports non-Kokkos builds and is executed serially
+//   &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG> // Task supports Kokkos::OpenMP builds and is executed using OpenMP via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>   // Task supports Kokkos::Cuda builds and is executed using CUDA via Kokkos
 
 Poisson1::Poisson1( const ProcessorGroup   * myworld
                   , const MaterialManagerP   materialManager
@@ -125,6 +126,19 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                                   ,       SchedulerP & sched
                                   )
 {
+//______________________________________________________________________
+// Legacy approach:
+
+//  Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
+
+//  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//  task->computes(phi_label);
+//  task->computes(residual_label);
+//  sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
+
+//______________________________________________________________________
+// Portable approach:
+
   auto TaskDependencies = [&](Task* task) {
     task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
     task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
@@ -137,26 +151,6 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                         &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
-
-
-//  CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-//                            TaskDependencies,
-//                            "Poisson1::timeAdvance", Poisson1::timeAdvance<,
-//                            level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
-
-
-  //Task* task = scinew Task("Poisson1::timeAdvance", this, &Poisson1::timeAdvance);
-
-  //#if defined(HAVE_CUDA) && defined(UINTAH_ENABLE_KOKKOS)
-  //  if (Uintah::Parallel::usingDevice()) {
-  //    task->usesDevice(true);
-  //  }
-  //#endif
-  //task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  //task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
-  //task->computes(residual_label);
-
-  //sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
 
 //______________________________________________________________________
@@ -191,6 +185,7 @@ void Poisson1::initialize( const ProcessorGroup *
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
+
     for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
 
       if (patch->getBCType(face) == Patch::None) {
@@ -216,14 +211,14 @@ void Poisson1::initialize( const ProcessorGroup *
 //______________________________________________________________________
 //
 template <typename ExecSpace, typename MemSpace>
-void Poisson1::timeAdvance( const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            OnDemandDataWarehouse* old_dw,
-                            OnDemandDataWarehouse* new_dw,
-                            UintahParams& uintahParams,
-                            ExecutionObject<ExecSpace, MemSpace>& execObj )
+void Poisson1::timeAdvance( const PatchSubset                          * patches
+                          , const MaterialSubset                       * matls
+                          ,       OnDemandDataWarehouse                * old_dw
+                          ,       OnDemandDataWarehouse                * new_dw
+                          ,       UintahParams                         & uintahParams
+                          ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+                          )
 {
-
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -247,12 +242,14 @@ void Poisson1::timeAdvance( const PatchSubset* patches,
                   );
 
     Uintah::BlockRange range( l, h );
+
     auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
     auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
+
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
     Uintah::parallel_for(execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){
-        newphi(i, j, k) = phi(i,j,k);
+      newphi(i, j, k) = phi(i,j,k);
     });
 
     // Perform the main loop

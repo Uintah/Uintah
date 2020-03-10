@@ -198,20 +198,22 @@ TaskGraph::createDetailedTask(       Task           * task
 //______________________________________________________________________
 //
 //DS: 01042020: fix for OnDemandDW race condition
-void TaskGraph::overrideGhostCells(const std::vector<Task*> &sorted_tasks){
+void TaskGraph::overrideGhostCells( const std::vector<Task*> & sorted_tasks )
+{
   const auto number_of_tasks = sorted_tasks.size();
+
   for (auto i = 0u; i < number_of_tasks; i++) {
     Task* task = sorted_tasks[i];
 
     // look through requires
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
-      if(req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX){
+      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX) {
         req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
       }
     }
 
     for (Task::Dependency* req = task->getModifies(); req != nullptr; req = req->m_next) {
-      if(req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX){
+      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX) {
         req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
       }
     }
@@ -232,7 +234,7 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
   nullSort(sorted_tasks);
 
 #ifdef HAVE_CUDA
-  overrideGhostCells(sorted_tasks);	//DS: 01042020: fix for OnDemandDW race condition - only if using device. Do not disturb legacy CPU execution
+  overrideGhostCells(sorted_tasks); //DS: 01042020: fix for OnDemandDW race condition - only if using device. Do not disturb legacy CPU execution
 #endif
 
 //  topologicalSort(sorted_tasks);

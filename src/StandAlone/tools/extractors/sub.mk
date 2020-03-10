@@ -55,7 +55,6 @@ else
           $(PETSC_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)         \
           $(PIDX_LIBRARY) $(KOKKOS_LIBRARY)
-          
   ifeq ($(HAVE_TIFF),yes)
     LIBS := $(LIBS) $(TIFF_LIBRARY)
   endif

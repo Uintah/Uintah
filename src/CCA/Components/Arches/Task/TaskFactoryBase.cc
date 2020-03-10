@@ -407,7 +407,6 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
     } else if ( TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE != temp ){
       assignedExecutionSpace = temp;
     }
-
   }
 
   auto TaskDependencies = [&](Task *& tsk) {
