@@ -1,0 +1,70 @@
+//__________________________________
+// Basic Git Commands
+
+git clone <repository>        // copy a remote repository into a new local directory
+
+git checkout <branch>         // switch between branches (e.g., master, kokkos_dev, etc)
+
+git checkout -b <new_branch>  // create and checkout a new branch
+
+git pull                      // bring changes from a remote repository into a local repository
+
+git status                    // show the status of a local repository
+
+git diff                      // show differences between commits, local/remote repositories, etc
+
+git add <file>                // add files to the list that will be committed
+
+git rm <file>                 // removes files from the list that will be committed and the working directory
+
+git commit -m "<msg>"         // commit changes to a local repository
+git push                      // push committed local changes to a remote repository
+
+git reset --hard              // discard uncommitted local changes in tracked files
+
+git revert <commit>           // reverse prior commits
+
+Notes:
+- git push is needed after git commit to bring changes into a remote repository
+- git pull incurs a git merge and may create a new merge commit
+- git revert creates a new commit reversing the specified commit(s)
+
+
+
+//__________________________________
+// Branch Merge Example
+
+git checkout master                   // switch to the master branch
+git pull                              // update to the latest remote revision
+
+git checkout kokkos_dev               // switch to the target branch
+git pull                              // update to the latest remote revision
+
+git merge master --no-commit --no-ff  // merge master into kokkos_dev without changing or updating the remote branch
+
+* inspect merge and resolve conflicts *
+
+git commit                            // commit changes to the local repository
+git push                              // push committed local changes to the remote repository
+
+Notes:
+- git merge brings commit history from the source branch into the destination branch
+
+
+
+//__________________________________
+// Additional Resources
+
+Git Learning Resources:
+https://try.github.io/
+
+Side-by-Side Comparisons of Git and SVN Commands:
+https://backlog.com/git-tutorial/reference/commands/
+
+Virtual Sandbox to Experiment with Git Commands:
+http://git-school.github.io/visualizing-git/#free-remote
+
+Virtual Sandbox and Tutorial to Experiment with Git Commands:
+https://learngitbranching.js.org/
+
+

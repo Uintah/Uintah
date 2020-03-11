@@ -1803,6 +1803,7 @@ IntrusionBC::addScalarRHS( const Patch* patch,
               }
             }
           }
+
         }
       }
     }

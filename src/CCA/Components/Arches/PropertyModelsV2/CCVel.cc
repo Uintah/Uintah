@@ -243,14 +243,15 @@ void CCVel::compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, con
 
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
   Vector DX = patch->dCell();
-  const double Fdx = 4*DX[0];
-  const double Fdy = 4*DX[1];
-  const double Fdz = 4*DX[2];
+
+  // const double Fdx = 4*DX[0];
+  // const double Fdy = 4*DX[1];
+  // const double Fdz = 4*DX[2];
 
   Uintah::parallel_for(range, [&](int i, int j, int k){
 
     // Cell-centered values for cell-centered vorticity - but has the negative
-    //  behavior of decaying the vorticity in the higher wavenumbers. 
+    //  behavior of decaying the vorticity in the higher wavenumbers.
     // const double dudy = ((u(i,j+1,k) + u(i+1,j+1,k)) - (u(i,j-1,k)+u(i+1,j-1,k))) / Fdy;
     // const double dudz = ((u(i,j,k+1) + u(i+1,j,k+1)) - (u(i,j,k-1)+u(i+1,j,k-1))) / Fdz;
     // const double dvdx = ((v(i+1,j,k) + v(i+1,j+1,k)) - (v(i-1,j,k)+v(i-1,j+1,k))) / Fdx;

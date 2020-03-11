@@ -601,8 +601,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_CCVVelocityLabel, gac, 1);
   tsk->requires(Task::OldDW, d_lab->d_CCWVelocityLabel, gac, 1);
 
-//#ifdef divergenceconstraint
-
   if (d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
@@ -612,10 +610,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                                 d_lab->d_tensorMatl,  oams,   gac, 1);
     }
   }
-
-//#endif // divergenceconstraint
-  // for multi-material
-    // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
 
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_MAlab->d_uVel_mmLinSrcLabel,   gn, 0);
