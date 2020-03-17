@@ -58,7 +58,6 @@ if [ "$MACHINE" == "uintah-build" ]; then
 
   if [ "$LOGNAME" == "gpu_rt" ]; then
     names=(\
-      "ahumphrey@sci.utah.edu,"            \
       "t.harman@utah.edu,"                 \
       "jholmen@sci.utah.edu,"              \
       "jeremy.thornock@utah.edu" )

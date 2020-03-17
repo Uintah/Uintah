@@ -384,6 +384,7 @@ void UnweightVariable<T>::compute_bcs( const Patch* patch, ArchesTaskInfoManager
           for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
             Scaling_info info = ieqn->second;
             T& un_var = tsk_info->get_field<T>(info.unscaled_var);
+
             parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
               un_var(i,j,k) *= info.constant;
             });
@@ -535,17 +536,15 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   const int istart = 0;
   const int iend = m_eqn_names.size();
   for (int ieqn = istart; ieqn < iend; ieqn++ ){
-
     T& un_var = tsk_info->get_field<T>(m_un_eqn_names[ieqn]);
     T& var = tsk_info->get_field<T>(m_eqn_names[ieqn]);
-    
+
     un_var.initialize(0.0);
 
     Uintah::parallel_for( range, [&](int i, int j, int k){
       const double rho_inter = 0.5 * (rho(i,j,k)+rho(i-ioff,j-joff,k-koff));
       un_var(i,j,k) = var(i,j,k)/ ( rho_inter + 1.e-16);
     });
-
   }
 
   // unscaling
@@ -553,6 +552,7 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
   for ( auto ieqn = m_scaling_info.begin(); ieqn != m_scaling_info.end(); ieqn++ ){
     Scaling_info info = ieqn->second;
     T& un_var = tsk_info->get_field<T>(info.unscaled_var);
+
     Uintah::parallel_for( range, [&](int i, int j, int k){
       un_var(i,j,k) *= info.constant;
     });
@@ -563,19 +563,17 @@ void UnweightVariable<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_i
     Clipping_info info = ieqn->second;
     T& var = tsk_info->get_field<T>(info.var);
     T& rho_var = tsk_info->get_field<T>(ieqn->first);
+
     Uintah::parallel_for( range, [&](int i, int j, int k){
-    if ( var(i,j,k) > info.high ) {
-
-      var(i,j,k)     = info.high;
-      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
-
-    } else if ( var(i,j,k) < info.low ) {
-      var(i,j,k) = info.low;
-      rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
-    }
+      if ( var(i,j,k) > info.high ) {
+        var(i,j,k) = info.high;
+        rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
+      } else if ( var(i,j,k) < info.low ) {
+        var(i,j,k) = info.low;
+        rho_var(i,j,k) = rho(i,j,k)*var(i,j,k);
+      }
     });
   }
-
 }
 }
 #endif

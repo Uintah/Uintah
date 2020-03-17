@@ -27,7 +27,7 @@
     <save label="volFractionZ"/>
     <save label="cellType"/>
     <save label="drhodt"/>
-    <save label="m_dot_g"/>
+    <save label="MB_mdot_g_in"/>
     <save label="gas_kinetic_energy"/>
     <save label="x-mom_RHS"/>
     <save label="x-mom_x_flux"/>
@@ -286,7 +286,7 @@
         </PressureSolver>
       </KMomentum>
       <Utilities>
-        <utility label="compute_mass_flow_rate" type="mass_flow_rate">
+        <utility label="MB" type="mass_flow_rate">
         </utility>
       </Utilities>
       <TurbulenceModels>

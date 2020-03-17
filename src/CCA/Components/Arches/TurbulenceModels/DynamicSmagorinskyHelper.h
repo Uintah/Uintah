@@ -51,6 +51,7 @@ namespace Uintah { namespace ArchesCore {
         }
       }
     }
+
     void apply_zero_neumann( const Patch* patch, CCVariable<double>& var,
                              constCCVariable<double>& vol_fraction ){
 

@@ -99,6 +99,7 @@ namespace Uintah {
     CFYT& flux_y;
     CFZT& flux_z;
 #endif
+
     const Vector& Dx;
 
   };

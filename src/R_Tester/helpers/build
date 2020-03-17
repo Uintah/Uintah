@@ -65,7 +65,6 @@ if [ "$OS" = "Linux" ]; then
       --with-petsc=/usr/local/petsc-3.8.4 \\
       --enable-examples \\
       --enable-arches \\
-      --enable-wasatch_3p \\
       --enable-ray-scatter \\"
     fi
 

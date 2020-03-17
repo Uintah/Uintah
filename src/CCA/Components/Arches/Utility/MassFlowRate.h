@@ -28,9 +28,9 @@ namespace Uintah{
 
     void create_local_labels();
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks);
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){}
 
-    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
+    void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
 
     void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry , const bool packed_tasks){};
 
@@ -64,7 +64,7 @@ namespace Uintah{
   private:
 
     int m_Nenv;
-    bool particleMethod_bool;
+    bool m_particleMethod_bool;
     std::string m_volFraction_name;
 
     std::string m_g_uVel_name;
@@ -78,6 +78,8 @@ namespace Uintah{
     std::string m_w_base_name;
     std::string m_RC_base_name;
     std::string m_CH_base_name;
+
+    std::string m_scalar_name{"NULL"};
 
     std::vector<std::string > m_p_uVel_names;
     std::vector<std::string > m_p_vVel_names;
@@ -106,8 +108,6 @@ namespace Uintah{
     std::vector<double> m_p_uVel_scaling_constant;
     std::vector<double> m_p_vVel_scaling_constant;
     std::vector<double> m_p_wVel_scaling_constant;
-
-    void register_massFlowRate( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
     void eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 

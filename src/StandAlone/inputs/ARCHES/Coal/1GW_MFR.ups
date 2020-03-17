@@ -17,12 +17,14 @@
     <filebase>1GW_MFR.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <save label="m_dot_g"/>
-    <save label="m_dot_p_organics"/>
-    <save label="m_dot_g_velinlet"/>
-    <save label="m_dot_p_organics_velinlet"/>
-    <save label="m_dot_g_coal_burner_46"/>
-    <save label="m_dot_p_organics_coal_burner_46"/>
+    <save label="MB_mdot_g_in"/>
+    <save label="MB_mdot_g_out"/>
+    <save label="MB_mdot_p_organics_in"/>
+    <save label="MB_mdot_p_organics_out"/>
+    <save label="MB_mdot_g_in_velinlet"/>
+    <save label="MB_mdot_p_organics_in_velinlet"/>
+    <save label="MB_mdot_g_in_coal_burner_46"/>
+    <save label="MB_mdot_p_organics_in_coal_burner_46"/>
     <save label="rho_coal_0"/>
     <save label="rho_coal_1"/>
     <save label="rho_coal_2"/>
@@ -982,7 +984,7 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face lower="20.0 0.0 0.0" name="xface outlet" rectangle="x+" upper="20.0 10.0 10.0">
+      <Face lower="20.0 0.0 0.0" name="xface outlet" rectangle="x+" upper="20.0 10.0 10.0" type="Outflow">
         <BCType id="all" label="outlet_xface outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
@@ -1470,7 +1472,7 @@
         </Sources>
       </TransportEqns>
       <Utilities>
-        <utility label="compute_mass_flow_rate" type="mass_flow_rate">
+        <utility label="MB" type="mass_flow_rate">
         </utility>
       </Utilities>
       <Turbulence model="compdynamicprocedure">

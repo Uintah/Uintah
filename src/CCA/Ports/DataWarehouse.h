@@ -87,7 +87,7 @@ DESCRIPTION
 WARNING
         
 ****************************************/
-      
+
 class DataWarehouse : public RefCounted {
 
 public:

@@ -1006,7 +1006,6 @@ template <typename ES, typename MS>
     IntVector vDir(var_help.ioff, var_help.joff, var_help.koff);
     const double dot = vDir[0]*iDir[0] + vDir[1]*iDir[1] + vDir[2]*iDir[2];
 
-
     if ( parallel_dir ){
         //The face normal and the velocity are in parallel
         if (dot == -1) {

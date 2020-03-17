@@ -712,9 +712,10 @@ private:
                             ,       bool       replace
                             );
 
-  inline void checkModifyAccess(const VarLabel* label,
-                                int matlIndex,
-                                const Patch* patch);
+  inline void checkModifyAccess( const VarLabel * label
+                               ,       int        matlIndex
+                               , const Patch    * patch
+                               );
 
   // These will return false if access is not allowed for the current task.
   inline bool hasGetAccess( const Task            * runningTask

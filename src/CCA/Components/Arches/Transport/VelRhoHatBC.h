@@ -46,12 +46,12 @@ public:
 
       public:
 
-        Builder(std::string name, int matl_index):
-        m_task_name(name), m_matl_index(matl_index){};
+        Builder( std::string name, int matl_index )
+          : m_task_name(name), m_matl_index(matl_index){};
+        ~Builder(){}
 
-        ~Builder() {}
-
-        VelRhoHatBC* build(){ return scinew VelRhoHatBC(m_task_name, m_matl_index);};
+        VelRhoHatBC* build()
+        { return scinew VelRhoHatBC( m_task_name, m_matl_index ); };
 
       protected:
 
