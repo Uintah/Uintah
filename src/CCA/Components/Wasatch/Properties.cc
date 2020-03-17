@@ -159,12 +159,10 @@ namespace WasatchCore{
       params->getAttribute("transitionMidPoint", transitionMidPoint);
       params->getAttribute("transitionRange"   , transitionRange   );
 
-      Expr::Tag fTag       = parse_nametag( params->findBlock("MixtureFraction"               )->findBlock("NameTag") );
-      Expr::Tag rhoFNP1Tag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      fTag      .reset_context(Expr::STATE_N);
-      rhoFNP1Tag.reset_context(Expr::STATE_NP1);
+      Expr::Tag fTag = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
+      fTag.reset_context(Expr::STATE_N);
+
       const Expr::Tag fInitTag(fTag.name(), Expr::STATE_NONE);
-      const Expr::Tag fNP1Tag (fTag.name(), Expr::STATE_NP1 ); 
 
       const Uintah::ProblemSpecP densParams = params->findBlock("Density");
       Expr::Tag densityTag = parse_nametag( densParams->findBlock("NameTag") );
@@ -188,11 +186,10 @@ namespace WasatchCore{
 
       const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag, fTag);
 
-      typedef TwoFluidDensityfromMixFrac<SVolField>::Builder  PropertyFromF;
-      typedef TwoFluidDensityfromRhoF   <SVolField>::Builder  PropertyFromRhoF;
-      typedef Expr::PlaceHolder         <SVolField>::Builder  PlaceHolder;
-      typedef ExprAlgebra               <SVolField>           Algebra;
-      typedef ExprAlgebra               <SVolField>::Builder  AlgBuilder;
+      typedef TwoFluidPropertyFromMixFrac<SVolField>::Builder  PropertyFromF;
+      typedef Expr::PlaceHolder          <SVolField>::Builder  PlaceHolder;
+      typedef ExprAlgebra                <SVolField>           Algebra;
+      typedef ExprAlgebra                <SVolField>::Builder  AlgBuilder;
 
       icFactory.register_expression( new PropertyFromF( densityInitTag, 
                                                         dRhoDfTag,
@@ -201,14 +198,36 @@ namespace WasatchCore{
                                                         density1, 
                                                         transitionMidPoint, 
                                                         transitionRange ) );
+      
+      // If specified  compute density from a density-weighted mixture fraction.
+      // Otherwise, compute density from a mixture fraction.
+      if(params->findBlock("DensityWeightedMixtureFraction")){
+        Expr::Tag rhoFNP1Tag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+        rhoFNP1Tag.reset_context(Expr::STATE_NP1);
 
-      asFactory.register_expression( new PropertyFromRhoF( densityNP1Tag, 
-                                                           dRhoDfTag, 
-                                                           rhoFNP1Tag,  
-                                                           density0, 
-                                                           density1, 
-                                                           transitionMidPoint, 
-                                                           transitionRange ) );
+        typedef TwoFluidDensityfromRhoF<SVolField>::Builder DensityFromRhoF;
+
+        asFactory.register_expression( new DensityFromRhoF( densityNP1Tag, 
+                                                            dRhoDfTag, 
+                                                            rhoFNP1Tag,  
+                                                            density0, 
+                                                            density1, 
+                                                            transitionMidPoint, 
+                                                            transitionRange ) );
+      }
+      else{
+        const Expr::Tag fNP1Tag(fTag.name(), Expr::STATE_NP1 ); 
+
+        asFactory.register_expression( new PropertyFromF( densityNP1Tag, 
+                                                          dRhoDfTag,
+                                                          fNP1Tag, 
+                                                          density0, 
+                                                          density1, 
+                                                          transitionMidPoint, 
+                                                          transitionRange ) );
+
+        asFactory.register_expression( new PlaceHolder( fNP1Tag) );
+      }
 
       asFactory.register_expression( new PropertyFromF( nuTag, 
                                                         fTag, 
@@ -222,10 +241,6 @@ namespace WasatchCore{
                                                      Algebra::PRODUCT ) );
 
       asFactory.register_expression( new PlaceHolder( densityTag ) );
-
-      // Expr::ExpressionID id =
-      
-      // asFactory.register_expression( new PlaceHolder( fNP1Tag) );
     }
 
   //====================================================================
