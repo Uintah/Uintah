@@ -58,9 +58,9 @@ PressureSource::~PressureSource()
 
 void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( doX_ ) gradXOp_     = opDB.retrieve_operator<GradXT>();
-  if( doY_ ) gradYOp_     = opDB.retrieve_operator<GradYT>();
-  if( doZ_ ) gradZOp_     = opDB.retrieve_operator<GradZT>();
+  if( doX_ ) gradXOp_ = opDB.retrieve_operator<GradXT>();
+  if( doY_ ) gradYOp_ = opDB.retrieve_operator<GradYT>();
+  if( doZ_ ) gradZOp_ = opDB.retrieve_operator<GradZT>();
   
   timeIntInfo_ = opDB.retrieve_operator<WasatchCore::TimeIntegrator>();
   
@@ -91,9 +91,9 @@ void PressureSource::evaluate()
   typedef typename Expr::Expression<SVolField>::ValVec SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
-  const TimeField& dt = dt_->field_ref();
+  const TimeField& dt      = dt_     ->field_ref();
   const TimeField& rkStage = rkStage_->field_ref();
-  const SVolField& rhoNew = rhoNew_->field_ref();
+  const SVolField& rhoNew  = rhoNew_ ->field_ref();
   
   SVolField& psrc = *results[0];
   
@@ -128,8 +128,8 @@ void PressureSource::evaluate()
     
   } else { // variable density
     
-    SVolField& drhodtNew = *results[1];
-    const SVolField& divu       = divu_->field_ref();    
+    SVolField& drhodtNew    = *results[1];
+    const SVolField& divu   = divu_  ->field_ref();    
     const SVolField& rhoOld = rhoOld_->field_ref();
     
     drhodtNew <<= (rhoNew - rhoOld)/dt;
