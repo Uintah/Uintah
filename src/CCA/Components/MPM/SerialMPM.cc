@@ -811,8 +811,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           all_matls);
   }
   if(flags->d_computeScaleFactor){
-    scheduleComputeParticleScaleFactor(   sched, patches, all_matls);
-    //scheduleComputeParticleScaleFactor(   sched, patches, matls);
+    scheduleComputeParticleScaleFactor(   sched, patches, matls);
+    if(flags->d_useLineSegments){
+      scheduleComputeLineSegScaleFactor(  sched, patches, lineseg_matls);
+    }
+    if(flags->d_useTriangles){
+      scheduleComputeTriangleScaleFactor( sched, patches, triangle_matls);
+    }
   }
   scheduleChangeGrainMaterials(           sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
@@ -1897,6 +1902,49 @@ SerialMPM::scheduleComputeParticleScaleFactor(       SchedulerP  & sched,
 
   Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, 
                           &SerialMPM::computeParticleScaleFactor);
+
+  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,              Ghost::None );
+  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,Ghost::None );
+  t->computes( lb->pScaleFactorLabel_preReloc );
+
+  sched->addTask( t, patches, matls );
+}
+
+void
+SerialMPM::scheduleComputeLineSegScaleFactor(        SchedulerP  & sched,
+                                               const PatchSet    * patches,
+                                               const MaterialSet * matls )
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels())) {
+    return;
+  }
+
+  printSchedule( patches, cout_doing, "MPM::scheduleComputeLineSegScaleFactor" );
+
+  Task * t = scinew Task( "MPM::computeLineSegScaleFactor",this, 
+                          &SerialMPM::computeLineSegScaleFactor);
+
+  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,              Ghost::None );
+  t->computes( lb->pScaleFactorLabel_preReloc );
+
+  sched->addTask( t, patches, matls );
+}
+
+void
+SerialMPM::scheduleComputeTriangleScaleFactor(       SchedulerP  & sched,
+                                               const PatchSet    * patches,
+                                               const MaterialSet * matls )
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels())) {
+    return;
+  }
+
+  printSchedule( patches, cout_doing,"MPM::scheduleComputeTriangleScaleFactor");
+
+  Task * t = scinew Task( "MPM::computeTriangleScaleFactor",this, 
+                          &SerialMPM::computeTriangleScaleFactor);
 
   t->requires( Task::NewDW, lb->pSizeLabel_preReloc,              Ghost::None );
   t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,Ghost::None );
@@ -6545,37 +6593,22 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         } // for particles
       } // isOutputTimestep
     } // loop over MPM matls
+  } // patches
+}
 
-#if 0
-   if(flags->d_useTracers){
-    unsigned int numTrMatls=m_materialManager->getNumMatls( "Tracer" );
-    for(unsigned int m = 0; m < numTrMatls; m++){
-      TracerMaterial* tr_matl = 
-                  (TracerMaterial*) m_materialManager->getMaterial("Tracer", m);
-      int dwi = tr_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+void SerialMPM::computeLineSegScaleFactor(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* ,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw)
+{
+  // This task computes the particles physical size, to be used
+  // in scaling particles for the deformed particle vis feature
 
-      constParticleVariable<Matrix3> psize,pF;
-      ParticleVariable<Matrix3> pScaleFactor;
-      new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
-      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
-      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing MPM::computeLineSegScaleFactor");
 
-      if(m_output->isOutputTimeStep()){
-        Vector dx = patch->dCell();
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-                                               0,dx[1],0,
-                                               0,0,dx[2])*psize[idx]));
-        } // for particles
-      } // isOutputTimestep
-    } // loop over Tracer matls
-   }  // if using tracers
-#endif
-
-   if(flags->d_useLineSegments){
     unsigned int numLSMatls=m_materialManager->getNumMatls( "LineSegment" );
     for(unsigned int m = 0; m < numLSMatls; m++){
       LineSegmentMaterial* ls_matl = 
@@ -6586,7 +6619,6 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize,pF;
       ParticleVariable<Matrix3> pScaleFactor;
       new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
-//    new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
       if(m_output->isOutputTimeStep()){
@@ -6594,18 +6626,28 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-//          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-//                                                0,dx[1],0,
-//                                                0,0,dx[2])*psize[idx]));
           pScaleFactor[idx] = ((Matrix3(dx[0],0,0,
                                         0,dx[1],0,
                                         0,0,dx[2])*psize[idx]));
         } // for particles
       } // isOutputTimestep
     } // loop over LineSegment matls
-   }  // if using line segments
+  } // patches
+}
 
-   if(flags->d_useTriangles){
+void SerialMPM::computeTriangleScaleFactor(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  // This task computes the particles initial physical size, to be used
+  // in scaling particles for the deformed particle vis feature
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing MPM::computeTriangleScaleFactor");
+
     unsigned int numLSMatls=m_materialManager->getNumMatls( "Triangle" );
     for(unsigned int m = 0; m < numLSMatls; m++){
       LineSegmentMaterial* ls_matl = 
@@ -6616,7 +6658,6 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
       constParticleVariable<Matrix3> psize,pF;
       ParticleVariable<Matrix3> pScaleFactor;
       new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
-//    new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 
       if(m_output->isOutputTimeStep()){
@@ -6624,17 +6665,12 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-//          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
-//                                                0,dx[1],0,
-//                                                0,0,dx[2])*psize[idx]));
           pScaleFactor[idx] = ((Matrix3(dx[0],0,0,
                                         0,dx[1],0,
                                         0,0,dx[2])*psize[idx]));
         } // for particles
       } // isOutputTimestep
     } // loop over Triangle matls
-   }  // if using triangles
-
   } // patches
 }
 

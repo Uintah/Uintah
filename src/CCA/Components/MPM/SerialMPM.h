@@ -500,9 +500,21 @@ protected:
                           DataWarehouse* new_dw);
 
 
-  // Used to compute the particles initial physical size
+  // Used to compute the particles physical size
   // for use in deformed particle visualization
   virtual void computeParticleScaleFactor(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
+
+  virtual void computeLineSegScaleFactor(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
+  virtual void computeTriangleScaleFactor(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
@@ -674,11 +686,19 @@ protected:
                                   const PatchSet*,
                                   const MaterialSet*);
 
-  virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
+  virtual void scheduleComputeParticleScaleFactor(SchedulerP&,
                                                   const PatchSet*,
                                                   const MaterialSet*);
 
-  virtual void scheduleChangeGrainMaterials(SchedulerP&, 
+  virtual void scheduleComputeLineSegScaleFactor(SchedulerP&,
+                                                 const PatchSet*,
+                                                 const MaterialSet*);
+
+  virtual void scheduleComputeTriangleScaleFactor(SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*);
+
+  virtual void scheduleChangeGrainMaterials(SchedulerP&,
                                             const PatchSet*,
                                             const MaterialSet*);
 
