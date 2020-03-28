@@ -373,7 +373,7 @@ TriGeometryPiece::readPoints(const string& file)
 {
   string f = file + ".pts";
   
-  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";
+//  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";
   std::ifstream source(f.c_str());
   
   if (!source) {
@@ -412,7 +412,7 @@ void
 TriGeometryPiece::readTri(const string& file)
 {
   string f = file + ".tri";
-  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";;
+//  proc0cout << " TriGeometryPiece reading file: (" << f << ")\n";;
   std::ifstream source(f.c_str());
   
   if (!source) {

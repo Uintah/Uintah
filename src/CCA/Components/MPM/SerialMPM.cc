@@ -59,6 +59,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -753,7 +754,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           triangle_matls_sub,
                                                           all_matls);
   }
-  scheduleFindGrainCollisions(            sched, patches, matls);
+//  scheduleFindGrainCollisions(          sched, patches, matls);
   if(flags->d_computeNormals){
     scheduleComputeNormals(               sched, patches, matls);
   }
@@ -829,7 +830,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleAddParticles(                 sched, patches, matls);
   }
 
-  scheduleManageChangeGrainMaterials(     level, sched);
+//scheduleManageChangeGrainMaterials(     level, sched);
   scheduleManageDoAuthigenesis(           level, sched);
 
   if(d_analysisModules.size() != 0){
@@ -1332,6 +1333,7 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                         this, &SerialMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
 
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
@@ -1652,24 +1654,34 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
-  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triangleIDLabel,         triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,   triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,   triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,   triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-                                                     triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gnone);
+                                                        triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triUseInPenaltyLabel,    triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triAreaLabel,            triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,     triangle_matls, gnone);
+//t->requires(Task::OldDW, lb->triNode0TriangleIDsLabel,triangle_matls, gnone);
+//t->requires(Task::OldDW, lb->triNode1TriangleIDsLabel,triangle_matls, gnone);
+//t->requires(Task::OldDW, lb->triNode2TriangleIDsLabel,triangle_matls, gnone);
 
-  t->computes(lb->pXLabel_preReloc,                      triangle_matls);
-  t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
-  t->computes(lb->triangleIDLabel_preReloc,              triangle_matls);
-  t->computes(lb->triMidToN0VectorLabel_preReloc,        triangle_matls);
-  t->computes(lb->triMidToN1VectorLabel_preReloc,        triangle_matls);
-  t->computes(lb->triMidToN2VectorLabel_preReloc,        triangle_matls);
-  t->computes(lb->pDeformationMeasureLabel_preReloc,     triangle_matls);
-  t->computes(lb->triUseInPenaltyLabel_preReloc,         triangle_matls);
+  t->computes(lb->pXLabel_preReloc,                     triangle_matls);
+  t->computes(lb->pSizeLabel_preReloc,                  triangle_matls);
+  t->computes(lb->triangleIDLabel_preReloc,             triangle_matls);
+  t->computes(lb->triMidToN0VectorLabel_preReloc,       triangle_matls);
+  t->computes(lb->triMidToN1VectorLabel_preReloc,       triangle_matls);
+  t->computes(lb->triMidToN2VectorLabel_preReloc,       triangle_matls);
+  t->computes(lb->pDeformationMeasureLabel_preReloc,    triangle_matls);
+  t->computes(lb->triUseInPenaltyLabel_preReloc,        triangle_matls);
+  t->computes(lb->triAreaLabel_preReloc,                triangle_matls);
+  t->computes(lb->triAreaAtNodesLabel_preReloc,         triangle_matls);
+//t->computes(lb->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
+//t->computes(lb->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
+//t->computes(lb->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -1692,8 +1704,9 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
 
   t->requires(Task::OldDW, lb->pXLabel,              lineseg_matls, gac, 2);
+  t->requires(Task::OldDW, lb->pSizeLabel,           lineseg_matls, gac, 2);
   t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gac, 2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+2);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 
@@ -1717,15 +1730,19 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
 
+  t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,2*NGN);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
+//  t->computes(lb->triInContactLabel,                triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -3396,8 +3413,36 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
     Vector dxCell = patch->dCell();
+#if 0
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+    if(time<20.0){
+      gravity = 0.5*flags->d_gravity*(time/20.);
+    } else if(time<50.){
+      gravity = 0.5*flags->d_gravity;
+    } else if(time<70.){
+      gravity = 0.5*flags->d_gravity + 0.5*gravity*((time-50.)/20.);
+    } else if(time<100.){
+      gravity = flags->d_gravity;
+    } else if(time<120.){
+      gravity = flags->d_gravity + 0.5*gravity*((time-100.)/20.);
+    } else if(time<150.){
+      gravity = 1.5*flags->d_gravity;
+    } else if(time<170.){
+      gravity = 1.5*flags->d_gravity + 0.5*gravity*((time-150.)/20.);
+    } else if(time<200.){
+      gravity = 2.0*flags->d_gravity;
+    }
+    proc0cout << "Gravity = " << gravity << endl;
+#endif
 
     for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
+#if 0
+      if(m==1){
+        gravity*=-1;
+      }
+#endif
       MPMMaterial* mpm_matl = 
                  (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
@@ -4961,13 +5006,11 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
   
         double sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for(unsigned int m = 0; m < numMPMMatls; m++){
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
             sumSk += gmass[adv_matl][node]*S[k];
           }
-        }
         vel/=sumSk;
   
         right += vel*delT;
@@ -4980,13 +5023,11 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
   
         sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for(unsigned int m = 0; m < numMPMMatls; m++){
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
             sumSk += gmass[adv_matl][node]*S[k];
           }
-        }
         vel/=sumSk;
   
         left += vel*delT;
@@ -5057,10 +5098,10 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeLineSegmentForces");
 
-    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+//    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator=scinew cpdiInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    Matrix3 size; size.Identity();
 
     Ghost::GhostType gac = Ghost::AroundCells;
     Vector dxCell = patch->dCell();
@@ -5080,7 +5121,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                     gac,NGN+1);
+                                                                     gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
     }
 
@@ -5088,6 +5129,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
     // Get the arrays of particle values to be changed
     std::vector<constParticleVariable<Point>  >  tx0(numLSMatls);
+    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
     std::vector<constParticleVariable<Vector>  > lsMidToEndVec0(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
 
@@ -5101,12 +5143,10 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       psetvec.push_back(pset0);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
+      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
       old_dw->get(lsMidToEndVec0[tmo], lb->lsMidToEndVectorLabel,     pset0);
     }
 
-    long int numChecks=0;
-    int numNear=0;
-    int numOverlap=0;
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       LineSegmentMaterial* t_matl0 = (LineSegmentMaterial *) 
                              m_materialManager->getMaterial("LineSegment", tmo);
@@ -5122,7 +5162,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
         if(adv_matl0==adv_matl1){
           continue;
         }
-
 
         ParticleSubset* pset1 = psetvec[tmi];
 
@@ -5144,76 +5183,96 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
           Point px0=tx0[tmo][idx0] - lsMidToEndVec0[tmo][idx0];
 
           double min_sep  = 9.e99;
+          double min_sep2  = 9.e99;
           int closest = 99999;
+          int secondClosest = 99999;
           // Loop over other particle subset
           for(ParticleSubset::iterator iter1 = pset1->begin();
               iter1 != pset1->end(); iter1++){
             particleIndex idx1 = *iter1;
-            numChecks++;
             Point px1 = tx0[tmi][idx1];
             double sep = (px1-px0).length2();
-            if(sep < min_sep && sep < 0.25*cell_length2){
-              numNear++;
-              min_sep  = sep;
-              closest  = idx1;
+            if(sep < min_sep2 && sep < 0.25*cell_length2){
+              if(sep < min_sep){
+                secondClosest=closest;
+                min_sep2=min_sep;
+                closest  = idx1;
+                min_sep  = sep;
+              } 
+              else{
+                secondClosest=idx1;
+                min_sep2  = sep;
+              }
             }
           }
 
           double forceMag=0.0;
+          bool done = false;
+          double tC1 = 99.9;
+          double tC2 = 99.9;
+          double overlap1 = 99.9;
+          double overlap2 = 99.9;
+          Vector normal1(0.,0.,0);
+          Vector normal2(0.,0.,0);
           if(closest < 99999){
             // Following the description in stackexchange:
             // https://math.stackexchange.com/questions/2193720/find-a-point-on-a-line-segment-which-is-the-closest-to-other-point-not-on-the-li
-            Point A = tx0[tmi][closest] + lsMidToEndVec0[tmi][closest];
-            Point B = tx0[tmi][closest] - lsMidToEndVec0[tmi][closest];
-            Vector v = B - A;
-            double vLength2 = v.length2();
-            double vLength = sqrt(vLength2);
+           Point A = tx0[tmi][closest] + lsMidToEndVec0[tmi][closest];
+           Point B = tx0[tmi][closest] - lsMidToEndVec0[tmi][closest];
+           Vector v = B - A;
+           double vLength2 = v.length2();
 
-            Vector u = A - px0;
-            double t = -Dot(v,u)/vLength2;
-            if(t >= 0.0 && t <= 1.0){
-              Vector fromLineSegToPoint = px0.asVector() - ((1.-t)*A + t*B);
-              //normal = v X (0,0,1)
-              Vector normal = Vector(v.y(), -v.x(), 0.)
-                            / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
-              double overlap = Dot(normal,fromLineSegToPoint);
-              if(overlap < 0.0){
-               numOverlap++;
+           Vector u = A - px0;
+           tC1 = -Dot(v,u)/vLength2;
+           Vector fromLineSegToPoint1= px0.asVector() - ((1.-tC1)*A + tC1*B);
+           //normal = v X (0,0,1)
+           normal1 = Vector(v.y(), -v.x(), 0.)
+                         / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
+           overlap1 = Dot(normal1,fromLineSegToPoint1);
+           if(tC1 >= 0.0 && tC1 <= 1.0){
+              if(overlap1 < 0.0){
+               done = true;
+               double vLength = sqrt(vLength2);
                double K = K_l*vLength;
-               forceMag = overlap*K;
+               forceMag = overlap1*K;
 
-               Vector tForce1A = (1.-t)*forceMag*normal;
-               Vector tForce1B = t*forceMag*normal;
+               Vector tForce1A = (1.-tC1)*forceMag*normal1;
+               Vector tForce1B = tC1*forceMag*normal1;
+#if 0
+               cout << "Case 1" << endl;
+               cout << "LS, px0    = " << px0 << endl;
+               cout << "LS, A      = " << A << endl;
+               cout << "LS, B      = " << B << endl;
+               cout << "LS, tForce1A      = " << tForce1A << endl;
+               cout << "LS, tForce1B      = " << tForce1B << endl;
+               cout << "idx0 = " << idx0 << endl;
+               cout << "closest = " << closest << endl;
+               cout << "normal1 = " << normal1 << endl;
+               cout << "LS, overlap1, forceMag = " << overlap1 << ", " 
+                                              << forceMag << endl;
+#endif
 
 #if 0
-	       bool spew = false;
-               if(adv_matl0==2 || adv_matl1==2){
-                if(px0.x()>0.01 && px0.x()<0.05 && px0.y()>0.24){
-
                cout << "tmo = " << tmo << endl;
                cout << "tmi = " << tmi << endl;
                cout << "LS, lsMTEV1      = " << lsMidToEndVec0[tmi][closest] << endl;
-               cout << "LS, overlap, forceMag = " << overlap << ", " 
+               cout << "LS, overlap1, forceMag = " << overlap1 << ", " 
                                               << forceMag << endl;
 
                cout << "LS, adv_matl0 = " << adv_matl0 << endl;
                cout << "LS, adv_matl1 = " << adv_matl1 << endl;
-               cout << "LS, A      = " << A << endl;
-               cout << "LS, B      = " << B << endl;
                cout << "LS, px0    = " << px0 << endl;
-               cout << "LS, normal = " << normal << endl;
+               cout << "LS, normal1 = " << normal1 << endl;
                cout << "LS, u      = " << u << endl;
-               cout << "LS, t      = " << t << endl;
-	         }
-	       }
+               cout << "LS, tC1      = " << tC1 << endl;
 #endif
 
                // See comments in addCohesiveZoneForces for a description of how
                // the force is put on the nodes
 
                // Get the node indices that surround the cell
-               //Matrix3 size = tsize0[tmo][idx0];
-               int NN = interpolator->findCellAndWeights(A, ni, S, size);
+               Matrix3 size1 = tsize0[tmi][closest];
+               int NN = interpolator->findCellAndWeights(A, ni, S, size1);
   
                double totMass0 = 0.;
                double totMass1 = 0.;
@@ -5237,7 +5296,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                }
 
                // Get the node indices that surround the cell
-               NN = interpolator->findCellAndWeights(B, ni, S, size);
+               NN = interpolator->findCellAndWeights(B, ni, S, size1);
   
                totMass0 = 0.;
                totMass1 = 0.;
@@ -5259,15 +5318,189 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                              * gmass[adv_matl1][node]/totMass1;
                  }
                }
+
+              } // if overlap1
+           } // if(tC1 >= 0.0 && tC1 <= 1.0)
+
+           if(!done && secondClosest < 99999){
+            Point A2=tx0[tmi][secondClosest]+lsMidToEndVec0[tmi][secondClosest];
+            Point B2=tx0[tmi][secondClosest]-lsMidToEndVec0[tmi][secondClosest];
+            Vector v2 = B2 - A2;
+            double v2Length2 = v2.length2();
+//            if(idx0==20 && (closest==30 || closest==31) && !done){
+
+            Vector u2 = A2 - px0;
+            tC2 = -Dot(v2,u2)/v2Length2;
+            Vector fromLineSegToPoint2= px0.asVector() - ((1.-tC2)*A2 + tC2*B2);
+            normal2 = Vector(v2.y(), -v2.x(), 0.)
+                        /(1.e-100 + sqrt(v2.y()*v2.y() + v2.x()*v2.x()));
+            overlap2 = Dot(normal2,fromLineSegToPoint2);
+            if(((tC1 < 0.0 && tC2 > 1.0) || (tC1 > 1.0 && tC2 < 0.0)) && 
+               overlap1 < 0.0 && overlap2 < 0.0 && !done){
+              done = true;
+#if 0
+              cout << "Case 3" << endl;
+              cout << "LS, px0    = " << px0 << endl;
+              cout << "closest = " << closest << endl;
+              cout << "secondClosest = " << secondClosest << endl;
+              cout << "idx0 = " << idx0 << endl;
+              cout << "overlap1 = " << overlap1 << endl;
+              cout << "overlap2 = " << overlap2 << endl;
+              cout << "normal1 = " << normal1 << endl;
+              cout << "normal2 = " << normal2 << endl;
+              cout << "tC1 = " << tC1 << endl;
+              cout << "tC2 = " << tC2 << endl;
+#endif
+              double vLength = sqrt(vLength2);
+              double K = K_l*vLength;
+
+              Point vertex;
+              Vector n;
+              double sizeWeight1, sizeWeight2;
+              Matrix3 size1,size2;
+              if((px0-A).length2() < (px0-B).length2()){ // closest
+               vertex = A;
+               n=normal1;
+               size1 = tsize0[tmi][closest];
+               size2 = tsize0[tmi][secondClosest];
+               sizeWeight1=fabs(tC2-1.)/(fabs(tC2-1.) + fabs(tC1));
+               sizeWeight2=fabs(tC1)/(fabs(tC2-1.) + fabs(tC1));
+              } else {  // secondClosest;
+               vertex = B;
+               n=normal2;
+               size1 = tsize0[tmi][secondClosest];
+               size2 = tsize0[tmi][closest];
+               sizeWeight1=fabs(tC1-1.)/(fabs(tC1-1.) + fabs(tC2));
+               sizeWeight2=fabs(tC2)/(fabs(tC1-1.) + fabs(tC2));
               }
+//              forceMag = overlap1*K;
+//              Vector tForce1A = forceMag*normal1;
+//              Vector tForce1A = forceMag*n;
+              Vector tForce1A = K*(px0-vertex);
+              // Get the node indices that surround the cell
+//              Matrix3 size_mean = 0.5*(size1+size2);
+              Matrix3 size_mean = sizeWeight1*size1 + sizeWeight2*size2;
+              int NN = interpolator->findCellAndWeights(px0, ni, S, size_mean);
+#if 0
+              cout << "sizeWeight1 = " << sizeWeight1 << endl;
+              cout << "sizeWeight2 = " << sizeWeight2 << endl;
+              cout << "size1 = " << size1 << endl;
+              cout << "size2 = " << size2 << endl;
+              cout << "LS, tForce1A      = " << tForce1A << endl;
+              cout << "size_mean = " << size_mean << endl;
+#endif
+ 
+              double totMass0 = 0.;
+              double totMass1 = 0.;
+              for (int k = 0; k < NN; k++) {
+                IntVector node = ni[k];
+                totMass0 += S[k]*gmass[adv_matl0][node];
+                totMass1 += S[k]*gmass[adv_matl1][node];
+              }
+
+              // Accumulate the contribution from each surrounding vertex
+              for (int k = 0; k < NN; k++) {
+                IntVector node = ni[k];
+                if(patch->containsNode(node)) {
+                  // Distribute force according to material mass on the nodes
+                  // to get nearly equal contribution to the acceleration
+                  LSContForce[adv_matl0][node] -= tForce1A*S[k]
+                                            * gmass[adv_matl0][node]/totMass0;
+                  LSContForce[adv_matl1][node] += tForce1A*S[k]
+                                            * gmass[adv_matl1][node]/totMass1;
+                }
+              }
+            } // if(tC1...)
+           }  // if secondClosest
+
+          } // closest < 99999
+
+          if(!done && secondClosest < 99999){
+            Point A2=tx0[tmi][secondClosest]+lsMidToEndVec0[tmi][secondClosest];
+            Point B2=tx0[tmi][secondClosest]-lsMidToEndVec0[tmi][secondClosest];
+            Vector v2 = B2 - A2;
+            double v2Length2 = v2.length2();
+
+            Vector u2 = A2 - px0;
+            tC2 = -Dot(v2,u2)/v2Length2;
+            Vector fromLineSegToPoint2= px0.asVector() - ((1.-tC2)*A2 + tC2*B2);
+            //normal = v X (0,0,1)
+            if(tC2 >= 0.0 && tC2 <= 1.0){
+              Vector normal = Vector(v2.y(), -v2.x(), 0.)
+                          / (1.e-100+sqrt(v2.y()*v2.y()+v2.x()*v2.x()));
+              overlap2 = Dot(normal,fromLineSegToPoint2);
+              if(overlap2 < 0.0){
+               done = true;
+               double v2Length = sqrt(v2Length2);
+               double K = K_l*v2Length;
+               forceMag = overlap2*K;
+
+               Vector tForce1A = (1.-tC2)*forceMag*normal;
+               Vector tForce1B = tC2*forceMag*normal;
+#if 0
+               cout << "Case 2" << endl;
+               cout << "tC2 = " << tC2 << endl;
+               cout << "LS, overlap2, forceMag = " << overlap2 << ", " 
+                                              << forceMag << endl;
+               cout << "IDX0 = " << idx0 << endl;
+               cout << "secondClosest = " << secondClosest << endl;
+#endif
+
+               // Get the node indices that surround the cell
+               Matrix3 size1 = tsize0[tmi][closest];
+               int NN = interpolator->findCellAndWeights(A2, ni, S, size1);
+  
+               double totMass0 = 0.;
+               double totMass1 = 0.;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+               }
+
+               // Accumulate the contribution from each surrounding vertex
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] -= tForce1A*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] += tForce1A*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+               }
+
+               // Get the node indices that surround the cell
+               NN = interpolator->findCellAndWeights(B2, ni, S, size1);
+  
+               totMass0 = 0.;
+               totMass1 = 0.;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+               }
+
+               // Accumulate the contribution from each surrounding vertex
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] -= tForce1B*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] += tForce1B*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+               }
+              } // if overlap2
             }
           }
         } //  Outer loop over linesegments
        }
       } // inner loop over line segment materials
     } // outer loop over line segment materials
-//    cout << "numChecks = " << numChecks << endl;
-//    cout << "numNear = " << numNear << endl;
 //    cout << "numOverlap = " << numOverlap << endl;
     delete interpolator;
   }
@@ -5336,7 +5569,15 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       ParticleVariable<Vector> triMidToN0Vec_new, 
                                triMidToN1Vec_new,triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
-      ParticleVariable<IntVector> triUseInPenalty_new;
+      ParticleVariable<IntVector>      triUseInPenalty_new;
+      constParticleVariable<double> triArea;
+      ParticleVariable<double>      triArea_new;
+      constParticleVariable<Vector> triAreaAtNodes;
+      ParticleVariable<Vector>      triAreaAtNodes_new;
+//    ParticleVariable<Stencil7>    triNode0TriIDs_new, 
+//                                  triNode1TriIDs_new, triNode2TriIDs_new;
+//    constParticleVariable<Stencil7>  triNode0TriIDs, 
+//                                     triNode1TriIDs, triNode2TriIDs;
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
@@ -5346,6 +5587,11 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triMidToN1Vec,   lb->triMidToN1VectorLabel,           pset);
       old_dw->get(triMidToN2Vec,   lb->triMidToN2VectorLabel,           pset);
       old_dw->get(triUseInPenalty, lb->triUseInPenaltyLabel,            pset);
+      old_dw->get(triArea,         lb->triAreaLabel,                    pset);
+      old_dw->get(triAreaAtNodes,  lb->triAreaAtNodesLabel,             pset);
+//    old_dw->get(triNode0TriIDs,  lb->triNode0TriangleIDsLabel,        pset);
+//    old_dw->get(triNode1TriIDs,  lb->triNode1TriangleIDsLabel,        pset);
+//    old_dw->get(triNode2TriIDs,  lb->triNode2TriangleIDsLabel,        pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
@@ -5359,12 +5605,26 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                        lb->triMidToN2VectorLabel_preReloc,pset);
       new_dw->allocateAndPut(triUseInPenalty_new,
                                        lb->triUseInPenaltyLabel_preReloc, pset);
+      new_dw->allocateAndPut(triArea_new,
+                                       lb->triAreaLabel_preReloc,         pset);
+      new_dw->allocateAndPut(triAreaAtNodes_new,
+                                       lb->triAreaAtNodesLabel_preReloc,  pset);
+//    new_dw->allocateAndPut(triNode0TriIDs_new,
+//                                lb->triNode0TriangleIDsLabel_preReloc,  pset);
+//    new_dw->allocateAndPut(triNode1TriIDs_new,
+//                                lb->triNode1TriangleIDsLabel_preReloc,  pset);
+//    new_dw->allocateAndPut(triNode2TriIDs_new,
+//                                lb->triNode2TriangleIDsLabel_preReloc,  pset);
 
       triangle_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
+      triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
+//    triNode0TriIDs_new.copyData(triNode0TriIDs);
+//    triNode1TriIDs_new.copyData(triNode1TriIDs);
+//    triNode2TriIDs_new.copyData(triNode2TriIDs);
 
-      // Loop over particles
+      // Loop over triangles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -5379,12 +5639,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
   
         double sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for(unsigned int m = 0; m < numMPMMatls; m++){
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-          }
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
         }
         vel/=sumSk;
   
@@ -5396,12 +5654,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
   
         sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for(unsigned int m = 0; m < numMPMMatls; m++){
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-          }
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
         }
         vel/=sumSk;
   
@@ -5413,18 +5669,17 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
   
         sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-        for(unsigned int m = 0; m < numMPMMatls; m++){
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-          }
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
         }
         vel/=sumSk;
   
         P2 += vel*delT;
 
         tx_new[idx] = (P0+P1+P2)/3.;
+        triArea_new[idx]=0.5*Cross(P1-P0,P2-P0).length();
 
         triMidToN0Vec_new[idx] = P0 - tx_new[idx];
         triMidToN1Vec_new[idx] = P1 - tx_new[idx];
@@ -5438,8 +5693,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                               r0.z()/dx.z(), r1.z()/dx.z(), r2.z()/dx.z());
         tsize_new[idx] = size;
   
-        // Check to see if a line segment has left the domain
-        // Check to see if a line segment has left the domain
+        // Check to see if a triangle has left the domain
+        // Check to see if a triangle has left the domain
         if(!domain.inside(tx_new[idx])){
           double epsilon = 1.e-15;
           Point txn = tx_new[idx];
@@ -5452,7 +5707,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
             txn = tx_new[idx];
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           static ProgressiveWarning warn("A triangle has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
            warn.invoke();
           }
           if(periodic.y()==0){
@@ -5464,7 +5719,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
             txn = tx_new[idx];
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           static ProgressiveWarning warn("A triangle has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
            warn.invoke();
           }
           if(periodic.z()==0){
@@ -5474,12 +5729,71 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
            if(tx_new[idx].z()>dom_max.z()){
             tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+           static ProgressiveWarning warn("A triangle has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
            warn.invoke();
           }
         }
-      }
-      // Loop over particles
+      } // Loop over triangles
+
+#if 0
+      // This is for computing updated triAreaAtNodes. Need to create a
+      // container to replace the modified Stencil7 that I used in a hack here
+      // Loop over triangles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Hit each vertex of the triangle
+        double area0=0., area1=0., area2=0.;
+
+        // Vertex 0
+        for(int itri=0; itri < triNode0TriIDs[idx][29]; itri++) {
+          int triID = triNode0TriIDs[idx][itri];
+          // Inner Loop over triangles
+          for(ParticleSubset::iterator jter = pset->begin();
+              jter != pset->end(); jter++){
+            particleIndex jdx = *jter;
+            if(triID == triangle_ids[jdx]){
+              area0+=triArea_new[jdx];
+              break;
+            } // if IDs are equal
+          } // inner loop over triangles
+        }
+        area0/=3.;
+
+        // Vertex 1
+        for(int itri=0; itri < triNode1TriIDs[idx][29]; itri++) {
+          int triID = triNode1TriIDs[idx][itri];
+          // Inner Loop over triangles
+          for(ParticleSubset::iterator jter = pset->begin();
+              jter != pset->end(); jter++){
+            particleIndex jdx = *jter;
+            if(triID == triangle_ids[jdx]){
+              area1+=triArea_new[jdx];
+              break;
+            } // if IDs are equal
+          } // inner loop over triangles
+        }
+        area1/=3.;
+
+        // Vertex 2
+        for(int itri=0; itri < triNode2TriIDs[idx][29]; itri++) {
+          int triID = triNode2TriIDs[idx][itri];
+          // Inner Loop over triangles
+          for(ParticleSubset::iterator jter = pset->begin();
+              jter != pset->end(); jter++){
+            particleIndex jdx = *jter;
+            if(triID == triangle_ids[jdx]){
+              area2+=triArea_new[jdx];
+              break;
+            } // if IDs are equal
+          } // inner loop over triangles
+        }
+        area2/=3.;
+
+        triAreaAtNodes_new[idx]=Vector(area0, area1, area2);
+      } // Outer loop over triangles for vertex area calculation
+#endif
     }
     delete interpolator;
   }
@@ -5496,6 +5810,11 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeTriangleForces");
 
+    // Get the current simulation time
+    simTime_vartype simTimeVar;
+    old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    double time = simTimeVar;
+
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -5508,6 +5827,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
+    std::vector<Vector> sumTriForce(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl =
                      (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -5520,22 +5840,27 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,2*NGN);
       LSContForce[m].initialize(Vector(0.0));
+      sumTriForce[m]=Vector(0.0);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("Triangle");
 
-    // Get the arrays of particle values to be changed
     std::vector<constParticleVariable<Point>  >  tx0(numLSMatls);
     std::vector<constParticleVariable<Vector>  > triMidToN0Vec(numLSMatls);
     std::vector<constParticleVariable<Vector>  > triMidToN1Vec(numLSMatls);
     std::vector<constParticleVariable<Vector>  > triMidToN2Vec(numLSMatls);
+//    std::vector<ParticleVariable<int>  >         triInContact(numLSMatls);
 
     std::vector<std::vector<constParticleVariable<Vector>  > >
                                                     triMidToNodeVec(numLSMatls);
 
-    std::vector<constParticleVariable<Matrix3> > tsize0(numLSMatls);
-    std::vector<constParticleVariable<IntVector>  > triUseInPenalty(numLSMatls);
+    std::vector<constParticleVariable<Matrix3> >    tsize0(numLSMatls);
+    std::vector<constParticleVariable<long64> >     triangle_ids(numLSMatls);
+    std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
+    std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
+    std::vector<int> psetSize(numLSMatls);
+//    std::vector<std::vector<int> > triInContact(numLSMatls);
     Matrix3 size; size.Identity();
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -5546,6 +5871,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
                                                        gac, 2, lb->pXLabel);
       psetvec.push_back(pset0);
+      psetSize[tmo]=(pset0->end() - pset0->begin());
+//      triInContact[tmo].resize(psetSize[tmo]);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
       old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
@@ -5553,15 +5880,29 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
       old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
       old_dw->get(triUseInPenalty[tmo],lb->triUseInPenaltyLabel,      pset0);
+      old_dw->get(triAreaAtNodes[tmo], lb->triAreaAtNodesLabel,       pset0);
+      old_dw->get(triangle_ids[tmo],   lb->triangleIDLabel,           pset0);
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
+//      new_dw->allocateAndPut(triInContact[tmo],lb->triInContactLabel, pset0);
+//      for(ParticleSubset::iterator iter0 = pset0->begin();
+//          iter0 != pset0->end(); iter0++){
+//        particleIndex idx0 = *iter0;
+//        triInContact[tmo][idx0] = -1;
+//      }
     }
 
     long int numChecks=0;
-    int numNear=0;
     int numOverlap=0;
     int numInside=0;
+    double totalContactArea    = 0.0;
+    double totalContactAreaTri = 0.0;
+    Vector totalForce(0.);
+    double timefactor=1.0;
+//    double timefactor=min(1.0, time/0.1);
+//    cout << "timefactor = " << timefactor << endl;
+
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
                              m_materialManager->getMaterial("Triangle", tmo);
@@ -5578,13 +5919,13 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
           continue;
         }
 
-
         ParticleSubset* pset1 = psetvec[tmi];
 
         int numPar_pset1 = pset1->numParticles();
 
         double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
                          (stiffness[adv_matl0] + stiffness[adv_matl1]);
+        K_l*=timefactor;
 
        if(numPar_pset1 > 0){
 
@@ -5604,37 +5945,65 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
           Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
 
           double min_sep  = 9.e99;
+          double min_sep2  = 9.e99;
           int closest = 99999;
+          int secondClosest = 99999;
           bool foundOne = false;
           // Loop over other particle subset
           for(ParticleSubset::iterator iter1 = pset1->begin();
               iter1 != pset1->end(); iter1++){
             particleIndex idx1 = *iter1;
+//            int ii = idx1;
+//            triInContact[tmi][ii]=-1;
             numChecks++;
             Point px1 = tx0[tmi][idx1];
             double sep = (px1-px0).length2();
-            if(sep < min_sep && sep < 0.16*cell_length2 && !foundOne){
-              numNear++;
+            if(sep < min_sep2  && sep < 0.25*cell_length2 ){
+              if(sep < min_sep){
+                secondClosest=closest;
+                min_sep2=min_sep;
+                closest  = idx1;
+                min_sep  = sep;
+              }
+              else{
+                secondClosest=idx1;
+                min_sep2  = sep;
+              }
+            }
+#if 0
+            if(sep < min_sep && sep < 0.16*cell_length2 /*&& !foundOne*/){
               min_sep  = sep;
               closest  = idx1;
-
+            }
+#endif
+          } // inner loop over triangles
+#if 0
+          if(spew){
+            cout << "px0 = " << px0 << endl;
+            cout << "closest = " << closest << endl;
+            cout << "min_sep/cell_length2 = " << min_sep/cell_length2 << endl;
+            cout << "px1 = " << tx0[tmi][closest] << endl;
+          }
+#endif
 
           double forceMag=0.0;
+          double overlapC = 1.;
+          Vector triNormalC(0.);
+          if(closest < 99999){
             // Following the description at:
             // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
-//            Vector triNormal = Cross(B - A, C - A);
             Vector triNormal =Cross(triMidToN0Vec[tmi][closest],
                                     triMidToN1Vec[tmi][closest]);
             double tNL = triNormal.length();
             if(tNL>0.0){
               triNormal /= tNL;
             }
+            triNormalC = triNormal;
             Vector AP = px0 - tx0[tmi][closest];
-//            cout << "AP = " << AP << endl;
             double overlap = Dot(AP,triNormal);
-//            cout << "overlap = " << overlap << endl;
             if(overlap < 0.0){ // Point is past the plane of the triangle
               numOverlap++;
+              overlapC=overlap;
               // Find the point on the plane nearest the test point
               Point inPlane = px0 - overlap*triNormal;
               //Now, see if that point is inside the triangle or not
@@ -5647,46 +6016,19 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               Vector u = Cross(b,c);
               Vector v = Cross(c,a);
               Vector w = Cross(a,b);
-#if 0
-                cout << "idx0 = " << idx0 << endl;
-                cout << "closest = " << closest << endl;
-            cout.precision(15);
-                cout << "min_sep = " << min_sep << endl;
-                cout << "Overlap = " << overlap << endl;
-                cout << "triNormal = " << triNormal << endl;
-                cout << "px0 = " << px0 << endl;
-                cout << "inPlane = " << inPlane << endl;
-                cout << "A = " << A << endl;
-                cout << "B = " << B << endl;
-                cout << "C = " << C << endl;
-                cout << "a = " << a << endl;
-                cout << "b = " << b << endl;
-                cout << "c = " << c << endl;
-                cout << "u = " << u << endl;
-                cout << "v = " << v << endl;
-                cout << "Dot(u,v) = " << Dot(u,v) << endl;
-                cout << "Dot(u,w) = " << Dot(u,w) << endl;
-#endif
+
               if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
                 numInside++;
-#if 0
-                cout << "Overlap = " << overlap << endl;
-                cout << "triNormal = " << triNormal << endl;
-                cout << "px0 = " << px0 << endl;
-                cout << "A = " << A << endl;
-                cout << "B = " << B << endl;
-                cout << "C = " << C << endl;
-                cout << "inPlane = " << inPlane << endl;
-#endif
+//                triInContact[tmi][closest] = tmo;
                 foundOne=true;
                 double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
                 double K = K_l*Length;
                 forceMag = overlap*K;
                 // Find the weights for each of the vertices
                 // These are actually twice the areas, doesn't matter, dividing
-                double areaA = (Cross(b,c)).length();
-                double areaB = (Cross(c,a)).length();
-                double areaC = (Cross(a,b)).length();
+                double areaA = u.length();
+                double areaB = v.length();
+                double areaC = w.length();
                 double totalArea = areaA+areaB+areaC;
                 areaA/=totalArea;
                 areaB/=totalArea;
@@ -5694,6 +6036,14 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 Vector tForceA  = -forceMag*triNormal*areaA;
                 Vector tForceB  = -forceMag*triNormal*areaB;
                 Vector tForceC  = -forceMag*triNormal*areaC;
+                totalContactArea += triAreaAtNodes[tmo][idx0][iu];
+                totalContactAreaTri += 0.5*totalArea;
+//                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
+//                cout << "totalAreaA, closest  = " << 0.5*totalArea 
+//                     << " "                      << closest << endl;
+                totalForce += tForceA;
+                totalForce += tForceB;
+                totalForce += tForceC;
 
                 // Distribute the force to the grid from the triangles
                 // from the triangle vertices.  Use same spatial location
@@ -5780,16 +6130,326 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               } // passed Dot test, plane intersection point is inside triangle
             }  // overlaps, point is through plane made by triangle
           } // closest < 99999 (new:  point is close enough)
-          } // inner loop over triangles
+
+#if 1
+          if(closest < 99999 && secondClosest < 99999 && !foundOne){
+            // Following the description at:
+            // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
+            Vector triNormal =Cross(triMidToN0Vec[tmi][secondClosest],
+                                    triMidToN1Vec[tmi][secondClosest]);
+            double tNL = triNormal.length();
+            if(tNL>0.0){
+              triNormal /= tNL;
+            }
+            Vector AP = px0 - tx0[tmi][secondClosest];
+            double overlap = Dot(AP,triNormal);
+            if(overlap < 0.0){ // Point is past the plane of the triangle
+              numOverlap++;
+              // Find the point on the plane nearest the test point
+              Point inPlane = px0 - overlap*triNormal;
+              //Now, see if that point is inside the triangle or not
+              Point A = tx0[tmi][secondClosest] + triMidToN0Vec[tmi][secondClosest];
+              Point B = tx0[tmi][secondClosest] + triMidToN1Vec[tmi][secondClosest];
+              Point C = tx0[tmi][secondClosest] + triMidToN2Vec[tmi][secondClosest];
+              Vector a = A - inPlane;
+              Vector b = B - inPlane;
+              Vector c = C - inPlane;
+              Vector u = Cross(b,c);
+              Vector v = Cross(c,a);
+              Vector w = Cross(a,b);
+
+              if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
+                if(fabs(overlap)>0.001){
+//                 cout << "overlap = " << overlap << ", tmi = " << tmi << ", tmo = " << tmo << endl;
+                }
+                numInside++;
+//                triInContact[tmi][secondClosest] = tmo;
+                foundOne=true;
+
+                double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
+                double K = K_l*Length;
+                forceMag = overlap*K;
+                // Find the weights for each of the vertices
+                // These are actually twice the areas, doesn't matter, dividing
+                double areaA = u.length();
+                double areaB = v.length();
+                double areaC = w.length();
+                double totalArea = areaA+areaB+areaC;
+                areaA/=totalArea;
+                areaB/=totalArea;
+                areaC/=totalArea;
+                Vector tForceA  = -forceMag*triNormal*areaA;
+                Vector tForceB  = -forceMag*triNormal*areaB;
+                Vector tForceC  = -forceMag*triNormal*areaC;
+                totalContactArea += triAreaAtNodes[tmo][idx0][iu];
+                totalContactAreaTri += 0.5*totalArea;
+//                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
+//                cout << "totalAreaB, closest  = " << 0.5*totalArea 
+//                     << " "                       << closest << endl;
+                totalForce += tForceA;
+                totalForce += tForceB;
+                totalForce += tForceC;
+
+                // Distribute the force to the grid from the triangles
+                // from the triangle vertices.  Use same spatial location
+                // for both adv_matls
+
+                // First for Point A
+
+                // Get the node indices that surround the cell
+                int NN = interpolator->findCellAndWeights(A, ni, S, size);
+  
+#if 0
+            cout << "Here B3.2" << endl;
+            cout << "px0 " << px0 << endl;
+            cout << "A " << A << endl;
+            cout << "B " << B << endl;
+            cout << "C " << C << endl;
+            cout << "tmo " << tmo << endl;
+            cout << "tmi " << tmi << endl;
+            cout << "adv_matl0 " << adv_matl0 << endl;
+            cout << "adv_matl1 " << adv_matl1 << endl;
+#endif
+                double totMass0 = 0.;
+                double totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceA*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   sumTriForce[adv_matl0] += tForceA*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceA*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                   sumTriForce[adv_matl1] -= tForceA*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+                // Next for Point B
+
+                // Get the node indices that surround the cell
+                NN = interpolator->findCellAndWeights(B, ni, S, size);
+
+                totMass0 = 0.;
+                totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceB*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   sumTriForce[adv_matl0] += tForceB*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceB*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                   sumTriForce[adv_matl1] -= tForceB*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+                // Finally for Point C
+
+                // Get the node indices that surround the cell
+                NN = interpolator->findCellAndWeights(C, ni, S, size);
+
+                totMass0 = 0.;
+                totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForceC*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   sumTriForce[adv_matl0] += tForceC*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForceC*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                   sumTriForce[adv_matl1] -= tForceC*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+              } // passed Dot test, plane intersection point is inside triangle
+
+              // Point overlaps second closest triangle
+              // check to see if it overlapped the closest
+              if(overlapC < 0.0 && !foundOne){
+                if(fabs(overlap)>0.001){
+//                 cout << "overlaP = " << overlap << ", tmi = " << tmi << ", tmo = " << tmo << endl;
+                }
+                // Point overlaps closest two triangles, but intersection
+                // with planes made by those triangles is not inside either one
+                // Assume that the point is in a valley, place force on two
+                // nearest vertices shared by the two closest triangles
+                double areaA = u.length();
+                double areaB = v.length();
+                double areaC = w.length();
+                double weight1Num, weight2Num;
+                Point Point1, Point2;
+                foundOne=true;
+                // Determine which two of the vertices are closest
+                if(areaA >= areaB && areaA >= areaC){
+                  Point1 = A;
+                  weight1Num = areaA;
+                  if(areaB > areaC){
+                   Point2 = B;
+                   weight2Num = areaB;
+                  } else {
+                   Point2 = C;
+                   weight2Num = areaC;
+                  } 
+                } else if(areaB >= areaA && areaB >= areaC){
+                  Point1 = B;
+                  weight1Num = areaB;
+                  if(areaA > areaC){
+                   Point2 = A;
+                   weight2Num = areaA;
+                  } else {
+                   Point2 = C;
+                   weight2Num = areaC;
+                  } 
+                } else {
+                  Point1 = C;
+                  weight1Num = areaC;
+                  if(areaA > areaB){
+                   Point2 = A;
+                   weight2Num = areaA;
+                  } else {
+                   Point2 = B;
+                   weight2Num = areaB;
+                  } 
+                }
+                numInside++;
+                totalContactArea += triAreaAtNodes[tmo][idx0][iu];
+                totalContactAreaTri += 0.5*(areaA+areaB+areaC);
+#if 0
+                if(triInContact[tmi][secondClosest] < 0){
+                  triInContact[tmi][secondClosest] = tmo;
+                } else if(triInContact[tmi][closest] < 0){
+                  triInContact[tmi][closest] = tmo;
+                }
+#endif
+
+                double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
+                double K = K_l*Length;
+                forceMag = 0.5*(overlap+overlapC)*K;
+                Vector triNormalMean = 0.5*(triNormal + triNormalC);
+                // Find the weights for each of the vertices
+                // These are actually twice the areas, doesn't matter, dividing
+                Vector tForce1  = -forceMag*triNormalMean*
+                                        (weight1Num/(weight1Num+weight2Num));
+                Vector tForce2  = -forceMag*triNormalMean*
+                                        (weight2Num/(weight1Num+weight2Num));
+                totalForce += tForce1;
+                totalForce += tForce2;
+
+                // Distribute the force to the grid from the triangles
+                // from the triangle vertices.  Use same spatial location
+                // for both adv_matls
+
+                // First for Point 1
+
+                // Get the node indices that surround the cell
+                int NN = interpolator->findCellAndWeights(Point1, ni, S, size);
+  
+                double totMass0 = 0.;
+                double totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForce1*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   sumTriForce[adv_matl0] += tForce1*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForce1*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                   sumTriForce[adv_matl1] -= tForce1*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+
+                // Then for Point 2
+
+                // Get the node indices that surround the cell
+                NN = interpolator->findCellAndWeights(Point2, ni, S, size);
+  
+                totMass0 = 0.;
+                totMass1 = 0.;
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 totMass0 += S[k]*gmass[adv_matl0][node];
+                 totMass1 += S[k]*gmass[adv_matl1][node];
+                }
+
+                // Accumulate the contribution from each surrounding vertex
+                for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   // Distribute force according to material mass on the nodes
+                   // to get nearly equal contribution to the acceleration
+                   LSContForce[adv_matl0][node] += tForce2*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   sumTriForce[adv_matl0] += tForce2*S[k]
+                                             * gmass[adv_matl0][node]/totMass0;
+                   LSContForce[adv_matl1][node] -= tForce2*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                   sumTriForce[adv_matl1] -= tForce2*S[k]
+                                             * gmass[adv_matl1][node]/totMass1;
+                 }
+                }
+              }  // Point in valley
+            }  // overlaps, point is through plane made by triangle
+          } // secondClosest < 99999
+#endif
          } // loop over the three vertices of the triangle
         } //  Outer loop over triangles
        }  // if num particles in the inner pset is > 0
       } // inner loop over triangle materials
     } // outer loop over triangle materials
-//    cout << "numChecks = " << numChecks << endl;
-//    cout << "numNear = " << numNear << endl;
-//    cout << "numOverlap = " << numOverlap << endl;
-//    cout << "numInside = " << numInside << endl;
+#if 0
+    if(totalContactArea > 1.e-22){
+      cout << "numOverlap = " << numOverlap << endl;
+      cout << "numInside = " << numInside << endl;
+      cout << "totalContactArea = " << time << " " << totalContactArea << endl;
+      cout << "totalContactAreaTri = " << time << " " << totalContactAreaTri << endl;
+      cout << "totalForce = " << time << " " << totalForce << endl;
+    }
+#endif
     delete interpolator;
   } // patches
 }

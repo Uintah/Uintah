@@ -907,6 +907,39 @@ MPMLabel::MPMLabel()
   triUseInPenaltyLabel_preReloc = VarLabel::create("tri.UseInPenalty+",
 			ParticleVariable<IntVector>::getTypeDescription() );
 
+  triAreaLabel        = VarLabel::create("tri.Area",
+			ParticleVariable<double>::getTypeDescription() );
+
+  triAreaLabel_preReloc = VarLabel::create("tri.Area+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  triAreaAtNodesLabel = VarLabel::create("tri.AreaAtNodes",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triAreaAtNodesLabel_preReloc = VarLabel::create("tri.AreaAtNodes+",
+			ParticleVariable<Vector>::getTypeDescription() );
+#if 0
+  triNode0TriangleIDsLabel = VarLabel::create("tri.Node0TriangleIDs",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triNode1TriangleIDsLabel = VarLabel::create("tri.Node1TriangleIDs",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triNode2TriangleIDsLabel = VarLabel::create("tri.Node2TriangleIDs",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triNode0TriangleIDsLabel_preReloc = VarLabel::create("tri.Node0TriangleIDs+",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triNode1TriangleIDsLabel_preReloc = VarLabel::create("tri.Node1TriangleIDs+",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triNode2TriangleIDsLabel_preReloc = VarLabel::create("tri.Node2TriangleIDs+",
+			ParticleVariable<Stencil7>::getTypeDescription() );
+
+  triInContactLabel = VarLabel::create("tri.InContact",
+			ParticleVariable<int>::getTypeDescription() );
+#endif
   pModalIDLabel = VarLabel::create("p.modalID",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -1012,6 +1045,19 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(triMidToN2VectorLabel_preReloc);
   VarLabel::destroy(triUseInPenaltyLabel);
   VarLabel::destroy(triUseInPenaltyLabel_preReloc);
+  VarLabel::destroy(triAreaLabel);
+  VarLabel::destroy(triAreaLabel_preReloc);
+  VarLabel::destroy(triAreaAtNodesLabel);
+  VarLabel::destroy(triAreaAtNodesLabel_preReloc);
+#if 0
+  VarLabel::destroy(triNode0TriangleIDsLabel);
+  VarLabel::destroy(triNode1TriangleIDsLabel);
+  VarLabel::destroy(triNode2TriangleIDsLabel);
+  VarLabel::destroy(triNode0TriangleIDsLabel_preReloc);
+  VarLabel::destroy(triNode1TriangleIDsLabel_preReloc);
+  VarLabel::destroy(triNode2TriangleIDsLabel_preReloc);
+  VarLabel::destroy(triInContactLabel);
+#endif
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);

@@ -62,6 +62,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
   Matrix3 Identity; Identity.Identity();
   ParticleSubset* subset = allocateVariables(numTriangles,dwi,patch,new_dw);
 
+  // Open tri and pts files
   string ptsfilename = fileroot + ".pts";
   string trifilename = fileroot + ".tri";
 
@@ -79,8 +80,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
                                                          __FILE__, __LINE__);
   }
 
-    Vector dx=patch->dCell();
-
+    // Read in pts files
     vector<double> px, py, pz;
     double p1,p2,p3 = 0.0;
     particleIndex start = 0;
@@ -92,22 +92,58 @@ Triangle::createTriangles(TriangleMaterial* matl,
      numpts++;
     } // while lines in the pts file
 
+    // Create a set to hold the triangle indices for each point
+    // Also, create a place to hold the "vertex area" for each point
+    vector<set<int> > triangles(numpts);
+    vector<double> ptArea(numpts);
+
+    // Read in tri file
+    // Put the triangle index into a set 
+    // Keep track of which triangles each point is part of by inserting
+    // the triangle index into each set
+    // Compute the area of each triangle
     vector<int> i0, i1, i2;
     vector<long64> TID;
     int ip0,ip1,ip2;
     unsigned int numtri = 0;
+    vector<double> triAreaNow(numtri);
     while (tri >> ip0 >> ip1 >> ip2) {
      long64 tid = numtri;
      i0.push_back(ip0);
      i1.push_back(ip1);
      i2.push_back(ip2);
      TID.push_back(tid);
+     triangles[ip0].insert(numtri);
+     triangles[ip1].insert(numtri);
+     triangles[ip2].insert(numtri);
+     Point P0(px[ip0], py[ip0], pz[ip0]);
+     Point P1(px[ip1], py[ip1], pz[ip1]);
+     Point P2(px[ip2], py[ip2], pz[ip2]);
+     Vector A = P1-P0;
+     Vector B = P2-P0;
+     triAreaNow.push_back(0.5*Cross(A,B).length());
      numtri++;
     } // while lines in the tri file
 
-    vector<int> useInPen(numpts,1);
+    // Compute the area at each vertex by putting 1/3 of the area of each
+    // triangle that touches a point into ptArea
+    double totalArea = 0;
+    for(int i = 0; i<numpts; i++){
+      for (set<int>::iterator it1 = triangles[i].begin(); 
+                              it1!= triangles[i].end();  it1++){
+       ptArea[i]+=triAreaNow[*it1]/3.; 
+      }
+      totalArea+=ptArea[i];
+      if(triangles[i].size() > 30){
+         cout << "This node has " << triangles[i].size() << " triangles" << endl;
+      }
+    } // while lines in the pts file
+
+    vector<int>    useInPen(numpts,1);
 
     // make triangles from subsequent points if their midpoint is on patch
+    // Choose which points to use in penalty contact so that each point is
+    // used just once.
     for(unsigned int i = 0; i<numtri; i++){
       Point P0(px[i0[i]], py[i0[i]], pz[i0[i]]);
       Point P1(px[i1[i]], py[i1[i]], pz[i1[i]]);
@@ -115,14 +151,30 @@ Triangle::createTriangles(TriangleMaterial* matl,
       Point test((px[i0[i]]+px[i1[i]]+px[i2[i]])/3.,
                  (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
                  (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
-      
       if(patch->containsPoint(test)){
         particleIndex pidx   = start;
-        triangle_pos[pidx]    = test;
-        triangleID[pidx]      = TID[i];
+        triangle_pos[pidx]   = test;
+        triangleID[pidx]     = TID[i];
+        triangleArea[pidx]   = triAreaNow[i];
         triangleMidToNode0[pidx] = P0 - test;
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
+
+        triangleAreaAtNodes[pidx]+=Vector(ptArea[i0[i]], 
+                                          ptArea[i1[i]], 
+                                          ptArea[i2[i]]);
+
+        triangleUseInPenalty[pidx] = IntVector(useInPen[i0[i]],
+                                               useInPen[i1[i]],
+                                               useInPen[i2[i]]);
+        useInPen[i0[i]]=0;
+        useInPen[i1[i]]=0;
+        useInPen[i2[i]]=0;
+
+        triangleSize[pidx]    = Identity;
+        triangleDefGrad[pidx] = Identity;
+        start++;
+#if 0
         Vector r0 = P1 - P0;
         Vector r1 = P2 - P0;
         Vector r2 = -.1*Cross(r1,r0);
@@ -134,17 +186,8 @@ Triangle::createTriangles(TriangleMaterial* matl,
         if(Jsize <= 0.0){
          cout << "negative J" << endl;
         }
-
-        triangleUseInPenalty[pidx] = IntVector(useInPen[i0[i]],
-                                               useInPen[i1[i]],
-                                               useInPen[i2[i]]);
-        useInPen[i0[i]]=0;
-        useInPen[i1[i]]=0;
-        useInPen[i2[i]]=0;
-
         triangleSize[pidx]    = size;
-        triangleDefGrad[pidx] = Identity;
-        start++;
+#endif
       }
     }
 
@@ -175,6 +218,9 @@ Triangle::allocateVariables(particleIndex numTriangles,
                                          d_lb->triMidToN2VectorLabel,   subset);
   new_dw->allocateAndPut(triangleUseInPenalty,
                                          d_lb->triUseInPenaltyLabel,    subset);
+  new_dw->allocateAndPut(triangleArea,   d_lb->triAreaLabel,            subset);
+  new_dw->allocateAndPut(triangleAreaAtNodes,
+                                         d_lb->triAreaAtNodesLabel,     subset);
 
   return subset;
 }
@@ -203,42 +249,42 @@ Triangle::countTriangles(const Patch* patch, const string fileroot)
                                                          __FILE__, __LINE__);
   }
 
-    vector<double> px, py, pz;
-    double p1,p2,p3 = 0.0;
-    int numpts = 0;
-    while (pts >> p1 >> p2 >> p3) {
-     px.push_back(p1);
-     py.push_back(p2);
-     pz.push_back(p3);
-     numpts++;
-    } // while lines in the pts file
+  vector<double> px, py, pz;
+  double p1,p2,p3 = 0.0;
+  int numpts = 0;
+  while (pts >> p1 >> p2 >> p3) {
+    px.push_back(p1);
+    py.push_back(p2);
+    pz.push_back(p3);
+    numpts++;
+  } // while lines in the pts file
 
-    vector<int> i0, i1, i2;
-    vector<long64> TID;
-    int ip0,ip1,ip2;
-    unsigned int numtri = 0;
-    while (tri >> ip0 >> ip1 >> ip2) {
-     long64 tid = numtri;
-     i0.push_back(ip0);
-     i1.push_back(ip1);
-     i2.push_back(ip2);
-     TID.push_back(tid);
-     numtri++;
-    } // while lines in the tri file
+  vector<int> i0, i1, i2;
+  vector<long64> TID;
+  int ip0,ip1,ip2;
+  unsigned int numtri = 0;
+  while (tri >> ip0 >> ip1 >> ip2) {
+    long64 tid = numtri;
+    i0.push_back(ip0);
+    i1.push_back(ip1);
+    i2.push_back(ip2);
+    TID.push_back(tid);
+    numtri++;
+  } // while lines in the tri file
 
-    // make triangles from the three tri points if their midpoint is on patch
-    for(unsigned int i = 0; i<numtri; i++){
-      Point test((px[i0[i]]+px[i1[i]]+px[i2[i]])/3.,
-                 (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
-                 (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
-      
-      if(patch->containsPoint(test)){
-        sum++;
-      }
-    }
+  // make triangles from the three tri points if their midpoint is on patch
+  for(unsigned int i = 0; i<numtri; i++){
+    Point test((px[i0[i]]+px[i1[i]]+px[i2[i]])/3.,
+               (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
+               (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
     
-    tri.close();
-    pts.close();
+    if(patch->containsPoint(test)){
+      sum++;
+    }
+  }
+  
+  tri.close();
+  pts.close();
 
   return sum;
 }
@@ -266,6 +312,8 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_lb->triMidToN1VectorLabel);
   d_triangle_state.push_back(d_lb->triMidToN2VectorLabel);
   d_triangle_state.push_back(d_lb->triUseInPenaltyLabel);
+  d_triangle_state.push_back(d_lb->triAreaAtNodesLabel);
+  d_triangle_state.push_back(d_lb->triAreaLabel);
 
   d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -275,6 +323,8 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_lb->triMidToN1VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triMidToN2VectorLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triUseInPenaltyLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triAreaAtNodesLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triAreaLabel_preReloc);
 }
 //__________________________________
 //
@@ -290,6 +340,9 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->triMidToN0VectorLabel);
   t->computes(d_lb->triMidToN1VectorLabel);
   t->computes(d_lb->triMidToN2VectorLabel);
+  t->computes(d_lb->triUseInPenaltyLabel);
+  t->computes(d_lb->triAreaLabel);
+  t->computes(d_lb->triAreaAtNodesLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
