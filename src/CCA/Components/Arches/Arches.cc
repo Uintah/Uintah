@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-//----- Arches.cc ---------------------------------------------
+//----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
