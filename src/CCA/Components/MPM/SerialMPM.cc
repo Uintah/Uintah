@@ -4632,11 +4632,12 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
                << " with F = " << pFNew[idx] << endl;
           cerr << "imax, jmax = " << imax << ", " << jmax << endl;
           cerr << "matl  = " << m << endl;
+          cerr << "tensorL  = " << tensorL << endl;
           cerr << "pmass = " << pmass[idx] << endl;
           cerr << "px = " << px[idx] << endl;
           cerr << "pvolume = " << pVolumeOld[idx] << endl;
-          cerr << "F is now " << pFNew[idx] << endl;
           cerr << "J = " << pFNew[idx].Determinant() << endl;
+          cerr << "F is now reset to " << pFOld[idx] << endl;
           pFNew[idx]=pFOld[idx];
         }
 
