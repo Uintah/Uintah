@@ -154,7 +154,8 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
       for(int n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
         double mass=gmass[n][c];
-        if(gtrcontactforce[n][c].length2() > 0.0){
+        if(gtrcontactforce[n][c].length2() > 0.0 &&
+           !compare(mass,0.0)){
           // Dv is the change in velocity due to penalty forces at tracers
           Vector Dv = (gtrcontactforce[n][c]/mass)*delT;
           double normalDv = Dv.length();
