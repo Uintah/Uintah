@@ -13,8 +13,6 @@
 <!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) -->
 <Uintah_Include>
   <shear_modulus_model type="scg_shear">
-    <mu_0> 85.5E+3 </mu_0>    <!-- mm-microgram-microsec -->
-    <A> 16.0E-6  </A>         <!-- mm-microgram-microsec -->
 
     <mu_0> 85.5E+9 </mu_0>    <!-- mks -->
     <A> 16.0E-12  </A>        <!-- mks -->

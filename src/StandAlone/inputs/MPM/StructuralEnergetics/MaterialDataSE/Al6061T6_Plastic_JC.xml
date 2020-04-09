@@ -11,8 +11,6 @@
 <!--  1 Pa = 1e-6 microgram/(mm*microsecond^2) -->
 <!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) --><Uintah_Include>
   <flow_model type="johnson_cook">
-    <A>324.0</A>          <!-- mm-microgram-microsec -->  
-    <B>114.0</B>          <!-- mm-microgram-microsec -->  
     
     <A>324.0E6</A>        <!-- mks -->
     <B>114.0E6</B>        <!-- mks -->

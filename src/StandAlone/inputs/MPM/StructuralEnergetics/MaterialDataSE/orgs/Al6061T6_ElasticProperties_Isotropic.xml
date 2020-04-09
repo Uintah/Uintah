@@ -1,5 +1,4 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- 6061-T6 Aluminum -->
 <!-- Aluminum for Structural Energetics -->
 <!--  Base Units -->
 <!--  mass        - microgram     -->
@@ -12,11 +11,11 @@
 <!--  1 Pa = 1e-6 microgram/(mm*microsecond^2) -->
 <!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) -->
 <Uintah_Include>
-  <shear_modulus_model type="scg_shear">
-    
-    <mu_0> 27.6E+9</mu_0>       <!-- mks -->
-    <A> 65.0E-12 </A>           <!-- mks -->
-    
-    <B> 0.62E-3 </B>            <!--  0.62e-3   1/K   -->
-  </shear_modulus_model>
+  <shear_modulus>27.6E+3</shear_modulus> <!-- mm-microgram-microsec -->
+  <bulk_modulus>78.1E+3</bulk_modulus>   <!-- mm-microgram-microsec -->
+  
+  <shear_modulus>27.6E+9</shear_modulus> <!-- mks -->
+  <bulk_modulus>78.1E+9</bulk_modulus>   <!-- mks -->
+  
 </Uintah_Include>
+

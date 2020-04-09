@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Nickel Specifications From Report-1GS -->
+<!--  Base Units -->
+<!--  mass        - microgram     -->
+<!--  time        - microsecond   -->
+<!--  length      - millimeter    -->
+<!--  temperature - Kelvin        -->
+<Uintah_Include>
+    <include href="MaterialDataSE/Ni200_MaterialConstants.xml"/>
+    <constitutive_model type="elastic_plastic">
+      <include href="MaterialDataSE/Ni200_ElasticProperties_Isotropic.xml"/>
+      <include href="MaterialDataSE/Ni200_Shear_SCG.xml"/>
+      <include href="MaterialDataSE/Ni200_Plastic_JC.xml"/>
+      <include href="MaterialDataSE/Ni200_EOS_MieGruneison.xml"/>
+      <include href="MaterialDataSE/VonMisesYield.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
+      <initial_material_temperature>  300.0 </initial_material_temperature>
+    </constitutive_model>
+</Uintah_Include>

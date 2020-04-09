@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Nickel 200 -->
+<!-- 6061 T6 Aluminum Alloy -->
 <!--  Base Units -->
 <!--  mass        - microgram     -->
 <!--  time        - microsecond   -->
@@ -9,17 +9,18 @@
 <!--  Pressure Conversion: -->
 <!--  1 Pa = 1 kg/(m*s^2) = 1e9 microgram/(1e3 mm * 1e12 microsecond^2) -->
 <!--  1 Pa = 1e-6 microgram/(mm*microsecond^2) -->
-<!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) -->
-<Uintah_Include>
+<!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) --><Uintah_Include>
   <flow_model type="johnson_cook">
+    <A>324.0</A>          <!-- mm-microgram-microsec -->  
+    <B>114.0</B>          <!-- mm-microgram-microsec -->  
     
-    <A>163.4E6</A>      <!-- mks -->  
-    <B>648.1E6</B>      <!-- mks -->  
-        
-    <C>0.006</C>
-    <n>0.33</n>
-    <m>1.44</m>
-    <T_r>300.0</T_r>    <!--    300 K   -->
-    <T_m>1728.0</T_m>   <!--   1728 K   -->
+    <A>324.0E6</A>        <!-- mks -->
+    <B>114.0E6</B>        <!-- mks -->
+    
+    <C>0.002</C>
+    <n>0.42</n>
+    <m>1.34</m>
+    <T_r>300.0</T_r>    <!--  300 K   -->
+    <T_m>933.0</T_m>    <!--  933 K   -->
   </flow_model>
 </Uintah_Include>

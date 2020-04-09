@@ -11,8 +11,6 @@
 <!--  1 Pa = 1e-6 microgram/(mm*microsecond^2) -->
 <!--  1 GPa = 1e+9 Pa = 1e+3 microgram/(mm*microsecond^2) -->
 <Uintah_Include>
-  <shear_modulus>27.6E+3</shear_modulus> <!-- mm-microgram-microsec -->
-  <bulk_modulus>78.1E+3</bulk_modulus>   <!-- mm-microgram-microsec -->
   
   <shear_modulus>27.6E+9</shear_modulus> <!-- mks -->
   <bulk_modulus>78.1E+9</bulk_modulus>   <!-- mks -->

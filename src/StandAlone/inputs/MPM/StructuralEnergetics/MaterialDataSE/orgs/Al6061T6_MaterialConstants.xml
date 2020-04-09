@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- Nickel for Structural Energetics -->
+<!-- Aluminum for Structural Energetics -->
 <!--  Base Units -->
 <!--  mass        - microgram     -->
 <!--  time        - microsecond   -->
@@ -23,12 +23,13 @@
 <!--  1 (kg * m^2/s^2)/(g*K) = 10^3 (micrograms*mm^2/microseconds^2)/(10^6 microgram * K) -->
 <!--  1 J/(g*K) = 10^-3 mm^2/(microseconds^2 * K) -->
 <Uintah_Include>
-  <density>8870.0</density>                             <!--  8870 kg/m^3  -->
+  <density>2780.0</density>                               <!--  2780 kg/m^3 -->
+  <thermal_conductivity>220.0E-6</thermal_conductivity>   <!-- mm-microgram-microsec -->
+  <specific_heat>0.920E-3</specific_heat>                 <!-- mm-microgram-microsec -->
   
-
-  <thermal_conductivity>75.0</thermal_conductivity>     <!-- mks -->
-  <specific_heat>0.425</specific_heat>                  <!-- mks -->
-
-  <room_temp>300.0</room_temp>                          <!--   300 K       -->
-  <melt_temp>1728</melt_temp>                           <!--  1728 K       -->
+  <thermal_conductivity>220.0</thermal_conductivity>      <!-- mks -->
+  <specific_heat>920</specific_heat>                      <!-- mks -->
+ 
+  <room_temp>300.0</room_temp>                            <!--   300 K       -->
+  <melt_temp>933.0</melt_temp>                            <!--   933 K       -->
 </Uintah_Include>

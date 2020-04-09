@@ -10,6 +10,7 @@
 <!--  1 m/s = 10e3 mm/ 10e6 microseconds = 1e-3 mm/microsecond -->
 <Uintah_Include>
   <equation_of_state type="mie_gruneisen">
+    <C_0>5.300</C_0>       <!-- mm-microgram-microsec -->
     <C_0>5300</C_0>        <!-- mks -->
     
     <Gamma_0>2.00</Gamma_0>

@@ -24,8 +24,6 @@
 <!--  1 J/(g*K) = 10^-3 mm^2/(microseconds^2 * K) -->
 <Uintah_Include>
   <density>2780.0</density>                               <!--  2780 kg/m^3 -->
-  <thermal_conductivity>220.0E-6</thermal_conductivity>   <!-- mm-microgram-microsec -->
-  <specific_heat>0.920E-3</specific_heat>                 <!-- mm-microgram-microsec -->
   
   <thermal_conductivity>220.0</thermal_conductivity>      <!-- mks -->
   <specific_heat>920</specific_heat>                      <!-- mks -->
