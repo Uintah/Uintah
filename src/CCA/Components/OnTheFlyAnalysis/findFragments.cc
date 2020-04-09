@@ -67,6 +67,7 @@ using namespace std;
 //______________________________________________________________________
 //
 static DebugStream dbg("findFragments", false);
+
 //______________________________________________________________________
 findFragments::findFragments(ProblemSpecP     & module_spec,
                              SimulationStateP & sharedState,
@@ -184,6 +185,7 @@ void findFragments::problemSetup(const ProblemSpecP & prob_spec,
 }
 
 //______________________________________________________________________
+//
 void findFragments::scheduleInitialize( SchedulerP   & sched,
                                         const LevelP & level)
 {
@@ -196,7 +198,9 @@ void findFragments::scheduleInitialize( SchedulerP   & sched,
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
+
 //______________________________________________________________________
+//
 void findFragments::initialize(const ProcessorGroup *,
                                const PatchSubset    * patches,
                                const MaterialSubset *,
@@ -228,6 +232,7 @@ void findFragments::initialize(const ProcessorGroup *,
 }
 
 //______________________________________________________________________
+//
 void findFragments::scheduleRestartInitialize(SchedulerP   & sched,
                                               const LevelP & level)
 {
@@ -235,6 +240,7 @@ void findFragments::scheduleRestartInitialize(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
+//
 void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
                                        const LevelP & level)
 {
@@ -242,8 +248,11 @@ void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
 
   Task* t = scinew Task("findFragments::doAnalysis",
                    this,&findFragments::doAnalysis);
+                   
   sched_sumLocalizedParticles( sched, level);
+  
   sched_identifyFragments(     sched, level);
+  
   sched_sumQ_inFragments(      sched, level);
   
 
@@ -260,6 +269,7 @@ void findFragments::scheduleDoAnalysis(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
+//
 void findFragments::doAnalysis(const ProcessorGroup * pg,
                                const PatchSubset    * patches,
                                const MaterialSubset *,
@@ -655,14 +665,8 @@ void findFragments::sumQ_inFragments(const ProcessorGroup      * pg,
     for ( size_t i=0;i<fragMass.size(); i++){
       cout << " patch: " << patch->getID() << " fragment ID: " << i << " mass: " << fragMass[i] << endl;
     }
-    
-    
   }
 }
-
-
-
-
 
 //______________________________________________________________________
 //  Open the file if it doesn't exist and write the file header
