@@ -12,59 +12,30 @@
   </replace_lines>
 </AllTests>
 -->
+
 <Test>
-    <Title>FM-1e8_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <Title>FM-9e9_std_10</Title>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
-    <x>FM-1e8_std_10</x>
+    <x>FM-9e9_std_10</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :1e8
+         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :9e9
          /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
     </replace_values>
 </Test>
 <Test>
-    <Title>FM-5e8_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <Title>FM-2e10_std_10</Title>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
-    <x>FM-5e8_std_10</x>
+    <x>FM-2e10_std_10</x>
     <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :5e8
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
-    </replace_values>
-</Test>
-<Test>
-    <Title>FM-1e9_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
-    <postProcess_cmd></postProcess_cmd>
-    <x>FM-1e9_std_10</x>
-    <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :1e9
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
-    </replace_values>
-</Test>
-<Test>
-    <Title>FM-5e9_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
-    <postProcess_cmd></postProcess_cmd>
-    <x>FM-5e9_std_10</x>
-    <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :5e9
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
-    </replace_values>
-</Test>
-<Test>
-    <Title>FM-1e10_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
-    <postProcess_cmd></postProcess_cmd>
-    <x>FM-1e10_std_10</x>
-    <replace_values>
-         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :1e10
+         /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_mean :2e10
          /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
     </replace_values>
 </Test>
 <Test>
     <Title>FM-5e10_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-5e10_std_10</x>
     <replace_values>
@@ -72,9 +43,10 @@
          /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
     </replace_values>
 </Test>
+<!--
 <Test>
     <Title>FM-1e11_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1e11_std_10</x>
     <replace_values>
@@ -84,7 +56,7 @@
 </Test>
 <Test>
     <Title>FM-5e11_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-5e11_std_10</x>
     <replace_values>
@@ -94,7 +66,7 @@
 </Test>
 <Test>
     <Title>FM-1e12_std_10</Title>
-    <sus_cmd> nice mpirun -np 10 sus   </sus_cmd>
+    <sus_cmd> nice mpirun -np 20 sus   </sus_cmd>
     <postProcess_cmd></postProcess_cmd>
     <x>FM-1e12_std_10</x>
     <replace_values>
@@ -102,4 +74,5 @@
          /Uintah_specification/MaterialProperties/MPM/material[@name='steel_cylinder']/damage_model/failure_std :10
     </replace_values>
 </Test>
+-->
 </start>

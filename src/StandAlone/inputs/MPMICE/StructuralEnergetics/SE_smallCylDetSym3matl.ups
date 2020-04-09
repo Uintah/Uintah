@@ -21,10 +21,10 @@
        <maxTime>            2e-5     </maxTime>
       <!-- <max_Timesteps>      10      </max_Timesteps> -->
        <initTime>           0.0       </initTime>
-       <delt_min>           0.0       </delt_min>
-       <delt_max>           1.0       </delt_max>
+       <delt_min>           1e-15    </delt_min>
+       <delt_max>           1.0      </delt_max>
        <delt_init>          1e-10    </delt_init>
-       <timestep_multiplier>0.2       </timestep_multiplier>
+       <timestep_multiplier>0.1       </timestep_multiplier>
        <max_delt_increase>  2      </max_delt_increase>
    </Time>
     <!--____________________________________________________________________-->
@@ -87,10 +87,10 @@
            <Box label = "1">
           <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
               <lower>        [  0.00,  0.00, 0.00]    </lower>
-              <upper>        [  0.14,  0.14, 0.001]   </upper>
+              <upper>        [  0.01,  0.01, 0.001]   </upper>
               <extraCells>   [1,1,1]                  </extraCells>
-              <patches>      [4,4,1]                  </patches>
-              <resolution>   [200,200,1]              </resolution>
+              <patches>      [6,6,1]                  </patches>
+              <resolution>   [100,100,1]              </resolution>
            </Box>
        </Level>
     </Grid>
@@ -99,9 +99,9 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>smallCylDetSym3matl.ups</filebase>
-      <outputInterval> 1e-07 </outputInterval>
-      <outputInitTimestep/> 
+      <filebase>smallCylDetSym3matl.uda</filebase>
+      <outputInterval> 2e-07 </outputInterval>
+      <outputInitTimestep/>
 
       <save label="press_CC"/>
       <save label="temp_CC"/>
@@ -115,12 +115,20 @@
       <save label="modelMom_src"/>
       <save label="totalMassBurned"/>
       <save label="totalHeatReleased"/>
-      
+  <!--
       <save label="detonating"/>
       <save label="BurningCriteria"/>
       <save label="SteadyBurn.numPPC"/>
       <save label="detLocalTo"/>
       <save label="onSurface"/>
+  -->
+      <save label="dTdt_CC"/>
+      <save label="dTdt_NC"/>
+      <save label="massBurnFraction"/>
+      <save label="g.mass"/>
+      <save label="dVdt_CC"/>
+      <save label="g.velocity"/>
+    
       <save label="delF"/>
       <save label="F"/>
 
@@ -132,6 +140,7 @@
       <save label="p.mass"/>
       <save label="p.stress"/>
       <save label="p.epsf"/>
+      <save label="p.dTdt"/>
       <checkpoint cycle = "2" timestepInterval = "1000"/>
     </DataArchiver>
 
@@ -141,7 +150,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.2</cfl>
+       <cfl>0.1</cfl>
        <ICE>
         <advection type = "SecondOrder"/>
         <ClampSpecificVolume>true</ClampSpecificVolume>
@@ -168,6 +177,7 @@
       <do_contact_friction_heating>    false       </do_contact_friction_heating>
       <DoExplicitHeatConduction>       false       </DoExplicitHeatConduction>
       <axisymmetric>                   false        </axisymmetric>
+      <TSR_max_particles_deleted>           5       </TSR_max_particles_deleted>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -176,19 +186,19 @@
     <MaterialProperties>
       <MPM>
 
-        <material name="cylinder">
-          <!-- <include href="MaterialData/Al.xml"/> -->
+        <material name="Al_cylinder">
+          <!--<include href="MaterialData/Al.xml"/> -->
           <include href="MaterialDataSE/Al_SE.xml"/>
-      
+
           <damage_model type="Threshold">
              <failure_criteria>MaximumPrincipalStress</failure_criteria>
              <failure_mean>       7.5e8     </failure_mean>
              <failure_std>        10        </failure_std>
              <failure_distrib>    weibull   </failure_distrib>
           </damage_model>
-          
+
           <erosion algorithm = "ZeroStress"/>
-          
+
           <geom_object>
             <difference>
               <cylinder label="outerCylinder">
@@ -214,36 +224,42 @@
           <include href="MaterialData/MatConstPBX9501.xml"/>
           <constitutive_model type = "visco_scram">
             <include href="MaterialData/ViscoSCRAMPBX9501.xml"/>
-            <include href="MaterialData/TimeTempPBX9501.xml"/>
-            
+
             <randomize_parameters>          false </randomize_parameters>
             <use_time_temperature_equation> false </use_time_temperature_equation>
             <useObjectiveRate>              false </useObjectiveRate>
             <useModifiedEOS>                true  </useModifiedEOS>
           </constitutive_model>
-          
+
           <erosion algorithm = "ZeroStress"/>
+          <geom_object>
+            <difference>
+              <cylinder label = "outerPBX_cylinder">
+                 <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
+                 <top>     [0.000000, 0.000000, 0.010000]  </top>
+                 <radius>       0.00390       </radius>
+              </cylinder>
+              <cylinder label = "innerPBX_cylinder">
+                 <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
+                 <top>     [0.000000, 0.000000, 0.010000]  </top>
+                 <radius>       0.00380       </radius>
+              </cylinder>              
+            </difference>
+            
+            <res>             [2,2,1]         </res>
+            <velocity>        [0.0,0.0,0.0]   </velocity>
+            <temperature>     550.0           </temperature>
+          </geom_object>
           
           <geom_object>
- 
-            <difference>
-               <cylinder label = "0">
-                  <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
-                  <top>     [0.000000, 0.000000, 0.010000]  </top>
-                  <radius>       0.00390       </radius>
-               </cylinder>
-               <cylinder label = "hole">
-                  <bottom>  [0.000000, 0.000000, 0.000000]  </bottom>
-                  <top>     [0.000000, 0.000000, 0.010000]  </top>
-                  <radius>       0.0034       </radius>
-               </cylinder>
-            </difference>             
-            <res>                 [2,2,1]         </res>
-            <velocity>            [0.0,0.0,0.0]   </velocity>
-            <temperature>         550.0           </temperature>
+            <cylinder label = "innerPBX_cylinder"/>
+            <res>             [2,2,1]         </res>
+            <velocity>        [0.0,0.0,0.0]   </velocity>
+            <temperature>     300.0           </temperature>
           </geom_object>
-        </material>
 
+
+        </material>
 <!--
         <contact>
          <type>approach</type>
@@ -265,40 +281,32 @@
             <om>   0.45     </om>
             <rho0> 1894     </rho0>
           </EOS>
-          <dynamic_viscosity>      0.0             </dynamic_viscosity>       
-          <thermal_conductivity>   0.0             </thermal_conductivity>    
-          <specific_heat>          544.96          </specific_heat>           
-          <gamma>                  1.4             </gamma> 
-                             
+          <dynamic_viscosity>      0.0      </dynamic_viscosity>
+          <thermal_conductivity>   0.0      </thermal_conductivity>
+          <specific_heat>          544.96   </specific_heat>
+          <gamma>                  1.4      </gamma>
+
           <geom_object>
             <difference>
               <box>
-                <min>          [-1.0, -1.0, -1.0] </min> 
-                <max>          [ 1.0,  1.0,  1.0] </max> 
+                <min>          [-1.0, -1.0, -1.0] </min>
+                <max>          [ 1.0,  1.0,  1.0] </max>
               </box>
               <union>
                 <difference>
-                  <cylinder label="outerCylinder"> </cylinder>
-                  <cylinder label="innerCylinder"> </cylinder>
+                  <cylinder label="outerCylinder"/>
+                  <cylinder label="innerCylinder"/>
                 </difference>
-                <cylinder label = "0">     </cylinder>
+                <cylinder label = "outerPBX_cylinder"/> 
               </union>
             </difference>
+            
             <res>                [2,2,1]             </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
             <temperature>        300.0               </temperature>
             <density>            1.38934929e+00      </density>
             <pressure>           101325.0            </pressure>
           </geom_object>
-          
-          <geom_object>
-            <cylinder label = "hole"/>
-            <res>                [2,2,1]             </res>
-            <velocity>           [0.0,0.0,0.0]       </velocity>
-            <temperature>        1600.0              </temperature>
-            <density>            13.8934929          </density>
-            <pressure>           5.4e9               </pressure>
-          </geom_object> 
 
         </material>
       </ICE>
@@ -311,9 +319,24 @@
           </exchange_coefficients>
         </exchange_properties>
     </MaterialProperties>
-    
+
     <!--__________________________________-->
     <Models>
+<!-- PBX9501 constants taken from Jacqueline Beckvermit's input files -->
+  <!--
+      <Model type="JWLpp">      
+        <JWLpp>
+          <fromMaterial>       PBX9501  </fromMaterial>
+          <toMaterial>         product  </toMaterial>
+          <G>                  2.33e-6  </G>
+          <b>                  1.2      </b>
+          <rho0>               1832.0   </rho0>
+          <E0>                 5.0e6    </E0>
+          <ThresholdPressure>  1.5e5    </ThresholdPressure>
+        </JWLpp>
+      </Model>
+-->
+
       <Model type="DDT1">
         <DDT1>
           <fromMaterial> PBX9501   </fromMaterial>
@@ -322,8 +345,10 @@
           <G>       2.33e-6 </G>
           <b>       1.2     </b>
           <E0>      5.0e6   </E0>
+          <useCrackModel>        false        </useCrackModel>
+          <useInductionTime>     false        </useInductionTime>
 
-          
+
           <IdealGasConst>        8.314        </IdealGasConst>
           <PreExpCondPh>         1.637e15     </PreExpCondPh>
           <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
@@ -336,12 +361,13 @@
           <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
           <BoundaryParticles>    1            </BoundaryParticles>
           <IgnitionTemp>         550          </IgnitionTemp>
-          <!-- These values are artifically low   ( 10atm) -->
-          <!--<ThresholdPressureJWL> 5.3e6        </ThresholdPressureJWL>  -->
-          <ThresholdPressureJWL> 1013250.       </ThresholdPressureJWL>
-          <ThresholdPressureSB>  1013250.       </ThresholdPressureSB>
+<!--          These values are artifically low  -->
+          <ThresholdPressureJWL> 2e4        </ThresholdPressureJWL>
+          <ThresholdPressureSB>  1       </ThresholdPressureSB>
         </DDT1>
       </Model>
+
+
     </Models>
     <PhysicalBC>
        <MPM>

@@ -33,13 +33,13 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-     <maxTime>              1.2e-5  </maxTime>
-     <initTime>             0.0    </initTime>
-     <delt_min>             1e-17  </delt_min>
-     <delt_max>             1.0    </delt_max>
-     <delt_init>            1e-10  </delt_init>
-     <timestep_multiplier>  0.1    </timestep_multiplier>
-     <max_delt_increase>    2      </max_delt_increase>
+       <maxTime>            1.2e-5     </maxTime>
+       <initTime>           0.0       </initTime>
+       <delt_min>           1e-17    </delt_min>
+       <delt_max>           1.0      </delt_max>
+       <delt_init>          1e-10    </delt_init>
+       <timestep_multiplier>0.1       </timestep_multiplier>
+       <max_delt_increase>  2      </max_delt_increase>
    </Time>
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
@@ -113,8 +113,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <!--<filebase>smallCylDetSym-SRM-Steel-HMX.uda</filebase> -->
-      <filebase>D.uda</filebase>
+      <filebase>smallCylDetSym-Steel-Steel-HMX.uda</filebase>
       <outputInterval> 5e-08 </outputInterval>
   <!--    <outputInterval> 1e-10 </outputInterval> -->
   <!--    <outputTimestepInterval> 1 </outputTimestepInterval> -->
@@ -136,21 +135,6 @@
       <save label="delF"/>
       <save label="F"/>
 
- <!--
-      <save label="totalMassBurned"/>
-      <save label="totalHeatReleased"/>
-      <save label="detonating"/>
-      <save label="BurningCriteria"/>
-      <save label="SteadyBurn.numPPC"/>
-      <save label="detLocalTo"/>
-      <save label="onSurface"/>
-  -->
-<!--
-      <save label="dTdt_CC"/>
-      <save label="dTdt_NC"/>
-      <save label="massBurnFraction"/>
-      <save label="dVdt_CC"/>
--->
       <save label="g.velocity"/>
       <save label="g.mass"/>
       <save label="p.x"/>
@@ -209,13 +193,24 @@
     <MaterialProperties>
       <MPM>
 
-        <material name="SRM_cylinder">
-          <!--<include href="MaterialData/Al.xml"/> -->
-          <include href="MaterialDataSE/Al_SE.xml"/>
+        <material name="steel_cylinder">
+
+          <include href="MaterialData/MaterialConst4340Steel.xml"/>
+          
+          <constitutive_model type="elastic_plastic">
+            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
+            <include href="MaterialData/VonMisesYield.xml"/>
+            <include href="MaterialData/NoStabilityCheck.xml"/>
+            <include href="MaterialData/JohnsonCookPlastic4340Steel.xml"/>
+            <include href="MaterialData/MieGruneisenEOS4340Steel.xml"/>
+          </constitutive_model>
+        <!--
+          <include href="MaterialData/Al.xml"/>
+        -->
 
           <damage_model type="Threshold">
              <failure_criteria>MaximumPrincipalStress</failure_criteria>
-             <failure_mean>       160e6     </failure_mean>
+             <failure_mean>       9e9       </failure_mean>
              <failure_std>        10        </failure_std>
              <failure_distrib>    weibull   </failure_distrib>
           </damage_model>
@@ -224,12 +219,12 @@
 
           <geom_object>
             <difference>
-              <cylinder label="SRM_outerCyl">
+              <cylinder label="steel_outerCyl">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
                 <radius>           0.006          </radius>
               </cylinder>
-              <cylinder label="SRM_innerCyl">
+              <cylinder label="steel_innerCyl">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
                 <radius>           0.005          </radius>
@@ -240,10 +235,8 @@
             <temperature>         300             </temperature>
           </geom_object>
         </material>
-        
-        <!--__________________________________-->
-        
-        <material name="steel_cylinder">
+
+        <material name="SRM_cylinder">
           <include href="MaterialData/MaterialConst4340Steel.xml"/>
           
           <constitutive_model type="elastic_plastic">
@@ -256,21 +249,21 @@
 
           <damage_model type="Threshold">
              <failure_criteria>MaximumPrincipalStress</failure_criteria>
-             <failure_mean>       4.5e9     </failure_mean>
+             <failure_mean>       9e9       </failure_mean>
              <failure_std>        10        </failure_std>
              <failure_distrib>    weibull   </failure_distrib>
           </damage_model>
-          
+
           <erosion algorithm = "ZeroStress"/>
 
           <geom_object>
             <difference>
-              <cylinder label="steel_outerCyl">
+              <cylinder label="SRM_outerCyl">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
                 <radius>           0.005          </radius>
               </cylinder>
-              <cylinder label="steel_innerCyl">
+              <cylinder label="SRM_innerCyl">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
                 <radius>           0.004          </radius>
@@ -281,26 +274,24 @@
             <temperature>         300             </temperature>
           </geom_object>
         </material>
-        
-     <!--
+<!--
         <contact>
           <type>single_velocity</type>
         </contact>
-     -->   
+-->        
         <contact>
           <type>friction</type>
           <mu>0.25</mu>
           <materials>[0,1]</materials>
         </contact>
-
+        
+        
       </MPM>
-
 
       <!--__________________________________-->
       <ICE>
         <material name = "reactant">
-        <!--   See header for comments on these parameters        -->
-<!-- Joseph-s values ./20100825/JWLICETarver/JWLTarverorig.ups -->
+<!-- Joseph-s values ./20100825/JWLICETarver/JWLTarverorig.ups-->
         <EOS type="JWLC">       
           <A>     732000.e9  </A>
           <B>     -5.2654e9  </B>
@@ -310,13 +301,27 @@
           <om>    0.8867     </om>
           <rho0>  1840.0     </rho0>
         </EOS>
-        <includeFlowWork>       false   </includeFlowWork>     <!--  ?????? -->
+        <includeFlowWork>       false   </includeFlowWork>    
         <dynamic_viscosity>     0.0     </dynamic_viscosity>
         <thermal_conductivity>  0.0     </thermal_conductivity>
         <specific_heat>         2786.0  </specific_heat>
         <gamma>                 1.4     </gamma>
 
 
+        <!-- Jim's  
+        <EOS type = "Murnaghan">
+          <n>     7.4       </n>
+          <K>     39.0e-11  </K>
+          <rho0>  1894.0    </rho0>
+          <P0>    101325.0  </P0>
+        </EOS>
+        <includeFlowWork>       false    </includeFlowWork>
+        <dynamic_viscosity>     0.0      </dynamic_viscosity>
+        <thermal_conductivity>  0.0      </thermal_conductivity>
+        <specific_heat>         1515.31  </specific_heat>
+        <gamma>                 1.4      </gamma>
+
+-->
 <!--      Vandersall 2010
           <EOS type="JWL">
             <A>     732000e9    </A>
@@ -335,7 +340,7 @@
 -->
           <geom_object>
             <difference>
-              <cylinder label = "steel_innerCyl"/>
+              <cylinder label = "SRM_innerCyl"/>
               <cylinder label = "HotPBXCore">
                 <bottom> [0.00,  0.00,  0.000000] </bottom>
                 <top>    [0.00,  0.00,  0.010000] </top>
@@ -346,7 +351,7 @@
             <velocity>     [0.0,0.0,0.0]  </velocity>
             <temperature>  300            </temperature>
             <pressure>     101325.0       </pressure>
-            <density>      1832           </density>
+            <density>      1894           </density>
           </geom_object>
 
           <geom_object>
@@ -355,7 +360,7 @@
             <velocity>     [0.0,0.0,0.0]  </velocity>
             <temperature>  300            </temperature>
             <pressure>     101325.0       </pressure>
-            <density>      1832           </density>
+            <density>      1894           </density>
 
           </geom_object>
         </material>
@@ -400,12 +405,12 @@
                 <min>          [-1.0, -1.0, -1.0] </min>
                 <max>          [ 1.0,  1.0,  1.0] </max>
               </box>
-              <cylinder label="SRM_outerCyl"/>
+              <cylinder label="steel_outerCyl"/>
             </difference>
 
            <res>          [2,2,1]         </res>
            <velocity>     [0.0,0.0,0.0]   </velocity>
-           <temperature>  298             </temperature>
+           <temperature>  300             </temperature>
            <density>      1.38934929e+00  </density>
            <pressure>     101325.0        </pressure>
 
@@ -421,7 +426,7 @@
             <!--             srm-react,     srm-prod,  -->
             <!--                            react-prod -->
 
-            <momentum>  [0 ,    1e15, 1e15,
+            <momentum>  [0,     1e15, 1e15,
                                 1e15, 1e15,
                                       1e15]    </momentum>
 

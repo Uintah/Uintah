@@ -33,7 +33,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            4e-6     </maxTime>
+       <maxTime>            1.2e-5     </maxTime>
        <initTime>           0.0       </initTime>
        <delt_min>           1e-17    </delt_min>
        <delt_max>           1.0      </delt_max>
@@ -54,7 +54,7 @@
         <BCType id = "0"    label = "Pressure"    var = "Neumann">
                               <value>  0.0 </value>
         </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
+        <BCType id = "all"  label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all"  label = "Temperature" var = "Neumann">
@@ -75,7 +75,7 @@
         <BCType id = "0"    label = "Pressure"    var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all"  label = "Velocity"    var = "Dirichlet">
+        <BCType id = "all"  label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all"  label = "Temperature" var = "Neumann">
@@ -101,10 +101,10 @@
            <Box label = "1">
           <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
               <lower>        [  0.00,  0.00, 0.00]    </lower>
-              <upper>        [  0.01,  0.01, 0.001]   </upper>
+              <upper>        [  0.016,  0.016, 0.001]   </upper>
               <extraCells>   [1,1,1]                  </extraCells>
               <patches>      [6,6,1]                  </patches>
-              <resolution>   [100,100,1]              </resolution>
+              <resolution>   [160,160,1]              </resolution>
            </Box>
        </Level>
     </Grid>
@@ -115,7 +115,7 @@
    <DataArchiver>
   <!--    <filebase>smallCylDetSym-Steel-SRM-HMX.uda</filebase> -->
       <filebase>D.uda</filebase>
-      <outputInterval> 2e-08 </outputInterval>
+      <outputInterval> 5e-08 </outputInterval>
   <!--    <outputInterval> 1e-10 </outputInterval> -->
   <!--    <outputTimestepInterval> 1 </outputTimestepInterval> -->
       <outputInitTimestep/>
@@ -268,11 +268,17 @@
             <temperature>         300             </temperature>
           </geom_object>
         </material>
-        <!--__________________________________-->
-
-
-      </MPM>
-
+     <!--
+        <contact>
+          <type>single_velocity</type>
+        </contact>
+     -->   
+        <contact>
+          <type>friction</type>
+          <mu>0.25</mu>
+          <materials>[0,1]</materials>
+        </contact>
+    </MPM>
 
       <!--__________________________________-->
       <ICE>
@@ -412,11 +418,11 @@
             <!--             srm-react,     srm-prod,  -->
             <!--                            react-prod -->
 
-            <momentum>  [1e15,  1e15, 1e15,
+            <momentum>  [0,     1e15, 1e15,
                                 1e15, 1e15,
                                       1e15]    </momentum>
 
-           <heat>       [1e15,  1e15, 1e15,
+           <heat>       [0,     1e15, 1e15,
                                 1e15, 1e15,
                                       1e15]    </heat>
           </exchange_coefficients>

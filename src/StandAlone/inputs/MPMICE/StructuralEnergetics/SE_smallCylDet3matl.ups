@@ -113,11 +113,10 @@
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-          <!--    <lower>        [-0.02,-0.02, 0.0000] </lower> -->
-              <lower>        [ -0.14, -0.14, 0.0000] </lower>
-              <upper>        [  0.14,  0.14, 0.00100] </upper>
+              <lower>        [ -0.02, -0.02, 0.0000] </lower>
+              <upper>        [  0.02,  0.02, 0.00100] </upper>
               <extraCells>   [1,1,1]                 </extraCells>
-              <patches>      [4,4,1]               </patches>
+              <patches>      [4,4,1]                 </patches>
               <resolution>   [400,400,1]             </resolution>
            </Box>
        </Level>
@@ -127,7 +126,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>smallCylDetSym3matl.ups</filebase>
+      <filebase>smallCylDet3matl.uda</filebase>
       <outputInterval> 1e-07 </outputInterval>
       <outputInitTimestep/> 
 
