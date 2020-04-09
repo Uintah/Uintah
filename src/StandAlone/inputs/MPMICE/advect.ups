@@ -19,6 +19,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
+       <max_Timesteps>       1 </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -131,12 +132,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]          </lower>
-              <upper>        [2.5,2.5,2.5]    </upper>
+              <lower>      [0,0,0]          </lower>
+              <upper>      [5,10,1]    </upper>
               <extraCells> [1,1,1]            </extraCells>
-              <patches>    [1,1,1]            </patches>
+              <patches>    [1,2,1]            </patches>
            </Box>
-           <spacing>        [0.5,0.5,0.5]     </spacing>
+           <spacing>        [1,1,1]     </spacing>
        </Level>
     </Grid>
    
@@ -146,21 +147,17 @@
    <DataArchiver>
       <filebase>advect_mpmice.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label="press_equil_CC"/>
-      <save label="uvel_FC"/>
-      <save label="vvel_FC"/>
-      <save label="wvel_FC"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
-      <save label="delP_Dilatate"/>
-      <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
-      <save label="rho_CC"/>
-      <save label="vel_CC"/>
+      <save label="fragmentID"/>
+      <save label="nTouched"/>
       <save label="p.x"/>
       <save label="p.volume"/>
+      <save label="p.mass"/>
+      <save label="p.temperature"/>
       <save label="p.velocity"/>
+      <save label="p.stress"/>
+      <save label="sumLocalized_CC"/>
+      <save label="nFragments"/>
+      
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -192,7 +189,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-         <material>
+         <material name="tofu">
               <density>             8900.0           </density>
               <constitutive_model type = "comp_neo_hook_plastic">
                   <useModifiedEOS>     true          </useModifiedEOS>
@@ -204,26 +201,51 @@
                   <strain_limit>       3.05          </strain_limit>
                   <reduction_factor>   1.0           </reduction_factor>
               </constitutive_model>
-                <thermal_conductivity>  400.0         </thermal_conductivity>
-                <specific_heat>         386.0         </specific_heat>
-                <geom_object>
-                    <box label="gpmpm">
-                        <min>           [1.0,1.0,1.0]   </min>
-                        <max>           [1.5,1.5,1.5]   </max>
-                    </box>
-                    <res>               [2,2,2]         </res>
-                    <velocity>          [10.0,10.0,10.0]   </velocity>
-                    <temperature>       300             </temperature>
-                </geom_object>
+              <thermal_conductivity>  400.0         </thermal_conductivity>
+              <specific_heat>         386.0         </specific_heat>
+              <geom_object>
+                <union label = "boxes">
+                  <box label="box1">
+                      <min>           [1, 1, 0]   </min>
+                      <max>           [2, 2, 1]   </max>
+                  </box>
+                  <box label="box2">
+                      <min>           [3, 2, 0]   </min>
+                      <max>           [4, 3, 1]   </max>
+                  </box>
+
+                  <box label="box3">
+                      <min>           [2, 4, 0]   </min>
+                      <max>           [3, 5, 1]   </max>
+                  </box>
+                  
+                  <box label="box4">
+                      <min>           [2, 6, 0]   </min>
+                      <max>           [3, 7, 1]   </max>
+                  </box>                  
+                  <box label="box5">
+                      <min>           [2, 8, 0]   </min>
+                      <max>           [3, 9, 1]   </max>
+                  </box>
+                  <box label="box6">
+                      <min>           [3, 7, 0]   </min>
+                      <max>           [4, 8, 1]   </max>
+                  </box>
+                </union>
+                <res>               [2,2,2]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
          </material>
 
-            <contact>
-              <type>null</type>
-              <materials>              [0]         </materials>
-            </contact>
+      <contact>
+        <type>null</type>
+        <materials>              [0]         </materials>
+      </contact>
+      
       </MPM>
        <ICE>
-         <material>
+         <material name="air">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
@@ -231,14 +253,11 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label="gpice">
-                    <min>           [-1.0,-1.0,-1.0]    </min>
-                    <max>           [4.0,4.0,4.0 ]      </max>
+                <box label="all">
+                    <min>           [-1, -1,-1]    </min>
+                    <max>           [10, 10, 10 ]      </max>
                 </box>
-              <box label="gpicehole">
-                    <min>           [1.0,1.0,1.0]       </min>
-                    <max>           [1.5,1.5,1.5]       </max>
-                </box>
+                <union label="boxes"/>
               </difference>
                <res>                      [2,2,2]        </res>
                <velocity>           [10.0,10.0,10.0]     </velocity>
@@ -249,17 +268,17 @@
          </material>
       </ICE>       
        
-            <exchange_properties> 
+      <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [0.0]           </heat>
         </exchange_coefficients>
-            </exchange_properties> 
-    </MaterialProperties>
+      </exchange_properties> 
+  </MaterialProperties>
     
     <!--__________________________________-->
     <DataAnalysis>
-
+<!--
       <Module name = "minMax">
         <samplingFrequency> 1e10 </samplingFrequency>
         <timeStart>          0   </timeStart>
@@ -273,7 +292,18 @@
           <analyze label="wvel_FCME" matl="1"/>
           <analyze label="g.velocity" matl="0"/>
         </Variables>
-      </Module>            
+      </Module> 
+-->  
+      <Module name = "findFragments">
+        <material>  tofu         </material>         
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <Variables>
+          <analyze label="g.velocity"/>
+        </Variables>
+      </Module>
+               
     </DataAnalysis>
        
 </Uintah_specification>
