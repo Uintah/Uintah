@@ -61,10 +61,17 @@ https://try.github.io/
 Side-by-Side Comparisons of Git and SVN Commands:
 https://backlog.com/git-tutorial/reference/commands/
 
+Git cheatsheet
+http://www.ndpsoftware.com/git-cheatsheet.html;
+
 Virtual Sandbox to Experiment with Git Commands:
 http://git-school.github.io/visualizing-git/#free-remote
 
 Virtual Sandbox and Tutorial to Experiment with Git Commands:
 https://learngitbranching.js.org/
 
+Why is git so hard:
+http://merrigrove.blogspot.com/2014/02/why-heck-is-git-so-hard-places-model-ok.html
 
+Git Branching:
+https://learngitbranching.js.org
