@@ -468,9 +468,10 @@ ViscoScram::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->requires(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
-  task->requires(Task::OldDW, pStatedataLabel,   matlset, gnone);
-  task->requires(Task::OldDW, pRandLabel,        matlset, gnone);
+  task->requires(Task::OldDW, pCrackRadiusLabel,    matlset, gnone);
+  task->requires(Task::OldDW, pStatedataLabel,      matlset, gnone);
+  task->requires(Task::OldDW, pRandLabel,           matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, gnone);
 
   task->computes(pVolChangeHeatRateLabel_preReloc, matlset);
   task->computes(pViscousHeatRateLabel_preReloc,   matlset);
@@ -534,6 +535,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constParticleVariable<double>    pTempPrev,pVol_new;
   constParticleVariable<Matrix3>   pDefGrad_new,velGrad;
+  constParticleVariable<long64>    pids;
 
   ParticleVariable<double>    pdTdt, p_q;
   ParticleVariable<Matrix3>   pStress_new, pStrainRate_new;
@@ -565,7 +567,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress,             lb->pStressLabel,             pset);
     old_dw->get(pCrackRadius,        pCrackRadiusLabel,            pset);
     old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset); 
-
+    old_dw->get(pids,                lb->pParticleIDLabel,         pset);
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pdTdt, 
                            lb->pdTdtLabel,                        pset);
@@ -640,7 +642,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         J = pDefGrad_new[idx].Determinant();
         cout << getpid() 
-             << "**WARNING** Negative Jacobian of deformation gradient" << endl;
+             << "**WARNING** Negative Jacobian of deformation gradient.  ParticleID: " << pids[idx] << endl;
         cout << "particle mass = " << pMass[idx]  << endl;
       }
       double rho_cur = rho_0/J;
@@ -992,6 +994,21 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // IJNME, 2000, 49:1191-1209)
       pdTdt[idx] = -pVolHeatRate_new[idx] + pVeHeatRate_new[idx] +
                                pCrHeatRate_new[idx];
+                               
+                               
+
+#if 0
+      //__________________________________
+      // CLAMP!!!
+      if ( (pTemperature[idx] + pdTdt[idx] * delT ) < 0){
+        double clamp = pVeHeatRate_new[idx] + pCrHeatRate_new[idx];
+        cout << "  ViscoScram:  Warning: particle ID: "<< pids[idx] << " clamping pdTdt from ("
+             << pdTdt[idx] << ") to (" << clamp << ")\n";
+        cout << " -pVolHeatRate_new: " << -pVolHeatRate_new[idx] << " pVeHeatRate_new: " << pVeHeatRate_new[idx]
+             << " pCrHeatRate_new: " << pCrHeatRate_new[idx] << endl;
+        pdTdt[idx] =  clamp;
+      }
+#endif                               
       /*
       if (pTemperature[idx] > 450.0) {
       cout << "\t idx = " << idx << "\n\t\t qdot_v = " << pVolHeatRate_new[idx]

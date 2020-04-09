@@ -1839,8 +1839,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // use eos evaulations for rho_micro_mpm
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-
       const IntVector& c = *iter;
+/*`==========TESTING==========*/
+      bool test = false;
+#if 0      
+      if(c == IntVector(1,1,0) ) {
+        test = true;
+        
+        cout << setprecision(12) << " Compute Equilibration Pressure Preliminary Calcs " << endl;
+        cout << "______________________________________________________________________" << endl;
+      } 
+#endif
+/*===========TESTING==========`*/
+
       double total_mat_vol = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
         if(ice_matl[m]){                // I C E
@@ -1851,6 +1862,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
         mat_volume[m] = ( rho_CC_old[m][c]*cell_vol )/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
+        
+/*`==========TESTING==========*/
+        if(test){
+          cout << "  m: " << m << " rho_micro: " << rho_micro[m][c] << " mat_vol: " << mat_volume[m] << " TMV: " << total_mat_vol <<endl;
+        } 
+/*===========TESTING==========`*/
+        
       }  // numAllMatls loop
 
       TMV_CC[c] = total_mat_vol;
@@ -1858,6 +1876,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
         vol_frac[m][c]   = mat_volume[m]/total_mat_vol;
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
+        
+/*`==========TESTING==========*/
+        if(test){
+          cout << "  m: " << m << " volFrac: " << vol_frac[m][c] << " rho_CC_new: " << rho_CC_new[m][c]  <<endl;
+        } 
+/*===========TESTING==========`*/
       }
     }  // cell iterator
 
@@ -1871,6 +1895,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       bool converged  = false;
       double sum;
       count           = 0;
+      
+/*`==========TESTING==========*/
+      bool test = false;
+      if(c == IntVector(1,1,0) ) {
+//        test = true;
+        ds_EqPress.setActive(true);
+      } 
+/*===========TESTING==========`*/
+      
       vector<EqPress_dbg> dbgEqPress;
 
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
@@ -2087,6 +2120,37 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           }
         } 
       }  // all testsPassed
+            
+      /*`==========TESTING==========*/
+      if (test ){
+        if(ds_EqPress.active()){
+          ostringstream warn;
+          std::cout << "\nDetails on  Equilibration Pressure iterations " << c <<" " <<  endl;
+          
+          vector<EqPress_dbg>::iterator dbg_iter;
+          for( dbg_iter  = dbgEqPress.begin(); dbg_iter != dbgEqPress.end(); dbg_iter++){
+            EqPress_dbg & d = *dbg_iter;
+            cout << "Iteration:   " << d.count
+                 << "  press_new:   " << d.press_new
+                 << "  sumVolFrac:  " << d.sumVolFrac
+                 << "  delPress:    " << d.delPress << "\n";
+            for (int m = 0; m < numALLMatls; m++){
+              cout << "  matl: " << d.matl[m].mat
+                   << "  press_eos:  " << d.matl[m].press_eos
+                   << "  volFrac:    " << d.matl[m].volFrac
+                   << "  rhoMicro:   " << d.matl[m].rhoMicro
+                   << "  rho_CC:     " << d.matl[m].rho_CC
+                   << "  Temp:       " << d.matl[m].temp_CC << "\n";
+            }
+          }
+        }
+      }
+      test = false;
+      ds_EqPress.setActive(false);
+/*===========TESTING==========`*/
+      
+      
+      
     }  // end of cell interator
     if (cout_norm.active())
       cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
@@ -2209,8 +2273,20 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                             double & sum,
                             IntVector c )
 {
+
+
+/*`==========TESTING==========*/
+  bool dbg = false;
+//  if( c == IntVector(1,1,0) ){
+//    dbg = true;
+//  }
   // Start over for this cell using a binary search
-//  cout << " cell " << c << " Starting binary pressure search "<< endl;
+
+  if(dbg){
+    cout << " cell " << c << " Starting binary pressure search "<< endl;
+  } 
+/*===========TESTING==========`*/
+  
   count = 0;
   bool converged = false;
   double c_2;
@@ -2317,13 +2393,21 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
       sumR += vfR[m];
       sumL += vfL[m];
       
-//      cout << "matl: " << m << " vol_frac_L: " << vfL[m] << " vol_frac_R: " << vfR[m] 
-//           << " rho_CC: " << rho_CC_new[m][c] << " rho_micro_L: " << rhoMicroL << " rhoMicroR: " << rhoMicroR << endl;
+/*`==========TESTING==========*/
+      if(dbg){
+        cout << setprecision(10) << scientific
+             << "  matl: " << m << " vol_frac_L: " <<left << setw(12) << vfL[m] << " vol_frac_R: " << setw(12) << vfR[m] 
+             << "\t rho_CC: " << setw(12) << rho_CC_new[m][c] << " rho_micro_L: " << setw(12) << rhoMicroL << " rhoMicroR: " << setw(12) << rhoMicroR << endl;
+      } 
+/*===========TESTING==========`*/
     }  // all matls
 
-
-//    cout << "Pm = " << Pm << "\t P_L: " << Pleft << "\t P_R: " << Pright << "\t 1.-sum " << residual << " \t sumR: " << sumR << " \t sumL " << sumL << endl;
-
+/*`==========TESTING==========*/
+    if(dbg){
+      cout << count << "  Pm = " << Pm << "\t P_L: " << Pleft << "\t P_R: " << Pright << "\t (1.-sum) :" << residual << " \t sumR: " << sumR << " \t sumL " << sumL << endl;
+    } 
+/*===========TESTING==========`*/
+    
     //__________________________________
     //  come up with a new guess
     double prod = (1.- sumR)*(1. - sumL);

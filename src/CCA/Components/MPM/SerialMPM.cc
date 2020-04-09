@@ -4185,15 +4185,19 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
         pTempNew[idx] += pdTdt[idx]*delT;
 
+#if 0
         // Delete particles whose mass is too small (due to combustion),
         // whose pLocalized flag has been set to -999 or who have a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
              (pLocalized[idx]==-999)){
           std::cout << "Deleting particle ID: " << pids[idx] << " matl: " << dwi << " with "
                     << " mass: " << pmassNew[idx] << " Temp: " << pTempNew[idx]
+                    << " pdTdt*delT: " << pdTdt[idx]*delT
                     << " Localized: " << pLocalized[idx] << "\n";
           delset->addParticle(idx);
         }
+#endif
+
       } // particles
        
       //__________________________________
