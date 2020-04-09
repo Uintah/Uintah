@@ -53,6 +53,9 @@ LightTime::LightTime(const ProcessorGroup* myworld, ProblemSpecP& params)
 {
   mymatls = 0;
   Ilb  = scinew ICELabel();
+  
+  d_vol_frac_rct_threshold = 0.1;     // HARDWIRED
+   
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel= VarLabel::create("F",
@@ -73,8 +76,9 @@ LightTime::~LightTime()
   VarLabel::destroy(mag_grad_Fr_Label);
   VarLabel::destroy(delFLabel);
   
-  if(mymatls && mymatls->removeReference())
+  if(mymatls && mymatls->removeReference()){
     delete mymatls;
+  }
 }
 //__________________________________
 void LightTime::outputProblemSpec(ProblemSpecP& ps)
@@ -308,8 +312,10 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       if(!d_react_mixed_cells){
         VF_SUM = .99;
       }
+      
       if((vol_frac_rct[c] + vol_frac_prd[c]) > VF_SUM){
-        if (time >= t_b && rctRho[c] > d_TINY_RHO){
+        if (time >= t_b && vol_frac_rct[c] > d_vol_frac_rct_threshold ) {
+        
           Fr[c] = (time - t_b)/delta_L;
 
           if(Fr[c] > .96) {
@@ -344,10 +350,13 @@ void LightTime::computeModelSources(const ProcessorGroup*,
           sp_vol_src_1[c] += createdVolx;
         }  // if (time to light it)
       }  // if cell only contains rct and prod
+      
+      
+      // reactant mass is already consumed
       if (rctRho[c] <= d_TINY_RHO){
         Fr[c] = 1.0;
         delF[c] = 0.0;
-      }  // reactant mass is already consumed
+      }  
     }  // cell iterator  
 
     //__________________________________

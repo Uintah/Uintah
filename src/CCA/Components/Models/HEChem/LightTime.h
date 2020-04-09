@@ -53,6 +53,17 @@ KEYWORDS
 
 DESCRIPTION
 
+This model was constructed based on a collection of notes provided
+to Jim Guilkey by Peter Vitello at LLNL.  These are excerpts from national
+lab code manuals such as HEMP and Kovec, but don't contain enough information
+to pull actual references.
+
+The model is pretty straightforward, it specifies the reactant material
+and the product material, indicates an origin of the detonation and a detonation
+velocity.  Cells start to burn once the distance from the origin to the cell
+center, divided by the detonation velocity, meets or exceeds the elapsed
+simulation time.  One can also specify an origin as a plane rather than a point.
+
 WARNING
 
 ****************************************/
@@ -131,12 +142,13 @@ WARNING
     ICELabel* Ilb;
     MaterialSet* mymatls;
     
-    double d_D;   // detonation wave velocity
-    double d_E0;
+    double d_D;               // detonation wave velocity
+    double d_E0;              // heat of detonation
     Point  d_start_place;
     Vector d_direction;
     bool   d_react_mixed_cells;
     double d_refineCriteria;
+    double d_vol_frac_rct_threshold;  // minimum react vol_frac for reaction  HARDWIRED 
 
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
