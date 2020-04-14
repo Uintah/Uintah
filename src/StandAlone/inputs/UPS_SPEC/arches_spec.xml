@@ -74,7 +74,12 @@
                Where the <task label> is the label the user assigns to the task (label=<task label>).
                Note that one may add a scalar to the spec which will compute flowrates of the scalar (as 
                opposed to the total flow rate) 
-               See inputs/ARCHES/Coal/1GW_MFR.ups for an example of usage.-->
+               See inputs/ARCHES/Coal/1GW_MFR.ups for an example of usage.
+               For inlets/outlets through intrusions, you will need to compute those separately.
+               See inputs/ARCHES/intrusion_mass_balance.ups for an example of usage. This method introduces
+               a source term adjacent to the intrusion inlet where SRC = constant * rho * u. The source term is
+               found by saving out the <variable>_RHS term as shown in the example. Sum up <variable>_RHS over 
+               the intrusion inlet to obtain total flow rate. --> 
 
           <scalar                       spec="OPTIONAL STRING" 
                                         need_applies_to="type mass_flow_rate"/> <!-- Add a scalar to the mass flow rate calc. -->
