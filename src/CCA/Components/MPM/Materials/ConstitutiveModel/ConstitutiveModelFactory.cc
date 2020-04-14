@@ -30,6 +30,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/CNH_MMS.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TransIsoHyper.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TransIsoHyperImplicit.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/TransIsoHypoFrictional.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoScram.h>
@@ -60,6 +61,8 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca3.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca4.h>
+
+
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArenaSoilBanerjeeBrannon/ArenaPartiallySaturated.h>
 //#include <CCA/Components/MPM/Materials/ConstitutiveModel/Biswajit/CamClay.h>
@@ -168,7 +171,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
   //__________________________________
   
-  
+  else if (cm_type == "TransIsoHypoFrictional") {
+    return(scinew TransIsoHypoFrictional(child,flags));
+  }
   else if (cm_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture"){

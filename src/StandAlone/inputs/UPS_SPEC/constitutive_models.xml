@@ -15,6 +15,7 @@
                                                                              rigid, 
                                                                              shell_CNH,
                                                                              trans_iso_hyper, 
+                                                                             TransIsoHypoFrictional, 
                                                                              visco_plastic, 
                                                                              soil_foam, 
                                                                              visco_scram,
@@ -98,7 +99,22 @@
     <failure_variable_mean         spec="OPTIONAL DOUBLE"/>
     <failure_variable_std          spec="OPTIONAL DOUBLE"/>
     <failure_variable_distrib      spec="OPTIONAL STRING"/>
-    
+
+    <!--For TransIsoHypoFrictional Model-->
+    <E_t           spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+    <Y_t           spec="OPTIONAL DOUBLE" need_applies_to="type TransIsoHypoFrictional" />    
+	<E_a           spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<nu_at         spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<nu_t          spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<G_at          spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<n_fiber       spec="REQUIRED VECTOR" need_applies_to="type TransIsoHypoFrictional" />
+	<mu_fiber      spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<crimp_stretch spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />	
+	<crimp_ratio   spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<phi_0         spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />
+	<alpha         spec="OPTIONAL DOUBLE" need_applies_to="type TransIsoHypoFrictional" />		        
+    <bulk          spec="REQUIRED DOUBLE" need_applies_to="type TransIsoHypoFrictional" />		    
+
     <!--__________________________________-->
     
     <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
