@@ -141,8 +141,10 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
       double centerOfMassMass=0.0; 
       for(int  n = 0; n < numMatls; n++){
         if(!d_matls.requested(n)) continue;
-        centerOfMassVelocity+=gvelocity_star[n][c] * gmass[n][c];
-        centerOfMassMass+= gmass[n][c]; 
+        if(gtrcontactforce[n][c].length2() > 0.0){
+          centerOfMassVelocity+=gvelocity_star[n][c] * gmass[n][c];
+          centerOfMassMass+= gmass[n][c]; 
+        }
       }
 
       centerOfMassVelocity/=centerOfMassMass;
