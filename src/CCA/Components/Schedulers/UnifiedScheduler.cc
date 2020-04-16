@@ -2494,10 +2494,10 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                     << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
+        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
         } else if (( !allocated )
                    || ( allocated && correctSize && !validOnGPU /*&& !copyingIn*/ )) {
-        //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
-        
+
           // It's either not on the GPU, or space exists on the GPU for it but it is invalid.
           // Either way, gather all ghost cells host side (if needed), then queue the data to be
           // copied in H2D.  If the data doesn't exist in the GPU, then the upcoming allocateAndPut
@@ -2778,7 +2778,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
               //Figure out which thread gets to copy data H2D.  First touch wins.  In case of a superpatch,
               //the patch vars were shallow copied so they all patches in the superpatch refer to the same atomic status.
-              bool performCopy = false, delayedCopy = false;
+              bool performCopy = false;
+              bool delayedCopy = false;
               if (!staging) {
                 performCopy = gpudw->compareAndSwapCopyingIntoGPU(label_cstr, patchID, matlIndx, levelID, numGhostCells);
               }
