@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2019 The University of Utah
+ * Copyright (c) 1997-2020 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,6 @@ namespace Uintah {
 
 class Task;
 class DetailedTask;
-class KokkosSchedulerWorker;
 
 /**************************************
 
@@ -54,7 +53,7 @@ CLASS
 GENERAL INFORMATION
    KokkosScheduler.h
 
-   Alan Humphrey, John Holmen, Brad Peterson
+   Alan Humphrey, John Holmen, Brad Peterson, Damodar Sahasrabudhe
    Scientific Computing and Imaging Institute
    University of Utah
 
@@ -111,8 +110,6 @@ class KokkosScheduler : public MPIScheduler  {
                                            // update this value if it ever changes.
 
     static std::string myRankThread();
-
-    friend class KokkosSchedulerWorker;
 
   private:
 
@@ -189,17 +186,29 @@ class KokkosScheduler : public MPIScheduler  {
 
     void prepareDeviceVars( DetailedTask * dtask );
 
+    void copyDelayedDeviceVars( DetailedTask * dtask );
+
+    bool delayedDeviceVarsValid( DetailedTask * dtask );	//check if the main patch is valid, not ghost cells.
+
     void prepareTaskVarsIntoTaskDW( DetailedTask * dtask );
 
     void prepareGhostCellsIntoTaskDW( DetailedTask * dtask );
 
-    void markDeviceRequiresDataAsValid( DetailedTask * dtask );
+    void markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask );
+
+    void markHostAsInvalid( DetailedTask * dtask );
 
     void markDeviceGhostsAsValid( DetailedTask * dtask );
 
+    void markHostComputesDataAsValid( DetailedTask * dtask );
+
     void markDeviceComputesDataAsValid( DetailedTask * dtask );
 
+    void markDeviceModifiesGhostAsInvalid( DetailedTask * dtask );
+
     void markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask );
+
+    void markDeviceAsInvalidHostAsValid( DetailedTask * dtask );
 
     void initiateD2HForHugeGhostCells( DetailedTask * dtask );
 
