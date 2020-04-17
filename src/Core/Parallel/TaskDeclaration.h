@@ -62,7 +62,7 @@ template < typename TaskFunctor
          , typename... Args >
 void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
-                          , const std::string & taskName
+                          , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
                                                     , const MaterialSubset                         * matls
                                                     ,       OnDemandDataWarehouse                  * old_dw
@@ -95,11 +95,12 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           )
 {
   Task* task{nullptr};
-
+  std::string taskName = taskNamePassed;
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value || std::is_same<Kokkos::Cuda, ExecSpace3>::value ) {
+      taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
@@ -165,7 +166,7 @@ template < typename TaskFunctor
          , typename... Args >
 void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
-                          , const std::string & taskName
+                          , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
                                                     , const MaterialSubset                         * matls
                                                     ,       OnDemandDataWarehouse                  * old_dw
@@ -190,11 +191,12 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           )
 {
   Task* task{nullptr};
-
+  std::string taskName = taskNamePassed;
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {
+      taskName = taskName + " (GPUTask)";
       if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
@@ -250,7 +252,7 @@ template < typename TaskFunctor
          , typename... Args >
 void create_portable_tasks(       TaskFunctor   taskFunctor
                           ,       TaskObject  * ptr
-                          , const std::string & taskName
+                          , const std::string & taskNamePassed
                           , void (TaskObject::*pmf1)( const PatchSubset                            * patches
                                                     , const MaterialSubset                         * matls
                                                     ,       OnDemandDataWarehouse                  * old_dw
@@ -267,11 +269,12 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
                           )
 {
   Task* task{nullptr};
-
+  std::string taskName = taskNamePassed;
   // Check for GPU tasks
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+      taskName = taskName + " (GPUTask)";
       task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
 
       //TODO: Consolodate these
