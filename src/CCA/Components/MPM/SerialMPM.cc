@@ -5521,7 +5521,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    Vector dx = patch->dCell();
+//    Vector dx = patch->dCell();
 
     BBox domain;
     const Level* level = getLevel(patches);
@@ -5686,6 +5686,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         triMidToN1Vec_new[idx] = P1 - tx_new[idx];
         triMidToN2Vec_new[idx] = P2 - tx_new[idx];
 
+#if 0
+        // No point in updating size unless it is used.  Just carry forward.
         Vector r0 = P1 - P0;
         Vector r1 = P2 - P0;
         Vector r2 = 0.1*Cross(r1,r0);
@@ -5693,6 +5695,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                               r0.y()/dx.y(), r1.y()/dx.y(), r2.y()/dx.y(),
                               r0.z()/dx.z(), r1.z()/dx.z(), r2.z()/dx.z());
         tsize_new[idx] = size;
+#endif
+        tsize_new[idx] = tsize[idx];
   
         // Check to see if a triangle has left the domain
         // Check to see if a triangle has left the domain
@@ -5814,7 +5818,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     // Get the current simulation time
     simTime_vartype simTimeVar;
     old_dw->get(simTimeVar, lb->simulationTimeLabel);
-    double time = simTimeVar;
+//    double time = simTimeVar;
 
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
@@ -5828,7 +5832,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
-    std::vector<Vector> sumTriForce(numMPMMatls);
+//    std::vector<Vector> sumTriForce(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl =
                      (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -5841,7 +5845,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,2*NGN);
       LSContForce[m].initialize(Vector(0.0));
-      sumTriForce[m]=Vector(0.0);
+//      sumTriForce[m]=Vector(0.0);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("Triangle");
@@ -5971,25 +5975,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 min_sep2  = sep;
               }
             }
-#if 0
-            if(sep < min_sep && sep < 0.16*cell_length2 /*&& !foundOne*/){
-              min_sep  = sep;
-              closest  = idx1;
-            }
-#endif
           } // inner loop over triangles
-#if 0
-          if(spew){
-            cout << "px0 = " << px0 << endl;
-            cout << "closest = " << closest << endl;
-            cout << "min_sep/cell_length2 = " << min_sep/cell_length2 << endl;
-            cout << "px1 = " << tx0[tmi][closest] << endl;
-          }
-#endif
 
           double forceMag=0.0;
           double overlapC = 1.;
           Vector triNormalC(0.);
+          Point  inPlaneC(0.,0.,0.);
           if(closest < 99999){
             // Following the description at:
             // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
@@ -6000,6 +5991,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               triNormal /= tNL;
             }
             triNormalC = triNormal;
+            // AP is a vector from the text point px0 to the centroid of the test triangle
             Vector AP = px0 - tx0[tmi][closest];
             double overlap = Dot(AP,triNormal);
             if(overlap < 0.0){ // Point is past the plane of the triangle
@@ -6127,12 +6119,14 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                              * gmass[adv_matl1][node]/totMass1;
                  }
                 }
-
               } // passed Dot test, plane intersection point is inside triangle
+              else {
+               // Save the inPlane location for later testing
+               inPlaneC = inPlane;
+              }
             }  // overlaps, point is through plane made by triangle
           } // closest < 99999 (new:  point is close enough)
 
-#if 1
           if(closest < 99999 && secondClosest < 99999 && !foundOne){
             // Following the description at:
             // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter4/point_in_triangle.html
@@ -6160,9 +6154,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               Vector w = Cross(a,b);
 
               if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
-                if(fabs(overlap)>0.001){
-//                 cout << "overlap = " << overlap << ", tmi = " << tmi << ", tmo = " << tmo << endl;
-                }
                 numInside++;
 //                triInContact[tmi][secondClosest] = tmo;
                 foundOne=true;
@@ -6200,17 +6191,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // Get the node indices that surround the cell
                 int NN = interpolator->findCellAndWeights(A, ni, S, size);
   
-#if 0
-            cout << "Here B3.2" << endl;
-            cout << "px0 " << px0 << endl;
-            cout << "A " << A << endl;
-            cout << "B " << B << endl;
-            cout << "C " << C << endl;
-            cout << "tmo " << tmo << endl;
-            cout << "tmi " << tmi << endl;
-            cout << "adv_matl0 " << adv_matl0 << endl;
-            cout << "adv_matl1 " << adv_matl1 << endl;
-#endif
                 double totMass0 = 0.;
                 double totMass1 = 0.;
                 for (int k = 0; k < NN; k++) {
@@ -6227,12 +6207,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                    // to get nearly equal contribution to the acceleration
                    LSContForce[adv_matl0][node] += tForceA*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
-                   sumTriForce[adv_matl0] += tForceA*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
+//                   sumTriForce[adv_matl0] += tForceA*S[k]
+//                                             * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceA*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
-                   sumTriForce[adv_matl1] -= tForceA*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
+//                   sumTriForce[adv_matl1] -= tForceA*S[k]
+//                                             * gmass[adv_matl1][node]/totMass1;
                  }
                 }
 
@@ -6257,12 +6237,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                    // to get nearly equal contribution to the acceleration
                    LSContForce[adv_matl0][node] += tForceB*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
-                   sumTriForce[adv_matl0] += tForceB*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
+//                   sumTriForce[adv_matl0] += tForceB*S[k]
+//                                             * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceB*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
-                   sumTriForce[adv_matl1] -= tForceB*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
+//                   sumTriForce[adv_matl1] -= tForceB*S[k]
+//                                             * gmass[adv_matl1][node]/totMass1;
                  }
                 }
 
@@ -6287,68 +6267,83 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                    // to get nearly equal contribution to the acceleration
                    LSContForce[adv_matl0][node] += tForceC*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
-                   sumTriForce[adv_matl0] += tForceC*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
+//                   sumTriForce[adv_matl0] += tForceC*S[k]
+//                                             * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceC*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
-                   sumTriForce[adv_matl1] -= tForceC*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
+//                   sumTriForce[adv_matl1] -= tForceC*S[k]
+//                                             * gmass[adv_matl1][node]/totMass1;
                  }
                 }
-
               } // passed Dot test, plane intersection point is inside triangle
 
               // Point overlaps second closest triangle
               // check to see if it overlapped the closest
               if(overlapC < 0.0 && !foundOne){
-                if(fabs(overlap)>0.001){
-//                 cout << "overlaP = " << overlap << ", tmi = " << tmi << ", tmo = " << tmo << endl;
-                }
                 // Point overlaps closest two triangles, but intersection
                 // with planes made by those triangles is not inside either one
-                // Assume that the point is in a valley, place force on two
-                // nearest vertices shared by the two closest triangles
-                double areaA = u.length();
-                double areaB = v.length();
-                double areaC = w.length();
-                double weight1Num, weight2Num;
-                Point Point1, Point2;
-                foundOne=true;
-                // Determine which two of the vertices are closest
-                if(areaA >= areaB && areaA >= areaC){
-                  Point1 = A;
-                  weight1Num = areaA;
-                  if(areaB > areaC){
-                   Point2 = B;
-                   weight2Num = areaB;
-                  } else {
-                   Point2 = C;
-                   weight2Num = areaC;
-                  } 
-                } else if(areaB >= areaA && areaB >= areaC){
-                  Point1 = B;
-                  weight1Num = areaB;
-                  if(areaA > areaC){
-                   Point2 = A;
-                   weight2Num = areaA;
-                  } else {
-                   Point2 = C;
-                   weight2Num = areaC;
-                  } 
-                } else {
-                  Point1 = C;
-                  weight1Num = areaC;
-                  if(areaA > areaB){
-                   Point2 = A;
-                   weight2Num = areaA;
-                  } else {
-                   Point2 = B;
-                   weight2Num = areaB;
-                  } 
-                }
-                numInside++;
-                totalContactArea += triAreaAtNodes[tmo][idx0][iu];
-                totalContactAreaTri += 0.5*(areaA+areaB+areaC);
+                // It is possible that the point is in a valley between those two
+                // triangles.  That is a case we want to detect.
+
+                // If the point is in a valley, then inPlaneC should be penetrating
+                // through the secondClosest face.  Test that:
+
+                Vector AP = inPlaneC - tx0[tmi][secondClosest];
+                double overlapN = Dot(AP,triNormal);
+                if(overlapN < 0.0){ // inPlaneC is past the plane of the secondClosest triangle
+                  // Find the point on the plane nearest the test point
+                  Point inPlane = px0 - overlapN*triNormal;
+                  //Now, see if that point is inside the triangle or not
+                  Vector a2 = A - inPlane;
+                  Vector b2 = B - inPlane;
+                  Vector c2 = C - inPlane;
+                  Vector u2 = Cross(b2,c2);
+                  Vector v2 = Cross(c2,a2);
+                  Vector w2 = Cross(a2,b2);
+
+                  if(Dot(u2,v2) >= 0. && Dot(u2,w2) >= 0.){
+                    // inPlane is inside of the secondClosest triangle
+                    double areaA = u.length();
+                    double areaB = v.length();
+                    double areaC = w.length();
+                    double weight1Num, weight2Num;
+                    Point Point1, Point2;
+                    foundOne=true;
+                    // Determine which two of the vertices are closest
+                    if(areaA >= areaB && areaA >= areaC){
+                      Point1 = A;
+                      weight1Num = areaA;
+                      if(areaB > areaC){
+                       Point2 = B;
+                       weight2Num = areaB;
+                      } else {
+                       Point2 = C;
+                       weight2Num = areaC;
+                      } 
+                    } else if(areaB >= areaA && areaB >= areaC){
+                      Point1 = B;
+                      weight1Num = areaB;
+                      if(areaA > areaC){
+                       Point2 = A;
+                       weight2Num = areaA;
+                      } else {
+                       Point2 = C;
+                       weight2Num = areaC;
+                      } 
+                    } else {
+                      Point1 = C;
+                      weight1Num = areaC;
+                      if(areaA > areaB){
+                       Point2 = A;
+                       weight2Num = areaA;
+                      } else {
+                       Point2 = B;
+                       weight2Num = areaB;
+                      } 
+                    }
+                    numInside++;
+                    totalContactArea += triAreaAtNodes[tmo][idx0][iu];
+                    totalContactAreaTri += 0.5*(areaA+areaB+areaC);
 #if 0
                 if(triInContact[tmi][secondClosest] < 0){
                   triInContact[tmi][secondClosest] = tmo;
@@ -6356,87 +6351,85 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                   triInContact[tmi][closest] = tmo;
                 }
 #endif
-
-                double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
-                double K = K_l*Length;
-                forceMag = 0.5*(overlap+overlapC)*K;
-                Vector triNormalMean = 0.5*(triNormal + triNormalC);
-                // Find the weights for each of the vertices
-                // These are actually twice the areas, doesn't matter, dividing
-                Vector tForce1  = -forceMag*triNormalMean*
-                                        (weight1Num/(weight1Num+weight2Num));
-                Vector tForce2  = -forceMag*triNormalMean*
-                                        (weight2Num/(weight1Num+weight2Num));
-                totalForce += tForce1;
-                totalForce += tForce2;
-
-                // Distribute the force to the grid from the triangles
-                // from the triangle vertices.  Use same spatial location
-                // for both adv_matls
-
-                // First for Point 1
-
-                // Get the node indices that surround the cell
-                int NN = interpolator->findCellAndWeights(Point1, ni, S, size);
+                    double Length=((C-B).length()+(B-A).length()+(A-C).length())/3.;
+                    double K = K_l*Length;
+                    forceMag = 0.5*(overlap+overlapC)*K;
+                    Vector triNormalMean = 0.5*(triNormal + triNormalC);
+                    // Find the weights for each of the vertices
+                    // These are actually twice the areas, doesn't matter, dividing
+                    Vector tForce1  = -forceMag*triNormalMean*
+                                            (weight1Num/(weight1Num+weight2Num));
+                    Vector tForce2  = -forceMag*triNormalMean*
+                                            (weight2Num/(weight1Num+weight2Num));
+                    totalForce += tForce1;
+                    totalForce += tForce2;
   
-                double totMass0 = 0.;
-                double totMass1 = 0.;
-                for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 totMass0 += S[k]*gmass[adv_matl0][node];
-                 totMass1 += S[k]*gmass[adv_matl1][node];
-                }
-
-                // Accumulate the contribution from each surrounding vertex
-                for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   // Distribute force according to material mass on the nodes
-                   // to get nearly equal contribution to the acceleration
-                   LSContForce[adv_matl0][node] += tForce1*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
-                   sumTriForce[adv_matl0] += tForce1*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
-                   LSContForce[adv_matl1][node] -= tForce1*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
-                   sumTriForce[adv_matl1] -= tForce1*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
-                 }
-                }
-
-                // Then for Point 2
-
-                // Get the node indices that surround the cell
-                NN = interpolator->findCellAndWeights(Point2, ni, S, size);
+                    // Distribute the force to the grid from the triangles
+                    // from the triangle vertices.  Use same spatial location
+                    // for both adv_matls
+    
+                    // First for Point 1
+                    // Get the node indices that surround the cell
+                    int NN = interpolator->findCellAndWeights(Point1, ni, S, size);
+      
+                    double totMass0 = 0.;
+                    double totMass1 = 0.;
+                    for (int k = 0; k < NN; k++) {
+                     IntVector node = ni[k];
+                     totMass0 += S[k]*gmass[adv_matl0][node];
+                     totMass1 += S[k]*gmass[adv_matl1][node];
+                    }
+    
+                    // Accumulate the contribution from each surrounding vertex
+                    for (int k = 0; k < NN; k++) {
+                     IntVector node = ni[k];
+                     if(patch->containsNode(node)) {
+                       // Distribute force according to material mass on the nodes
+                       // to get nearly equal contribution to the acceleration
+                       LSContForce[adv_matl0][node] += tForce1*S[k]
+                                                 * gmass[adv_matl0][node]/totMass0;
+//                       sumTriForce[adv_matl0] += tForce1*S[k]
+//                                                 * gmass[adv_matl0][node]/totMass0;
+                       LSContForce[adv_matl1][node] -= tForce1*S[k]
+                                                 * gmass[adv_matl1][node]/totMass1;
+//                       sumTriForce[adv_matl1] -= tForce1*S[k]
+//                                                 * gmass[adv_matl1][node]/totMass1;
+                     }
+                    }
   
-                totMass0 = 0.;
-                totMass1 = 0.;
-                for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 totMass0 += S[k]*gmass[adv_matl0][node];
-                 totMass1 += S[k]*gmass[adv_matl1][node];
-                }
-
-                // Accumulate the contribution from each surrounding vertex
-                for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   // Distribute force according to material mass on the nodes
-                   // to get nearly equal contribution to the acceleration
-                   LSContForce[adv_matl0][node] += tForce2*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
-                   sumTriForce[adv_matl0] += tForce2*S[k]
-                                             * gmass[adv_matl0][node]/totMass0;
-                   LSContForce[adv_matl1][node] -= tForce2*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
-                   sumTriForce[adv_matl1] -= tForce2*S[k]
-                                             * gmass[adv_matl1][node]/totMass1;
-                 }
-                }
-              }  // Point in valley
+                    // Then for Point 2
+                    // Get the node indices that surround the cell
+                    NN = interpolator->findCellAndWeights(Point2, ni, S, size);
+      
+                    totMass0 = 0.;
+                    totMass1 = 0.;
+                    for (int k = 0; k < NN; k++) {
+                     IntVector node = ni[k];
+                     totMass0 += S[k]*gmass[adv_matl0][node];
+                     totMass1 += S[k]*gmass[adv_matl1][node];
+                    }
+    
+                    // Accumulate the contribution from each surrounding vertex
+                    for (int k = 0; k < NN; k++) {
+                     IntVector node = ni[k];
+                     if(patch->containsNode(node)) {
+                       // Distribute force according to material mass on the nodes
+                       // to get nearly equal contribution to the acceleration
+                       LSContForce[adv_matl0][node] += tForce2*S[k]
+                                                 * gmass[adv_matl0][node]/totMass0;
+//                       sumTriForce[adv_matl0] += tForce2*S[k]
+//                                                 * gmass[adv_matl0][node]/totMass0;
+                       LSContForce[adv_matl1][node] -= tForce2*S[k]
+                                                 * gmass[adv_matl1][node]/totMass1;
+//                       sumTriForce[adv_matl1] -= tForce2*S[k]
+//                                                 * gmass[adv_matl1][node]/totMass1;
+                     }
+                    }  // Point 2 contribution to force
+                  }
+                } // if inPlane from closest overlaps inPlane from secondClosest
+              }  // if overlapC && !found one, possible point in valley
             }  // overlaps, point is through plane made by triangle
           } // secondClosest < 99999
-#endif
          } // loop over the three vertices of the triangle
         } //  Outer loop over triangles
        }  // if num particles in the inner pset is > 0
