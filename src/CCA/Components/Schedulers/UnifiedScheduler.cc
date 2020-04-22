@@ -3677,6 +3677,7 @@ UnifiedScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
+      bool success=false;
       if (!it->second.m_staging) {
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -3686,7 +3687,7 @@ UnifiedScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        success = gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       } else {
         if (gpu_stats.active()) {
           cerrLock.lock();
@@ -3698,14 +3699,16 @@ UnifiedScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask
           }
           cerrLock.unlock();
         }
-        gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
+        success = gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
       }
 
-      if (it->second.m_tempVarToReclaim) {
-        //Release our reference to the variable data that getGridVar returned
-        delete it->second.m_tempVarToReclaim;
+      if(success){	//release only if SetValud returns true. Otherwise double deletion (probably due to race condition) and then segfault was observed in dqmom example
+        if (it->second.m_tempVarToReclaim) {
+          //Release our reference to the variable data that getGridVar returned
+          delete it->second.m_tempVarToReclaim;
+        }
       }
     }
   }
