@@ -27,6 +27,7 @@
 
    class ArchesLabel;
    class BoundaryCondition;
+   class WBCHelper;
 
 class SourceTermFactory
 {
@@ -91,6 +92,16 @@ public:
 
   /** @brief Execute the sources at a given stage */
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep, const int stage );
+
+  /** @brief Pass along the WBCHelper to the sources */
+  void set_bcHelper( WBCHelper* helper ){
+    for ( auto i = _sources.begin(); i != _sources.end(); i++ ){
+
+      SourceTermBase* src = i->second;
+      src->set_bcHelper( helper );
+
+    }
+  }
 
 private:
 

@@ -1275,6 +1275,9 @@ ExplicitSolver::sched_initialize( const LevelP& level,
 
   d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()] );
 
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  srcFactory.set_bcHelper( m_bcHelper[level->getIndex()]); 
+
   if ( level->getIndex() == d_archesLevelIndex ){
 
     //formerly known as paramInit
@@ -1295,6 +1298,7 @@ ExplicitSolver::sched_initialize( const LevelP& level,
 
     i_trans_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
     i_util_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
+    i_property_models_fac->second->set_bcHelper( m_bcHelper[level->getID()] );
 
     const bool dont_pack_tasks = false;
     TaskFactoryBase::TaskMap all_tasks;
