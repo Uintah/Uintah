@@ -2482,16 +2482,28 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           // ghost cell data while B is resizing its own data.
           // I believe both issues can be fixed with proper checkpoints.  But in reality
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
+
+          // DS 04222020: AMRSimulationController::collectGhostCells and SchedulerCommon::addTask together can
+          // determine max ghost cells for variables across all tasks and across init and main task graph.
+          // So this scenario can only occur when there are other task graphs such as sub scheduler of Poisson2
+          // or may be during AMR as methods related to it are not yet included in collectGhostCells.
+          // Updating error message to more meaningful text.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
-          gpu_stats <<  myRankThread() 
-                    << " Resizing of GPU grid vars not implemented at this time.  "
-                    << "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
-                    << "For " << curDependency->m_var->getName()
+          std::cout <<  myRankThread()
+                    //<< " Resizing of GPU grid vars not implemented at this time. "
+                    <<"\n**Ensure the MAX number of ghost cells for the variable for GPU tasks in the previous task graph are same as in the current taskgraph**\n "
+					<< "Task: " << dtask->getName()
+                    //<< "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
+                    << " for " << curDependency->m_var->getName()
                     << " patch " << patchID
                     << " material " << matlID
                     << " level " << levelID
                     << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
-                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")" << std::endl;
+                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")"
+  					<< " max ghost cells set to: " << curDependency->m_var->getMaxDeviceGhost()
+  					<< "\n Are you using sub scheduler or AMR? Those are not yet supported by AMRSimulationController::collectGhostCells."
+  					<< std::endl;
+
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
         //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
@@ -4435,189 +4447,191 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
     // don't need to copy it back D2H"
 
-    bool hack_foundAComputes{false};
-
-    // RMCRT hack:
-    if ( (varName == "divQ")           ||
-         (varName == "RMCRTboundFlux") ||
-         (varName == "radiationVolq")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // almgren-mmsBC.ups hack
-    // almgren-mms_conv.ups hack
-    if ( (varName == "uVelocity") ||
-         (varName == "vVelocity") ||
-         (varName == "wVelocity")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // box1.ups hack
-    if ( (varName == "length_0_x_dflux") ||
-         (varName == "length_0_y_dflux") ||
-         (varName == "length_0_z_dflux") ||
-         (varName == "length_1_x_dflux") ||
-         (varName == "length_1_y_dflux") ||
-         (varName == "length_1_z_dflux") ||
-         (varName == "pU_0_x_dflux")     ||
-         (varName == "pU_0_y_dflux")     ||
-         (varName == "pU_0_z_dflux")     ||
-         (varName == "pV_0_x_dflux")     ||
-         (varName == "pV_0_y_dflux")     ||
-         (varName == "pV_0_z_dflux")     ||
-         (varName == "pW_0_x_dflux")     ||
-         (varName == "pW_0_y_dflux")     ||
-         (varName == "pW_0_z_dflux")     ||
-         (varName == "pU_1_x_dflux")     ||
-         (varName == "pU_1_y_dflux")     ||
-         (varName == "pU_1_z_dflux")     ||
-         (varName == "pV_1_x_dflux")     ||
-         (varName == "pV_1_y_dflux")     ||
-         (varName == "pV_1_z_dflux")     ||
-         (varName == "pW_1_x_dflux")     ||
-         (varName == "pW_1_y_dflux")     ||
-         (varName == "pW_1_z_dflux")     ||
-         (varName == "w_qn0_x_dflux")    ||
-         (varName == "w_qn0_y_dflux")    ||
-         (varName == "w_qn0_z_dflux")    ||
-         (varName == "w_qn1_x_dflux")    ||
-         (varName == "w_qn1_y_dflux")    ||
-         (varName == "w_qn1_z_dflux")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // dqmom_example_char_no_pressure.ups hack:
-    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
-    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
-    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
-    if ( (varName.substr(0,10) == "char_ps_qn")                                  ||
-         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ||
-         (varName == "raw_coal_0_x_dflux")                                       ||
-         (varName == "raw_coal_0_y_dflux")                                       ||
-         (varName == "raw_coal_1_x_dflux")                                       ||
-         (varName == "raw_coal_1_y_dflux")                                       ||
-         (varName == "raw_coal_1_z_dflux")                                       ||
-         (varName == "w_qn2_x_dflux")                                            ||
-         (varName == "w_qn2_y_dflux")                                            ||
-         (varName == "w_qn3_x_dflux")                                            ||
-         (varName == "w_qn4_x_dflux")                                            ||
-         (varName == "w_qn4_y_dflux")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // heliumKS_pressureBC.ups hack
-    if ( (varName == "A_press")            ||
-         (varName == "b_press")            ||
-         (varName == "cellType")           ||
-         (varName == "continuity_balance") ||
-         (varName == "density")            ||
-         (varName == "density_star")       ||
-         (varName == "drhodt")             ||
-         (varName == "gamma")              ||
-         (varName == "gravity_z")          ||
-         (varName == "gridX")              ||
-         (varName == "gridY")              ||
-         (varName == "gridZ")              ||
-         (varName == "guess_press")        ||
-         (varName == "phi")                ||
-         (varName == "phi_x_dflux")        ||
-         (varName == "phi_y_dflux")        ||
-         (varName == "phi_z_dflux")        ||
-         (varName == "phi_x_flux")         ||
-         (varName == "phi_y_flux")         ||
-         (varName == "phi_z_flux")         ||
-         (varName == "pressure")           ||
-         (varName == "rho_phi")            ||
-         (varName == "rho_phi_RHS")        ||
-         (varName == "sigma11")            ||
-         (varName == "sigma12")            ||
-         (varName == "sigma13")            ||
-         (varName == "sigma22")            ||
-         (varName == "sigma23")            ||
-         (varName == "sigma33")            ||
-         (varName == "t_viscosity")        ||
-         (varName == "ucell_xvel")         ||
-         (varName == "ucell_yvel")         ||
-         (varName == "ucell_zvel")         ||
-         (varName == "vcell_xvel")         ||
-         (varName == "vcell_yvel")         ||
-         (varName == "vcell_zvel")         ||
-         (varName == "wcell_xvel")         ||
-         (varName == "wcell_yvel")         ||
-         (varName == "wcell_zvel")         ||
-         (varName == "ucellX")             ||
-         (varName == "vcellY")             ||
-         (varName == "wcellZ")             ||
-         (varName == "uVel")               ||
-         (varName == "vVel")               ||
-         (varName == "wVel")               ||
-         (varName == "uVel_cc")            ||
-         (varName == "vVel_cc")            ||
-         (varName == "wVel_cc")            ||
-         (varName == "volFraction")        ||
-         (varName == "volFractionX")       ||
-         (varName == "volFractionY")       ||
-         (varName == "volFractionZ")       ||
-         (varName == "x-mom")              ||
-         (varName == "x-mom_RHS")          ||
-         (varName == "x-mom_x_flux")       ||
-         (varName == "x-mom_y_flux")       ||
-         (varName == "x-mom_z_flux")       ||
-         (varName == "y-mom")              ||
-         (varName == "y-mom_RHS")          ||
-         (varName == "z-mom")              ||
-         (varName == "z-mom_RHS")          ||
-         (varName == "z-mom_x_flux")       ||
-         (varName == "z-mom_y_flux")       ||
-         (varName == "z-mom_z_flux")       ||
-         (varName == "hypre_solver_label")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
-    if ( (varName == "uVelocity_cc") ||
-         (varName == "vVelocity_cc") ||
-         (varName == "wVelocity_cc")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // isotropic_kokkos_wale.ups hack:
-    if ( (varName == "wale_model_visc")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // poisson1.ups hack:
-    if ( (varName == "phi")      ||
-         (varName == "residual")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    if (g_d2h_dbg) {
-      std::ostringstream message;
-      message << "  " << varName << ": Device-to-Host Copy May Be Needed";
-      DOUT(true, message.str());
-    }
-
-    if (!hack_foundAComputes) {
-      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
-                // Go start the loop over and get the next potential variable.
-    }
+    // DS 04222020: Commented hack_foundAComputes hack as now CPU validity status of a variable is
+    // maintained in OnDemandWH and whether D2H copy is needed can be determined dynamically.
+//    bool hack_foundAComputes{false};
+//
+//    // RMCRT hack:
+//    if ( (varName == "divQ")           ||
+//         (varName == "RMCRTboundFlux") ||
+//         (varName == "radiationVolq")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // almgren-mmsBC.ups hack
+//    // almgren-mms_conv.ups hack
+//    if ( (varName == "uVelocity") ||
+//         (varName == "vVelocity") ||
+//         (varName == "wVelocity")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // box1.ups hack
+//    if ( (varName == "length_0_x_dflux") ||
+//         (varName == "length_0_y_dflux") ||
+//         (varName == "length_0_z_dflux") ||
+//         (varName == "length_1_x_dflux") ||
+//         (varName == "length_1_y_dflux") ||
+//         (varName == "length_1_z_dflux") ||
+//         (varName == "pU_0_x_dflux")     ||
+//         (varName == "pU_0_y_dflux")     ||
+//         (varName == "pU_0_z_dflux")     ||
+//         (varName == "pV_0_x_dflux")     ||
+//         (varName == "pV_0_y_dflux")     ||
+//         (varName == "pV_0_z_dflux")     ||
+//         (varName == "pW_0_x_dflux")     ||
+//         (varName == "pW_0_y_dflux")     ||
+//         (varName == "pW_0_z_dflux")     ||
+//         (varName == "pU_1_x_dflux")     ||
+//         (varName == "pU_1_y_dflux")     ||
+//         (varName == "pU_1_z_dflux")     ||
+//         (varName == "pV_1_x_dflux")     ||
+//         (varName == "pV_1_y_dflux")     ||
+//         (varName == "pV_1_z_dflux")     ||
+//         (varName == "pW_1_x_dflux")     ||
+//         (varName == "pW_1_y_dflux")     ||
+//         (varName == "pW_1_z_dflux")     ||
+//         (varName == "w_qn0_x_dflux")    ||
+//         (varName == "w_qn0_y_dflux")    ||
+//         (varName == "w_qn0_z_dflux")    ||
+//         (varName == "w_qn1_x_dflux")    ||
+//         (varName == "w_qn1_y_dflux")    ||
+//         (varName == "w_qn1_z_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // dqmom_example_char_no_pressure.ups hack:
+//    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
+//    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
+//    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
+//    if ( (varName.substr(0,10) == "char_ps_qn")                                  ||
+//         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ||
+//         (varName == "raw_coal_0_x_dflux")                                       ||
+//         (varName == "raw_coal_0_y_dflux")                                       ||
+//         (varName == "raw_coal_1_x_dflux")                                       ||
+//         (varName == "raw_coal_1_y_dflux")                                       ||
+//         (varName == "raw_coal_1_z_dflux")                                       ||
+//         (varName == "w_qn2_x_dflux")                                            ||
+//         (varName == "w_qn2_y_dflux")                                            ||
+//         (varName == "w_qn3_x_dflux")                                            ||
+//         (varName == "w_qn4_x_dflux")                                            ||
+//         (varName == "w_qn4_y_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // heliumKS_pressureBC.ups hack
+//    if ( (varName == "A_press")            ||
+//         (varName == "b_press")            ||
+//         (varName == "cellType")           ||
+//         (varName == "continuity_balance") ||
+//         (varName == "density")            ||
+//         (varName == "density_star")       ||
+//         (varName == "drhodt")             ||
+//         (varName == "gamma")              ||
+//         (varName == "gravity_z")          ||
+//         (varName == "gridX")              ||
+//         (varName == "gridY")              ||
+//         (varName == "gridZ")              ||
+//         (varName == "guess_press")        ||
+//         (varName == "phi")                ||
+//         (varName == "phi_x_dflux")        ||
+//         (varName == "phi_y_dflux")        ||
+//         (varName == "phi_z_dflux")        ||
+//         (varName == "phi_x_flux")         ||
+//         (varName == "phi_y_flux")         ||
+//         (varName == "phi_z_flux")         ||
+//         (varName == "pressure")           ||
+//         (varName == "rho_phi")            ||
+//         (varName == "rho_phi_RHS")        ||
+//         (varName == "sigma11")            ||
+//         (varName == "sigma12")            ||
+//         (varName == "sigma13")            ||
+//         (varName == "sigma22")            ||
+//         (varName == "sigma23")            ||
+//         (varName == "sigma33")            ||
+//         (varName == "t_viscosity")        ||
+//         (varName == "ucell_xvel")         ||
+//         (varName == "ucell_yvel")         ||
+//         (varName == "ucell_zvel")         ||
+//         (varName == "vcell_xvel")         ||
+//         (varName == "vcell_yvel")         ||
+//         (varName == "vcell_zvel")         ||
+//         (varName == "wcell_xvel")         ||
+//         (varName == "wcell_yvel")         ||
+//         (varName == "wcell_zvel")         ||
+//         (varName == "ucellX")             ||
+//         (varName == "vcellY")             ||
+//         (varName == "wcellZ")             ||
+//         (varName == "uVel")               ||
+//         (varName == "vVel")               ||
+//         (varName == "wVel")               ||
+//         (varName == "uVel_cc")            ||
+//         (varName == "vVel_cc")            ||
+//         (varName == "wVel_cc")            ||
+//         (varName == "volFraction")        ||
+//         (varName == "volFractionX")       ||
+//         (varName == "volFractionY")       ||
+//         (varName == "volFractionZ")       ||
+//         (varName == "x-mom")              ||
+//         (varName == "x-mom_RHS")          ||
+//         (varName == "x-mom_x_flux")       ||
+//         (varName == "x-mom_y_flux")       ||
+//         (varName == "x-mom_z_flux")       ||
+//         (varName == "y-mom")              ||
+//         (varName == "y-mom_RHS")          ||
+//         (varName == "z-mom")              ||
+//         (varName == "z-mom_RHS")          ||
+//         (varName == "z-mom_x_flux")       ||
+//         (varName == "z-mom_y_flux")       ||
+//         (varName == "z-mom_z_flux")       ||
+//         (varName == "hypre_solver_label")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
+//    if ( (varName == "uVelocity_cc") ||
+//         (varName == "vVelocity_cc") ||
+//         (varName == "wVelocity_cc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_wale.ups hack:
+//    if ( (varName == "wale_model_visc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // poisson1.ups hack:
+//    if ( (varName == "phi")      ||
+//         (varName == "residual")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    if (g_d2h_dbg) {
+//      std::ostringstream message;
+//      message << "  " << varName << ": Device-to-Host Copy May Be Needed";
+//      DOUT(true, message.str());
+//    }
+//
+//    if (!hack_foundAComputes) {
+//      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
+//                // Go start the loop over and get the next potential variable.
+//    }
 
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
