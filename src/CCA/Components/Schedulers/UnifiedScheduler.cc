@@ -4583,6 +4583,13 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
       hack_foundAComputes = true;
     }
 
+    // isotropic_kokkos_wale.ups hack:
+    if ( (varName == "wale_model_visc")
+       )
+    {
+      hack_foundAComputes = true;
+    }
+
     // poisson1.ups hack:
     if ( (varName == "phi")      ||
          (varName == "residual")
