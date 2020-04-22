@@ -4496,8 +4496,18 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
     // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
     // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
-    if ( (varName.substr(0,10) == "char_ps_qn") ||
-         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW)
+    if ( (varName.substr(0,10) == "char_ps_qn")                                  ||
+         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ||
+         (varName == "raw_coal_0_x_dflux")                                       ||
+         (varName == "raw_coal_0_y_dflux")                                       ||
+         (varName == "raw_coal_1_x_dflux")                                       ||
+         (varName == "raw_coal_1_y_dflux")                                       ||
+         (varName == "raw_coal_1_z_dflux")                                       ||
+         (varName == "w_qn2_x_dflux")                                            ||
+         (varName == "w_qn2_y_dflux")                                            ||
+         (varName == "w_qn3_x_dflux")                                            ||
+         (varName == "w_qn4_x_dflux")                                            ||
+         (varName == "w_qn4_y_dflux")
        )
     {
       hack_foundAComputes = true;
