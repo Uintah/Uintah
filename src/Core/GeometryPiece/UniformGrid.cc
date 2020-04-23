@@ -67,22 +67,26 @@ list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts,         
 {
   list<Tri> tri_list;
   vector<IntVector>::const_iterator tri_itr;
+  int triNum=0;
   for (tri_itr = tris.begin(); tri_itr != tris.end(); ++tri_itr) {
     Vector A = pts[(*tri_itr).y()] - pts[(*tri_itr).x()];
     Vector B = pts[(*tri_itr).z()] - pts[(*tri_itr).x()];
     double areaX2 = Cross(A,B).length();
     if(areaX2==0.0){
       std::ostringstream warn;
+      warn.precision(15);
       warn << "\n ERROR: triangle with points: \n"
            << pts[(*tri_itr).x()] << " " << pts[(*tri_itr).y()]
                                   << " " << pts[(*tri_itr).z()]
          << ").\n  has zero area.\n"
+         << "This is the " << triNum << "-th triangle " << "\n"
          << "This triangle is part of " << filename << "\n";
       throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
     }
     Tri triangle = Tri(pts[(*tri_itr).x()],pts[(*tri_itr).y()],
                        pts[(*tri_itr).z()]);
     tri_list.push_back(triangle);
+    triNum++;
   }
   return tri_list;
 }
