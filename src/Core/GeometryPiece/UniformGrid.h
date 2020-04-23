@@ -74,7 +74,9 @@ WARNING
    ~Tri();
    Point centroid();
    Point vertex(int i);
-   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
+   std::list<Tri> makeTriList(std::vector<IntVector>& tris, 
+                              std::vector<Point>& pts,
+                              std::string filename);
    bool inside(Point& p);
    Plane plane();
  private:

@@ -63,7 +63,7 @@ Point Tri::vertex(int i)
   return d_points[i];
 }
 
-list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts)
+list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts,                                                             std::string filename)
 {
   list<Tri> tri_list;
   vector<IntVector>::const_iterator tri_itr;
@@ -76,7 +76,8 @@ list<Tri> Tri::makeTriList(vector<IntVector>& tris ,vector<Point>& pts)
       warn << "\n ERROR: triangle with points: \n"
            << pts[(*tri_itr).x()] << " " << pts[(*tri_itr).y()]
                                   << " " << pts[(*tri_itr).z()]
-         << ").\n  has zero area.\n";
+         << ").\n  has zero area.\n"
+         << "This triangle is part of " << filename << "\n";
       throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
     }
     Tri triangle = Tri(pts[(*tri_itr).x()],pts[(*tri_itr).y()],
