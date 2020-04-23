@@ -876,19 +876,19 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 //    to call collectGhostCells before executing init tasks so that the scheduler gets the up to date information about ghost cells. If the logic causes
 //    problem in future, we might have to explicitly delete extra tasks added.
 
-void AMRSimulationController::collectGhostCells()
+void
+AMRSimulationController::collectGhostCells()
 {
-	for (int i = 0; i < m_current_gridP->numLevels(); i++) {
-		m_application->scheduleTimeAdvance(m_current_gridP->getLevel(i),
-				m_scheduler);
+  for (int i = 0; i < m_current_gridP->numLevels(); i++) {
+    m_application->scheduleTimeAdvance(m_current_gridP->getLevel(i),
+                                       m_scheduler);
 
-		m_application->scheduleFinalizeTimestep(m_current_gridP->getLevel(i),
-				m_scheduler);
-	}
+    m_application->scheduleFinalizeTimestep(m_current_gridP->getLevel(i),
+                                            m_scheduler);
+  }
 
-	// Compute the next time step.
-	scheduleComputeStableTimeStep();
-
+  // Compute the next time step.
+  scheduleComputeStableTimeStep();
 }
 #endif
 

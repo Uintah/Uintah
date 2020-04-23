@@ -2492,7 +2492,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
           std::cout <<  myRankThread()
                     //<< " Resizing of GPU grid vars not implemented at this time. "
                     <<"\n**Ensure the MAX number of ghost cells for the variable for GPU tasks in the previous task graph are same as in the current taskgraph**\n "
-					<< "Task: " << dtask->getName()
+                    << "Task: " << dtask->getName()
                     //<< "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
                     << " for " << curDependency->m_var->getName()
                     << " patch " << patchID
@@ -2500,9 +2500,9 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
                     << " level " << levelID
                     << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
                     << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")"
-  					<< " max ghost cells set to: " << curDependency->m_var->getMaxDeviceGhost()
-  					<< "\n Are you using sub scheduler or AMR? Those are not yet supported by AMRSimulationController::collectGhostCells."
-  					<< std::endl;
+                    << " max ghost cells set to: " << curDependency->m_var->getMaxDeviceGhost()
+                    << "\n Are you using sub scheduler or AMR? Those are not yet supported by AMRSimulationController::collectGhostCells."
+                    << std::endl;
 
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
