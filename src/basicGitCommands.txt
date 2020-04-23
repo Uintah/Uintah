@@ -32,6 +32,21 @@ Notes:
 
 
 //__________________________________
+// Branch Workflow Example
+
+git clone https://github.com/Uintah/Uintah.git  // download Uintah
+cd Uintah                                       // move to the newly downloaded repository
+git checkout Cyberstone2                        // switch to the target branch
+
+* modify Cyberstone2 code *
+
+git add <files>                                 // add modified files to the list that will be committed
+git commit -m "<msg>"                           // commit changes to the local repository
+git push                                        // push committed local changes to the remote repository
+
+
+
+//__________________________________
 // Branch Merge Example
 
 git checkout master                   // switch to the master branch
