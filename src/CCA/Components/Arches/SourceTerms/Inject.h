@@ -225,9 +225,13 @@ private:
 
               const double value = spec->value;
 
-              Uintah::parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (int i,int j,int k) {
-                src(i,j,k) = value;
-              });
+              const int mysize = cell_iter.size();
+              auto this_iter = cell_iter.get_ref_to_iterator();
+
+              for ( int i = 0; i < mysize; i++ ){
+                IntVector c = this_iter[i];
+                src[this_iter[i]] = value;
+              }
 
             } else if ( spec->bcType == CUSTOM ){
 
