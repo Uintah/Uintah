@@ -37,6 +37,7 @@ namespace Uintah {
 
 class BoundaryCondition;
 class TableLookup;
+class WBCHelper;
 
 class SourceTermBase{
 
@@ -79,7 +80,7 @@ public:
                                    const MaterialSubset * matls,
                                          DataWarehouse  * old_dw,
                                          DataWarehouse  * new_dw ) {};
-    
+
   /** @brief Work to be performed after properties are setup */
   virtual void extraSetup( GridP& grid, BoundaryCondition* bc, TableLookup* table_lookup ){ }
 
@@ -118,6 +119,10 @@ public:
               This is a limiting case with the current abstraction. **/
   std::vector<std::string>& get_all_src_names(){ return _mult_srcs; }
 
+  void set_bcHelper( WBCHelper* helper ){
+    m_bcHelper = helper; 
+  }
+
 
 protected:
 
@@ -134,6 +139,8 @@ protected:
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
   TableLookup* _table_lookup;
+  WBCHelper* m_bcHelper;
+
 
 }; // end SourceTermBase
 }  // end namespace Uintah

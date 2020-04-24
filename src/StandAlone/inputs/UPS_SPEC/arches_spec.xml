@@ -2064,8 +2064,8 @@
                                                attribute1="label REQUIRED STRING"
                                                need_applies_to="type ht_convection"/> <!-- Convection SourceTerm for wall heat trasnfer -->
 
-            <!-- Spec for constant and multi-point constant source term model -->
-            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
+            <!-- Spec for constant source term model -->
+            <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src" />
 
             <!-- Spec for using multiply by variable for constant source term model -->
             <multiply_by_variable         spec="OPTIONAL NO_DATA" need_applies_to="type constant_src">
@@ -2080,11 +2080,6 @@
             <char_BirthDeath            spec="OPTIONAL NO_DATA" need_applies_to="type coal_gas_oxi">
             </char_BirthDeath>
 
-            <!-- Multi-point constant injection -->
-            <injector_region            spec="REQUIRED NO_DATA" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src">
-              <geom_object/>
-            </injector_region>
-
             <!-- specs needed for second moment of mixture fraction source-->
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
 
@@ -2095,11 +2090,13 @@
             <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/> <!-- Molecular diffusivity (?) -->
             <turb_visc_label            spec="OPTIONAL STRING" need_applies_to="type dissipation_src"/> <!-- label for the turbulent viscosity. Default = turb_viscosity -->
 
-            <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)-->
-            <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile
-                                          within the geom_oject (use <inputfile> spec)-->
-            <inject_type                spec="REQUIRED STRING 'constant, fromfile'" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
-            <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
+            <!-- Inject Sources: This is used in conjunction with the InteriorFace BC spec -->
+            <!--                 Set "Custom" in the InteriorFace var specification when using the "inputfile" (below) -->
+            <!--                 Set "Dirichlet" in the InteriorFace var specficiation and set the value spec (in the InteriorFace spec) to the constant desired -->
+            <!--                 Neumann isn't currently supported -->
+            <!--                 Note that the value specified in any case is rho*u*phi (flux). -->
+            <!--                 The code takes this value and multiplies by an area to compute the integral on a "face". -->  
+            <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
 
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->

@@ -17,26 +17,26 @@
     <max_Timesteps>1000</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>box1.uda</filebase>
+    <filebase>box1_wale_nopressure.uda</filebase>
     <outputTimestepInterval>50</outputTimestepInterval>
     <outputInitTimestep/>
-    <save label="x-mom"/>
-    <save label="drhodt"/>
+    <!--<save label="x-mom"/>-->
+    <!--<save label="drhodt"/>-->
     <save label="gas_kinetic_energy"/>
-    <save label="y-mom"/>
-    <save label="z-mom"/>
+    <!--<save label="y-mom"/>-->
+    <!--<save label="z-mom"/>-->
     <save label="rho_phi"/>
-    <save label="A_press"/>
-    <save label="b_press"/>
+    <!--<save label="A_press"/>-->
+    <!--<save label="b_press"/>-->
     <save label="phi"/>
     <save label="uVel"/>
     <save label="vVel"/>
     <save label="wVel"/>
     <save label="t_viscosity"/>
     <save label="density"/>
-    <save label="density_star"/>
-    <save label="continuity_balance"/>
-    <save label="pressure"/>
+    <!--<save label="density_star"/>-->
+    <!--<save label="continuity_balance"/>-->
+    <!--<save label="pressure"/>-->
     <save label="w_qn0"/>
     <save label="w_qn1"/>
     <save label="length_qn0"/>
@@ -450,6 +450,30 @@
         </model>
       </StateProperties>
       <PropertyModelsV2>
+        <model label="uVel" type="constant_property">
+          <grid type="FX"/>
+          <value>0.</value>
+        </model>
+        <model label="vVel" type="constant_property">
+          <grid type="FY"/>
+          <value>0.</value>
+        </model>
+        <model label="wVel" type="constant_property">
+          <grid type="FZ"/>
+          <value>1.</value>
+        </model>
+        <model label="uVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>0.</value>
+        </model>
+        <model label="vVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>0.</value>
+        </model>
+        <model label="wVel_cc" type="constant_property">
+          <grid type="CC"/>
+          <value>1.</value>
+        </model>
         <model label="gamma_dqmom" type="constant_property">
           <grid type="CC"/>
           <value>1e-5</value>
@@ -460,20 +484,20 @@
         </model>
         <model label="t_gas_kinetic_energy" type="gas_kinetic_energy"/>
       </PropertyModelsV2>
-      <KMomentum>
-        <convection scheme="central"/>
-        <PressureSolver>
-          <Parameters>
-            <solver>           cg     </solver>
-            <preconditioner>  pfmg    </preconditioner>
-            <tolerance>      1.0e-10  </tolerance>
-            <maxiterations>    75     </maxiterations>
-            <skip>              1     </skip>
-            <setupFrequency>    0     </setupFrequency>
-            <jump>              0     </jump>
-          </Parameters>
-        </PressureSolver>
-      </KMomentum>
+      <!--<KMomentum>-->
+        <!--<convection scheme="central"/>-->
+        <!--<PressureSolver>-->
+          <!--<Parameters>-->
+            <!--<solver>           cg     </solver>-->
+            <!--<preconditioner>  pfmg    </preconditioner>-->
+            <!--<tolerance>      1.0e-10  </tolerance>-->
+            <!--<maxiterations>    75     </maxiterations>-->
+            <!--<skip>              1     </skip>-->
+            <!--<setupFrequency>    0     </setupFrequency>-->
+            <!--<jump>              0     </jump>-->
+          <!--</Parameters>-->
+        <!--</PressureSolver>-->
+      <!--</KMomentum>-->
       <TurbulenceModels>
 	      <model label="wale" type="wale">
 	      </model>
