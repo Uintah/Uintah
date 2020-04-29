@@ -299,11 +299,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
   template <typename T, typename PT>
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &KScalarRHS<T, PT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KScalarRHS<T, PT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KScalarRHS<T, PT>::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
