@@ -15,7 +15,7 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CoalDensity::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CoalDensity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalDensity::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalDensity::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace CoalDensity::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CoalDensity::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CoalDensity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalDensity::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalDensity::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

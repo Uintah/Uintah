@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &VariableStats::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VariableStats::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VariableStats::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &VariableStats::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VariableStats::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VariableStats::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -45,7 +45,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &VariableStats::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VariableStats::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VariableStats::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -55,7 +55,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &VariableStats::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VariableStats::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &VariableStats::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

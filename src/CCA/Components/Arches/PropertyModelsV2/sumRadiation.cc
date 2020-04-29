@@ -19,7 +19,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &sumRadiation::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &sumRadiation::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &sumRadiation::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &sumRadiation::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

@@ -14,7 +14,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &cloudBenchmark::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &cloudBenchmark::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskTimestepInitFunctionPointers(
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &cloudBenchmark::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &cloudBenchmark::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -40,7 +40,7 @@ TaskAssignedExecutionSpace cloudBenchmark::loadTaskRestartInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &cloudBenchmark::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &cloudBenchmark::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &cloudBenchmark::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

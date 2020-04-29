@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &OneDWallHT::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &OneDWallHT::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &OneDWallHT::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &OneDWallHT::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -49,7 +49,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &OneDWallHT::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &OneDWallHT::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &OneDWallHT::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

@@ -134,7 +134,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &ExampleParticleModel<IT, DT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -145,7 +145,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &ExampleParticleModel<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

@@ -115,7 +115,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &WaveFormInit<T, CT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &WaveFormInit<T, CT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

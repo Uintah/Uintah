@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskTimestepInitFunction
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &ConstantStateProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ConstantStateProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ConstantStateProperties::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -49,7 +49,7 @@ TaskAssignedExecutionSpace ConstantStateProperties::loadTaskRestartInitFunctionP
 {
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &ConstantStateProperties::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ConstantStateProperties::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &ConstantStateProperties::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &ColdFlowProperties::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

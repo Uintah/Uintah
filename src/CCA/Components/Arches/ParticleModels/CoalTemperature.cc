@@ -15,7 +15,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CoalTemperature::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CoalTemperature::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalTemperature::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CoalTemperature::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CoalTemperature::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalTemperature::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace CoalTemperature::loadTaskTimestepInitFunctionPointers
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &CoalTemperature::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &CoalTemperature::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CoalTemperature::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &CoalTemperature::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

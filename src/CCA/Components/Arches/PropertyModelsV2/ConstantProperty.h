@@ -118,7 +118,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &ConstantProperty<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ConstantProperty<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -136,7 +136,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &ConstantProperty<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -147,7 +147,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                        , &ConstantProperty<T>::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ConstantProperty<T>::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ConstantProperty<T>::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ConstantProperty<T>::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

@@ -24,7 +24,7 @@ TaskAssignedExecutionSpace DensityPredictor::loadTaskInitializeFunctionPointers(
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DensityPredictor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityPredictor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DensityPredictor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -34,7 +34,7 @@ TaskAssignedExecutionSpace DensityPredictor::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DensityPredictor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityPredictor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DensityPredictor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -44,7 +44,7 @@ TaskAssignedExecutionSpace DensityPredictor::loadTaskTimestepInitFunctionPointer
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &DensityPredictor::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityPredictor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DensityPredictor::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DensityPredictor::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

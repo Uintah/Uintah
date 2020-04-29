@@ -26,7 +26,7 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointer
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &DepositionEnthalpy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

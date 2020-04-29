@@ -148,7 +148,7 @@ TableLookup::sched_setDependBCs( const LevelP& level,
   create_portable_tasks(TaskDependencies, this,
                         "setDependBCs",
                         &TableLookup::setDependBCs<UINTAH_CPU_TAG>,
-                        &TableLookup::setDependBCs<KOKKOS_OPENMP_TAG>,
+                        //&TableLookup::setDependBCs<KOKKOS_OPENMP_TAG>,
                         //&TableLookup::setDependBCs<KOKKOS_CUDA_TAG>,
                         sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT, model);
 

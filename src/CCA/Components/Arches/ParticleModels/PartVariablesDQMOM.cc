@@ -20,7 +20,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointer
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &PartVariablesDQMOM::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &PartVariablesDQMOM::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

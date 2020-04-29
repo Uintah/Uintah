@@ -36,7 +36,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &RateDeposition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &RateDeposition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -46,7 +46,7 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers(
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &RateDeposition::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &RateDeposition::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }

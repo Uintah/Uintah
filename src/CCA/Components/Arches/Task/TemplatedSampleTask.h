@@ -114,11 +114,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskComputeBCsFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &TemplatedSampleTask<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &TemplatedSampleTask<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TemplatedSampleTask<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------
@@ -127,7 +123,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &TemplatedSampleTask<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TemplatedSampleTask<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &TemplatedSampleTask<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -138,7 +134,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &TemplatedSampleTask<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &TemplatedSampleTask<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -147,11 +143,7 @@ private:
   template <typename T>
   TaskAssignedExecutionSpace TemplatedSampleTask<T>::loadTaskTimestepInitFunctionPointers()
   {
-    return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &TemplatedSampleTask<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TemplatedSampleTask<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TemplatedSampleTask<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                       );
+    return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
   }
 
   //--------------------------------------------------------------------------------------------------

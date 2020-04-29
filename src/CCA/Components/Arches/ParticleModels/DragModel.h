@@ -159,7 +159,7 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &DragModel<IT, DT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &DragModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &DragModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -170,7 +170,7 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &DragModel<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &DragModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &DragModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -181,7 +181,7 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &DragModel<IT, DT>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &DragModel<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &DragModel<IT, DT>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &DragModel<IT, DT>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

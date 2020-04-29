@@ -112,7 +112,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &AlmgrenMMS<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &AlmgrenMMS<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &AlmgrenMMS<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &AlmgrenMMS<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

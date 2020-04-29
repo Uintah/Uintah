@@ -171,7 +171,7 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &ShaddixEnthalpy<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ShaddixEnthalpy<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ShaddixEnthalpy<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
@@ -182,7 +182,7 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &ShaddixEnthalpy<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &ShaddixEnthalpy<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }

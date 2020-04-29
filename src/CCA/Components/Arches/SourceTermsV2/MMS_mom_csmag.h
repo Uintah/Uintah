@@ -120,7 +120,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskInitializeFunctionPointers(
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &MMS_mom_csmag<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &MMS_mom_csmag<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_mom_csmag<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom_csmag<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -131,7 +131,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &MMS_mom_csmag<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &MMS_mom_csmag<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_mom_csmag<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                      //, &MMS_mom_csmag<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
@@ -140,11 +140,7 @@ TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskEvalFunctionPointers()
 template <typename T>
 TaskAssignedExecutionSpace MMS_mom_csmag<T>::loadTaskTimestepInitFunctionPointers()
 {
-  return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &MMS_mom_csmag<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &MMS_mom_csmag<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_mom_csmag<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-                                     );
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
 //--------------------------------------------------------------------------------------------------

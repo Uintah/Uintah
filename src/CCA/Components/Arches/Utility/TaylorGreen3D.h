@@ -112,7 +112,7 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &TaylorGreen3D<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TaylorGreen3D<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       //, &TaylorGreen3D<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
                                        //, &TaylorGreen3D<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
