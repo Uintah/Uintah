@@ -1,6 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/ContinuityPredictor.h>
 #include <CCA/Components/Arches/UPSHelper.h>
-#include <CCA/Components/Arches/KokkosTools.h>
 
 namespace Uintah{
 

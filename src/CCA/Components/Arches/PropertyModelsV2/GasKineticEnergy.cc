@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/GasKineticEnergy.h>
-#include <CCA/Components/Arches/KokkosTools.h>
 #include <CCA/Components/Arches/GridTools.h>
 
 namespace Uintah{

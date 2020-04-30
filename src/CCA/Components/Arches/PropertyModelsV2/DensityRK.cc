@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/DensityRK.h>
-#include <CCA/Components/Arches/KokkosTools.h>
 #include <CCA/Components/Arches/UPSHelper.h>
 
 
