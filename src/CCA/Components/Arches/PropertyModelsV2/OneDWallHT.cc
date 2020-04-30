@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/OneDWallHT.h>
-#include <CCA/Components/Arches/KokkosTools.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -64,7 +63,7 @@ OneDWallHT::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
 
   CCVariable<double>& Twall = tsk_info->get_field<CCVariable<double> >("Twall");
-  KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( Twall, 300.0 );
+  Twall.initialize( 300.0 );
 
 }
 
@@ -82,7 +81,7 @@ void
 OneDWallHT::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& Twall = tsk_info->get_field<CCVariable<double> >("Twall");
-  KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( Twall, 300.0 );
+  Twall.initialize( 300.0 );
 
 }
 

@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
-#include <CCA/Components/Arches/KokkosTools.h>
 
 namespace Uintah{
 
@@ -62,7 +61,7 @@ DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
 
   CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
-  KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
+  rho.initialize( 0.0 );
 
 }
 
@@ -80,7 +79,7 @@ void
 DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
   CCVariable<double>& rho = tsk_info->get_field<CCVariable<double> >("new_densityGuess");
-  KOKKOS_INITIALIZE_TO_CONSTANT_EXTRA_CELL( rho, 0.0 );
+  rho.initialize( 0.0 );
 
 }
 
