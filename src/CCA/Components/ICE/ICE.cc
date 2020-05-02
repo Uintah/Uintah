@@ -405,12 +405,12 @@ void ICE::problemSetup( const ProblemSpecP     & prob_spec,
   //__________________________________
   //  conservationTest
   if (m_output->isLabelSaved("TotalMass") ){
-    d_conservationTest->mass     = true;
-    d_conservationTest->onOff    = true;
+    d_conservationTest->mass     = false;
+    d_conservationTest->onOff    = false;
   }
   if (m_output->isLabelSaved("TotalMomentum") ){
-    d_conservationTest->momentum = true;
-    d_conservationTest->onOff    = true;
+    d_conservationTest->momentum = false;
+    d_conservationTest->onOff    = false;
   }
   if (m_output->isLabelSaved("TotalIntEng")   || 
       m_output->isLabelSaved("KineticEnergy") ){

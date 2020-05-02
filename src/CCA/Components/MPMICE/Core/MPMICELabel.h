@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_MPMICELABEL_H
 
 #include <Core/Grid/Variables/VarLabel.h>
+#include <vector>
 
 namespace Uintah {
 
@@ -52,6 +53,8 @@ namespace Uintah {
       const VarLabel* gVelocityLabel;
       const VarLabel* TempGradLabel;      // Needed by burn model --- temporary 
       const VarLabel* aveSurfTempLabel;    
+      
+      std::vector<VarLabel*> MomentumToSolidLabels;
     };
 
 } // end namespace Uintah

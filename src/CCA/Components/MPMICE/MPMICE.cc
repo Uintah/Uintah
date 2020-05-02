@@ -926,7 +926,13 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 
   t->computes(Ilb->dTdt_CCLabel);
   t->computes(Ilb->dVdt_CCLabel);
+  t->computes(Ilb->dMomdt_CCLabel);
   t->computes(Mlb->heatRate_CCLabel);
+  
+  for(size_t i=0; i< MIlb->MomentumToSolidLabels.size(); i++){
+    t->computes(MIlb->MomentumToSolidLabels[i]);
+  }
+  
 
   sched->addTask(t, patches, mpm_matls);
 }
@@ -1060,6 +1066,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
                             DataWarehouse*,
                             DataWarehouse* new_dw)
 {
+  //__________________________________
+  //  Create varLabels needed for mpm_material
+  // ONLY create these labels once per proc, otherwise nPatches labels are created
+  MIlb->MomentumToSolidLabels = createLabels("MPM", "MomentumToSolid", sumvec_vartype::getTypeDescription() );
+
   timeStep_vartype timeStep;
   new_dw->get(timeStep, VarLabel::find( timeStep_name) );
 
@@ -1628,6 +1639,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       int indx = mpm_matl->getDWIndex();
       CCVariable<double> dTdt_CC,heatRate;
       CCVariable<Vector> dVdt_CC;
+      CCVariable<Vector> dMomdt_CC;
 
       constCCVariable<double> mass_L_CC, old_heatRate;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC, mom_source;
@@ -1647,24 +1659,37 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
 
       new_dw->allocateAndPut(dTdt_CC,     Ilb->dTdt_CCLabel,    indx, patch);
       new_dw->allocateAndPut(dVdt_CC,     Ilb->dVdt_CCLabel,    indx, patch);
+      new_dw->allocateAndPut(dMomdt_CC,   Ilb->dMomdt_CCLabel,  indx, patch);
       new_dw->allocateAndPut(heatRate,    Mlb->heatRate_CCLabel,indx, patch);
 
       dTdt_CC.initialize(0.0);
       dVdt_CC.initialize(Vector(0.0));
+      dMomdt_CC.initialize(Vector(0.0));
       //__________________________________
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
-         IntVector c = *iter;
-         if(!d_rigidMPM){
-           dVdt_CC[c] = (mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))
-                                                      /(mass_L_CC[c]*delT);
-         }
-         dTdt_CC[c]   = (eng_L_ME_CC[c] - (old_int_eng_L_CC[c]-int_eng_src[c]))
-                           /(mass_L_CC[c] * cv * delT);
-         double heatRte  = (eng_L_ME_CC[c] - old_int_eng_L_CC[c])/delT;
-         heatRate[c] = .05*heatRte + .95*old_heatRate[c];
+        IntVector c = *iter;
+
+        if(!d_rigidMPM){
+          dVdt_CC[c] = (mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))
+                                                     /(mass_L_CC[c]*delT);
+        }
+        dTdt_CC[c]   = (eng_L_ME_CC[c] - (old_int_eng_L_CC[c]-int_eng_src[c]))
+                          /(mass_L_CC[c] * cv * delT);
+        double heatRte  = (eng_L_ME_CC[c] - old_int_eng_L_CC[c])/delT;
+        heatRate[c] = .05*heatRte + .95*old_heatRate[c];
       }
       setBC(dTdt_CC,    "set_if_sym_BC",patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
       setBC(dVdt_CC,    "set_if_sym_BC",patch, m_materialManager, indx, new_dw, isNotInitialTimeStep);
+      
+      //__________________________________
+      // compute dmomentum/dt
+      Vector sum_dMomdt(0.0);
+      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+         IntVector c = *iter;
+         dMomdt_CC[c] =(mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))/delT;
+         sum_dMomdt += dMomdt_CC[c];
+      }
+      new_dw->put(sumvec_vartype(sum_dMomdt),    MIlb->MomentumToSolidLabels[indx]);
     }
   }  //patches
 }
@@ -3005,4 +3030,28 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
       }  // fine patches
     }  // matls
   }  // coarse level
+}
+
+
+//______________________________________________________________________
+//  create a vector of labels. One for every MPM matl
+std::vector<VarLabel*>
+MPMICE::createLabels( const std::string whichComponent,
+                      std::string desc,
+                      const Uintah::TypeDescription* td )
+{
+  std::vector<VarLabel*> labels;
+
+  unsigned int num_matls = m_materialManager->getNumMatls( whichComponent );
+   
+  for (unsigned int m = 0; m < num_matls; m++ ) {
+    Material* matl = m_materialManager->getMaterial( m );
+    int indx= matl->getDWIndex();
+    
+    string name = desc +"_" + to_string(indx);
+    VarLabel* l = VarLabel::create( name, td );
+
+    labels.push_back(l);
+  }
+  return labels;
 }

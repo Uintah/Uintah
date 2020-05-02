@@ -89,6 +89,7 @@ namespace Uintah {
     const VarLabel* specific_heatLabel;
     const VarLabel* dTdt_CCLabel;
     const VarLabel* dVdt_CCLabel;
+    const VarLabel* dMomdt_CCLabel;
 //__________________________________
 //    IMPLICIT      
     const VarLabel* matrixLabel;

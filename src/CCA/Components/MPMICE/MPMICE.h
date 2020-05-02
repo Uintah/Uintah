@@ -395,6 +395,10 @@ public:
                                    const MaterialSubset*,
                                    DataWarehouse* fine_old_dw,
                                    DataWarehouse* fine_new_dw);
+                                   
+    std::vector<VarLabel*>createLabels( const std::string whichComponent,
+                                        std::string desc,
+                                        const Uintah::TypeDescription* td );
 
 private:                        
      

@@ -99,11 +99,11 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
           } // for
         }  //if
       }  // for patches
-    mean_vel/=total_mass;
+    //mean_vel/=total_mass;
     KE*=.5;
 
    outfile.precision(15);
-   outfile << time << " " << mean_vel.y() << " " << total_mass << " " << KE << endl; 
+   outfile << time << " " << mean_vel << " " << total_mass << " " << KE << endl; 
 
   }
 } // end jim2()

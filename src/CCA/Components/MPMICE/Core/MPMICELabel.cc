@@ -103,4 +103,8 @@ MPMICELabel::~MPMICELabel()
   //  WSB1 burn model
   VarLabel::destroy(TempGradLabel);
   VarLabel::destroy(aveSurfTempLabel);
+  
+  for(size_t i=0; i<MomentumToSolidLabels.size(); i++){
+    VarLabel::destroy( MomentumToSolidLabels[i] );
+  }
 }
