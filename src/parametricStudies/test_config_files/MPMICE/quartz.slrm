@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --job-name = [jobName]
+#SBATCH --time     = [runTime]      # walltime
+#SBATCH --output   = [output]       # stdout and stderr
+#SBATCH --ntasks   = [mpiRanks]     # number of MPI tasks
+#SBATCH --account  = hprtm         # account
+#SBATCH --partition= pbatch        # partition
+#
+
+#sacct --format="JobID,JobName%10,NNodes%10,NodeList%35" -j $SLURM_JOB_ID
+echo "$SLURM_JOB_NAME $SLURM_JOB_ID numNodes: $SLURM_JOB_NUM_NODES nTasks: $SLURM_NTASKS"
+date 

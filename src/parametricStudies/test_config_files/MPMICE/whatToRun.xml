@@ -1,15 +1,32 @@
-<config>
-<postProcessCmd_path>parametricStudies/comparisonUtils</postProcessCmd_path>
 
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+
+<symbolicLinks>/p/lustre2/harman4/2x2Twill/tri_pts
+               /p/lustre2/harman4/2x2Twill/</symbolicLinks>
+
+
+<!--
+<test>
+  <name>flowBlocks</name>
+  <tst>/p/lustre2/harman4/flowThroughNozzle/resolutionStudy.tst</tst>
+  <otherFilesToCopy>/p/lustre2/harman4/flowThroughNozzle/*.xml </otherFilesToCopy> 
+</test>
+-->
+
+<test>
+  <name>twill_dpdx_XL</name>
+  <tst>/p/lustre2/harman4/2x2Twill/twill_DP.tst</tst>
+  <otherFilesToCopy>/p/lustre2/harman4/2x2Twill/*.xml </otherFilesToCopy> 
+</test>
+<!--__________________________________
 
 <test>
   <name>Rayleigh</name>
   <tst>rayleigh_dy.tst</tst>
 </test>
 
-<!--__________________________________-->
-
-<!--
 <test>
   <name>Propagation</name>
   <tst> Propagation_burning/Propagation_burning.tst</tst>
