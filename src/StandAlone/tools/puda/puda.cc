@@ -362,7 +362,7 @@ main( int argc, char *argv[] )
       cout.precision(16);
       
       for(int i=0;i<(int)index.size();i++) {
-        cout << index[i] << ": " << times[i] << "\n";
+        cout << i <<": " << index[i] << ": " << times[i] << "\n";
       }
     }
     
