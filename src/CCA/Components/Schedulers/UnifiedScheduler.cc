@@ -2757,7 +2757,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
           if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
             if (!device_ptr) {
-              gpu_stats << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
+              std::cout << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
                   << "For " << label_cstr
                   << " patch " << patchID
                   << " material " << matlIndx
