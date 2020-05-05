@@ -1731,15 +1731,15 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
 
   t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,2*NGN);
+  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 1);
+  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+1);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 //  t->computes(lb->triInContactLabel,                triangle_matls);
@@ -5843,7 +5843,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                     gac,2*NGN);
+                                                                     gac,NGN+1);
       LSContForce[m].initialize(Vector(0.0));
 //      sumTriForce[m]=Vector(0.0);
     }
@@ -5874,7 +5874,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       int dwi0 = t_matl0->getDWIndex();
 
       ParticleSubset* pset0 = old_dw->getParticleSubset(dwi0, patch,
-                                                       gac, 2, lb->pXLabel);
+                                                        gac, 1, lb->pXLabel);
       psetvec.push_back(pset0);
       psetSize[tmo]=(pset0->end() - pset0->begin());
 //      triInContact[tmo].resize(psetSize[tmo]);
@@ -5963,7 +5963,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             numChecks++;
             Point px1 = tx0[tmi][idx1];
             double sep = (px1-px0).length2();
-            if(sep < min_sep2  && sep < 0.25*cell_length2 ){
+            if(sep < min_sep2  && sep < 0.16*cell_length2 ){
               if(sep < min_sep){
                 secondClosest=closest;
                 min_sep2=min_sep;
