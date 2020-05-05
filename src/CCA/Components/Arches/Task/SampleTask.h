@@ -3,7 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
-namespace Uintah{
+namespace Uintah {
 
   class SampleTask : public TaskInterface {
 
@@ -26,11 +26,11 @@ public:
 
     void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const bool packed_tasks ){}
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep, const bool packed_tasks );
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep , const bool packed_tasks ){}
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep, const bool packed_tasks ){}
 
     template <typename ExecSpace, typename MemSpace>
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
@@ -39,7 +39,7 @@ public:
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
     template <typename ExecSpace, typename MemSpace>
-    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+    void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
@@ -48,9 +48,6 @@ public:
 
       register_new_variable<CCVariable<double> >("a_sample_field");
       register_new_variable<CCVariable<double> >("a_result_field");
-      register_new_variable<CCVariable<double> >("A");
-      register_new_variable<CCVariable<double> >("B");
-      register_new_variable<CCVariable<double> >("C"); 
 
     };
 

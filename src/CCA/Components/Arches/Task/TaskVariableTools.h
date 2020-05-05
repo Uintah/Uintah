@@ -440,7 +440,7 @@ namespace Uintah {
                         , const bool        temporary_variable = false
                         );
 
-  /** @brief Helper struct when resolving get_uintah_field and get_const_uintah_field becomes tricky **/
+  /** @brief Helper struct when resolving get_field becomes tricky **/
   template <typename T>
   struct FieldTool
   {
