@@ -6,6 +6,9 @@ using namespace Uintah;
 //  Arches Task Porting Overview
 //--------------------------------------------------------------------------------------------------
 //
+//  DISCLAIMER: Arches tasks are in varying states of portability with some using deprecated infrastructure.
+//              Please verify use of the latest portable infrastructure (e.g., 04, 05) when porting.
+//
 //  (01) Add helper function(s) to enable task tagging, e.g.,:
 //
 //       TaskAssignedExecutionSpace loadTaskEvalFunctionPointers();
@@ -112,6 +115,12 @@ using namespace Uintah;
 //       Replace std::fabs with fabs, replace std::fmax with fmax, replace std::fmin with fmin, etc
 //
 //       * A collection of C/C++ standard library math functions supported in CUDA device code can be found at https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#mathematical-functions-appendix
+//
+//  (12) Convert private and protected functions using Uintah::parallel_<pattern> calls to public.
+//
+//       * More on extended lambda restrictions can be found at https://docs.nvidia.com/cuda/cuda-c-programming-guide/#extended-lambda-restrictions
+//
+//  (13) Copy class member variables used in Uintah::parallel_<pattern> calls into temporary variables declared outside of calls.
 //
 //--------------------------------------------------------------------------------------------------
 //
@@ -230,15 +239,15 @@ void
 SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
   // Get all data warehouse variables used in SampleTask::initialize
-  CCVariable<double>& field  = tsk_info->get_field<CCVariable<double> >( "a_sample_field" );
-  CCVariable<double>& result = tsk_info->get_field<CCVariable<double> >( "a_result_field" );
+  auto field  = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "a_sample_field" );
+  auto result = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "a_result_field" );
 
   // Initialize data warehouse variables
-  field.initialize( 1.1 );
-  result.initialize( 2.1 );
+  Uintah::parallel_initialize( execObj, 1.1, field );
+  Uintah::parallel_initialize( execObj, 2.1, result );
 
   // NOTES:
-  // * Non-portable get_field calls require 1 template parameter: (1) legacy Uintah type
+  // * Portable get_field calls require 3 template parameters: (1) legacy Uintah type, (2) underlying plain-old-data type, and (3) memory space
   // * Pass underlying strings into get_field where possible to improve searchability (e.g., "a_sample_field")
   // * Uintah infrastructure uses underlying strings for debugging output and exceptions
 }
@@ -264,22 +273,22 @@ void
 SampleTask::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj )
 {
   // Get all data warehouse variables used in SampleTask::eval
-  CCVariable<double>& field   = tsk_info->get_field<CCVariable<double> >( "a_sample_field" );
-  CCVariable<double>& result  = tsk_info->get_field<CCVariable<double> >( "a_result_field" );
-  CCVariable<double>& density = tsk_info->get_field<CCVariable<double> >( "density" );
+  auto field   = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "a_sample_field" );
+  auto result  = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "a_result_field" );
+  auto density = tsk_info->get_field<CCVariable<double>, double, MemSpace>( "density" );
 
   // Setup the range of cells to iterate over
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
 
   // Setup the loop that iterates over cells
-  Uintah::parallel_for( range, [&]( int i, int j, int k ){
+  Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA( int i, int j, int k ){
     field(i,j,k)  = _value * density(i,j,k);
     result(i,j,k) = field(i,j,k) * field(i,j,k);
   });
 
   // NOTES:
-  // * Non-portable get_field calls require 1 template parameter: (1) legacy Uintah type
+  // * Portable get_field calls require 3 template parameters: (1) legacy Uintah type, (2) underlying plain-old-data type, and (3) memory space
   // * Pass underlying strings into get_field where possible to improve searchability (e.g., "a_sample_field")
   // * Uintah infrastructure uses underlying strings for debugging output and exceptions
-  // * Non-portable Uintah::parallel_for calls do not pass execObj and are executed serially
+  // * Portable Uintah::parallel_for calls pass execObj and are executed using the supported back-end(s)
 }
