@@ -269,7 +269,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KScalarRHS<T, PT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -291,7 +291,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -671,7 +671,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
           auto rho_phi = tsk_info->get_field<T, double, MemSpace>(m_transported_eqn_names[ieqn]);
           auto old_rho_phi = tsk_info->get_field<CT, const double, MemSpace>(m_transported_eqn_names[ieqn]);
 
-          Uintah::parallel_for(execObj, range, [&](int i, int j, int k){
+          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
             rho_phi(i,j,k) = old_rho_phi(i,j,k);
           });
 
@@ -680,7 +680,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
         auto phi = tsk_info->get_field<T, double, MemSpace>(m_eqn_names[ieqn]);
         auto old_phi = tsk_info->get_field<CT, const double, MemSpace>(m_eqn_names[ieqn]);
 
-        Uintah::parallel_for(execObj, range, [&](int i, int j, int k){
+        Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
           phi(i,j,k) = old_phi(i,j,k);
         });
 
