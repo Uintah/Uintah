@@ -109,6 +109,14 @@ PROGRAM := $(SRCDIR)/partextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# tracerextract
+
+SRCS    := $(SRCDIR)/tracerextract.cc
+PROGRAM := $(SRCDIR)/tracerextract
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # lineextract
 
 SRCS    := $(SRCDIR)/lineextract.cc
