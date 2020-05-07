@@ -151,7 +151,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KFEUpdate<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KFEUpdate<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KFEUpdate<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -496,7 +496,7 @@ private:
 
         const double scalConstant=(ieqn->second).constant;
 
-        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
           phi_unscaled(i,j,k) = phi(i,j,k) *scalConstant *vol_fraction(i,j,k) ;
         });
         }

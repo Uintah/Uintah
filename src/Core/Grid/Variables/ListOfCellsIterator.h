@@ -194,16 +194,28 @@ namespace Uintah {
     template<typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
     get_ref_to_iterator(){ return listOfCells_; }
+
+    template<typename ExecSpace, typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+    get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #else
     template<typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
     get_ref_to_iterator(){ return listOfCells_; }
+
+    template<typename ExecSpace, typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
+    get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #endif
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     template<typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
     get_ref_to_iterator(){ return listOfCells_; }
+
+    template<typename ExecSpace, typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+    get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #endif
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
@@ -218,6 +230,34 @@ namespace Uintah {
         Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
         copied_to_gpu = true;
         return listOfCells_gpu;
+      }
+    }
+
+    template<typename ExecSpace, typename MemSpace>
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
+    get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj) {
+      if ( copied_to_gpu == 2 ) { //if already copied, return
+        return listOfCells_gpu;
+      }
+      else {
+        int cur_val = __sync_val_compare_and_swap(&copied_to_gpu, 0, 1);
+        if(cur_val == 0){ //comparison was successful and this is a lucky thread that gets to copy the value.
+          listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+          cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
+          cudaMemcpyAsync(listOfCells_gpu.data(), listOfCells_.data(),  listOfCells_.size() * sizeof(int_3), cudaMemcpyHostToDevice, *stream);
+          cudaStreamSynchronize(*stream); //Think how cudaStreamSynchronize can be avoided. No other way to set  copied_to_gpu as of now.
+
+          bool success = __sync_bool_compare_and_swap(&copied_to_gpu, 1, 2);
+          if(!success){
+            printf("Error in copying values. Possible CPU race condition. %s:%d\n", __FILE__, __LINE__);
+            exit(1);
+          }
+          return listOfCells_gpu;
+        }
+        else{//some other thread already took care. wait until copy is completed.
+          while(copied_to_gpu != 2){std::this_thread::yield();}
+          return listOfCells_gpu;
+        }
       }
     }
 #endif
@@ -257,7 +297,8 @@ namespace Uintah {
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     Kokkos::View<int_3*, Kokkos::CudaSpace> listOfCells_gpu;
-    bool copied_to_gpu{false};
+    //bool copied_to_gpu{false};
+    volatile int copied_to_gpu{0}; //0: not copied, 1: copying, 2: copied
 #endif
 
     private:

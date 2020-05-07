@@ -427,7 +427,7 @@ public:
 
 
       // CCVariable or CC position in the staggered variable
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         int im=i - iDir_p[0];
         int jm=j - iDir_p[1];
         int km=k - iDir_p[2];
@@ -439,7 +439,7 @@ public:
       // Staggered Variable
       if ( dot == -1 ){
       // Normal face -
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -448,7 +448,7 @@ public:
         });
       } else if ( dot == 1 ){
       // Normal face +
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = spec_value;
         });
       } else {
@@ -493,7 +493,7 @@ template <typename ExecSpace, typename MemSpace>
 
       const double spec_value = bnd->find(var_name)->value;
 
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         int im = i - iDir_p[0];
         int jm = j - iDir_p[1];
         int km = k - iDir_p[2];
@@ -505,7 +505,7 @@ template <typename ExecSpace, typename MemSpace>
 
       // for staggered variables, only going to allow for zero gradient, one-sided for now
       if ( dot == -1 ){
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -517,7 +517,7 @@ template <typename ExecSpace, typename MemSpace>
           var(i,j,k) = var(im,jm,km);
         });
       } else if ( dot == 1 ){
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -575,7 +575,7 @@ template <typename ExecSpace, typename MemSpace>
     const double bound_area = bnd->area;
     if ( dot == -1 ){
     // Normal face (-)  staggered variables
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -585,7 +585,7 @@ template <typename ExecSpace, typename MemSpace>
       });
     } else if ( dot == 1 ){
     // Normal face (+)  staggered variables
-      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -651,14 +651,14 @@ template <typename ExecSpace, typename MemSpace>
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar or CCvariable
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
         });
       } else {
         // SFCX or SFCY or SFCZ variable
           if (dot == -1){
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
               // (-) faces  two cells at the begin of the domain
               // value are the same because we do not resolve extra cell (i=-1), and we set the BC at i = 0
 //                    var[*bndIter] = 1.0  - m_amp * cos( m_two_pi * x[*bndIter] )
@@ -675,7 +675,7 @@ template <typename ExecSpace, typename MemSpace>
                                   * sin( m_two_pi * y(im,jm,km) );
             });
           } else {
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
                // (+) faces one cell at the end of the domain
                var(i,j,k) = 1.0  - m_amp * cos( m_two_pi * x(i,j,k) )
                                   * sin( m_two_pi * y(i,j,k) );
@@ -686,14 +686,14 @@ template <typename ExecSpace, typename MemSpace>
 
       if (var_help.dir == ArchesCore::NODIR ){
         // scalar
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
                               * cos( m_two_pi * y(i,j,k) );
         });
       } else {
       // SFCX or SFCY or SFCZ variable
         if (dot == -1){
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -709,7 +709,7 @@ template <typename ExecSpace, typename MemSpace>
           });
         } else {
           // (+) faces
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           var(i,j,k) = 1.0  + m_amp * sin( m_two_pi * x(i,j,k) )
                                   * cos( m_two_pi * y(i,j,k) );
 
@@ -778,7 +778,7 @@ template <typename ExecSpace, typename MemSpace>
     const double z1 = std::exp(-m_k1 * time_d);
     if (var_help.dir == ArchesCore::NODIR ){
       // scalar or CCvariable
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         const double z2 = std::cosh(m_w0 * std::exp (-m_k2 * time_d) *x(i,j,k)); // x is cc value
         const double phi = (z1-z2)/(z1 * (1.0 - m_rho0/m_rho1)-z2);
         const double rho = 1.0/(phi/m_rho1 + (1.0- phi )/m_rho0);
@@ -828,7 +828,7 @@ template <typename ExecSpace, typename MemSpace>
 
     const int_3 iDir_p(iDir[0],iDir[1],iDir[2]);
 
-    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
           int im=i - iDir_p[0];
           int jm=j - iDir_p[1];
           int km=k - iDir_p[2];
@@ -1021,7 +1021,7 @@ template <typename ExecSpace, typename MemSpace>
         //The face normal and the velocity are in parallel
         if (dot == -1) {
             //Face +
-           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
                  int im=i - iDir_p[0];
                  int jm=j - iDir_p[1];
                  int km=k - iDir_p[2];
@@ -1031,7 +1031,7 @@ template <typename ExecSpace, typename MemSpace>
             });
         } else {
             // Face -
-           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+           parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
                  int im=i - iDir_p[0];
                  int jm=j - iDir_p[1];
                  int km=k - iDir_p[2];
@@ -1042,7 +1042,7 @@ template <typename ExecSpace, typename MemSpace>
        }
     } else {
       //The face normal and the velocity are tangential
-        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         int im=i - iDir_p[0];
         int jm=j - iDir_p[1];
         int km=k - iDir_p[2];
@@ -1127,7 +1127,7 @@ template <typename ExecSpace, typename MemSpace>
       area = m_area;
     }
 
-    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator<MemSpace>(),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+    parallel_for_unstructured( execObj,bndIter.get_ref_to_iterator(execObj),bndIter.size(), KOKKOS_LAMBDA (int i,int j,int k) {
 
       rhs(i,j,k) += m_rho_phi_u * area;
 
