@@ -22,6 +22,8 @@ git push                      // push committed local changes to a remote reposi
 
 git reset --hard              // discard uncommitted local changes in tracked files
 
+git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s) 
+
 git revert <commit>           // reverse prior commits
 
 Notes:

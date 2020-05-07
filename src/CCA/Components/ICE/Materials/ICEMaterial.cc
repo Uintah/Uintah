@@ -314,8 +314,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
               IntVector idx(ix, iy, iz);
               Point p = lower + dxpp*idx;
-              if(piece->inside(p))
+              if( piece->inside(p, true) ){
                 count++;
+              }
             }
           }
         }
