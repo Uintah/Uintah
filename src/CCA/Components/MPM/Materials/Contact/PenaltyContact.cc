@@ -111,9 +111,6 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    //Vector dx = patch->dCell();
-    constNCVariable<int> alphaMaterial;
-    constNCVariable<Vector> normAlphaToBeta;
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
