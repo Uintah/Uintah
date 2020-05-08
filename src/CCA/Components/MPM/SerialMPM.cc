@@ -1652,8 +1652,8 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
   t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triangleIDLabel,         triangle_matls, gnone);
@@ -1739,7 +1739,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 1);
   t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 1);
   t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 1);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+2);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
 //  t->computes(lb->triInContactLabel,                triangle_matls);
@@ -5541,8 +5541,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+1);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+1);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+2);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+2);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("Triangle");
@@ -5843,7 +5843,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                     gac,NGN+1);
+                                                                     gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
 //      sumTriForce[m]=Vector(0.0);
     }
