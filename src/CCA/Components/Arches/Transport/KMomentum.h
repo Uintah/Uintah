@@ -257,7 +257,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::BC>( this
                                        , &KMomentum<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -279,7 +279,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &KMomentum<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &KMomentum<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &KMomentum<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
