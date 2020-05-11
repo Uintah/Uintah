@@ -164,6 +164,7 @@ uintah: sus \
         compute_Lnorm_udas \
         restart_merger \
         partextract \
+        tracerextract \
         partvarRange \
         selectpart \
         async_mpi_test \
@@ -209,6 +210,7 @@ link_tools:
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/StandAlone/lineextract; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/StandAlone/timeextract; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/partextract $(OBJTOP_ABS)/StandAlone/partextract; \
+              ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/tracerextract $(OBJTOP_ABS)/StandAlone/tracerextract; \
 	   fi )
 link_localRT:
 	@( if ! test -L StandAlone/localRT; then \
@@ -220,7 +222,7 @@ sus: prereqs StandAlone/sus
 
 $(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/svn_info.h
 
-tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract  tracerextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
@@ -233,6 +235,8 @@ compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
 restart_merger: prereqs StandAlone/restart_merger
 
 partextract: prereqs StandAlone/tools/extractors/partextract
+
+tracerextract: prereqs StandAlone/tools/extractors/tracerextract
 
 partvarRange: prereqs StandAlone/partvarRange
 
