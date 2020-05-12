@@ -38,7 +38,7 @@
 
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <dirent.h>
 #include <iostream>
@@ -55,8 +55,8 @@ using namespace std;
 //       each CV should keep track of output face fluxes
 //______________________________________________________________________
 
-static DebugStream cout_doing("controlVolFluxes",   false);
-static DebugStream cout_dbg("controlVolFluxes_dbg", false);
+Dout cout_OTF_CVF("controlVolFluxes",     "OnTheFlyAnalysis", "controlVolFluxes task exec", false);
+Dout dbg_OTF_CVF("controlVolFluxes_dbg",  "OnTheFlyAnalysis", "controlVolFluxes debug info", false);
 
 controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
                                     const MaterialManagerP materialManager,
@@ -80,7 +80,7 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
 //
 controlVolFluxes::~controlVolFluxes()
 {
-  cout_doing << " Doing: destorying fluxes " << endl;
+  DOUT(cout_OTF_CVF, " Doing: destorying fluxes " );
   if( m_zeroMatlSet  && m_zeroMatlSet->removeReference() ) {
     delete m_zeroMatlSet;
   }
@@ -130,7 +130,7 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
                                     std::vector<std::vector<const VarLabel* > > &PState,
                                     std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tfluxes" << endl;
+  DOUT(cout_OTF_CVF, "Doing problemSetup \t\t\t\tfluxes" );
 
   if(grid->numLevels() > 1 ) {
     proc0cout << "______________________________________________________________________\n"
@@ -214,7 +214,7 @@ void controlVolFluxes::problemSetup(const ProblemSpecP& ,
 void controlVolFluxes::scheduleInitialize( SchedulerP   & sched,
                                            const LevelP & level )
 {
-  printSchedule(level,cout_doing,"controlVolFluxes::scheduleInitialize");
+  printSchedule(level,cout_OTF_CVF,"controlVolFluxes::scheduleInitialize");
 
   Task* t = scinew Task("controlVolFluxes::initialize",
                   this, &controlVolFluxes::initialize);
@@ -272,7 +272,7 @@ void controlVolFluxes::initialize( const ProcessorGroup *,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing initialize");
+    printTask(patches, patch,cout_OTF_CVF,"Doing initialize");
 
     // last computational time
     double tminus = d_startTime - 1.0/m_analysisFreq;
@@ -324,7 +324,7 @@ void controlVolFluxes::scheduleDoAnalysis(SchedulerP   & sched,
 
   //__________________________________
   //  compute the total Q and net fluxes
-  printSchedule( level,cout_doing,"controlVolFluxes::scheduleDoAnalysis" );
+  printSchedule( level,cout_OTF_CVF,"controlVolFluxes::scheduleDoAnalysis" );
 
   Task* t0 = scinew Task( "controlVolFluxes::integrate_Q_overCV",
                      this,&controlVolFluxes::integrate_Q_overCV );
@@ -404,8 +404,8 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_doing,"Doing controlVolFluxes::integrate_Q_overCV");
-    cout_dbg << "     Patch: " << patch->getCellLowIndex() << " " << patch->getCellHighIndex() << "\n";
+    printTask(patches, patch,cout_OTF_CVF,"Doing controlVolFluxes::integrate_Q_overCV");
+    DOUT(dbg_OTF_CVF, "     Patch: " << patch->getCellLowIndex() << " " << patch->getCellHighIndex() << "\n");
 
     constCCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
@@ -441,7 +441,6 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
         totalQ_CV += rho_CC[c] * cellVol;
       }
 
-      cout_dbg.precision(15);
       //__________________________________
       // Sum the fluxes passing through control volume surface
 
@@ -459,11 +458,13 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
         string faceName = contVol->getFaceName( face );
         Vector norm     = contVol->getFaceNormal( face );
         IntVector axis  = contVol->getFaceAxes( face );
-        cout_dbg << std::left << setw(7) << contVol->getName()
+
+        DOUT( dbg_OTF_CVF, std::setprecision(15) << std::left
+                 << setw(7)    << contVol->getName()
                  << setw(7)   << "Face:"     << setw(7) << faceName
                  << setw(10)  << "faceType:" << setw(5) << face
                  << setw(7)   << "norm:"     << setw(5) << norm << std::left
-                 << setw(15)  << "faceAxes:" << setw(7) <<  axis;
+                 << setw(15)  << "faceAxes:" << setw(7) <<  axis );
 
 
         //__________________________________
@@ -492,8 +493,7 @@ void controlVolFluxes::integrate_Q_overCV(const ProcessorGroup * pg,
 
       //__________________________________
       // put in the dw
-      cout_dbg.precision(15);
-      cout_dbg <<  contVol->getName() << " Total CV : " << totalQ_CV << " Net face fluxes: " << net_Q_flux << endl;
+      DOUT( dbg_OTF_CVF,  std::setprecision(15) << contVol->getName() << " Total CV : " << totalQ_CV << " Net face fluxes: " << net_Q_flux );
 
       new_dw->put( sum_vartype( totalQ_CV ),     m_lb->totalQ_CV[cv] );
       new_dw->put( sumvec_vartype( net_Q_flux ), m_lb->net_Q_faceFluxes[cv] );
@@ -529,7 +529,7 @@ void controlVolFluxes::doAnalysis(const ProcessorGroup * pg,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing doAnalysis");
+    printTask(patches, patch,cout_OTF_CVF,"Doing doAnalysis");
 
     //__________________________________
     // open the struct that contains the file pointer map.  We use FileInfoP types
@@ -639,7 +639,7 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
   //  get the iterator on this face
   CellIterator iter = cv->getFaceIterator(face, controlVolume::SFC_Cells, patch);
 
-  cout_dbg << std::right << setw(10) <<  " faceIter: " << setw(10) << iter << endl;
+ DOUT( dbg_OTF_CVF, std::right << setw(10) <<  " faceIter: " << setw(10) << iter );
 
   for(; !iter.done(); iter++) {
     IntVector c = *iter;
@@ -661,7 +661,7 @@ void controlVolFluxes::integrate_Q_overFace( controlVolume::FaceType face,
   }
   faceQ->Q_faceFluxes[face] = Q_flux;
 
-  cout_dbg<< "     Face: " << cv->getFaceName(face) << "\t dir: " << pDir << " Q_Flux = " <<  Q_flux << endl;
+  DOUT( dbg_OTF_CVF, "     Face: " << cv->getFaceName(face) << "\t dir: " << pDir << " Q_Flux = " <<  Q_flux );
 }
 
 //______________________________________________________________________
