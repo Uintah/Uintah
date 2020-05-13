@@ -63,6 +63,11 @@ Triangle::createTriangles(TriangleMaterial* matl,
   double gridLength = dx.minComponent();
   Matrix3 Identity; Identity.Identity();
   ParticleSubset* subset = allocateVariables(numTriangles,dwi,patch,new_dw);
+  ParticleSubset::iterator iter = subset->begin();
+  for(;iter != subset->end(); iter++){
+       particleIndex idx = *iter;
+    triangleAreaAtNodes[idx] = Vector(0.,0.,0.0);
+  }
 
   // Open tri and pts files
   string ptsfilename = fileroot + ".pts";
@@ -383,7 +388,7 @@ void Triangle::initialize(const ProcessorGroup*,
       totalTriangles+=numTriangles;
 
       createTriangles(triangle_matl, numTriangles,
-                    patch, new_dw, filename);
+                      patch, new_dw, filename);
     }
     cout << "Total Triangles =  " << totalTriangles << endl;
   }
