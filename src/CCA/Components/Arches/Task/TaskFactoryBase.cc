@@ -545,19 +545,19 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
   // so Uintah can ensure those simulation variables are prepared in that memory space prior to task execution.
   if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_OPENMP) {
     create_portable_tasks( TaskDependencies, this,
-                          _factory_name + std::string("::") + task_group_name,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
                           &TaskFactoryBase::do_task<KOKKOS_OPENMP_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   } else if (assignedExecutionSpace == TaskAssignedExecutionSpace::KOKKOS_CUDA) {
     create_portable_tasks( TaskDependencies, this,
-                          _factory_name + std::string("::") + task_group_name,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
                           &TaskFactoryBase::do_task<KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
   } else { //if (assignedExecutionSpace == TaskAssignedExecutionSpace::UINTAH_CPU) {
     create_portable_tasks( TaskDependencies, this,
-                          _factory_name + std::string("::") + task_group_name,
+                          _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
                           &TaskFactoryBase::do_task<UINTAH_CPU_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);

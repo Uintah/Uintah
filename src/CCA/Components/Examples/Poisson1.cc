@@ -47,6 +47,20 @@ using namespace Uintah;
 
 class DetailedTask;
 
+
+//DS 05132020: Updated Poisson1 to use CC Variable or NCVariable. Comment/uncomment following three lines to switch between two types.
+
+//typedef NCVariable<double> vartype;
+//typedef constNCVariable<double> constvartype;
+//#define POISSON1_GHOST_TYPE Ghost::AroundNodes
+
+typedef CCVariable<double> vartype;
+typedef constCCVariable<double> constvartype;
+#define POISSON1_GHOST_TYPE Ghost::AroundCells
+
+
+
+
 //______________________________________________________________________
 // A sample implementation supporting three modes of execution:
 //   &Poisson1::timeAdvance<UINTAH_CPU_TAG>    // Task supports non-Kokkos builds and is executed serially
@@ -58,7 +72,7 @@ Poisson1::Poisson1( const ProcessorGroup   * myworld
                   )
   : ApplicationCommon( myworld, materialManager )
 {
-  phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
+  phi_label = VarLabel::create("phi", vartype::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
 
@@ -140,8 +154,8 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
 // Portable approach:
 
   auto TaskDependencies = [&](Task* task) {
-    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-    task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+    task->requires(Task::OldDW, phi_label, POISSON1_GHOST_TYPE, 1);
+    task->computesWithScratchGhost(phi_label, nullptr, Uintah::Task::NormalDomain, POISSON1_GHOST_TYPE, 1);
     task->computes(residual_label);
   };
 
@@ -182,7 +196,7 @@ void Poisson1::initialize( const ProcessorGroup *
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    NCVariable<double> phi;
+    vartype phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
 
@@ -243,8 +257,8 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
 
     Uintah::BlockRange range( l, h );
 
-    auto phi = old_dw->getConstNCVariable<double, MemSpace> (phi_label, matl, patch, Ghost::AroundNodes, 1);
-    auto newphi = new_dw->getNCVariable<double, MemSpace> (phi_label, matl, patch);
+    auto phi = old_dw->getConstGridVariable<constvartype, double, MemSpace> (phi_label, matl, patch, POISSON1_GHOST_TYPE, 1);
+    auto newphi = new_dw->getGridVariable<vartype, double, MemSpace> (phi_label, matl, patch);
 
     // Perform the boundary condition of copying over prior initialized values.  (TODO:  Replace with boundary condition)
     //Uintah::parallel_for<ExecSpace, LaunchBounds< 640,1 > >( execObj, rangeBoundary, KOKKOS_LAMBDA(int i, int j, int k){

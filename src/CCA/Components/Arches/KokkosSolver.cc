@@ -47,6 +47,7 @@
 #include <CCA/Components/Arches/SourceTermsV2/SourceTermFactoryV2.h>
 #include <CCA/Components/Arches/BoundaryConditions/BoundaryConditionFactory.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
+#include <CCA/Components/Arches/ArchesExamples/ExampleFactory.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -131,6 +132,7 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   std::shared_ptr<ChemMixFactory> TableModels(scinew ChemMixFactory(m_arches));
   std::shared_ptr<TurbulenceModelFactory> TurbModelF(scinew TurbulenceModelFactory(m_arches));
   std::shared_ptr<SourceTermFactoryV2> SourceTermV2(scinew SourceTermFactoryV2(m_arches));
+  std::shared_ptr<ArchesExamples::ExampleFactory> ExampleFactoryF(scinew ArchesExamples::ExampleFactory(m_arches));
 
   m_task_factory_map.clear();
   m_task_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -143,6 +145,8 @@ KokkosSolver::problemSetup( const ProblemSpecP     & input_db
   m_task_factory_map.insert(std::make_pair("table_factory", TableModels));
   m_task_factory_map.insert(std::make_pair("turbulence_model_factory", TurbModelF));
   m_task_factory_map.insert(std::make_pair("source_term_factory",SourceTermV2));
+  if(db->findBlock("ArchesExample"))
+	  m_task_factory_map.insert(std::make_pair("ExampleFactory",ExampleFactoryF));
 
   typedef std::map<std::string, std::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering and Building Tasks For: " << std::endl;
@@ -869,22 +873,28 @@ KokkosSolver::SandBox_initialize( const LevelP & level,
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  // initialize hypre objects
-  if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
-    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
-    press_tsk->sched_Initialize( level, sched );
+  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+    // initialize hypre objects
+    if ( m_task_factory_map["utility_factory"]->has_task("[PressureEqn]")){
+      PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(m_task_factory_map["utility_factory"]->retrieve_task("[PressureEqn]"));
+      press_tsk->sched_Initialize( level, sched );
+    }
+
+    i_prop_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
   }
-
-  i_prop_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
-
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
-
-  m_task_factory_map["initialize_factory"]->schedule_task_group( "all_tasks",
-    TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
-
+  else{//schedule examples if present
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+  }
 
 }
 
@@ -903,28 +913,41 @@ KokkosSolver::SandBox( const LevelP     & level
 
   BFM::iterator i_prop_fac = m_task_factory_map.find("property_models_factory");
   BFM::iterator i_util_fac = m_task_factory_map.find("utility_factory");
+  BFM::iterator i_exam_fac = m_task_factory_map.find("ExampleFactory");
 
-  PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
-                           i_util_fac->second->retrieve_task("[PressureEqn]"));
+  if(i_exam_fac==m_task_factory_map.end()){	//schedule default sandbox if there are no examples.
+    PressureEqn* press_tsk = dynamic_cast<PressureEqn*>(
+                             i_util_fac->second->retrieve_task("[PressureEqn]"));
 
-  // ----------------- Time Integration ------------------------------------------------------------
-  i_prop_fac->second->schedule_task_group("all_tasks",
-    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+    // ----------------- Time Integration ------------------------------------------------------------
+    i_prop_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group("all_tasks",
-    TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group("all_tasks",
+      TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
 
-  //m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
-  i_prop_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+    //m_task_factory_map["utility_factory"]->schedule_task( "grid_info", TaskInterface::INITIALIZE, level, sched, matls );
+    i_prop_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
 
-  i_util_fac->second->schedule_task_group( "all_tasks",
-    TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+    i_util_fac->second->schedule_task_group( "all_tasks",
+      TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
 
-  // Solve it - calling out to hypre external lib
-  press_tsk->solve(level, sched, time_substep);
+    // Solve it - calling out to hypre external lib
+    press_tsk->solve(level, sched, time_substep);
+  }
+  else{	//schedule examples if present
+    i_exam_fac->second->schedule_task_group("all_tasks",
+        TaskInterface::TIMESTEP_INITIALIZE, packed_info.global, level, sched, matls, time_substep );
+
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+        TaskInterface::TIMESTEP_EVAL, packed_info.global, level, sched, matls, time_substep );
+
+    i_exam_fac->second->schedule_task_group( "all_tasks",
+        TaskInterface::BC, packed_info.global, level, sched, matls, time_substep );
+  }
 
 }

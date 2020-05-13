@@ -2596,6 +2596,9 @@
         </Moment>
 
       </CQMOM>
+      <ArchesExample                    spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING" >
+      </ArchesExample>
     </ARCHES>
   </CFD>
 
