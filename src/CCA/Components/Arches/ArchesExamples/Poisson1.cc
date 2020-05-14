@@ -15,16 +15,16 @@ TaskAssignedExecutionSpace Poisson1::loadTaskComputeBCsFunctionPointers(){
 TaskAssignedExecutionSpace Poisson1::loadTaskInitializeFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &Poisson1::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &Poisson1::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &Poisson1::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &Poisson1::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &Poisson1::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
 TaskAssignedExecutionSpace Poisson1::loadTaskEvalFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &Poisson1::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &Poisson1::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &Poisson1::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     , &Poisson1::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &Poisson1::eval<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -57,31 +57,23 @@ Poisson1::register_initialize( ArchesVIVector& variable_registry , const bool pa
 template <typename ExecSpace, typename MemSpace>
 void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
   //copied from Poisson1::initialize
-  //TODO: port this code
-  int matl = 0;
   typedef CCVariable<double> T;
   auto phi = tsk_info->get_field<T, double, MemSpace>("phi");
   parallel_initialize(execObj,0.0, phi);
 
-  for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
+  const BndMapT& bc_info = m_bcHelper->get_boundary_information();
 
-    if (patch->getBCType(face) == Patch::None) {
-      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
-      for (int child = 0; child < numChildren; child++) {
-        Iterator nbound_ptr, nu;
-
-        const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr, child);
-
-        const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
-        double value = bc->getValue();
-        for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-          phi( (*nbound_ptr)[0], (*nbound_ptr)[1], (*nbound_ptr)[2]) = value;
-        }
-        delete bcb;
-      }
+  for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
+	double val = i_bc->second.find("phi")->value;
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
+    if ( on_this_patch ){
+      //Handle cell type first
+      Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+      parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+        phi(i,j,k) = val;
+      });
     }
   }
-
 }
 
 //--------------------------------------------- eval -----------------------------------------------------
