@@ -5969,7 +5969,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             numChecks++;
             Point px1 = tx0[tmi][idx1];
             double sep = (px1-px0).length2();
-            if(sep < min_sep2  && sep < 0.04*cell_length2 ){
+            if(sep < min_sep2  && sep < 0.16*cell_length2 ){
               if(sep < min_sep){
                 secondClosest=closest;
                 min_sep2=min_sep;
