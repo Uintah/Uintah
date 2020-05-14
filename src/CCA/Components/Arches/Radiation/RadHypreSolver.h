@@ -79,7 +79,7 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Construct an instance of a HypreSolver.
-      RadHypreSolver(const ProcessorGroup* myworld);
+      RadHypreSolver();
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
