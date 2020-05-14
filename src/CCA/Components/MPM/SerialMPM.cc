@@ -5818,7 +5818,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     // Get the current simulation time
     simTime_vartype simTimeVar;
     old_dw->get(simTimeVar, lb->simulationTimeLabel);
-//    double time = simTimeVar;
+    double time = simTimeVar;
 
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
@@ -5904,9 +5904,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     double totalContactArea    = 0.0;
     double totalContactAreaTri = 0.0;
     Vector totalForce(0.);
-    double timefactor=1.0;
-//    double timefactor=min(1.0, time/0.1);
-//    cout << "timefactor = " << timefactor << endl;
+//    double timefactor=1.0;
+    double timefactor=min(1.0, time/1.0);
+    proc0cout << "timefactor = " << timefactor << endl;
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
@@ -5948,6 +5948,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
            continue;
           }
           Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
+          Vector ptNormal =Cross(triMidToN0Vec[tmo][idx0],
+                                 triMidToN1Vec[tmo][idx0]);
+          double pNL = ptNormal.length();
+          if(pNL>0.0){
+            ptNormal /= pNL;
+          }
 
           double min_sep  = 9.e99;
           double min_sep2  = 9.e99;
@@ -5963,7 +5969,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             numChecks++;
             Point px1 = tx0[tmi][idx1];
             double sep = (px1-px0).length2();
-            if(sep < min_sep2  && sep < 0.16*cell_length2 ){
+            if(sep < min_sep2  && sep < 0.04*cell_length2 ){
               if(sep < min_sep){
                 secondClosest=closest;
                 min_sep2=min_sep;
@@ -5994,7 +6000,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             // AP is a vector from the text point px0 to the centroid of the test triangle
             Vector AP = px0 - tx0[tmi][closest];
             double overlap = Dot(AP,triNormal);
-            if(overlap < 0.0){ // Point is past the plane of the triangle
+            if(overlap < 0.0 && Dot(ptNormal,triNormal) < 0.){ // Point is past the plane of the triangle
               numOverlap++;
               overlapC=overlap;
               // Find the point on the plane nearest the test point
@@ -6011,6 +6017,13 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               Vector w = Cross(a,b);
 
               if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
+#if 0
+                if(adv_matl0==0 && adv_matl1==17){
+                  cout << "tmo = " << tmo << endl;
+                  cout << "tmi = " << tmi << endl;
+                  cout << "overlap = " << overlap << endl;
+                }
+#endif
                 numInside++;
 //                triInContact[tmi][closest] = tmo;
                 foundOne=true;
@@ -6138,7 +6151,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             }
             Vector AP = px0 - tx0[tmi][secondClosest];
             double overlap = Dot(AP,triNormal);
-            if(overlap < 0.0){ // Point is past the plane of the triangle
+            if(overlap < 0.0 && Dot(ptNormal,triNormal) < 0.){ // Point is past the plane of the triangle
               numOverlap++;
               // Find the point on the plane nearest the test point
               Point inPlane = px0 - overlap*triNormal;
