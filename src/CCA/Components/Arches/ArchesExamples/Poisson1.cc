@@ -4,14 +4,14 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+using namespace Uintah;
 using namespace Uintah::ArchesExamples;
 
-//--------------------------------------------------------------------------------------------------
+//---------------------------------------------- load function pointers ----------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskComputeBCsFunctionPointers(){
   return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
-//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskInitializeFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &Poisson1::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
@@ -20,7 +20,6 @@ TaskAssignedExecutionSpace Poisson1::loadTaskInitializeFunctionPointers(){
                                      );
 }
 
-//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskEvalFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &Poisson1::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
@@ -29,34 +28,32 @@ TaskAssignedExecutionSpace Poisson1::loadTaskEvalFunctionPointers(){
                                      );
 }
 
-//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskTimestepInitFunctionPointers(){
   return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
-//--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskRestartInitFunctionPointers(){
   return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
 }
 
-//--------------------------------------------------------------------------------------------------
+//----------------------------------------------- problem setup ---------------------------------------------------
 void Poisson1::problemSetup( ProblemSpecP& db ){
 //updating delT (as done in stand alone example) is not needed here. Arches will take care of delT
 }
 
-//--------------------------------------------------------------------------------------------------
 void
 Poisson1::create_local_labels(){
   register_new_variable<CCVariable<double> >( "phi" );
 }
 
-//--------------------------------------------------------------------------------------------------
+
+//--------------------------------------------- init -----------------------------------------------------
 void
 Poisson1::register_initialize( ArchesVIVector& variable_registry , const bool packed_tasks){
   register_variable( "phi", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 }
 
-//--------------------------------------------------------------------------------------------------
+
 template <typename ExecSpace, typename MemSpace>
 void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
   //copied from Poisson1::initialize
@@ -87,14 +84,14 @@ void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
 
 }
 
-//--------------------------------------------------------------------------------------------------
+//--------------------------------------------- eval -----------------------------------------------------
 void
 Poisson1::register_timestep_eval( ArchesVIVector& variable_registry , const int time_substep, const bool packed_tasks){
   register_variable( "phi", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry, time_substep, m_task_name );
   register_variable( "phi", ArchesFieldContainer::COMPUTES, variable_registry, m_task_name );
 }
 
-//--------------------------------------------------------------------------------------------------
+
 template <typename ExecSpace, typename MemSpace> void
 Poisson1::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
   //copied from Poisson1::timeAdvance
