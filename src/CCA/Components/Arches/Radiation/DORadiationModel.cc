@@ -335,7 +335,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
       } else if (linear_sol == "hypre"){
 
-        d_linearSolver = scinew RadHypreSolver();
+        d_linearSolver = scinew RadHypreSolver(d_myworld);
 
       }
       d_linearSolver->problemSetup(db);

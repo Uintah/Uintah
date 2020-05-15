@@ -43,11 +43,11 @@ using namespace Uintah;
 // ****************************************************************************
 // Default constructor for HypreSolver
 // ****************************************************************************
-RadHypreSolver::RadHypreSolver()
+RadHypreSolver::RadHypreSolver(const ProcessorGroup* myworld)
+   : d_myworld(myworld)
 {
   d_iteration = 0;
   d_use7PointStencil = false; 
-  d_myworld->getComm(); 
 }
 
 // ****************************************************************************
