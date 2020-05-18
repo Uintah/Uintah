@@ -61,10 +61,10 @@ void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
   auto phi = tsk_info->get_field<T, double, MemSpace>("phi");
   parallel_initialize(execObj,0.0, phi);
 
+  //arches bc
   const BndMapT& bc_info = m_bcHelper->get_boundary_information();
-
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
-	double val = i_bc->second.find("phi")->value;
+	double val = i_bc->second.find("Phi")->value;
     const bool on_this_patch = i_bc->second.has_patch(patch->getID());
     if ( on_this_patch ){
       //Handle cell type first
@@ -93,8 +93,8 @@ Poisson1::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionOb
   auto newphi = tsk_info->get_field< T, double, MemSpace>("phi");
 
     // Prepare the ranges for both boundary conditions and main loop
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
+    IntVector l = patch->getExtraCellLowIndex();
+    IntVector h = patch->getExtraCellHighIndex();
 
     Uintah::BlockRange rangeBoundary( l, h);
 

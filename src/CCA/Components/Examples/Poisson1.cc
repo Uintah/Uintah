@@ -48,16 +48,23 @@ using namespace Uintah;
 class DetailedTask;
 
 
-//DS 05132020: Updated Poisson1 to use CC Variable or NCVariable. Comment/uncomment following three lines to switch between two types.
+//DS 05132020: Updated Poisson1 to use CC Variable or NCVariable. Comment/uncomment USE_CC_VARS to switch between two types.
+#define USE_CC_VARS
 
-//typedef NCVariable<double> vartype;
-//typedef constNCVariable<double> constvartype;
-//#define POISSON1_GHOST_TYPE Ghost::AroundNodes
 
+#ifdef USE_CC_VARS
 typedef CCVariable<double> vartype;
 typedef constCCVariable<double> constvartype;
 #define POISSON1_GHOST_TYPE Ghost::AroundCells
-
+#define getLowIndex(patch) patch->getCellLowIndex()
+#define getHighIndex(patch) patch->getCellHighIndex()
+#else
+typedef NCVariable<double> vartype;
+typedef constNCVariable<double> constvartype;
+#define POISSON1_GHOST_TYPE Ghost::AroundNodes
+#define getLowIndex(patch) patch->getNodeLowIndex()
+#define getHighIndex(patch) patch->getNodeHighIndex()
+#endif
 
 
 
@@ -240,8 +247,8 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
     double residual = 0;
 
     // Prepare the ranges for both boundary conditions and main loop
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
+    IntVector l = getLowIndex(patch);
+    IntVector h = getHighIndex(patch);
 
     Uintah::BlockRange rangeBoundary( l, h);
 
@@ -272,6 +279,7 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
                         ( phi(i + 1, j, k) + phi(i - 1, j, k) + phi(i, j + 1, k) +
                           phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) );
 
+
 //      printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
 //             phi.m_view.data(), &(phi(i,j,k)),
 //             phi(i,j,k),
@@ -282,5 +290,6 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
     }, residual);
+
   }
 }
