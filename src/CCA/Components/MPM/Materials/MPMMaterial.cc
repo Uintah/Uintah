@@ -439,8 +439,9 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
           for(int iz=0;iz < ppc.z(); iz++){
             IntVector idx(ix, iy, iz);
             Point p = lower + dxpp*idx;
-            if(piece->inside(p))
+            if(piece->inside(p, true)){
               count++;
+            }
           }
         }
       }

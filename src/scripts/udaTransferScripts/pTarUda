@@ -246,6 +246,7 @@ echo "_____________________________________"
 
 PTAR_RECORD=$uda/$recordName
 
+/bin/rm $PTAR_RECORD >& /dev/null
 touch $PTAR_RECORD
 
 if test ! -f $PTAR_RECORD; then

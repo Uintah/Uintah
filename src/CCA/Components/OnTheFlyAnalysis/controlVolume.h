@@ -63,7 +63,7 @@ namespace Uintah {
     };
 
     const std::vector<FaceType> allFaces = {xminus, xplus, yminus, yplus, zminus, zplus};
-    
+
     enum FaceIteratorType {
       InteriorFaceCells,              // Includes cells on the interior of the face
       SFC_Cells                       // offset +1 cell on the plus faces
@@ -102,25 +102,25 @@ namespace Uintah {
     // Be careful:  Acid test is a CV with faces that coincide with patch boundary
     bool inline hasBoundaryFaces( const Patch* patch) const {
 
-      // Inclusive tests 
+      // Inclusive tests
       IntVector pLo = patch->getCellLowIndex();
       IntVector pHi = patch->getCellHighIndex() - IntVector(1,1,1);
-      
+
       pHi = Max( pHi, IntVector(1,1,1) );  // Must always have 1 cell in each dir
                                            // Needed for 2D patches
-      
-      bool test = m_lowIndx.x()  < pHi.x() &&       
-                  m_lowIndx.y()  < pHi.y() &&       
-                  m_lowIndx.z()  < pHi.z() &&       
-                  m_highIndx.x() >= pLo.x() &&      
-                  m_highIndx.y() >= pLo.y() &&      
+
+      bool test = m_lowIndx.x()  <= pHi.x() &&
+                  m_lowIndx.y()  <= pHi.y() &&
+                  m_lowIndx.z()  <= pHi.z() &&
+                  m_highIndx.x() >= pLo.x() &&
+                  m_highIndx.y() >= pLo.y() &&
                   m_highIndx.z() >= pLo.z();
       return test;
     }
 
     //______________________________________________________________________
     //  Returns the cell index nearest to the point
-    IntVector findCell( const Level * level, 
+    IntVector findCell( const Level * level,
                         const Point & p);
     //______________________________________________________________________
     //
@@ -147,7 +147,7 @@ namespace Uintah {
 
 
   protected:
-    
+
     IntVector m_lowIndx;
     IntVector m_highIndx;
     Box m_box;
