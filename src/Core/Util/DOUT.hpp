@@ -26,6 +26,7 @@
 #define CORE_UTIL_DOUT_HPP
 
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/UintahMPI.h>
 
 #include <sci_defs/compile_defs.h> // for STATIC_BUILD
@@ -52,10 +53,11 @@
 // Conditional with rank
 #define DOUTR( cond, ... )                                 \
   if ( cond) {                                             \
+    MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm(); \
     std::ostringstream dout_msg;                           \
     dout_msg << __VA_ARGS__;                               \
     dout_msg << "Rank ";                                   \
-    dout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
+    dout_msg << MPI::Impl::prank( comm ) << " ";           \
     printf("%s\n",dout_msg.str().c_str());                 \
   }
 
@@ -63,9 +65,10 @@
 // Conditional with rank, file, and line number reported
 #define DOUTALL( cond, ... )                               \
   if (cond) {                                              \
+    MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm(); \
     std::ostringstream pout_msg;                           \
     pout_msg << "Rank ";                                   \
-    pout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
+    pout_msg << MPI::Impl::prank( comm ) << "  ";          \
     pout_msg << __FILE__ << ":";                           \
     pout_msg << __LINE__ << " : ";                         \
     pout_msg << __VA_ARGS__;                               \
@@ -75,9 +78,10 @@
 //__________________________________
 //  For threads, Rank and thread reported
 #define TOUT( ... ) {                                       \
+    MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm(); \
     std::ostringstream tout_msg;                            \
     tout_msg << "Rank ";                                    \
-    tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
+    tout_msg << MPI::Impl::prank( comm ) << "  ";           \
     tout_msg << "Thread ";                                  \
     tout_msg << MPI::Impl::tid() << ") ";                   \
     tout_msg << __VA_ARGS__;                                \
@@ -87,9 +91,10 @@
 //__________________________________
 //  For threads, with rank, thread, file, and line, reported
 #define TOUTALL( ... ) {                                    \
+    MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm(); \
     std::ostringstream tout_msg;                            \
     tout_msg << "Rank ";                                    \
-    tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
+    tout_msg << MPI::Impl::prank( comm ) << "  ";           \
     tout_msg << "Thread ";                                  \
     tout_msg << MPI::Impl::tid() << ") ";                   \
     tout_msg << __FILE__ << ":";                            \
@@ -137,7 +142,7 @@ public:
       printf("These two dout are for the same component and have the same name. \n");
       (*iter).second->print();
       print();
-      
+
       // Two Douts for the same component with the same name.
       SCI_THROW(InternalError(std::string("Multiple Douts for component " + m_component + " with name " + m_name), __FILE__, __LINE__));
     }

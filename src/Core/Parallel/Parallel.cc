@@ -292,7 +292,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     std::cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
   }
-//    Uintah::MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+//    Uintah::MPI::Errhandler_set(Uintah::worldComm_, MPI_ERRORS_RETURN);
 }
 
   //_____________________________________________________________________________
@@ -357,13 +357,13 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     std::cout.flush();
 
     double seconds = 1.0;
-    
+
     struct timespec ts;
     ts.tv_sec = (int)seconds;
     ts.tv_nsec = (int)(1.e9 * (seconds - ts.tv_sec));
 
     nanosleep(&ts, &ts);
-    
+
     Uintah::MPI::Abort(Uintah::worldComm_, errorcode);
   }
   else {
