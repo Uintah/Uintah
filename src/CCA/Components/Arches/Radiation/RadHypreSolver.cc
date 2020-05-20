@@ -47,7 +47,7 @@ RadHypreSolver::RadHypreSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
   d_iteration = 0;
-  d_use7PointStencil = false; 
+  d_use7PointStencil = false;
 }
 
 // ****************************************************************************
@@ -60,7 +60,7 @@ RadHypreSolver::~RadHypreSolver()
 // ****************************************************************************
 // Problem setup
 // ****************************************************************************
-void 
+void
 RadHypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
@@ -79,7 +79,7 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
     if (d_pcType == "smg")
       d_kspType = "3";
     else
-      if (d_pcType == "pfmg"){ // relax type of 1 is default, for pfmg, as is skip=1 
+      if (d_pcType == "pfmg"){ // relax type of 1 is default, for pfmg, as is skip=1
         d_kspType = "4";
         d_use7PointStencil = true;
       }else{
@@ -113,36 +113,36 @@ RadHypreSolver::gridSetup(bool plusX, bool plusY, bool plusZ)
 {
 
 
-  if(d_use7PointStencil){ 
+  if(d_use7PointStencil){
 
-    d_offsets[0][0] = 0; // central                   
-    d_offsets[0][1] = 0;                  
-    d_offsets[0][2] = 0;                    
-                   
-    d_offsets[1][0] = 0; // top or bottom                   
-    d_offsets[1][1] = 0;                  
-    d_offsets[1][2] = plusZ ? -1 : 1;                    
-                   
-    d_offsets[2][0] = 0; // north or south                   
-    d_offsets[2][1] = plusY ? -1 : 1;                    
-    d_offsets[2][2] = 0;                  
-                   
-    d_offsets[3][0] = plusX ? -1 : 1;  // east or west                    
-    d_offsets[3][1] = 0;                    
-    d_offsets[3][2] = 0;                  
-                   
+    d_offsets[0][0] = 0; // central
+    d_offsets[0][1] = 0;
+    d_offsets[0][2] = 0;
+
+    d_offsets[1][0] = 0; // top or bottom
+    d_offsets[1][1] = 0;
+    d_offsets[1][2] = plusZ ? -1 : 1;
+
+    d_offsets[2][0] = 0; // north or south
+    d_offsets[2][1] = plusY ? -1 : 1;
+    d_offsets[2][2] = 0;
+
+    d_offsets[3][0] = plusX ? -1 : 1;  // east or west
+    d_offsets[3][1] = 0;
+    d_offsets[3][2] = 0;
+
     // the following are to hold zeros, for radiation
-    d_offsets[4][0] = 0; // top or bottom                   
-    d_offsets[4][1] = 0;                  
-    d_offsets[4][2] = plusZ ? 1 : -1;                    
-                   
-    d_offsets[5][0] = 0; // north or south                   
-    d_offsets[5][1] = plusY ? 1 : -1;                    
-    d_offsets[5][2] = 0;                  
-                   
-    d_offsets[6][0] = plusX ? 1 : -1;  // east or west                    
-    d_offsets[6][1] = 0;                    
-    d_offsets[6][2] = 0;                  
+    d_offsets[4][0] = 0; // top or bottom
+    d_offsets[4][1] = 0;
+    d_offsets[4][2] = plusZ ? 1 : -1;
+
+    d_offsets[5][0] = 0; // north or south
+    d_offsets[5][1] = plusY ? 1 : -1;
+    d_offsets[5][2] = 0;
+
+    d_offsets[6][0] = plusX ? 1 : -1;  // east or west
+    d_offsets[6][1] = 0;
+    d_offsets[6][2] = 0;
 
 
   }else{
@@ -151,24 +151,24 @@ RadHypreSolver::gridSetup(bool plusX, bool plusY, bool plusZ)
     d_offsets[0][2] = 1;                  //Second index is the [0,1,2]=[i,j,k]
     if (plusZ)
       d_offsets[0][2] = -1;
-    d_offsets[1][0] = 0; 
-    d_offsets[1][1] = 1; 
+    d_offsets[1][0] = 0;
+    d_offsets[1][1] = 1;
     if (plusY)
       d_offsets[1][1] = -1;
-    d_offsets[1][2] = 0; 
+    d_offsets[1][2] = 0;
     d_offsets[2][0] = 1;
     if (plusX)
-      d_offsets[2][0] = -1; 
-    d_offsets[2][1] = 0; 
-    d_offsets[2][2] = 0; 
-    d_offsets[3][0] = 0; 
-    d_offsets[3][1] = 0; 
+      d_offsets[2][0] = -1;
+    d_offsets[2][1] = 0;
+    d_offsets[2][2] = 0;
+    d_offsets[3][0] = 0;
+    d_offsets[3][1] = 0;
     d_offsets[3][2] = 0;
   }
   for (int s = 0; s < d_stencilSize; s++){
     HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
   }
-     
+
   /*
    //This is not required for radiation -start
   const Level* level = patch->getLevel();
@@ -198,7 +198,7 @@ RadHypreSolver::matrixInit(const Patch* patch){
   IntVector idxHi = patch->getFortranCellHighIndex();
 
 
-  for (int i = 0; i < 6; i++){    
+  for (int i = 0; i < 6; i++){
     d_A_num_ghost[i] = 0;
   }
 
@@ -216,12 +216,12 @@ RadHypreSolver::matrixInit(const Patch* patch){
   d_dim = 3;
 
   d_nblocks = bx*by*bz;                        //number of blocks per processor, now is set to 1
-#if ((HYPRE_VERSION_MINOR) >= 14) 
+#if ((HYPRE_VERSION_MINOR) >= 14)
     d_ilower = hypre_CTAlloc(int*, d_nblocks,HYPRE_MEMORY_HOST);
     d_iupper = hypre_CTAlloc(int*, d_nblocks,HYPRE_MEMORY_HOST);
     d_stencilIndices = hypre_CTAlloc(int, d_stencilSize,HYPRE_MEMORY_HOST);
     //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
-    d_offsets = hypre_CTAlloc(int*, d_stencilSize,HYPRE_MEMORY_HOST);   
+    d_offsets = hypre_CTAlloc(int*, d_stencilSize,HYPRE_MEMORY_HOST);
 #else
       d_ilower = hypre_CTAlloc(int*, d_nblocks);
       d_iupper = hypre_CTAlloc(int*, d_nblocks);
@@ -236,14 +236,14 @@ RadHypreSolver::matrixInit(const Patch* patch){
 
 
   for (int i = 0; i < d_nblocks; i++){
-#if (HYPRE_VERSION_MINOR >= 14) 
+#if (HYPRE_VERSION_MINOR >= 14)
     d_ilower[i] = hypre_CTAlloc(int, d_dim,HYPRE_MEMORY_HOST);
     d_iupper[i] = hypre_CTAlloc(int, d_dim,HYPRE_MEMORY_HOST);
 #else
     d_ilower[i] = hypre_CTAlloc(int, d_dim);
     d_iupper[i] = hypre_CTAlloc(int, d_dim);
 #endif
-    
+
   }
 
   for (int i = 0; i < d_dim; i++){
@@ -251,10 +251,10 @@ RadHypreSolver::matrixInit(const Patch* patch){
     d_A_num_ghost[2*i + 1] = 1;
   }
 
-  
+
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
-  
+
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
@@ -269,27 +269,27 @@ RadHypreSolver::matrixInit(const Patch* patch){
     }
   }
 
-#if (HYPRE_VERSION_MINOR >= 14) 
+#if (HYPRE_VERSION_MINOR >= 14)
   d_offsets = hypre_CTAlloc(int*, d_stencilSize,HYPRE_MEMORY_HOST);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
 #else
   d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
 #endif
   if(d_use7PointStencil){
-#if (HYPRE_VERSION_MINOR >= 14) 
-    d_offsets[0] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
-    d_offsets[1] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
-    d_offsets[2] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
-    d_offsets[3] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
-    d_offsets[4] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
-    d_offsets[5] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST); 
+#if (HYPRE_VERSION_MINOR >= 14)
+    d_offsets[0] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[1] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[2] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[3] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[4] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
+    d_offsets[5] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
     d_offsets[6] = hypre_CTAlloc(int, 3,HYPRE_MEMORY_HOST);
 #else
-    d_offsets[0] = hypre_CTAlloc(int, 3); 
-    d_offsets[1] = hypre_CTAlloc(int, 3); 
-    d_offsets[2] = hypre_CTAlloc(int, 3); 
-    d_offsets[3] = hypre_CTAlloc(int, 3); 
-    d_offsets[4] = hypre_CTAlloc(int, 3); 
-    d_offsets[5] = hypre_CTAlloc(int, 3); 
+    d_offsets[0] = hypre_CTAlloc(int, 3);
+    d_offsets[1] = hypre_CTAlloc(int, 3);
+    d_offsets[2] = hypre_CTAlloc(int, 3);
+    d_offsets[3] = hypre_CTAlloc(int, 3);
+    d_offsets[4] = hypre_CTAlloc(int, 3);
+    d_offsets[5] = hypre_CTAlloc(int, 3);
     d_offsets[6] = hypre_CTAlloc(int, 3);
 #endif
   }else{
@@ -306,7 +306,7 @@ RadHypreSolver::matrixInit(const Patch* patch){
 #endif
   }
 
-  HYPRE_StructGridCreate(MPI_COMM_WORLD, d_dim, &d_grid);
+  HYPRE_StructGridCreate(d_myworld->getComm(), d_dim, &d_grid);
 
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructGridSetExtents(d_grid, d_ilower[ib], d_iupper[ib]);
@@ -317,21 +317,21 @@ RadHypreSolver::matrixInit(const Patch* patch){
    * Set up the matrix structure
    *-----------------------------------------------------------*/
   HYPRE_StructStencilCreate(d_dim, d_stencilSize, &d_stencil);
-  HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
+  HYPRE_StructMatrixCreate(d_myworld->getComm(), d_grid, d_stencil, &d_A);
   HYPRE_StructMatrixSetSymmetric(d_A, 0);
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
-  HYPRE_StructMatrixInitialize(d_A); 
+  HYPRE_StructMatrixInitialize(d_A);
 
   /*-----------------------------------------------------------
    * Set up the linear system (b & x)
    *-----------------------------------------------------------*/
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+  HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &d_b);
   HYPRE_StructVectorInitialize(d_b);
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+  HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &d_x);
   HYPRE_StructVectorInitialize(d_x);
 
   HYPRE_StructMatrixAssemble(d_A);
-  HYPRE_StructVectorAssemble(d_b); 
+  HYPRE_StructVectorAssemble(d_b);
   HYPRE_StructVectorAssemble(d_x);
 
 
@@ -353,11 +353,11 @@ RadHypreSolver::matrixInit(const Patch* patch){
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
-void 
+void
 RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           const Patch* patch,
                           ArchesVariables* vars,
-                          ArchesConstVariables* constvars, 
+                          ArchesConstVariables* constvars,
                           bool plusX, bool plusY, bool plusZ,
                           CCVariable<double>& SU,
                           CCVariable<double>& AB,
@@ -366,19 +366,19 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           CCVariable<double>& AP,
                           const bool print_all_info )
 
-{ 
+{
   Timers::Simple timer;
   timer.start();
-  
+
   int i;
- 
+
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
-  
+
   /* Set the coefficients for the grid */
   i = 0;
-  
-  if(d_use7PointStencil){  
+
+  if(d_use7PointStencil){
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -402,7 +402,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
           d_valueA[i+2] = -AW(colX,colY,colZ);
           d_valueA[i+3] = AP(colX,colY,colZ);
 #if 0
-          cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
+          cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;
           cerr << "value[AB]=" << d_value[i] << endl;
           cerr << "value[AS]=" << d_value[i+1] << endl;
           cerr << "value[AW]=" << d_value[i+2] << endl;
@@ -419,7 +419,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
                                    d_stencilIndices, d_valueA);
   }
- 
+
   i = 0;
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -430,11 +430,11 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
       }
     }
   }
-    
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_valueB);
   }
-  
+
   i = 0;
   // Set up the initial guess
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -446,7 +446,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
       }
     }
   }
-    
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_valueX);
   }
@@ -458,16 +458,16 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   sprintf(B_fname,"output/b.patch.%i.%i",patchID, d_iteration);
   sprintf(X_fname,"output/x.patch.%i.%i",patchID, d_iteration);
   sprintf(A_fname,"output/A.patch.%i.%i",patchID, d_iteration);
-  
+
   HYPRE_StructVectorPrint(B_fname, d_b, 0);
   HYPRE_StructMatrixPrint(A_fname, d_A, 0);
-  HYPRE_StructVectorPrint(X_fname, d_x, 0);  
+  HYPRE_StructVectorPrint(X_fname, d_x, 0);
 #endif
-  
+
 
   if ( print_all_info ) {
     proc0cout << " Time in HYPRE setMatrix: " << timer().seconds() << " seconds\n";
-  } 
+  }
 }
 //______________________________________________________________________
 //
@@ -484,8 +484,8 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
      10 = SMG as the preconditoner and GMRES as the solver
      11 = PFMG as the preconditioner and GMRES as the solver (default)
   */
-     
-  HYPRE_StructVector tmp;  
+
+  HYPRE_StructVector tmp;
   int num_iterations;
   int n_pre, n_post, skip;
   double sum_b, iprod, final_res_norm;
@@ -493,11 +493,11 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 
 
   /*Calculating initial norm*/
-  if ( print_all_info ){ 
+  if ( print_all_info ){
 
-    /*Calculating Ax-b = r */ 
-    HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
-    HYPRE_StructVectorInitialize(tmp);  
+    /*Calculating Ax-b = r */
+    HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &tmp);
+    HYPRE_StructVectorInitialize(tmp);
     hypre_StructCopy(d_b,tmp);
     hypre_StructMatvec(1.0, d_A, d_x, -1.0,tmp);
     iprod = hypre_StructInnerProd(tmp,tmp);
@@ -519,12 +519,12 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 
   Timers::Simple timer;
   timer.start();
-  
+
   Timers::Simple solveTimer;
 
   if( d_kspType == "1" ) {
     /*Solve the system using SMG*/
-    HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructSMGCreate(d_myworld->getComm(), &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
     HYPRE_StructSMGSetMaxIter(solver, d_maxSweeps);
     HYPRE_StructSMGSetTol(solver, d_residual);
@@ -537,7 +537,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   solveTimer.start();
     HYPRE_StructSMGSolve(solver, d_A, d_b, d_x);
   solveTimer.stop();
-    
+
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructSMGDestroy(solver);
@@ -545,7 +545,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   }
   else if( d_kspType == "2" ) {
     /*Solve the system using PFMG*/
-    HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructPFMGCreate(d_myworld->getComm(), &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
     HYPRE_StructPFMGSetTol(solver, d_residual);
     HYPRE_StructPFMGSetRelChange(solver, 0);
@@ -560,14 +560,14 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   solveTimer.start();
     HYPRE_StructPFMGSolve(solver, d_A, d_b, d_x);
   solveTimer.stop();
-    
+
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
     //    cerr << "PFMG Solve time = " << timer().seconds() << endl;
   }
   else if (d_kspFix == "gmres") {
-    HYPRE_StructGMRESCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructGMRESCreate(d_myworld->getComm(), &solver);
     HYPRE_GMRESSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
     HYPRE_GMRESSetTol( (HYPRE_Solver)solver, d_residual);
     //    HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
@@ -576,7 +576,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 
     if (d_kspType == "3") {
       /* use symmetric SMG as preconditioner */
-      HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructSMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
       HYPRE_StructSMGSetMaxIter(precond, 1);
       HYPRE_StructSMGSetTol(precond, d_residual);
@@ -591,10 +591,10 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
       //      cerr << "SMG Precond time = " << timer().seconds() << endl;
     }
 
-    else if (d_kspType == "4") {  
+    else if (d_kspType == "4") {
 
       /* use symmetric PFMG as preconditioner */
-      HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructPFMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
       HYPRE_StructPFMGSetTol(precond, d_residual);
       HYPRE_StructPFMGSetZeroGuess(precond);
@@ -615,7 +615,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     else if (d_kspType == "5") {
 
       /* use two-step Jacobi as preconditioner */
-      HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructJacobiCreate(d_myworld->getComm(), &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
       HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
@@ -637,7 +637,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
   solveTimer.stop();
     //cerr << "PCG Solve time = " << solveTimer().seconds << endl;
-    
+
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructGMRESDestroy(solver);
@@ -653,16 +653,16 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     }
   }
   else if (d_kspFix == "cg") {
-    HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructPCGCreate(d_myworld->getComm(), &solver);
     HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
     HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_residual);
     HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
-    
+
     if (d_kspType == "6") {
       /* use symmetric SMG as preconditioner */
-      HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructSMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
       HYPRE_StructSMGSetMaxIter(precond, 1);
       HYPRE_StructSMGSetTol(precond, d_residual);
@@ -675,9 +675,9 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
                            (HYPRE_Solver) precond);
       //      cerr << "SMG Precond time = " << timer().seconds() << endl;
-    } else if (d_kspType == "7") {  
+    } else if (d_kspType == "7") {
       /* use symmetric PFMG as preconditioner */
-      HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructPFMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
       HYPRE_StructPFMGSetTol(precond, d_residual);
       HYPRE_StructPFMGSetZeroGuess(precond);
@@ -695,7 +695,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
       //      cerr << "PFMG Precond time = " << timer().seconds() << endl;
     } else if (d_kspType == "8") {
       /* use two-step Jacobi as preconditioner */
-      HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructJacobiCreate(d_myworld->getComm(), &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
       HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
@@ -705,7 +705,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
                            (HYPRE_Solver) precond);
       //      cerr << "Jacobi Precond time = " << timer().seconds() << endl;
     }
-    
+
   solveTimer.start();
     HYPRE_PCGSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
@@ -717,7 +717,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
   solveTimer.stop();
     //cerr << "PCG Solve time = " << solveTimer().seconds << endl;
-    
+
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructPCGDestroy(solver);
@@ -733,11 +733,11 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     }
   }
 
-  if ( print_all_info ){ 
+  if ( print_all_info ){
     proc0cout << "    Direction: " << direcn << "     Sum(B) = " << sum_b << "      Init Norm: " << init_norm << "      Total Iter: " << num_iterations << "     Final Norm: " <<  final_res_norm << "     Total Time(sec): " << timer().seconds() << endl;
-  } else { 
+  } else {
     proc0cout << "  Direction: " << direcn << "   Total Iter: " << num_iterations << "   Final Norm: " <<  final_res_norm << "     Total Time(sec): " << timer().seconds() << "  Solve Only:"<< solveTimer().seconds() << endl;
-  } 
+  }
 
   if (final_res_norm < d_residual)
     return true;
@@ -758,15 +758,15 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 #else
   xvec = hypre_CTAlloc(double, d_volume);
 #endif
- 
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
   }
-  
+
 #if 0
   HYPRE_StructVectorPrint("driver.out.x", d_x, 0);
 #endif
-  
+
   int i = 0;
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -784,9 +784,9 @@ RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 #endif
 }
 //______________________________________________________________________
-//  
+//
 void
-RadHypreSolver::destroyMatrix() 
+RadHypreSolver::destroyMatrix()
 {
   /*-----------------------------------------------------------
    * Finalize things
@@ -796,7 +796,7 @@ RadHypreSolver::destroyMatrix()
   HYPRE_StructMatrixDestroy(d_A);
   HYPRE_StructVectorDestroy(d_b);
   HYPRE_StructVectorDestroy(d_x);
-   
+
   for (int i = 0; i < d_nblocks; i++){
 #if (HYPRE_VERSION_MINOR >= 14)
     hypre_TFree(d_iupper[i],HYPRE_MEMORY_HOST);
@@ -815,7 +815,7 @@ RadHypreSolver::destroyMatrix()
   hypre_TFree(d_iupper);
   hypre_TFree(d_stencilIndices);
 #endif
-  
+
   for (int i = 0; i < d_stencilSize; i++){
 #if (HYPRE_VERSION_MINOR >= 14)
     hypre_TFree(d_offsets[i],HYPRE_MEMORY_HOST);
@@ -836,8 +836,8 @@ RadHypreSolver::destroyMatrix()
   hypre_FinalizeMemoryDebug();
 #endif
 
-  
-  
+
+
 }
 
 void

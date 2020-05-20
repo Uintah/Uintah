@@ -65,7 +65,7 @@ HypreSolver::~HypreSolver()
 // ****************************************************************************
 // Problem setup
 // ****************************************************************************
-void 
+void
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Parameters");
@@ -73,26 +73,26 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
   if(!db) {
     ostringstream warn;
     warn << "INPUT FILE ERROR: ARCHES:PressureSolver: missing <Parameters> tag \n";
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
-  } 
-  
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+
   string solver;
   string preconditioner = "-9";
-  
+
   db->getWithDefault("solver", solver, "cg");
-  
+
   if (solver == "smg"){
     d_solverType = "0";
   }
-  
+
   if (solver == "pfmg"){
     d_solverType = "1";
   }
 
   db->getWithDefault("preconditioner", preconditioner, "pfmg");
- 
+
   if (solver == "cg"){
-    // preconditioners  
+    // preconditioners
     if (preconditioner == "smg")
       d_solverType = "10";
     else if (preconditioner == "pfmg")
@@ -103,47 +103,47 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
       d_solverType = "19";
     }
   }
-  
+
   //__________________________________
   //bulletproofing
-  
+
   string test = "bad";
   string test2 = "bad";
   db->get("ksptype",test);
   db->get("pctype", test2);
-  
+
   if (test != "bad" || test2 != "bad"){
     ostringstream warn;
     warn << "INPUT FILE ERROR: ARCHES: using a depreciated linear solver option \n"
          << "change  <ksptype>   to    <solver> \n"
          << "change  <pctype>    to    <preconditioner> \n"<< endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-  
+
   if(solver != "cg" && preconditioner != "-9" && d_myworld->myRank() == 0 ){
     cout << "-----------------------------------------------\n";
     cout << " WARNING: Linear solver options \n";
     cout << " The preconditioner ("<<preconditioner<< ") only works with the cg solver\n";
     cout << "-----------------------------------------------\n";
   }
-  
+
   if(solver != "cg" && solver != "smg" && solver != "pfmg"){
     ostringstream warn;
     warn << "INPUT FILE ERROR: ARCHES: unknown linear solve type ("<<solver<<") \n"
          << "Valid Options:  cg, smg, or pfmg"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-  
-  if(solver == "cg" && 
+
+  if(solver == "cg" &&
     preconditioner != "pfmg"   && preconditioner != "smg" &&
     preconditioner != "jacobi" && preconditioner != "none"){
-     
+
     ostringstream warn;
     warn << "INPUT FILE ERROR: ARCHES: unknown preconditioner type ("<<preconditioner<<") \n"
          << "Valid Options:  smg, pfmg, jacobi, none"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-  
+
   db->getWithDefault("maxiterations", d_maxSweeps, 75);
   db->getWithDefault("tolerance",     d_stored_residual, 1.0e-8);
 }
@@ -166,7 +166,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
 
-#if 0  
+#if 0
   //__________________________________
   //  bulletproofing      -This sucks Todd
   if( fmodf(nx,2) !=0 || fmodf(ny,2) != 0 || fmodf(nz,2) != 0){
@@ -174,11 +174,11 @@ HypreSolver::gridSetup(const ProcessorGroup*,
     warn << "INPUT FILE ERROR: ARCHES: hypre pressure solver. \n"
          << "This solver only works on a grid with an even number of cells in each directon on a patch\n"
          << "Patch: " << patch->getID() << " cells: (" << nx << ","<< ny <<","<< nz <<")" ;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
-     
-  for (int i = 0; i < 6; i++){    
+
+  for (int i = 0; i < 6; i++){
     d_A_num_ghost[i] = 0;
   }
 
@@ -189,7 +189,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   d_dim = 3;
 
   d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
-     
+
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
 
@@ -197,15 +197,15 @@ HypreSolver::gridSetup(const ProcessorGroup*,
     d_ilower[i] = hypre_CTAlloc(int, d_dim);
     d_iupper[i] = hypre_CTAlloc(int, d_dim);
   }
-  
+
   for (int i = 0; i < d_dim; i++){
     d_A_num_ghost[2*i] = 1;
     d_A_num_ghost[2*i + 1] = 1;
   }
-  
+
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
-  
+
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
@@ -220,7 +220,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
     }
   }
 #if 0
-  ib = 0;  
+  ib = 0;
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
@@ -231,13 +231,13 @@ HypreSolver::gridSetup(const ProcessorGroup*,
     }
   }
 #endif
-  
-  HYPRE_StructGridCreate(MPI_COMM_WORLD, d_dim, &d_grid);
+
+  HYPRE_StructGridCreate(d_myworld->getComm(), d_dim, &d_grid);
 
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructGridSetExtents(d_grid, d_ilower[ib], d_iupper[ib]);
   }
- 
+
   const Level* level = patch->getLevel();
   IntVector periodic_vector = level->getPeriodicBoundaries();
   IntVector low, high;
@@ -248,7 +248,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   periodic[1] = periodic_vector.y() * range.y();
   periodic[2] = periodic_vector.z() * range.z();
   HYPRE_StructGridSetPeriodic(d_grid, periodic);
-  HYPRE_StructGridAssemble(d_grid);  
+  HYPRE_StructGridAssemble(d_grid);
 
   /*-----------------------------------------------------------
    * Set up the stencil structure
@@ -259,10 +259,10 @@ HypreSolver::gridSetup(const ProcessorGroup*,
                       {-1,0,0},
                       {0,-1,0},
                       {0,0,-1}};
-   
-   
+
+
   HYPRE_StructStencilCreate(d_dim, d_stencilSize, &d_stencil);
-   
+
   for (int s = 0; s < d_stencilSize; s++){
     HYPRE_StructStencilSetElement(d_stencil, s, offsets[s]);
   }
@@ -271,30 +271,30 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
-void 
+void
 HypreSolver::setMatrix(const ProcessorGroup* pc,
                        const Patch* patch,
                        CCVariable<Stencil7>& coeff)
-{ 
+{
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
    * Set up the matrix structure
    *-----------------------------------------------------------*/
 
-  HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
+  HYPRE_StructMatrixCreate(d_myworld->getComm(), d_grid, d_stencil, &d_A);
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
-  HYPRE_StructMatrixInitialize(d_A); 
- 
+  HYPRE_StructMatrixInitialize(d_A);
+
   double *A = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
-  
+
   /* Set the coefficients for the grid */
   int i = 0;
   int s;
   for (s = 0; s < (d_stencilSize); s++){
     d_stencilIndices[s] = s;
   }
-  
+
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     A[i]   =  coeff[c].p; //[0, 0, 0]
@@ -303,9 +303,9 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
     A[i+3] = coeff[c].b; //[0 ,0,-1]
 
     i = i + d_stencilSize;
-   
+
   }
-  
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
                                     d_stencilIndices, A);
@@ -318,26 +318,26 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
-void 
+void
 HypreSolver::setRHS_X(const ProcessorGroup* pc,
                       const Patch* patch,
                       CCVariable<double>& guess,
-                      constCCVariable<double>& rhs, 
+                      constCCVariable<double>& rhs,
                       bool construct_A )
-{ 
+{
    // gridSetup(pc, patch);
    /*-----------------------------------------------------------
     * Set up the linear system (b & x)
     *-----------------------------------------------------------*/
-   if ( construct_A ) { 
-     // These objects should only be constructed if A is constructed. 
-     // Otherwise they are reused. 
-     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+   if ( construct_A ) {
+     // These objects should only be constructed if A is constructed.
+     // Otherwise they are reused.
+     HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &d_b);
      HYPRE_StructVectorInitialize(d_b);
-     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+     HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &d_x);
      HYPRE_StructVectorInitialize(d_x);
    }
- 
+
   /* Set the coefficients for the grid */
   int i = 0;
 
@@ -352,7 +352,7 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
     B[i] = rhs[c];
     i++;
   }
-    
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], B);
   }
@@ -364,14 +364,14 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
     X[i] = guess[c];
     i++;
   }
-    
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], X);
   }
 
-  HYPRE_StructVectorAssemble(d_b);  
+  HYPRE_StructVectorAssemble(d_b);
   HYPRE_StructVectorAssemble(d_x);
-  
+
   hypre_TFree(X);
   hypre_TFree(B);
 }
@@ -393,15 +393,15 @@ HypreSolver::pressLinearSolve()
      17 = Jacobi as the preconditioner and CG as the solver
      19 = CG as the solver with no preconditioner
   */
-     
-  HYPRE_StructVector tmp;  
+
+  HYPRE_StructVector tmp;
   int num_iterations;
   int n_pre, n_post, skip;
   double sum_b, iprod, final_res_norm;
 
   /*Calculating initial norm*/
-  HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &tmp);
-  HYPRE_StructVectorInitialize(tmp);  
+  HYPRE_StructVectorCreate(d_myworld->getComm(), d_grid, &tmp);
+  HYPRE_StructVectorInitialize(tmp);
   hypre_StructCopy(d_b,tmp);
   hypre_StructMatvec(1.0, d_A, d_x, -1.0,tmp);
   iprod = hypre_StructInnerProd(tmp,tmp);
@@ -425,7 +425,7 @@ HypreSolver::pressLinearSolve()
 
   if (d_solverType == "0") {
     /*Solve the system using SMG*/
-    HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructSMGCreate(d_myworld->getComm(), &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
     HYPRE_StructSMGSetMaxIter(solver, d_maxSweeps);
     HYPRE_StructSMGSetTol(solver, d_residual);
@@ -435,14 +435,14 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructSMGSetLogging(solver, 1);
     HYPRE_StructSMGSetup(solver, d_A, d_b, d_x);
     HYPRE_StructSMGSolve(solver, d_A, d_b, d_x);
-    
+
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructSMGDestroy(solver);
   }
   else if (d_solverType == "1") {
     /*Solve the system using PFMG*/
-    HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructPFMGCreate(d_myworld->getComm(), &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
     HYPRE_StructPFMGSetTol(solver, d_residual);
     HYPRE_StructPFMGSetRelChange(solver, 0);
@@ -455,23 +455,23 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructPFMGSetLogging(solver, 1);
     HYPRE_StructPFMGSetup(solver, d_A, d_b, d_x);
     HYPRE_StructPFMGSolve(solver, d_A, d_b, d_x);
-    
+
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
   }
   else {
-    HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
+    HYPRE_StructPCGCreate(d_myworld->getComm(), &solver);
     HYPRE_PCGSetMaxIter( (HYPRE_Solver)solver, d_maxSweeps);
     HYPRE_PCGSetTol( (HYPRE_Solver)solver, d_residual);
     HYPRE_PCGSetTwoNorm( (HYPRE_Solver)solver, 1 );
     HYPRE_PCGSetRelChange( (HYPRE_Solver)solver, 0 );
     HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
- 
-    
+
+
     if (d_solverType == "10") {
       /* use symmetric SMG as preconditioner */
-      HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructSMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
       HYPRE_StructSMGSetMaxIter(precond, 1);
       HYPRE_StructSMGSetTol(precond, d_residual);
@@ -484,10 +484,10 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
                            (HYPRE_Solver) precond);
     }
-  
-    else if (d_solverType == "11") {  
+
+    else if (d_solverType == "11") {
       /* use symmetric PFMG as preconditioner */
-      HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructPFMGCreate(d_myworld->getComm(), &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
       HYPRE_StructPFMGSetTol(precond, d_residual);
       HYPRE_StructPFMGSetZeroGuess(precond);
@@ -505,7 +505,7 @@ HypreSolver::pressLinearSolve()
     }
     else if (d_solverType == "17") {
       /* use two-step Jacobi as preconditioner */
-      HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
+      HYPRE_StructJacobiCreate(d_myworld->getComm(), &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
       HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
@@ -514,13 +514,13 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
                            (HYPRE_Solver) precond);
     }
-    
+
     HYPRE_PCGSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
 
     HYPRE_PCGSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-    
+
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructPCGDestroy(solver);
@@ -536,7 +536,7 @@ HypreSolver::pressLinearSolve()
     }
   }
   if(me == 0) {
-    final_res_norm *= sum_b;          
+    final_res_norm *= sum_b;
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << timer().seconds() << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
@@ -555,11 +555,11 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
   double* xvec;
   xvec = hypre_CTAlloc(double, d_volume);
- 
+
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
   }
-  
+
   int i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
@@ -568,11 +568,11 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   }
   hypre_TFree(xvec);
 }
- 
+
 //______________________________________________________________________
-//  
+//
 void
-HypreSolver::destroyMatrix() 
+HypreSolver::destroyMatrix()
 {
   /*-----------------------------------------------------------
    * Finalize things
@@ -583,7 +583,7 @@ HypreSolver::destroyMatrix()
   HYPRE_StructMatrixDestroy(d_A);
   HYPRE_StructVectorDestroy(d_b);
   HYPRE_StructVectorDestroy(d_x);
-   
+
   for (i = 0; i < d_nblocks; i++){
     hypre_TFree(d_iupper[i]);
     hypre_TFree(d_ilower[i]);
@@ -600,20 +600,20 @@ HypreSolver::destroyMatrix()
 void HypreSolver::print(const string& desc, const int timestep, const int step){
 
   char A_fname[100],B_fname[100], X_fname[100];
-  
+
   sprintf(B_fname,"output/b.%s.%i.%i",desc.c_str(), timestep, step);
   sprintf(X_fname,"output/x.%s.%i.%i",desc.c_str(), timestep, step);
   sprintf(A_fname,"output/A.%s.%i.%i",desc.c_str(), timestep, step);
-  
+
   HYPRE_StructMatrixPrint(A_fname, d_A, 0);
-  
+
   HYPRE_StructVectorPrint(B_fname, d_b, 0);
-  
-  HYPRE_StructVectorPrint(X_fname, d_x, 0);  
+
+  HYPRE_StructVectorPrint(X_fname, d_x, 0);
 }
 
 
 void HypreSolver::finalizeSolver()
 {
-  
+
 }
