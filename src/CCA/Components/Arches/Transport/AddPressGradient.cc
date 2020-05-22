@@ -95,7 +95,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
   auto vhat = tsk_info->get_field<SFCYVariable<double>, double, MemSpace>( "vHat" );
   auto what = tsk_info->get_field<SFCZVariable<double>, double, MemSpace>( "wHat" );
 
-  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  Uintah::BlockRange range(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
   Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
 
     uhat(i,j,k) = xmom(i,j,k);
