@@ -47,7 +47,7 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   d_useModifiedEOS = false;
 
   // These two parameters are used for the unburned Murnahan EOS
-  ps->require("K",    d_initialData.d_K);
+  ps->require("K",d_initialData.d_K);
   ps->require("n",d_initialData.d_n);
 
   // These parameters are used for the product JWL EOS
@@ -274,7 +274,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
 
       double t_b = dist/d_initialData.d_D;
 
-      double delta_L = 1.5*pow(pmass[idx]/rho0,1./3.)/d_initialData.d_D;
+      double delta_L = 1.5*cbrt(pmass[idx]/rho0)/d_initialData.d_D;
 
       if (time >= t_b){
         pProgressF_new[idx] = (time - t_b)/delta_L;
