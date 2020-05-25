@@ -57,7 +57,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
   // Gather all of the processor names in rank order.
   MPI::Allgather(  my_proc_name,  MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
                   all_proc_names, MPI_MAX_PROCESSOR_NAME+1, MPI_CHAR,
-                  MPI_COMM_WORLD);
+                  m_comm );
 
   std::map< std::string, unsigned int > proc_name_map;
 
@@ -83,7 +83,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
     m_all_proc_indexs[i] = proc_name_map[ proc_name ];
   }
 
-  delete [] all_proc_names;  
+  delete [] all_proc_names;
 
   // More than one node so create a node based communicator.
   if( proc_name_map.size() > 1 )
@@ -91,7 +91,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
     // The node index becomes the "color" while using the world rank
     // which is unique for the ordering.
     MPI::Comm_split(m_comm, m_all_proc_indexs[m_rank], m_rank, &m_node_comm);
-    
+
     // Get the number of ranks for this node and the rank on this node.
     MPI::Comm_size(m_node_comm, &m_node_nRanks);
     MPI::Comm_rank(m_node_comm, &m_node_rank);
@@ -105,7 +105,7 @@ ProcessorGroup::ProcessorGroup( const ProcessorGroup * parent
   }
 }
 
-ProcessorGroup::~ProcessorGroup() 
+ProcessorGroup::~ProcessorGroup()
 {
   // This free call causes a hard crash.
   // if( m_all_proc_names.size() > 1 )
