@@ -4873,42 +4873,43 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         // Check to see if a tracer has left the domain
         if(!domain.inside(tx_new[idx])){
           double epsilon = 1.e-15;
+          static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
           Point txn = tx_new[idx];
           if(periodic.x()==0){
            if(tx_new[idx].x()<dom_min.x()){
             tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
             txn = tx_new[idx];
+            warn.invoke();
            }
            if(tx_new[idx].x()>dom_max.x()){
             tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
             txn = tx_new[idx];
+            warn.invoke();
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
           }
           if(periodic.y()==0){
            if(tx_new[idx].y()<dom_min.y()){
             tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
             txn = tx_new[idx];
+            warn.invoke();
            }
            if(tx_new[idx].y()>dom_max.y()){
             tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
             txn = tx_new[idx];
+            warn.invoke();
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
           }
           if(periodic.z()==0){
            if(tx_new[idx].z()<dom_min.z()){
             tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+            warn.invoke();
            }
            if(tx_new[idx].z()>dom_max.z()){
             tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+            warn.invoke();
            }
-           static ProgressiveWarning warn("A tracer has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
           }
-        }
+        } // if tracer has left domain
       }
     }
     delete interpolator;
@@ -5648,6 +5649,44 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         vel/=sumSk;
   
         P0 += vel*delT;
+
+        // Check to see if a vertex has left the domain
+        if(!domain.inside(P0)){
+          double epsilon = 1.e-15;
+          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+          Point txn = P0;
+           if(P0.x()<dom_min.x()){
+            P0 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = P0;
+            warn.invoke();
+           }
+           if(P0.x()>dom_max.x()){
+            P0 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = P0;
+            warn.invoke();
+           }
+
+           if(P0.y()<dom_min.y()){
+            P0 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = P0;
+            warn.invoke();
+           }
+           if(P0.y()>dom_max.y()){
+            P0 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = P0;
+            warn.invoke();
+           }
+
+           if(P0.z()<dom_min.z()){
+            P0 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+            warn.invoke();
+           }
+           if(P0.z()>dom_max.z()){
+            P0 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+            warn.invoke();
+           }
+        } // if vertex has left domain
+
   
         // Get the node indices that surround the point
         NN = interpolator->findCellAndWeights(P1, ni, S, tsize[idx]);
@@ -5664,6 +5703,43 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
   
         P1 += vel*delT;
 
+        // Check to see if a vertex has left the domain
+        if(!domain.inside(P1)){
+          double epsilon = 1.e-15;
+          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+          Point txn = P1;
+           if(P1.x()<dom_min.x()){
+            P1 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = P1;
+            warn.invoke();
+           }
+           if(P1.x()>dom_max.x()){
+            P1 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = P1;
+            warn.invoke();
+           }
+
+           if(P1.y()<dom_min.y()){
+            P1 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = P1;
+            warn.invoke();
+           }
+           if(P1.y()>dom_max.y()){
+            P1 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = P1;
+            warn.invoke();
+           }
+
+           if(P1.z()<dom_min.z()){
+            P1 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+            warn.invoke();
+           }
+           if(P1.z()>dom_max.z()){
+            P1 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+            warn.invoke();
+           }
+        } // if vertex has left domain
+
         // Get the node indices that surround the point
         NN = interpolator->findCellAndWeights(P2, ni, S, tsize[idx]);
         vel = Vector(0.0,0.0,0.0);
@@ -5678,6 +5754,43 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         vel/=sumSk;
   
         P2 += vel*delT;
+
+        // Check to see if a vertex has left the domain
+        if(!domain.inside(P2)){
+          double epsilon = 1.e-15;
+          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
+          Point txn = P2;
+           if(P2.x()<dom_min.x()){
+            P2 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+            txn = P2;
+            warn.invoke();
+           }
+           if(P2.x()>dom_max.x()){
+            P2 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+            txn = P2;
+            warn.invoke();
+           }
+
+           if(P2.y()<dom_min.y()){
+            P2 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+            txn = P2;
+            warn.invoke();
+           }
+           if(P2.y()>dom_max.y()){
+            P2 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+            txn = P2;
+            warn.invoke();
+           }
+
+           if(P2.z()<dom_min.z()){
+            P2 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+            warn.invoke();
+           }
+           if(P2.z()>dom_max.z()){
+            P2 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+            warn.invoke();
+           }
+        } // if vertex has left domain
 
         tx_new[idx] = (P0+P1+P2)/3.;
         triArea_new[idx]=0.5*Cross(P1-P0,P2-P0).length();
@@ -5698,6 +5811,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 #endif
         tsize_new[idx] = tsize[idx];
   
+#if 0
         // Check to see if a triangle has left the domain
         // Check to see if a triangle has left the domain
         if(!domain.inside(tx_new[idx])){
@@ -5738,6 +5852,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
            warn.invoke();
           }
         }
+#endif
       } // Loop over triangles
 
 #if 0
