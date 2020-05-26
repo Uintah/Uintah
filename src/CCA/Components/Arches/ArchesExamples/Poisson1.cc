@@ -77,7 +77,7 @@ void Poisson1::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     if ( on_this_patch ){
       //Handle cell type first
       Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-      parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+      parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator(execObj),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
         phi(i,j,k) = val;
       });
     }
@@ -173,7 +173,7 @@ Poisson1::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 	const bool on_this_patch = i_bc->second.has_patch(patch->getID());
 	if ( on_this_patch ){
 	  Uintah::ListOfCellsIterator& cell_iter_ct  = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
-	  parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator<MemSpace>(),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
+	  parallel_for_unstructured(execObj,cell_iter_ct.get_ref_to_iterator(execObj),cell_iter_ct.size(), KOKKOS_LAMBDA (int i,int j,int k) {
 		newphi(i,j,k) = phi(i,j,k);
 	  });
 	}

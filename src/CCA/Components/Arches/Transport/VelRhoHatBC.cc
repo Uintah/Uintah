@@ -90,7 +90,7 @@ void VelRhoHatBC::set_mom_bc( ExecutionObject<ExecSpace, MemSpace> &execObj,grid
                             std::abs(iDir[1])*move_to_face_value,
                             std::abs(iDir[2])*move_to_face_value);
 
-      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
+      parallel_for_unstructured(execObj, cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA (const int i,const int j,const int k) {
         int i_f = i + move_to_face[0]; // cell on the face
         int j_f = j + move_to_face[1];
         int k_f = k + move_to_face[2];

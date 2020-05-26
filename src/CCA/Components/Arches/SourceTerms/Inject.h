@@ -226,7 +226,8 @@ private:
               const double value = spec->value;
 
               const int mysize = cell_iter.size();
-              auto this_iter = cell_iter.get_ref_to_iterator<UintahSpaces::HostSpace>();
+              ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> cpuExeobj; //using temporary exeObj with CPU space. Remove while porting the task
+              auto this_iter = cell_iter.get_ref_to_iterator(cpuExeobj);
 
               for ( int i = 0; i < mysize; i++ ){
                 IntVector c = IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2]);
@@ -256,7 +257,8 @@ private:
               double vol = DX[i0]*DX[i1]*DX[zeroi];
 
               const int mysize = cell_iter.size();
-              auto this_iter = cell_iter.get_ref_to_iterator<UintahSpaces::HostSpace>();
+              ExecutionObject<UintahSpaces::CPU, UintahSpaces::HostSpace> cpuExeobj; //using temporary exeObj with CPU space. Remove while porting the task
+              auto this_iter = cell_iter.get_ref_to_iterator(cpuExeobj);
 
               for ( int i = 0; i < mysize; i++ ){
                 IntVector lookup_c = IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2]) - ijk;

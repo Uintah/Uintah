@@ -330,7 +330,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
           //Now loop through the cells:
           double value_m_dot = 0;
-          parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+          parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
           const int ic = i - iDir[0]; // interior cell index
           const int jc = j - iDir[1];
@@ -391,7 +391,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
       double value_m_dot = 0;
       if ( m_scalar_name == "NULL" ){
 
-        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
           const int im = i - iDir[0]; // interior cell index
           const int jm = j - iDir[1];
@@ -414,7 +414,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
         auto scalar = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>( m_scalar_name );
 
-        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
           const int im = i - iDir[0]; // interior cell index
           const int jm = j - iDir[1];

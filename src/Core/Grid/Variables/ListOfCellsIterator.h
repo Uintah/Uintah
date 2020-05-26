@@ -191,17 +191,17 @@ namespace Uintah {
 // Special handling of MemSpace to promote UintahSpaces::HostSpace to Kokkos::HostSpace
 // UintahSpaces::HostSpace is not supported with Kokkos::OpenMP and/or Kokkos::CUDA builds
 #if defined( UINTAH_ENABLE_KOKKOS )
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
-    get_ref_to_iterator(){ return listOfCells_; }
+//    template<typename MemSpace>
+//    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+//    get_ref_to_iterator(){ return listOfCells_; }
 
     template<typename ExecSpace, typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
     get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #else
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
-    get_ref_to_iterator(){ return listOfCells_; }
+//    template<typename MemSpace>
+//    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
+//    get_ref_to_iterator(){ return listOfCells_; }
 
     template<typename ExecSpace, typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value,  std::vector<int_3>&>::type
@@ -209,9 +209,9 @@ namespace Uintah {
 #endif
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
-    get_ref_to_iterator(){ return listOfCells_; }
+//    template<typename MemSpace>
+//    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
+//    get_ref_to_iterator(){ return listOfCells_; }
 
     template<typename ExecSpace, typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
@@ -219,19 +219,19 @@ namespace Uintah {
 #endif
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    template<typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
-    get_ref_to_iterator() {
-      if ( copied_to_gpu ) {
-        return listOfCells_gpu;
-      }
-      else {
-        listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
-        Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
-        copied_to_gpu = true;
-        return listOfCells_gpu;
-      }
-    }
+//    template<typename MemSpace>
+//    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
+//    get_ref_to_iterator() {
+//      if ( copied_to_gpu ) {
+//        return listOfCells_gpu;
+//      }
+//      else {
+//        listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+//        Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
+//        copied_to_gpu = true;
+//        return listOfCells_gpu;
+//      }
+//    }
 
     template<typename ExecSpace, typename MemSpace>
     inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type

@@ -194,7 +194,7 @@ TableLookup::setDependBCs( const PatchSubset* patches,
               m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
             if ( (*spec).bcType == DIRICHLET ){
-              parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+              parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), [&] (const int i,const int j,const int k) {
                 var(i,j,k) = (*spec).value;
               });
             } else {

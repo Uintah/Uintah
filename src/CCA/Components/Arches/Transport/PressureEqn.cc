@@ -250,7 +250,7 @@ void PressureEqn::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
       sign = 1.0;
     }
 
-    parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator<MemSpace>(),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
+    parallel_for_unstructured(execObj,cell_iter.get_ref_to_iterator(execObj),cell_iter.size(), KOKKOS_LAMBDA(const int i,const int j,const int k) {
 
       const int im=i- iDir[0];
       const int jm=j- iDir[1];
