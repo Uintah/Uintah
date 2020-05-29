@@ -232,6 +232,7 @@ private:
       std::string up_face_i = ArchesCore::append_env(up_face,ienv);
       std::string vp_face_i = ArchesCore::append_env(vp_face,ienv);
       std::string wp_face_i = ArchesCore::append_env(wp_face,ienv);
+
       FXT& up_f = tsk_info->get_field<FXT>(up_face_i);
       FYT& vp_f = tsk_info->get_field<FYT>(vp_face_i);
       FZT& wp_f = tsk_info->get_field<FZT>(wp_face_i);
@@ -243,10 +244,6 @@ private:
       CT& up = tsk_info->get_field<CT>(up_i);
       CT& vp = tsk_info->get_field<CT>(vp_i);
       CT& wp = tsk_info->get_field<CT>(wp_i);
-
-      ArchesCore::OneDInterpolator my_interpolant_up( up_f, up, -1, 0, 0 );
-      ArchesCore::OneDInterpolator my_interpolant_vp( vp_f, vp, 0, -1, 0 );
-      ArchesCore::OneDInterpolator my_interpolant_wp( wp_f, wp, 0, 0, -1 );
 
       GET_EXTRACELL_FX_BUFFERED_PATCH_RANGE(0, 1);
       GET_EXTRACELL_FY_BUFFERED_PATCH_RANGE(0, 1);
@@ -260,22 +257,10 @@ private:
       vp_f.initialize(0.0);
       wp_f.initialize(0.0);
 
-      if ( m_int_scheme == ArchesCore::SECONDCENTRAL ) {
+      ArchesCore::doInterpolation( range_x, up_f, up, -1,  0,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range_y, vp_f, vp,  0, -1,  0, m_int_scheme );
+      ArchesCore::doInterpolation( range_z, wp_f, wp,  0,  0, -1, m_int_scheme );
 
-        ArchesCore::SecondCentral ci;
-        Uintah::parallel_for( range_x, my_interpolant_up, ci );
-        Uintah::parallel_for( range_y, my_interpolant_vp, ci );
-        Uintah::parallel_for( range_z, my_interpolant_wp, ci );
-
-      } else if ( m_int_scheme== ArchesCore::FOURTHCENTRAL ){
-
-        //Does this really work when next to boundaries?
-        ArchesCore::FourthCentral ci;
-        Uintah::parallel_for( range_x, my_interpolant_up, ci );
-        Uintah::parallel_for( range_y, my_interpolant_vp, ci );
-        Uintah::parallel_for( range_z, my_interpolant_wp, ci );
-
-      }
     }
   }
 }
