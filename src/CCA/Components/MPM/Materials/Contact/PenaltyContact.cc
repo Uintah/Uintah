@@ -109,22 +109,23 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > gtrcontactforce(numMatls);
   std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
 
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
-      new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);
+      new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
+      new_dw->get(gvolume[m],        lb->gVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(gtrcontactforce[m],lb->gLSContactForceLabel,
                                                          dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
-                            dwi, patch);
+                                                         dwi, patch);
     }
-
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    Vector dx = patch->dCell();
 
     if(flag->d_axisymmetric){
       ostringstream warn;
@@ -181,6 +182,18 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
           double frictionCoefficient=
                    Min(d_mu,tangentDeltaVelocity/fabs(normalDv));
           Dv-=surfaceTangent*frictionCoefficient*fabs(normalDv);
+
+          // Define contact algorithm imposed strain, find maximum
+          Vector epsilon=(Dv/dx)*delT;
+          double epsilon_max=
+            Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+          if(!compare(epsilon_max,0.0)){
+            //epsilon_max *=Max(1.0, mass/(centerOfMassMass-mass));
+
+            // Scale velocity change if contact imposed strain is too large
+            double ff=Min(epsilon_max,.1)/epsilon_max;
+            Dv=Dv*ff;
+          }
           gvelocity_star[n][c]    +=Dv;
         }   // if gtrcontactforce>0
       }     // matls
