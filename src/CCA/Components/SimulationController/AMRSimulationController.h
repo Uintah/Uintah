@@ -78,9 +78,7 @@ protected:
   //! If doing AMR do the regridding
   bool doRegridding( bool initialTimeStep );
 
-#ifdef HAVE_CUDA
   void collectGhostCells();
-#endif
 
   void compileTaskGraph( int totalFine );
 

@@ -248,7 +248,8 @@ namespace Uintah {
         const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
         const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+        my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+        flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi ) ;
          });
 
       }
@@ -281,7 +282,8 @@ namespace Uintah {
           const double Sup = u(IJK_) > 0 ? phi(IJK_M_) : phi(IJK_);
           const double Sdn = u(IJK_) > 0 ? phi(IJK_) : phi(IJK_M_);
 
-          flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi * ( Sdn - Sup )) ;
+          my_psi *= ( Sdn - Sup ); //split flux calc in two lines to avoid floating point difference in CPU and GPU
+          flux(IJK_) = afc * u(IJK_) * ( Sup + 0.5 * my_psi) ;
         });
 
         }

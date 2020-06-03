@@ -599,16 +599,13 @@ AMRSimulationController::doInitialTimeStep()
     
       // If compiled with VisIt check the in-situ status for work.
       // ScheduleCheckInSitu( true );
-    
+
+      //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
+      collectGhostCells();
+
       taskGraphTimer.reset( true );
       m_scheduler->compile();
       taskGraphTimer.stop();
-
-#ifdef HAVE_CUDA
-      //DS 04222020: call this function exactly at this spot - after compilation of init task graph, but before its execution.
-      //Its a bad hack, but seems to work.
-      collectGhostCells();
-#endif
 
       m_runtime_stats[ CompilationTime ] += taskGraphTimer().seconds();
 
@@ -855,7 +852,6 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
   return retVal;
 }
 
-#ifdef HAVE_CUDA
 //______________________________________________________________________
 //
 // DS 04202020: Resizing GPU variables is no longer a problem since the fix in UnifiedScheduler allocates variables with max ghost cell values.
@@ -879,6 +875,7 @@ AMRSimulationController::doRegridding( bool initialTimeStep )
 void
 AMRSimulationController::collectGhostCells()
 {
+  m_scheduler->setMaxGhostCellsCollectionPhase(true);	//disable actual scheduling of tasks by the scheduler.
   for (int i = 0; i < m_current_gridP->numLevels(); i++) {
     m_application->scheduleTimeAdvance(m_current_gridP->getLevel(i),
                                        m_scheduler);
@@ -889,8 +886,10 @@ AMRSimulationController::collectGhostCells()
 
   // Compute the next time step.
   scheduleComputeStableTimeStep();
+
+  m_scheduler->setMaxGhostCellsCollectionPhase(false);  //enable actual scheduling of tasks by the scheduler.
+
 }
-#endif
 
 //______________________________________________________________________
 //

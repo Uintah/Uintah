@@ -3327,13 +3327,22 @@ GPUDataWarehouse::compareAndSwapCopyingIntoGPUStaging(char const* label, int pat
     } else if ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS) {
       printf("ERROR:\nGPUDataWarehouse::compareAndSwapCopyingIntoGPUStaging( )  Variable %s is marked as valid with ghosts, that should never happen with staging vars.\n", label);
       exit(-1);
-    } else if (((oldVarStatus & COPYING_IN) == COPYING_IN) ||
-               ((oldVarStatus & VALID) == VALID)) {
+    } else if (((oldVarStatus & COPYING_IN) == COPYING_IN) /*||
+               ((oldVarStatus & VALID) == VALID)*/) {
+    	//DS 06032020: Commented "((oldVarStatus & VALID) == VALID)" condition as a temporary fix for the defect: When a variable is modified on GPU, ValidWithGhost status
+    	//is reverted to allow gathering of ghost cells again for the next requires dependency. But as of now there is no mechanism to mark staging variables
+    	//invalid. As a result, although the ghost cells on the main variable are invalidated, staging variables still have valid status and hold old values and
+    	//because of valid status prepareDeviceVars does not issue fresh H2D copy for the staging variable.
+    	//The permanent fix is to find out and inactivate staging variables of neighboring patches. But that needs more time. So this temporary fix to ignore
+    	//valid status as of now which will cause few redundant h2d copies, but will make code work.
+//      printf("compareAndSwapCopyingIntoGPUStaging: %s %d COPYING_IN: %d VALID: %d\n", label, patchID, (oldVarStatus & COPYING_IN) == COPYING_IN, (oldVarStatus & VALID) == VALID );
+
       //Something else already took care of it.  So this task won't manage it.
       return false;
     } else {
       //Attempt to claim we'll manage the ghost cells for this variable.  If the claim fails go back into our loop and recheck
       atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
+      newVarStatus = newVarStatus & ~VALID; //DS 06032020: temp fix
       copyingin = __sync_bool_compare_and_swap(status, oldVarStatus, newVarStatus);
     }
   }

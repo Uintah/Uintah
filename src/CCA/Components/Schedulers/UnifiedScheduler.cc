@@ -1886,7 +1886,7 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-        std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator it = vars.find(lpmd);
+        std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator it = vars.find(lpmd);
         if (it  == vars.end() || (it != vars.end() && it->second->m_whichdw != dependantVar->m_whichdw)) {
           vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }

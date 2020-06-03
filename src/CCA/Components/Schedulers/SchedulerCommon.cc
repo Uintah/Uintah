@@ -877,14 +877,34 @@ SchedulerCommon::addTask(       Task        * task
                         )
 {
 
+  //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
+  //in case modifieswithscratchghost is used.
+  if (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc) {
+    for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
+      if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
+        dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
+        dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
+      }
+    }
+    for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
+      if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
+        dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
+        dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
+      }
+    }
+  }
+
+  //return without actually adding tasks to the taskgraph if its a ghost cells collection phase. Set in AMRSimulationController
+  if(m_max_ghost_cell_collection_phase){
+	delete task;
+    return;
+  }
+
   //DS 12102019: The commented code is useful to debug arches tasks by adding only few at a time into the graph
   //Its easy to avoid adding tasks here at a single place than going over all Arches files and commenting (and uncommenting)
   //different tasks.
   // DO NOT DELETE PLEASE PLEASE PLEASE
 //  gtask_num++;
-//  std::string taskName = task->getName();
-//  taskName = std::to_string(gtask_num) + " " + taskName;
-//  task->setName(taskName);
 //
 //  printf("%d$%d$%d$%s$", d_myworld->myRank(), gtask_num, task->usesDevice(), task->getName().c_str());
 //  for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next)
@@ -897,9 +917,11 @@ SchedulerCommon::addTask(       Task        * task
 //    std::cout << dep->m_var->getName() << ",";
 //  printf("\n");
 //
-//
-//  if(gtask_num > 73 && gtask_num < 136 && gtask_num != 73)
+//  if(gtask_num > 47 && gtask_num < 59)
 //	  return;
+
+
+
 
   // Save the DW map
   task->setMapping(m_dwmap);
@@ -931,13 +953,6 @@ SchedulerCommon::addTask(       Task        * task
   // another max ghost cell extent for anything >= MAX_HALO_DEPTH.  The idea is that later
   // we will create two neighborhoods with max extents for each as determined here.
   for (auto dep = task->getRequires(); dep != nullptr; dep = dep->m_next) {
-    //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
-    if (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc) {
-      if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
-        dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
-        dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
-      }
-    }
 
     if (dep->m_num_ghost_cells >= MAX_HALO_DEPTH) {
       if (dep->m_num_ghost_cells > this->m_max_distal_ghost_cells) {
@@ -947,17 +962,6 @@ SchedulerCommon::addTask(       Task        * task
     else {
       if (dep->m_num_ghost_cells > this->m_max_ghost_cells) {
         this->m_max_ghost_cells = dep->m_num_ghost_cells;
-      }
-    }
-  }
-
-  //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
-  //in case modifieswithscratchghost is used.
-  if (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc) {
-    for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
-      if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
-        dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
-        dep->m_var->setMaxDeviceGhostType(dep->m_gtype);
       }
     }
   }

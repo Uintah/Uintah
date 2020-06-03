@@ -303,6 +303,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
 
+    virtual void setMaxGhostCellsCollectionPhase(bool val) {m_max_ghost_cell_collection_phase = val;}
+
   protected:
 
     void finalizeTimestep();
@@ -450,6 +452,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     // max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int m_max_level_offset{0};
+
+    bool m_max_ghost_cell_collection_phase{false}; //DS 06012020: GPU resize problems require max ghost cells for variables should be collected across tasks. To do this,
+                                                   //one has to call scheduleTimestep, scheduleInitialize etc to go through all tasks, but task should not be added into
+                                                   //the task graph during this collection phase. So return from addTask if m_max_ghost_cell_collection_phase == true
 
     // task-graph needs access to reduction task map, etc
     friend class TaskGraph;
