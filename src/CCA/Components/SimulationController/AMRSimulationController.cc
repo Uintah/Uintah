@@ -601,7 +601,9 @@ AMRSimulationController::doInitialTimeStep()
       // ScheduleCheckInSitu( true );
 
       //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
+#ifdef HAVE_CUDA
       collectGhostCells();
+#endif
 
       taskGraphTimer.reset( true );
       m_scheduler->compile();

@@ -896,7 +896,8 @@ SchedulerCommon::addTask(       Task        * task
 
   //return without actually adding tasks to the taskgraph if its a ghost cells collection phase. Set in AMRSimulationController
   if(m_max_ghost_cell_collection_phase){
-	delete task;
+	  if(task)
+		  delete task;
     return;
   }
 
