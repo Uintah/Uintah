@@ -148,7 +148,6 @@ private:
         throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
       }
 
-      std::cout << " \n \n \n HELLO \n \n \n" << std::endl;
       _storage = Inject::readInputFile( file_name );
 
     } else {
@@ -265,7 +264,6 @@ private:
                 auto ptr = _storage.find(IntVector(lookup_c));
                 if ( ptr != _storage.end() ){
                   double value = ptr->second;
-                  std::cout << value << std::endl;
                   src[this_iter[i]] = value*area/vol;
                 }
 
