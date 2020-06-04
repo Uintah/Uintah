@@ -207,13 +207,13 @@ void TaskGraph::overrideGhostCells( const std::vector<Task*> & sorted_tasks )
 
     // look through requires
     for (Task::Dependency* req = task->getRequires(); req != nullptr; req = req->m_next) {
-      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX) {
+      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells < req->m_var->getMaxDeviceGhost()) {
         req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
       }
     }
 
     for (Task::Dependency* req = task->getModifies(); req != nullptr; req = req->m_next) {
-      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells != SHRT_MAX) {
+      if (req->m_gtype != Ghost::None && req->m_num_ghost_cells > 0 && req->m_num_ghost_cells < req->m_var->getMaxDeviceGhost()) {
         req->m_num_ghost_cells = req->m_var->getMaxDeviceGhost();
       }
     }

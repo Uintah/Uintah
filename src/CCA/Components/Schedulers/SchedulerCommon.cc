@@ -879,7 +879,8 @@ SchedulerCommon::addTask(       Task        * task
 
   //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
   //in case modifieswithscratchghost is used.
-  if (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc) {
+  //tg_num != 1 avoid updating max ghosts from RMCRT task graphs.
+  if ( tg_num != 1 && (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc)) {
     for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
       if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
         dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
@@ -896,8 +897,10 @@ SchedulerCommon::addTask(       Task        * task
 
   //return without actually adding tasks to the taskgraph if its a ghost cells collection phase. Set in AMRSimulationController
   if(m_max_ghost_cell_collection_phase){
-	  if(task)
-		  delete task;
+	  //ideally task should be deleted for max ghost cell collection phase, but encountered double free error. So
+	  //commented this part now. Will cause a minor memory leak. Hopefully not too much.
+//	  if(task)
+//		  delete task;
     return;
   }
 
