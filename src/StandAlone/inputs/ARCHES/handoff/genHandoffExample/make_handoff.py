@@ -60,7 +60,7 @@ N = np.shape(ho_info['mixture_fraction'][orig_data_i])
 Nnew = [np.shape(newX)[0], np.shape(newY)[0]]
 
 #load the table: 
-myTable = ct('../../ClassicMixingTables/methane/CH4_gogolek.mix.gz')
+myTable = ct('CH4_gogolek.mix')
 
 #compute the mdots
 fp = ho_info['mixture_fraction_2'][orig_data_i]
