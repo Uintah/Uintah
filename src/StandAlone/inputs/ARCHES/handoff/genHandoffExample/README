@@ -1,0 +1,20 @@
+Perform these steps: 
+
+1) Set the appropriate paths in make_handoff.py or set your PYTHONPATH variable. 
+
+2) Copy the mixing table and unzip it 
+
+cp ../../ClassicMixingTables/methane/CH4_gogolek.mix.gz .
+gunzip CH4_gogolek.mix.gz
+
+2) Run 
+
+python ../scripts/okcProc.py marathon_handoff.visit
+
+which concatonates all files obtained from VisIt. 
+
+3) Run 
+
+python make_handoff.py
+
+which creates *.handoff files used in the UPS file. 

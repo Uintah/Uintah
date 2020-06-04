@@ -38,8 +38,10 @@
       <DefaultMaterial>0</DefaultMaterial>
       <!-- Secondary, Co-Flow Inlet -->
       <InteriorFace rectangle="z-" lower="1 1 1" upper="2 2 1">
-        <BCType label="myInjector" var="Custom">
-        <!--<BCType label="myInjector" var="Dirichlet">-->
+        <BCType label="mixFracInject" var="Custom">
+          <value>1.</value>
+        </BCType>
+        <BCType label="xMomInject" var="Dirichlet">
           <value>1.</value>
         </BCType>
       </InteriorFace>
@@ -137,11 +139,13 @@
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
-          <src label="myInjector"/>
+          <src label="mixFracInject"/>
         </Eqn>
         <Sources>
-          <src label="myInjector" type="cc_inject_src"> 
+          <src label="mixFracInject" type="cc_inject_src"> 
             <inputfile>inputs/Arches/handoff/input/handoff_f.dat</inputfile>
+          </src>
+          <src label="zMomInject" type="fz_inject_src"> 
           </src>
         </Sources>
       </TransportEqns>
@@ -176,6 +180,7 @@
             <wall_csmag>0.4</wall_csmag>
           </wall_closure>
           <convection_scheme>central</convection_scheme>
+          <src label="zMomInject"/>
         </MomentumSolver>
       </ExplicitSolver>
     </ARCHES>

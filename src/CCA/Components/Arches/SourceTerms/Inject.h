@@ -150,9 +150,6 @@ private:
 
       _storage = Inject::readInputFile( file_name );
 
-    } else {
-
-      throw ProblemSetupException( "Error: Inject type not recognized.", __FILE__, __LINE__);
 
     }
 
