@@ -3115,8 +3115,10 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
   }
   else {
     IntVector lowIndex, highIndex;
-    //patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells+scratchGhostCells, lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
-    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, label->getMaxDeviceGhost(), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
+    if(Parallel::usingDevice()) //using std::max(label->getMaxDeviceGhost(), numGhostCells) because numGhostCells can be larger than getMaxDeviceGhost() for rmcrt task graph
+      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, std::max(label->getMaxDeviceGhost(), numGhostCells), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
+    else
+      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells, lowIndex, highIndex); //existing CPU version
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18

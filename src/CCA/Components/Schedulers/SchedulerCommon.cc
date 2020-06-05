@@ -877,10 +877,11 @@ SchedulerCommon::addTask(       Task        * task
                         )
 {
 
+#ifdef HAVE_CUDA
   //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
   //in case modifieswithscratchghost is used.
   //tg_num != 1 avoid updating max ghosts from RMCRT task graphs.
-  if ( tg_num != 1 && (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc)) {
+  if ( tg_num != 1 /*&& (task->getType() == Task::Normal || task->getType() == Task::Hypre || task->getType() == Task::OncePerProc)*/) {
     for (auto dep = task->getModifies(); dep != nullptr; dep = dep->m_next) {
       if (dep->m_num_ghost_cells != SHRT_MAX && dep->m_num_ghost_cells > dep->m_var->getMaxDeviceGhost()) {  //avoid overwriting SHRT_MAX (set for RMCRT)
         dep->m_var->setMaxDeviceGhost(dep->m_num_ghost_cells);
@@ -897,12 +898,13 @@ SchedulerCommon::addTask(       Task        * task
 
   //return without actually adding tasks to the taskgraph if its a ghost cells collection phase. Set in AMRSimulationController
   if(m_max_ghost_cell_collection_phase){
-	  //ideally task should be deleted for max ghost cell collection phase, but encountered double free error. So
-	  //commented this part now. Will cause a minor memory leak. Hopefully not too much.
-//	  if(task)
-//		  delete task;
+    //ideally task should be deleted for max ghost cell collection phase, but encountered double free error. So
+    //commented this part now. Will cause a minor memory leak. Hopefully not too much.
+    if(task)
+      delete task;
     return;
   }
+#endif
 
   //DS 12102019: The commented code is useful to debug arches tasks by adding only few at a time into the graph
   //Its easy to avoid adding tasks here at a single place than going over all Arches files and commenting (and uncommenting)
@@ -922,7 +924,7 @@ SchedulerCommon::addTask(       Task        * task
 //  printf("\n");
 //
 //  if(gtask_num > 47 && gtask_num < 59)
-//	  return;
+//    return;
 
 
 
