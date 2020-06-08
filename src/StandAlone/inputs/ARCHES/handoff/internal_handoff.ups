@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<Uintah_specification>
+  <Meta>
+   </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>         10.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.00001     </delt_min>
+    <delt_max>        0.01        </delt_max>
+    <max_Timesteps>   50          </max_Timesteps>
+    <timestep_multiplier>0.35     </timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>internal_handoff.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="mixture_fraction"/>
+    <save label="density"/>
+    <save label="viscosityCTS"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.01"/>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [3,3,3]   </upper>
+        <resolution>  [21,21,21]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+        <patches>     [1,1,1]   </patches>
+      </Box>
+    </Level>
+    <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
+      <!-- Secondary, Co-Flow Inlet -->
+      <InteriorFace rectangle="z-" lower="1 1 1" upper="2 2 1">
+        <BCType label="mixFracInject" var="Custom">
+          <value>1.</value>
+        </BCType>
+        <BCType label="xMomInject" var="Dirichlet">
+          <value>1.</value>
+        </BCType>
+      </InteriorFace>
+      <Face side="x-">
+        <!-- Momentum BCs -->
+        <BCType label="bottom_wall" var="WallBC">
+          <value>0.01</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <!-- Pressure BC's -->
+      <Face side="y-">
+        <!-- Momentum BCs -->
+        <BCType label="y- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <!-- Momentum BCs -->
+        <BCType label="y+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <!-- Momentum BCs -->
+        <BCType label="z- pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <!-- Momentum BCs -->
+        <BCType label="z+ pressure" var="PressureBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <!-- Outlet -->
+      <Face side="x+">
+        <!-- Momentum BCs -->
+        <BCType label="outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
+        <!-- Table BCs -->
+        <BCType label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>         [0,0,-9.8]    </gravity>
+    <reference_point>       [-1,-1,-1]    </reference_point>
+    <viscosity>       0.000020      </viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <PropertyModelsV2>
+        <model label="test" type="constant_property">
+          <grid type="CC"/>
+          <value>1</value>
+        </model>
+      </PropertyModelsV2>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
+      <Turbulence model="compdynamicprocedure"/>
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+          <src label="mixFracInject"/>
+        </Eqn>
+        <Sources>
+          <src label="mixFracInject" type="cc_inject_src"> 
+            <inputfile>inputs/Arches/handoff/input/handoff_f.dat</inputfile>
+          </src>
+          <src label="zMomInject" type="fz_inject_src"> 
+          </src>
+        </Sources>
+      </TransportEqns>
+      <Properties>
+        <table label="a_user_generated_label" type="coldflow">
+          <reference_density value="1.18434"/>
+          <stream_1 density="1.18434" temperature="298"/>
+          <stream_0 density="0.133" temperature="298"/>
+          <mixture_fraction label="mixture_fraction"/>
+        </table>
+      </Properties>
+      <!--__________________________________-->
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <!--__________________________________-->
+      <ExplicitSolver>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <wall_closure type="constant_coefficient">
+            <wall_csmag>0.4</wall_csmag>
+          </wall_closure>
+          <convection_scheme>central</convection_scheme>
+          <src label="zMomInject"/>
+        </MomentumSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

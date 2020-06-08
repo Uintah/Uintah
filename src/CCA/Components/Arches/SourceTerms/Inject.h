@@ -148,12 +148,8 @@ private:
         throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
       }
 
-      std::cout << " \n \n \n HELLO \n \n \n" << std::endl;
       _storage = Inject::readInputFile( file_name );
 
-    } else {
-
-      throw ProblemSetupException( "Error: Inject type not recognized.", __FILE__, __LINE__);
 
     }
 
@@ -267,7 +263,6 @@ private:
                 auto ptr = _storage.find(IntVector(lookup_c));
                 if ( ptr != _storage.end() ){
                   double value = ptr->second;
-                  std::cout << value << std::endl;
                   src[IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2])] = value*area/vol;
                 }
 
