@@ -65,7 +65,7 @@ WARNING
   public:
     virtual ~GridVariableBase() {}
       
-    virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
+    virtual bool rewindow(const IntVector& low, const IntVector& high, const int force_reallocate=0) = 0;
     virtual void offset(const IntVector& offset) = 0;
 
     virtual GridVariableBase* cloneType() const = 0;

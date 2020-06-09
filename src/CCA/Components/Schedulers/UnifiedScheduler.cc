@@ -2689,6 +2689,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           const IntVector boundaryLayer = it->second.m_dep->m_var->getBoundaryLayer();
           Ghost::GhostType dgtype = it->second.m_dep->m_var->getMaxDeviceGhostType();
           int dghost = it->second.m_dep->m_var->getMaxDeviceGhost();
+          int scratchGhost = (it->second.m_staging) ? 0 : (dghost - numGhostCells); //number of sratch cells needed to reach max  device ghost cells
 
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
@@ -2897,7 +2898,7 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
 
                         //DS 12132019: GPU Resize fix. Do it only if its not staging. Use max ghost cells and corresponding low and high to allocate scratch space
                         GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(type_description->createInstance());
-                        dw->getGridVar(*gridVar, label, matlIndx, patch, dgtype, numGhostCells);
+                        dw->getGridVar(*gridVar, label, matlIndx, patch, dgtype, numGhostCells, scratchGhost);
                         host_ptr = gridVar->getBasePointer();
                         it->second.m_tempVarToReclaim = gridVar;  //This will be held onto so it persists, and then cleaned up after the device-to-host copy
                         if (it->second.m_staging == false) {
@@ -3777,7 +3778,7 @@ UnifiedScheduler::markHostComputesDataAsValid( DetailedTask * dtask )
           //DS: not using gpudw->compareAndSwapSetValidOnCPU here because entry will not be there in GPU dw.
         }
         dw->compareAndSwapSetValidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
-        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
       }
     }
   }
@@ -3816,7 +3817,7 @@ UnifiedScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
         }
         dw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
-        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
       }
     }
   }
@@ -3903,7 +3904,7 @@ UnifiedScheduler::markDeviceAsInvalidHostAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
         }
         dw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
-        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
       }
     }
   }
@@ -3949,7 +3950,7 @@ UnifiedScheduler::markHostAsInvalid( DetailedTask * dtask )
 
         gpudw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
         dw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
-        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
       }
     }
   }
@@ -3986,7 +3987,7 @@ UnifiedScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
         }
         m_dws[dwIndex]->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
-        m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+//        m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
       if (it->second.m_var) {
         //Release our reference to the variable data that getGridVar returned
@@ -5026,6 +5027,18 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
             cerrLock.unlock();
           }
         }
+      }
+      else{
+          if (g_d2h_dbg) {
+             std::ostringstream message;
+             message << dtask->getName() << "  " << varName << ": Skipping Device-to-Host Copy: D2H copy no" <<
+                     varName.c_str() << " patch: " <<  patchID << " matl: " <<  matlID << " level:" <<  levelID
+                     << " conditions: valid on CPU: " << dw->isValidOnCPU( varName.c_str(), patchID, matlID, levelID)
+                     << " allocated on GPU: " << gpudw->isAllocatedOnGPU( varName.c_str(), patchID, matlID, levelID)
+                     << " valid on GPU: " << gpudw->isValidOnGPU( varName.c_str(), patchID, matlID, levelID)
+                     ;
+             DOUT(true, message.str());
+           }
       }
     }
   }

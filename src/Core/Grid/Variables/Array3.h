@@ -202,7 +202,7 @@ public:
   }
 
   // return true iff no reallocation is needed
-  bool rewindow(const IntVector& lowIndex, const IntVector& highIndex);
+  bool rewindow(const IntVector& lowIndex, const IntVector& highIndex, const int force_reallocate=0);
 
   inline const Array3Window<T>* getWindow() const {
     return d_window;
@@ -217,10 +217,10 @@ public:
     // Kokkos Views don't reference count, but OnDemand Data Warehouse's GridVariables will clean themselves up
     // when it goes out of scope and the ref count hits zero.  Uintah's KokkosView3 API means that the GridVariables
     // are out of scope but the KokkosView3 remains.  So we have the KokkosView3 also manage Array3Data ref counting.
-	  if (!m_view.m_A3Data) {
+      if (!m_view.m_A3Data) {
       m_view.m_A3Data = d_window->getData();
       m_view.m_A3Data->addReference();
-	  }
+      }
     return m_view;
   }
 #endif
@@ -399,7 +399,7 @@ private:
 // return true iff no reallocation is needed
 template <class T>
 bool Array3<T>::rewindow(const IntVector& lowIndex,
-    const IntVector& highIndex) {
+    const IntVector& highIndex, const int force_reallocate/*=0*/) {
   if (!d_window) {
     resize(lowIndex, highIndex);
     return false; // reallocation needed
@@ -417,7 +417,7 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
   }
   Array3Window<T>* oldWindow = d_window;
   bool no_reallocation_needed = false;
-  if (inside) {
+  if (inside && force_reallocate==0) {
     // just rewindow
     d_window=
       scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
