@@ -205,19 +205,37 @@ TriGeometryPiece::insideNewest(const Point & p,
   int crossx=0;
   int crossy=0;
   int crossz=0;
+
+#if 0
+  int crossings = 0;
+  double min_distance = 1.e100;
+  Point pt_away(1.e10, 1.e10, 1.e10);
+
+  d_grid->countIntersections(p, pt_away, crossings, min_distance);
   
-  d_grid->countIntersectionsx(p,crossx);
-  d_grid->countIntersectionsy(p,crossy);
-  d_grid->countIntersectionsz(p,crossz);
-  
-  //  cout << "Point " << p << " has " << cross << " crossings " << endl;
-  if ((crossx % 2 == 1 && crossy % 2 ==1)||
-      (crossx % 2 == 1 && crossz % 2 ==1)||
-      (crossy % 2 == 1 && crossz % 2 ==1)){
+  if (crossings % 2 == 1){
+    cout << "crossings = " << crossings << endl;
     return true;
   } else {
     return false;
   }
+#endif
+
+
+#if 1
+//  d_grid->countIntersectionsx(p,crossx);
+//  d_grid->countIntersectionsy(p,crossy);
+  d_grid->countIntersectionsz(p,crossz);
+  //  cout << "Point " << p << " has " << cross << " crossings " << endl;
+//  if ((crossx % 2 == 1 && crossy % 2 ==1)||
+//      (crossx % 2 == 1 && crossz % 2 ==1)||
+//      (crossy % 2 == 1 && crossz % 2 ==1)){
+  if (crossz % 2 == 1){
+    return true;
+  } else {
+    return false;
+  }
+#endif
 }
 
 //______________________________________________________________________
