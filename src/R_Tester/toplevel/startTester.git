@@ -282,18 +282,18 @@ else
   # clone src tree
   
   cd "$BUILDROOT"
-  gitLog="$BUILDROOT"/git_clone.log
+  gitLog=git_clone_${$LOGNAME}.log
 
-  git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/git_clone.log 2>&1
+  git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/${gitLog} 2>&1
   rc=$?
  
-  mv /tmp/git_clone.log $gitLog
+  mv /tmp/${gitLog} ${BUILDROOT}/${gitLog}
   
-  echo "Cloning the latest version of Uintah at `date` to $BUILDROOT" |tee "$BUILDROOT"/log
-  echo -e "\n git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .\n">> $gitLog 2>&1
+  echo "Cloning the latest version of Uintah at `date` to $BUILDROOT" |tee ${BUILDROOT}/log
+  echo -e "\n git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .\n">> ${BUILDROOT}/${gitLog} 2>&1
  
   if [ $rc -ne 0 ]; then
-    echo -e "ERROR: There was a problem with git clone.\n  See $BUILDROOT/git_clone.log.   Now exiting...." |tee --append "$BUILDROOT"/log
+    echo -e "ERROR: There was a problem with git clone.\n  See ${BUILDROOT}/${gitLog}.   Now exiting...." |tee --append "$BUILDROOT"/log
     exit -1
   fi
 
