@@ -56,6 +56,8 @@ if [ "$MACHINE" == "uintah-build" ]; then
   HTMLLOG=${PUBLIC_HTML}/Uintah.html
   RT_URL=http://uintah-build.chpc.utah.edu/~$LOGNAME
 
+  export TEST_COMPONENTS="Examples ARCHES ICE MPM MPMICE"
+
   if [ "$LOGNAME" == "gpu_rt" ]; then
     names=(\
       "t.harman@utah.edu,"                 \
