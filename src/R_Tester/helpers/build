@@ -35,7 +35,7 @@ if [ "$OS" = "Linux" ]; then
     COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-     --without-petsc \\
+     --with-petsc=/usr/local/petsc-3.10.5 \\
      --enable-arches \\
      --enable-examples \\
      --enable-ice \\
@@ -46,7 +46,7 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --without-petsc\\
+      --with-petsc=/usr/local/petsc-3.10.5 \\
       --with-cuda=/usr \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
@@ -60,7 +60,7 @@ if [ "$OS" = "Linux" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
-      --without-petsc\\
+      --with-petsc=/usr/local/petsc-3.10.5 \\
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"
