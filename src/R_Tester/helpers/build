@@ -36,17 +36,21 @@ if [ "$OS" = "Linux" ]; then
      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
      --with-petsc=/usr/local/petsc-3.10.5 \\
+     --with-boost=/usr/local/boost-1.65.1 \\
      --enable-arches \\
      --enable-examples \\
      --enable-ice \\
      --enable-mpm \\
-     --enable-ray-scatter \\"
+     --enable-ray-scatter \\
+     --enable-wasatch \\
+     --enable-wasatch_3p \\"
 
     if [ "$LOGNAME" == "gpu_rt" ]; then
       COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
       --with-petsc=/usr/local/petsc-3.10.5 \\
+      --with-boost=/usr/local/boost-1.65.1 \\
       --with-cuda=/usr \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
@@ -61,6 +65,7 @@ if [ "$OS" = "Linux" ]; then
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
       --with-petsc=/usr/local/petsc-3.10.5 \\
+     --with-boost=/usr/local/boost-1.65.1 \\
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"
