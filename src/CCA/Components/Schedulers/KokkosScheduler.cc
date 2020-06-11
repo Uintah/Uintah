@@ -2991,7 +2991,7 @@ KokkosScheduler::markHostComputesDataAsValid( DetailedTask * dtask )
           //DS: not using gpudw->compareAndSwapSetValidOnCPU here because entry will not be there in GPU dw.
         }
         dw->compareAndSwapSetValidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
-//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
       }
     }
   }
@@ -3030,7 +3030,7 @@ KokkosScheduler::markDeviceComputesDataAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
         }
         dw->compareAndSwapSetInvalidOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
-//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(comp->m_var->getName().c_str(), patchID, matlID, levelID);
       }
     }
   }
@@ -3117,7 +3117,7 @@ KokkosScheduler::markDeviceAsInvalidHostAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
         }
         dw->compareAndSwapSetValidOnCPU(var_name, patchID, matlID, levelID);
-//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
       }
     }
   }
@@ -3163,7 +3163,7 @@ KokkosScheduler::markHostAsInvalid( DetailedTask * dtask )
 
         gpudw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
         dw->compareAndSwapSetInvalidOnCPU(var_name, patchID, matlID, levelID);
-//        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
+        dw->compareAndSwapSetInvalidWithGhostsOnCPU(var_name, patchID, matlID, levelID);
       }
     }
   }
@@ -3192,7 +3192,7 @@ KokkosScheduler::markHostRequiresAndModifiesDataAsValid( DetailedTask * dtask )
           gpudw->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
         }
         m_dws[dwIndex]->compareAndSwapSetValidOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
-//        m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        m_dws[dwIndex]->compareAndSwapSetInvalidWithGhostsOnCPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       }
       if (it->second.m_var) {
         //Release our reference to the variable data that getGridVar returned

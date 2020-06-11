@@ -86,8 +86,8 @@ WARNING
 
     virtual void copyPointer(Variable&);
 
-    virtual bool rewindow(const IntVector& low, const IntVector& high, const int force_reallocate=0)
-      { return Array3<T>::rewindow(low, high, force_reallocate); }
+    virtual bool rewindow(const IntVector& low, const IntVector& high)
+      { return Array3<T>::rewindow(low, high); }
 
     virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); }
 

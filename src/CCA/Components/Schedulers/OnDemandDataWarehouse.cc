@@ -1852,10 +1852,7 @@ OnDemandDataWarehouse::getModifiable(       GridVariableBase & var
                                     )
 {
  //checkModifyAccess(label, matlIndex, patch);
-  //DS 06092020: Pass scratch ghost cells as 0 (default value) and force_reallocate=0.
-  //Because the variable is supposed to be modified, it should not be reallocated, otherwise modifications will not
-  //be reflected in the original memory location.
-  getGridVar(var, label, matlIndex, patch, gtype, numGhostCells, 0, 0);
+  getGridVar(var, label, matlIndex, patch, gtype, numGhostCells);
 }
 
 //______________________________________________________________________
@@ -3079,10 +3076,6 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
 
 //______________________________________________________________________
 //
-//DS 06092020: Added scratchGhost parameter defaulted to 0.
-//CAUTION: Should be passed only from scheduler. Used to add scratch ghost cells around CPU variable to match dimensions of GPU
-//variable during H2D transfer.
-//Added a parameter force_reallocate. Pass 0 when the variable is to be modified AND ngc>0. Defaulted to 1 assuming readonly use of the variable
 void
 OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const VarLabel         * label
@@ -3090,8 +3083,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const Patch            * patch
                                  ,       Ghost::GhostType   gtype
                                  ,       int                numGhostCells
-                                 ,       int                scratchGhost/*=0*/
-                                 ,       int                allow_force_reallocate/*=1*/
                                  )
 {
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
@@ -3124,8 +3115,10 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
   }
   else {
     IntVector lowIndex, highIndex;
-    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells+scratchGhost, lowIndex, highIndex);
-
+    if(Parallel::usingDevice()) //using std::max(label->getMaxDeviceGhost(), numGhostCells) because numGhostCells can be larger than getMaxDeviceGhost() for rmcrt task graph
+      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, std::max(label->getMaxDeviceGhost(), numGhostCells), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
+    else
+      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells, lowIndex, highIndex); //existing CPU version
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18
@@ -3134,25 +3127,32 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     // The reason for this is that during initialization it doesn't know what ghost cells will be required of it for the next timestep.
     // (This will be an issue whenever the task graph changes to require more ghost cells from the old datawarehouse).
 
-    //DS 06092020: Yes this is needed now for GPU execution. force_reallocate if ngc>1. This forces reallocation and
-    //copying of the patch variable to new memory space. Thus creates an exclusive copy of the variable and avoids
-    //race conditions observed earlier. When the ngc < allocated size and the same memory is shared among multiple threads
-    //and causes race conditions. Hence forcing the reallocation.
-    //Side effect: If any compute or modifies is created in future with ngc>0, then allow_force_reallocate should be passed as 0
-    int force_reallocate = 0;
-    if(allow_force_reallocate)
-      force_reallocate = (Uintah::Parallel::usingDevice() && numGhostCells > 0)? 1 : 0;
+    bool copy_needed = false;
+    bool no_reallocation_needed = var.rewindow( lowIndex, highIndex );
 
-    bool no_reallocation_needed = var.rewindow( lowIndex, highIndex, force_reallocate );
+    //DS 0106202: no_reallocation_needed = false, then rewindow will allocate a new pointer and copy everything. Remember, it does not modify
+    //the pointer in m_var_DB. m_var_DB still points to old smaller pointer and same is returned if other thread requests the same variable.
+    //Thus the new pointer thus becomes after resizing becomes exclusive to the calling thread and there are no race conditions - This
+    //happens in most of the CPU tasks variable which are allocated without scratch ghost cells. In case of GPU tasks, data is allocated with
+    //scratch ghost cells. Thus rewindow returns no_reallocation_needed = false, as the requested ghost cells fall within the already allocated
+    //region. Thus all threads get the same pointer and that leads to data races. Not sure whether those data races are causing errors.
+    //Possible fix: Use same max ghost cell count if  numGhostCells>0 and also use status flags to ensure only 1 thread gathers ghosts. Rest
+    //of the threads can use those values as and when ready.
 
-    //DS 06092020: bulletproofing to warn when getGridVar is called for modifiable access (allow_force_reallocate==0)
-    //but numGhostCells are more than allocated memory and rewindow generates a copy of original data. Thus modifying
-    //this variable updates the copy and not the real data stored in dw. But not 100% confident about it hence added a
-    //warning instead of an error.
-    if(allow_force_reallocate==0 && no_reallocation_needed==false){
-      printf("Warning: rewindow created a copy of the variable %s for \"modifies\" call on patch %d. \
-              Please allocate the variable with  ghost cells %s %d\n",label->getName().c_str(), patch->getID(),  __FILE__, __LINE__);
+    if (Parallel::usingDevice() == false) {
+      copy_needed = true;
     }
+    else {
+      if (no_reallocation_needed == false) { //thread had exclusive copy of the variable
+        copy_needed = true;
+      }
+      else { //no need of reallocation. So threads might share the same memory. Use flags to determine copying right
+        if (compareAndSwapAwaitingGhostDataOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID())) {
+          copy_needed = true;
+        }
+      }
+    }
+
 
     if ( no_reallocation_needed == false && g_warnings_dbg ) {
       static bool warned = false;
@@ -3174,26 +3174,36 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
       }
     }
 
-    std::vector<ValidNeighbors> validNeighbors;
-    getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
-    for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+    if (copy_needed) {
+      std::vector<ValidNeighbors> validNeighbors;
+      getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
+      for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 
-      GridVariableBase* srcvar = var.cloneType();
-      GridVariableBase* tmp = iter->validNeighbor;
-      srcvar->copyPointer(*tmp);
-      if (iter->neighborPatch->isVirtual()) {
-        srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
-      }
-      try {
-        var.copyPatch(srcvar, iter->low, iter->high);
+        if (iter->validNeighbor && (no_reallocation_needed == false || iter->low < low || high < iter->high)) {
+          GridVariableBase* srcvar = var.cloneType();
+          GridVariableBase* tmp = iter->validNeighbor;
+          srcvar->copyPointer(*tmp);
+          if (iter->neighborPatch->isVirtual()) {
+            srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
+          }
+          try {
+            var.copyPatch(srcvar, iter->low, iter->high);
 
-      } catch (InternalError& e) {
-        std::cout << " Bad range: " << iter->low << " " << iter->high
-                  << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
-                  << std::endl;
-        throw e;
+          } catch (InternalError& e) {
+            std::cout << " Bad range: " << iter->low << " " << iter->high
+                      << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh()
+                      << std::endl;
+            throw e;
+          }
+          delete srcvar;
+        }
       }
-      delete srcvar;
+      if (no_reallocation_needed == true && Parallel::usingDevice()) {
+        setValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ); //ghosts are ready
+      }
+    }
+    else { //threads which does not get to copy the data should wait until copy is completed.
+      while (isValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID()) == false );
     }
   }
 }
@@ -4048,6 +4058,28 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
 //______________________________________________________________________
 //
 // DS: 01042020: fix for OnDemandDW race condition
+bool
+OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
+{
+  //assuming varLock will be already secured in allocate method
+
+//  bool allocated = false;
+//  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+//  atomicDataStatus* status = nullptr;
+//
+//  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
+//    if (it != atomicStatusInHostMemory.end()) {
+//        printf("ERROR:OnDemandDataWarehouse::compareAndSwapAllocate( ) already allocated. Possible race condition or duplicate allocation.\n");
+//        varLock->unlock();
+//        exit(-1);
+//    } else {
+//      //insert here
+//      atomicDataStatus newVarStatus = ALLOCATED;
+//      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
+//      varLock->unlock();
+//      return true;
+//    }
+}
 
 //______________________________________________________________________
 //
@@ -4164,8 +4196,8 @@ OnDemandDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patch
     // get the address
     atomicDataStatus oldVarStatus  = __sync_or_and_fetch(status, 0);
     if (((oldVarStatus & COPYING_IN) == COPYING_IN) ||
-       ((oldVarStatus & VALID) == VALID) /*||
-       ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)*/) {
+       ((oldVarStatus & VALID) == VALID) ||
+       ((oldVarStatus & VALID_WITH_GHOSTS) == VALID_WITH_GHOSTS)) {
         // Something else already took care of it.  So this task won't manage it.
         return false;
       } else {
@@ -4176,31 +4208,6 @@ OnDemandDataWarehouse::compareAndSwapCopyingIntoCPU(char const* label, int patch
     }
   }
   return true;
-}
-
-/*
-DS 06092020: commented few methods which are not used
-bool
-OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
-{
-  //assuming varLock will be already secured in allocate method
-
-  bool allocated = false;
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  atomicDataStatus* status = nullptr;
-
-  std::map<labelPatchMatlLevel, atomicDataStatus>::iterator it = atomicStatusInHostMemory.find(lpml);
-    if (it != atomicStatusInHostMemory.end()) {
-        printf("ERROR:OnDemandDataWarehouse::compareAndSwapAllocate( ) already allocated. Possible race condition or duplicate allocation.\n");
-        varLock->unlock();
-        exit(-1);
-    } else {
-      //insert here
-      atomicDataStatus newVarStatus = ALLOCATED;
-      atomicStatusInHostMemory.insert( std::map<labelPatchMatlLevel, atomicDataStatus>::value_type( lpml, newVarStatus ) );
-      varLock->unlock();
-      return true;
-    }
 }
 
 //______________________________________________________________________
@@ -4321,4 +4328,3 @@ OnDemandDataWarehouse::compareAndSwapSetInvalidWithGhostsOnCPU( char const* labe
   varLock->unlock();
   return true;
 }
-*/
