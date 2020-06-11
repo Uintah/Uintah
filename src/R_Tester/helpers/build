@@ -32,24 +32,26 @@ if [ "$OS" = "Linux" ]; then
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
 
-    COMMON="      --with-mpi=/usr/lib/mpich\\
-     --with-hypre=/usr/local/hypre-2.8.0b \\
+    COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
+     --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
+     --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
+     --with-petsc=/usr/local/petsc-3.10.5 \\
      --with-boost=/usr/local/boost-1.65.1 \\
-     --with-petsc=/usr/local/petsc-3.8.4 \\
      --enable-arches \\
      --enable-examples \\
      --enable-ice \\
      --enable-mpm \\
+     --enable-ray-scatter \\
      --enable-wasatch \\
-     --enable-wasatch_3p \\
-     --enable-ray-scatter \\"
+     --enable-wasatch_3p \\"
 
     if [ "$LOGNAME" == "gpu_rt" ]; then
-      COMMON="      --with-mpi=/usr/lib/mpich\\
-      --with-hypre=/usr/local/hypre-2.8.0b \\
+      COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
+      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
+      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
+      --with-petsc=/usr/local/petsc-3.10.5 \\
       --with-boost=/usr/local/boost-1.65.1 \\
-      --with-petsc=/usr/local/petsc-3.8.4 \
-      --with-cuda=/usr/local/cuda \\
+      --with-cuda=/usr \\
       --enable-gencode=52 \\
       --enable-ray-scatter \\
       --enable-examples \\
@@ -59,10 +61,11 @@ if [ "$OS" = "Linux" ]; then
     fi
 
     if [ "$LOGNAME" == "kokkos_rt" ]; then
-      COMMON="      --with-mpi=/usr/lib/mpich\\
-      --with-hypre=/usr/local/hypre-2.8.0b \\
-      --with-boost=/usr/local/boost-1.65.1 \\
-      --with-petsc=/usr/local/petsc-3.8.4 \\
+      COMMON="      --with-mpi-include=/usr/include/x86_64-linux-gnu/mpich\\
+      --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
+      --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
+      --with-petsc=/usr/local/petsc-3.10.5 \\
+     --with-boost=/usr/local/boost-1.65.1 \\
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"
