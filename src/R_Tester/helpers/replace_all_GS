@@ -80,7 +80,14 @@ endif
 
 #__________________________________
 # which part of the gold standards to replace
-set opts = (`dialog --stdout --separate-output --checklist "Select what you want to replace" 20 55 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "logs" "clear memory/performance logs" off, "all" "" on`)
+set opts = (`dialog --stdout --separate-output --checklist "Select what you want to replace" 0 0 0 \
+             "uda"         "Replace everthing in the uda directory" off, \
+             "checkpoints" "Replace only checkpoints directory" off,\
+             "memory"      "Replace the memory stats file" off,\
+             "performance" "Replace the performance stats file" off,\
+             "inputFile"   "Replace only the input file" off,\
+             "logs"        "Clear memory/performance logs" off, \
+             "all"         "Replace the uda, memory and performance stats" on`)
 
 if( $status != 0 ) then
   echo "cancel selected"
