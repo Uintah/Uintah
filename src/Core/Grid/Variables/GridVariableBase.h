@@ -66,6 +66,8 @@ WARNING
     virtual ~GridVariableBase() {}
       
     virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
+    virtual bool rewindowExact(const IntVector& lowIndex, const IntVector& highIndex) = 0;
+
     virtual void offset(const IntVector& offset) = 0;
 
     virtual GridVariableBase* cloneType() const = 0;

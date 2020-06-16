@@ -89,6 +89,9 @@ WARNING
     virtual bool rewindow(const IntVector& low, const IntVector& high)
       { return Array3<T>::rewindow(low, high); }
 
+    virtual bool rewindowExact(const IntVector& low, const IntVector& high)
+      { return Array3<T>::rewindowExact(low, high); }
+
     virtual void offset(const IntVector& offset)  { Array3<T>::offset(offset); }
 
     // offset the indexing into the array (useful when getting virtual

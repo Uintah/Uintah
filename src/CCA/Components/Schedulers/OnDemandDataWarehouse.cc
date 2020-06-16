@@ -1913,7 +1913,21 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase & var
 
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
-  Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
+
+  //DS 06162020 Allocate ghost layer needed by device variables (label->getMaxDeviceGhost()). Similar functionality to computeWithScratchGhost.
+  //This avoids reallocation during rewindow and ensures that getGridVariable returns original window pointer for modification.
+  //If rewindow reallocates the variable, it  does not update the original variable in m_var_DB, but creates a copy. As a results modifications
+  //occur in copy and not in the original. The simplest option is to allocate max ghosts in advance for every variable  so that rewindow never reallocates.
+  //getMaxDeviceGhost returns 0 for cpu only execution. So no difference to CPU only version.
+  //TODO: getMaxDeviceGhost does not count RMCRT tasks graphs and might conflict. Need to fix later.
+  //TODO: check the impact on super patch.
+  //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+  if(numGhostCells < label->getMaxDeviceGhost())
+    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), label->getMaxDeviceGhostType(), label->getMaxDeviceGhost(), lowOffset, highOffset);
+  else
+    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype, numGhostCells, lowOffset, highOffset);
+
+
   patch->computeExtents(basis, label->getBoundaryLayer(), lowOffset, highOffset, lowIndex, highIndex);
 
   if (!s_combine_memory) {
@@ -3076,6 +3090,41 @@ void OnDemandDataWarehouse::getValidNeighbors( const VarLabel                   
 
 //______________________________________________________________________
 //
+/*
+DS 06162020 numGhostCells related (ngc) scenarios in getGridVar:
+With GPU:
+G1. ngc = 0: No ghost cells needed
+G2. ngc > 0 and <= label->getMaxDeviceGhost(): ghost cells for tasks in normal/regular task graph. The value passed should be <= max device ghost cells
+G3. ngc > label->getMaxDeviceGhost() and <= SHRT_MAX: ghost cells for any RMCRT task variables from RMCRT task graph
+Without GPU:
+G4. ngc = 0: No ghost cells needed
+G5. ngc > 0 and label->getMaxDeviceGhost() always returns 0 without gpu: ghost cells for tasks in normal/regular task graph.
+
+Rewindow scenarios:
+R1. no_reallocation_needed==false: Reallocation needed - each thread (or rather each call) will form a new copy, no race conditions. Copy will not be reused
+R2. no_reallocation_needed==true : Reallocation NOT needed. Existing variable will be reused and could be shared among threads. Possible race condition.
+
+Status flag update rules:
+Status flag should be updated if and only if BOTH of the following conditions are satisfied:
+S1. only for R2 (because R2 is shared and can be resued, but R1 is not shared and can not be reused.)
+S2. final ngc>0 and the shared window size is EXACTLY same as patch + final ngc (i.e. low and high indices computed by computeVariableExtents)
+    e.g. if final ngc = 2 and window size is 4, then there is a possibility that some task might request ngc=4 later (especially RMCRT), that's why
+    window of size 4 was allocated at the beginning. So do not set status to Valid for final ngc < 4 or it might conflict with task with ngc=4.
+    In the worst case, if the window is allocated which is greater than ALL ngc requests, ghost cells will be always gathered, but it will ensure correctness.
+
+
+Handling combinations of G and R scenarios using status flag if needed (actual implementation):
+Compute final ngc as:
+  if(ngc > 0){
+    final ngc = max(ngc, label->getMaxDeviceGhost())
+  }
+G* R1: Reallocation needed. Shared patch can not be reused so always copy values and never update status. (ideally G1 R1 and G4 R1 not possible)
+G1 R2: set final ngc = 0 and return without setting flag to valid because ghost cells are not gathered.
+G2 R2: set final ngc = label->getMaxDeviceGhost(). If status==valid, return existing var (ghost cells are valid), else gather ghost cells and set status to valid if S1 and S2 are met.
+G3 R2: set final ngc = ngc, gather ghost cells again and update status
+G4 R2: same as G1 R2
+G5 R2: set final ngc = ngc, gather ghost cells and return. Do not worry about status
+ */
 void
 OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const VarLabel         * label
@@ -3083,8 +3132,12 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
                                  , const Patch            * patch
                                  ,       Ghost::GhostType   gtype
                                  ,       int                numGhostCells
+                                 ,       int                exactWindow/*=0*/   //reallocate even if existing window is larger than requested. Exactly match dimensions
                                  )
 {
+  if(numGhostCells > 0 && numGhostCells < label->getMaxDeviceGhost())
+      numGhostCells = label->getMaxDeviceGhost();
+
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
@@ -3115,10 +3168,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
   }
   else {
     IntVector lowIndex, highIndex;
-    if(Parallel::usingDevice()) //using std::max(label->getMaxDeviceGhost(), numGhostCells) because numGhostCells can be larger than getMaxDeviceGhost() for rmcrt task graph
-      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, std::max(label->getMaxDeviceGhost(), numGhostCells), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
-    else
-      patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, numGhostCells, lowIndex, highIndex); //existing CPU version
+    patch->computeVariableExtents(basis, label->getBoundaryLayer(), gtype, std::max(label->getMaxDeviceGhost(), numGhostCells), lowIndex, highIndex); //DS 12132019: GPU Resize fix. Add scratchGhostCells to allocate extra memory
 
     //---------------------------------------------------------------------------------------------
     // NOTE: Though this works well now, not sure if we care about it.... ditch this? APH, 11/28/18
@@ -3127,8 +3177,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     // The reason for this is that during initialization it doesn't know what ghost cells will be required of it for the next timestep.
     // (This will be an issue whenever the task graph changes to require more ghost cells from the old datawarehouse).
 
-    bool copy_needed = false;
-    bool no_reallocation_needed = var.rewindow( lowIndex, highIndex );
+    bool no_reallocation_needed = false;
 
     //DS 0106202: no_reallocation_needed = false, then rewindow will allocate a new pointer and copy everything. Remember, it does not modify
     //the pointer in m_var_DB. m_var_DB still points to old smaller pointer and same is returned if other thread requests the same variable.
@@ -3139,20 +3188,19 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
     //Possible fix: Use same max ghost cell count if  numGhostCells>0 and also use status flags to ensure only 1 thread gathers ghosts. Rest
     //of the threads can use those values as and when ready.
 
-    if (Parallel::usingDevice() == false) {
-      copy_needed = true;
-    }
-    else {
-      if (no_reallocation_needed == false) { //thread had exclusive copy of the variable
-        copy_needed = true;
+    //DS 06162020 Added logic to rewindowExact. Ensures the allocated space has exactly same size as the requested. This is needed for D2H copy.
+    //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+    //TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
+    //variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
+    if(exactWindow==0)
+      no_reallocation_needed = var.rewindow( lowIndex, highIndex );
+    else{
+      no_reallocation_needed = var.rewindowExact( lowIndex, highIndex );
+      if(no_reallocation_needed==false){
+        printf("Error in rewindowing variable %s on patch %d\n", label->getName().c_str(), patch->getID() );
+        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "Error in rewindowing variable" , __FILE__, __LINE__) );
       }
-      else { //no need of reallocation. So threads might share the same memory. Use flags to determine copying right
-        if (compareAndSwapAwaitingGhostDataOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID())) {
-          copy_needed = true;
-        }
-      }
     }
-
 
     if ( no_reallocation_needed == false && g_warnings_dbg ) {
       static bool warned = false;
@@ -3174,12 +3222,31 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
       }
     }
 
-    if (copy_needed) {
+    if (numGhostCells == 0) { //Scenarios G1* and G4*
+      return; // no need to gather ghost cells. Do not update status. Return. Scenarios G1* and G4*
+    }
+    bool should_gather = false;
+
+
+    if (Parallel::usingDevice() == false) { //G5*
+      should_gather = true; //G5 R2: set final ngc = ngc, gather ghost cells and return. Do not worry about status
+    }
+    else {
+      if(no_reallocation_needed == true && numGhostCells == label->getMaxDeviceGhost()){ //G2 R2
+        if (compareAndSwapAwaitingGhostDataOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID())) {
+          should_gather = true;
+        }
+      }
+      else //G3 R2
+        should_gather = true;
+    }
+
+    if (should_gather) {
       std::vector<ValidNeighbors> validNeighbors;
       getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
       for(auto iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 
-        if (iter->validNeighbor && (no_reallocation_needed == false || iter->low < low || high < iter->high)) {
+        if (iter->validNeighbor) {
           GridVariableBase* srcvar = var.cloneType();
           GridVariableBase* tmp = iter->validNeighbor;
           srcvar->copyPointer(*tmp);
@@ -3198,7 +3265,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
           delete srcvar;
         }
       }
-      if (no_reallocation_needed == true && Parallel::usingDevice()) {
+      if (Parallel::usingDevice()) {
         setValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ); //ghosts are ready
       }
     }

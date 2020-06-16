@@ -203,6 +203,7 @@ public:
 
   // return true iff no reallocation is needed
   bool rewindow(const IntVector& lowIndex, const IntVector& highIndex);
+  bool rewindowExact(const IntVector& lowIndex, const IntVector& highIndex);
 
   inline const Array3Window<T>* getWindow() const {
     return d_window;
@@ -462,6 +463,61 @@ bool Array3<T>::rewindow(const IntVector& lowIndex,
 }
 
 // return true iff no reallocation is needed
+
+//DS 06162020 Added logic to rewindowExact. Ensures the allocated space has exactly same size as the requested. This is needed for D2H copy.
+//Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+//TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
+//variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
+template <class T>
+bool Array3<T>::rewindowExact(const IntVector& lowIndex, const IntVector& highIndex) {
+  if (!d_window) {
+    resize(lowIndex, highIndex);
+    return false; // reallocation needed
+  }
+  bool match = true;
+  IntVector relLowIndex = lowIndex - d_window->getOffset();
+  IntVector relHighIndex = highIndex - d_window->getOffset();
+  IntVector size = d_window->getData()->size();
+  for (int i = 0; i < 3; i++) {
+    ASSERT(relLowIndex[i] < relHighIndex[i]);
+    if ((relLowIndex[i] != 0) || (relHighIndex[i] != size[i])) {
+      match = false;
+      break;
+    }
+  }
+  Array3Window<T>* oldWindow = d_window;
+  bool no_reallocation_needed = false;
+  if (match) {
+    d_window=scinew Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(), lowIndex, highIndex);
+    no_reallocation_needed = true;
+  }
+  else {
+    // will have to re-allocate and copy
+    IntVector offset = oldWindow->getOffset();
+    IntVector oldHigh = oldWindow->getHighIndex();
+    printf("### Error. Allocated size does not exactly match with the requested size. allocated: offset %d %d %d high: %d %d %d requested: low %d %d %d high  %d %d %d\n",
+           offset[0], offset[1], offset[2], oldHigh[0], oldHigh[1], oldHigh[2],
+           lowIndex[0], lowIndex[1], lowIndex[2], highIndex[0], highIndex[1], highIndex[2]);
+  }
+  d_window->addReference();
+  if(oldWindow->removeReference())
+  {
+    delete oldWindow;
+    oldWindow=0;
+  }
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+  if (d_window) {
+    m_view = d_window->getKokkosView();
+  }
+#endif
+
+  // return true iff no reallocation is needed
+  return no_reallocation_needed;
+}
+
+
+
 template <>
 inline void Array3<double>::write(std::ostream& out, const IntVector& l, const IntVector& h, bool outputDoubleAsFloat)
 {

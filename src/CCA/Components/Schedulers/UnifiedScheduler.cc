@@ -4779,8 +4779,19 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                 if (uses_SHRT_MAX) {
                   gridVar->allocate(host_low, host_high);
                 } else {
-                //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
+                  //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+                  //DS 06162020 Fix for the crash. Using allocateAndPut deletes the existing variable in dw and allocates a new one. If some other
+                  //thread is accessing the same variable at the same time, then it leads to a crash. Hence allocate only if the variable does
+                  //not exist on the host. While reusing existing variable, call getGridVar and set exactWindow=1. exactWindow=1 ensures that
+                  //the allocated space has exactly same size as the requested. This is needed for D2H copy.
+                  //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+                  //TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
+                  //variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
+                  else //if the variable exists, then fetch it.
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), 0, 1); //do not pass ghost cells. We dont want to gather them, just need memory allocated
                 }
                 if (finalized) {
                   dw->refinalize();
@@ -4806,7 +4817,12 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
                   if (finalized) {
                     dw->unfinalize();
                   }
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+                  else
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0, 1);
+
                   if (finalized) {
                     dw->refinalize();
                   }

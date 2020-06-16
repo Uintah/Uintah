@@ -1118,6 +1118,7 @@ private:
                  , const Patch            * patch
                  ,       Ghost::GhostType   gtype
                  ,       int                numGhostCells
+                 ,       int                exactWindow=0 //reallocate even if existing window is larger than requested. Exactly match dimensions
                  );
 
   inline Task::WhichDW getWhichDW( RunningTaskInfo * info );
