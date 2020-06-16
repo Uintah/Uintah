@@ -28,6 +28,10 @@ if [ "$OS" = "Linux" ]; then
       --enable-assertion-level=0 \\
      '--enable-optimize=-O3 -mfpmath=sse' \\"
 
+  ENV="     CC=mpicc \\
+      CXX=mpic++ \\
+      F77=gfortran"
+
   #_________________
   #  machine specific variables
   if [ "$MACHINE" == "uintah-build" ]; then
@@ -65,15 +69,16 @@ if [ "$OS" = "Linux" ]; then
       --with-mpi-lib=/usr/lib/x86_64-linux-gnu\\
       --with-hypre=/usr/local/hypre-2.15.0/opt-base \\
       --with-petsc=/usr/local/petsc-3.10.5 \\
-     --with-boost=/usr/local/boost-1.65.1 \\
+      --with-boost=/usr/local/boost-1.65.1 \\
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"
+      
+      ENV="      CC='mpicc -cc=gcc-7' \\
+      CXX='mpicxx -cxx=g++-7' \\
+      F77='mpifort -fc=gfortran-7'"
     fi
 
-    ENV="     CC=mpicc \\
-     CXX=mpic++ \\
-     F77=gfortran"
   fi
 fi
 
