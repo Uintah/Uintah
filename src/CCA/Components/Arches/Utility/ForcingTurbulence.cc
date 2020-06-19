@@ -88,7 +88,6 @@ void ForcingTurbulence::initialize( const Patch* patch, ArchesTaskInfoManager* t
   double binSum = 0.0;
   // for( auto const& [key, val] : TKE_spectrum_nm1 ) binSum += val;
   for ( std::map<int, double>::iterator i = TKE_spectrum_nm1.begin(); i != TKE_spectrum_nm1.end(); i++) { binSum += i->second ; }
-  proc0cout << endl << " - Total System Turbulent Kinetic Energy @ Initialization : " << binSum << " [J]" << endl << endl;
 
 }
 
@@ -316,7 +315,6 @@ void ForcingTurbulence::eval_scale_TKE( const Patch* patch, ArchesTaskInfoManage
   double binSum = 0.0;
   // for( auto const& [key, val] : TKE_spectrum_scaled ) binSum += val;
   for ( std::map<int, double>::iterator i = TKE_spectrum_scaled.begin(); i != TKE_spectrum_scaled.end(); i++) { binSum += i->second ; }
-  proc0cout << endl << " - Total System Turbulent Kinetic Energy after scaling : " << binSum << " [J]" << endl << endl;
 
 }
 
