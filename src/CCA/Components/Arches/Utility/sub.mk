@@ -42,7 +42,8 @@ SRCS += \
           $(SRCDIR)/ShunnMMSP3.cc                     \
           $(SRCDIR)/TaylorGreen3D.cc                  \
           $(SRCDIR)/AlmgrenMMS.cc                     \
-          $(SRCDIR)/MassFlowRate.cc
+          $(SRCDIR)/MassFlowRate.cc                   \
+					$(SRCDIR)/ForcingTurbulence.cc
 
 ########################################################################
 #
