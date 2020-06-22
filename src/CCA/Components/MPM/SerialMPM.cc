@@ -3310,7 +3310,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= gvolume[c];
       }
 
-//     if(m!=numMPMMatls-1){
+     if(m!=flags->d_KEMaterial){
 
       // save boundary forces before apply symmetry boundary condition.
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
@@ -3351,7 +3351,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           }
         }
       } // faces
-//     }  // endif not piston material
+     }  // endif not piston material
 
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
@@ -6019,9 +6019,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     double totalContactArea    = 0.0;
     double totalContactAreaTri = 0.0;
     Vector totalForce(0.);
-//    double timefactor=1.0;
-    double timefactor=min(1.0, time/1.0);
-    proc0cout << "timefactor = " << timefactor << endl;
+    double timefactor=1.0;
+//    double timefactor=min(1.0, time/1.0);
+//    proc0cout << "timefactor = " << timefactor << endl;
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
