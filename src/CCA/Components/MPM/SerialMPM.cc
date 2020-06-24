@@ -6148,7 +6148,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             Vector u = Cross(b,c);
             Vector v = Cross(c,a);
             Vector w = Cross(a,b);
-            if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
+            if(Dot(u,v) >= -1.e20 && Dot(u,w) >= -1.e20){
               numInside++;
 //                triInContact[tmi][closest] = tmo;
               foundOne=true;
@@ -6275,6 +6275,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             Vector AP = triInPlane[0] - tx0[tmi][idc1];
             double overlapN = Dot(AP,triTriNormal[1]);
             if(overlapN < 0.0){ // inPlaneC is past the plane of the secondClosest triangle
+
               // Find the point on the plane nearest the test point
               Point inPlane = px0 - overlapN*triTriNormal[1];
               //Now, see if that point is inside the triangle or not
@@ -6420,6 +6421,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
         } //  Outer loop over triangles
        }  // if num particles in the inner pset is > 0
       } // inner loop over triangle materials
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch, adv_matl0, "Symmetric", 
+                              LSContForce[adv_matl0], "linear");
     } // outer loop over triangle materials
 #if 0
     if(totalContactArea > 1.e-22){
