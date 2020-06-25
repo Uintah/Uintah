@@ -15,6 +15,7 @@ if( ! -d $scriptsDir ) then
   exit (1)
 endif
 
+cd $scriptsDir
 
 # SVN
 #set svn_path   = https://gforge.sci.utah.edu/svn/uintah/trunk/src/R_Tester/toplevel/
