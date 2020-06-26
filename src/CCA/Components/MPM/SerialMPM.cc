@@ -6148,7 +6148,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             Vector u = Cross(b,c);
             Vector v = Cross(c,a);
             Vector w = Cross(a,b);
-            if(Dot(u,v) >= -1.e20 && Dot(u,w) >= -1.e20){
+//            if(Dot(u,v) >= -1.e20 && Dot(u,w) >= -1.e20){
+            if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
               numInside++;
 //                triInContact[tmi][closest] = tmo;
               foundOne=true;
