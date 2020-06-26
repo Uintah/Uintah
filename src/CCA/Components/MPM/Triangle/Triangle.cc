@@ -157,11 +157,21 @@ Triangle::createTriangles(TriangleMaterial* matl,
     }
   } // while lines in the pts file
 
-  vector<int>    useInPen(numpts,1);
+  vector<int>       useInPen(numpts,1);
+  vector<IntVector> useInPenVector(numtri,IntVector(99,99,99));
 
   // make triangles from subsequent points if their midpoint is on patch
   // Choose which points to use in penalty contact so that each point is
   // used just once.
+  for(unsigned int i = 0; i<numtri; i++){
+      useInPenVector[i] = IntVector(useInPen[i0[i]],
+                                    useInPen[i1[i]],
+                                    useInPen[i2[i]]);
+      useInPen[i0[i]]=0;
+      useInPen[i1[i]]=0;
+      useInPen[i2[i]]=0;
+  }
+
   for(unsigned int i = 0; i<numtri; i++){
     Point P0(px[i0[i]], py[i0[i]], pz[i0[i]]);
     Point P1(px[i1[i]], py[i1[i]], pz[i1[i]]);
@@ -182,12 +192,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
                                         ptArea[i1[i]], 
                                         ptArea[i2[i]]);
 
-      triangleUseInPenalty[pidx] = IntVector(useInPen[i0[i]],
-                                             useInPen[i1[i]],
-                                             useInPen[i2[i]]);
-      useInPen[i0[i]]=0;
-      useInPen[i1[i]]=0;
-      useInPen[i2[i]]=0;
+      triangleUseInPenalty[pidx] = useInPenVector[i];
 
       triangleSize[pidx]    = Identity;
       triangleDefGrad[pidx] = Identity;
