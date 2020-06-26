@@ -2,44 +2,42 @@
 #______________________________________________________________________
 
 # to differentiate among the build names & even directories
-COMPILE="yes"
+COMPILE="yes"                                       # yes/no for compiling uintah
 DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
 
-DO_DBG="1"
-DO_OPT="1"
+DO_DBG="1"                                          # compile and run debug tests
+DO_OPT="1"                                          # compile and run optimized tests
 LOCAL_OR_NIGHTLY_TEST="nightly"
 WHICH_TESTS="NIGHTLYTESTS"
-BUILDONLY="0"
-OS=`uname -s`
-PARALLELISM=0
+BUILDONLY="0"                                       # Compile Uintah, don't run RT tests
+OS=$(uname -s)                                      # operating sytem
+PARALLELISM=0                                       # number of cores to use
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
 AUTO_UPDATE_GIT_STAMP="yes"                         # Automatically update the git hash when a test passes
 
-SEND_MAIL_TO=""
-USE_DEFAULT_BUILD="yes"
-USE_PREVTREE="no"
-USE_TREE="new"
+SEND_MAIL_TO=""                                     # array of email names to send mail to
+USE_PREVTREE="no"                                   # yes/no use the previous tree
+USE_TREE="new"                                      # name of tree to use if not using the default
 VERBOSE="no"
-COMMON_GROUP=""
-CHECKPOINTS=""
-MPIRUN_PATH=""
-GIT_url="https://github.com/Uintah/Uintah.git"
-GIT_branch="master"
+COMMON_GROUP=""                                     # common group the developers belong to
+CHECKPOINTS=""                                      # path to the checkpoints directory
+MPIRUN_PATH=""                                      # non-system path to mpirun
+GIT_url="https://github.com/Uintah/Uintah.git"      # url for github
+GIT_branch="master"                                 # github branch name
 OUTPUT_HTML="yes"
 
-ID=`date +%m%d%y`
+ID=$(date +%m%d%y)
 
 #__________________________________
 # Machine specific variables
 
-MACHINE=`hostname`
+MACHINE=$(hostname)
 
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
   BUILD_DIR=/home/${LOGNAME}/"$OS"
   TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
-  TEMP_DIR=/home/${LOGNAME}/"$OS"
   SCRIPT_DIR=/home/${LOGNAME}/scripts
   CHECKPOINTS=/home/${LOGNAME}/CheckPoints
 
@@ -128,14 +126,12 @@ while [ "$#" -gt 0 ]; do
             shift
             USE_TREE="$1"
         fi
-        USE_DEFAULT_BUILD="no"
         ;;
     -build_dir)
         if [ "$#" -gt 1 ]; then
             shift
             BUILD_DIR="$1"
         fi
-        USE_DEFAULT_BUILD="no"
         ;;
     -test_data)
         if [ "$#" -gt 1 ]; then
@@ -221,12 +217,12 @@ export BUILD_DIR BUILDROOT TEST_DATA_DIR PARALLELISM MAKE_PARALLELISM SEND_MAIL_
 
 date
 
-if [ $USE_TREE != "new" ]; then
+if [ "${USE_TREE}" != "new" ]; then
   # use the Uintah specified on the command line
-  cd "$USE_TREE"
-  BUILDROOT=`pwd`
+  cd "$USE_TREE" || exit
+  BUILDROOT=$(pwd)
   cd ..
-  echo "Using tree at $BUILDROOT" > "$BUILDROOT"/log
+  echo "Using tree at $BUILDROOT" > "${BUILDROOT}"/log
 
   ID="$ID"-old
 
@@ -238,31 +234,31 @@ elif [ $USE_PREVTREE = "yes" ]; then
       exit -1
   fi
   
-  cd "${BUILD_DIR}/last_ran.lock"
-  BUILDROOT=`pwd`
+  cd "${BUILD_DIR}/last_ran.lock" || exit
+  BUILDROOT=$(pwd)
   cd ..
-  echo "Using previous tree at $BUILDROOT" > "$BUILDROOT"/log
+  echo "Using previous tree at $BUILDROOT" > "${BUILDROOT}"/log
 
   ID="$ID"-old
   
 else
   #check out the current version
-  cd "$BUILD_DIR"
+  cd "$BUILD_DIR" || exit
 
   BUILDROOT="${BUILD_DIR}/Uintah.${ID}"
-  if [ -d "$BUILDROOT" ]; then
+  if [ -d "${BUILDROOT}" ]; then
 
     # don\t just set the ID directly, we have two different possibilities for ID
-    NID=`date +_%H`
+    NID=$(date +_%H)
     ID="${ID}${NID}"
     BUILDROOT="${BUILDROOT}${NID}"
     
-    if [ -d "$BUILDROOT" ]; then
-      NID=`date +%M`
+    if [ -d "${BUILDROOT}" ]; then
+      NID=$(date +%M)
       ID="${ID}${NID}"
       BUILDROOT="${BUILDROOT}${NID}"
       
-      if [ -d "$BUILDROOT" ]; then
+      if [ -d "${BUILDROOT}" ]; then
         echo "Uintah.${ID} dir already exists"
         exit -1
       fi
@@ -271,52 +267,53 @@ else
 
   umask 002
 
-  mkdir "$BUILDROOT"
+  mkdir "${BUILDROOT}"
   
-  unlink ${BUILD_DIR}/last_ran.lock
-  ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
+  unlink "${BUILD_DIR}/last_ran.lock"
+  ln -s "${BUILDROOT}" "${BUILD_DIR}/last_ran.lock"
 
-  echo $PATH
+
 
   #__________________________________
   # clone src tree
   
-  cd "$BUILDROOT"
-  gitLog=git_clone_${$LOGNAME}.log
+  cd "${BUILDROOT}" || exit
+  gitLog="git_clone_${LOGNAME}.log"
 
-  git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/${gitLog} 2>&1
+  git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/"${gitLog}" 2>&1
   rc=$?
  
-  mv /tmp/${gitLog} ${BUILDROOT}/${gitLog}
+  mv /tmp/"${gitLog}" "${BUILDROOT}"/"${gitLog}"
   
-  echo "Cloning the latest version of Uintah at `date` to $BUILDROOT" |tee ${BUILDROOT}/log
-  echo -e "\n git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .\n">> ${BUILDROOT}/${gitLog} 2>&1
+  echo "Cloning the latest version of Uintah at $(date) to $BUILDROOT" |tee "${BUILDROOT}"/log
+  echo -e "\n git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .\n">> "${BUILDROOT}"/"${gitLog}" 2>&1
  
   if [ $rc -ne 0 ]; then
-    echo -e "ERROR: There was a problem with git clone.\n  See ${BUILDROOT}/${gitLog}.   Now exiting...." |tee --append "$BUILDROOT"/log
+    echo -e "ERROR: There was a problem with git clone.\n  See ${BUILDROOT}/${gitLog}.   Now exiting...." |tee --append "${BUILDROOT}"/log
     exit -1
   fi
 
-  cd "$BUILD_DIR"
+  cd "$BUILD_DIR" || exit
   date
 fi
 
 #__________________________________
 # create html web page
-rm -f $HTMLLOG
+rm -f "${HTMLLOG}"
 
-TITLE=`date`
+TITLE=$(date)
 
-echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG
-echo "`date +'%r %D'`" >> $HTMLLOG
-echo "Regression Tester results from `hostname`" >> $HTMLLOG
-echo "Architecture: ${OS}" >> $HTMLLOG
-echo "" >> $HTMLLOG
-echo "Using build: ${BUILDROOT}" >> $HTMLLOG
-echo "LOG: $HTMLLOG" >> $HTMLLOG
+echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> "${HTMLLOG}"
+date +'%r %D' >> "${HTMLLOG}"
+echo "Regression Tester results from $(hostname)" >> "${HTMLLOG}"
+echo "Architecture: ${OS}" >> "${HTMLLOG}"
+echo "" >> "${HTMLLOG}"
+echo "Using build: ${BUILDROOT}" >> "${HTMLLOG}"
+echo "LOG: ${HTMLLOG}" >> "${HTMLLOG}"
 
 
-PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
+PATH="${BUILDROOT}"/src/R_Tester/helpers:"$PATH"
+echo "${PATH}"
 export PATH DO_DBG DO_OPT HTMLLOG PUBLIC_HTML RT_URL OUTPUT_HTML VERBOSE
 
 if [ $VERBOSE = "yes" ]; then
@@ -326,8 +323,8 @@ fi
 runTests
 retval=$?
 
-chgrp -R $COMMON_GROUP $BUILDROOT > /dev/null 2>&1
-chmod -R g+w $BUILDROOT > /dev/null 2>&1
+chgrp -R $COMMON_GROUP "${BUILDROOT}" > /dev/null 2>&1
+chmod -R g+w "${BUILDROOT}" > /dev/null 2>&1
 
 
 if [ $VERBOSE = "yes" ]; then
