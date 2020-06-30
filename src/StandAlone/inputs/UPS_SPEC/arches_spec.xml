@@ -55,33 +55,37 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'variable_math,
                                                                           mass_flow_rate,
-                                                                          poisson'">
+                                                                          poisson,
+                                                                          forcing_turbulence'">
 
           <!-- mass_flow_rate -->
           <!-- The mass_flow_rate utility computes the mass flowrate of inlet and outlet boundary conditions.
                To activate it, create a mass_flow_rate utility, then add "type=Inlet" to any mass flow
-               inlet and "type=Outflow" for any outlet 
+               inlet and "type=Outflow" for any outlet
                for which you wish to have the flow rates. This will create reduction variables
                for saving:
-               <task label>_mdot_g_in : Global total gas inflow rate 
+               <task label>_mdot_g_in : Global total gas inflow rate
                <task label>_mdot_g_out : Global total gas outflow rate
-               <task label>_mdot_p_organics_in : Global total particle organic inflow rate (no ash or H2O) 
-               <task label>_mdot_p_organics_out : Global total particle organic outflow rate (no ash or H2O) 
+               <task label>_mdot_p_organics_in : Global total particle organic inflow rate (no ash or H2O)
+               <task label>_mdot_p_organics_out : Global total particle organic outflow rate (no ash or H2O)
                <task label>_mdot_g_in_* : Gas flow rate through inlet named * (wildcard)
                <task label>_mdot_g_out_* : Gas flow rate through outlet named * (wildcard)
                <task label>_mdot_p_organics_in_ : Particle organics flow rate through inlet named * (wildcard)
                <task label>_mdot_p_organics_out_ : Particle organics flow rate through outlet named * (wildcard)
                Where the <task label> is the label the user assigns to the task (label=<task label>).
-               Note that one may add a scalar to the spec which will compute flowrates of the scalar (as 
-               opposed to the total flow rate) 
+               Note that one may add a scalar to the spec which will compute flowrates of the scalar (as
+               opposed to the total flow rate)
                See inputs/ARCHES/Coal/1GW_MFR.ups for an example of usage.
                For inlets/outlets through intrusions, you will need to compute those separately.
                See inputs/ARCHES/intrusion_mass_balance.ups for an example of usage. This method introduces
                a source term adjacent to the intrusion inlet where SRC = constant * rho * u. The source term is
-               found by saving out the <variable>_RHS term as shown in the example. Sum up <variable>_RHS over 
-               the intrusion inlet to obtain total flow rate. --> 
+               found by saving out the <variable>_RHS term as shown in the example. Sum up <variable>_RHS over
+               the intrusion inlet to obtain total flow rate. -->
 
-          <scalar                       spec="OPTIONAL STRING" 
+          <!-- forcing_turbulence -->
+          <!-- forcing_turbulence utility scales the turbulent kinetic energy of the largest turbulent modes. -->
+
+          <scalar                       spec="OPTIONAL STRING"
                                         need_applies_to="type mass_flow_rate"/> <!-- Add a scalar to the mass flow rate calc. -->
 
           <!-- <grid type=...> represents the variable type. -->
@@ -1013,19 +1017,19 @@
                                                                                        label= unique name for this intrusion boundary -->
            <geom_object/>                                                         <!-- geometry object associated with this intrusion -->
 
-           <!-- Some models will allow you to adjust the area that is used in the model calculation from the 
-                stair stepped area provided by the mesh (e.g. wall heat transfer). Use the area_model to specify 
-                the modification to the area. The modified area is computed as: 
-                  A_mod = A_face * factor 
-                where the factor can be computed one of two ways. A_mod would then be used in the physical model 
-                See just below for the details of each option. 
+           <!-- Some models will allow you to adjust the area that is used in the model calculation from the
+                stair stepped area provided by the mesh (e.g. wall heat transfer). Use the area_model to specify
+                the modification to the area. The modified area is computed as:
+                  A_mod = A_face * factor
+                where the factor can be computed one of two ways. A_mod would then be used in the physical model
+                See just below for the details of each option.
                 Note that domain edge boundary conditions are set in the <Grid><BoundaryCondition> section
                 using the Dirichlet option. -->
            <area_model                  spec="OPTIONAL NO_DATA">
-            <!-- physical_area will compute the factor as:  
-                 factor = physical_area / wetted_stairstepped_geometry_area --> 
+            <!-- physical_area will compute the factor as:
+                 factor = physical_area / wetted_stairstepped_geometry_area -->
             <physical_area              spec="OPTIONAL DOUBLE 'positive'"/>
-            <!-- alpha_g is simply a constant: 
+            <!-- alpha_g is simply a constant:
                  factor = alpha_g -->
             <alpha_g                    spec="OPTIONAL DOUBLE 'positive'"/>
            </area_model>
@@ -2095,7 +2099,7 @@
             <!--                 Set "Dirichlet" in the InteriorFace var specficiation and set the value spec (in the InteriorFace spec) to the constant desired -->
             <!--                 Neumann isn't currently supported -->
             <!--                 Note that the value specified in any case is rho*u*phi (flux). -->
-            <!--                 The code takes this value and multiplies by an area to compute the integral on a "face". -->  
+            <!--                 The code takes this value and multiplies by an area to compute the integral on a "face". -->
             <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
 
             <!-- Radiation models -->
