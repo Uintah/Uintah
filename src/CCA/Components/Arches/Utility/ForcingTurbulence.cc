@@ -41,6 +41,35 @@ ForcingTurbulence::ForcingTurbulence( std::string task_name, int matl_index ) : 
 ForcingTurbulence::~ForcingTurbulence() {
 }
 
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskComputeBCsFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskInitializeFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskEvalFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskTimestepInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
+//--------------------------------------------------------------------------------------------------
+TaskAssignedExecutionSpace ForcingTurbulence::loadTaskRestartInitFunctionPointers()
+{
+  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+}
+
 // Problem Setup ---------------------------------------------------------------
 void ForcingTurbulence::problemSetup( ProblemSpecP& db ) {
 
