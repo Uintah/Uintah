@@ -26,11 +26,7 @@ if [ "$OS" = "Linux" ]; then
 
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
-     '--enable-optimize=-O3 -mfpmath=sse' \\"
-
-  ENV="     CC=mpicc \\
-      CXX=mpic++ \\
-      F77=gfortran"
+     '--enable-optimize=-O3 -fno-ipa-cp-clone -mfpmath=sse' \\"
 
   #_________________
   #  machine specific variables
@@ -73,12 +69,11 @@ if [ "$OS" = "Linux" ]; then
       --enable-examples \\
       --enable-arches \\
       --enable-ray-scatter \\"
-      
-      ENV="      CC='mpicc -cc=gcc-7' \\
-      CXX='mpicxx -cxx=g++-7' \\
-      F77='mpifort -fc=gfortran-7'"
     fi
 
+    ENV="     CC=mpicc \\
+     CXX=mpic++ \\
+     F77=gfortran"
   fi
 fi
 
