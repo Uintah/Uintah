@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches [Kokkos] - Decay of Isotropic Turbulence - nLES - 32x32x32</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>     0.67    </maxTime>
+    <initTime>    0.0     </initTime>
+    <delt_min>    1e-2    </delt_min>
+    <delt_max>    1e-2    </delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>kokkos_iso_nles_forced_32.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <!-- <save label="ucell_xFilterStress"/>
+    <save label="ucell_yFilterStress"/>
+    <save label="ucell_zFilterStress"/>
+    <save label="vcell_xFilterStress"/>
+    <save label="vcell_yFilterStress"/>
+    <save label="vcell_zFilterStress"/>
+    <save label="wcell_xFilterStress"/>
+    <save label="wcell_yFilterStress"/>
+    <save label="wcell_zFilterStress"/> -->
+    <save label="ucell_xSgsStress"/>
+    <save label="ucell_ySgsStress"/>
+    <save label="ucell_zSgsStress"/>
+    <save label="vcell_xSgsStress"/>
+    <save label="vcell_ySgsStress"/>
+    <save label="vcell_zSgsStress"/>
+    <save label="wcell_xSgsStress"/>
+    <save label="wcell_ySgsStress"/>
+    <save label="wcell_zSgsStress"/>
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="z-mom"/>
+    <save label="uVel"/>
+    <save label="vVel"/>
+    <save label="wVel"/>
+    <save label="uVel_cc"/>
+    <save label="vVel_cc"/>
+    <save label="wVel_cc"/>
+    <save label="gamma"/>
+    <save label="pressure"/>
+    <save label="b_press"/>
+    <!--checkpoint cycle="2" interval=".3"/-->
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.56548668,0.56548668,0.56548668]</upper>
+        <resolution>[32,32,32]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+    <BoundaryConditions>
+    </BoundaryConditions>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>1e-5</viscosity>
+  </PhysicalConstants>
+  <CFD>
+    <ARCHES>
+      <TimeIntegrator order="1">
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+      <VarID>
+        <var role="uvelocity" label="uVel"/>
+        <var role="vvelocity" label="vVel"/>
+        <var role="wvelocity" label="wVel"/>
+        <var role="total_viscosity" label="gamma"/>
+        <var role="density" label="density"/>
+      </VarID>
+      <PropertyModelsV2>
+        <!--model label="density" type="constant_property">
+          <grid type="CC"/>
+          <value>1.2474</value>
+        </model-->
+        <model label="gamma" type="constant_property">
+          <grid type="CC"/>
+          <value>1.7722e-5</value>
+        </model>
+      </PropertyModelsV2>
+      <StateProperties>
+        <model label="density_model" type="constant">
+          <const_property label="density" value="1.0"/>
+        </model>
+      </StateProperties>
+      <KMomentum>
+        <src_x label="FractalXSrc"/>
+        <src_y label="FractalYSrc"/>
+        <src_z label="FractalZSrc"/>
+        <PressureSolver>
+          <Parameters>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-12  </tolerance>
+            <maxiterations>    750     </maxiterations>
+            <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
+          </Parameters>
+        </PressureSolver>
+      </KMomentum>
+      <TurbulenceModels>
+       <model label="fractalSGS" type="multifractal">
+         <Cs>0.5</Cs>
+       </model>
+      </TurbulenceModels>
+      <Utilities>
+        <utility label="compute_forced_turbulence" type="forcing_turbulence">
+        </utility>
+      </Utilities>
+      <Initialization>
+        <task task_label="uVel-init" variable_label="uVel"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="0"/>
+          <variable type="FX"/>
+        </task>
+        <task task_label="vVel-init" variable_label="vVel"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="1"/>
+          <variable type="FY"/>
+        </task>
+        <task task_label="wVel-init" variable_label="wVel"  type="input_file">
+          <filename>inputs/ARCHES/periodicTurb/cbc32_uvw_arches-indexed.gz</filename>
+          <vector index="2"/>
+          <variable type="FZ"/>
+        </task>
+      </Initialization>
+      <BoundaryConditions>
+        <force_area_calc/>
+      </BoundaryConditions>
+      <KokkosSolver>
+      </KokkosSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>

@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/Utility/MassFlowRate.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Transport/PressureEqn.h>
+#include <CCA/Components/Arches/Utility/ForcingTurbulence.h>
 
 using namespace Uintah;
 
@@ -93,6 +94,12 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
         std::string press_name = "[PressureEqn]";
         tsk = scinew PressureEqn::Builder(press_name, 0, _materialManager);
         register_task( press_name, tsk, db_util);
+
+      } else if ( type == "forcing_turbulence" ){
+
+        std::string task_name = "forced_turbulence";
+        tsk = scinew ForcingTurbulence::Builder( task_name, 0 );
+        register_task( task_name , tsk, db_util );
 
       } else {
 

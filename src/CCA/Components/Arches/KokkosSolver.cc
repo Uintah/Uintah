@@ -571,6 +571,8 @@ KokkosSolver::SSPRKSolve_initialize( const LevelP & level,
   // source_term_kokkos_factory
   m_task_factory_map["source_term_factory"]->schedule_task_group( "all_tasks", TaskInterface::INITIALIZE, packed_info.global, level, sched, matls );
 
+  m_task_factory_map["utility_factory"]->schedule_task( "forced_turbulence", TaskInterface::INITIALIZE, level, sched, matls, 0, false, true );
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -789,6 +791,9 @@ KokkosSolver::SSPRKSolve( const LevelP & level,
 
     //Compute drhodt
     i_prop_fac->second->schedule_task( "drhodt", TaskInterface::TIMESTEP_EVAL,
+      level, sched, matls, time_substep, false, true );
+
+    i_util_fac->second->schedule_task( "forced_turbulence", TaskInterface::TIMESTEP_EVAL,
       level, sched, matls, time_substep, false, true );
 
     // ** PRESSURE PROJECTION **
