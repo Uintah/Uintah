@@ -61,7 +61,7 @@ void AddPressGradient::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
   uhat.copyData(xmom);
   vhat.copyData(ymom);
-  what.copyData(zmom); 
+  what.copyData(zmom);
 
   // because the hypre solve required a positive diagonal
   // so we -1 * ( Ax = b ) requiring that we change the sign

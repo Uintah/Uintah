@@ -27,6 +27,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/UnweightVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/ConsScalarDiffusion.h>
 #include <CCA/Components/Arches/PropertyModelsV2/GasKineticEnergy.h>
+#include <CCA/Components/Arches/PropertyModelsV2/TimeVaryingProperty.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -219,6 +220,30 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           _pre_update_property_tasks.push_back(name);
         } else if ( var_type == "FZ" ){
           tsk = scinew ConstantProperty<SFCZVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else {
+          throw InvalidValue("Error: Property grid type not recognized for model: "+name,__FILE__,__LINE__);
+        }
+        register_task( name, tsk, db_model );
+        _pre_update_property_tasks.push_back(name);
+
+      } else if ( type == "time_varying"){
+
+        std::string var_type = "NA";
+        db_model->findBlock("grid")->getAttribute("type",var_type);
+
+        TaskInterface::TaskBuilder* tsk;
+        if ( var_type == "CC" ){
+          tsk = scinew TimeVaryingProperty<CCVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FX" ){
+          tsk = scinew TimeVaryingProperty<SFCXVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FY" ){
+          tsk = scinew TimeVaryingProperty<SFCYVariable<double> >::Builder(name, 0);
+          _pre_update_property_tasks.push_back(name);
+        } else if ( var_type == "FZ" ){
+          tsk = scinew TimeVaryingProperty<SFCZVariable<double> >::Builder(name, 0);
           _pre_update_property_tasks.push_back(name);
         } else {
           throw InvalidValue("Error: Property grid type not recognized for model: "+name,__FILE__,__LINE__);

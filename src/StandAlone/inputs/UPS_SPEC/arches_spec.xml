@@ -173,7 +173,8 @@
                                                                           spectralProperties,
                                                                           constant_scalar_diffusion_coef,
                                                                           gas_kinetic_energy,
-                                                                          wall_thermal_resistance'">
+                                                                          wall_thermal_resistance, 
+                                                                          time_varying'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <scattering_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties "/> <!-- multiplicative modifier on particle scattering coefficients, is ignored when radiation scattering is turned off  -->
@@ -196,7 +197,17 @@
               <Qabs                       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  partRadProperties"/> <!-- fudge parameter for partcle absorption coefficient model "basic" default is 0.8 tested for SUFCO coal -->
               <radiateAtGasTemp           spec="OPTIONAL BOOLEAN" need_applies_to="type partRadProperties"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation -->
 
-
+              <!-- Time Varing Test Function -->
+              <function                   spec="REQUIRED STRING 'sine, linear'" need_applies_to="type time_varying"/>
+              <!--- sine -->
+              <!-- y = c + A*sin(2*pi/P*time) -->
+              <Amp                        spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <P                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <!-- linear -->
+              <!-- y = m*time + b -->
+              <c                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <m                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <b                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
 
 
           <calculator                   spec="REQUIRED NO_DATA"
@@ -235,7 +246,7 @@
 
           <grid                         spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'CC,FX,FY,FZ'"
-                                        need_applies_to="type constant_property"/>
+                                        need_applies_to="type constant_property, time_varying"/>
           <!-- Constant Property
                 Just create a variable with a constant value
                 Must specify a grid type (CC,FX,FY,FZ)
@@ -328,10 +339,8 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type variable_stats"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
           <!-- for CO / equilibrium model -->
-          <CO_defect_label              spec="REQUIRED STRING"
-                                        need_applies_to="type CO"/> <!-- Name of the CO defect -->
-          <CO_rate_label                spec="OPTIONAL STRING"
-                                        need_applies_to="type CO"/> <!-- Name of the arrenhius rate -->
+          <!-- defect label will be: model_label+"_defect"
+               rate label will be: model_label+"_rate" -->
           <A                            spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- pre exponential factor kmole/m3/s-->
           <Ea                           spec="OPTIONAL DOUBLE"
