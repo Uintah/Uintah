@@ -148,12 +148,14 @@ private:
     db->require("function", m_func);
 
     if ( m_func == "sine" ){
-      db->require("c", m_c);
+      // y = c + Amp * sin( 2*pi/P * x)
+      db->require("offset", m_c);
       db->require("P", m_P);
       db->require("Amp", m_A);
     } else if ( m_func == "linear" ){
+      // y = m*x + intercept
       db->require("m", m_m);
-      db->require("b", m_b);
+      db->require("intercept", m_b);
     }
 
   }

@@ -204,14 +204,14 @@
               <!-- Time Varing Test Function -->
               <function                   spec="REQUIRED STRING 'sine, linear'" need_applies_to="type time_varying"/>
               <!--- sine -->
-              <!-- y = c + A*sin(2*pi/P*time) -->
+              <!-- y = offset + A*sin(2*pi/P*time) -->
               <Amp                        spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
               <P                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <offset                     spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
               <!-- linear -->
-              <!-- y = m*time + b -->
-              <c                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <!-- y = m*time + intercept -->
               <m                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
-              <b                          spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
+              <intercept                  spec="OPTIONAL DOUBLE" need_applies_to="type time_varying"/>
 
 
           <calculator                   spec="REQUIRED NO_DATA"
