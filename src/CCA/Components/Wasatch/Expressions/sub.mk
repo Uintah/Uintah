@@ -54,6 +54,7 @@ CUDA_ENABLED_SRCS :=      \
      SimpleEmission       \
      SolnVarEst           \
      Strain               \
+     TargetValueSource    \
      TimeAdvance          \
      TestNestedExpression
 

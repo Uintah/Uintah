@@ -314,6 +314,16 @@ namespace WasatchCore{
          sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ) {
       srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
     }
+    
+    for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("TargetValueSource");
+        sourceTermParams != nullptr;
+        sourceTermParams=sourceTermParams->findNextBlock("TargetValueSource") ) {
+      
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+      
+      srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
+    }
+
   }
 
   //------------------------------------------------------------------
