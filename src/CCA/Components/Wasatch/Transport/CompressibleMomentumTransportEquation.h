@@ -480,7 +480,7 @@ namespace WasatchCore{
                                            const Expr::Tag mixMWTag,
                                            const Expr::Tag e0Tag, // total internal energy tag
                                            const Expr::Tag bodyForceTag,
-                                           const Expr::Tag srcTermTag,
+                                           const Expr::TagList& srcTermTags,
                                            GraphCategories& gc,
                                            Uintah::ProblemSpecP params,
                                            TurbulenceParameters turbParams );

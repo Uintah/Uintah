@@ -88,8 +88,8 @@ class MomRHSPart
   DECLARE_FIELDS( YFluxT, cFluxY_, strainY_ )
   DECLARE_FIELDS( ZFluxT, cFluxZ_, strainZ_ )
   DECLARE_FIELDS( SVolField, density_, visc_, divu_ )
-  DECLARE_FIELDS( FieldT, bodyForce_, srcTerm_, volfrac_ )
-  
+  DECLARE_FIELDS( FieldT, bodyForce_, volfrac_ )
+  DECLARE_VECTOR_OF_FIELDS( FieldT, srcTerms_ )
   const DivX* divXOp_;
   const DivY* divYOp_;
   const DivZ* divZOp_;
@@ -112,15 +112,15 @@ class MomRHSPart
               const Expr::Tag& dilataionTag,
               const Expr::Tag& densityTag,
               const Expr::Tag& bodyForceTag,
-              const Expr::Tag& srcTermTag,
+              const Expr::TagList& srcTermTags,
               const Expr::Tag& volFracTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, strainXt_, strainYt_, strainZt_, dilataiont_, densityt_, bodyForcet_, srcTermt_;
+    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, strainXt_, strainYt_, strainZt_, dilataiont_, densityt_, bodyForcet_;
     const Expr::Tag volfract_;
-    
+    Expr::TagList srcTermtags_;
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& convFluxX,
@@ -133,7 +133,7 @@ public:
              const Expr::Tag& dilataionTag,
              const Expr::Tag& densityTag,
              const Expr::Tag& bodyForceTag,
-             const Expr::Tag& srcTermTag,
+             const Expr::TagList& srcTermTags,
              const Expr::Tag& volFracTag );
 
     Expr::ExpressionBase* build() const;

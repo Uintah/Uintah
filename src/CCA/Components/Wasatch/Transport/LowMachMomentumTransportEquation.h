@@ -66,7 +66,7 @@ namespace WasatchCore{
      *  \param densTag the tag for the mixture mass density
      *  \param isConstDensity
      *  \param bodyForceTag tag for body force
-     *  \param srcTermTag tag for any source terms present
+     *  \param srcTermTags tag list for any source terms present
      *  \param gc
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams
@@ -78,7 +78,7 @@ namespace WasatchCore{
                                       const std::string momName,
                                       const Expr::Tag densTag,
                                       const Expr::Tag bodyForceTag,
-                                      const Expr::Tag srcTermTag,
+                                      const Expr::TagList& srcTermTags,
                                       GraphCategories& gc,
                                       Uintah::ProblemSpecP params,
                                       TurbulenceParameters turbulenceParams,
