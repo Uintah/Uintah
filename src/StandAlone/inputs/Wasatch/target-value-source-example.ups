@@ -16,17 +16,13 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f"/>
-      <LinearFunction slope="0.1" intercept="0.1">
-        <NameTag name="XSVOL"/>
-      </LinearFunction>
+      <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="phi-diffusivity"/>
-      <GaussianFunction amplitude="4e-3" deviation="2" mean="5" baseline="1e-3">
-        <NameTag name="XSVOL"/>
-      </GaussianFunction>
+      <NameTag name="sine-source"/>
+      <SineTime/>
     </BasicExpression>
 
 	<!-- Use a FanModel to define momentum source terms to mimic drone rotors 
@@ -36,7 +32,8 @@
 	     YOU MUST add those sources manually to the momentum equations.
 	     Also, this expression will automatically create geometric location for the 
 	     fan rotors based on the CommonGeometry, those are named: [FanName]_location_x etc... -->    
-    <TargetValueSource name="src1" targetfieldname="f" targetvalue="1.0">
+    <TargetValueSource name="src1" targetfieldname="f">
+    	<NameTag name="sine-source"/>
 		<geom_object>
     		<union label="a1">
 				 <box>
@@ -47,12 +44,12 @@
       	</geom_object>
 	</TargetValueSource>
 
-    <TargetValueSource name="src2" targetfieldname="f" targetvalue="0.0">
+    <TargetValueSource name="src2" targetfieldname="f" targetvalue="1.0">
 		<geom_object>
     		<union label="a2">
 				 <box>
-					<min>[ 0.5, 0.1, -1]</min>
-					<max>[ 0.53,0.3,  1]</max>
+					<min>[ 0.1, 0.1, -1]</min>
+					<max>[ 0.13,0.3,  1]</max>
 				 </box>
 			</union>
       	</geom_object>
@@ -62,39 +59,35 @@
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
       <SolutionVariable>f</SolutionVariable>
-      <DiffusiveFlux direction="X">
-        <DiffusionCoefficient>
-          <NameTag name="phi-diffusivity"/>
-        </DiffusionCoefficient>
-        <!-- ConstantDiffusivity>0.3</ConstantDiffusivity -->
-      </DiffusiveFlux>
-      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="XY" coefficient="0.2"/>
       <SourceTermExpression> <NameTag name="src1_source"/> </SourceTermExpression>
-<!-- 	  <SourceTermExpression> <NameTag name="src2_source"/> </SourceTermExpression>       -->
+	  <SourceTermExpression> <NameTag name="src2_source"/> </SourceTermExpression>      
     </TransportEquation>
   </Wasatch>
 
 
   <Time>
-    <maxTime>10</maxTime>
+    <maxTime>6.3</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps> 500 </max_Timesteps>    
+    <max_Timesteps> 10000 </max_Timesteps>    
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>target-value-source-example.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>100</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="1" interval="5"/>
     <save label="f"/>
-    <save label="f_rhs"/>    
+    <save label="f_rhs"/>   
+    <save label="sine-source"/> 
     <save label="src1_source"/>
     <save label="src1_location"/>        
-<!--     <save label="src2_source"/>         -->
+    <save label="src2_source"/>        
+    <save label="src2_location"/>            
   </DataArchiver> 
 
   <Grid>

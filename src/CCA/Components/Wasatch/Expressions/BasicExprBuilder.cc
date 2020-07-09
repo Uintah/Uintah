@@ -1279,12 +1279,17 @@ namespace WasatchCore{
       const Expr::Tag targetFieldTag(targetFieldName, Expr::STATE_DYNAMIC);
       const Expr::Tag targetFieldRHSTag(targetFieldName + "_rhs", Expr::STATE_NONE);
       const Expr::Tag targetFieldRHSOldTag(targetFieldName + "_rhs_old", Expr::STATE_NONE);
-
       
       // get the name of the target field (usually a scalar, always state_dynamic - use old value)
       double targetValue;
       if (exprParams->getAttribute("targetvalue",targetValue))
         exprParams->getAttribute("targetvalue",targetValue);
+
+      // if the target value is defined by another expression, get the nametag of that expression
+      Expr::Tag targetValueExpressionTag;
+      if (exprParams->findBlock("NameTag"))
+        targetValueExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
+
      
       // get the geometry of the fan
       std::multimap <Uintah::GeometryPieceP, double > geomObjectsMap;
@@ -1305,8 +1310,8 @@ namespace WasatchCore{
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, targetFieldRHSTag);
 
       // now create the xmomentum source term
-      gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename TargetValueSource<FieldT>::Builder(targetValueSourceTag, targetFieldTag, targetFieldRHSOldTag, volFracTag, Expr::Tag(), targetValue));
-            
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename TargetValueSource<FieldT>::Builder(targetValueSourceTag, targetFieldTag, targetFieldRHSOldTag, volFracTag, targetValueExpressionTag, targetValue));
+      
     }
     //________________________________________
     // parse and build Taylor-Green Vortex MMS
