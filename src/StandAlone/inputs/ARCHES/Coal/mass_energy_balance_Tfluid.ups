@@ -1844,8 +1844,6 @@
           <single_variable label="NH3_zz_src"/>
         </model>
         <model label="CO_model" type="CO">
-          <CO_defect_label>CO_model_d</CO_defect_label>
-          <CO_rate_label>CO_model_rate</CO_rate_label>
           <density_label>density</density_label>
           <temperature_label>temperature</temperature_label>
           <CO_label>CO</CO_label>

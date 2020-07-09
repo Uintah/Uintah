@@ -45,7 +45,7 @@ TargetValueSource( const Expr::Tag& phiTag,
   
   const WasatchCore::TagNames& tagNames = WasatchCore::TagNames::self();
   dt_ = this->template create_field_request<TimeField>(tagNames.dt);
-  if (targetPhiTag != Expr::Tag()) targetphi_ = this->template create_field_request<FieldT>(phiTag);
+  if (targetPhiTag != Expr::Tag()) targetphi_ = this->template create_field_request<FieldT>(targetPhiTag);
   phi_     = this->template create_field_request<FieldT>(phiTag);
   phiRHS_  = this->template create_field_request<FieldT>(phiRHSTag);
   volFrac_ = this->template create_field_request<FieldT>(volFracTag);
