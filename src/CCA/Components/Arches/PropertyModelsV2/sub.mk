@@ -33,9 +33,9 @@ SRCS += \
         $(SRCDIR)/ConstantProperty.cc       \
         $(SRCDIR)/DensityPredictor.cc       \
         $(SRCDIR)/ContinuityPredictor.cc    \
-        $(SRCDIR)/DensityStar.cc    \
-        $(SRCDIR)/DensityRK.cc    \
-        $(SRCDIR)/Drhodt.cc    \
+        $(SRCDIR)/DensityStar.cc            \
+        $(SRCDIR)/DensityRK.cc              \
+        $(SRCDIR)/Drhodt.cc                 \
         $(SRCDIR)/FaceVelocities.cc         \
         $(SRCDIR)/OneDWallHT.cc             \
         $(SRCDIR)/PropertyModelFactoryV2.cc \
@@ -47,9 +47,10 @@ SRCS += \
         $(SRCDIR)/gasRadProperties.cc       \
         $(SRCDIR)/partRadProperties.cc      \
         $(SRCDIR)/sootVolumeFrac.cc         \
-        $(SRCDIR)/ConsScalarDiffusion.cc         \
+        $(SRCDIR)/ConsScalarDiffusion.cc    \
         $(SRCDIR)/spectralProperties.cc     \
-        $(SRCDIR)/GasKineticEnergy.cc     \
+        $(SRCDIR)/GasKineticEnergy.cc       \
+        $(SRCDIR)/TimeVaryingProperty.cc    \
         $(SRCDIR)/sumRadiation.cc
 
 ########################################################################

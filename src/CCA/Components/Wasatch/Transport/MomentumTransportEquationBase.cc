@@ -621,7 +621,7 @@ namespace WasatchCore{
                                  const std::string momName,
                                  const Expr::Tag densTag,
                                  const Expr::Tag bodyForceTag,
-                                 const Expr::Tag srcTermTag,
+                                 const Expr::TagList& srcTermTags,
                                  GraphCategories& gc,
                                  Uintah::ProblemSpecP params,
                                  TurbulenceParameters turbulenceParams )
@@ -717,7 +717,7 @@ namespace WasatchCore{
                                                                                                                  viscTag,
                                                                                                                  strainTags[0], strainTags[1], strainTags[2],
                                                                                                                  dilTag,
-                                                                                                                 this->densityTag_, bodyForceTag, srcTermTag,
+                                                                                                                 this->densityTag_, bodyForceTag, srcTermTags,
                                                                                                                  this->thisVolFracTag_) );
     factory.cleave_from_parents ( momRHSPartID );
     

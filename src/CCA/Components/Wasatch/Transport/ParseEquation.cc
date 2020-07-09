@@ -662,14 +662,15 @@ namespace WasatchCore{
 
     // parse source expression
     std::string srcTermDir;
-    Expr::Tag xSrcTermTag, ySrcTermTag, zSrcTermTag;
+    Expr::TagList xSrcTermTags, ySrcTermTags, zSrcTermTags;
+
     for( Uintah::ProblemSpecP srcTermParams=momentumSpec->findBlock("SourceTerm");
         srcTermParams != nullptr;
         srcTermParams=srcTermParams->findNextBlock("SourceTerm") ){
       srcTermParams->getAttribute("direction", srcTermDir );
-      if (srcTermDir == "X") xSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
-      if (srcTermDir == "Y") ySrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
-      if (srcTermDir == "Z") zSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
+      if (srcTermDir == "X") xSrcTermTags.push_back( parse_nametag( srcTermParams->findBlock("NameTag") ) );
+      if (srcTermDir == "Y") ySrcTermTags.push_back( parse_nametag( srcTermParams->findBlock("NameTag") ) );
+      if (srcTermDir == "Z") zSrcTermTags.push_back( parse_nametag( srcTermParams->findBlock("NameTag") ) );
     }
 
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION  ];
@@ -715,7 +716,7 @@ namespace WasatchCore{
                                                   TagNames::self().mixMW,
                                                   e0Tag,
                                                   xBodyForceTag,
-                                                  xSrcTermTag,
+                                                  xSrcTermTags,
                                                   gc,
                                                   momentumSpec,
                                                   turbParams );
@@ -741,7 +742,7 @@ namespace WasatchCore{
                                                   TagNames::self().mixMW,
                                                   e0Tag,
                                                   yBodyForceTag,
-                                                  ySrcTermTag,
+                                                  ySrcTermTags,
                                                   gc,
                                                   momentumSpec,
                                                   turbParams );
@@ -766,7 +767,7 @@ namespace WasatchCore{
                                                   TagNames::self().mixMW,
                                                   e0Tag,
                                                   zBodyForceTag,
-                                                  zSrcTermTag,
+                                                  zSrcTermTags,
                                                   gc,
                                                   momentumSpec,
                                                   turbParams );
@@ -830,7 +831,7 @@ namespace WasatchCore{
                                                       xmomname,
                                                       lowMachDensityTag,
                                                       xBodyForceTag,
-                                                      xSrcTermTag,
+                                                      xSrcTermTags,
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,
@@ -845,7 +846,7 @@ namespace WasatchCore{
                                                       ymomname,
                                                       lowMachDensityTag,
                                                       yBodyForceTag,
-                                                      ySrcTermTag,
+                                                      ySrcTermTags,
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,
@@ -860,7 +861,7 @@ namespace WasatchCore{
                                                       zmomname,
                                                       lowMachDensityTag,
                                                       zBodyForceTag,
-                                                      zSrcTermTag,
+                                                      zSrcTermTags,
                                                       gc,
                                                       momentumSpec,
                                                       turbParams,

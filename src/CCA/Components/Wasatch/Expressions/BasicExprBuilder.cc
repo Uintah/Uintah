@@ -42,6 +42,7 @@
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/GeometryBased.h>
 #include <CCA/Components/Wasatch/Expressions/FanModel.h>
+#include <CCA/Components/Wasatch/Expressions/TargetValueSource.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
@@ -486,30 +487,6 @@ namespace WasatchCore{
       }
       builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
-    
-//    else if ( params->findBlock("FanModel") ) {
-//      Uintah::ProblemSpecP fanModelSpec = params->findBlock("FanModel");
-//      double targetVelocity = 0.0;
-//      fanModelSpec->getAttribute("targetVelocity", targetVelocity);
-//
-//      std::string momName;
-//      fanModelSpec->getAttribute("momentumName", momName);
-//      // need to use the old momentum RHS tag
-//      Expr::Tag momRHSOldTag(momName + "_rhs_old",Expr::STATE_NONE);
-//      const Expr::Tag momOldTag(momName, Expr::STATE_DYNAMIC);
-//      const Expr::Tag volFracTag = parse_nametag( fanModelSpec->findBlock("Geom")->findBlock("NameTag") );
-//
-//      const Expr::Tag densityTag = parse_nametag( fanModelSpec->findBlock("Density")->findBlock("NameTag") );
-//
-//      builder = scinew typename FanModel<FieldT>::Builder(tag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity);
-//
-//      // create an old variable
-//      OldVariable& oldVar = OldVariable::self();
-//      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, tag);
-//      Expr::Tag momRHSTag(momName + "_rhs", Expr::STATE_NONE);
-//      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
-//    }
-
     
     else if ( params->findBlock("Bubbles") ) {
       std::vector<Uintah::GeometryPieceP> geomObjects;
@@ -1284,6 +1261,58 @@ namespace WasatchCore{
       }
     }
 
+    //________________________________________
+    // parse and build TargetValueSource Models
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("TargetValueSource");
+        exprParams != nullptr;
+        exprParams = exprParams->findNextBlock("TargetValueSource") ){
+      
+      typedef SVolField FieldT;
+      // get the name of this target source
+      std::string targetValueSrcName;
+      exprParams->getAttribute("name",targetValueSrcName);
+      const Expr::Tag targetValueSourceTag(targetValueSrcName + "_source", Expr::STATE_NONE);
+
+      // get the name of the target field (usually a scalar, always state_dynamic - use old value)
+      std::string targetFieldName;
+      exprParams->getAttribute("targetfieldname",targetFieldName);
+      const Expr::Tag targetFieldTag(targetFieldName, Expr::STATE_DYNAMIC);
+      const Expr::Tag targetFieldRHSTag(targetFieldName + "_rhs", Expr::STATE_NONE);
+      const Expr::Tag targetFieldRHSOldTag(targetFieldName + "_rhs_old", Expr::STATE_NONE);
+      
+      // get the name of the target field (usually a scalar, always state_dynamic - use old value)
+      double targetValue;
+      if (exprParams->getAttribute("targetvalue",targetValue))
+        exprParams->getAttribute("targetvalue",targetValue);
+
+      // if the target value is defined by another expression, get the nametag of that expression
+      Expr::Tag targetValueExpressionTag;
+      if (exprParams->findBlock("NameTag"))
+        targetValueExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
+
+     
+      // get the geometry of the fan
+      std::multimap <Uintah::GeometryPieceP, double > geomObjectsMap;
+      double outsideValue = 0.0;
+      std::vector<Uintah::GeometryPieceP> geomObjects;
+      Uintah::GeometryPieceFactory::create(exprParams->findBlock("geom_object"),geomObjects);
+      double insideValue = 1.0;
+      geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue)); // set a value inside the geometry object
+      // now create an XVOL geometry expression using GeometryBased
+      const Expr::Tag volFracTag(targetValueSrcName + "_location",Expr::STATE_NONE);
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
+
+      
+      const TagNames tNames = TagNames::self();
+      OldVariable& oldVar = OldVariable::self();
+
+      // create an old variable
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, targetFieldRHSTag);
+
+      // now create the xmomentum source term
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename TargetValueSource<FieldT>::Builder(targetValueSourceTag, targetFieldTag, targetFieldRHSOldTag, volFracTag, targetValueExpressionTag, targetValue));
+      
+    }
     //________________________________________
     // parse and build Taylor-Green Vortex MMS
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("TaylorVortexMMS");

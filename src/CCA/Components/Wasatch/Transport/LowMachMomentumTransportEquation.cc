@@ -83,7 +83,7 @@ namespace WasatchCore{
                              const std::string momName,
                              const Expr::Tag densTag,
                              const Expr::Tag bodyForceTag,
-                             const Expr::Tag srcTermTag,
+                             const Expr::TagList& srcTermTags,
                              GraphCategories& gc,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
@@ -94,7 +94,7 @@ namespace WasatchCore{
                          momName,
                          densTag,
                          bodyForceTag,
-                         srcTermTag,
+                         srcTermTags,
                          gc,
                          params,
                          turbulenceParams)

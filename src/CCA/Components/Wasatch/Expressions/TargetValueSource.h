@@ -22,21 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef FanModel_Expr_h
-#define FanModel_Expr_h
+#ifndef TargetValueSource_Expr_h
+#define TargetValueSource_Expr_h
 
 #include <expression/Expression.h>
-
 #include <spatialops/structured/FVStaggered.h>
-
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
 
 /**
- *  \class 	FanModel
+ *  \class 	TargetValueSource
  *  \ingroup 	Expressions
  *
- *  \brief Defines a source term to added to a momentum equation in order to achieve a target velocity in a region of the domain.
+ *  \brief Defines a source term to be added to a scalar equation in order to achieve a target scalar value.
  *
  *  \tparam FieldT the type of field for the momentum RHS (nominally
  *          XVolField, YVolField, ZVolField).
@@ -59,54 +57,48 @@ Then, we solve for S
  \f]
  */
 template< typename FieldT >
-class FanModel
+class TargetValueSource
  : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::BasicOpTypes<FieldT>  OpTypes;
-  
-  // interpolant for density: svol to fieldT
-  typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;  
-  const DensityInterpT* densityInterpOp_;
+  const bool constValTarget_;
 
   
   typedef typename SpatialOps::SingleValueField TimeField;
   DECLARE_FIELD ( TimeField, dt_ )
-  DECLARE_FIELD ( SVolField, rho_ )
-  DECLARE_FIELDS( FieldT, mom_, momRHS_, fanSourceOld_, volFrac_ )
-  const double targetVel_;
-  FanModel( const Expr::Tag& rhoTag,
-            const Expr::Tag& momTag,
-            const Expr::Tag& momRHSTag,
-            const Expr::Tag& fanSrcOldTag,
+  DECLARE_FIELDS( FieldT, phi_, targetphi_, phiRHS_, volFrac_ )
+  const double targetphivalue_;
+  TargetValueSource( const Expr::Tag& phiTag,
+            const Expr::Tag& phiRHSTag,
             const Expr::Tag& volFracTag,
-            const double targetVelocity);
+            const Expr::Tag& targetPhiTag,
+            const double targetPhiValue);
   
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag rhot_;
-    const Expr::Tag momt_;
-    const Expr::Tag momrhst_;
+    const Expr::Tag phit_;
+    const Expr::Tag phirhst_;
     const Expr::Tag volfract_;
-    const Expr::Tag fansrcoldt_;
-    const double targetvelocity_;
+    const Expr::Tag targetphit_;
+    const double targetphivalue_;
     
   public:
     Builder( const Expr::Tag& result,
-             const Expr::Tag& rhoTag,
-             const Expr::Tag& momTag,
-             const Expr::Tag& momRHSTag,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& phiRHSTag,
              const Expr::Tag& volFracTag,
+            const Expr::Tag& targetPhiTag,
              const double targetVelocity);
 
     Expr::ExpressionBase* build() const;
   };
 
-  ~FanModel();
+  ~TargetValueSource();
 
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
-#endif // FanModel_Expr_h
+#endif // TargetValueSource_Expr_h

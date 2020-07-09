@@ -1,0 +1,105 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test scalar transport equations on each mesh (scalar, x,y,z staggered)</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="rho"/>
+    </Density>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="sine-source"/>
+      <SineTime/>
+    </BasicExpression>
+
+	<!-- Use a FanModel to define momentum source terms to mimic drone rotors 
+	     This expression will create up to three momentum source terms based on the dimensions
+	     of the flow. THe momentum source terms will be named based on the fan name such that
+	     [FanName]_source_x, [FanName]_source_y, and [FanName]_source_z
+	     YOU MUST add those sources manually to the momentum equations.
+	     Also, this expression will automatically create geometric location for the 
+	     fan rotors based on the CommonGeometry, those are named: [FanName]_location_x etc... -->    
+    <TargetValueSource name="src1" targetfieldname="f">
+    	<NameTag name="sine-source"/>
+		<geom_object>
+    		<union label="a1">
+				 <box>
+					<min>[0.4, 0.4, -1]</min>
+					<max>[0.6, 0.43,  1]</max>
+				 </box>
+			</union>
+      	</geom_object>
+	</TargetValueSource>
+
+    <TargetValueSource name="src2" targetfieldname="f" targetvalue="1.0">
+		<geom_object>
+    		<union label="a2">
+				 <box>
+					<min>[ 0.1, 0.1, -1]</min>
+					<max>[ 0.13,0.3,  1]</max>
+				 </box>
+			</union>
+      	</geom_object>
+	</TargetValueSource>
+
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>f</SolutionVariable>
+      <DiffusiveFlux direction="XY" coefficient="0.2"/>
+      <SourceTermExpression> <NameTag name="src1_source"/> </SourceTermExpression>
+	  <SourceTermExpression> <NameTag name="src2_source"/> </SourceTermExpression>      
+    </TransportEquation>
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>6.3</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 10000 </max_Timesteps>    
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>target-value-source-example.uda</filebase>
+    <outputTimestepInterval>100</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="1" interval="5"/>
+    <save label="f"/>
+    <save label="f_rhs"/>   
+    <save label="sine-source"/> 
+    <save label="src1_source"/>
+    <save label="src1_location"/>        
+    <save label="src2_source"/>        
+    <save label="src2_location"/>            
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[32,32,1]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

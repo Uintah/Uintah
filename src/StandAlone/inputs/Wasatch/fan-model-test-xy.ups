@@ -55,13 +55,25 @@
 	     YOU MUST add those sources manually to the momentum equations.
 	     Also, this expression will automatically create geometric location for the 
 	     fan rotors based on the CommonGeometry, those are named: [FanName]_location_x etc... -->    
-    <FanModel name="fan">
-	    <TargetVelocities>[1.0,-3.0,0.0]</TargetVelocities>
+    <FanModel name="fan1">
+	    <TargetVelocities>[1.0,-2.0,0.0]</TargetVelocities>
 		<geom_object>
-    		<union label="rotors">
+    		<union label="rotors1">
 				 <box>
 					<min>[-0.1, 0.4, -1]</min>
 					<max>[0.1,  0.43,  1]</max>
+				 </box>
+			</union>
+      	</geom_object>
+	</FanModel>
+
+    <FanModel name="fan2">
+	    <TargetVelocities>[2.0,1.0,0.0]</TargetVelocities>
+		<geom_object>
+    		<union label="rotors2">
+				 <box>
+					<min>[-1, -1, -1]</min>
+					<max>[-0.97,-0.8,  1]</max>
 				 </box>
 			</union>
       	</geom_object>
@@ -113,10 +125,16 @@
 
       </Pressure>
       <SourceTerm direction="X">
-      	<NameTag name="fan_source_x"/>
+      	<NameTag name="fan1_source_x"/>
       </SourceTerm>
       <SourceTerm direction="Y">
-      	<NameTag name="fan_source_y"/>
+      	<NameTag name="fan1_source_y"/>
+      </SourceTerm>
+      <SourceTerm direction="X">
+      	<NameTag name="fan2_source_x"/>
+      </SourceTerm>
+      <SourceTerm direction="Y">
+      	<NameTag name="fan2_source_y"/>
       </SourceTerm>
       
       <ConvectiveInterpMethod method="MINMOD"/>
@@ -149,8 +167,11 @@
     <save label="dilatation"/>
     <save label="vorticity_z"/>
     <save label="vel_magnitude"/>        
-    <save label="fan_location_x"/>
-    <save label="fan_location_y"/>    
+    <save label="fan1_location_x"/>
+    <save label="fan1_location_y"/>    
+    <save label="fan2_location_x"/>
+    <save label="fan2_location_y"/>    
+    
   </DataArchiver> 
 
 	<Grid>

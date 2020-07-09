@@ -451,8 +451,6 @@
           </calculator>
         </model>
         <model type="CO" label="CO_model">
-          <CO_defect_label>CO_d</CO_defect_label>
-          <CO_rate_label>CO_model_rate</CO_rate_label>
           <density_label>density</density_label>
           <temperature_label>temperature</temperature_label>
           <CO_label>CO</CO_label>

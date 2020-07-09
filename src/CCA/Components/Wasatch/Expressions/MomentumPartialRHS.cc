@@ -41,7 +41,7 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& dilataionTag,
             const Expr::Tag& densityTag,
             const Expr::Tag& bodyForceTag,
-            const Expr::Tag& srcTermTag,
+            const Expr::TagList& srcTermTags,
             const Expr::Tag& volFracTag )
   : Expr::Expression<FieldT>(),
     doXConv_( convFluxX != Expr::Tag()),
@@ -55,7 +55,7 @@ MomRHSPart( const Expr::Tag& convFluxX,
     is3dconvdiff_( doXConv_ && doYConv_ && doZConv_ && doXTau_ && doYTau_ && doZTau_ ),
 
     hasBodyF_(bodyForceTag != Expr::Tag()),
-    hasSrcTerm_(srcTermTag != Expr::Tag()),
+    hasSrcTerm_(srcTermTags.size()>0),
     hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
@@ -76,7 +76,7 @@ MomRHSPart( const Expr::Tag& convFluxX,
     density_   = this->template create_field_request<SVolField>(densityTag  );
     bodyForce_ = this->template create_field_request<FieldT   >(bodyForceTag);
   }
-  if( hasSrcTerm_   ) srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
+  if( hasSrcTerm_   ) this->template create_field_vector_request<FieldT>( srcTermTags, srcTerms_ );
   if( hasIntrusion_ ) volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
@@ -192,7 +192,14 @@ evaluate()
   
   // sum in other terms as required
   if( hasBodyF_     ) result <<= result + (*densityInterpOp_)(density_->field_ref()) * bodyForce_->field_ref();
-  if( hasSrcTerm_   ) result <<= result + srcTerm_->field_ref();
+//  if( hasSrcTerm_   ) result <<= result + srcTerm_->field_ref();
+  // accumulate source terms in.  This isn't quite as efficient
+  // because we don't have a great way to inline all of this yet.
+  typename std::vector<FieldT>::const_iterator isrc;
+  for( size_t i=0; i<srcTerms_.size(); ++i ) {
+    result <<= result + srcTerms_[i]->field_ref();
+  }
+
   if( hasIntrusion_ ) result <<= result * volfrac_->field_ref();
 }
 
@@ -211,21 +218,21 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& dilataionTag,
                   const Expr::Tag& densityTag,
                   const Expr::Tag& bodyForceTag,
-                  const Expr::Tag& srcTermTag,
+                  const Expr::TagList& srcTermTags,
                   const Expr::Tag& volFracTag )
   : ExpressionBuilder(result),
-    cfluxXt_   ( convFluxX    ),
-    cfluxYt_   ( convFluxY    ),
-    cfluxZt_   ( convFluxZ    ),
-    viscTag_   ( viscTag      ),
-    strainXt_  ( strainX      ),
-    strainYt_  ( strainY      ),
-    strainZt_  ( strainZ      ),
-    dilataiont_( dilataionTag ),
-    densityt_  ( densityTag   ),
-    bodyForcet_( bodyForceTag ),
-    srcTermt_  ( srcTermTag   ),
-    volfract_  ( volFracTag   )
+    cfluxXt_    ( convFluxX    ),
+    cfluxYt_    ( convFluxY    ),
+    cfluxZt_    ( convFluxZ    ),
+    viscTag_    ( viscTag      ),
+    strainXt_   ( strainX      ),
+    strainYt_   ( strainY      ),
+    strainZt_   ( strainZ      ),
+    dilataiont_ ( dilataionTag ),
+    densityt_   ( densityTag   ),
+    bodyForcet_ ( bodyForceTag ),
+    srcTermtags_( srcTermTags   ),
+    volfract_   ( volFracTag   )
 {}
 
 //--------------------------------------------------------------------
@@ -236,7 +243,7 @@ MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
                                  viscTag_, strainXt_, strainYt_, strainZt_,
-                                 dilataiont_, densityt_, bodyForcet_, srcTermt_,
+                                 dilataiont_, densityt_, bodyForcet_, srcTermtags_,
                                  volfract_ );
 }
 

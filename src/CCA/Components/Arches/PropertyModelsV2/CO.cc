@@ -73,12 +73,12 @@ CO::problemSetup( ProblemSpecP& db ){
   m_disc = scinew Discretization_new();
 
   db->getAttribute("label", m_CO_model_name);
+
   m_CO_diff_name=m_CO_model_name+"_diff";
   m_CO_conv_name=m_CO_model_name+"_conv";
+  m_defect_name = m_CO_model_name + "_defect"; 
+  m_rate_name = m_CO_model_name + "_rate"; 
 
-  db->require("CO_defect_label",m_defect_name);
-
-  db->getWithDefault("CO_rate_label"     , m_rate_name              , m_CO_model_name+"_rate");
   db->getWithDefault("density_label"     , m_rho_table_name         , "density");
   db->getWithDefault("temperature_label" , m_temperature_table_name , "temperature");
   db->getWithDefault("CO_label"          , m_CO_table_name          , "CO");

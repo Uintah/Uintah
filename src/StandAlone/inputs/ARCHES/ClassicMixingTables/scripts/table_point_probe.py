@@ -10,7 +10,7 @@ Created on Wed Sep  4 16:55:59 2013
 from mixing_table import ClassicTable as ct
 import numpy as np
 
-file_in = raw_input('Enter filename: ')
+file_in = input('Enter filename: ')
 myTable = ct(file_in)
 
 name = myTable.ind_names[0]
@@ -34,16 +34,16 @@ num_loops = 0
 while doit == True:    
 
     if ( num_dim == 1 ):
-        i1=raw_input('Enter '+ myTable.ind_names[0]+':')
+        i1=input('Enter '+ myTable.ind_names[0]+':')
         x0 = np.array([np.float(i1)])
     elif ( num_dim == 2 ):
-        i1=raw_input('Enter '+ myTable.ind_names[0]+':')
-        i2=raw_input('Enter '+ myTable.ind_names[1]+':')
+        i1=input('Enter '+ myTable.ind_names[0]+':')
+        i2=input('Enter '+ myTable.ind_names[1]+':')
         x0 = np.array([np.float(i1),np.float(i2)])
     else:
-        i1=raw_input('Enter '+ myTable.ind_names[0]+':')
-        i2=raw_input('Enter '+ myTable.ind_names[1]+':')
-        i3=raw_input('Enter '+ myTable.ind_names[2]+':')
+        i1=input('Enter '+ myTable.ind_names[0]+':')
+        i2=input('Enter '+ myTable.ind_names[1]+':')
+        i3=input('Enter '+ myTable.ind_names[2]+':')
         x0 = np.array([np.float(i1),np.float(i2),np.float(i3)])
         
     counter = 0
@@ -54,7 +54,7 @@ while doit == True:
       print(name, ' = ', state_space[i])
     
     print('\n')
-    goon = raw_input('Enter 0 to stop or any number to continue: ')
+    goon = input('Enter 0 to stop or any number to continue: ')
     print('\n')
     
     if ( np.float(goon) < 0.1 ):
