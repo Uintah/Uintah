@@ -27,7 +27,7 @@
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
-    <save label = "TotalMomentum"/>
+    <!-- <save label = "TotalMomentum"/>  The nightly RT doesn't compute this deterministically -->
 
     <save label = "g.mass"/>
     <save label = "g.velocity"/>
