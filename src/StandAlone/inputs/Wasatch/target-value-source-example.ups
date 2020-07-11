@@ -67,11 +67,11 @@
 
 
   <Time>
-    <maxTime>6.3</maxTime>
+    <maxTime>12.6</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps> 10000 </max_Timesteps>    
+    <max_Timesteps> 100000 </max_Timesteps>    
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
