@@ -194,7 +194,7 @@ void DQMOMNoInversion::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info
 
     for ( auto j = models.begin(); j != models.end(); j++ ){
 
-      auto model = tsk_info->get_field<constCCVariable<double>, double, MemSpace>(*j);
+      auto model = tsk_info->get_field<constCCVariable<double>, const double, MemSpace>(*j);
 
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
       Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA( int i, int j, int k){

@@ -316,7 +316,7 @@ private:
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     auto property = tsk_info->get_field<T, double, MemSpace>( m_task_name );
-    auto old_property = tsk_info->get_field<CT, double, MemSpace>( m_task_name );
+    auto old_property = tsk_info->get_field<CT, const double, MemSpace>( m_task_name );
 
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA( int i, int j, int k){

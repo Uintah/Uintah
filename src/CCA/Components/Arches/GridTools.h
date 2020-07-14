@@ -221,6 +221,7 @@ namespace Uintah{ namespace ArchesCore{
   //Helper specialization:
   template <>
   struct VariableHelper<Uintah::CCVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constCCVariable<double> ConstType;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
@@ -232,6 +233,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constCCVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constCCVariable<double> ConstType;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
@@ -243,6 +245,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCXVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCXVariable<double> ConstType;
     typedef Uintah::SFCXVariable<double> XFaceType;
     typedef Uintah::SFCXVariable<double> YFaceType;
@@ -254,6 +257,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCXVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCXVariable<double> ConstType;
     typedef Uintah::constSFCXVariable<double> XFaceType;
     typedef Uintah::constSFCXVariable<double> YFaceType;
@@ -265,6 +269,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCYVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCYVariable<double> ConstType;
     typedef Uintah::SFCYVariable<double> XFaceType;
     typedef Uintah::SFCYVariable<double> YFaceType;
@@ -276,6 +281,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCYVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCYVariable<double> ConstType;
     typedef Uintah::constSFCYVariable<double> XFaceType;
     typedef Uintah::constSFCYVariable<double> YFaceType;
@@ -287,6 +293,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::SFCZVariable<double> >{
+    typedef double PODType;
     typedef Uintah::constSFCZVariable<double> ConstType;
     typedef Uintah::SFCZVariable<double> XFaceType;
     typedef Uintah::SFCZVariable<double> YFaceType;
@@ -298,6 +305,7 @@ namespace Uintah{ namespace ArchesCore{
 
   template <>
   struct VariableHelper<Uintah::constSFCZVariable<double> >{
+    typedef const double PODType;
     typedef Uintah::constSFCZVariable<double> ConstType;
     typedef Uintah::constSFCZVariable<double> XFaceType;
     typedef Uintah::constSFCZVariable<double> YFaceType;

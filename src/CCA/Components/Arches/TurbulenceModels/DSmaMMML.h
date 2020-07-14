@@ -289,7 +289,7 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   const double filter   = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   const double filter2  = filter*filter;
   const double fhat     = 3.; //Mystery value for tilde(bar(delta))
-  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_volFraction_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
 
 
   int nG = 0;
@@ -309,18 +309,24 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   typedef typename ArchesCore::VariableHelper< TT >::YFaceType TY;
   typedef typename ArchesCore::VariableHelper< TT >::ZFaceType TZ;
 
-  auto Beta11 = tsk_info->get_field<TT, double, MemSpace >("Beta11");
-  auto Beta12 = tsk_info->get_field<TT, double, MemSpace >("Beta12");
-  auto Beta13 = tsk_info->get_field<TT, double, MemSpace >("Beta13");
-  auto Beta22 = tsk_info->get_field<TT, double, MemSpace >("Beta22");
-  auto Beta23 = tsk_info->get_field<TT, double, MemSpace >("Beta23");
-  auto Beta33 = tsk_info->get_field<TT, double, MemSpace >("Beta33");
+  typedef typename ArchesCore::VariableHelper< TT >::PODType TTPODType;
+  typedef typename ArchesCore::VariableHelper< TX >::PODType TXPODType;
+  typedef typename ArchesCore::VariableHelper< TY >::PODType TYPODType;
+  typedef typename ArchesCore::VariableHelper< TZ >::PODType TZPODType;
 
 
-  auto filterRho = tsk_info->get_field<TT, double, MemSpace >("Filterrho");
-  auto filterRhoU = tsk_info->get_field<TX, double, MemSpace >("Filterrhou");
-  auto filterRhoV = tsk_info->get_field<TY, double, MemSpace >("Filterrhov");
-  auto filterRhoW = tsk_info->get_field<TZ, double, MemSpace >("Filterrhow");
+  auto Beta11 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta11");
+  auto Beta12 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta12");
+  auto Beta13 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta13");
+  auto Beta22 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta22");
+  auto Beta23 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta23");
+  auto Beta33 = tsk_info->get_field<TT, TTPODType, MemSpace >("Beta33");
+
+
+  auto filterRho = tsk_info->get_field<TT, TTPODType, MemSpace >("Filterrho");
+  auto filterRhoU = tsk_info->get_field<TX, TXPODType, MemSpace >("Filterrhou");
+  auto filterRhoV = tsk_info->get_field<TY, TYPODType, MemSpace >("Filterrhov");
+  auto filterRhoW = tsk_info->get_field<TZ, TZPODType, MemSpace >("Filterrhow");
 
   // Filter Beta
   auto filterBeta11 = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterbeta11");
@@ -454,15 +460,15 @@ void DSmaMMML<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Ex
   auto alpha23 = tsk_info->get_field< CCVariable<double>, double, MemSpace >("alpha23");
   auto alpha33 = tsk_info->get_field< CCVariable<double>, double, MemSpace >("alpha33");
 
-  auto rhoUU = tsk_info->get_field<TT, double, MemSpace >("rhoUU" );
-  auto rhoVV = tsk_info->get_field<TT, double, MemSpace >("rhoVV" );
-  auto rhoWW = tsk_info->get_field<TT, double, MemSpace >("rhoWW" );
-  auto rhoUV = tsk_info->get_field<TT, double, MemSpace >("rhoUV" );
-  auto rhoUW = tsk_info->get_field<TT, double, MemSpace >("rhoUW" );
-  auto rhoVW = tsk_info->get_field<TT, double, MemSpace >("rhoVW" );
-  auto rhoU = tsk_info->get_field<TT, double, MemSpace >("rhoU");
-  auto rhoV = tsk_info->get_field<TT, double, MemSpace >("rhoV");
-  auto rhoW = tsk_info->get_field<TT, double, MemSpace >("rhoW");
+  auto rhoUU = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoUU" );
+  auto rhoVV = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoVV" );
+  auto rhoWW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoWW" );
+  auto rhoUV = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoUV" );
+  auto rhoUW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoUW" );
+  auto rhoVW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoVW" );
+  auto rhoU = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoU");
+  auto rhoV = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoV");
+  auto rhoW = tsk_info->get_field<TT, TTPODType, MemSpace >("rhoW");
 
   auto filter_rhoUU = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterrhoUU");
   auto filter_rhoVV = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterrhoVV");

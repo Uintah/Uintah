@@ -264,14 +264,14 @@ void DSFT::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionO
 template <typename ExecSpace, typename MemSpace>
 void DSFT::computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  auto uVel = tsk_info->get_field<constSFCXVariable<double>, double, MemSpace >(m_u_vel_name);
-  auto vVel = tsk_info->get_field<constSFCYVariable<double>, double, MemSpace >(m_v_vel_name);
-  auto wVel = tsk_info->get_field<constSFCZVariable<double>, double, MemSpace >(m_w_vel_name);
-  auto rho = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_density_name);
-  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_volFraction_name);
-  auto CCuVel = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_cc_u_vel_name);
-  auto CCvVel = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_cc_v_vel_name);
-  auto CCwVel = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_cc_w_vel_name);
+  auto uVel = tsk_info->get_field<constSFCXVariable<double>, const double, MemSpace >(m_u_vel_name);
+  auto vVel = tsk_info->get_field<constSFCYVariable<double>, const double, MemSpace >(m_v_vel_name);
+  auto wVel = tsk_info->get_field<constSFCZVariable<double>, const double, MemSpace >(m_w_vel_name);
+  auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_density_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
+  auto CCuVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_u_vel_name);
+  auto CCvVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_v_vel_name);
+  auto CCwVel = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_cc_w_vel_name);
 
   const Vector Dx = patch->dCell();
   Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );

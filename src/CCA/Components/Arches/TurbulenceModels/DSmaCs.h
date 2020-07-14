@@ -265,8 +265,8 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   auto mu_sgc = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_t_vis_name);
   auto mu_turb = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
   auto Cs = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_Cs_name);
-  auto rho = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_density_name);
-  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_volFraction_name);
+  auto rho = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_density_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, const double, MemSpace >(m_volFraction_name);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   // int nG = -1;
@@ -278,9 +278,10 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2 = filter*filter;
 
-  auto ML = tsk_info->get_field<TT, double, MemSpace >("ML");
-  auto MM = tsk_info->get_field<TT, double, MemSpace >("MM");
-  auto IsI = tsk_info->get_field<TT, double, MemSpace >(m_IsI_name);
+  typedef typename ArchesCore::VariableHelper< TT >::PODType TTPODType;
+  auto ML = tsk_info->get_field<TT, TTPODType, MemSpace >("ML");
+  auto MM = tsk_info->get_field<TT, TTPODType, MemSpace >("MM");
+  auto IsI = tsk_info->get_field<TT, TTPODType, MemSpace >(m_IsI_name);
 
   auto filterML = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterML");
   auto filterMM = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterMM");
