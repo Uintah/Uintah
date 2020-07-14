@@ -47,6 +47,7 @@ set trunkServers = ("Trunk:opt-full-try" "Trunk:dbg-full-try" "Trunk:opt-gpu-try
 set BUILDERS = ""
 set CREATE_PATCH = false
 set MY_PATCH     = false
+set BRANCH       = "master"
 
 # No args so all tests
 
@@ -92,6 +93,7 @@ while ( $#argv )
 
     case kokkos-opt:
       set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full-try"
+      set BRANCH = "kokkos_dev"
       shift
       breaksw
 
@@ -161,7 +163,7 @@ echo "  BUILDERS: ${BUILDERS}"
 buildbot --verbose try \
          --connect=pb \
          --master=uintah-build.chpc.utah.edu:8031 \
-         --branch=master \
+         --branch=${BRANCH} \
          --repository='https://github.com/Uintah/Uintah.git' \
          --username=buildbot_try \
          --passwd=try_buildbot \
