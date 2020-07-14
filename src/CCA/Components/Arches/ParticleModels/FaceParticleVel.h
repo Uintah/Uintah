@@ -138,7 +138,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &FaceParticleVel<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -149,7 +149,7 @@ private:
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                        , &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                        , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 

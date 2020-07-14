@@ -33,7 +33,7 @@ TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &AddPressGradient::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      , &AddPressGradient::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &AddPressGradient::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &AddPressGradient::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 

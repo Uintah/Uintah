@@ -1036,6 +1036,15 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<int_3*, Kokkos::CudaSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
 
+  void* stream = execObj.getStream();
+  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, list_size);
+
+  Kokkos::parallel_for (policy, KOKKOS_LAMBDA (const unsigned int& iblock) {
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
+  });
+
+  /*
   unsigned int cudaThreadsPerBlock = execObj.getCudaThreadsPerBlock();
   unsigned int cudaBlocksPerLoop   = execObj.getCudaBlocksPerLoop();
 
@@ -1063,6 +1072,8 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
       });
     });
+  */
+
 #if defined(NO_STREAM)
   cudaDeviceSynchronize();
 #endif

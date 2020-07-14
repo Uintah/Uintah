@@ -22,8 +22,8 @@ TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &CCVel::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &CCVel::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &CCVel::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &CCVel::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -32,8 +32,8 @@ TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &CCVel::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &CCVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &CCVel::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &CCVel::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -42,8 +42,8 @@ TaskAssignedExecutionSpace CCVel::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                      , &CCVel::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &CCVel::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &CCVel::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     , &CCVel::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &CCVel::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -248,7 +248,7 @@ void CCVel::compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, con
   // const double Fdy = 4*DX[1];
   // const double Fdz = 4*DX[2];
 
-  Uintah::parallel_for(range, [&](int i, int j, int k){
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
 
     // Cell-centered values for cell-centered vorticity - but has the negative
     //  behavior of decaying the vorticity in the higher wavenumbers.

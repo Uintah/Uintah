@@ -136,8 +136,8 @@ private:
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &ConstantProperty<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ConstantProperty<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ConstantProperty<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &ConstantProperty<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -315,10 +315,13 @@ private:
   ConstantProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
-    T& property = tsk_info->get_field<T>( m_task_name );
-    CT& old_property = tsk_info->get_field<CT>( m_task_name );
+    auto property = tsk_info->get_field<T, double, MemSpace>( m_task_name );
+    auto old_property = tsk_info->get_field<CT, double, MemSpace>( m_task_name );
 
-    property.copyData(old_property);
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA( int i, int j, int k){
+      property(i,j,k) = old_property(i,j,k);
+    });
 
   }
 }

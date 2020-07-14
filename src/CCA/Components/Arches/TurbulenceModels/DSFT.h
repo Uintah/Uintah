@@ -67,10 +67,10 @@ public:
 
     };
 
-private:
-
     template <typename ExecSpace, typename MemSpace>
     void computeModel( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
+private:
 
     std::string m_u_vel_name;
     std::string m_v_vel_name;

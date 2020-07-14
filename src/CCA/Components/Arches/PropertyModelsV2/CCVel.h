@@ -51,6 +51,12 @@ public:
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
 
+    template <typename ExecSpace, typename MemSpace>
+    void compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
+
+    template <typename ExecSpace, typename MemSpace>
+    void compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
+
     //Build instructions for this (CCVel) class.
     class Builder : public TaskInterface::TaskBuilder {
 
@@ -83,12 +89,6 @@ private:
     ArchesCore::INTERPOLANT m_int_scheme;
 
     int m_ghost_cells;
-
-    template <typename ExecSpace, typename MemSpace>
-    void compute_velocities(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
-
-    template <typename ExecSpace, typename MemSpace>
-    void compute_vorticity(ExecutionObject<ExecSpace, MemSpace>& execObj, const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   };
 }

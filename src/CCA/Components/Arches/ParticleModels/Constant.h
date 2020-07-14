@@ -86,15 +86,16 @@ namespace Uintah{
     template <typename ExecSpace, typename MemSpace>
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){}
 
+    /** @brief Set the actual value of the constant to the grid variable **/
+    template <typename ExecSpace, typename MemSpace>
+    void set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj );
+
   private:
 
     const std::string _base_var_name;
 
     const int _N;                      //<<< The number of "environments"
     std::vector<double> _const;        //<<< constant source value/environment
-
-    /** @brief Set the actual value of the constant to the grid variable **/
-    void set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
   };
 
@@ -133,8 +134,8 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                        , &Constant<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Constant<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Constant<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &Constant<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -151,8 +152,8 @@ namespace Uintah{
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
                                        , &Constant<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &Constant<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                       , &Constant<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -190,7 +191,7 @@ namespace Uintah{
   template <typename ExecSpace, typename MemSpace>
   void Constant<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    set_value( patch, tsk_info );
+    set_value( patch, tsk_info, execObj );
 
   }
 
@@ -212,22 +213,24 @@ namespace Uintah{
   template <typename ExecSpace, typename MemSpace> void
   Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-    set_value( patch, tsk_info );
+    set_value( patch, tsk_info, execObj );
 
   }
 
   template <typename T>
-  void Constant<T>::set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+  template <typename ExecSpace, typename MemSpace>
+  void Constant<T>::set_value( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
     for ( int ei = 0; ei < _N; ei++ ){
 
       std::string name = ArchesCore::append_env( _base_var_name, ei );
-      T& model_value = tsk_info->get_field<T>(name);
-      model_value.initialize(_const[ei]);
+      auto model_value = tsk_info->get_field<T, double, MemSpace>(name);
 
       name = ArchesCore::append_qn_env( _base_var_name, ei );
-      T& model_qn_value = tsk_info->get_field<T>(name);
-      model_qn_value.initialize(_const[ei]);
+      auto model_qn_value = tsk_info->get_field<T, double, MemSpace>(name);
+
+      const double init_val = _const[ei];
+      Uintah::parallel_initialize( execObj, init_val, model_value, model_qn_value );
 
     }
 

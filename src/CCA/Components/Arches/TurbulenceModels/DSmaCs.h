@@ -109,8 +109,8 @@ TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &DSmaCs<TT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSmaCs<TT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaCs<TT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DSmaCs<TT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &DSmaCs<TT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -120,8 +120,8 @@ TaskAssignedExecutionSpace DSmaCs<TT>::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &DSmaCs<TT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DSmaCs<TT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DSmaCs<TT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DSmaCs<TT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &DSmaCs<TT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -215,16 +215,13 @@ template<typename TT>
 template <typename ExecSpace, typename MemSpace>
 void DSmaCs<TT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
-  CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
-  CCVariable<double>& filterMM = tsk_info->get_field<CCVariable<double> >("filterMM");
-  CCVariable<double>& filterML = tsk_info->get_field<CCVariable<double> >("filterML");
-  mu_sgc.initialize(0.0);
-  mu_turb.initialize(0.0);
-  Cs.initialize(0.0);
-  filterMM.initialize(0.0);
-  filterML.initialize(0.0);
+  auto mu_sgc = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_t_vis_name);
+  auto mu_turb = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
+  auto Cs = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_Cs_name);
+  auto filterMM = tsk_info->get_field<CCVariable<double>, double, MemSpace >("filterMM");
+  auto filterML = tsk_info->get_field<CCVariable<double>, double, MemSpace >("filterML");
+
+  Uintah::parallel_initialize(execObj, 0.0, mu_sgc, mu_turb, Cs, filterMM, filterML);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -265,14 +262,11 @@ template<typename TT>
 template <typename ExecSpace, typename MemSpace>
 void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& mu_sgc = tsk_info->get_field<CCVariable<double> >(m_t_vis_name);
-  CCVariable<double>& mu_turb = tsk_info->get_field<CCVariable<double> >(m_turb_viscosity_name);
-  CCVariable<double>& Cs = tsk_info->get_field<CCVariable<double> >(m_Cs_name);
-  constCCVariable<double>& rho = tsk_info->get_field<constCCVariable<double> >(m_density_name);
-  constCCVariable<double>& vol_fraction = tsk_info->get_field<constCCVariable<double> >(m_volFraction_name);
-  Cs.initialize(0.0);
-  mu_sgc.initialize(0.0);
-  mu_turb.initialize(0.0);
+  auto mu_sgc = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_t_vis_name);
+  auto mu_turb = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_turb_viscosity_name);
+  auto Cs = tsk_info->get_field<CCVariable<double>, double, MemSpace >(m_Cs_name);
+  auto rho = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_density_name);
+  auto vol_fraction = tsk_info->get_field<constCCVariable<double>, double, MemSpace >(m_volFraction_name);
 
   Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex() );
   // int nG = -1;
@@ -284,23 +278,23 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
   double filter = pow(Dx.x()*Dx.y()*Dx.z(),1.0/3.0);
   double filter2 = filter*filter;
 
-  FieldTool< TT > c_field_tool(tsk_info);
+  auto ML = tsk_info->get_field<TT, double, MemSpace >("ML");
+  auto MM = tsk_info->get_field<TT, double, MemSpace >("MM");
+  auto IsI = tsk_info->get_field<TT, double, MemSpace >(m_IsI_name);
 
-  TT& ML = c_field_tool.get("ML");
-  TT& MM = c_field_tool.get("MM");
-  TT& IsI = c_field_tool.get(m_IsI_name);
+  auto filterML = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterML");
+  auto filterMM = tsk_info->get_field< CCVariable<double>, double, MemSpace >("filterMM");
 
-  CCVariable<double>& filterML = tsk_info->get_field< CCVariable<double> >("filterML");
-  CCVariable<double>& filterMM = tsk_info->get_field< CCVariable<double> >("filterMM");
-  filterML.initialize(0.0);
-  filterMM.initialize(0.0);
+  Uintah::parallel_initialize(execObj, 0.0, mu_sgc, mu_turb, Cs, filterMM, filterML);
 
-  m_Filter.applyFilter<TT>(MM,filterMM,range,vol_fraction);
-  m_Filter.applyFilter<TT>(ML,filterML,range,vol_fraction);
+  m_Filter.applyFilter(MM,filterMM,range,vol_fraction, execObj);
+  m_Filter.applyFilter(ML,filterML,range,vol_fraction, execObj);
 
   const double m_MM_lower_value = 1.0e-14;
   const double m_ML_lower_value = 1.0e-14;
-  Uintah::parallel_for( range, [&](int i, int j, int k){
+  const double molecular_visc = m_molecular_visc;
+
+  Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
     double value = 0;
     //if ( (*MM)(i,j,k) < m_MM_lower_value || (*ML)(i,j,k) < m_ML_lower_value) {
     if ( filterMM(i,j,k) < m_MM_lower_value || filterML(i,j,k) < m_ML_lower_value) {
@@ -317,8 +311,8 @@ void DSmaCs<TT>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, Exec
 
 
     Cs(i,j,k) = vol_fraction(i,j,k)*Min(value,10.0);
-    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*IsI(i,j,k)*rho(i,j,k) + m_molecular_visc)*vol_fraction(i,j,k); //
-    mu_turb(i,j,k) = mu_sgc(i,j,k) - m_molecular_visc; //
+    mu_sgc(i,j,k) = (Cs(i,j,k)*filter2*IsI(i,j,k)*rho(i,j,k) + molecular_visc)*vol_fraction(i,j,k); //
+    mu_turb(i,j,k) = mu_sgc(i,j,k) - molecular_visc; //
 
   });
   Uintah::ArchesCore::BCFilter bcfilter;

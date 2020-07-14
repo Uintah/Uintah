@@ -23,8 +23,8 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskInitializeFunctionPointers(
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &GasKineticEnergy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GasKineticEnergy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &GasKineticEnergy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -33,8 +33,8 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &GasKineticEnergy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &GasKineticEnergy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     , &GasKineticEnergy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -82,8 +82,8 @@ GasKineticEnergy::register_initialize( std::vector<ArchesFieldContainer::Variabl
 template <typename ExecSpace, typename MemSpace>
 void GasKineticEnergy::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
-  CCVariable<double>& ke = tsk_info->get_field<CCVariable<double> >( m_kinetic_energy );
-  ke.initialize(0.0);
+  auto ke = tsk_info->get_field<CCVariable<double>, double, MemSpace >( m_kinetic_energy );
+  parallel_initialize(execObj,0.0,ke);
 
 }
 
