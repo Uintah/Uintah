@@ -74,6 +74,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
     SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
     
     names=(\
+    "damodars@sci.utah.edu,"      \
     "jholmen@sci.utah.edu,"       \
     "jeremy.thornock@utah.edu,"   \
     "t.harman@utah.edu" )

@@ -75,6 +75,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
     GIT_branch="kokkos_dev"
     
     names=(\
+    "damodars@sci.utah.edu,"      \
     "jholmen@sci.utah.edu,"       \
     "jeremy.thornock@utah.edu,"   \
     "t.harman@utah.edu" )

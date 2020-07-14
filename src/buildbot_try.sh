@@ -136,7 +136,7 @@ if( $CREATE_PATCH == "true" ) then
 
   ls -l buildbot_patch.txt
 
-  set PATCH = "--diff=buildbot_patch.txt"
+  set PATCH = "--diff=buildbot_patch.txt --patchlevel=1"
 
 endif
 #__________________________________
@@ -148,25 +148,26 @@ if( $MY_PATCH == "true" ) then
     exit 1
   endif
 
- set PATCH = "--diff=$PATCHFILE -p 1"
+ set PATCH = "--diff=$PATCHFILE --patchlevel=1"
 endif
 
 #__________________________________
 
-echo "  PATCH $PATCH"
-echo "  BUILDERS: $BUILDERS"
+echo "  PATCH ${PATCH}"
+echo "  BUILDERS: ${BUILDERS}"
 
 #__________________________________
 
 buildbot --verbose try \
          --connect=pb \
          --master=uintah-build.chpc.utah.edu:8031 \
+         --branch=kokkos_dev \
+         --repository='https://github.com/Uintah/Uintah.git' \
          --username=buildbot_try \
          --passwd=try_buildbot \
          --vc=git \
-         --topdir=. \
          --who=`whoami` \
-         $PATCH $BUILDERS
+         ${PATCH} ${BUILDERS}
 
 echo $status
 
