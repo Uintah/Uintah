@@ -10,14 +10,13 @@ DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
 WHICH_TESTS="NIGHTLYTESTS"
 BUILDONLY="0"
-OS=`uname -s`
+OS=$(uname -s)
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
 AUTO_UPDATE_SVN_STAMP="yes"                         # Automatically update the svn revision number when a test passes
 
 SEND_MAIL_TO=""
-USE_DEFAULT_BUILD="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
@@ -27,20 +26,24 @@ MPIRUN_PATH=""
 SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/trunk/src"
 OUTPUT_HTML="yes"
 
-ID=`date +%m%d%y`
+ID=$(date +%m%d%y)
 
 #__________________________________
 # Machine specific variables
 
-MACHINE=`hostname`
+MACHINE=$(hostname)
 
 if [ "$MACHINE" == "uintah-build" ]; then
   COMMON_GROUP="users"
   BUILD_DIR=/home/${LOGNAME}/"$OS"
   TEST_DATA_DIR=/home/${LOGNAME}/"$OS"/TestData
-  TEMP_DIR=/home/${LOGNAME}/"$OS"
   SCRIPT_DIR=/home/${LOGNAME}/scripts
   CHECKPOINTS=/home/${LOGNAME}/CheckPoints
+
+  names=("uintah-developer@gforge.sci.utah.edu," \
+         "kgbrinkerhoff@gmail.com," )
+  IFS=""    # used to elimnate spaces between array elements
+  DEFAULT_MAIL_TO=${names[*]}
 
   # Where the webpage will be, and init webpage
   # Note you need the following directory structure:
@@ -67,12 +70,12 @@ if [ "$MACHINE" == "uintah-build" ]; then
   fi
 
   if [ "$LOGNAME" == "kokkos_rt" ]; then
-  
+
     export TEST_COMPONENTS="Examples ARCHES"
     WHICH_TESTS="NIGHTLYTESTS"
     DO_DBG="0"
     SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/kokkos_dev/src"
-    
+
     names=(\
     "damodars@sci.utah.edu,"      \
     "jholmen@sci.utah.edu,"       \
@@ -126,14 +129,12 @@ while [ "$#" -gt 0 ]; do
             shift
             USE_TREE="$1"
         fi
-        USE_DEFAULT_BUILD="no"
         ;;
     -build_dir)
         if [ "$#" -gt 1 ]; then
             shift
             BUILD_DIR="$1"
         fi
-        USE_DEFAULT_BUILD="no"
         ;;
     -test_data)
         if [ "$#" -gt 1 ]; then
@@ -183,7 +184,7 @@ if [ $show_help != "0" ]; then
             -j #:                   Use # number of processors maximum
             -use_tree "tree":       Use the given tree instead of checking one out
             -use_prevtree:          Use the previous (last_ran.lock) checkout and/or build
-            -build_only:            Test the compilation only.  Don\'t run the tests.
+            -build_only:            Test the compilation only.  Don\\'t run the tests.
             -dbg_only:              Only run debug tests.
             -opt_only:              Only run optimized tests.
             -no_compile:            Run the tests only; assume the build is already done.
@@ -200,10 +201,10 @@ PATH=:"$MPIRUN_PATH":"$PATH":"$SCRIPT_DIR":.
 export PATH BUILDONLY COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS AUTO_UPDATE_PERF_GS AUTO_UPDATE_SVN_STAMP
 
 # set number of processors to use when building
-if [ $PARALLELISM -eq 0 ]; then
+if [ ${PARALLELISM} -eq 0 ]; then
   MAKE_PARALLELISM=1
 else
-  MAKE_PARALLELISM="$PARALLELISM"
+  MAKE_PARALLELISM="${PARALLELISM}"
 fi
 
 # use /usr/var/tmp on machines that have it, with the assumption that it will
@@ -220,10 +221,10 @@ if [ $VERBOSE = "yes" ]; then
   date
 fi
 
-if [ $USE_TREE != "new" ]; then
+if [ ${USE_TREE} != "new" ]; then
   # use the Uintah specified on the command line
-  cd "$USE_TREE"
-  BUILDROOT=`pwd`
+  cd "$USE_TREE" || exit
+  BUILDROOT=$(pwd)
   cd ..
   echo "Using tree at " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
@@ -235,8 +236,8 @@ elif [ $USE_PREVTREE = "yes" ]; then
       echo "${BUILD_DIR}/last_ran.lock does not exist"
       exit -1
   fi
-  cd "${BUILD_DIR}/last_ran.lock"
-  BUILDROOT=`pwd`
+  cd "${BUILD_DIR}/last_ran.lock" || exit
+  BUILDROOT=$(pwd)
   cd ..
   echo "Using previous tree at " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
@@ -246,17 +247,17 @@ else
   if [ $VERBOSE = "yes" ]; then
     echo "cd $BUILD_DIR"
   fi
-  cd "$BUILD_DIR"
+  cd "$BUILD_DIR" || exit
 
   BUILDROOT="${BUILD_DIR}/Uintah.${ID}"
   if [ -d "$BUILDROOT" ]; then
 
     # don\t just set the ID directly, we have two different possibilities for ID
-    NID=`date +_%H`
+    NID=$(date +_%H)
     ID="${ID}${NID}"
     BUILDROOT="${BUILDROOT}${NID}"
     if [ -d "$BUILDROOT" ]; then
-      NID=`date +%M`
+      NID=$(date +%M)
       ID="${ID}${NID}"
       BUILDROOT="${BUILDROOT}${NID}"
       if [ -d "$BUILDROOT" ]; then
@@ -281,19 +282,19 @@ else
   ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
 
   if [ $VERBOSE = "yes" ]; then
-    echo "Checking out latest version of Uintah at `date`"
+    echo "Checking out latest version of Uintah at $(date)"
   fi
-  echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
+  echo "Checking out latest version of Uintah at $(date) to " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
 
   if [ $VERBOSE = "yes" ]; then
     echo "TIME STAMP: SVN CHECKOUT STARTING AT:"
     date
   fi
-  cd "$BUILDROOT"
+  cd "$BUILDROOT" || exit
 
 
-  echo $PATH
+  echo "$PATH"
 
   #__________________________________
   # Try checking out the src tree 10 times
@@ -315,7 +316,7 @@ else
       echo "Look at ${BUILDROOT}/svn_co.log for more information"
       sleep 60
     fi
-    counter=$(( $counter + 1 ))
+    counter=$(( counter + 1 ))
 
     if [ $counter -gt 10 ]; then
       exit -1
@@ -323,7 +324,7 @@ else
 
   done
 
-  cd "$BUILD_DIR"
+  cd "$BUILD_DIR" || exit
 
   if [ $VERBOSE = "yes" ]; then
       echo "TIME STAMP: SVN CHECKOUT DONE AT:"
@@ -335,10 +336,10 @@ fi
 #__________________________________
 # create html web page
 rm -f $HTMLLOG
-TITLE=`date`
+TITLE=$(date)
 echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG
-echo "`date +'%r %D'`" >> $HTMLLOG
-echo "Regression Tester results from `hostname`" >> $HTMLLOG
+date +'%r %D' >> $HTMLLOG
+echo "Regression Tester results from $(hostname)" >> $HTMLLOG
 echo "Architecture: ${OS}" >> $HTMLLOG
 echo "" >> $HTMLLOG
 echo "Using build: ${BUILDROOT}" >> $HTMLLOG
