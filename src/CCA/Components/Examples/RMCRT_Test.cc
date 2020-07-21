@@ -387,13 +387,16 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
   typedef std::vector<const VarLabel*> VarLabelVec;
 
-  VarLabelVec fineLevelVarLabels = { d_RMCRT->d_divQLabel,
-                                     d_RMCRT->d_boundFluxLabel,
-                                     d_RMCRT->d_radiationVolqLabel,
-                                     d_RMCRT->d_sigmaT4Label };
-                                                      
-  VarLabelVec coarseLevelVarLabels = { d_RMCRT->d_abskgLabel,
-                                       d_RMCRT->d_sigmaT4Label };
+  VarLabelVec fineLevelVarLabels, coarseLevelVarLabels;
+
+  fineLevelVarLabels.push_back(d_RMCRT->d_divQLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_boundFluxLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_radiationVolqLabel);
+  fineLevelVarLabels.push_back(d_RMCRT->d_sigmaT4Label );
+
+  coarseLevelVarLabels.push_back(d_RMCRT->d_abskgLabel );
+  coarseLevelVarLabels.push_back(d_RMCRT->d_sigmaT4Label );
+
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H

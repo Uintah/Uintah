@@ -2690,6 +2690,11 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
           Ghost::GhostType dgtype = it->second.m_dep->m_var->getMaxDeviceGhostType();
           int dghost = it->second.m_dep->m_var->getMaxDeviceGhost();
 
+          if(numGhostCells>dghost){//RMCRT
+            dghost = numGhostCells;
+            dgtype = ghosttype;
+          }
+
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
           switch (type) {
