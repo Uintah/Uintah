@@ -977,8 +977,8 @@ void printParticleVariables(DataArchive* da,
                   } // end of var compare if
                 } // end of variable loop
               } // end of loop over particleVariables
+              cout << endl;
             } // if all particleIDs or this particular particleID
-            cout << endl;
           } // end of loop over particles
         } // if pset not empty
       } // end of patch loop
