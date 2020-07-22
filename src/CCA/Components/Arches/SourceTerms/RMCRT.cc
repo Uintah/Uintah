@@ -395,14 +395,16 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
   typedef std::vector<const VarLabel*> VarLabelVec;
 
-  VarLabelVec fineLevelVarLabels = { m_RMCRT->d_divQLabel,
-                                     m_RMCRT->d_boundFluxLabel,
-                                     m_RMCRT->d_radiationVolqLabel,            // ToDo: only carry forward saved vars
-                                     m_RMCRT->d_abskgLabel,
-                                     m_RMCRT->d_sigmaT4Label };
-                                                      
-  VarLabelVec coarseLevelVarLabels = { m_RMCRT->d_abskgLabel,
-                                       m_RMCRT->d_sigmaT4Label };
+  VarLabelVec fineLevelVarLabels, coarseLevelVarLabels;
+
+  fineLevelVarLabels.push_back(m_RMCRT->d_divQLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_boundFluxLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_radiationVolqLabel);            // ToDo: only carry forward saved vars
+  fineLevelVarLabels.push_back(m_RMCRT->d_abskgLabel);
+  fineLevelVarLabels.push_back(m_RMCRT->d_sigmaT4Label);
+
+  coarseLevelVarLabels.push_back(m_RMCRT->d_abskgLabel);
+  coarseLevelVarLabels.push_back(m_RMCRT->d_sigmaT4Label);
 
   Task::WhichDW notUsed = Task::None;
   //______________________________________________________________________

@@ -666,7 +666,7 @@ public:
                )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::CudaSpace>();
     }
@@ -718,7 +718,7 @@ public:
                     )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<const T, Kokkos::CudaSpace>();
     }
@@ -780,7 +780,7 @@ public:
                )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::CudaSpace>();
     }
@@ -832,7 +832,7 @@ public:
                     )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<const T, Kokkos::CudaSpace>();
     }
@@ -895,7 +895,7 @@ public:
                  )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::CudaSpace>();
     }
@@ -947,7 +947,7 @@ public:
                       )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       return KokkosView3<const T, Kokkos::CudaSpace>();
     }
@@ -1011,7 +1011,7 @@ public:
                     )
   {
     if ( matlIndex != -999 ) {
-      var = this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, 0 );
+      var = this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
       var = KokkosView3<T, Kokkos::CudaSpace>();
     }
