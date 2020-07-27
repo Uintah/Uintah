@@ -1657,25 +1657,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template <typename T, typename ExecSpace, typename MemSpace>
-inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
-Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
-                         const MaterialSubset* matls,
-                         OnDemandDataWarehouse* old_dw,
-                         OnDemandDataWarehouse* new_dw,
-                         UintahParams& uintahParams,
-                         ExecutionObject<ExecSpace, MemSpace>& execObj,
-                         bool modifies_divQ,
-                         Task::WhichDW notUsed,
-                         Task::WhichDW which_sigmaT4_dw,
-                         Task::WhichDW which_celltype_dw ) {
-  // When we're ready, we can merge the current Ray.cc file in with this one here.
-  printf("The non-Kokkos version\n");
-}
-
 //The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
 template <typename T, typename ExecSpace, typename MemSpace>
-inline typename std::enable_if<!std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
+void
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          OnDemandDataWarehouse* old_dw,

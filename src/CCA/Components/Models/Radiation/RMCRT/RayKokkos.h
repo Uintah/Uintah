@@ -384,31 +384,16 @@ namespace Uintah{
 
       //__________________________________
       template<typename T, typename ExecSpace, typename MemSpace>
-      inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
-      rayTrace_dataOnion( const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          OnDemandDataWarehouse* old_dw,
-                          OnDemandDataWarehouse* new_dw,
-                          UintahParams& uintahParams,
-                          ExecutionObject<ExecSpace, MemSpace>& execObj,
-                          bool modifies_divQ,
-                          Task::WhichDW which_abskg_dw,
-                          Task::WhichDW which_sigmaT4_dw,
-                          Task::WhichDW which_celltype_dw );
-
-      //__________________________________
-      template<typename T, typename ExecSpace, typename MemSpace>
-      inline typename std::enable_if<!std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
-      rayTrace_dataOnion( const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          OnDemandDataWarehouse* old_dw,
-                          OnDemandDataWarehouse* new_dw,
-                          UintahParams& uintahParams,
-                          ExecutionObject<ExecSpace, MemSpace>& execObj,
-                          bool modifies_divQ,
-                          Task::WhichDW which_abskg_dw,
-                          Task::WhichDW which_sigmaT4_dw,
-                          Task::WhichDW which_celltype_dw );
+      void rayTrace_dataOnion( const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               OnDemandDataWarehouse* old_dw,
+                               OnDemandDataWarehouse* new_dw,
+                               UintahParams& uintahParams,
+                               ExecutionObject<ExecSpace, MemSpace>& execObj,
+                               bool modifies_divQ,
+                               Task::WhichDW which_abskg_dw,
+                               Task::WhichDW which_sigmaT4_dw,
+                               Task::WhichDW which_celltype_dw );
 
       //__________________________________
       template <int numLevels, typename T, typename ExecSpace, typename MemSpace>
