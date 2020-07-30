@@ -61,15 +61,17 @@
 //__________________________________
 // To enable comparisons with Ray:CPU, define FIXED_RANDOM_NUM both here and in src/Core/Math/MersenneTwister.h
 // To enable comparisons with Ray:GPU, define FIXED_RANDOM_NUM both here and in src/CCA/Components/Models/Radiation/RMCRT/RayGPUKernel.cu
-
-#define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
-//#define ML_DEBUG
 //#define FIXED_RANDOM_NUM  // Enable comparisons between implementations
+
+// From Ray.cc
+#define DEBUG -9          // 1: divQ, 2: boundFlux, 3: scattering
+#define CUDA_PRINTF       // increase the printf buffer
+
+// From RMCRTCommon.cc
 #define FIXED_RAY_DIR -9  // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
                           //                      4: (0.7071, 0.7071, 7071), 5: (1,0,0)  6: (0, 1, 0),   7: (0,0,1)
 #define SIGN 1            // Multiply the FIXED_RAY_DIRs by value
 #define FUZZ 1e-12        // Numerical fuzz
-#define CUDA_PRINTF       // increase the printf buffer
 
 /*______________________________________________________________________
   TO DO:
@@ -79,6 +81,7 @@
   - Kokkos-ify the radiometer
 
 Optimizations:
+  - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
   - Temperatures af ints?
@@ -637,127 +640,127 @@ Ray::rayTrace( const PatchSubset* patches,
                Task::WhichDW which_sigmaT4_dw,
                Task::WhichDW which_celltype_dw )
 {
-//  const Level* level = getLevel(patches);
-//
-//#ifdef USE_TIMER
-//    // No carry forward just reset the time to zero.
-//    PerPatch< double > ppTimer = 0;
-//
-//    for (int p=0; p<patches->size(); ++p) {
-//      const Patch* patch = patches->get(p);
-//      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-//    }
-//#endif
-//
-//  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
-//  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-//  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-//
-//  //It seems these variables need to stay in scope for the entire run, otherwise something inside Uintah
-//  //apparently deallocates them mid-run.
-//  constCCVariable< T > sigmaT4OverPi;
-//  constCCVariable< T > abskg;
-//  constCCVariable<int> celltype;
-//
+  const Level* level = getLevel(patches);
+
+#ifdef USE_TIMER
+    // No carry forward just reset the time to zero.
+    PerPatch< double > ppTimer = 0;
+
+    for (int p=0; p<patches->size(); ++p) {
+      const Patch* patch = patches->get(p);
+      new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+    }
+#endif
+
+  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+
+  //It seems these variables need to stay in scope for the entire run, otherwise something inside Uintah
+  //apparently deallocates them mid-run.
+  constCCVariable< T > sigmaT4OverPi;
+  constCCVariable< T > abskg;
+  constCCVariable<int> celltype;
+
 //  //For portability, everything should be views.
 //  KokkosView3<const T>   abskg_view;
 //  KokkosView3<const T>   sigmaT4OverPi_view;
 //  KokkosView3<double>    divQ_view;
 //  KokkosView3<double>    radiationVolq_view;
 //  KokkosView3<const int> celltype_view;
-//
-//  if ( ! Parallel::usingDevice() ) {
-//    if ( d_ROI_algo == entireDomain ) {
-//      abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
-//      sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
-//      celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
-//    }
-//  }
-//
-//  // patch loop
-//  for (int p=0; p < patches->size(); p++){
-//
-//    Timers::Simple timer;
-//    timer.start();
-//
-//    const Patch* patch = patches->get(p);
-//    printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
-//
-//    //Get the variables from a Data Warehouse
-//    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
-//    if ( ! Parallel::usingDevice() ) {
-//
-//      CCVariable<double>   divQ;
-//      CCVariable<Stencil7> boundFlux;
-//      CCVariable<double>   radiationVolq;
-//
-//      if ( modifies_divQ ) {
-//        new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
-//        new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-//        new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
-//      }
-//      else {
-//        new_dw->allocateAndPut( divQ,         d_divQLabel,          d_matl, patch );
-//        new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-//        new_dw->allocateAndPut( radiationVolq,d_radiationVolqLabel, d_matl, patch );
-//        divQ.initialize( 0.0 );
-//        radiationVolq.initialize( 0.0 );
-//
-//        for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
-//          IntVector c = *iter;
-//          boundFlux[c].initialize(0.0);
-//        }
-//      }
-//
-//      IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
-//      IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
-//
-//      //__________________________________
-//      //  If ray length distance is used
-//      if ( d_ROI_algo == boundedRayLength ) {
-//
-//        patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
-//                                                       Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
-//        DOUT(g_ray_dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
-//        abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
-//        sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
-//        celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
-//      }
-//
+
+  if ( ! Parallel::usingDevice() ) {
+    if ( d_ROI_algo == entireDomain ) {
+      abskg_dw->getLevel(    abskg,         d_abskgLabel,    d_matl, level );
+      sigmaT4_dw->getLevel(  sigmaT4OverPi, d_sigmaT4Label,  d_matl, level );
+      celltype_dw->getLevel( celltype,      d_cellTypeLabel, d_matl, level );
+    }
+  }
+
+  // patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    Timers::Simple timer;
+    timer.start();
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
+
+    //Get the variables from a Data Warehouse
+    //See if its CPU or GPU execution, if so, get the right variables from the right data warehouse.
+    if ( ! Parallel::usingDevice() ) {
+
+      CCVariable<double>   divQ;
+      CCVariable<Stencil7> boundFlux;
+      CCVariable<double>   radiationVolq;
+
+      if ( modifies_divQ ) {
+        new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
+        new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+        new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
+      }
+      else {
+        new_dw->allocateAndPut( divQ,         d_divQLabel,          d_matl, patch );
+        new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+        new_dw->allocateAndPut( radiationVolq,d_radiationVolqLabel, d_matl, patch );
+        divQ.initialize( 0.0 );
+        radiationVolq.initialize( 0.0 );
+
+        for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
+          IntVector c = *iter;
+          boundFlux[c].initialize(0.0);
+        }
+      }
+
+      IntVector ROI_Lo = IntVector(-SHRT_MAX,-SHRT_MAX,-SHRT_MAX );
+      IntVector ROI_Hi = IntVector( SHRT_MAX, SHRT_MAX, SHRT_MAX );
+
+      //__________________________________
+      //  If ray length distance is used
+      if ( d_ROI_algo == boundedRayLength ) {
+
+        patch->computeVariableExtentsWithBoundaryCheck(CCVariable<double>::getTypeDescription()->getType(), IntVector(0,0,0),
+                                                       Ghost::AroundCells, d_haloCells.x(), ROI_Lo, ROI_Hi);
+        DOUT(g_ray_dbg, "  ROI: " << ROI_Lo << " "<< ROI_Hi );
+        abskg_dw->getRegion(   abskg,          d_abskgLabel ,   d_matl, level, ROI_Lo, ROI_Hi );
+        sigmaT4_dw->getRegion( sigmaT4OverPi,  d_sigmaT4Label,  d_matl, level, ROI_Lo, ROI_Hi );
+        celltype_dw->getRegion( celltype,      d_cellTypeLabel, d_matl, level, ROI_Lo, ROI_Hi );
+      }
+
 //      // Get the views for portability.
 //      abskg_view         = abskg.getKokkosView();
 //      sigmaT4OverPi_view = sigmaT4OverPi.getKokkosView();
 //      celltype_view      = celltype.getKokkosView();
 //      divQ_view          = divQ.getKokkosView();
 //      radiationVolq_view = radiationVolq.getKokkosView();
-//
-//      //__________________________________
-//      //  BULLETPROOFING
-//      //if ( level->isNonCubic() ){
-//      if( false) {
-//
-//        IntVector l = abskg.getLowIndex();
-//        IntVector h = abskg.getHighIndex();
-//
-//        CellIterator iterLim = CellIterator(l, h);
-//        for(CellIterator iter = iterLim; !iter.done();iter++) {
-//          IntVector c = *iter;
-//
-//          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
-//               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ){
-//            std::ostringstream warn;
-//            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 is non-physical \n"
-//                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
-//                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
-//                << "          " << *patch << "\n"
-//                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ")\n";
-//
-//            cout << warn.str() << endl;
-//            throw InternalError( warn.str(), __FILE__, __LINE__ );
-//          }
-//        }
-//      }
-//    } else {  //if ( Parallel::usingDevice() )
+
+      //__________________________________
+      //  BULLETPROOFING
+      //if ( level->isNonCubic() ){
+      if( false) {
+
+        IntVector l = abskg.getLowIndex();
+        IntVector h = abskg.getHighIndex();
+
+        CellIterator iterLim = CellIterator(l, h);
+        for(CellIterator iter = iterLim; !iter.done();iter++) {
+          IntVector c = *iter;
+
+          if ( std::isinf( abskg[c] )         || std::isnan( abskg[c] )  ||
+               std::isinf( sigmaT4OverPi[c] ) || std::isnan( sigmaT4OverPi[c] ) ){
+            std::ostringstream warn;
+            warn<< "ERROR:Ray::rayTrace   abskg or sigmaT4 is non-physical \n"
+                << "     c:   " << c << " location: " << level->getCellPosition(c) << "\n"
+                << "     ROI: " << ROI_Lo << " "<< ROI_Hi << "\n"
+                << "          " << *patch << "\n"
+                << " ( abskg[c]: " << abskg[c] << ", sigmaT4OverPi[c]: " << sigmaT4OverPi[c] << ")\n";
+
+            cout << warn.str() << endl;
+            throw InternalError( warn.str(), __FILE__, __LINE__ );
+          }
+        }
+      }
+    } else {  //if ( Parallel::usingDevice() )
 //#if defined(HAVE_CUDA)
 //      GPUDataWarehouse* abskg_gdw    = nullptr;
 //      GPUDataWarehouse* sigmaT4_gdw  = nullptr;
@@ -785,37 +788,42 @@ Ray::rayTrace( const PatchSubset* patches,
 //      divQ_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, 0);
 //      radiationVolq_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, 0);
 //#endif
-//    }
-//
-//    unsigned long int size = 0;                   // current size of PathIndex
-//    Vector Dx = patch->dCell();                   // cell spacing
-//
-//    //______________________________________________________________________
-//    //         R A D I O M E T E R
-//    //______________________________________________________________________
-//
-//// TODO: Kokkos-ify the radiometer
-//
-//    //______________________________________________________________________
-//    //         B O U N D A R Y F L U X
-//    //______________________________________________________________________
-//
-//// TODO: Kokkos-ify the boundary flux calculation
-//
-//    //______________________________________________________________________
-//    //         S O L V E   D I V Q
-//    //______________________________________________________________________
-//
-//    if ( d_solveDivQ ) {
-//
+    }
+
+    unsigned long int size = 0;                   // current size of PathIndex
+    Vector Dx = patch->dCell();                   // cell spacing
+
+    //______________________________________________________________________
+    //         R A D I O M E T E R
+    //______________________________________________________________________
+
+// TODO: Kokkos-ify the radiometer
+
+    //______________________________________________________________________
+    //         B O U N D A R Y F L U X
+    //______________________________________________________________________
+    if( d_solveBoundaryFlux ) {
+
+// TODO: Kokkos-ify the boundary flux calculation
+
+    }   // end if d_solveBoundaryFlux
+
+
+    //______________________________________________________________________
+    //         S O L V E   D I V Q
+    //______________________________________________________________________
+    if( d_solveDivQ ) {
+
+    //__________________________________
+    //
 //      bool latinHyperCube = ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ) ? true : false;
 //      LevelParams levelParams_pod;
 //      levelParams_pod.Dx[0] = Dx.x(); levelParams_pod.Dx[1] = Dx.y(); levelParams_pod.Dx[2] = Dx.z();
 //      levelParams_pod.anchor[0] = level->getAnchor().x(); levelParams_pod.anchor[1] = level->getAnchor().y(); levelParams_pod.anchor[2] = level->getAnchor().z();
-//
+
 //      IntVector lo = patch->getCellLowIndex();
 //      IntVector hi = patch->getCellHighIndex();
-//
+
 //      RMCRT_flags RT_flags;
 //      RT_flags.finePatchLow.x = lo.x();
 //      RT_flags.finePatchLow.y = lo.y();
@@ -828,14 +836,14 @@ Ray::rayTrace( const PatchSubset* patches,
 //                                    RT_flags.finePatchSize.z;
 //      RT_flags.startCell = 0;
 //      RT_flags.endCell = numCells;
-//
+
 //      Uintah::BlockRange range;
 //#ifdef HAVE_CUDA
 //      int numKernels = dtask->getTask()->maxStreamsPerTask();
 //      IntVector hiRange(256,0,0);
 //      // Split up a functor into four loops.  Gets better GPU occupancy this way.
 //      for (int i = 0; i < numKernels; i++) {
-//
+
 //        RT_flags.startCell = (i/static_cast<double>(numKernels)) * numCells;
 //        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
 //        RT_flags.cellsPerGroup = hiRange.x();
@@ -864,45 +872,43 @@ Ray::rayTrace( const PatchSubset* patches,
 //                  , d_allowReflect
 //                  , divQ_view
 //                  , radiationVolq_view );
-//
+
 //        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
 //        //Uintah::parallel_reduce_sum( range, functor, size );
 //        Uintah::parallel_reduce_1D( range, functor, size );
 //      }
-//
-//    }  // end of if(_solveDivQ)
-//
-//    //__________________________________
-//    //
-//    timer.stop();
-//    
-//#ifdef ADD_PERFORMANCE_STATS
-//    // Add in the patch stat, recording for each patch.
-//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
-//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
-//    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
-//    // For each stat recorded increment the count so to get a per patch value.
-//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
-//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
-//    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
-//#endif
-//    
-//    if (patch->getGridIndex() == 0) {
-//      cout << endl
-//           << " RMCRT REPORT: Patch 0" << endl
-//           << " Used " << timer().milliseconds()
-//           << " milliseconds of CPU time. \n" << endl // Convert time to ms
-//           << " Size: " << size << endl
-//           << " Efficiency: " << size / timer().seconds()
-//           << " steps per sec" << endl
-//           << endl;
-//    }
-//
-//#ifdef USE_TIMER
-//    PerPatch< double > ppTimer = timer().seconds();
-//    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
-//#endif
-//  }  //end patch loop
+
+    }  // end of if(_solveDivQ)
+
+    timer.stop();
+
+#ifdef ADD_PERFORMANCE_STATS
+    // Add in the patch stat, recording for each patch.
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+    // For each stat recorded increment the count so to get a per patch value.
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
+#endif
+
+    if (patch->getGridIndex() == 0) {
+      cout << endl
+           << " RMCRT REPORT: Patch 0" << endl
+           << " Used " << timer().milliseconds()
+           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+           << " Size: " << size << endl
+           << " Efficiency: " << size / timer().seconds()
+           << " steps per sec" << endl
+           << endl;
+    }
+
+#ifdef USE_TIMER
+    PerPatch< double > ppTimer = timer().seconds();
+    new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
+#endif
+  }  //end patch loop
 }  // end ray trace method
 
 
@@ -1075,12 +1081,6 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           &Ray::rayTrace_dataOnion<double, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-//
-//    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-//                              TaskDependencies,
-//                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<double COMMA,
-//                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
-//                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   } else {
     create_portable_tasks(taskDependencies, this,
                           "Ray::rayTrace_dataOnion",
@@ -1089,21 +1089,15 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           &Ray::rayTrace_dataOnion<float, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
-//    CALL_ASSIGN_PORTABLE_TASK_3TAGS(UINTAH_CPU_TAG, KOKKOS_OPENMP_TAG, KOKKOS_CUDA_TAG,
-//                              TaskDependencies,
-//                              "Ray::rayTrace_dataOnion", Ray::rayTrace_dataOnion<float COMMA,
-//                              level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
-//                              modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
-  //tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
 
   //sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
-
 }
 
 
-//______________________________________________________________________
-//
+//---------------------------------------------------------------------------
+// Functor for ray tracer using the multilevel "data onion" scheme
+//---------------------------------------------------------------------------
 template <typename T, typename MemSpace, typename RandomGenerator, int m_maxLevels>
 struct rayTrace_dataOnion_solveDivQFunctor {
 
@@ -1654,10 +1648,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   } // end operator()
 };   // end rayTrace_dataOnion_solveDivQFunctor
 
+
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-//The Kokkos verison (e.g. NOT the same as UintahSpaces::CPU)
 template <typename T, typename ExecSpace, typename MemSpace>
 void
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
@@ -2114,6 +2108,7 @@ Ray::computeExtents(       LevelP              level_0
   for (int L = maxLevels - 1; L > 1; L--) {
 
     LevelP level = new_dw->getGrid()->getLevel(L);
+
     if( level->hasCoarserLevel() ){
 
       regionLo[L-1] = level->mapCellToCoarser(regionLo[L]) - d_haloCells + d_haloCells/level->getRefinementRatio()+(d_haloCells[0]%level->getRefinementRatio()[0] ? 1 : 0 );   // this ROI extent suggests a constant ghost cell rquirement on all levels.
