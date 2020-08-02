@@ -1076,17 +1076,17 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
     create_portable_tasks(taskDependencies, this,
                           "Ray::rayTrace_dataOnion",
-                          &Ray::rayTrace_dataOnion<double, UINTAH_CPU_TAG>,
-                          &Ray::rayTrace_dataOnion<double, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<double, KOKKOS_CUDA_TAG>,
+                          &Ray::rayTrace_dataOnion<2, double, UINTAH_CPU_TAG>,
+                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_OPENMP_TAG>,
+                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   } else {
     create_portable_tasks(taskDependencies, this,
                           "Ray::rayTrace_dataOnion",
-                          &Ray::rayTrace_dataOnion<float, UINTAH_CPU_TAG>,
-                          &Ray::rayTrace_dataOnion<float, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<float, KOKKOS_CUDA_TAG>,
+                          &Ray::rayTrace_dataOnion<2, float, UINTAH_CPU_TAG>,
+                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_OPENMP_TAG>,
+                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
@@ -1652,7 +1652,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 //---------------------------------------------------------------------------
 // Ray tracer using the multilevel "data onion" scheme
 //---------------------------------------------------------------------------
-template <typename T, typename ExecSpace, typename MemSpace>
+template <int numLevels, typename T, typename ExecSpace, typename MemSpace>
 void
 Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          const MaterialSubset* matls,
@@ -1663,58 +1663,20 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          bool modifies_divQ,
                          Task::WhichDW notUsed,
                          Task::WhichDW which_sigmaT4_dw,
-                         Task::WhichDW which_celltype_dw ) {
-#if defined(UINTAH_ENABLE_KOKKOS)
-
-  const Level* fineLevel = getLevel(finePatches);
-  int maxLevels = fineLevel->getGrid()->numLevels();
-  if (maxLevels == 2) {
-    //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<2, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
-                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
-  } else if (maxLevels == 3) {
-    //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<3, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
-                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
-  } else if (maxLevels == 4) {
-    //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<4, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
-                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
-  } else if (maxLevels == 5) {
-    //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<5, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
-                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
-  } else if (maxLevels == 6) {
-    //Set up the data onion function for multiple levels.
-    this->rayTrace_dataOnionLevels<7, T, ExecSpace, MemSpace>( finePatches, matls, old_dw, new_dw, uintahParams, execObj,
-                                                                       modifies_divQ, notUsed, which_sigmaT4_dw, which_celltype_dw );
-  } else {
-    std::cerr << "Requested RMCRT Data Onion max level amount of " << maxLevels << " not yet supported.  Edit the code file to supply more possible levels." << std::endl;
-    SCI_THROW(InternalError("Requested RMCRT Data Onion max level amount not yet supported.  Edit the code file to supply more possible levels.", __FILE__, __LINE__));
-  }
-#endif
-}
-
-//---------------------------------------------------------------------------
-// Ray tracer using the multilevel "data onion" scheme
-//---------------------------------------------------------------------------
-template <int numLevels, typename T, typename ExecSpace, typename MemSpace>
-void
-Ray::rayTrace_dataOnionLevels( const PatchSubset* finePatches,
-                               const MaterialSubset* matls,
-                               OnDemandDataWarehouse* old_dw,
-                               OnDemandDataWarehouse* new_dw,
-                               UintahParams& uintahParams,
-                               ExecutionObject<ExecSpace, MemSpace>& execObj,
-                               bool modifies_divQ,
-                               Task::WhichDW notUsed,
-                               Task::WhichDW which_sigmaT4_dw,
-                               Task::WhichDW which_celltype_dw )
+                         Task::WhichDW which_celltype_dw )
 {
   // Get level information
   const Level* fineLevel = getLevel(finePatches);
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
+
+  //__________________________________
+  //  BULLETPROOFING
+  if ( numLevels != fineLevel->getGrid()->numLevels() ) {
+    throw ProblemSetupException("\nERROR: RMCRT: RayKokkos: sched_rayTrace_dataOnion:"
+                                "\nThe number of levels provided in the input file must match the rayTrace_dataOnion_solveDivQFunctor template parameter."
+                                "\nSet numLevels accordingly when calling create_portable_tasks in sched_rayTrace_dataOnion.", __FILE__, __LINE__);
+  }
 
   // Patch loop
   for (int p = 0; p < finePatches->size(); p++) {
