@@ -1665,8 +1665,11 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                          Task::WhichDW which_sigmaT4_dw,
                          Task::WhichDW which_celltype_dw )
 {
-  // Get level information
+
   const Level* fineLevel = getLevel(finePatches);
+
+  //__________________________________
+  //
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
 
@@ -1776,195 +1779,188 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     // Get the GPU vars
-    if ( std::is_same<Kokkos::Cuda , ExecSpace>::value ) {
+    // The upcoming Kokkos views
+    KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
+    KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
+    KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
+    KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
 
-      // The upcoming Kokkos views
-      KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
-      KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
-      KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
-      KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+    KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
+    KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
 
-      KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
-      KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
+    GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
+    GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
+    GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
 
-      GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
-      GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
-      GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
-
-      // Get the Kokkos Views from the simulation variables
-      const Level* curLevel = fineLevel;
-      const Patch* curPatch = patch;
-      for ( int L = (numLevels - 1); L >= 0; L-- ) {
-        // Get vars on this level
-        if (d_algorithm == dataOnionSlim) {
-          abskgSigmaT4CellType_view[L] = abskg_gdw->getKokkosView<const double>(  d_abskgSigmaT4CellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
-        }
-        else {
-          abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(),    curPatch->getID(), d_matl, L);
-          sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(),  curPatch->getID(), d_matl, L);
-          cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
-        }
-
-        // Go down a coarser level, if possible
-        if (curLevel->hasCoarserLevel()) {
-          //Get the patchID of the patch down a coarser level.
-          IntVector fineLow, fineHigh;
-          IntVector coarseLow = curLevel->mapCellToCoarser(curPatch->getCellLowIndex());
-          IntVector coarseHigh = curLevel->mapCellToCoarser(curPatch->getCellHighIndex());
-          Patch::selectType coarserPatches;
-          curLevel = curLevel->getCoarserLevel().get_rep();
-          curLevel->selectPatches(coarseLow, coarseHigh, coarserPatches);
-          curPatch = coarserPatches[0];
-        }
-      }
-
-      //Get the computational variables on the fine level
-      divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
-      radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
-
-      unsigned long int size = 0ul;                   // current size of PathIndex
-
-      //______________________________________________________________________
-      //         B O U N D A R Y F L U X
-      //______________________________________________________________________
-
-      unsigned long int nFluxRaySteps = 0ul;
-
-      // TODO: Kokkos-ify the boundary flux calculation
-
-      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
-      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
-
-      //launch the functor
+    // Get the Kokkos Views from the simulation variables
+    const Level* curLevel = fineLevel;
+    const Patch* curPatch = patch;
+    for ( int L = (numLevels - 1); L >= 0; L-- ) {
+      // Get vars on this level
       if (d_algorithm == dataOnionSlim) {
-        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-        //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-        //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-        //Uintah::parallel_reduce_sum<Kokkos::Cuda>( execObj, range, functor, size );
+        abskgSigmaT4CellType_view[L] = abskg_gdw->getKokkosView<const double>(  d_abskgSigmaT4CellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
       }
       else {
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
-        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
-                   cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-        Uintah::parallel_reduce_sum( execObj, range, functor, size );
+        abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(),    curPatch->getID(), d_matl, L);
+        sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(),  curPatch->getID(), d_matl, L);
+        cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
       }
 
-    } // end if ( std::is_same< Kokkos::Cuda , ExecSpace >::value )
+      // Go down a coarser level, if possible
+      if (curLevel->hasCoarserLevel()) {
+        //Get the patchID of the patch down a coarser level.
+        IntVector fineLow, fineHigh;
+        IntVector coarseLow = curLevel->mapCellToCoarser(curPatch->getCellLowIndex());
+        IntVector coarseHigh = curLevel->mapCellToCoarser(curPatch->getCellHighIndex());
+        Patch::selectType coarserPatches;
+        curLevel = curLevel->getCoarserLevel().get_rep();
+        curLevel->selectPatches(coarseLow, coarseHigh, coarserPatches);
+        curPatch = coarserPatches[0];
+      }
+    }
+
+    //Get the computational variables on the fine level
+    divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
+    radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+    // Get all the coarse level variables (e.g. as long as it has a finer level)
+
+    //if (d_algorithm == dataOnionSlim) {
+    // For use in the DataOnionSlim version
+    KokkosView3<const double, Kokkos::HostSpace> abskgSigmaT4CellType_view[numLevels];
+    // For use in the normal version
+    KokkosView3<const T, Kokkos::HostSpace>   abskg_view[numLevels];
+    KokkosView3<const T, Kokkos::HostSpace>   sigmaT4OverPi_view[numLevels];
+    KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
+    //}
+
+    KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
+    KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
+
+    for(int L = 0; L<numLevels; L++) {
+      LevelP level = new_dw->getGrid()->getLevel(L);
+      if (level->hasFinerLevel() ) {
+        DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
+        DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
+        if(level->hasCoarserLevel()){
+          if (d_algorithm == dataOnionSlim) {
+            new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+          } else {
+            abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+            celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
+          }
+        } else{
+          if (d_algorithm == dataOnionSlim) {
+            new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
+          } else {
+            abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
+            sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
+            celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
+          }
+        }
+      }
+    }
+    // Get all the fine level data.
+    DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+    if (d_algorithm == dataOnionSlim) {
+      new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    } else {
+      abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+      celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
+    }
+    //Get the computable variables on the fine level
+    if( modifies_divQ ){
+      old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+      new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+      old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+    }else{
+      new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
+      new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
+      new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
+      divQ_fine.initialize( 0.0 );
+      radiationVolq_fine.initialize( 0.0 );
+      for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        boundFlux_fine[c].initialize(0.0);
+      }
+    }
+
+    //Get the Kokkos Views from the simulation variables (coarse and fine)
+    for ( int L = 0; L < numLevels; L++ ) {
+      if (d_algorithm == dataOnionSlim) {
+        abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
+      } else {
+        abskg_view[L]         = abskg[L].getKokkosView();
+        sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
+        cellType_view[L]      = cellType[L].getKokkosView();
+      }
+    }
+    divQ_fine_view          = divQ_fine.getKokkosView();
+    radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
+#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
+
+    unsigned long int size = 0ul;                   // current size of PathIndex
+
+    //______________________________________________________________________
+    //         B O U N D A R Y F L U X
+    //______________________________________________________________________
+
+    unsigned long int nFluxRaySteps = 0ul;
+
+    // TODO: Kokkos-ify the boundary flux calculation
+
+    unsigned long int nRaySteps = 0ul;
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    // Get the GPU vars
+    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+    auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
+
+    //launch the functor
+    if (d_algorithm == dataOnionSlim) {
+      //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+      //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+      //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+      //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+      //Uintah::parallel_reduce_sum<Kokkos::Cuda>( execObj, range, functor, size );
+    }
+    else {
+      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
+      functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+               cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+      Uintah::parallel_reduce_sum( execObj, range, functor, size );
+    }
 #endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
     // Get the CPU vars
-    if ( std::is_same< Kokkos::OpenMP , ExecSpace >::value ) {
-      // Get all the coarse level variables (e.g. as long as it has a finer level)
 
-      //if (d_algorithm == dataOnionSlim) {
-      // For use in the DataOnionSlim version
-      KokkosView3<const double, Kokkos::HostSpace> abskgSigmaT4CellType_view[numLevels];
-      // For use in the normal version
-      KokkosView3<const T, Kokkos::HostSpace>   abskg_view[numLevels];
-      KokkosView3<const T, Kokkos::HostSpace>   sigmaT4OverPi_view[numLevels];
-      KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
-      //}
-      KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
-      KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
+    //______________________________________________________________________
+    //         S O L V E   D I V Q
+    //______________________________________________________________________
 
-      for(int L = 0; L<numLevels; L++) {
-        LevelP level = new_dw->getGrid()->getLevel(L);
-        if (level->hasFinerLevel() ) {
-          DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-          DOUT( g_ray_dbg, "    RT DataOnion: getting coarse level data L-" << L );
-          if(level->hasCoarserLevel()){
-            if (d_algorithm == dataOnionSlim) {
-              new_dw->getRegion( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            } else {
-              abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel   , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-              sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label , d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-              celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep(), regionLo[L], regionHi[L]);
-            }
-          } else{
-            if (d_algorithm == dataOnionSlim) {
-              new_dw->getLevel( abskgSigmaT4CellType[L] , d_abskgSigmaT4CellTypeLabel , d_matl , level.get_rep() );
-            } else {
-              abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
-              sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
-             celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-            }
-          }
-        }
-      }
-      // Get all the fine level data.
-      DOUT( g_ray_dbg, "    RT DataOnion:  getting fine level data across L-" << fine_L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi );
+    if (d_solveDivQ) {
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::OpenMP >( );
+
       if (d_algorithm == dataOnionSlim) {
-        new_dw->getRegion(   abskgSigmaT4CellType[fine_L] , d_abskgSigmaT4CellTypeLabel   , d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
+        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+        //         divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+        //         Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+        //Uintah::parallel_reduce_sum<Kokkos::OpenMP>( execObj, range, functor, size );
       } else {
-        abskg_dw->getRegion(    abskg[fine_L],         d_abskgLabel ,   d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-        sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-        celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
-      }
-      //Get the computable variables on the fine level
-      if( modifies_divQ ){
-        old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-      }else{
-        new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
-        new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
-        new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-        divQ_fine.initialize( 0.0 );
-        radiationVolq_fine.initialize( 0.0 );
-        for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          boundFlux_fine[c].initialize(0.0);
-        }
-      }
-
-      //Get the Kokkos Views from the simulation variables (coarse and fine)
-      for ( int L = 0; L < numLevels; L++ ) {
-        if (d_algorithm == dataOnionSlim) {
-          abskgSigmaT4CellType_view[L] = abskgSigmaT4CellType[L].getKokkosView();
-        } else {
-          abskg_view[L]         = abskg[L].getKokkosView();
-          sigmaT4OverPi_view[L] = sigmaT4OverPi[L].getKokkosView();
-          cellType_view[L]      = cellType[L].getKokkosView();
-        }
-      }
-      divQ_fine_view          = divQ_fine.getKokkosView();
-      radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
-
-      unsigned long int size = 0;                   // current size of PathIndex
-
-      //______________________________________________________________________
-      //         B O U N D A R Y F L U X
-      //______________________________________________________________________
-
-      unsigned long int nFluxRaySteps = 0;
-
-      // TODO: Kokkos-ify the boundary flux calculation
-
-      unsigned long int nRaySteps = 0;
-
-      //______________________________________________________________________
-      //         S O L V E   D I V Q
-      //______________________________________________________________________
-
-      if (d_solveDivQ) {
-        Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
-        auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::OpenMP >( );
-
-        if (d_algorithm == dataOnionSlim) {
-          //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-          //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-          //         divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-          //         Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-          //Uintah::parallel_reduce_sum<Kokkos::OpenMP>( execObj, range, functor, size );
-        } else {
-          rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
-          functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
+        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-          Uintah::parallel_reduce_sum( execObj, range, functor, size );
-        }
-      }  // end of if(_solveDivQ)
+        Uintah::parallel_reduce_sum( execObj, range, functor, size );
+      }
+    }  // end of if(_solveDivQ)
+#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
 
       //__________________________________
       //
@@ -1981,19 +1977,17 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
 #endif
 
-      if (finePatch->getGridIndex() == levelPatchID) {
-        cout << endl
-             << " RMCRT REPORT: Patch " << levelPatchID << endl
-             << " Used "<< timer().milliseconds()
-             << " milliseconds of CPU time. \n" << endl // Convert time to ms
-             << " nRaySteps: " << nRaySteps
-             << " nFluxRaySteps: " << nFluxRaySteps << endl
-             << " Efficiency: " << nRaySteps / timer().seconds()
-             << " steps per sec" << endl
-             << endl;
-      }
-    } //end if ( std::is_same< Kokkos::OpenMP , ExecSpace >::value )
-#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
+    if (finePatch->getGridIndex() == levelPatchID) {
+      cout << endl
+           << " RMCRT REPORT: Patch " << levelPatchID << endl
+           << " Used "<< timer().milliseconds()
+           << " milliseconds of CPU time. \n" << endl // Convert time to ms
+           << " nRaySteps: " << nRaySteps
+           << " nFluxRaySteps: " << nFluxRaySteps << endl
+           << " Efficiency: " << nRaySteps / timer().seconds()
+           << " steps per sec" << endl
+           << endl;
+    }
 
 #ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();
