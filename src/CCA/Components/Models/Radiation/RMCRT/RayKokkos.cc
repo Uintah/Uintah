@@ -1824,7 +1824,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
 #endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
     // Get all the coarse level variables (e.g. as long as it has a finer level)
 
     //if (d_algorithm == dataOnionSlim) {
@@ -1936,7 +1936,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     }
 #endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
     // Get the CPU vars
 
     //______________________________________________________________________
