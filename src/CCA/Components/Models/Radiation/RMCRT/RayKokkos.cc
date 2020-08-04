@@ -1872,7 +1872,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       sigmaT4_dw->getRegion(  sigmaT4OverPi[fine_L], d_sigmaT4Label,  d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
       celltype_dw->getRegion( cellType[fine_L],      d_cellTypeLabel, d_matl, fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
     }
-    //Get the computable variables on the fine level
+
     if( modifies_divQ ){
       old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
       new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
@@ -1883,6 +1883,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
       divQ_fine.initialize( 0.0 );
       radiationVolq_fine.initialize( 0.0 );
+
       for (CellIterator iter = finePatch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         boundFlux_fine[c].initialize(0.0);
@@ -1899,51 +1900,53 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
         cellType_view[L]      = cellType[L].getKokkosView();
       }
     }
+
     divQ_fine_view          = divQ_fine.getKokkosView();
     radiationVolq_fine_view = radiationVolq_fine.getKokkosView();
 #endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
 
-    unsigned long int size = 0ul;                   // current size of PathIndex
-
     //______________________________________________________________________
-    //         B O U N D A R Y F L U X
+    //          B O U N D A R Y F L U X
     //______________________________________________________________________
 
     unsigned long int nFluxRaySteps = 0ul;
+    if( d_solveBoundaryFlux){
 
-    // TODO: Kokkos-ify the boundary flux calculation
+      //__________________________________
+      //
+      // TODO: Kokkos-ify the boundary flux calculation
+
+    }   // end if d_solveBoundaryFlux
 
     unsigned long int nRaySteps = 0ul;
-
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    // Get the GPU vars
-    Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
-    auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
-
-    //launch the functor
-    if (d_algorithm == dataOnionSlim) {
-      //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-      //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-      //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-      //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-      //Uintah::parallel_reduce_sum<Kokkos::Cuda>( execObj, range, functor, size );
-    }
-    else {
-      rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
-      functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
-               cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-      Uintah::parallel_reduce_sum( execObj, range, functor, size );
-    }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
-    // Get the CPU vars
 
     //______________________________________________________________________
     //         S O L V E   D I V Q
     //______________________________________________________________________
-
     if (d_solveDivQ) {
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
+      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
+
+      if (d_algorithm == dataOnionSlim) {
+        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
+        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
+        //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
+        //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
+        //Uintah::parallel_reduce_sum<Kokkos::Cuda>( execObj, range, functor, size );
+      }
+      else {
+        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
+        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
+                 cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+
+        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
+        Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
+      }
+#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
       Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
       auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::OpenMP >( );
 
@@ -1957,14 +1960,17 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
         rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
         functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
                  cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
-        Uintah::parallel_reduce_sum( execObj, range, functor, size );
+
+        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
+        Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
       }
-    }  // end of if(_solveDivQ)
 #endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
 
-      //__________________________________
-      //
-      timer.stop();
+    }  // end of if(_solveDivQ)
+
+    //__________________________________
+    //
+    timer.stop();
     
 #ifdef ADD_PERFORMANCE_STATS
     // Add in the patch stat, recording for each patch.
