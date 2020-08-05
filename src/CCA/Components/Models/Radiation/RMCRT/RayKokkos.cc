@@ -75,6 +75,7 @@
 
 /*______________________________________________________________________
   TO DO:
+  - Add support for legacy code paths (i.e., UintahSpaces::CPU)
   - Add GPU-specific setup for Kokkos::CUDA
   - Portable LHC sampling
   - Kokkos-ify boundary flux calculations
@@ -1076,7 +1077,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
     create_portable_tasks(taskDependencies, this,
                           "Ray::rayTrace_dataOnion",
-                          &Ray::rayTrace_dataOnion<2, double, UINTAH_CPU_TAG>,
+                          //&Ray::rayTrace_dataOnion<2, double, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, double, KOKKOS_OPENMP_TAG>,
                           &Ray::rayTrace_dataOnion<2, double, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
@@ -1084,7 +1085,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
   } else {
     create_portable_tasks(taskDependencies, this,
                           "Ray::rayTrace_dataOnion",
-                          &Ray::rayTrace_dataOnion<2, float, UINTAH_CPU_TAG>,
+                          //&Ray::rayTrace_dataOnion<2, float, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, float, KOKKOS_OPENMP_TAG>,
                           &Ray::rayTrace_dataOnion<2, float, KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
@@ -1925,47 +1926,68 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //______________________________________________________________________
     if (d_solveDivQ) {
 
+      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex() );
+
+      // NOTE: When building Uintah, portable tasks are built for all tags passed into create_portable_tasks.
+      //       For Kokkos::CUDA builds, the KOKKOS_OPENMP_TAG is downshifted to UINTAH_CPU_TAG in Core/Parallel/LoopExecution.h.
+      //       This bulletproofing is to prevent Kokkos::CUDA builds from attempting to build for the not yet supported UINTAH_CPU_TAG.
+      // TODO: Add support for Mersenne Twister-based random number generation
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
-      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::Cuda >( );
+      auto random_pool = Uintah::GetKokkosRandom1024Pool<Kokkos::Cuda>( );
+#else
+      auto random_pool = Uintah::GetKokkosRandom1024Pool<ExecSpace>( );
+#endif
 
-      if (d_algorithm == dataOnionSlim) {
-        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >, numLevels >
-        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-        //             divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-        //             Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-        //Uintah::parallel_reduce_sum<Kokkos::Cuda>( execObj, range, functor, size );
-      }
-      else {
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::CudaSpace, decltype(random_pool), numLevels>
-        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
-                 cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+      if ( d_algorithm == dataOnionSlim ) {
+//#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+//        SlimRayTrace_dataOnion_solveDivQFunctor<T, Kokkos::CudaSpace, decltype(random_pool), numLevels> functor( levelParamsML
+//#else
+//        SlimRayTrace_dataOnion_solveDivQFunctor<T, MemSpace, decltype(random_pool), numLevels> functor( levelParamsML
+//#endif
+//                                                                                                      , domain_BB_Lo
+//                                                                                                      , domain_BB_Hi
+//                                                                                                      , fineLevel_ROI_Lo_pod
+//                                                                                                      , fineLevel_ROI_Hi_pod
+//                                                                                                      , abskgSigmaT4CellType_view
+//                                                                                                      , divQ_fine_view
+//                                                                                                      , radiationVolq_fine_view
+//                                                                                                      , d_threshold
+//                                                                                                      , d_allowReflect
+//                                                                                                      , d_nDivQRays
+//                                                                                                      , d_CCRays
+//                                                                                                      , Max( d_haloCells[0]
+//                                                                                                           , d_haloCells[1]
+//                                                                                                           , d_haloCells[2]
+//                                                                                                           )
+//                                                                                                      );
 
-        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
-        Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
-      }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
-      Uintah::BlockRange range( patch->getCellLowIndex(), patch->getCellHighIndex());
-      auto random_pool = Uintah::GetKokkosRandom1024Pool< Kokkos::OpenMP >( );
-
-      if (d_algorithm == dataOnionSlim) {
-        //SlimRayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >, numLevels >
-        //functor( levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, abskgSigmaT4CellType_view,
-        //         divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays,
-        //         Max(d_haloCells[0], d_haloCells[1], d_haloCells[2] ));
-        //Uintah::parallel_reduce_sum<Kokkos::OpenMP>( execObj, range, functor, size );
+//        //This parallel_reduce_sum replaces the cellIterator loop used to solve DivQ
+//        Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
       } else {
-        rayTrace_dataOnion_solveDivQFunctor< T, Kokkos::HostSpace, decltype(random_pool), numLevels >
-        functor( random_pool, levelParamsML, domain_BB_Lo, domain_BB_Hi, fineLevel_ROI_Lo_pod, fineLevel_ROI_Hi_pod, sigmaT4OverPi_view, abskg_view,
-                 cellType_view , divQ_fine_view , radiationVolq_fine_view , d_threshold , d_allowReflect, d_nDivQRays, d_CCRays);
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+        rayTrace_dataOnion_solveDivQFunctor<T, Kokkos::CudaSpace, decltype(random_pool), numLevels> functor( random_pool
+#else
+        rayTrace_dataOnion_solveDivQFunctor<T, MemSpace, decltype(random_pool), numLevels> functor( random_pool
+#endif
+                                                                                                  , levelParamsML
+                                                                                                  , domain_BB_Lo
+                                                                                                  , domain_BB_Hi
+                                                                                                  , fineLevel_ROI_Lo_pod
+                                                                                                  , fineLevel_ROI_Hi_pod
+                                                                                                  , sigmaT4OverPi_view
+                                                                                                  , abskg_view
+                                                                                                  , cellType_view
+                                                                                                  , divQ_fine_view
+                                                                                                  , radiationVolq_fine_view
+                                                                                                  , d_threshold
+                                                                                                  , d_allowReflect
+                                                                                                  , d_nDivQRays
+                                                                                                  , d_CCRays
+                                                                                                  );
 
-        // This parallel_reduce replaces the cellIterator loop used to solve DivQ
+        // This parallel_reduce_sum replaces the cellIterator loop used to solve DivQ
         Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
       }
-#endif // end _OPENMP && KOKKOS_ENABLE_OPENMP
-
     }  // end of if(_solveDivQ)
 
     //__________________________________
@@ -1975,8 +1997,8 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 #ifdef ADD_PERFORMANCE_STATS
     // Add in the patch stat, recording for each patch.
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
-    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
-    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += nRaySteps;
+    m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += nRaySteps / timer().seconds();
     // For each stat recorded increment the count so to get a per patch value.
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
