@@ -150,6 +150,7 @@ private:
 
       _storage = Inject::readInputFile( file_name );
 
+      db->require("relative_xyz", m_rel_xyz);
 
     }
 
@@ -336,11 +337,6 @@ private:
     std::string variable = getString( file );
     double space1 = getDouble( file );
     double space2 = getDouble( file );
-    double relx = getDouble( file );
-    double rely = getDouble( file );
-    double relz = getDouble( file );
-    Point p(relx,rely,relz);
-    m_rel_xyz = p;
     int num_points = getInt( file );
     std::map<IntVector, double> result;
 

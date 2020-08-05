@@ -23,7 +23,7 @@ def get_dims(filename):
     else: 
         return 0,1
 
-def getInterpolator(filename, refine_ratio):
+def getInterpolator(filename, refine_ratio, spline_order=(3,3)):
     
     import numpy as np
     from scipy import interpolate 
@@ -33,7 +33,9 @@ def getInterpolator(filename, refine_ratio):
         Also returns original x,y,data values and the new Xnew, Ynew 
         locations of the coarsened data. """
     
-    dim1, dim2 = get_dims(filename)
+    #dim1, dim2 = get_dims(filename)
+    dim1 = 0
+    dim2 = 1
     var = np.loadtxt(filename, skiprows=3)
     f = open(filename,'r')
     for i, l in enumerate(f):
@@ -87,6 +89,32 @@ def getInterpolator(filename, refine_ratio):
 
     xx, yy = np.meshgrid(x,y)
 
-    var_2d = var[:,3].reshape((Nx,Ny))
+    var_2d = var[:,2].reshape((Nx,Ny))
 
-    return interpolate.interp2d(xx, yy, var_2d, kind='linear'), x, y, newX, newY, var_2d
+    import matplotlib.pyplot as plt
+
+    plt.contourf(xx,yy,var_2d)
+
+    #interpolator = interpolate.interp2d(xx, yy, var_2d, kind='linear')
+    interpolator = interpolate.SmoothBivariateSpline(xx.reshape(Nx**2),yy.reshape(Ny**2),var[:,2],kx=spline_order[0],ky=spline_order[1])
+
+    new_var = np.zeros((newNx,newNy))
+
+    for i in range(newNx): 
+        for j in range(newNy): 
+
+            new_var[i,j] = interpolator(newX[i],newY[j])
+
+    print(' ----- filename: ',filename,' -----')
+    print('Min of orig variable was :{}'.format(np.min(var_2d)))
+    print('Min of interp variable is :{}'.format(np.min(new_var)))
+    print('Max of orig variable was :{}'.format(np.max(var_2d)))
+    print('Max of interp variable is :{}'.format(np.max(new_var)))
+
+    newXX, newYY = np.meshgrid(newX,newY)
+    print(np.shape(newX))
+    plt.contour(newXX,newYY,new_var,linewidths=3.5,linestyle='dotted')
+    plt.title(filename)
+    plt.show()
+
+    return interpolator, x, y, newX, newY, var_2d

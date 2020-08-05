@@ -142,10 +142,11 @@ print(arrayND.shape)
 # This was a quick addition ... maybe add all as subplots into one plot
 plt.ion()
 for i, item in enumerate(var_list[3:]):
-        plt.scatter(arrayND[:,0],arrayND[:,1],c=arrayND[:,3+i])
+        plt.figure()
+        plt.scatter(arrayND[:,0],arrayND[:,1],c=arrayND[:,3+i],marker='s',cmap='hsv')
         plt.title(np.str(var_list[3+i]))
-        plt.show()
-        plt.pause(0.001)
+        plt.colorbar()
+        plt.savefig(np.str(var_list[3+i]).split('/')[0]+'.pdf')
         # plt.waitforbuttonpress(timeout=1)
         
 plt.ioff()
@@ -208,11 +209,11 @@ for i, item in enumerate(var_list[3:]):
         
         for j in range(arrayND.shape[0]):
                 
-                calc_i=int(round(arrayND[j,0]/dx))
-                calc_j=int(round(arrayND[j,1]/dy))
-                calc_k=0
+                calc_i=int(round((arrayND[j,0]+dx/2)/dx))-1
+                calc_j=int(round((arrayND[j,1]+dy/2)/dy))-1
+                #calc_k=0
 
-                fh.write(np.str(calc_i)+' '+np.str(calc_j)+' '+np.str(calc_k)+' '+np.str(arrayND[j,i+3])+'\n')
+                fh.write(np.str(calc_i)+' '+np.str(calc_j)+' '+np.str(arrayND[j,i+3])+'\n')
                 
         fh.close()
         
