@@ -1722,6 +1722,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       levelParamsML[L].regionHi[1] = regionHi[L][1];
       levelParamsML[L].regionHi[2] = regionHi[L][2];
     }
+
     fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
     fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
     fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
@@ -1741,17 +1742,42 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     // and abskg, sigmaT4OverPi, and cellType are used in the regular RMCRT data onion scenario.  The variables
     // are all declared here for scope.
 
-    std::vector< constCCVariable<double> > abskgSigmaT4CellType(numLevels);
+    //__________________________________
+    // retrieve the coarse level data
+    // compute the level dependent variables that are constant
     std::vector< constCCVariable< T > > abskg(numLevels);
     std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
     std::vector< constCCVariable<int> > cellType(numLevels);
+    //constCCVariable< T > abskg_fine;
+    //constCCVariable< T > sigmaT4OverPi_fine;
+
+    DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+    DataWarehouse* abskg_dw    = get_abskg_dw(numLevels - 1, d_abskgLabel, new_dw);
 
     CCVariable<double>   divQ_fine;
     CCVariable<Stencil7> boundFlux_fine;
     CCVariable<double>   radiationVolq_fine;
-    DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-    DataWarehouse* abskg_dw = get_abskg_dw(numLevels - 1, d_abskgLabel, new_dw);
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+    KokkosView3<const T,   Kokkos::CudaSpace> abskg_view[numLevels];
+    KokkosView3<const T,   Kokkos::CudaSpace> sigmaT4OverPi_view[numLevels];
+    KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+
+    GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
+    GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
+    GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
+
+    KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
+    KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
+#else
+    KokkosView3<const T,   Kokkos::HostSpace> abskg_view[numLevels];
+    KokkosView3<const T,   Kokkos::HostSpace> sigmaT4OverPi_view[numLevels];
+    KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
+
+    KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
+    KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
+#endif
 
     // Determine the size of the domain.
     BBox domain_BB;
@@ -1760,20 +1786,6 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    // Get the GPU vars
-    // The upcoming Kokkos views
-    KokkosView3<const double, Kokkos::CudaSpace> abskgSigmaT4CellType_view[numLevels];
-    KokkosView3<const T, Kokkos::CudaSpace>   abskg_view[numLevels];
-    KokkosView3<const T, Kokkos::CudaSpace>   sigmaT4OverPi_view[numLevels];
-    KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
-
-    KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
-    KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
-
-    GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
-    GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
-    GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
-
     // Get the Kokkos Views from the simulation variables
     const Level* curLevel = fineLevel;
     const Patch* curPatch = patch;
@@ -1802,15 +1814,6 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 #endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
 
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
-    // Get all the coarse level variables (e.g. as long as it has a finer level)
-
-    KokkosView3<const T, Kokkos::HostSpace>   abskg_view[numLevels];
-    KokkosView3<const T, Kokkos::HostSpace>   sigmaT4OverPi_view[numLevels];
-    KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
-
-    KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
-    KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
-
     for(int L = 0; L<numLevels; L++) {
       LevelP level = new_dw->getGrid()->getLevel(L);
       if (level->hasFinerLevel() ) {
