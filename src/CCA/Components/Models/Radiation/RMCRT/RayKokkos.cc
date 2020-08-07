@@ -1651,23 +1651,12 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   const Level* fineLevel = getLevel(finePatches);
 
   //__________________________________
-  //
-  int levelPatchID = fineLevel->getPatch(0)->getID();
-  LevelP level_0 = new_dw->getGrid()->getLevel(0);
-
-  //__________________________________
   //  BULLETPROOFING
   if ( numLevels != fineLevel->getGrid()->numLevels() ) {
     throw ProblemSetupException("\nERROR: RMCRT: RayKokkos: sched_rayTrace_dataOnion:"
                                 "\nThe number of levels provided in the input file must match the rayTrace_dataOnion_solveDivQFunctor template parameter."
                                 "\nSet numLevels accordingly when calling create_portable_tasks in sched_rayTrace_dataOnion.", __FILE__, __LINE__);
   }
-
-  // Patch loop
-  for (int p = 0; p < finePatches->size(); p++) {
-
-    Timers::Simple timer;
-    timer.start();
 
 #ifdef USE_TIMER
     // No carry forward just reset the time to zero.
@@ -1678,6 +1667,61 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
     }
 #endif
+
+  //__________________________________
+  //
+  int levelPatchID = fineLevel->getPatch(0)->getID();
+  LevelP level_0 = new_dw->getGrid()->getLevel(0);
+
+  // Get the vars:
+  // Computes:  (Only on the fine) divQ, radiationVolq.  Is boundaryFlux needed for computes?
+  // Requires:  (One on each level) If it's regular, abskg, sigmaT4, cellType.  If it's slim, the combined abskgSigmaT4CellType.
+
+  //__________________________________
+  //
+  // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
+  // Note that even though boundFlux isn't used here, we still have to allocate it so
+  // an upcoming carry forward task doesn't break.  Note that abskgSigmaT4CellType is used in a data onion slim RMCRT scenario
+  // and abskg, sigmaT4OverPi, and cellType are used in the regular RMCRT data onion scenario.  The variables
+  // are all declared here for scope.
+
+  //__________________________________
+  // retrieve the coarse level data
+  // compute the level dependent variables that are constant
+  std::vector< constCCVariable< T > > abskg(numLevels);
+  std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
+  std::vector< constCCVariable<int> > cellType(numLevels);
+
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
+  DataWarehouse* abskg_dw    = get_abskg_dw(numLevels - 1, d_abskgLabel, new_dw);
+
+  CCVariable<double>   divQ_fine;
+  CCVariable<Stencil7> boundFlux_fine;
+  CCVariable<double>   radiationVolq_fine;
+
+#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+  KokkosView3<const T,   Kokkos::CudaSpace> abskg_view[numLevels];
+  KokkosView3<const T,   Kokkos::CudaSpace> sigmaT4OverPi_view[numLevels];
+  KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+
+  GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
+  GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
+  GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
+
+  KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
+  KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
+#else
+  KokkosView3<const T,   Kokkos::HostSpace> abskg_view[numLevels];
+  KokkosView3<const T,   Kokkos::HostSpace> sigmaT4OverPi_view[numLevels];
+  KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
+
+  KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
+  KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
+#endif
+
+  // Patch loop
+  for (int p = 0; p < finePatches->size(); p++) {
 
     const Patch* patch = finePatches->get(p);
     const Patch* finePatch = finePatches->get(p);
@@ -1696,12 +1740,22 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
     int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
 
+  //__________________________________
+  //  retrieve fine level data & compute the extents (dynamic and fixed )
     if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
       const Patch* notUsed = 0;
-      computeExtents(level_0, fineLevel, notUsed, numLevels, new_dw, fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
+      computeExtents(level_0, fineLevel, notUsed, numLevels, new_dw,
+                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
     }
-    else if ( d_ROI_algo == patch_based ) {
-      computeExtents(level_0, fineLevel, finePatch, numLevels, new_dw, fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
+
+     //__________________________________
+    //  retrieve fine level data ( patch_based )
+    if ( d_ROI_algo == patch_based ) {
+
+      computeExtents(level_0, fineLevel, finePatch, numLevels, new_dw,
+                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+                     regionLo,  regionHi);
+
     }
 
     for ( int L = 0; L < numLevels; L++ ) {
@@ -1730,54 +1784,8 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
     fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
 
-    // Get the vars:
-    // Computes:  (Only on the fine) divQ, radiationVolq.  Is boundaryFlux needed for computes?
-    // Requires:  (One on each level) If it's regular, abskg, sigmaT4, cellType.  If it's slim, the combined abskgSigmaT4CellType.
-
-    //__________________________________
-    //
-    // Declare these simulation vars here so they stay in scope for the OnDemandDataWarehouse
-    // Note that even though boundFlux isn't used here, we still have to allocate it so
-    // an upcoming carry forward task doesn't break.  Note that abskgSigmaT4CellType is used in a data onion slim RMCRT scenario
-    // and abskg, sigmaT4OverPi, and cellType are used in the regular RMCRT data onion scenario.  The variables
-    // are all declared here for scope.
-
-    //__________________________________
-    // retrieve the coarse level data
-    // compute the level dependent variables that are constant
-    std::vector< constCCVariable< T > > abskg(numLevels);
-    std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
-    std::vector< constCCVariable<int> > cellType(numLevels);
-    //constCCVariable< T > abskg_fine;
-    //constCCVariable< T > sigmaT4OverPi_fine;
-
-    DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-    DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
-    DataWarehouse* abskg_dw    = get_abskg_dw(numLevels - 1, d_abskgLabel, new_dw);
-
-    CCVariable<double>   divQ_fine;
-    CCVariable<Stencil7> boundFlux_fine;
-    CCVariable<double>   radiationVolq_fine;
-
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    KokkosView3<const T,   Kokkos::CudaSpace> abskg_view[numLevels];
-    KokkosView3<const T,   Kokkos::CudaSpace> sigmaT4OverPi_view[numLevels];
-    KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
-
-    GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
-    GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
-    GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
-
-    KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
-    KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
-#else
-    KokkosView3<const T,   Kokkos::HostSpace> abskg_view[numLevels];
-    KokkosView3<const T,   Kokkos::HostSpace> sigmaT4OverPi_view[numLevels];
-    KokkosView3<const int, Kokkos::HostSpace> cellType_view[numLevels];
-
-    KokkosView3<double, Kokkos::HostSpace> divQ_fine_view;
-    KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
-#endif
+    Timers::Simple timer;
+    timer.start();
 
     // Determine the size of the domain.
     BBox domain_BB;
