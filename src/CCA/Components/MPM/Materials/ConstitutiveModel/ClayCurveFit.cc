@@ -391,41 +391,14 @@ void ClayCurveFit::computeStressTensor(const PatchSubset* patches,
 
       double Ps = Pe - (1./beta)*log((0.01)/(phi_init - phi_min));
 
-      // Mie-Gruneisen response for fully densified solid
+      // Response for fully densified solid
       if(alpha <= alpha_low_lim || alpha_min_new[idx] < alpha_low_lim){
         // Get the state data
         p = Ks*(1.-rhoL/rhoM);
         c = sqrt(Ks/rhoM);
-/*
-        double Gamma_0 = d_initialData.Gamma_0; //1.54
-        double C_0 = d_initialData.C_0; //4029.
-        double S_alpha = d_initialData.S_alpha; //1.237;
+        p = Ps + p;
 
-        // Calc. zeta
-        double zeta = (rhoM/rhoS - 1./alpha_low_lim);
-
-        // Calculate internal energy E
-        double E = (cv)*(ptemperature[idx] - tempAlpha1_old[idx])*rhoS;
-
-        // Calculate the pressure
-        p = Gamma_0*E;
-        if (rhoM != rhoS) {
-          double numer = rhoS*(C_0*C_0)*(1.0/zeta+
-                               (1.0-0.5*Gamma_0));
-          double denom = 1.0/zeta - (S_alpha-1.0);
-          if (denom == 0.0) {
-            cout << "rho_0 = " << rhoS << " zeta = " << zeta
-                 << " numer = " << numer << endl;
-            denom = 1.0e-5;
-          }
-           p += numer/(denom*denom);
-         }
-*/
-         p = Ps + p;
-
-//         double DTrace=velGrad[idx].Trace();
-//         dTdt_MG = -ptemperature[idx]*Gamma_0*rhoS*DTrace/rhoM;
-         tempAlpha1[idx] = tempAlpha1_old[idx];
+        tempAlpha1[idx] = tempAlpha1_old[idx];
       }
 
       // Unloading cases that get into either alpha > alpha0, or negative P

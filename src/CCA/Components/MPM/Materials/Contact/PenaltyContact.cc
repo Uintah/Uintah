@@ -155,41 +155,50 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
         if(!d_matls.requested(n)) continue;
         double mass=gmass[n][c];
         if(gtrcontactforce[n][c].length2() > 0.0 &&
-           !compare(mass,0.0)){
+           !compare(mass,0.0) /*&& mass!=centerOfMassMass*/){
           // Dv is the change in velocity due to penalty forces at tracers
           Vector Dv = (gtrcontactforce[n][c]/mass)*delT;
           double normalDv = Dv.length();
+          // This is an inward facing normal
           Vector normal = Dv/(normalDv+1.e-100);
 
-          // deltaVel is the difference in velocity of this material
+          // deltaVelocity is the difference in velocity of this material
           // relative to the centerOfMassVelocity
           Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
-          double normalDeltaVel=Dot(deltaVelocity,normal);
-          
-          Vector normal_normaldV = normal*normalDeltaVel;
+          // Get the normal component of deltaVelocity
+          double normalDeltaVel = Dot(deltaVelocity,normal);
+
+          // Take the minimum of these two measures of normal velocity.
+          // This prevents the penalty force (normalDv) from pushing too hard,
+          // and thereby creating space between the materials.  The
+          // force based on the velocity (normalDeltaVel) is just enough 
+          // to bring the material's velocity to the center of mass velocity.
+          normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
+
+          // Change in velocity in the normal direction
+          Dv = normalDv*normal;
+
+          // Create a vector that is the normal part of deltaVelocity
+          Vector normal_normaldV = -normal*normalDv;
+          // Subtract the normal part from the entire deltaVelocity
           Vector dV_normalDV = deltaVelocity - normal_normaldV;
+          // Compute tangent unit vector in the direction of the
+          // non-normal part of deltaVelocity
           Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
 
-#if 0
-          cout << "Dv = " << Dv << endl;
-          cout << "centerOfMassVelocity = " << centerOfMassVelocity << endl;
-          cout << "deltaVelocity = " << deltaVelocity << endl;
-          cout << "dV_normalDV = " << dV_normalDV << endl;
-          cout << "tangent = " << surfaceTangent << endl;
-#endif
-             
           double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
           double frictionCoefficient=
-                   Min(d_mu,tangentDeltaVelocity/fabs(normalDv));
-          Dv-=surfaceTangent*frictionCoefficient*fabs(normalDv);
+                    Min(d_mu,tangentDeltaVelocity/(normalDv + 1.e-100));
+
+          // Change in velocity in the tangential direction
+          Dv -= surfaceTangent*frictionCoefficient*normalDv;
+
 
           // Define contact algorithm imposed strain, find maximum
           Vector epsilon=(Dv/dx)*delT;
           double epsilon_max=
             Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
           if(!compare(epsilon_max,0.0)){
-            //epsilon_max *=Max(1.0, mass/(centerOfMassMass-mass));
-
             // Scale velocity change if contact imposed strain is too large
             double ff=Min(epsilon_max,.1)/epsilon_max;
             Dv=Dv*ff;
