@@ -1178,21 +1178,25 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   // This operator() replaces the cellIterator loop used to solve DivQ
   KOKKOS_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
+
 #ifndef FIXED_RANDOM_NUM
-    // Each thread needs a unique state
-    rnd_type rand_gen = m_rand_pool.get_state();
+    rnd_type rand_gen = m_rand_pool.get_state(); // Each thread needs a unique state
 #endif
+
+    //____________________________________________________________________________________________//
+    //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
 
     int L = m_maxLevels - 1;
 
-    double sumI = 0;
-
     double CC_pos[3];
-    int ijk[3] = {i,j,k};
-    m_levelParamsML[L].getCellPosition(ijk, CC_pos);
-    //double CC_pos[3]= { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
-    //                   , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
-    //                   , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
+    m_levelParamsML[L].getCellPosition( i, j, k, CC_pos );
+
+    // TODO: Add support for Latin-Hyper-Cube sampling
+    //if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
+    //  randVector(rand_i, mTwister, origin);
+    //}
+
+    double sumI = 0;
 
     //__________________________________
     //  Ray loop
@@ -1321,14 +1325,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                                 , 1.0 / direction_vector[1]
                                 , 1.0 / direction_vector[2] };
 
-//`==========TESTING==========//
+/*`==========TESTING==========*/
 #if DEBUG == 1
       if ( isDbgCell(i,j,k) ) {
         printf( "        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n",
                 i, j, k, direction_vector[0], direction_vector[1], direction_vector[2], rayOrigin[0], rayOrigin[1], rayOrigin[2] );
       }
 #endif
-//===========TESTING==========`//
+/*===========TESTING==========`*/
 
       //______________________________________________________//
       //==== START raySignStep(sign, step, ray_direction) ====//
@@ -1347,11 +1351,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
       // Define tMax & tDelta on all levels
       // Go from finest to coarsest level so you can compare
       // with 1L rayTrace results.
+
       double CC_posOrigin[3];
-      m_levelParamsML[L].getCellPosition(ijk, CC_posOrigin);
-      //double CC_posOrigin[3] = { m_fineLevel->getAnchor().x() + ( m_Dx[L][0] * i ) + ( 0.5 * m_Dx[L][0] )
-      //                         , m_fineLevel->getAnchor().y() + ( m_Dx[L][1] * j ) + ( 0.5 * m_Dx[L][1] )
-      //                         , m_fineLevel->getAnchor().z() + ( m_Dx[L][2] * k ) + ( 0.5 * m_Dx[L][2] ) };
+      m_levelParamsML[L].getCellPosition( i, j, k, CC_posOrigin );
 
       // rayDx is the distance from bottom, left, back, corner of cell to ray
       double rayDx[3];
@@ -1381,6 +1383,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
       double fs                   = 1.0;
       int    nReflect             = 0;           // Number of reflections
       bool   onFineLevel          = true;
+      //const  Level* level   = fineLevel;
       double optical_thickness    = 0;
       double expOpticalThick_prev = 1.0;         // exp(-opticalThick_prev)
       double rayLength            = 0.0;
@@ -1401,7 +1404,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
           prevLev     = L;
 
           //__________________________________
-          //  Determine which cell the ray will enter next
+          //  Determine the principal direction the ray is traveling
+          //
           dir = -9; // Hard-coded for NONE
           if ( tMaxV[0] < tMaxV[1] ) {    // X < Y
             if ( tMaxV[0] < tMaxV[2] ) {  // X < Z
@@ -1427,10 +1431,8 @@ struct rayTrace_dataOnion_solveDivQFunctor {
           // Logic for moving between levels
           // - Currently you can only move from fine to coarse level
           // - Don't jump levels if ray is at edge of domain
-          m_levelParamsML[L].getCellPosition(cur, CC_pos);
-          //CC_pos[0] = level->getAnchor().x() + ( m_Dx[L][0] * cur[0] ) + ( 0.5 * m_Dx[L][0] );
-          //CC_pos[1] = level->getAnchor().y() + ( m_Dx[L][1] * cur[1] ) + ( 0.5 * m_Dx[L][1] );
-          //CC_pos[2] = level->getAnchor().z() + ( m_Dx[L][2] * cur[2] ) + ( 0.5 * m_Dx[L][2] );
+
+          m_levelParamsML[L].getCellPosition( cur[0], cur[1], cur[2], CC_pos ); // position could be outside of domain
 
           //________________________________________//
           //==== START domain_BB.inside(CC_pos) ====//
@@ -1466,7 +1468,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
           if (jumpFinetoCoarserLevel) {
             m_levelParamsML[L].mapCellToCoarser(cur);
-            L   = (L > 0) ? L - 1 : 0;
+            //level = level->getCoarserLevel().get_rep();      // move to a coarser level
+            //L     = level->getIndex();
+            L = (L > 0) ? L - 1 : 0;
             onFineLevel = false;
 
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
@@ -1475,13 +1479,13 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             }
 #endif
 
-          }
-          else if (jumpCoarsetoCoarserLevel) {
-#if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
-            int c_old[3] = { cur[0], cur[1], cur[2] };      // needed for debugging
-#endif
+          } else if (jumpCoarsetoCoarserLevel) {
+
+            int c_old[3] = { cur[0], cur[1], cur[2] };                          // needed for debugging
             m_levelParamsML[L].mapCellToCoarser(cur);
-            L   = (L > 0) ? L - 1 : 0;                      // move to a coarser level
+            // level = level->getCoarserLevel().get_rep();
+            // L     = level->getIndex();
+            L = (L > 0) ? L - 1 : 0;
 
 #if ( (DEBUG == 1 || DEBUG == 4) && defined(ML_DEBUG) )
             if( isDbgCell(i,j,k) ) {
@@ -1521,9 +1525,16 @@ struct rayTrace_dataOnion_solveDivQFunctor {
           optical_thickness += m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * distanceTraveled;
           m_nRaySteps++;
 
+// TODO: Add support for FAST_EXP
+/*`==========TESTING==========*/
+//#ifdef FAST_EXP
+//          double expOpticalThick = fast_exp(-optical_thickness);
+//#else
           double expOpticalThick = exp( -optical_thickness );
+//#endif
+/*===========TESTING==========`*/
 
-//`==========TESTING==========//
+ /*`==========TESTING==========*/
 #if DEBUG == 1
           if ( isDbgCell(i,j,k) ) {
             printf( "            cur [%d,%d,%d] prev [%d,%d,%d]", cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
@@ -1536,28 +1547,29 @@ struct rayTrace_dataOnion_solveDivQFunctor {
             printf( "                tDelta [%g,%g,%g] \n", tDelta[L][0], tDelta[L][1], tDelta[L][2] );
       //    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z() );
       //    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n", abskg[prevLev][prevCell], sigmaT4OverPi[prevLev][prevCell] );
-      //    printf( "  0          abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur] );
+      //    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur] );
       //    printf( "            Dx[prevLev].x  %g \n", m_levelParamsML[L].Dx[0] );
             printf( "                optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength );
           }
 #endif
-//===========TESTING==========`//
-            //if (rayOrigin[0] == 0 && rayOrigin[1] == 0 && rayOrigin[2] == 0) {
-//              printf("At (%d,%d,%d) abskg is %g and sigmaT4OverPi is %g and cellType is %d\n",
-//                  prevCell[0], prevCell[1], prevCell[2],
-//                  m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
-//                  m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
-//                  m_cellType[L]( cur[0], cur[1], cur[2] ));
-          //}
+/*===========TESTING==========`*/
+
+//          if (rayOrigin[0] == 0 && rayOrigin[1] == 0 && rayOrigin[2] == 0) {
+//            printf("At (%d,%d,%d) abskg is %g and sigmaT4OverPi is %g and cellType is %d\n",
+//                   prevCell[0], prevCell[1], prevCell[2],
+//                   m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
+//                   m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ),
+//                   m_cellType[L]( cur[0], cur[1], cur[2] ));
+//          }
+
           sumI += m_sigmaT4OverPi[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * ( expOpticalThick_prev - expOpticalThick ) * fs;
           //sumI += 0.318331f * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
           expOpticalThick_prev = expOpticalThick;
+
         } // end domain while loop  ++++++++++++++
 
-        //______________________________________________________________________
-
-        T wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
+        double wallEmissivity = ( m_abskg[L]( cur[0], cur[1], cur[2] ) > 1.0 ) ? 1.0: m_abskg[L]( cur[0], cur[1], cur[2] );  // Ensure wall emissivity doesn't exceed one
 
         intensity = exp( -optical_thickness );
 
@@ -1567,13 +1579,13 @@ struct rayTrace_dataOnion_solveDivQFunctor {
         // When a ray reaches the end of the domain, we force it to terminate
         intensity = ( !m_d_allowReflect ) ? 0 : ( intensity * fs );
 
-//`==========TESTING==========//
+/*`==========TESTING==========*/
 #if DEBUG == 1
         if ( isDbgCell(i,j,k) ) {
           printf( "        intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, m_d_allowReflect );
         }
 #endif
-//===========TESTING==========`//
+/*===========TESTING==========`*/
 
         //__________________________________
         //  Reflections
@@ -1624,9 +1636,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 #endif
 
 //`===========TESTING==========//
+
+    //________ _________________________________________________________________________________//
+    //==== END for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
+
 #ifndef FIXED_RANDOM_NUM
     m_rand_pool.free_state(rand_gen);
 #endif
+
   } // end operator()
 };   // end rayTrace_dataOnion_solveDivQFunctor
 

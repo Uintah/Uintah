@@ -103,11 +103,11 @@ namespace Uintah{
     //__________________________________
     //  Portable version of level::getCellPosition()
     KOKKOS_INLINE_FUNCTION
-    void getCellPosition(const int cell[3], double cellPos[3]) const
+    void getCellPosition(const int x, const int y, const int z, double cellPos[3]) const
     {
-      cellPos[0] = anchor[0] + (Dx[0] * cell[0]) + (0.5 * Dx[0]);
-      cellPos[1] = anchor[1] + (Dx[1] * cell[1]) + (0.5 * Dx[1]);
-      cellPos[2] = anchor[2] + (Dx[2] * cell[2]) + (0.5 * Dx[2]);
+      cellPos[0] = anchor[0] + (Dx[0] * x) + (0.5 * Dx[0]);
+      cellPos[1] = anchor[1] + (Dx[1] * y) + (0.5 * Dx[1]);
+      cellPos[2] = anchor[2] + (Dx[2] * z) + (0.5 * Dx[2]);
     }
 
     KOKKOS_INLINE_FUNCTION
