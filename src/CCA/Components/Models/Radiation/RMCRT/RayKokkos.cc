@@ -1708,6 +1708,8 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   std::vector< constCCVariable< T > > abskg(numLevels);
   std::vector< constCCVariable< T > > sigmaT4OverPi(numLevels);
   std::vector< constCCVariable<int> > cellType(numLevels);
+  //constCCVariable< T > abskg_fine;         // replaced by indexing into each
+  //constCCVariable< T > sigmaT4OverPi_fine;
 
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
@@ -1737,6 +1739,71 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   KokkosView3<double, Kokkos::HostSpace> radiationVolq_fine_view;
 #endif
 
+  // vector<Vector> Dx(maxLevels); // replaced by LevelParamsML
+
+  LevelParamsML levelParamsML[numLevels];
+
+  for ( int L = 0; L < numLevels; L++ ) {
+    LevelP level = new_dw->getGrid()->getLevel(L);
+
+    levelParamsML[L].Dx[0] = level->dCell().x();
+    levelParamsML[L].Dx[1] = level->dCell().y();
+    levelParamsML[L].Dx[2] = level->dCell().z();
+
+    levelParamsML[L].anchor[0] = level->getAnchor().x();
+    levelParamsML[L].anchor[1] = level->getAnchor().y();
+    levelParamsML[L].anchor[2] = level->getAnchor().z();
+
+    levelParamsML[L].refinementRatio[0] = level->getRefinementRatio().x();
+    levelParamsML[L].refinementRatio[1] = level->getRefinementRatio().y();
+    levelParamsML[L].refinementRatio[2] = level->getRefinementRatio().z();
+  }
+
+  IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
+  IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
+  vector<IntVector> regionLo( numLevels );
+  vector<IntVector> regionHi( numLevels );
+
+  int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
+  int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
+
+  //__________________________________
+  //  retrieve fine level data & compute the extents (dynamic and fixed )
+  if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
+
+    const Patch* notUsed = 0;
+    computeExtents(level_0, fineLevel, notUsed, numLevels, new_dw,
+                   fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
+
+    fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
+    fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
+    fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
+
+    fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
+    fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
+    fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
+
+    for ( int L = 0; L < numLevels; L++ ) {
+      levelParamsML[L].regionLo[0] = regionLo[L][0];
+      levelParamsML[L].regionLo[1] = regionLo[L][1];
+      levelParamsML[L].regionLo[2] = regionLo[L][2];
+
+      levelParamsML[L].regionHi[0] = regionHi[L][0];
+      levelParamsML[L].regionHi[1] = regionHi[L][1];
+      levelParamsML[L].regionHi[2] = regionHi[L][2];
+    }
+  }
+
+  Timers::Simple timer;
+  timer.start();
+
+  // Determine the size of the domain.
+  BBox domain_BB;
+  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
+
+  double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
+  double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
+
   // Patch loop
   for (int p = 0; p < finePatches->size(); p++) {
 
@@ -1747,24 +1814,6 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
     int fine_L = numLevels - 1;
 
-    //Load levelParamsML
-    LevelParamsML levelParamsML[numLevels];
-    IntVector fineLevel_ROI_Lo = IntVector( -9,-9,-9 );
-    IntVector fineLevel_ROI_Hi = IntVector( -9,-9,-9 );
-    vector<IntVector> regionLo( numLevels );
-    vector<IntVector> regionHi( numLevels );
-
-    int fineLevel_ROI_Lo_pod[3] = { -9,-9,-9 };
-    int fineLevel_ROI_Hi_pod[3] = { -9,-9,-9 };
-
-  //__________________________________
-  //  retrieve fine level data & compute the extents (dynamic and fixed )
-    if ( d_ROI_algo == fixed || d_ROI_algo == dynamic ) {
-      const Patch* notUsed = 0;
-      computeExtents(level_0, fineLevel, notUsed, numLevels, new_dw,
-                     fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
-    }
-
      //__________________________________
     //  retrieve fine level data ( patch_based )
     if ( d_ROI_algo == patch_based ) {
@@ -1773,42 +1822,24 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                      fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                      regionLo,  regionHi);
 
+      fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
+      fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
+      fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
+
+      fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
+      fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
+      fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
+
+      for ( int L = 0; L < numLevels; L++ ) {
+        levelParamsML[L].regionLo[0] = regionLo[L][0];
+        levelParamsML[L].regionLo[1] = regionLo[L][1];
+        levelParamsML[L].regionLo[2] = regionLo[L][2];
+
+        levelParamsML[L].regionHi[0] = regionHi[L][0];
+        levelParamsML[L].regionHi[1] = regionHi[L][1];
+        levelParamsML[L].regionHi[2] = regionHi[L][2];
+      }
     }
-
-    for ( int L = 0; L < numLevels; L++ ) {
-      LevelP level = new_dw->getGrid()->getLevel(L);
-      levelParamsML[L].Dx[0] = level->dCell().x();
-      levelParamsML[L].Dx[1] = level->dCell().y();
-      levelParamsML[L].Dx[2] = level->dCell().z();
-      levelParamsML[L].anchor[0] = level->getAnchor().x();
-      levelParamsML[L].anchor[1] = level->getAnchor().y();
-      levelParamsML[L].anchor[2] = level->getAnchor().z();
-      levelParamsML[L].refinementRatio[0] = level->getRefinementRatio().x();
-      levelParamsML[L].refinementRatio[1] = level->getRefinementRatio().y();
-      levelParamsML[L].refinementRatio[2] = level->getRefinementRatio().z();
-      levelParamsML[L].regionLo[0] = regionLo[L][0];
-      levelParamsML[L].regionLo[1] = regionLo[L][1];
-      levelParamsML[L].regionLo[2] = regionLo[L][2];
-      levelParamsML[L].regionHi[0] = regionHi[L][0];
-      levelParamsML[L].regionHi[1] = regionHi[L][1];
-      levelParamsML[L].regionHi[2] = regionHi[L][2];
-    }
-
-    fineLevel_ROI_Lo_pod[0] = fineLevel_ROI_Lo.x();
-    fineLevel_ROI_Lo_pod[1] = fineLevel_ROI_Lo.y();
-    fineLevel_ROI_Lo_pod[2] = fineLevel_ROI_Lo.z();
-    fineLevel_ROI_Hi_pod[0] = fineLevel_ROI_Hi.x();
-    fineLevel_ROI_Hi_pod[1] = fineLevel_ROI_Hi.y();
-    fineLevel_ROI_Hi_pod[2] = fineLevel_ROI_Hi.z();
-
-    Timers::Simple timer;
-    timer.start();
-
-    // Determine the size of the domain.
-    BBox domain_BB;
-    level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
-    double domain_BB_Lo[3] = { domain_BB.min().x(), domain_BB.min().y(), domain_BB.min().z() };
-    double domain_BB_Hi[3] = { domain_BB.max().x(), domain_BB.max().y(), domain_BB.max().z() };
 
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
     // Get the Kokkos Views from the simulation variables
