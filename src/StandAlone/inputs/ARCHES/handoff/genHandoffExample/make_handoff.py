@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def get_mdot( Nspace, fp, eta, hl, v, myTable, area, R ): 
+
+    """ Compute the mdots if v > 0. """
+
     mdot = 0
     mdot_eta = 0
     mdot_fp = 0
@@ -28,7 +31,7 @@ def get_mdot( Nspace, fp, eta, hl, v, myTable, area, R ):
                 mdot_fp   += fp[i,j]*state_space[2]*v[i,j]*(1+R)*area
                 mdot_eta  += eta[i,j]*state_space[2]*v[i,j]*(1+R)*area
                 mdot_fuel += fp[i,j]*state_space[2]*v[i,j]*(1+R)*area \
-                        + eta[i,j]*state_space[2]*v[i,j]*(1+R)*area
+                           + eta[i,j]*state_space[2]*v[i,j]*(1+R)*area
 
     return mdot, mdot_eta, mdot_fp, mdot_fuel, density
 
@@ -37,12 +40,13 @@ def get_mdot( Nspace, fp, eta, hl, v, myTable, area, R ):
 orig_data_i = 1
 int_i = 0
 
-filenames = ['handoff_marathon_handoff_CCWVelocity_m.dat', 'handoff_marathon_handoff_mixture_fraction_2_m.dat','handoff_marathon_handoff_mixture_fraction_m.dat','handoff_marathon_handoff_heat_loss_m.dat','handoff_marathon_handoff_steam_m.dat']
+filenames = ['handoff_fine_heat_loss.dat', 'handoff_fine_uVelocitySPBC.dat',  
+             'handoff_fine_mixture_fraction_2.dat','handoff_fine_mixture_fraction.dat','handoff_fine_enthalpy.dat']
 
 ho_info = {}
 for f in filenames: 
     this_info = []
-    this_name = (f.split('.dat')[0]).split('handoff_marathon_handoff_')[1].split('_m')[0]
+    this_name = (f.split('.dat')[0]).split('handoff_fine_')[1].split('.')[0]
     interpolator,x,y,newX,newY,origdata = A.getInterpolator(f, 2)
     dx = x[1]-x[0]
     dy = y[1]-y[0]
@@ -66,7 +70,7 @@ myTable = ct('CH4_gogolek.mix')
 fp = ho_info['mixture_fraction_2'][orig_data_i]
 eta = ho_info['mixture_fraction'][orig_data_i]
 hl = ho_info['heat_loss'][orig_data_i]
-v = ho_info['CCWVelocity'][orig_data_i]
+v = ho_info['uVelocitySPBC'][orig_data_i]
 
 mdot, mdot_eta, mdot_fp, mdot_fuel, rho_orig = get_mdot(N,fp,eta,hl,v,myTable,area_cell, 0.0)
 
@@ -74,7 +78,7 @@ mdot, mdot_eta, mdot_fp, mdot_fuel, rho_orig = get_mdot(N,fp,eta,hl,v,myTable,ar
 fp_i = ho_info['mixture_fraction_2'][int_i](newX,newY)
 eta_i = ho_info['mixture_fraction'][int_i](newX,newY)
 heat_loss_i = ho_info['heat_loss'][int_i](newX,newY)
-v_i = ho_info['CCWVelocity'][int_i](newX,newY)
+v_i = ho_info['uVelocitySPBC'][int_i](newX,newY)
 
 mdot_new, mdot_eta_new, mdot_fp_new, mdot_fuel_new, rho_coarse = get_mdot(Nnew,fp_i,eta_i,heat_loss_i,v_i,myTable,area_new_cell, 0.)
 
@@ -85,6 +89,10 @@ r_mdot_fuel = ( mdot_fuel - mdot_fuel_new ) / mdot_fuel
 
 #which R?
 R = r_mdot_fp
+
+print('Adjustment ratio, R = {}'.format(R))
+print('mdot_fp = ', mdot_fp)
+print('mdot_fp_new =', mdot_fp_new)
 
 mdot_new, mdot_eta_new, mdot_fp_new, mdot_fuel_new, rho_coarse = get_mdot(Nnew,fp_i,eta_i,heat_loss_i,v_i,myTable,area_new_cell, R)
 
@@ -104,10 +112,11 @@ for i in range(Nnew[0]):
 
         source = rho_coarse[i,j]*v_i[i,j]*v_i[i,j]
 
-        if source > 0: 
-            f.write('{} {} 0 {}\n'.format(i,j,source))
-        else: 
-            f.write('{} {} 0 {}\n'.format(i,j,0.))
+        f.write('0 {} {} {}\n'.format(i,j,source))
+        #if source > 0: 
+            #f.write('0 {} {} {}\n'.format(i,j,source))
+        #else: 
+            #f.write('0 {} {} {}\n'.format(i,j,0.))
 
 
 f.close()
@@ -120,12 +129,12 @@ f.write('{}\n'.format(Nnew[0]*Nnew[1]))
 for i in range(Nnew[0]): 
     for j in range(Nnew[1]): 
 
-        source = rho_coarse[i,j]*v[i,j]*fp_i[i,j]
+        source = rho_coarse[i,j]*v_i[i,j]*fp_i[i,j]
 
-        if source > 0: 
-            f.write('{} {} 0 {}\n'.format(i,j,source))
+        if fp_i[i,j] > 0: 
+            f.write('0 {} {} {}\n'.format(i,j,source))
         else: 
-            f.write('{} {} 0 {}\n'.format(i,j,0.))
+            f.write('0 {} {} {}\n'.format(i,j,0.))
 
 f.close()
 
@@ -137,12 +146,12 @@ f.write('{}\n'.format(Nnew[0]*Nnew[1]))
 for i in range(Nnew[0]): 
     for j in range(Nnew[1]): 
 
-        source = rho_coarse[i,j]*v[i,j]*eta_i[i,j]
+        source = rho_coarse[i,j]*v_i[i,j]*eta_i[i,j]
 
-        if source > 0: 
-            f.write('{} {} 0 {}\n'.format(i,j,source))
+        if eta_i[i,j] > 0: 
+            f.write('0 {} {} {}\n'.format(i,j,source))
         else: 
-            f.write('{} {} 0 {}\n'.format(i,j,0.))
+            f.write('0 {} {} {}\n'.format(i,j,0.))
 
 f.close()
 
@@ -154,7 +163,7 @@ f.write('{}\n'.format(Nnew[0]*Nnew[1]))
 for i in range(Nnew[0]): 
     for j in range(Nnew[1]): 
 
-        f.write('{} {} 0 {}\n'.format(i,j,heat_loss_i[i,j]))
+        f.write('0 {} {} {}\n'.format(i,j,heat_loss_i[i,j]))
 
 f.close()
 
@@ -176,12 +185,13 @@ for i in range(Nnew[0]):
 
         h = h_ad - heat_loss_i[i,j]*h_sens
 
-        source = rho_coarse[i,j]*v[i,j]*h
+        source = rho_coarse[i,j]*v_i[i,j]*h
 
-        if source > 0: 
-            f.write('{} {} 0 {}\n'.format(i,j,source))
-        else: 
-            f.write('{} {} 0 {}\n'.format(i,j,0.))
+        f.write('0 {} {} {}\n'.format(i,j,source))
+        #if source > 0: 
+            #f.write('{} {} 0 {}\n'.format(i,j,source))
+        #else: 
+            #f.write('{} {} 0 {}\n'.format(i,j,0.))
 
 f.close()
 

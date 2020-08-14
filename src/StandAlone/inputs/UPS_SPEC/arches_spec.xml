@@ -2109,7 +2109,9 @@
             <!--                 Neumann isn't currently supported -->
             <!--                 Note that the value specified in any case is rho*u*phi (flux). -->
             <!--                 The code takes this value and multiplies by an area to compute the integral on a "face". -->
+            <!--                 The relatize_xyz specifies where (0,0,0) is located. Note that only the two changing dimensions matter -->
             <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
+            <relative_xyz               spec="REQUIRED VECTOR" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
 
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->
