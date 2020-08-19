@@ -1576,7 +1576,7 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
         labelPatchMatlDependency lpmd(dependantVar->m_var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
-        std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator it = vars.find(lpmd);
+        std::multimap<labelPatchMatlDependency, const Task::Dependency*>::iterator it = vars.find(lpmd);
         if (it  == vars.end() || (it != vars.end() && it->second->m_whichdw != dependantVar->m_whichdw)) {
           vars.insert(std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type(lpmd, dependantVar));
         }
@@ -1977,7 +1977,28 @@ KokkosScheduler::initiateH2DCopies( DetailedTask * dtask )
           // ghost cell data while B is resizing its own data.
           // I believe both issues can be fixed with proper checkpoints.  But in reality
           // we shouldn't be resizing variables on the GPU, so this event should never happen.
+
+          // DS 04222020: AMRSimulationController::collectGhostCells and SchedulerCommon::addTask together can
+          // determine max ghost cells for variables across all tasks and across init and main task graph.
+          // So this scenario can only occur when there are other task graphs such as sub scheduler of Poisson2
+          // or may be during AMR as methods related to it are not yet included in collectGhostCells.
+          // Updating error message to more meaningful text.
           gpudw->remove(curDependency->m_var->getName().c_str(), patchID, matlID, levelID);
+          std::cout <<  myRankThread()
+                    //<< " Resizing of GPU grid vars not implemented at this time. "
+                    <<"\n**Ensure the MAX number of ghost cells for the variable for GPU tasks in the previous task graph are same as in the current taskgraph**\n "
+                    << "Task: " << dtask->getName()
+                    //<< "For the GPU, computes need to be declared with scratch computes to have room for ghost cells.  "
+                    << " for " << curDependency->m_var->getName()
+                    << " patch " << patchID
+                    << " material " << matlID
+                    << " level " << levelID
+                    << ".  Requested var of size (" << host_size.x() << ", " << host_size.y() << ", " << host_size.z() << ") "
+                    << "with offset (" << low.x() << ", " << low.y() << ", " << low.z() << ")"
+                    << " max ghost cells set to: " << curDependency->m_var->getMaxDeviceGhost()
+                    << "\n Are you using sub scheduler or AMR? Those are not yet supported by AMRSimulationController::collectGhostCells."
+                    << std::endl;
+
           SCI_THROW(InternalError("ERROR: Resizing of GPU grid vars not implemented at this time",__FILE__, __LINE__));
 
         //commented copyingIn here to avoid a race condition between delayed copying and gathering of ghost cells
@@ -2134,6 +2155,11 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
           Ghost::GhostType dgtype = it->second.m_dep->m_var->getMaxDeviceGhostType();
           int dghost = it->second.m_dep->m_var->getMaxDeviceGhost();
 
+          if(numGhostCells>dghost){//RMCRT
+            dghost = numGhostCells;
+            dgtype = ghosttype;
+          }
+
           //Allocate the vars if needed.  If they've already been allocated, then
           //this simply sets the var to reuse the existing pointer.
           switch (type) {
@@ -2201,6 +2227,11 @@ KokkosScheduler::prepareDeviceVars( DetailedTask * dtask )
           // If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
           if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
             if (!device_ptr) {
+              std::cout << myRankThread() << " ERROR: GPU variable's device pointer was nullptr. "
+                  << "For " << label_cstr
+                  << " patch " << patchID
+                  << " material " << matlIndx
+                  << " level " << levelID << "." << std::endl;
               SCI_THROW(InternalError("ERROR: GPU variable's device pointer was nullptr",__FILE__, __LINE__));
             }
 
@@ -2923,17 +2954,20 @@ KokkosScheduler::markDeviceRequiresAndModifiesDataAsValid( DetailedTask * dtask 
     int dwIndex = it->second.m_dep->mapDataWarehouse();
     GPUDataWarehouse* gpudw = m_dws[dwIndex]->getGPUDW(whichGPU);
     if (it->second.m_dep->m_dep_type == Task::Requires || it->second.m_dep->m_dep_type == Task::Modifies) {
+      bool success=false;
       if (!it->second.m_staging) {
-        gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
+        success = gpudw->compareAndSwapSetValidOnGPU(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx);
       } else {
-        gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
+        success = gpudw->compareAndSwapSetValidOnGPUStaging(it->second.m_dep->m_var->getName().c_str(), it->first.m_patchID, it->first.m_matlIndx, it->first.m_levelIndx,
                                     make_int3(it->second.m_offset.x(),it->second.m_offset.y(),it->second.m_offset.z()),
                                     make_int3(it->second.m_sizeVector.x(), it->second.m_sizeVector.y(), it->second.m_sizeVector.z()));
       }
 
-      if (it->second.m_tempVarToReclaim) {
-        //Release our reference to the variable data that getGridVar returned
-        delete it->second.m_tempVarToReclaim;
+      if(success){	//release only if SetValud returns true. Otherwise double deletion (probably due to race condition) and then segfault was observed in dqmom example
+        if (it->second.m_tempVarToReclaim) {
+          //Release our reference to the variable data that getGridVar returned
+          delete it->second.m_tempVarToReclaim;
+        }
       }
     }
   }
@@ -3564,166 +3598,191 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
     // and requires other variables.  So the logic is "If it wasn't one of the computes", then we
     // don't need to copy it back D2H"
 
-    bool hack_foundAComputes{false};
-
-    // RMCRT hack:
-    if ( (varName == "divQ")           ||
-         (varName == "RMCRTboundFlux") ||
-         (varName == "radiationVolq")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // almgren-mmsBC.ups hack
-    // almgren-mms_conv.ups hack
-    if ( (varName == "uVelocity") ||
-         (varName == "vVelocity") ||
-         (varName == "wVelocity")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // box1.ups hack
-    if ( (varName == "length_0_x_dflux") ||
-         (varName == "length_0_y_dflux") ||
-         (varName == "length_0_z_dflux") ||
-         (varName == "length_1_x_dflux") ||
-         (varName == "length_1_y_dflux") ||
-         (varName == "length_1_z_dflux") ||
-         (varName == "pU_0_x_dflux")     ||
-         (varName == "pU_0_y_dflux")     ||
-         (varName == "pU_0_z_dflux")     ||
-         (varName == "pV_0_x_dflux")     ||
-         (varName == "pV_0_y_dflux")     ||
-         (varName == "pV_0_z_dflux")     ||
-         (varName == "pW_0_x_dflux")     ||
-         (varName == "pW_0_y_dflux")     ||
-         (varName == "pW_0_z_dflux")     ||
-         (varName == "pU_1_x_dflux")     ||
-         (varName == "pU_1_y_dflux")     ||
-         (varName == "pU_1_z_dflux")     ||
-         (varName == "pV_1_x_dflux")     ||
-         (varName == "pV_1_y_dflux")     ||
-         (varName == "pV_1_z_dflux")     ||
-         (varName == "pW_1_x_dflux")     ||
-         (varName == "pW_1_y_dflux")     ||
-         (varName == "pW_1_z_dflux")     ||
-         (varName == "w_qn0_x_dflux")    ||
-         (varName == "w_qn0_y_dflux")    ||
-         (varName == "w_qn0_z_dflux")    ||
-         (varName == "w_qn1_x_dflux")    ||
-         (varName == "w_qn1_y_dflux")    ||
-         (varName == "w_qn1_z_dflux")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // dqmom_example_char_no_pressure.ups hack:
-    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
-    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
-    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
-    if ( (varName.substr(0,10) == "char_ps_qn") ||
-         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW)
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // heliumKS_pressureBC.ups hack
-    if ( (varName == "A_press")            ||
-         (varName == "b_press")            ||
-         (varName == "cellType")           ||
-         (varName == "continuity_balance") ||
-         (varName == "density")            ||
-         (varName == "density_star")       ||
-         (varName == "drhodt")             ||
-         (varName == "gamma")              ||
-         (varName == "gravity_z")          ||
-         (varName == "gridX")              ||
-         (varName == "gridY")              ||
-         (varName == "gridZ")              ||
-         (varName == "guess_press")        ||
-         (varName == "phi")                ||
-         (varName == "phi_x_dflux")        ||
-         (varName == "phi_y_dflux")        ||
-         (varName == "phi_z_dflux")        ||
-         (varName == "phi_x_flux")         ||
-         (varName == "phi_y_flux")         ||
-         (varName == "phi_z_flux")         ||
-         (varName == "pressure")           ||
-         (varName == "rho_phi")            ||
-         (varName == "rho_phi_RHS")        ||
-         (varName == "sigma11")            ||
-         (varName == "sigma12")            ||
-         (varName == "sigma13")            ||
-         (varName == "sigma22")            ||
-         (varName == "sigma23")            ||
-         (varName == "sigma33")            ||
-         (varName == "t_viscosity")        ||
-         (varName == "ucell_xvel")         ||
-         (varName == "ucell_yvel")         ||
-         (varName == "ucell_zvel")         ||
-         (varName == "vcell_xvel")         ||
-         (varName == "vcell_yvel")         ||
-         (varName == "vcell_zvel")         ||
-         (varName == "wcell_xvel")         ||
-         (varName == "wcell_yvel")         ||
-         (varName == "wcell_zvel")         ||
-         (varName == "ucellX")             ||
-         (varName == "vcellY")             ||
-         (varName == "wcellZ")             ||
-         (varName == "uVel")               ||
-         (varName == "vVel")               ||
-         (varName == "wVel")               ||
-         (varName == "uVel_cc")            ||
-         (varName == "vVel_cc")            ||
-         (varName == "wVel_cc")            ||
-         (varName == "volFraction")        ||
-         (varName == "volFractionX")       ||
-         (varName == "volFractionY")       ||
-         (varName == "volFractionZ")       ||
-         (varName == "x-mom")              ||
-         (varName == "x-mom_RHS")          ||
-         (varName == "x-mom_x_flux")       ||
-         (varName == "x-mom_y_flux")       ||
-         (varName == "x-mom_z_flux")       ||
-         (varName == "y-mom")              ||
-         (varName == "y-mom_RHS")          ||
-         (varName == "z-mom")              ||
-         (varName == "z-mom_RHS")          ||
-         (varName == "z-mom_x_flux")       ||
-         (varName == "z-mom_y_flux")       ||
-         (varName == "z-mom_z_flux")       ||
-         (varName == "hypre_solver_label")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
-    if ( (varName == "uVelocity_cc") ||
-         (varName == "vVelocity_cc") ||
-         (varName == "wVelocity_cc")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    // poisson1.ups hack:
-    if ( (varName == "phi")      ||
-         (varName == "residual")
-       )
-    {
-      hack_foundAComputes = true;
-    }
-
-    if (!hack_foundAComputes) {
-      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
-                // Go start the loop over and get the next potential variable.
-    }
+    // DS 04222020: Commented hack_foundAComputes hack as now CPU validity status of a variable is
+    // maintained in OnDemandWH and whether D2H copy is needed can be determined dynamically.
+//    bool hack_foundAComputes{false};
+//
+//    // RMCRT hack:
+//    if ( (varName == "divQ")           ||
+//         (varName == "RMCRTboundFlux") ||
+//         (varName == "radiationVolq")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // almgren-mmsBC.ups hack
+//    // almgren-mms_conv.ups hack
+//    if ( (varName == "uVelocity") ||
+//         (varName == "vVelocity") ||
+//         (varName == "wVelocity")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // box1.ups hack
+//    if ( (varName == "length_0_x_dflux") ||
+//         (varName == "length_0_y_dflux") ||
+//         (varName == "length_0_z_dflux") ||
+//         (varName == "length_1_x_dflux") ||
+//         (varName == "length_1_y_dflux") ||
+//         (varName == "length_1_z_dflux") ||
+//         (varName == "pU_0_x_dflux")     ||
+//         (varName == "pU_0_y_dflux")     ||
+//         (varName == "pU_0_z_dflux")     ||
+//         (varName == "pV_0_x_dflux")     ||
+//         (varName == "pV_0_y_dflux")     ||
+//         (varName == "pV_0_z_dflux")     ||
+//         (varName == "pW_0_x_dflux")     ||
+//         (varName == "pW_0_y_dflux")     ||
+//         (varName == "pW_0_z_dflux")     ||
+//         (varName == "pU_1_x_dflux")     ||
+//         (varName == "pU_1_y_dflux")     ||
+//         (varName == "pU_1_z_dflux")     ||
+//         (varName == "pV_1_x_dflux")     ||
+//         (varName == "pV_1_y_dflux")     ||
+//         (varName == "pV_1_z_dflux")     ||
+//         (varName == "pW_1_x_dflux")     ||
+//         (varName == "pW_1_y_dflux")     ||
+//         (varName == "pW_1_z_dflux")     ||
+//         (varName == "w_qn0_x_dflux")    ||
+//         (varName == "w_qn0_y_dflux")    ||
+//         (varName == "w_qn0_z_dflux")    ||
+//         (varName == "w_qn1_x_dflux")    ||
+//         (varName == "w_qn1_y_dflux")    ||
+//         (varName == "w_qn1_z_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // dqmom_example_char_no_pressure.ups hack:
+//    // All the computes are char_ps_qn4, char_ps_qn4_gasSource, char_ps_qn4_particletempSource, char_ps_qn4_particleSizeSource
+//    // char_ps_qn4_surfacerate, char_gas_reaction0_qn4, char_gas_reaction1_qn4, char_gas_reaction2_qn4.  Note that the qn# goes
+//    // from qn0 to qn4.  Also, the char_gas_reaction0_qn4 variable is both a computes in the newDW and a requires in the oldDW
+//    if ( (varName.substr(0,10) == "char_ps_qn")                                  ||
+//         (varName.substr(0,17) == "char_gas_reaction" && dwIndex == Task::NewDW) ||
+//         (varName == "raw_coal_0_x_dflux")                                       ||
+//         (varName == "raw_coal_0_y_dflux")                                       ||
+//         (varName == "raw_coal_1_x_dflux")                                       ||
+//         (varName == "raw_coal_1_y_dflux")                                       ||
+//         (varName == "raw_coal_1_z_dflux")                                       ||
+//         (varName == "w_qn2_x_dflux")                                            ||
+//         (varName == "w_qn2_y_dflux")                                            ||
+//         (varName == "w_qn3_x_dflux")                                            ||
+//         (varName == "w_qn4_x_dflux")                                            ||
+//         (varName == "w_qn4_y_dflux")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // heliumKS_pressureBC.ups hack
+//    if ( (varName == "A_press")            ||
+//         (varName == "b_press")            ||
+//         (varName == "cellType")           ||
+//         (varName == "continuity_balance") ||
+//         (varName == "density")            ||
+//         (varName == "density_star")       ||
+//         (varName == "drhodt")             ||
+//         (varName == "gamma")              ||
+//         (varName == "gravity_z")          ||
+//         (varName == "gridX")              ||
+//         (varName == "gridY")              ||
+//         (varName == "gridZ")              ||
+//         (varName == "guess_press")        ||
+//         (varName == "phi")                ||
+//         (varName == "phi_x_dflux")        ||
+//         (varName == "phi_y_dflux")        ||
+//         (varName == "phi_z_dflux")        ||
+//         (varName == "phi_x_flux")         ||
+//         (varName == "phi_y_flux")         ||
+//         (varName == "phi_z_flux")         ||
+//         (varName == "pressure")           ||
+//         (varName == "rho_phi")            ||
+//         (varName == "rho_phi_RHS")        ||
+//         (varName == "sigma11")            ||
+//         (varName == "sigma12")            ||
+//         (varName == "sigma13")            ||
+//         (varName == "sigma22")            ||
+//         (varName == "sigma23")            ||
+//         (varName == "sigma33")            ||
+//         (varName == "t_viscosity")        ||
+//         (varName == "ucell_xvel")         ||
+//         (varName == "ucell_yvel")         ||
+//         (varName == "ucell_zvel")         ||
+//         (varName == "vcell_xvel")         ||
+//         (varName == "vcell_yvel")         ||
+//         (varName == "vcell_zvel")         ||
+//         (varName == "wcell_xvel")         ||
+//         (varName == "wcell_yvel")         ||
+//         (varName == "wcell_zvel")         ||
+//         (varName == "ucellX")             ||
+//         (varName == "vcellY")             ||
+//         (varName == "wcellZ")             ||
+//         (varName == "uVel")               ||
+//         (varName == "vVel")               ||
+//         (varName == "wVel")               ||
+//         (varName == "uVel_cc")            ||
+//         (varName == "vVel_cc")            ||
+//         (varName == "wVel_cc")            ||
+//         (varName == "volFraction")        ||
+//         (varName == "volFractionX")       ||
+//         (varName == "volFractionY")       ||
+//         (varName == "volFractionZ")       ||
+//         (varName == "x-mom")              ||
+//         (varName == "x-mom_RHS")          ||
+//         (varName == "x-mom_x_flux")       ||
+//         (varName == "x-mom_y_flux")       ||
+//         (varName == "x-mom_z_flux")       ||
+//         (varName == "y-mom")              ||
+//         (varName == "y-mom_RHS")          ||
+//         (varName == "z-mom")              ||
+//         (varName == "z-mom_RHS")          ||
+//         (varName == "z-mom_x_flux")       ||
+//         (varName == "z-mom_y_flux")       ||
+//         (varName == "z-mom_z_flux")       ||
+//         (varName == "hypre_solver_label")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_dynSmag_unpacked_noPress.ups hack:
+//    if ( (varName == "uVelocity_cc") ||
+//         (varName == "vVelocity_cc") ||
+//         (varName == "wVelocity_cc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // isotropic_kokkos_wale.ups hack:
+//    if ( (varName == "wale_model_visc")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    // poisson1.ups hack:
+//    if ( (varName == "phi")      ||
+//         (varName == "residual")
+//       )
+//    {
+//      hack_foundAComputes = true;
+//    }
+//
+//    if (g_d2h_dbg) {
+//      std::ostringstream message;
+//      message << "  " << varName << ": Device-to-Host Copy May Be Needed";
+//      DOUT(true, message.str());
+//    }
+//
+//    if (!hack_foundAComputes) {
+//      continue; // This variable wasn't a computes, we shouldn't do a device-to-host transfer
+//                // Go start the loop over and get the next potential variable.
+//    }
 
     if (gpudw != nullptr) {
       // It's not valid on the CPU but it is on the GPU.  Copy it on over.
@@ -3812,8 +3871,19 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
                 if (uses_SHRT_MAX) {
                   gridVar->allocate(host_low, host_high);
                 } else {
-                //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
+                  //DS 12132019: GPU Resize fix. Use max ghost cells and corresponding low and high to allocate scratch space
+                  //DS 06162020 Fix for the crash. Using allocateAndPut deletes the existing variable in dw and allocates a new one. If some other
+                  //thread is accessing the same variable at the same time, then it leads to a crash. Hence allocate only if the variable does
+                  //not exist on the host. While reusing existing variable, call getGridVar and set exactWindow=1. exactWindow=1 ensures that
+                  //the allocated space has exactly same size as the requested. This is needed for D2H copy.
+                  //Check comments in OnDemandDW::allocateAndPut, OnDemandDW::getGridVar, Array3<T>::rewindowExact and UnifiedScheduler::initiateD2H
+                  //TODO: Throwing error if allocated and requested spaces are not same might be a problem for RMCRT. Fix can be to create a temporary
+                  //variable (buffer) in UnifiedScheduler for D2H copy and then copy from buffer to actual variable. But lets try this solution first.
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), dependantVar->m_var->getMaxDeviceGhost());
+                  else //if the variable exists, then fetch it.
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, dependantVar->m_var->getMaxDeviceGhostType(), 0, 1); //do not pass ghost cells. We dont want to gather them, just need memory allocated
                 }
                 if (finalized) {
                   dw->refinalize();
@@ -3839,7 +3909,12 @@ KokkosScheduler::initiateD2H( DetailedTask * dtask )
                   if (finalized) {
                     dw->unfinalize();
                   }
-                  dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+
+                  if (!dw->exists(dependantVar->m_var, matlID, patch))
+                    dw->allocateAndPut(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0);
+                  else
+                    dw->getGridVar(*gridVar, dependantVar->m_var, matlID, patch, Ghost::None, 0, 1);
+
                   if (finalized) {
                     dw->refinalize();
                   }
