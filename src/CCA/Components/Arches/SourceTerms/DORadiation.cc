@@ -957,9 +957,14 @@ if (timeSubStep==0){
       }
     }
   } else if ( m_user_intensity_save ){
+    DataWarehouse* old_dw = sched->get_dw(0);
     for ( auto i = m_user_intensity_save_labels.begin(); i != m_user_intensity_save_labels.end(); i++ ){
-      tsk_noRadiation->requires( Task::OldDW, *i, gn, 0 );
-      tsk_noRadiation->computes( *i );
+      if ( old_dw->exists(*i) ){
+        tsk_noRadiation->requires( Task::OldDW, *i, gn, 0 );
+        tsk_noRadiation->computes( *i );
+      } else {
+        tsk_noRadiation->computes( *i );
+      }
     }
   }
 
