@@ -36,7 +36,7 @@ using namespace ArchesCore;
 //       mass flow of the organics in the particle phase.
 //       To get the total mass flow rate of the particles you
 //       need to compute it from the fixed ash and moisture content:
-//       m_dot_part = m_dot_org / ( mass fraction of organics )
+//       mDot_part = m_dot_org / ( mass fraction of organics )
 //       where m_dot_org is what is computed here.
 
 // Constructor -----------------------------------------------------------------
@@ -262,7 +262,7 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
   if(m_particleMethod_bool){
 
-    double m_dot_coal = 0.0;
+    double mDot_coal = 0.0;
 
     for ( int qn = 0; qn < m_Nenv; qn++ ){
 
@@ -277,134 +277,144 @@ void MassFlowRate::eval_massFlowRate( const Patch* patch, ArchesTaskInfoManager*
 
       for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-        // Sweep through, for type == Inlet, then sweep through the specified cells
-        if ( i_bc->second.type == INLET_BC ){
+        const bool on_this_patch = i_bc->second.has_patch(patch->getID());
 
-          // Get the cell iterator - range of cellID:
-          Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+        if ( on_this_patch ){
 
-          // Get the face direction (this is the outward facing normal):
-          const IntVector iDir     = patch->faceDirection(i_bc->second.face);
+          // Sweep through, for type == Inlet, then sweep through the specified cells
+          if ( i_bc->second.type == INLET_BC ){
 
-          //Now loop through the cells:
-          double value_m_dot = 0;
-          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+            // Get the cell iterator - range of cellID:
+            Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-          const int ic = i - iDir[0]; // interior cell index
-          const int jc = j - iDir[1];
-          const int kc = k - iDir[2];
+            // Get the face direction (this is the outward facing normal):
+            const IntVector iDir     = patch->faceDirection(i_bc->second.face);
 
-          const double eps_interp  =  eps(i,j,k)*eps(ic,jc,kc);
+            //Now loop through the cells:
+            double value_m_dot = 0;
+            parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-          const double RCqn_interp = 0.5 * ( RCqn(i,j,k) + RCqn(ic,jc,kc) );
-          const double CHqn_interp = 0.5 * ( CHqn(i,j,k) + CHqn(ic,jc,kc) );
-          const double wqn_interp  = 0.5 * ( wqn (i,j,k) + wqn (ic,jc,kc) );
+            const int ic = i - iDir[0]; // interior cell index
+            const int jc = j - iDir[1];
+            const int kc = k - iDir[2];
 
-          const double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
-          const double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
-          const double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
+            const double eps_interp  =  eps(i,j,k)*eps(ic,jc,kc);
 
-          const double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[qn] / wqn_interp ;
-          const double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[qn] / wqn_interp ;
-          const double wvel_p_i = wvel_p_interp * m_p_wVel_scaling_constant[qn] / wqn_interp ;
+            const double RCqn_interp = 0.5 * ( RCqn(i,j,k) + RCqn(ic,jc,kc) );
+            const double CHqn_interp = 0.5 * ( CHqn(i,j,k) + CHqn(ic,jc,kc) );
+            const double wqn_interp  = 0.5 * ( wqn (i,j,k) + wqn (ic,jc,kc) );
 
-          const double RCi = RCqn_interp * m_RC_scaling_constant[qn] / wqn_interp; // kg of i / m3
-          const double CHi = CHqn_interp * m_CH_scaling_constant[qn] / wqn_interp;
+            const double uvel_p_interp  = 0.5 * ( uvel_p(i,j,k) + uvel_p(ic,jc,kc) );
+            const double vvel_p_interp  = 0.5 * ( vvel_p(i,j,k) + vvel_p(ic,jc,kc) );
+            const double wvel_p_interp  = 0.5 * ( wvel_p(i,j,k) + wvel_p(ic,jc,kc) );
 
-          const double wi =  wqn_interp * m_w_scaling_constant[qn];
+            const double uvel_p_i = uvel_p_interp * m_p_uVel_scaling_constant[qn] / wqn_interp ;
+            const double vvel_p_i = vvel_p_interp * m_p_vVel_scaling_constant[qn] / wqn_interp ;
+            const double wvel_p_i = wvel_p_interp * m_p_wVel_scaling_constant[qn] / wqn_interp ;
 
-          value_m_dot += -( RCi + CHi ) * uvel_p_i * area_x * wi * eps_interp * iDir[0]
-                         -( RCi + CHi ) * vvel_p_i * area_y * wi * eps_interp * iDir[1]
-                         -( RCi + CHi ) * wvel_p_i * area_z * wi * eps_interp * iDir[2];
+            const double RCi = RCqn_interp * m_RC_scaling_constant[qn] / wqn_interp; // kg of i / m3
+            const double CHi = CHqn_interp * m_CH_scaling_constant[qn] / wqn_interp;
 
-          });
+            const double wi =  wqn_interp * m_w_scaling_constant[qn];
 
-          m_dot_coal += value_m_dot;
+            value_m_dot += -( RCi + CHi ) * uvel_p_i * area_x * wi * eps_interp * iDir[0]
+                           -( RCi + CHi ) * vvel_p_i * area_y * wi * eps_interp * iDir[1]
+                           -( RCi + CHi ) * wvel_p_i * area_z * wi * eps_interp * iDir[2];
 
-          new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_p_organics_in_"+i_bc->second.name));
+            });
 
+            mDot_coal += value_m_dot;
+
+            new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_p_organics_in_"+i_bc->second.name));
+
+          }
         }
       }
     }
 
-    new_dw->put(sum_vartype(m_dot_coal), VarLabel::find(m_task_name+"_mdot_p_organics_in"));
+    new_dw->put(sum_vartype(mDot_coal), VarLabel::find(m_task_name+"_mdot_p_organics_in"));
 
   }
 
-  double m_dot_gas  = 0.0;
-  double m_dot_gas_out = 0.0;
+  double mDot_gas  = 0.0;
+  double mDot_gas_out = 0.0;
 
   for ( auto i_bc = bc_info.begin(); i_bc != bc_info.end(); i_bc++ ){
 
-    // Sweep through, for type == Inlet, then sweep through the specified cells
-    if ( i_bc->second.type == INLET_BC || i_bc->second.type == OUTLET_BC ){
+    const bool on_this_patch = i_bc->second.has_patch(patch->getID());
 
-      // Get the cell iterator - range of cellID:
-      Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
+    if ( on_this_patch ){
 
-      // Get the face direction (this is the outward facing normal):
-      const IntVector iDir     = patch->faceDirection(i_bc->second.face);
+      // Sweep through, for type == Inlet, then sweep through the specified cells
+      if ( i_bc->second.type == INLET_BC || i_bc->second.type == OUTLET_BC ){
 
-      //Now loop through the cells:
-      double value_m_dot = 0;
-      if ( m_scalar_name == "NULL" ){
+        // Get the cell iterator - range of cellID:
+        Uintah::ListOfCellsIterator& cell_iter = m_bcHelper->get_uintah_extra_bnd_mask( i_bc->second, patch->getID());
 
-        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+        // Get the face direction (this is the outward facing normal):
+        const IntVector iDir     = patch->faceDirection(i_bc->second.face);
 
-          const int im = i - iDir[0]; // interior cell index
-          const int jm = j - iDir[1];
-          const int km = k - iDir[2];
+        //Now loop through the cells:
+        double value_m_dot = 0;
+        if ( m_scalar_name == "NULL" ){
 
-          const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
-          const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
+          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
 
-          // x- => (-1,0,0)  x+ => (1,0,0)
-          // y- => (0,-1,0)  y+ => (0,1,0)
-          // z- => (0,0,-1)  z+ => (0,0,1)
-          value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * iDir[0]
-                         -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * iDir[1]
-                         -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * iDir[2];
+            const int im = i - iDir[0]; // interior cell index
+            const int jm = j - iDir[1];
+            const int km = k - iDir[2];
 
-
-        });
-
-      } else {
-
-        auto scalar = tsk_info->get_field<constCCVariable<double> >( m_scalar_name );
-
-        parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
-
-          const int im = i - iDir[0]; // interior cell index
-          const int jm = j - iDir[1];
-          const int km = k - iDir[2];
-
-          const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
-          const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
-          const double scalar_interp = 0.5 * ( scalar(i,j,k) + scalar(im,jm,km) );
+            const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
+            const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
 
             // x- => (-1,0,0)  x+ => (1,0,0)
             // y- => (0,-1,0)  y+ => (0,1,0)
             // z- => (0,0,-1)  z+ => (0,0,1)
-            value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * scalar_interp * iDir[0]
-                           -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * scalar_interp * iDir[1]
-                           -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * scalar_interp * iDir[2];
+            value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * iDir[0]
+                           -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * iDir[1]
+                           -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * iDir[2];
 
 
-        });
+          });
+
+        } else {
+
+          auto scalar = tsk_info->get_field<constCCVariable<double> >( m_scalar_name );
+
+          parallel_for(cell_iter.get_ref_to_iterator(),cell_iter.size(), [&] (const int i,const int j,const int k) {
+
+            const int im = i - iDir[0]; // interior cell index
+            const int jm = j - iDir[1];
+            const int km = k - iDir[2];
+
+            const double rho_interp  = 0.5 * ( density(i,j,k) + density(im,jm,km) );
+            const double eps_interp  =  eps(i,j,k)*eps(im,jm,km);
+            const double scalar_interp = 0.5 * ( scalar(i,j,k) + scalar(im,jm,km) );
+
+              // x- => (-1,0,0)  x+ => (1,0,0)
+              // y- => (0,-1,0)  y+ => (0,1,0)
+              // z- => (0,0,-1)  z+ => (0,0,1)
+              value_m_dot += -rho_interp * uvel_g(i,j,k) * area_x * eps_interp * scalar_interp * iDir[0]
+                             -rho_interp * vvel_g(i,j,k) * area_y * eps_interp * scalar_interp * iDir[1]
+                             -rho_interp * wvel_g(i,j,k) * area_z * eps_interp * scalar_interp * iDir[2];
+
+
+          });
+        }
+
+        if ( i_bc->second.type == OUTLET_BC ){
+          new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_g_out_"+i_bc->second.name));
+          mDot_gas_out += value_m_dot;
+        } else {
+          new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_g_in_"+i_bc->second.name));
+          mDot_gas += value_m_dot;
+        }
+
       }
-
-      if ( i_bc->second.type == OUTLET_BC ){
-        new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_g_out_"+i_bc->second.name));
-        m_dot_gas_out += value_m_dot;
-      } else {
-        new_dw->put(sum_vartype(value_m_dot), VarLabel::find(m_task_name+"_mdot_g_in_"+i_bc->second.name));
-        m_dot_gas += value_m_dot;
-      }
-
     }
   }
 
-  new_dw->put(sum_vartype(m_dot_gas), VarLabel::find(m_task_name+"_mdot_g_in"));
-  new_dw->put(sum_vartype(m_dot_gas_out), VarLabel::find(m_task_name+"_mdot_g_out"));
+  new_dw->put(sum_vartype(mDot_gas), VarLabel::find(m_task_name+"_mdot_g_in"));
+  new_dw->put(sum_vartype(mDot_gas_out), VarLabel::find(m_task_name+"_mdot_g_out"));
 
 }
