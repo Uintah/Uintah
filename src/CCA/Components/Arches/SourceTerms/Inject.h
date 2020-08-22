@@ -220,6 +220,26 @@ private:
 
             if ( spec->bcType == DIRICHLET ){
 
+              int i0; int i1; int zeroi;
+              if ( face == Patch::xminus || face == Patch::xplus ){
+                i0 = 1;
+                i1 = 2;
+                zeroi = 0;
+              } else if ( face == Patch::yminus || face == Patch::yplus ){
+                i0 = 2;
+                i1 = 0;
+                zeroi = 1;
+              } else {
+                i0 = 0;
+                i1 = 1;
+                zeroi = 2;
+              }
+
+              Vector DX = patch->dCell();
+
+              double area = DX[i0]*DX[i1];
+              double vol = DX[i0]*DX[i1]*DX[zeroi];
+
               const double value = spec->value;
 
               const int mysize = cell_iter.size();
@@ -228,7 +248,7 @@ private:
 
               for ( int i = 0; i < mysize; i++ ){
                 IntVector c = IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2]);
-                src[IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2])] = value;
+                src[IntVector(this_iter[i][0], this_iter[i][1], this_iter[i][2])] = value*area/vol;
               }
 
             } else if ( spec->bcType == CUSTOM ){

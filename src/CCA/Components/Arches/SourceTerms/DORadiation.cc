@@ -1396,11 +1396,20 @@ DORadiation::TransferRadFieldsFromOldDW( const ProcessorGroup * pc,
       }
     }
   } else if ( m_user_intensity_save ){
-      
+
     for ( auto i = m_user_intensity_save_labels.begin(); i != m_user_intensity_save_labels.end(); i++ ){
 
-      new_dw->transferFrom( old_dw, *i, patches, matls );
-
+      for (int p=0; p < patches->size(); p++){
+        const Patch* patch = patches->get(p);
+        if ( old_dw->exists(*i, 0, patch) ){
+          new_dw->transferFrom( old_dw, *i, patches, matls );
+        } else {
+          //If the user adds a new label to the archiver this will create and initialize to zero.
+          CCVariable<double> temp;
+          new_dw->allocateAndPut( temp, *i, m_matIdx, patch);
+          temp.initialize(0.0);
+        }
+      }
     }
   }
 
