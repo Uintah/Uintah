@@ -247,7 +247,8 @@ RMCRT_Radiation::extraSetup( GridP& grid,
 
   m_boundaryCondition = bc;
 
-
+  DOUT( dbg, Uintah::Parallel::getMPIRank() << "Doing RMCRT_Radiation::extraSetup");
+  
   //__________________________________
   //  create sumAbskLabel
   const TypeDescription* td = CCVariable<double>::getTypeDescription();
@@ -784,6 +785,29 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
   if( m_whichAlgo == radiometerOnly && !new_dw->exists( radiometer->d_VRFluxLabel, m_matl, firstPatch) ){
     radiometer->sched_initialize_VRFlux( level, sched );
   }
+  
+  //__________________________________
+  // if sumAbsk or sigmaT4 is missing from checkpoint then compute it
+  if( !new_dw->exists( m_sumAbsk_Label,         m_matl, firstPatch ) || 
+      !new_dw->exists( m_RMCRT->d_sigmaT4Label, m_matl, firstPatch ) ){
+
+    // Before you can require something from the new_dw
+    // there must be a compute() for that variable.
+    std::string taskname = "RMCRT_Radiation::sched_restartInitializeHack2";
+    printSchedule(level, dbg, taskname);
+
+    Task* t2 = scinew Task( taskname, this, &RMCRT_Radiation::restartInitializeHack2);
+                           
+    for (int i=0 ; i< m_nPartGasLabels; i++){
+      t2->computes( m_partGas_absk_Labels[i] );
+      t2->computes( m_partGas_temp_Labels[i] );
+    }
+
+    sched->addTask( t2, archesLevel->eachPatch(), m_matlSet );
+    
+    sched_sumAbsk( level, sched );
+    sched_sigmaT4( level, sched );
+  }
 }
 
 //______________________________________________________________________
@@ -798,22 +822,27 @@ RMCRT_Radiation::sched_sigmaT4( const LevelP & level,
   Task* tsk = nullptr;
   std::string type = "null";
 
+  Task::WhichDW oldNew_dw = Task::OldDW;
+  if ( sched->isRestartInitTimestep() ){
+    oldNew_dw = Task::NewDW;
+  }
+
   if ( m_FLT_DBL == TypeDescription::double_type ) {
     type = "double";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<double> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<double>, oldNew_dw );
   }
   else {
     type = "float";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<float> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<float>, oldNew_dw );
   }
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sigmaT4 (" +type+")");
 
-  tsk->requires( Task::OldDW, m_labels->d_volFractionLabel, m_gn, 0 );
+  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( Task::OldDW, m_partGas_absk_Labels[i], m_gn, 0 );
-    tsk->requires( Task::OldDW, m_partGas_temp_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_RMCRT->d_sigmaT4Label );
@@ -828,8 +857,11 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
                           const PatchSubset     * patches,
                           const MaterialSubset  * matls,
                           DataWarehouse         * old_dw,
-                          DataWarehouse         * new_dw )
+                          DataWarehouse         * new_dw,
+                          Task::WhichDW           which_dw )
 {
+  DataWarehouse* oldNew_dw = new_dw->getOtherDataWarehouse(which_dw);
+  
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -838,7 +870,7 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
     double sigma_over_pi = (m_RMCRT->d_sigma)/M_PI;
 
     constCCVariable<double> gasVolFrac;
-    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
+    oldNew_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
     // sigma T^4/pi
     CCVariable< T > sigmaT4;  
@@ -849,8 +881,8 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
     std::vector<constCCVariable<double> > partGas_temp( m_nPartGasLabels );
 
     for (int i=0;  i< m_nPartGasLabels; i++){
-      old_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
-      old_dw->get( partGas_temp[i],  m_partGas_temp_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_temp[i],  m_partGas_temp_Labels[i], m_matl, patch, m_gn, 0);
     }
  
     constCCVariable<double> radTemp = partGas_temp[0];               // radiation_temperature
@@ -913,21 +945,26 @@ RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
   Task* tsk = nullptr;
   std::string type = "null";
 
+  Task::WhichDW oldNew_dw = Task::OldDW;
+  if ( sched->isRestartInitTimestep() ){
+    oldNew_dw = Task::NewDW;
+  }
+
   if ( m_FLT_DBL == TypeDescription::double_type ) {
     type = "double";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<double> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<double>, oldNew_dw );
   }
   else {
     type = "float";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<float> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<float>, oldNew_dw);
   }
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sumAbsk (" +type+")");
 
-  tsk->requires( Task::OldDW, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
+  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( Task::OldDW, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_sumAbsk_Label );
@@ -942,21 +979,24 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
                           const PatchSubset     * patches,
                           const MaterialSubset  * matls,
                           DataWarehouse         * old_dw,
-                          DataWarehouse         * new_dw )
+                          DataWarehouse         * new_dw,
+                          Task::WhichDW           which_dw )
 {
+  DataWarehouse* oldNew_dw = new_dw->getOtherDataWarehouse(which_dw);
+  
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch, dbg, "Doing RMCRT_Radiation::sumAbsk");
     
     constCCVariable<double> gasVolFrac;
-    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
+    oldNew_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
     // gas and particle temperature & absk
     std::vector<constCCVariable<double> > partGas_absk( m_nPartGasLabels );
 
     for (int i=0;  i< m_nPartGasLabels; i++){
-      old_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
     }
 
     CCVariable<double> sumAbsk_tmp;

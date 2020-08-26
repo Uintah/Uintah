@@ -178,7 +178,8 @@ private:
                 const PatchSubset    * patches,
                 const MaterialSubset * matls,
                 DataWarehouse        * old_dw,
-                DataWarehouse        * new_dw );
+                DataWarehouse        * new_dw,
+                Task::WhichDW          which_dw );
 
   //__________________________________
   /** @brief Schedule compute of blackbody intensity */
@@ -192,7 +193,8 @@ private:
                 const PatchSubset    * patches,
                 const MaterialSubset * matls,
                 DataWarehouse        * old_dw,
-                DataWarehouse        * new_dw );
+                DataWarehouse        * new_dw,
+                Task::WhichDW          which_dw );
 
   //______________________________________________________________________
   //   Boundary Conditions
