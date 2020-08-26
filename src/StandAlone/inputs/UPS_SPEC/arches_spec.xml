@@ -345,6 +345,8 @@
           <!-- for CO / equilibrium model -->
           <!-- defect label will be: model_label+"_defect"
                rate label will be: model_label+"_rate" -->
+          <new_on_restart               spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type CO"/> <!-- only use when model is added upon restart - subsequent restarts should have this removed -->
           <A                            spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- pre exponential factor kmole/m3/s-->
           <Ea                           spec="OPTIONAL DOUBLE"

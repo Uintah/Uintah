@@ -50,6 +50,10 @@ CO::problemSetup( ProblemSpecP& db ){
   db->getWithDefault("Ea"                , m_Ea                     , 45566.0);// kcal/kmole
   db->getWithDefault("Tcrit"             , m_T_crit                 , 1150);
 
+  if ( db->findBlock("new_on_restart")){ 
+    m_new_on_restart = true; 
+  }
+
   if ( db->findBlock("conv_scheme")){
     db->require("conv_scheme",m_conv_scheme);
   } else {
@@ -122,7 +126,7 @@ void CO::register_timestep_init( VIVec& variable_registry , const bool packed_ta
   register_variable( m_CO_model_name , AFC::COMPUTES, variable_registry);
   register_variable( m_CO_model_name , AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
   register_variable( m_defect_name, AFC::COMPUTES, variable_registry );
-  register_variable( m_defect_name , AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
+    register_variable( m_defect_name , AFC::REQUIRES, 0, AFC::OLDDW, variable_registry );
   register_variable( m_CO_diff_name, AFC::COMPUTES, variable_registry );
   register_variable( m_CO_conv_name, AFC::COMPUTES, variable_registry );
   register_variable( m_rate_name, AFC::COMPUTES, variable_registry );
@@ -164,8 +168,8 @@ CO::register_timestep_eval( std::vector<AFC::VariableInformation>& variable_regi
   register_variable( m_CO_conv_name  , AFC::MODIFIES , 0 , AFC::NEWDW , variable_registry , time_substep );
 
   // OLDDW variables
-  register_variable( m_CO_model_name          , AFC::REQUIRES , 2 , AFC::OLDDW , variable_registry , time_substep );
-  register_variable( m_defect_name            , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
+    register_variable( m_CO_model_name          , AFC::REQUIRES , 2 , AFC::OLDDW , variable_registry , time_substep );
+    register_variable( m_defect_name            , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
   register_variable( m_CO_table_name          , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
   register_variable( m_H2O_table_name         , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
   register_variable( m_O2_table_name          , AFC::REQUIRES , 0 , AFC::OLDDW , variable_registry , time_substep );
@@ -325,4 +329,23 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
   m_boundary_condition->setScalarValueBC( 0, patch, y_new, m_CO_model_name );
 
 }
+
+void
+CO::register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){
+  if ( m_new_on_restart ){ 
+    register_variable( m_CO_model_name, ArchesFieldContainer::COMPUTES, variable_registry ); 
+    register_variable( m_CO_model_name+"_defect", ArchesFieldContainer::COMPUTES, variable_registry ); 
+  }
+}
+
+void  CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+
+  CCVariable<double>& CO = tsk_info->get_field<CCVariable<double> >( m_CO_model_name );
+  CCVariable<double>& d  = tsk_info->get_field<CCVariable<double> >( m_CO_model_name+"_defect" );
+
+  CO.initialize(0.0);
+  d.initialize(0.0); 
+}
+
+
 } //namespace Uintah
