@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/GridTools.h>
 #include <CCA/Components/Arches/ChemMix/ChemHelper.h>
+#include <Core/Exceptions/InternalError.h>
 
 namespace Uintah{
 
@@ -601,18 +602,40 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info )
   //Single variables
   for ( int i = 0; i < N; i++ ){
 
+
     CCVariable<double>& sum = tsk_info->get_field<CCVariable<double> >( _ave_sum_names[i] );
-    constCCVariable<double>& var = tsk_info->get_field<constCCVariable<double> >( _base_var_names[i] );
     constCCVariable<double>& old_sum = tsk_info->get_field<constCCVariable<double> >( _ave_sum_names[i] );
     CCVariable<double>& sqr_sum = tsk_info->get_field<CCVariable<double> >( _sqr_variable_names[i] );
     constCCVariable<double>& old_sqr_sum = tsk_info->get_field<constCCVariable<double> >( _sqr_variable_names[i] );
 
-    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range, [&](int i, int j, int k){
-      sum(i,j,k) = old_sum(i,j,k) + dt * var(i,j,k);
-      sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * var(i,j,k) * var(i,j,k);
-    });
+    // a base variable can be a double or a float
+    const VarLabel* varlabel = VarLabel::find( _base_var_names[i], "ERROR  VariableStats::eval"  );
+    const Uintah::TypeDescription* td = varlabel->typeDescription();
+    const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
+    //______double
+    Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
+    if ( subtype == TypeDescription::double_type ) {
+      constCCVariable<double>& var = tsk_info->get_field<constCCVariable<double> >( _base_var_names[i] );
+
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double v = var(i,j,k);
+        sum(i,j,k) = old_sum(i,j,k) + dt * v;
+        sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * v * v;
+      });
+    }
+    //______float
+    else if ( subtype == TypeDescription::float_type ) {
+      constCCVariable<float>& var = tsk_info->get_field<constCCVariable<float> >( _base_var_names[i] );
+
+      Uintah::parallel_for( range, [&](int i, int j, int k){
+        const double v = (double)var(i,j,k);
+        sum(i,j,k) = old_sum(i,j,k) + dt * v;
+        sqr_sum(i,j,k) = old_sqr_sum(i,j,k) + dt * v * v;
+      });
+    } else {
+      throw InternalError("ERROR : Invalid variable type in VariableStats::eval(...) yet.", __FILE__, __LINE__);
+    }
   }
 
   if ( !_no_flux ){
