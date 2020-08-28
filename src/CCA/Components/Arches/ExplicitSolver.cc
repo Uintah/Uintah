@@ -1276,7 +1276,7 @@ ExplicitSolver::sched_initialize( const LevelP& level,
   d_tabulated_properties->set_bcHelper( m_bcHelper[level->getIndex()] );
 
   SourceTermFactory& srcFactory = SourceTermFactory::self();
-  srcFactory.set_bcHelper( m_bcHelper[level->getIndex()]); 
+  srcFactory.set_bcHelper( m_bcHelper[level->getIndex()]);
 
   if ( level->getIndex() == d_archesLevelIndex ){
 
@@ -1562,6 +1562,7 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
       SourceTermBase* src = isrc->second;
       src->sched_restartInitialize(level, sched);
     }
+    srcFactory.set_bcHelper( m_bcHelper[level->getIndex()]); 
 
     //__________________________________
     //  initialize property models
