@@ -45,6 +45,7 @@
                                                                              Maxwell_Weichert,
 									     MohrCoulomb,
 									     HypoplasticB,
+									     TransIsoHypoFrictional,
 									     QADamage">
 
 	<!-- input parameters for Kelvin_voigt model -->
