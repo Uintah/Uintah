@@ -39,7 +39,7 @@
 #define SIGN 1              // Multiply the FIXED_RAY_DIRs by value
 #define FUZZ 1e-12          // numerical fuzz
 
-//#define FAST_EXP          // This uses a fast approximate exp() function that is 
+//#define FAST_EXP          // This uses a fast approximate exp() function that is
                             // significantly faster.
 
 //______________________________________________________________________
@@ -105,8 +105,8 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
   d_gn           = Ghost::None;
   d_flowCell     = -1; //<----HARD CODED FLOW CELL
   d_maxRayLength = DBL_MAX;
-  
-#ifdef FAST_EXP  
+
+#ifdef FAST_EXP
   d_fastExp.populateExp_int(-2, 2);
 #endif
 }
@@ -117,11 +117,13 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 //
 RMCRTCommon::~RMCRTCommon()
 {
+
   VarLabel::destroy( d_sigmaT4Label );
   VarLabel::destroy( d_boundFluxLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
-  if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
+  // when the radiometer class (float) is invoked d_abskgLabel is deleted twice.  This prevents that
+ if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type && d_abskgLabel->getReferenceCount() == 1 ){
     VarLabel::destroy( d_abskgLabel );
   }
 
@@ -158,18 +160,18 @@ RMCRTCommon::registerVariables(int   matlIndex,
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
-  auto double_type = TypeDescription::double_type;
-  auto float_type = TypeDescription::float_type;
-  
-  if ( RMCRTCommon::d_FLT_DBL == double_type && subtype == double_type ) {
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type &&
+                      subtype == TypeDescription::double_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
-  
-  if ( RMCRTCommon::d_FLT_DBL == float_type && subtype == float_type ) {
+
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&
+                      subtype == TypeDescription::float_type ) {
     d_abskgLabel = d_compAbskgLabel;
   }
-  
-  if ( RMCRTCommon::d_FLT_DBL == float_type && subtype == double_type ) {
+
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&
+                      subtype == TypeDescription::double_type ) {
     d_abskgLabel = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
   }
 
@@ -198,10 +200,10 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
 {
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
-  
+
   int L = level->getIndex();
   Task::WhichDW abskgDW = get_abskg_whichDW( L, d_compAbskgLabel );
-  
+
   // only run task if a conversion is needed.
   Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
@@ -245,13 +247,13 @@ RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       abskg_F[c] = (float)abskg_D[c];
-      
+
       // bulletproofing
       if (std::isinf( abskg_F[c] ) || std::isnan( abskg_F[c] ) ) {
         std::ostringstream warn;
         warn<< "RMCRTCommon::DoubleToFloat A non-physical abskg detected (" << abskg_F[c] << ") at cell: " << c << "\n";
         throw InternalError( warn.str(), __FILE__, __LINE__ );
-      } 
+      }
     }
   }
 }
@@ -337,7 +339,7 @@ RMCRTCommon::sched_initialize_VarLabel( const LevelP  & level,
   Task* tsk = nullptr;
   const TypeDescription* td = label->typeDescription();
   const TypeDescription::Type subtype = td->getSubType()->getType();
-  
+
   if ( subtype == TypeDescription::double_type ) {
     tsk = scinew Task( taskname, this, &RMCRTCommon::initialize_VarLabel<double>, label );
   } else {
@@ -385,9 +387,9 @@ RMCRTCommon::raySignStep(double sign[],
   // get new step and sign
   for ( int d=0; d<3; d++){
     double me = copysign((double)1.0, inv_direction_vector[d]);  // +- 1
-    
+
     sign[d] = std::max(0.0, me);    // 0, 1
-    
+
     cellStep[d] = int(me);
   }
 }
@@ -448,24 +450,24 @@ RMCRTCommon::ray_Origin( MTRand& mTwister,
                          Vector& rayOrigin )
 {
   if( useCCRays == false ){
-    
+
     double x = mTwister.rand() * dx.x();
     double y = mTwister.rand() * dx.y();
     double z = mTwister.rand() * dx.z();
-    
-    Vector offset(x,y,z);  // Note you HAVE to compute the components separately to ensure that the 
+
+    Vector offset(x,y,z);  // Note you HAVE to compute the components separately to ensure that the
                            //  random numbers called in the x,y,z order -Todd
-       
-    if ( offset.x() > dx.x() || 
+
+    if ( offset.x() > dx.x() ||
          offset.y() > dx.y() ||
          offset.z() > dx.z() ) {
       std::cout << "  Warning:ray_Origin  The Mersenne twister random number generator has returned garbage (" << offset
                 << ") Now forcing the ray origin to be located at the cell-center\n" ;
       offset = Vector( 0.5*dx.x(), 0.5*dx.y(), 0.5*dx.z() );
     }
-    
-    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + offset.x(); 
-    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + offset.y(); 
+
+    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + offset.x();
+    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + offset.y();
     rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + offset.z();
   }else{
     rayOrigin[0] = CC_pos(0);
@@ -505,7 +507,7 @@ RMCRTCommon::reflect(double& fs,
 //______________________________________________________________________
 template <class T >
 void
-RMCRTCommon::updateSumI (const Level* level, 
+RMCRTCommon::updateSumI (const Level* level,
                          Vector& ray_direction,
                          Vector& ray_origin,
                          const IntVector& origin,
@@ -521,8 +523,8 @@ RMCRTCommon::updateSumI (const Level* level,
   IntVector cur = origin;
   IntVector prevCell = cur;
   // Cell stepping direction for ray marching
-  int    step[3];                                          
-  double sign[3];                 //   is 0 for negative ray direction 
+  int    step[3];
+  double sign[3];                 //   is 0 for negative ray direction
 
   Vector inv_ray_direction = Vector(1.0)/ray_direction;
 
@@ -535,21 +537,21 @@ RMCRTCommon::updateSumI (const Level* level,
 /*===========TESTING==========`*/
 
   raySignStep(sign, step, ray_direction);
- 
+
   Point CC_pos = level->getCellPosition(origin);
-  
+
   // rayDx is the distance from bottom, left, back, corner of cell to ray
   double rayDx[3];
   rayDx[0] = ray_origin.x() - ( CC_pos.x() - 0.5*Dx[0] );
   rayDx[1] = ray_origin.y() - ( CC_pos.y() - 0.5*Dx[1] );
   rayDx[2] = ray_origin.z() - ( CC_pos.z() - 0.5*Dx[2] );
-  
+
   // tMax is the physical distance from the ray origin to each of the respective planes of intersection
   double tMax[3];
   tMax[0] = (sign[0] * Dx[0] - rayDx[0]) * inv_ray_direction.x();
   tMax[1] = (sign[1] * Dx[1] - rayDx[1]) * inv_ray_direction.y();
   tMax[2] = (sign[2] * Dx[2] - rayDx[2]) * inv_ray_direction.z();
-    
+
   //Length of t to traverse one cell
   Vector tDelta = Abs(inv_ray_direction) * Dx;
 
@@ -571,15 +573,15 @@ RMCRTCommon::updateSumI (const Level* level,
 
   // Determine the length at which scattering will occur
   // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-  double scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
+  double scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
 #endif
 
   //______________________________________________________________________
-  
+
   while ( intensity > d_threshold && (rayLength < d_maxRayLength) ){
- 
+
     DIR dir = NONE;
-    
+
     while ( in_domain && (rayLength < d_maxRayLength) ){
 
 
@@ -588,7 +590,7 @@ RMCRTCommon::updateSumI (const Level* level,
 
       T abskg_prev = abskg[prevCell];  // optimization
       T sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
-      
+
       //__________________________________
       //  Determine which cell the ray will enter next
       dir = NONE;
@@ -614,10 +616,10 @@ RMCRTCommon::updateSumI (const Level* level,
       tMax[dir]  = tMax[dir] + tDelta[dir];
 
       // occassionally disMin ~ -1e-15ish
-      if( disMin > -FUZZ && disMin < FUZZ){  
+      if( disMin > -FUZZ && disMin < FUZZ){
         disMin += FUZZ;
       }
-      
+
       rayLength += disMin;
       rayLength_scatter += disMin;
 
@@ -626,11 +628,11 @@ RMCRTCommon::updateSumI (const Level* level,
       ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
 
       in_domain = (celltype[cur] == d_flowCell);
-      
-      optical_thickness += abskg_prev*disMin; 
+
+      optical_thickness += abskg_prev*disMin;
 
       nRaySteps++;
-      
+
  /*`==========TESTING==========*/
 #if ( DEBUG >= 1 )
       if( isDbgCell( origin )){
@@ -646,18 +648,18 @@ RMCRTCommon::updateSumI (const Level* level,
          printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
       }
 #endif
-/*===========TESTING==========`*/     
+/*===========TESTING==========`*/
 
       //Eqn 3-15(see below reference) while
       //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
 
-      
+
 /*`==========TESTING==========*/
 #ifdef FAST_EXP
 
       // We need to know the range of optical_thickness before we can select
       // which implementation to use.
-  
+
       double expOpticalThick = d_fastExp.fast_exp(-optical_thickness);
       //double expOpticalThick = exp(-optical_thickness);
 
@@ -668,7 +670,7 @@ RMCRTCommon::updateSumI (const Level* level,
       double exp5     = d_fastExp.exp5(-optical_thickness);
       double exp7     = d_fastExp.exp7(-optical_thickness);
       double exact    = exp(-optical_thickness);
-      
+
       cout << " X: " << -optical_thickness << endl;
       cout << " Sch_exp error:    " << ((S_exp    - exact)/exact ) * 100 << " S_exp:   " << S_exp    << " exact: " << exact << endl;
       cout << " fast_exp error:   " << ((fast_exp - exact)/exact ) * 100 << " fast_exp:" << fast_exp << endl;
@@ -688,7 +690,7 @@ RMCRTCommon::updateSumI (const Level* level,
 
 #ifdef RAY_SCATTER
       if (rayLength_scatter > scatLength && in_domain ){
-            
+
         // get new scatLength for each scattering event
         scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
 
@@ -710,10 +712,10 @@ RMCRTCommon::updateSumI (const Level* level,
         rayDx[0] = ray_location.x() - ( CC_pos.x() - 0.5*Dx[0] );
         rayDx[1] = ray_location.y() - ( CC_pos.y() - 0.5*Dx[1] );
         rayDx[2] = ray_location.z() - ( CC_pos.z() - 0.5*Dx[2] );
-  
+
         tMax[0] = (sign[0] * Dx[0] - rayDx[0]) * inv_ray_direction.x();
         tMax[1] = (sign[1] * Dx[1] - rayDx[1]) * inv_ray_direction.y();
-        tMax[2] = (sign[2] * Dx[2] - rayDx[2]) * inv_ray_direction.z();       
+        tMax[2] = (sign[2] * Dx[2] - rayDx[2]) * inv_ray_direction.z();
 
         //Length of t to traverse one cell
         tDelta = Abs(inv_ray_direction) * Dx;
@@ -799,7 +801,7 @@ if( isDbgCell( origin)  ){
       ++nReflect;
     }
   }  // threshold while loop.
-  
+
 } // end of updateSumI function
 
 //______________________________________________________________________
@@ -819,12 +821,12 @@ RMCRTCommon::sched_CarryForward_FineLevelLabels ( const LevelP& level,
   tsk->requires( Task::OldDW, d_boundFluxLabel,     d_gn, 0 );
   tsk->requires( Task::OldDW, d_radiationVolqLabel, d_gn, 0 );
   tsk->requires( Task::OldDW, d_sigmaT4Label,       d_gn, 0 );
-  
+
   tsk->computes( d_divQLabel );
   tsk->computes( d_boundFluxLabel );
   tsk->computes( d_radiationVolqLabel );
   tsk->computes( d_sigmaT4Label );
-  
+
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
 }
 
@@ -871,7 +873,7 @@ RMCRTCommon::sched_carryForward_VarLabels ( const LevelP& level,
     tsk->requires( Task::OldDW, *iter, d_gn, 0 );
     tsk->computes( *iter );
   }
-  
+
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_CARRY_FORWARD );
 }
 
@@ -979,10 +981,10 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
 
 #ifdef FIXED_RANDOM_NUM
-    int rand_int =  0.3*i;  
+    int rand_int =  0.3*i;
 #else
     int rand_int =  mTwister.randInt(i);
-#endif 
+#endif
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
     int_array[rand_int] = swap;
@@ -997,42 +999,42 @@ RMCRTCommon::randVector( std::vector <int> &int_array,
 // is the labelName_L-X, the value in the map is the old or new dw.
 //_____________________________________________________________________
 void
-RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel, 
+RMCRTCommon::set_abskg_dw_perLevel ( const LevelP& fineLevel,
                                      Task::WhichDW fineLevel_abskg_dw )
 {
   int maxLevels = fineLevel->getGrid()->numLevels();
   printSchedule(fineLevel, g_ray_dbg, "RMCRTCommon::set_abskg_dws");
-  
+
   //__________________________________
   // fineLevel could have two entries.  One for abskg and abskgRMCRT
   std::ostringstream key;
   key << d_compAbskgLabel->getName() << "_L-"<< fineLevel->getIndex();
   d_abskg_dw[key.str()] = fineLevel_abskg_dw;
-  
+
   //__________________________________
   // fineLevel: FLOAT  abskgRMCRT
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type ) {
     std::ostringstream key1;
     key1 << d_abskgLabel->getName() << "_L-"<< fineLevel->getIndex();
-    d_abskg_dw[key1.str()] = Task::NewDW;  
+    d_abskg_dw[key1.str()] = Task::NewDW;
   }
-  
+
   //__________________________________
   // coarse levels always require from the newDW
   for(int L = 0; L<maxLevels; L++) {
-  
+
     if ( L != fineLevel->getIndex() ) {
       std::ostringstream key2;
-      key2 << d_abskgLabel->getName() << "_L-"<< L;  
+      key2 << d_abskgLabel->getName() << "_L-"<< L;
       d_abskg_dw[key2.str()] = Task::NewDW;
-    } 
+    }
   }
-  
+
 #if 0             // debugging
   for( auto iter = d_abskg_dw.begin(); iter !=  d_abskg_dw.end(); iter++ ){
     std::cout << " key: " << (*iter).first << " value: " << (*iter).second << std::endl;
   }
-#endif  
+#endif
 }
 
 //______________________________________________________________________
@@ -1042,10 +1044,10 @@ DataWarehouse*
 RMCRTCommon::get_abskg_dw ( const int L,
                             const VarLabel* label,
                             DataWarehouse* new_dw)
-{  
+{
   Task::WhichDW dw = get_abskg_whichDW ( L, label );
   DataWarehouse* abskg_dw = new_dw->getOtherDataWarehouse( dw );
-  
+
   return abskg_dw;
 }
 
