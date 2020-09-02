@@ -5,18 +5,25 @@
   </Meta>
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
+  
+  <LoadBalancer type="SimpleLoadBalancer">
+    <outputNthProc> 2 </outputNthProc>
+    <timestepInterval> 1000 </timestepInterval>
+  </LoadBalancer>
+  
   <Time>
     <maxTime>90.0</maxTime>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>20</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.25</timestep_multiplier>
   </Time>
+  
   <DataArchiver>
     <filebase>AtikokanU1.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
-    <outputInitTimestep/>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <save label="VRIntensity"/>
     <save label="MassImpactLoss" />
     <save label="dep_velocity_impact" />
     <save label="OrganicFlowImpLossWall" />
@@ -50,6 +57,7 @@
     <save label="NO_ps_src_running_sum"/>
     <save label="HCN_ps_src_running_sum"/>
     <save label="NH3_ps_src_running_sum"/>
+    <save label="VRIntensity_running_sum"/>
     <save label="momentum_eta_source1"/>
     <save label="momentum_eta_source2"/>
     <save label="dep_velocity"/>
@@ -130,6 +138,7 @@
     <save label="temperature_coal_3_running_sum"/>
     <save label="eta_source1_running_sum"/>
     <save label="eta_source2_running_sum"/>
+    <save label="VRIntensity_running_sum"/>
     <save label="radiationFluxN_running_sum"/>
     <save label="radiationFluxS_running_sum"/>
     <save label="radiationFluxT_running_sum"/>
@@ -159,8 +168,9 @@
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <checkpoint cycle="2" timestepInterval="3"/>
+    <checkpoint cycle="1" timestepInterval="10"/>
     <compression>gzip</compression>
+
     <save label="MB_mdot_g_in_oulet_permeable"/>
     <save label="MB_mdot_p_organics_in_oulet_permeable"/>
     <save label="MB_mdot_g_in"/>
@@ -1669,6 +1679,34 @@
         <var label="CCVVelocity" role="ccvvelocity"/>
         <var label="CCWVelocity" role="ccwvelocity"/>
       </VarID>
+
+      <Radiometer label="rad_rmcrt">
+        <calc_frequency> 1 </calc_frequency>
+        <absorptionCoeffs>
+          <gas_absk> abskg </gas_absk>
+
+          <includeParticleRad>
+            <particle_absk> abskp </particle_absk>
+            <part_temp_label> temperature_coal </part_temp_label>
+          </includeParticleRad>
+
+        </absorptionCoeffs>
+        <RMCRT type="float">
+          <algorithm type="radiometerOnly"/>
+          <randomSeed>        false       </randomSeed>
+          <Threshold>         0.05        </Threshold>
+          <sigmaScat>         0           </sigmaScat>
+          <allowReflect>      false      </allowReflect>
+          <Radiometer>
+            <viewAngle>       5.0                 </viewAngle>
+            <unitNormalVector>  [1.0, 0.0, 0.0]   </unitNormalVector>
+            <locationsMin>    [3.8, 6.3,  0.0]    </locationsMin>
+            <locationsMax>    [4.0, 12.6, 2.0]    </locationsMax>
+            <nRays>          10   </nRays>
+          </Radiometer>
+        </RMCRT>
+      </Radiometer>
+
       <PropertyModelsV2>
         <model label="soot" type="sootVolumeFrac">
           <Ysoot_label>Ysoot</Ysoot_label>
@@ -1732,6 +1770,7 @@
           <single_variable label="dep_enthalpy"/>
           <single_variable label="dep_velocity"/>
           <single_variable label="abskg"/>
+          <single_variable label="VRIntensity"/>
         </model>
         <model label="CO_model" type="CO">
           <density_label>density</density_label>
