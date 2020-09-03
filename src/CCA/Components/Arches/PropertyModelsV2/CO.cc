@@ -63,7 +63,11 @@ TaskAssignedExecutionSpace CO::loadTaskTimestepInitFunctionPointers()
 //--------------------------------------------------------------------------------------------------
 TaskAssignedExecutionSpace CO::loadTaskRestartInitFunctionPointers()
 {
-  return TaskAssignedExecutionSpace::NONE_EXECUTION_SPACE;
+  return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
+                                     , &CO::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
+                                     //, &CO::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
+                                     //, &CO::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     );
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -176,8 +180,8 @@ void CO::register_timestep_init( VIVec& variable_registry , const bool packed_ta
 }
 
 //--------------------------------------------------------------------------------------------------
-template <typename ExecSpace, typename MemSpace> void
-CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
+template <typename ExecSpace, typename MemSpace>
+void CO::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& CO = tsk_info->get_field<CCVariable<double>>( m_CO_model_name );
   constCCVariable<double>& CO_old = tsk_info->get_field<constCCVariable<double>>( m_CO_model_name );
@@ -381,7 +385,8 @@ CO::register_restart_initialize( VIVec& variable_registry , const bool packed_ta
   }
 }
 
-void  CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
+template <typename ExecSpace, typename MemSpace>
+void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, ExecutionObject<ExecSpace, MemSpace>& execObj ){
 
   CCVariable<double>& CO = tsk_info->get_field<CCVariable<double> >( m_CO_model_name );
   CCVariable<double>& d  = tsk_info->get_field<CCVariable<double> >( m_CO_model_name+"_defect" );
