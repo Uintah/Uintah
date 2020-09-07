@@ -98,8 +98,11 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
-    std::vector<constNCVariable<double> > gnormtrac(numMatls);
+    std::vector<constNCVariable<Vector> > gContactForce(numMatls);
+//    std::vector<constNCVariable<double> > gnormtrac(numMatls);
+//    std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
+    std::vector<NCVariable<double> >  dLdt(numMatls);
     constNCVariable<double> NC_CCweight;
     std::vector<bool> masterMatls(numMatls);
     std::vector<bool> inContactWithMatls(numMatls);
@@ -108,10 +111,16 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,       dwi, patch, gnone, 0);
-      new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
+//      new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
+      new_dw->get(gContactForce[m],
+                                lb->gSurfaceForceLabel, dwi, patch, gnone, 0);
+//      new_dw->get(gSurfaceArea[m],
+//                                lb->gSurfaceAreaLabel,  dwi, patch, gnone, 0);
 
-      new_dw->getModifiable(massBurnRate[m], 
+      new_dw->getModifiable(massBurnRate[m],
                                 lb->massBurnFractionLabel, dwi, patch);
+      new_dw->getModifiable(dLdt[m],
+                                lb->dLdtDissolutionLabel,  dwi, patch);
       
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       if(mat->getModalID()==d_masterModalID){
@@ -132,12 +141,14 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
      if(masterMatls[m]){
       int md=m;
 
-      double rate = (0.75*M_PI)
-                  * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
-                  * exp(-d_Ea/(d_R*d_temperature))
-                  * 2.0*3.1536e19*d_timeConversionFactor*area;
+      // This isn't actually dL_dt yet, that is computed below as dLdt
+      double dL_dt = (0.75*M_PI)
+                   * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
+                   * exp(-d_Ea/(d_R*d_temperature))
+                   * 2.0*3.1536e19*d_timeConversionFactor;
+      double rate = dL_dt*area;
 //      cout << "rateD = " << rate << endl;
-      int numNodesMBRGT0 = 0;
+//      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -152,27 +163,28 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           }
         }
         // Maybe mass weight this?
-        double normtrac_ave = 0.5*(gnormtrac[md][c] + 
-                                   gnormtrac[inContactMatl][c]);
-
+//        double normtrac_ave = 0.5*(gnormtrac[md][c] + 
+//                                   gnormtrac[inContactMatl][c]);
+        double normtrac_ave = -.5*(gContactForce[md][c].length() + 
+                                   gContactForce[inContactMatl][c].length())
+                                  *(8.*NC_CCweight[c]) / area;
+//        double normtrac_ave = -1.*(gContactForce[md][c].length() + 
+//                                   gContactForce[inContactMatl][c].length())
+//                                   /(gSurfaceArea[md][c] +
+//                                     gSurfaceArea[inContactMatl][c]);
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
           -normtrac_ave > d_StressThresh){   // Compressive stress is neg
 //           cout << "normtrac_ave = " << normtrac_ave << endl;
 //           cout << "gnormtrac_max = " << std::min(gnormtrac[md][c], gnormtrac[inContactMatl][c])  << endl;
 //           cout << "gnormtrac_min = " << std::max(gnormtrac[md][c], gnormtrac[inContactMatl][c])  << endl;
-//          (-gnormtrac[md][c] > d_StressThresh || // Compressive stress is neg
-//           -gnormtrac[inContactMatl][c] > d_StressThresh)){
             double rho = gmass[md][c]/gvolume[md][c];
-//          double stressDiff = std::max(
-//                               (-gnormtrac[md][c]-d_StressThresh),
-//                               (-gnormtrac[inContactMatl][c]-d_StressThresh));
             double stressDiff = (-normtrac_ave - d_StressThresh);
-//	    cout << "stressDiff = " << stressDiff << endl;
             massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
+            dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = " << NC_CCweight[c] << endl;
-            numNodesMBRGT0++;
+//            numNodesMBRGT0++;
         }
       } // nodes
 //      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
@@ -180,7 +192,6 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     } // materials
   } // patches
  } // if hold
-//           pressure > d_StressThresh){ // && volFrac > 0.6){
 }
 
 void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
@@ -198,7 +209,9 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
 
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
+//  t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
+//  t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfaceForceLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);

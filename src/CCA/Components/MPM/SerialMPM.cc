@@ -1024,6 +1024,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->massBurnFractionLabel);
+  t->computes(lb->dLdtDissolutionLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1623,6 +1624,8 @@ void SerialMPM::scheduleUpdateLineSegments(SchedulerP& sched,
   t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
                                                      lineseg_matls, gnone);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gSurfNormLabel,       mpm_matls,     gac,NGN+1);
 
   t->computes(lb->pXLabel_preReloc,                      lineseg_matls);
   t->computes(lb->pSizeLabel_preReloc,                   lineseg_matls);
@@ -1708,7 +1711,9 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->lsMidToEndVectorLabel,lineseg_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+2);
 
-  t->computes(lb->gLSContactForceLabel,             mpm_matls);
+  t->computes(lb->gLSContactForceLabel,              mpm_matls);
+  t->computes(lb->gSurfaceForceLabel,                mpm_matls);
+  t->computes(lb->gSurfaceAreaLabel,                 mpm_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -2629,7 +2634,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gSp_vol;
       NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
-      NCVariable<double> gTemperatureRate,massBurnFrac;
+      NCVariable<double> gTemperatureRate,massBurnFrac,dLdt;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
@@ -2647,6 +2652,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(massBurnFrac,     lb->massBurnFractionLabel,
                              dwi,patch);
+      new_dw->allocateAndPut(dLdt,             lb->dLdtDissolutionLabel,
+                             dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2659,6 +2666,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalheatrate.initialize(0);
       gSp_vol.initialize(0.);
       massBurnFrac.initialize(0.);
+      dLdt.initialize(0.);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -3413,7 +3421,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
-    Vector dxCell = patch->dCell();
 #if 0
     simTime_vartype simTimeVar;
     old_dw->get(simTimeVar, lb->simulationTimeLabel);
@@ -3480,6 +3487,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
 
+#if 0
         if (flags->d_doingDissolution) {
            double delX = dxCell.x();
            double rat = velocity_star[c].length()*delT/delX;
@@ -3496,9 +3504,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 //            acceleration[c] = (velocity_star[c] - velocity[c])/delT;
 //            cout << "vstar_new = " << velocity_star[c] << endl;
 //            cout << "acc_new = " << acceleration[c] << endl << endl;
-           }
-//          }
+           } // if(rat> ...)
         } // if doing dissolution
+#endif
       }
 
       // Check the integrated nodal velocity and if the product of velocity
@@ -4350,6 +4358,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } else {  // Not XPIC(2)
         // Loop over particles
+        Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -4421,7 +4430,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
               dL[maxDirP1] = dL1overdL0*dL[maxDir];
               dL[maxDirP2] = dL2overdL0*dL[maxDir];
-              L[maxDir]       *= (Ll[maxDir]       - dL[maxDir]);
+              L[maxDir]   *= (Ll[maxDir]   - dL[maxDir]);
               L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
               L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
 
@@ -4436,11 +4445,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //            Matrix3 pszNew = sizeRed*psize[idx];
 //            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
 //            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-//            Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
-//                                          dL2*dy*pSN.y(),
-//                                          dL3*dz*pSN.z());
+            Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                          dL[1]*dx.y()*pSN.y(),
+                                          dL[2]*dx.z()*pSN.z());
 //            cout << "deltaPos = " << deltaPos << endl;
-//            pxnew[idx] = pxnew[idx] - deltaPos;
+            pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
@@ -4453,10 +4462,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          if(m==0){
+//          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
-          }
+//          }
         }
       } // use XPIC(2) or not
 
@@ -4950,13 +4959,17 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls("MPM");
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
+    std::vector<constNCVariable<double> > dLdt(numMPMMatls);
+    std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+1);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+1);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
+      new_dw->get(gSurfNorm[m], lb->gSurfNormLabel,      dwi, patch, gac,NGN+1);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("LineSegment");
@@ -5006,37 +5019,50 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
 
         // First update the position of the "right" end of the segment
         Point right = tx[idx]+lsMidToEndVec[idx];
+        Point left  = tx[idx]-lsMidToEndVec[idx];
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeights(right, ni, S, size);
         Vector vel(0.0,0.0,0.0);
+        Vector surf(0.0,0.0,0.0);
+//        Vector v = left - right;
+
+//        normal = v X (0,0,1)
+//        Vector normal = Vector(v.y(), -v.x(), 0.)
+//                         / (1.e-100+sqrt(v.y()*v.y()+v.x()*v.x()));
   
-        double sumSk=0.0;
+        double sumSk =0.0;
         // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-          }
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
+          surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+//          surf   -= dLdt[adv_matl][node]*normal*S[k];
+        }
         vel/=sumSk;
   
         right += vel*delT;
+        right += 2.*surf*delT;
   
         // Next update the position of the "left" end of the segment
-        Point left = tx[idx]-lsMidToEndVec[idx];
         // Get the node indices that surround the cell
         NN = interpolator->findCellAndWeights(left, ni, S, size);
         vel = Vector(0.0,0.0,0.0);
+        surf = Vector(0.0,0.0,0.0);
   
         sumSk=0.0;
         // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-            sumSk += gmass[adv_matl][node]*S[k];
-          }
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+          sumSk += gmass[adv_matl][node]*S[k];
+          surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+//          surf   -= dLdt[adv_matl][node]*normal*S[k];
+        }
         vel/=sumSk;
   
         left += vel*delT;
+        left += 2.*surf*delT;
 
         tx_new[idx] = 0.5*(left+right);
 
@@ -5047,7 +5073,6 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
                                               0.0,                  0.0, 1.0);
         tsize_new[idx] = size_new;
   
-        // Check to see if a line segment has left the domain
         // Check to see if a line segment has left the domain
         if(!domain.inside(tx_new[idx])){
           double epsilon = 1.e-15;
@@ -5115,6 +5140,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
+    std::vector<NCVariable<Vector> > SurfForce(numMPMMatls);
+    std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -5126,9 +5153,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       stiffness[m] = 1./inv_stiff;
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
+      new_dw->allocateAndPut(SurfForce[m],  lb->gSurfaceForceLabel,  dwi,patch);
+      new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
+      SurfForce[m].initialize(Vector(0.0));
+      SurfArea[m].initialize(1.0e-100);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("LineSegment");
@@ -5244,34 +5275,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
                Vector tForce1A = (1.-tC1)*forceMag*normal1;
                Vector tForce1B = tC1*forceMag*normal1;
-#if 0
-               cout << "Case 1" << endl;
-               cout << "LS, px0    = " << px0 << endl;
-               cout << "LS, A      = " << A << endl;
-               cout << "LS, B      = " << B << endl;
-               cout << "LS, tForce1A      = " << tForce1A << endl;
-               cout << "LS, tForce1B      = " << tForce1B << endl;
-               cout << "idx0 = " << idx0 << endl;
-               cout << "closest = " << closest << endl;
-               cout << "normal1 = " << normal1 << endl;
-               cout << "LS, overlap1, forceMag = " << overlap1 << ", " 
-                                              << forceMag << endl;
-#endif
-
-#if 0
-               cout << "tmo = " << tmo << endl;
-               cout << "tmi = " << tmi << endl;
-               cout << "LS, lsMTEV1      = " << lsMidToEndVec0[tmi][closest] << endl;
-               cout << "LS, overlap1, forceMag = " << overlap1 << ", " 
-                                              << forceMag << endl;
-
-               cout << "LS, adv_matl0 = " << adv_matl0 << endl;
-               cout << "LS, adv_matl1 = " << adv_matl1 << endl;
-               cout << "LS, px0    = " << px0 << endl;
-               cout << "LS, normal1 = " << normal1 << endl;
-               cout << "LS, u      = " << u << endl;
-               cout << "LS, tC1      = " << tC1 << endl;
-#endif
 
                // See comments in addCohesiveZoneForces for a description of how
                // the force is put on the nodes
@@ -5284,8 +5287,24 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                double totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                  totMass0 += S[k]*gmass[adv_matl0][node];
                  totMass1 += S[k]*gmass[adv_matl1][node];
+//               }
+               }
+
+               double lsArea = vLength*dxCell.z();
+               double lsAreaA = (1.-tC1)*lsArea;
+               double lsAreaB =     tC1 *lsArea;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   SurfArea[adv_matl0][node]  += lsAreaA*S[k];
+                   SurfForce[adv_matl0][node] += lsAreaA*tForce1A*S[k];
+                   SurfArea[adv_matl1][node]  += lsAreaA*S[k];
+                   SurfForce[adv_matl1][node] -= lsAreaA*tForce1A*S[k];
+                 }
                }
 
                // Accumulate the contribution from each surrounding vertex
@@ -5294,10 +5313,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                  if(patch->containsNode(node)) {
                    // Distribute force according to material mass on the nodes
                    // to get nearly equal contribution to the acceleration
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                    LSContForce[adv_matl0][node] -= tForce1A*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1A*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+//                 }
                  }
                }
 
@@ -5308,8 +5330,21 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                  totMass0 += S[k]*gmass[adv_matl0][node];
                  totMass1 += S[k]*gmass[adv_matl1][node];
+//               }
+               }
+
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   SurfArea[adv_matl0][node]  += lsAreaB*S[k];
+                   SurfForce[adv_matl0][node] += lsAreaB*tForce1B*S[k];
+                   SurfArea[adv_matl1][node]  += lsAreaB*S[k];
+                   SurfForce[adv_matl1][node] -= lsAreaB*tForce1B*S[k];
+                 }
                }
 
                // Accumulate the contribution from each surrounding vertex
@@ -5318,10 +5353,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                  if(patch->containsNode(node)) {
                    // Distribute force according to material mass on the nodes
                    // to get nearly equal contribution to the acceleration
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                    LSContForce[adv_matl0][node] -= tForce1B*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1B*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+//                 }
                  }
                }
 
@@ -5344,19 +5382,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
             if(((tC1 < 0.0 && tC2 > 1.0) || (tC1 > 1.0 && tC2 < 0.0)) && 
                overlap1 < 0.0 && overlap2 < 0.0 && !done){
               done = true;
-#if 0
-              cout << "Case 3" << endl;
-              cout << "LS, px0    = " << px0 << endl;
-              cout << "closest = " << closest << endl;
-              cout << "secondClosest = " << secondClosest << endl;
-              cout << "idx0 = " << idx0 << endl;
-              cout << "overlap1 = " << overlap1 << endl;
-              cout << "overlap2 = " << overlap2 << endl;
-              cout << "normal1 = " << normal1 << endl;
-              cout << "normal2 = " << normal2 << endl;
-              cout << "tC1 = " << tC1 << endl;
-              cout << "tC2 = " << tC2 << endl;
-#endif
+
               double vLength = sqrt(vLength2);
               double K = K_l*vLength;
 
@@ -5387,21 +5413,27 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 //              Matrix3 size_mean = 0.5*(size1+size2);
               Matrix3 size_mean = sizeWeight1*size1 + sizeWeight2*size2;
               int NN = interpolator->findCellAndWeights(px0, ni, S, size_mean);
-#if 0
-              cout << "sizeWeight1 = " << sizeWeight1 << endl;
-              cout << "sizeWeight2 = " << sizeWeight2 << endl;
-              cout << "size1 = " << size1 << endl;
-              cout << "size2 = " << size2 << endl;
-              cout << "LS, tForce1A      = " << tForce1A << endl;
-              cout << "size_mean = " << size_mean << endl;
-#endif
  
               double totMass0 = 0.;
               double totMass1 = 0.;
               for (int k = 0; k < NN; k++) {
                 IntVector node = ni[k];
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                 totMass0 += S[k]*gmass[adv_matl0][node];
                 totMass1 += S[k]*gmass[adv_matl1][node];
+//              }
+              }
+
+              double lsArea = vLength*dxCell.z();
+              for (int k = 0; k < NN; k++) {
+                IntVector node = ni[k];
+                if(patch->containsNode(node)) {
+                  SurfArea[adv_matl0][node]  += lsArea*S[k];
+                  SurfForce[adv_matl0][node] += lsArea*tForce1A*S[k];
+                  SurfArea[adv_matl1][node]  += lsArea*S[k];
+                  SurfForce[adv_matl1][node] -= lsArea*tForce1A*S[k];
+                }
               }
 
               // Accumulate the contribution from each surrounding vertex
@@ -5410,10 +5442,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                 if(patch->containsNode(node)) {
                   // Distribute force according to material mass on the nodes
                   // to get nearly equal contribution to the acceleration
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                   LSContForce[adv_matl0][node] -= tForce1A*S[k]
                                             * gmass[adv_matl0][node]/totMass0;
                   LSContForce[adv_matl1][node] += tForce1A*S[k]
                                             * gmass[adv_matl1][node]/totMass1;
+//                }
                 }
               }
             } // if(tC1...)
@@ -5443,14 +5478,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
                Vector tForce1A = (1.-tC2)*forceMag*normal;
                Vector tForce1B = tC2*forceMag*normal;
-#if 0
-               cout << "Case 2" << endl;
-               cout << "tC2 = " << tC2 << endl;
-               cout << "LS, overlap2, forceMag = " << overlap2 << ", " 
-                                              << forceMag << endl;
-               cout << "IDX0 = " << idx0 << endl;
-               cout << "secondClosest = " << secondClosest << endl;
-#endif
 
                // Get the node indices that surround the cell
                Matrix3 size1 = tsize0[tmi][closest];
@@ -5460,8 +5487,24 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                double totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                  totMass0 += S[k]*gmass[adv_matl0][node];
                  totMass1 += S[k]*gmass[adv_matl1][node];
+//               }
+               }
+
+               double lsArea = v2Length*dxCell.z();
+               double lsAreaA = (1.-tC1)*lsArea;
+               double lsAreaB =     tC1 *lsArea;
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   SurfArea[adv_matl0][node]  += lsAreaA*S[k];
+                   SurfForce[adv_matl0][node] += lsAreaA*tForce1A*S[k];
+                   SurfArea[adv_matl1][node]  += lsAreaA*S[k];
+                   SurfForce[adv_matl1][node] -= lsAreaA*tForce1A*S[k];
+                 }
                }
 
                // Accumulate the contribution from each surrounding vertex
@@ -5470,10 +5513,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                  if(patch->containsNode(node)) {
                    // Distribute force according to material mass on the nodes
                    // to get nearly equal contribution to the acceleration
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                    LSContForce[adv_matl0][node] -= tForce1A*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1A*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+//                 }
                  }
                }
 
@@ -5484,8 +5530,21 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                totMass1 = 0.;
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                  totMass0 += S[k]*gmass[adv_matl0][node];
                  totMass1 += S[k]*gmass[adv_matl1][node];
+//               }
+               }
+
+               for (int k = 0; k < NN; k++) {
+                 IntVector node = ni[k];
+                 if(patch->containsNode(node)) {
+                   SurfArea[adv_matl0][node]  += lsAreaB*S[k];
+                   SurfForce[adv_matl0][node] += lsAreaB*tForce1B*S[k];
+                   SurfArea[adv_matl1][node]  += lsAreaB*S[k];
+                   SurfForce[adv_matl1][node] -= lsAreaB*tForce1B*S[k];
+                 }
                }
 
                // Accumulate the contribution from each surrounding vertex
@@ -5494,10 +5553,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                  if(patch->containsNode(node)) {
                    // Distribute force according to material mass on the nodes
                    // to get nearly equal contribution to the acceleration
+//               if(gmass[adv_matl0][node]>1.e-50 &&
+//                  gmass[adv_matl1][node]>1.e-50){
                    LSContForce[adv_matl0][node] -= tForce1B*S[k]
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1B*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+//                 }
                  }
                }
               } // if overlap2
@@ -5506,6 +5568,12 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
         } //  Outer loop over linesegments
        }
       } // inner loop over line segment materials
+
+      for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+        IntVector c = *iter;
+        SurfForce[adv_matl0][c]   /= SurfArea[adv_matl0][c];
+      }
     } // outer loop over line segment materials
 //    cout << "numOverlap = " << numOverlap << endl;
     delete interpolator;
@@ -5935,9 +6003,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               "Doing computeTriangleForces");
 
     // Get the current simulation time
-    simTime_vartype simTimeVar;
-    old_dw->get(simTimeVar, lb->simulationTimeLabel);
-    double time = simTimeVar;
+    //simTime_vartype simTimeVar;
+    //old_dw->get(simTimeVar, lb->simulationTimeLabel);
+    //double time = simTimeVar;
 
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
@@ -6025,8 +6093,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     double timefactor=1.0;
 //    double timefactor=min(1.0, time/1.0);
 //    proc0cout << "timefactor = " << timefactor << endl;
-
-    bool spew = false;
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
@@ -8351,7 +8417,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
       new_dw->allocateAndPut(pSurf,    lb->pSurfLabel_preReloc,      psetOP);
 
       double cellVol=dx.x()*dx.y()*dx.z();
-      double tol = 0.125*cbrt(cellVol);
+      double tol = 0.100*cbrt(cellVol);
       int nclose = 2*flags->d_ndim;
 
       // Either carry forward the particle surface data, or recompute it every

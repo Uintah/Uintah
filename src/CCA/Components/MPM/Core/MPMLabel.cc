@@ -438,6 +438,12 @@ MPMLabel::MPMLabel()
      VarLabel::create("g.thermalContactTemperatureRate",
      NCVariable<double>::getTypeDescription());
 
+  gSurfaceForceLabel = VarLabel::create( "g.surfaceforce",
+                   NCVariable<Vector>::getTypeDescription() );
+
+  gSurfaceAreaLabel = VarLabel::create( "g.surfacearea",
+                   NCVariable<double>::getTypeDescription() );
+
   gNormTractionLabel = VarLabel::create( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
@@ -508,6 +514,9 @@ MPMLabel::MPMLabel()
                         NCVariable<double>::getTypeDescription());
 
   massBurnFractionLabel  = VarLabel::create("massBurnFraction",
+                        NCVariable<double>::getTypeDescription());
+                     
+  dLdtDissolutionLabel  = VarLabel::create("dLdtDissolution",
                         NCVariable<double>::getTypeDescription());
                      
   gSp_volLabel     =  VarLabel::create("g.sp_vol",
@@ -1127,6 +1136,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
+  VarLabel::destroy(gSurfaceForceLabel);
+  VarLabel::destroy(gSurfaceAreaLabel);
   VarLabel::destroy(gNormTractionLabel);
   VarLabel::destroy(gNormTractionF0Label);
   VarLabel::destroy(gNormTractionF1Label);
@@ -1162,6 +1173,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
+  VarLabel::destroy(dLdtDissolutionLabel);
   VarLabel::destroy(AccArchesNCLabel);
   VarLabel::destroy(heaTranSolid_NCLabel);
   VarLabel::destroy(frictionalWorkLabel);

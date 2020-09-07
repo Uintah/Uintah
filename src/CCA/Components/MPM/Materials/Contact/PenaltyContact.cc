@@ -173,7 +173,11 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
           // and thereby creating space between the materials.  The
           // force based on the velocity (normalDeltaVel) is just enough 
           // to bring the material's velocity to the center of mass velocity.
-          normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
+//          if(!compare(mass-centerOfMassMass,0.0)){
+            normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
+//          } else {
+//            normalDv = fabs(normalDv);
+//          }
 
           // Change in velocity in the normal direction
           Dv = normalDv*normal;
