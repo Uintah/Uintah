@@ -812,15 +812,19 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
   DataWarehouse* new_dw = sched->getLastDW();
 
   // Find the first patch, on the arches level, that this mpi rank owns.
-  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level );
-  const PatchSubset* myPatches     = ps->getSubset( Uintah::Parallel::getMPIRank() );
-  const Patch* firstPatch          = myPatches->get(0);
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level ); 
+  const int rank                   = Uintah::Parallel::getMPIRank();
+  const PatchSubset* myPatches     = ps->getSubset( rank );
+  
+  if ( myPatches->size() > 0 ){
+    const Patch* firstPatch  = myPatches->get(0);
 
-  for ( auto  iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    const VarLabel* varLabel = *iter;
+    for ( auto  iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+      const VarLabel* varLabel = *iter;
 
-    if( !new_dw->exists( varLabel, arches, firstPatch ) ){
-      _missingCkPt_labels.push_back( varLabel );
+      if( !new_dw->exists( varLabel, arches, firstPatch ) ){
+        _missingCkPt_labels.push_back( varLabel );
+      }
     }
   }
 
