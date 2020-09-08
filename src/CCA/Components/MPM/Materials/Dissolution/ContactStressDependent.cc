@@ -121,7 +121,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                 lb->massBurnFractionLabel, dwi, patch);
       new_dw->getModifiable(dLdt[m],
                                 lb->dLdtDissolutionLabel,  dwi, patch);
-      
+
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       if(mat->getModalID()==d_masterModalID){
         mat->setNeedSurfaceParticles(true);
