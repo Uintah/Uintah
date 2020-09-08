@@ -226,6 +226,7 @@ private:
                                                           //   when scattering isn't on.
                                                           
   std::vector<const VarLabel*> m_user_intensity_save_labels; ///< Labels the user has requested to be saved.
+  std::vector<const VarLabel*> _missingCkPt_labels;       // labels that are missing from the checkpoint
 
 
   std::vector<const VarLabel*> _species_varlabels;
