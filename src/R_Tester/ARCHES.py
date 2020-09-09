@@ -113,7 +113,6 @@ PRODUCTION_TESTS_NO_COAL = [
 ]
 
 PRODUCTION_COAL_TESTS = [
-   ("AtikokanU1"                        , "Coal/AtikokanU1.ups"                                     , 6   , "All"   , ["exactComparison"])   ,
    ("birth_test"                        , "DQMOM_regression/birth_test.ups"                         , 1   , "All"   , ["exactComparison"])   ,
    ("upwind_birth_test"                 , "DQMOM_regression/upwind_birth_test.ups"                  , 1   , "All"   , ["exactComparison"])   ,
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1   , "All"   , ["exactComparison"     , "no_restart"]) ,
