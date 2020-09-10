@@ -1712,7 +1712,6 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac, NGN+2);
 
   t->computes(lb->gLSContactForceLabel,              mpm_matls);
-  t->computes(lb->gSurfaceForceLabel,                mpm_matls);
   t->computes(lb->gSurfaceAreaLabel,                 mpm_matls);
 
   sched->addTask(t, patches, matls);
@@ -5140,7 +5139,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
-    std::vector<NCVariable<Vector> > SurfForce(numMPMMatls);
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
@@ -5153,12 +5151,10 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       stiffness[m] = 1./inv_stiff;
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
-      new_dw->allocateAndPut(SurfForce[m],  lb->gSurfaceForceLabel,  dwi,patch);
       new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
-      SurfForce[m].initialize(Vector(0.0));
       SurfArea[m].initialize(1.0e-100);
     }
 
@@ -5190,6 +5186,35 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
       int adv_matl0 = t_matl0->getAssociatedMaterial();
 
       ParticleSubset* pset0 = psetvec[tmo];
+
+      // Extrapolate area of line segments to the grid for use in dissolution
+      if (flags->d_doingDissolution){
+       for(ParticleSubset::iterator iter0 = pset0->begin();
+           iter0 != pset0->end(); iter0++){
+         particleIndex idx0 = *iter0;
+
+         Point px0=tx0[tmo][idx0] - lsMidToEndVec0[tmo][idx0];
+         Point a = tx0[tmo][idx0] + lsMidToEndVec0[tmo][idx0];
+         Vector v = px0 - a;
+         double vLength = v.length();
+         double LSArea = vLength*dxCell.z();
+         Matrix3 size0 = tsize0[tmo][idx0];
+         int nn = interpolator->findCellAndWeights(tx0[tmo][idx0],ni,S,size0);
+         double totMass = 0.;
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           totMass += S[k]*gmass[adv_matl0][node];
+        }
+
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           if(patch->containsNode(node)) {
+             SurfArea[adv_matl0][node] += LSArea*S[k]*gmass[adv_matl0][node]
+                                          /totMass;
+           }
+         }
+        }
+      }
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
         LineSegmentMaterial* t_matl1 = (LineSegmentMaterial *) 
@@ -5294,19 +5319,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 //               }
                }
 
-               double lsArea = vLength*dxCell.z();
-               double lsAreaA = (1.-tC1)*lsArea;
-               double lsAreaB =     tC1 *lsArea;
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   SurfArea[adv_matl0][node]  += lsAreaA*S[k];
-                   SurfForce[adv_matl0][node] += lsAreaA*tForce1A*S[k];
-                   SurfArea[adv_matl1][node]  += lsAreaA*S[k];
-                   SurfForce[adv_matl1][node] -= lsAreaA*tForce1A*S[k];
-                 }
-               }
-
                // Accumulate the contribution from each surrounding vertex
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
@@ -5337,16 +5349,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 //               }
                }
 
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   SurfArea[adv_matl0][node]  += lsAreaB*S[k];
-                   SurfForce[adv_matl0][node] += lsAreaB*tForce1B*S[k];
-                   SurfArea[adv_matl1][node]  += lsAreaB*S[k];
-                   SurfForce[adv_matl1][node] -= lsAreaB*tForce1B*S[k];
-                 }
-               }
-
                // Accumulate the contribution from each surrounding vertex
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
@@ -5371,7 +5373,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
             Point B2=tx0[tmi][secondClosest]-lsMidToEndVec0[tmi][secondClosest];
             Vector v2 = B2 - A2;
             double v2Length2 = v2.length2();
-//            if(idx0==20 && (closest==30 || closest==31) && !done){
 
             Vector u2 = A2 - px0;
             tC2 = -Dot(v2,u2)/v2Length2;
@@ -5423,17 +5424,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                 totMass0 += S[k]*gmass[adv_matl0][node];
                 totMass1 += S[k]*gmass[adv_matl1][node];
 //              }
-              }
-
-              double lsArea = vLength*dxCell.z();
-              for (int k = 0; k < NN; k++) {
-                IntVector node = ni[k];
-                if(patch->containsNode(node)) {
-                  SurfArea[adv_matl0][node]  += lsArea*S[k];
-                  SurfForce[adv_matl0][node] += lsArea*tForce1A*S[k];
-                  SurfArea[adv_matl1][node]  += lsArea*S[k];
-                  SurfForce[adv_matl1][node] -= lsArea*tForce1A*S[k];
-                }
               }
 
               // Accumulate the contribution from each surrounding vertex
@@ -5494,19 +5484,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 //               }
                }
 
-               double lsArea = v2Length*dxCell.z();
-               double lsAreaA = (1.-tC1)*lsArea;
-               double lsAreaB =     tC1 *lsArea;
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   SurfArea[adv_matl0][node]  += lsAreaA*S[k];
-                   SurfForce[adv_matl0][node] += lsAreaA*tForce1A*S[k];
-                   SurfArea[adv_matl1][node]  += lsAreaA*S[k];
-                   SurfForce[adv_matl1][node] -= lsAreaA*tForce1A*S[k];
-                 }
-               }
-
                // Accumulate the contribution from each surrounding vertex
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
@@ -5537,16 +5514,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 //               }
                }
 
-               for (int k = 0; k < NN; k++) {
-                 IntVector node = ni[k];
-                 if(patch->containsNode(node)) {
-                   SurfArea[adv_matl0][node]  += lsAreaB*S[k];
-                   SurfForce[adv_matl0][node] += lsAreaB*tForce1B*S[k];
-                   SurfArea[adv_matl1][node]  += lsAreaB*S[k];
-                   SurfForce[adv_matl1][node] -= lsAreaB*tForce1B*S[k];
-                 }
-               }
-
                // Accumulate the contribution from each surrounding vertex
                for (int k = 0; k < NN; k++) {
                  IntVector node = ni[k];
@@ -5568,12 +5535,6 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
         } //  Outer loop over linesegments
        }
       } // inner loop over line segment materials
-
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        SurfForce[adv_matl0][c]   /= SurfArea[adv_matl0][c];
-      }
     } // outer loop over line segment materials
 //    cout << "numOverlap = " << numOverlap << endl;
     delete interpolator;

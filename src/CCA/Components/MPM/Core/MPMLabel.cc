@@ -438,9 +438,6 @@ MPMLabel::MPMLabel()
      VarLabel::create("g.thermalContactTemperatureRate",
      NCVariable<double>::getTypeDescription());
 
-  gSurfaceForceLabel = VarLabel::create( "g.surfaceforce",
-                   NCVariable<Vector>::getTypeDescription() );
-
   gSurfaceAreaLabel = VarLabel::create( "g.surfacearea",
                    NCVariable<double>::getTypeDescription() );
 
@@ -1136,7 +1133,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
-  VarLabel::destroy(gSurfaceForceLabel);
   VarLabel::destroy(gSurfaceAreaLabel);
   VarLabel::destroy(gNormTractionLabel);
   VarLabel::destroy(gNormTractionF0Label);
