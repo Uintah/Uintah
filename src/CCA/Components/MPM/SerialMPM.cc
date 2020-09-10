@@ -1657,6 +1657,8 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->gSurfNormLabel,       mpm_matls,     gac,NGN+2);
   t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triangleIDLabel,         triangle_matls, gnone);
@@ -1746,6 +1748,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+2);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
+  t->computes(lb->gSurfaceAreaLabel,                mpm_matls);
 //  t->computes(lb->triInContactLabel,                triangle_matls);
 
   sched->addTask(t, patches, matls);
@@ -5036,7 +5039,6 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
           vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
           sumSk += gmass[adv_matl][node]*S[k];
           surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
-//          surf   -= dLdt[adv_matl][node]*normal*S[k];
         }
         vel/=sumSk;
   
@@ -5056,7 +5058,6 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
           vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
           sumSk += gmass[adv_matl][node]*S[k];
           surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
-//          surf   -= dLdt[adv_matl][node]*normal*S[k];
         }
         vel/=sumSk;
   
@@ -5570,13 +5571,17 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls("MPM");
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
+    std::vector<constNCVariable<double> > dLdt(numMPMMatls);
+    std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN+2);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN+2);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
+      new_dw->get(gSurfNorm[m], lb->gSurfNormLabel,      dwi, patch, gac,NGN+2);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("Triangle");
@@ -5664,178 +5669,86 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        Point P[3];
         // Update the positions of the triangle vertices
-        Point P0 = tx[idx]+triMidToN0Vec[idx];
-        Point P1 = tx[idx]+triMidToN1Vec[idx];
-        Point P2 = tx[idx]+triMidToN2Vec[idx];
-        // Get the node indices that surround the point
-        int NN = interpolator->findCellAndWeights(P0, ni, S, tsize[idx]);
-        Vector vel(0.0,0.0,0.0);
+        P[0] = tx[idx]+triMidToN0Vec[idx];
+        P[1] = tx[idx]+triMidToN1Vec[idx];
+        P[2] = tx[idx]+triMidToN2Vec[idx];
+
+        // Loop over the vertices
+        for(int itv = 0; itv < 3; itv++){
+
+          // Get the node indices that surround the point
+          int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
+          Vector vel(0.0,0.0,0.0);
+          Vector surf(0.0,0.0,0.0);
   
-        double sumSk=0.0;
-        // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-          sumSk += gmass[adv_matl][node]*S[k];
-        }
-        vel/=sumSk;
+          double sumSk=0.0;
+          // Accumulate the contribution from each surrounding vertex
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
+            sumSk += gmass[adv_matl][node]*S[k];
+            surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+          }
+          vel/=sumSk;
   
-        P0 += vel*delT;
+          P[itv] += vel*delT;
+          P[itv] += 2.*surf*delT;
 
-        // Check to see if a vertex has left the domain
-        if(!domain.inside(P0)){
-          double epsilon = 1.e-15;
-          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-          Point txn = P0;
-           if(P0.x()<dom_min.x()){
-            P0 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-            txn = P0;
-            warn.invoke();
-           }
-           if(P0.x()>dom_max.x()){
-            P0 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-            txn = P0;
-            warn.invoke();
-           }
+          // Check to see if a vertex has left the domain
+          // If vertices are placed properly (on domain boundaries),
+          // this shouldn't be needed.
+#if 0
+          if(!domain.inside(P[itv])){
+            double epsilon = 1.e-15;
+            static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in. This is a ProgressiveWarning.",10);
+            Point txn = P[itv];
+            if(P[itv].x()<dom_min.x()){
+             P[itv] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
+             txn = P[itv];
+             warn.invoke();
+            }
+            if(P[itv].x()>dom_max.x()){
+             P[itv] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
+             txn = P[itv];
+             warn.invoke();
+            }
+ 
+            if(P[itv].y()<dom_min.y()){
+             P[itv] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
+             txn = P[itv];
+             warn.invoke();
+            }
+            if(P[itv].y()>dom_max.y()){
+             P[itv] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
+             txn = P[itv];
+             warn.invoke();
+            }
 
-           if(P0.y()<dom_min.y()){
-            P0 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-            txn = P0;
-            warn.invoke();
-           }
-           if(P0.y()>dom_max.y()){
-            P0 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-            txn = P0;
-            warn.invoke();
-           }
+            if(P[itv].z()<dom_min.z()){
+             P[itv] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
+             warn.invoke();
+            }
+            if(P[itv].z()>dom_max.z()){
+             P[itv] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
+             warn.invoke();
+            }
+          } // if vertex has left domain
+#endif
+        } // loop over vertices
 
-           if(P0.z()<dom_min.z()){
-            P0 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-            warn.invoke();
-           }
-           if(P0.z()>dom_max.z()){
-            P0 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-            warn.invoke();
-           }
-        } // if vertex has left domain
+        tx_new[idx] = (P[0]+P[1]+P[2])/3.;
+        triArea_new[idx]=0.5*Cross(P[1]-P[0],P[2]-P[0]).length();
 
-  
-        // Get the node indices that surround the point
-        NN = interpolator->findCellAndWeights(P1, ni, S, tsize[idx]);
-        vel = Vector(0.0,0.0,0.0);
-  
-        sumSk=0.0;
-        // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-          sumSk += gmass[adv_matl][node]*S[k];
-        }
-        vel/=sumSk;
-  
-        P1 += vel*delT;
-
-        // Check to see if a vertex has left the domain
-        if(!domain.inside(P1)){
-          double epsilon = 1.e-15;
-          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-          Point txn = P1;
-           if(P1.x()<dom_min.x()){
-            P1 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-            txn = P1;
-            warn.invoke();
-           }
-           if(P1.x()>dom_max.x()){
-            P1 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-            txn = P1;
-            warn.invoke();
-           }
-
-           if(P1.y()<dom_min.y()){
-            P1 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-            txn = P1;
-            warn.invoke();
-           }
-           if(P1.y()>dom_max.y()){
-            P1 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-            txn = P1;
-            warn.invoke();
-           }
-
-           if(P1.z()<dom_min.z()){
-            P1 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-            warn.invoke();
-           }
-           if(P1.z()>dom_max.z()){
-            P1 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-            warn.invoke();
-           }
-        } // if vertex has left domain
-
-        // Get the node indices that surround the point
-        NN = interpolator->findCellAndWeights(P2, ni, S, tsize[idx]);
-        vel = Vector(0.0,0.0,0.0);
-  
-        sumSk=0.0;
-        // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
-          sumSk += gmass[adv_matl][node]*S[k];
-        }
-        vel/=sumSk;
-  
-        P2 += vel*delT;
-
-        // Check to see if a vertex has left the domain
-        if(!domain.inside(P2)){
-          double epsilon = 1.e-15;
-          static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-          Point txn = P2;
-           if(P2.x()<dom_min.x()){
-            P2 = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-            txn = P2;
-            warn.invoke();
-           }
-           if(P2.x()>dom_max.x()){
-            P2 = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-            txn = P2;
-            warn.invoke();
-           }
-
-           if(P2.y()<dom_min.y()){
-            P2 = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-            txn = P2;
-            warn.invoke();
-           }
-           if(P2.y()>dom_max.y()){
-            P2 = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-            txn = P2;
-            warn.invoke();
-           }
-
-           if(P2.z()<dom_min.z()){
-            P2 = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-            warn.invoke();
-           }
-           if(P2.z()>dom_max.z()){
-            P2 = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-            warn.invoke();
-           }
-        } // if vertex has left domain
-
-        tx_new[idx] = (P0+P1+P2)/3.;
-        triArea_new[idx]=0.5*Cross(P1-P0,P2-P0).length();
-
-        triMidToN0Vec_new[idx] = P0 - tx_new[idx];
-        triMidToN1Vec_new[idx] = P1 - tx_new[idx];
-        triMidToN2Vec_new[idx] = P2 - tx_new[idx];
+        triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
+        triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
+        triMidToN2Vec_new[idx] = P[2] - tx_new[idx];
 
 #if 0
         // No point in updating size unless it is used.  Just carry forward.
-        Vector r0 = P1 - P0;
-        Vector r1 = P2 - P0;
+        Vector r0 = P[1] - P[0];
+        Vector r1 = P[2] - P[0];
         Vector r2 = 0.1*Cross(r1,r0);
         Matrix3 size =Matrix3(r0.x()/dx.x(), r1.x()/dx.x(), r2.x()/dx.x(),
                               r0.y()/dx.y(), r1.y()/dx.y(), r2.y()/dx.y(),
@@ -5843,49 +5756,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         tsize_new[idx] = size;
 #endif
         tsize_new[idx] = tsize[idx];
-  
-#if 0
-        // Check to see if a triangle has left the domain
-        // Check to see if a triangle has left the domain
-        if(!domain.inside(tx_new[idx])){
-          double epsilon = 1.e-15;
-          Point txn = tx_new[idx];
-          if(periodic.x()==0){
-           if(tx_new[idx].x()<dom_min.x()){
-            tx_new[idx] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-            txn = tx_new[idx];
-           }
-           if(tx_new[idx].x()>dom_max.x()){
-            tx_new[idx] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-            txn = tx_new[idx];
-           }
-           static ProgressiveWarning warn("A triangle has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
-          }
-          if(periodic.y()==0){
-           if(tx_new[idx].y()<dom_min.y()){
-            tx_new[idx] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-            txn = tx_new[idx];
-           }
-           if(tx_new[idx].y()>dom_max.y()){
-            tx_new[idx] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-            txn = tx_new[idx];
-           }
-           static ProgressiveWarning warn("A triangle has moved outside the domain through a y boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
-          }
-          if(periodic.z()==0){
-           if(tx_new[idx].z()<dom_min.z()){
-            tx_new[idx] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-           }
-           if(tx_new[idx].z()>dom_max.z()){
-            tx_new[idx] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-           }
-           static ProgressiveWarning warn("A triangle has moved outside the domain through a z boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
-           warn.invoke();
-          }
-        }
-#endif
+
       } // Loop over triangles
 
 #if 0
@@ -5947,16 +5818,16 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         triAreaAtNodes_new[idx]=Vector(area0, area1, area2);
       } // Outer loop over triangles for vertex area calculation
 #endif
-    }
+    }  // matls
     delete interpolator;
-  }
+  }    // patches
 }
 
 void SerialMPM::computeTriangleForces(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* ,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* ,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -5979,6 +5850,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
+    std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
 //    std::vector<Vector> sumTriForce(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -5990,9 +5862,11 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       stiffness[m] = 1./inv_stiff;
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
+      new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
+      SurfArea[m].initialize(0.0);
 //      sumTriForce[m]=Vector(0.0);
     }
 
@@ -6062,6 +5936,40 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       ParticleSubset* pset0 = psetvec[tmo];
 
+      // Extrapolate area of line segments to the grid for use in dissolution
+      if (flags->d_doingDissolution){
+       for(ParticleSubset::iterator iter0 = pset0->begin();
+           iter0 != pset0->end(); iter0++){
+         particleIndex idx0 = *iter0;
+
+         Point vert[3];
+
+         vert[0] = tx0[tmo][idx0] + triMidToN0Vec[tmo][idx0];
+         vert[1] = tx0[tmo][idx0] + triMidToN1Vec[tmo][idx0];
+         vert[2] = tx0[tmo][idx0] + triMidToN2Vec[tmo][idx0];
+         Vector BA = vert[1]-vert[0];
+         Vector CA = vert[2]-vert[0];
+         double thirdTriArea = 0.5*Cross(BA,CA).length()/3.;
+
+         for(int itv = 0; itv < 3; itv++){
+           int nn = interpolator->findCellAndWeights(vert[itv], ni, S, size);
+           double totMass = 0.;
+           for (int k = 0; k < nn; k++) {
+             IntVector node = ni[k];
+             totMass += S[k]*gmass[adv_matl0][node];
+           }
+
+           for (int k = 0; k < nn; k++) {
+             IntVector node = ni[k];
+             if(patch->containsNode(node)) {
+               SurfArea[adv_matl0][node] += thirdTriArea*S[k]
+                                           *gmass[adv_matl0][node]/totMass;
+             }
+           }
+         }
+        } // loop over all triangles
+      }   // only do this if a dissolution problem
+
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
         TriangleMaterial* t_matl1 = (TriangleMaterial *) 
                               m_materialManager->getMaterial("Triangle",tmi);
@@ -6075,8 +5983,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
         int numPar_pset1 = pset1->numParticles();
 
-        double K_l = 3.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
-                        (stiffness[adv_matl0] + stiffness[adv_matl1]);
+        double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
+                         (stiffness[adv_matl0] + stiffness[adv_matl1]);
         K_l*=timefactor;
 
        if(numPar_pset1 > 0){
