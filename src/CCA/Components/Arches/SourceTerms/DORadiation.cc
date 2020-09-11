@@ -802,16 +802,43 @@ DORadiation::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
   // application passed down to other classes like the model.
   m_arches = sched->getApplication();
 
-  if( _DO_model ){
+  if( _DO_model ){      // When is this ever false?  --Todd
     _DO_model->setApplicationInterface( m_arches );
   }
 
-  if (_dynamicSolveFrequency ) {
+  //__________________________________
+  //  Are all needed varLabels in the checkpoint?
+  // If not then initialize them to 0.0
+  DataWarehouse* new_dw = sched->getLastDW();
+
+  // Find the first patch, on the arches level, that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet( level ); 
+  const int rank                   = Uintah::Parallel::getMPIRank();
+  const PatchSubset* myPatches     = ps->getSubset( rank );
+  
+  if ( myPatches->size() > 0 ){
+    const Patch* firstPatch  = myPatches->get(0);
+
+    for ( auto  iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
+      const VarLabel* varLabel = *iter;
+
+      if( !new_dw->exists( varLabel, arches, firstPatch ) ){
+        _missingCkPt_labels.push_back( varLabel );
+      }
+    }
+  }
+
+  if (_dynamicSolveFrequency || _missingCkPt_labels.size() > 0) {
+
     std::string taskNoCom = "DORadiation::restartInitialize";
     Task* tsk = scinew Task(taskNoCom, this, &DORadiation::restartInitialize);
     //tsk->requires( Task::NewDW, _dynamicSolveCountPatchLabel, Ghost::None, 0 );  // These appear to cause problems.  Perhaps it is best to ignore requires since the simulation doesn't care about satifying requires() on restart. NEW is the only DW present on restart.
     //tsk->requires( Task::NewDW, _lastRadSolvePatchLabel, Ghost::None, 0 );
     //tsk->requires( Task::NewDW, _simulationTimeLabel,Ghost::None,0);
+
+    for ( auto  iter = _missingCkPt_labels.begin(); iter != _missingCkPt_labels.end(); iter++){
+      tsk->computes( *iter );
+    }
 
     sched->addTask(tsk, level->eachPatch(), m_matls);
   }
@@ -833,20 +860,53 @@ DORadiation::restartInitialize( const ProcessorGroup  * pc,
                                       DataWarehouse   * old_dw,
                                       DataWarehouse   * new_dw )
 {
-   //// ONLY NEW DW USED, it appears that at restart only the newDW is available.
-  simTime_vartype simTime(0);
-  new_dw->get(simTime, _simulationTimeLabel );
+  //__________________________________
+  //  Initialize any variable missing from the
+  // checkpoints to 0.  Enabling addOrthogonalDirs on
+  // a restart
 
-  timeStep_vartype timeStep(0);
-  new_dw->get(timeStep, _labels->d_timeStepLabel ); // For this to be totally correct, should have corresponding requires.
 
-  SoleVariable< double > ppTargetTimeStep;
-  SoleVariable< int > lastRadSolveIndex;
+  if( _missingCkPt_labels.size() > 0 ){
+    static bool doCout=( pc->myRank() == 0 );  // this won't work if this level is owned by another rank.
 
-  new_dw->get( ppTargetTimeStep,  _dynamicSolveCountPatchLabel );
-  new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
+    DOUT( doCout, "__________________________________\n"
+              << "  DORadiation::restartInitialize \n"
+              << "    These variables were not found in the checkpoints\n"
+              << "    and will be initialized to 0\n");
 
-  m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,simTime,ppTargetTimeStep));
+    for ( auto  iter = _missingCkPt_labels.begin(); iter != _missingCkPt_labels.end(); iter++){
+      const VarLabel* QLabel = *iter;
+      DOUT( doCout, "    Label:  " << QLabel-> getName() );
+
+      for (int p=0; p < patches->size(); p++){
+        const Patch* patch = patches->get(p);
+        CCVariable<double> Q;
+        new_dw->allocateAndPut( Q, QLabel, m_matIdx, patch);
+        Q.initialize( 0.0 );
+      }
+    }
+    doCout=false;
+  }
+
+
+  //__________________________________
+  //  Is this ever used?
+  if (_dynamicSolveFrequency){
+     //// ONLY NEW DW USED, it appears that at restart only the newDW is available.
+    simTime_vartype simTime(0);
+    new_dw->get(simTime, _simulationTimeLabel );
+
+    timeStep_vartype timeStep(0);
+    new_dw->get(timeStep, _labels->d_timeStepLabel ); // For this to be totally correct, should have corresponding requires.
+
+    SoleVariable< double > ppTargetTimeStep;
+    SoleVariable< int > lastRadSolveIndex;
+
+    new_dw->get( ppTargetTimeStep,  _dynamicSolveCountPatchLabel );
+    new_dw->get( lastRadSolveIndex, _lastRadSolvePatchLabel );
+
+    m_arches->setTaskGraphIndex(needRadSolveNextTimeStep(timeStep - lastRadSolveIndex +1,_radiation_calc_freq,simTime,ppTargetTimeStep));
+  }
 }
 
 //---------------------------------------------------------------------------
