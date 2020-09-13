@@ -1625,7 +1625,9 @@ void SerialMPM::scheduleUpdateLineSegments(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
                                                      lineseg_matls, gnone);
   t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
-  t->requires(Task::NewDW, lb->gSurfNormLabel,       mpm_matls,     gac,NGN+1);
+  if(flags->d_computeNormals){
+   t->requires(Task::NewDW,lb->gSurfNormLabel,       mpm_matls,     gac,NGN+1);
+  }
 
   t->computes(lb->pXLabel_preReloc,                      lineseg_matls);
   t->computes(lb->pSizeLabel_preReloc,                   lineseg_matls);
@@ -4973,7 +4975,14 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
       new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
       new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
       new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
-      new_dw->get(gSurfNorm[m], lb->gSurfNormLabel,      dwi, patch, gac,NGN+1);
+      if(flags->d_computeNormals){
+        new_dw->get(gSurfNorm[m], lb->gSurfNormLabel,    dwi, patch, gac,NGN+2);
+      } else{
+        NCVariable<Vector> gSN_create;
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGP);
+        gSN_create.initialize(Vector(0.));
+        gSurfNorm[m] = gSN_create;                   // reference created data
+      }
     }
 
     int numLSMatls=m_materialManager->getNumMatls("LineSegment");
