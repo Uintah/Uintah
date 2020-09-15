@@ -171,6 +171,7 @@
                                                                           cloudBenchmark,
                                                                           sootVolumeFrac,
                                                                           gasRadProperties,
+                                                                          RMCRTgasRadProperties,
                                                                           partRadProperties,
                                                                           interpolation_var,
                                                                           CO,
@@ -180,7 +181,7 @@
                                                                           wall_thermal_resistance, 
                                                                           time_varying'">
 
-              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
+              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties RMCRTgasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <scattering_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties "/> <!-- multiplicative modifier on particle scattering coefficients, is ignored when radiation scattering is turned off  -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
@@ -216,7 +217,7 @@
 
           <calculator                   spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim, GauthamWSGG'"
-                                        need_applies_to="type gasRadProperties"
+                                        need_applies_to="type gasRadProperties RMCRTgasRadProperties"
                                         >
 
             <temperature                  spec="OPTIONAL NO_DATA"

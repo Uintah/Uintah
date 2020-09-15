@@ -176,7 +176,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk, db_model );
         _pre_table_post_iv_update.push_back(name);
 
-      } else if ( type == "gasRadProperties" ){
+      } else if ( type == "gasRadProperties" || type == "RMCRTgasRadProperties" ){
 
         TaskInterface::TaskBuilder* tsk = scinew gasRadProperties::Builder( name, 0 );
         register_task( name, tsk, db_model );
@@ -276,7 +276,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
           for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != nullptr; db_src = db_src->findNextBlock("src")){
             std::string radiation_model;
             db_src->getAttribute("type", radiation_model);
-            if (radiation_model == "do_radiation" ){
+            if (radiation_model == "do_radiation" || radiation_model== "rmcrt_radiation"){
               std::string task_name="sumRadiation::abskt";
               TaskInterface::TaskBuilder* tsk = scinew sumRadiation::Builder( task_name, 0 );
               register_task( task_name, tsk, db_m );

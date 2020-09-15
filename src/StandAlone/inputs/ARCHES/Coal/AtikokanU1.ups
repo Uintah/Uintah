@@ -47,6 +47,12 @@
     <save label="NO_ps_src"/>
     <save label="HCN_ps_src"/>
     <save label="NH3_ps_src"/>
+    <save label="abskp_0"/>
+    <save label="abskp_1"/>
+    <save label="abskp_2"/>
+    <save label="abskp_3"/>
+    <save label="RMCRT_sumAbsk"/>
+    <save label="abskg_rmcrt"/>
     <save label="abskg"/>
     <save label="abskg_running_sum"/>
     <save label="dep_enthalpy_running_sum"/>
@@ -1681,9 +1687,9 @@
       </VarID>
 
       <Radiometer label="rad_rmcrt">
-        <calc_frequency> 1 </calc_frequency>
+        <calc_frequency> 6 </calc_frequency>
         <absorptionCoeffs>
-          <gas_absk> abskg </gas_absk>
+          <gas_absk> abskg_rmcrt </gas_absk>
 
           <includeParticleRad>
             <particle_absk> abskp </particle_absk>
@@ -1708,6 +1714,11 @@
       </Radiometer>
 
       <PropertyModelsV2>
+        <model type="RMCRTgasRadProperties" label="abskg_rmcrt">
+          <calculator type="hottel_sarofim">
+            <opl>3.0</opl>
+          </calculator>
+        </model>
         <model label="soot" type="sootVolumeFrac">
           <Ysoot_label>Ysoot</Ysoot_label>
           <density_label>density</density_label>
