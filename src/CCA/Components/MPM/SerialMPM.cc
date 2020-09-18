@@ -1590,6 +1590,7 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,    gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
   t->requires(Task::OldDW, lb->tracerIDLabel,      tracer_matls, gnone);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
   if (flags->d_doingDissolution) {
     t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
   }
