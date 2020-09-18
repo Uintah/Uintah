@@ -791,6 +791,7 @@ protected:
   MaterialSubset*  d_loadCurveIndex;
   std::set<double> d_collideColors;
   std::vector<double> d_collideColorsV;
+  std::string d_currentPhase;
   
   std::vector<AnalysisModule*> d_analysisModules;
   SwitchingCriteria* d_switchCriteria;
