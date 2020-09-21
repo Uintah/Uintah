@@ -107,6 +107,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<bool> masterMatls(numMatls);
     std::vector<bool> inContactWithMatls(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
+
+
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
@@ -147,7 +149,6 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                    * exp(-d_Ea/(d_R*d_temperature))
                    * 2.0*3.1536e19*d_timeConversionFactor;
       double rate = dL_dt*area;
-//      cout << "rateD = " << rate << endl;
 //      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
@@ -158,7 +159,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
-          if(inContactWithMatls[n]) {
+          if(n!=md && inContactWithMatls[n]) {
             inContactMatl = n;
           }
         }

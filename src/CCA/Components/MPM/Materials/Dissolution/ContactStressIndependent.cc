@@ -173,7 +173,7 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
-          if(inContactWithMatls[n]) {
+          if(n!=md && inContactWithMatls[n]) {
             inContactMatl = n;
           }
         }
