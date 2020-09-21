@@ -1753,7 +1753,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
   t->computes(lb->gSurfaceAreaLabel,                mpm_matls);
@@ -4822,12 +4822,12 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    BBox domain;
-    const Level* level = getLevel(patches);
-    level->getInteriorSpatialRange(domain);
+//    BBox domain;
+//    const Level* level = getLevel(patches);
+//    level->getInteriorSpatialRange(domain);
 //    Point dom_min = domain.min();
 //    Point dom_max = domain.max();
-    IntVector periodic = level->getPeriodicBoundaries();
+//    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -4837,13 +4837,14 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
+    Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
       new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
       if (flags->d_doingDissolution){
         new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
@@ -4888,7 +4889,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
 
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
@@ -5588,14 +5588,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-//    Vector dx = patch->dCell();
 
-    BBox domain;
-    const Level* level = getLevel(patches);
-    level->getInteriorSpatialRange(domain);
+//    BBox domain;
+//    const Level* level = getLevel(patches);
+//    level->getInteriorSpatialRange(domain);
+//    Vector dx = patch->dCell();
 //    Point dom_min = domain.min();
 //    Point dom_max = domain.max();
-    IntVector periodic = level->getPeriodicBoundaries();
+//    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -5731,7 +5731,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
           }
           vel/=sumSk;
-  
+
           P[itv] += vel*delT;
           P[itv] += 2.*surf*delT;
 
@@ -5903,7 +5903,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                     gac,NGN+2);
+                                                                     gac,NGN+3);
       LSContForce[m].initialize(Vector(0.0));
       SurfArea[m].initialize(0.0);
 //      sumTriForce[m]=Vector(0.0);
@@ -5920,7 +5920,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<std::vector<constParticleVariable<Vector>  > >
                                                     triMidToNodeVec(numLSMatls);
 
-    std::vector<constParticleVariable<Matrix3> >    tsize0(numLSMatls);
     std::vector<constParticleVariable<long64> >     triangle_ids(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
@@ -5941,7 +5940,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //      triInContact[tmo].resize(psetSize[tmo]);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
-      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
       old_dw->get(triMidToN0Vec[tmo],  lb->triMidToN0VectorLabel,     pset0);
       old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
       old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
@@ -6042,6 +6040,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
            continue;
           }
           Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
+
           Vector ptNormal =Cross(triMidToN0Vec[tmo][idx0],
                                  triMidToN1Vec[tmo][idx0]);
           double pNL = ptNormal.length();
