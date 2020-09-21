@@ -215,6 +215,7 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
+  t->modifies(lb->dLdtDissolutionLabel,  mss);
 
   sched->addTask(t, patches, ms);
 

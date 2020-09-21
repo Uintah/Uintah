@@ -1586,14 +1586,15 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,    gac,NGN);
-  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,    gac,NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,       gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,       gac,NGN+1);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
+  if (flags->d_doingDissolution) {
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
+  }
+
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
   t->requires(Task::OldDW, lb->tracerIDLabel,      tracer_matls, gnone);
-  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
-  if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
-  }
 
   t->computes(lb->pXLabel_preReloc,           tracer_matls);
   t->computes(lb->tracerIDLabel_preReloc,     tracer_matls);
@@ -1661,11 +1662,11 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
-  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
   if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
   }
   t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
@@ -3496,27 +3497,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
-
-#if 0
-        if (flags->d_doingDissolution) {
-           double delX = dxCell.x();
-           double rat = velocity_star[c].length()*delT/delX;
-           if(rat>flags->d_maxVelStarToDx_DtRatio && c.z()>=0){
-//            cout << "n = " << c << endl;
-//            cout << "mas = " << mass[c] << endl;
-//            cout << "mat = " << m << endl;
-//            cout << "rat = " << rat << endl;
-//            cout << "vel = " << velocity[c] << endl;
-//            cout << "vstar = " << velocity_star[c] << endl;
-//            cout << "acc = " << acceleration[c] << endl << endl;
-             velocity_star[c] = (velocity[c].length()/velocity_star[c].length())
-                              * velocity_star[c];
-//            acceleration[c] = (velocity_star[c] - velocity[c])/delT;
-//            cout << "vstar_new = " << velocity_star[c] << endl;
-//            cout << "acc_new = " << acceleration[c] << endl << endl;
-           } // if(rat> ...)
-        } // if doing dissolution
-#endif
       }
 
       // Check the integrated nodal velocity and if the product of velocity
@@ -4843,14 +4823,14 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
-      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
-      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
       if (flags->d_doingDissolution){
-        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
+        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
       } else{
         NCVariable<Vector> gSN_create;
-        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+2);
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+1);
         gSN_create.initialize(Vector(0.));
         gSurfNorm[m] = gSN_create;                     // reference created data
       }
@@ -5610,14 +5590,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
-      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
-      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
       if (flags->d_doingDissolution){
-        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
+        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
       } else{
         NCVariable<Vector> gSN_create;
-        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+2);
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+1);
         gSN_create.initialize(Vector(0.));
         gSurfNorm[m] = gSN_create;                     // reference created data
       }
