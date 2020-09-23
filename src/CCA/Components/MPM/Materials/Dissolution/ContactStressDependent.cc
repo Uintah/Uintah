@@ -165,20 +165,26 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
         }
 
         double surfArea = max(gSurfaceArea[md][c] + 
-                              gSurfaceArea[inContactMatl][c], 1.e-4*area);
+                              gSurfaceArea[inContactMatl][c], 1.e-2*area);
         double normtrac_ave = -1.*(gContactForce[md][c].length() + 
                                    gContactForce[inContactMatl][c].length())
                                    /surfArea;
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
+           gSurfaceArea[md][c] > 1.e-3*area &&
+           gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
           -normtrac_ave > d_StressThresh){   // Compressive stress is neg
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 
 //                <<  gContactForce[inContactMatl][c] << endl;
-//           cout << "normtrac_ave = " << normtrac_ave << endl;
-//           cout << "surfArea = " << surfArea << endl;
+//            cout << "normtrac_ave = " << normtrac_ave << endl;
+//            cout << "surfArea = " << surfArea << endl;
+//            cout << "gSurfaceArea["<<md<<"]["<<c<<"] = " 
+//                 <<  gSurfaceArea[md][c] << endl;
+//            cout << "gSurfaceArea["<<inContactMatl<<"]["<<c<<"] = " 
+//                 <<  gSurfaceArea[inContactMatl][c] << endl;
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-normtrac_ave - d_StressThresh);
             massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
@@ -188,7 +194,10 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 //            numNodesMBRGT0++;
         }
       } // nodes
-//      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//      if(numNodesMBRGT0 > 0){
+//        cout << "md = " << md << endl;
+//        cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//      }
      } // endif a masterMaterial
     } // materials
   } // patches
