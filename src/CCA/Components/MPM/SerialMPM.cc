@@ -1410,6 +1410,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
   t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::OldDW, lb->timeStepLabel);
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -3872,7 +3873,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   int curBHIndex=0;
   double geoTime_MYa=0.;
   double geoTemp_K=0.;
-  d_currentPhase = "null";
+  flags->d_currentPhase = "null";
 
   if (flags->d_useLoadCurves) {
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -3885,7 +3886,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         // get the load curve time (not the ID), use that to get the BH index
         curLCIndex = pbc->getLoadCurve()->getNextIndex(time)-1;
         int lastLCIndex = pbc->getLoadCurve()->getNextIndex(time-delT)-1;
-        d_currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
+        flags->d_currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
         bool outputStep = false;
         if(lastLCIndex != curLCIndex){
           m_output->setOutputTimeStep(    true, grid );
@@ -3902,20 +3903,20 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
  
-          if(d_currentPhase=="hold"){
+          if(flags->d_currentPhase=="hold"){
             double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
             double startTemp = burialHistory->getTemperature_K(curBHIndex);
             double endTemp   = burialHistory->getTemperature_K(curBHIndex-1);
             geoTemp_K = startTemp + ((endTemp-startTemp)/uintahDisTime)
                                     *(time-holdStartTime);
-          } else if(d_currentPhase=="ramp") {
+          } else if(flags->d_currentPhase=="ramp") {
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex-1);
-          } else if(d_currentPhase=="settle"){
+          } else if(flags->d_currentPhase=="settle"){
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
           }
           geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
           bool EOC    = burialHistory->getEndOnCompletion(curBHIndex);
-          if(EOC && d_currentPhase=="ramp" && outputStep){
+          if(EOC && flags->d_currentPhase=="ramp" && outputStep){
             proc0cout << "Stopping per burial history specification" << endl;
             new_dw->put(bool_or_vartype(true), 
                         VarLabel::find(endSimulation_name));
@@ -3926,12 +3927,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                         VarLabel::find(endSimulation_name));
           } // endif
           burialHistory->setCurrentIndex(curBHIndex);
-          burialHistory->setCurrentPhaseType(d_currentPhase);
+          burialHistory->setCurrentPhaseType(flags->d_currentPhase);
 
           // DISSOLUTION
           if (flags->d_doingDissolution) {
            dissolutionModel->setTemperature(geoTemp_K);
-           dissolutionModel->setPhase(d_currentPhase);
+           dissolutionModel->setPhase(flags->d_currentPhase);
            dissolutionModel->setTimeConversionFactor(geoInterval/uintahDisTime);
           }
         }
@@ -4075,6 +4076,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+  int timestep = timeStep;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -4223,9 +4228,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
+      Vector dx = patch->dCell();
 
-      if(flags->d_XPIC2 && !(d_currentPhase=="hold" && 
-                             flags->d_doingDissolution)){
+      // The following logic is intended to turn on every 10th dissolution step
+      // For problems not involving dissolution, or during phases of the
+      // dissolution simulation where dissolution isn't happening, XPIC is
+      // carried out as normal.
+      if((flags->d_XPIC2 && !(flags->d_currentPhase=="hold" && 
+                             flags->d_doingDissolution)) ||
+         (flags->d_XPIC2 && 
+          flags->d_currentPhase=="hold" && flags->d_doingDissolution 
+                                        && timestep%10==1)){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
@@ -4275,9 +4288,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                   maxDir=i;
                 }
               }
-//              cout << "maxDir   = " << maxDir << endl;
-//              cout << "maxDir+1 = " << (maxDir+1)%3 << endl;
-//              cout << "maxDir+2 = " << (maxDir+2)%3 << endl;
               int maxDirP1 = (maxDir+1)%3;
               int maxDirP2 = (maxDir+2)%3;
               pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
@@ -4296,12 +4306,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
               double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
               double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
-//              double a = dL2overdL1;
-//              double b = -(L2l+L1l*dL2overdL1);
-//              double c = deltaMassFrac*(L1l*L2l);
-//              double dL1 = (-b - sqrt(b*b-4.*a*c))/(2.*a);
-              // 2D version
-              //double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
 
               dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
                                          (Ll[maxDirP1]*Ll[maxDirP2] 
@@ -4318,18 +4322,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                       L[0].y(), L[1].y(), L[2].y(),
                                       L[0].z(), L[1].z(), L[2].z());
 
-//            This, and below, are my attempts to make the dissolving particles
-//            retreat, but it doesn't look great.
-//            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
-//            psizeNew[idx] = sizeRed*psize[idx];
-//            Matrix3 pszNew = sizeRed*psize[idx];
-//            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
-//            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-//            Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
-//                                          dL2*dy*pSN.y(),
-//                                          dL3*dz*pSN.z());
-//            cout << "deltaPos = " << deltaPos << endl;
-//            pxnew[idx] = pxnew[idx] - deltaPos;
+              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                           dL[1]*dx.y()*pSN.y(),
+                                           dL[2]*dx.z()*pSN.z());
+              pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
@@ -4349,7 +4345,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } else {  // Not XPIC(2)
         // Loop over particles
-        Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -4436,11 +4431,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //            Matrix3 pszNew = sizeRed*psize[idx];
 //            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
 //            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-            Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
-                                          dL[1]*dx.y()*pSN.y(),
-                                          dL[2]*dx.z()*pSN.z());
+              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                           dL[1]*dx.y()*pSN.y(),
+                                           dL[2]*dx.z()*pSN.z());
 //            cout << "deltaPos = " << deltaPos << endl;
-            pxnew[idx] = pxnew[idx] - deltaPos;
+              pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
@@ -5141,8 +5136,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeLineSegmentForces");
 
-//    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
-    ParticleInterpolator* interpolator=scinew cpdiInterpolator(patch);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+//    ParticleInterpolator* interpolator=scinew cpdiInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -5212,7 +5207,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
          double vLength = v.length();
          double LSArea = vLength*dxCell.z();
          Matrix3 size0 = tsize0[tmo][idx0];
-         int nn = interpolator->findCellAndWeights(tx0[tmo][idx0],ni,S,size0);
+         int nn = interpolator->findCellAndWeights(px0,ni,S,size0);
          double totMass = 0.;
          for (int k = 0; k < nn; k++) {
            IntVector node = ni[k];
@@ -5222,12 +5217,27 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
          for (int k = 0; k < nn; k++) {
            IntVector node = ni[k];
            if(patch->containsNode(node)) {
-             SurfArea[adv_matl0][node] += LSArea*S[k]*gmass[adv_matl0][node]
+             SurfArea[adv_matl0][node] += 0.5*LSArea*S[k]*gmass[adv_matl0][node]
                                           /totMass;
            }
          }
-        }
-      }
+
+         nn = interpolator->findCellAndWeights(a,ni,S,size0);
+         totMass = 0.;
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           totMass += S[k]*gmass[adv_matl0][node];
+         }
+
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           if(patch->containsNode(node)) {
+             SurfArea[adv_matl0][node] += 0.5*LSArea*S[k]*gmass[adv_matl0][node]
+                                          /totMass;
+           }
+         }
+        } // loop over particles
+      }  // if doingDissolution
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
         LineSegmentMaterial* t_matl1 = (LineSegmentMaterial *) 

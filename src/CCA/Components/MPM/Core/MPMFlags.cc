@@ -119,6 +119,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useLineSegments                    =  false;
   d_useTriangles                       =  false;
   d_outputDataOnLoadCurveChange        =  true;
+  d_currentPhase                       =  "null";
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;

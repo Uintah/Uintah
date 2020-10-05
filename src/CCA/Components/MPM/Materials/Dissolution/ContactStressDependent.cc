@@ -150,6 +150,11 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                    * 2.0*3.1536e19*d_timeConversionFactor;
       double rate = dL_dt*area;
 //      int numNodesMBRGT0 = 0;
+//      double mBRSum = 0.;
+//      double normtrac_mean = 0.;
+//      double surfArea_mean = 0.;
+//      double contForceDis = 0.;
+//      double contForceTot = 0.;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -170,6 +175,9 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                    gContactForce[inContactMatl][c].length())
                                    /surfArea;
 
+//        contForceTot += normtrac_ave*surfArea;
+//        contForceTot += gContactForce[md][c].length();
+
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
            gSurfaceArea[md][c] > 1.e-3*area &&
@@ -188,15 +196,25 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-normtrac_ave - d_StressThresh);
             massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
+//            mBRSum += massBurnRate[md][c];
+//            surfArea_mean += surfArea;
+//            contForceDis += normtrac_ave*surfArea;
             dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = " << NC_CCweight[c] << endl;
 //            numNodesMBRGT0++;
+//            normtrac_mean += normtrac_ave;
         }
       } // nodes
 //      if(numNodesMBRGT0 > 0){
 //        cout << "md = " << md << endl;
-//        cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//        cout << "numNodesMBRGT0 = " << numNodesMBRGT0 << endl;
+//        cout << "mBRSum =" << mBRSum << endl;
+//        cout << "normtrac_mean = " << normtrac_mean/((double) numNodesMBRGT0) << endl;
+//        cout << "surfArea_total = " << surfArea_mean << endl;
+//        cout << "surfArea_mean = " << surfArea_mean/((double) numNodesMBRGT0) << endl;
+//        cout << "contForceDis = " << contForceDis << endl;
+//        cout << "contForceTot = " << contForceTot << endl;
 //      }
      } // endif a masterMaterial
     } // materials
