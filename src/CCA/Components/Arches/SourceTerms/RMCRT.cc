@@ -667,7 +667,7 @@ RMCRT_Radiation::initialize( const ProcessorGroup *,
 
     CCVariable<double> radVolq;
     CCVariable<double> src;
-    CCVariable<Stencil7> RMCRTboundFlux ;
+    CCVariable<Stencil7> RMCRTboundFlux;
 
     //__________________________________
     // all levels
@@ -675,10 +675,10 @@ RMCRT_Radiation::initialize( const ProcessorGroup *,
     radVolq.initialize( 0.0 );  // needed for coal
 
     new_dw->allocateAndPut( RMCRTboundFlux, VarLabel::find("RMCRTboundFlux"), m_matl, patch );
-    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range,[&](int i, int j, int k){
-      RMCRTboundFlux(i,j,k).initialize(0.0);
-    });
+    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
+      IntVector c = *iter;
+      RMCRTboundFlux[c].initialize(0.0);
+    }
 
     //__________________________________
     //  CFD level
