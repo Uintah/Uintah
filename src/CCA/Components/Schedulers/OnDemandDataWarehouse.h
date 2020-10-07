@@ -1026,7 +1026,7 @@ public:
   static bool s_combine_memory;
 
   //DS: 01042020: fix for OnDemandDW race condition
-  bool compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
+  //bool compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx);
   bool compareAndSwapSetValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   bool compareAndSwapSetInvalidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   bool isValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);

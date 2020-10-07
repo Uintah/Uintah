@@ -4125,9 +4125,9 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
 //______________________________________________________________________
 //
 // DS: 01042020: fix for OnDemandDW race condition
-bool
-OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
-{
+//bool
+//OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int patchID, const int matlIndx, const int levelIndx)
+//{
   //assuming varLock will be already secured in allocate method
 
 //  bool allocated = false;
@@ -4146,7 +4146,7 @@ OnDemandDataWarehouse::compareAndSwapAllocateOnCPU(char const* label, const int 
 //      varLock->unlock();
 //      return true;
 //    }
-}
+//}
 
 //______________________________________________________________________
 //
