@@ -647,9 +647,9 @@ Discretization::calculateVelDiagonal(const Patch* patch,
                                                         coeff_vars->wVelocityCoeff[Arches::AB],
                                                         coeff_vars->wVelocityCoeff[Arches::AP],
                                                         coeff_vars->wVelLinearSrc);
-  Uintah::parallel_for( rangex, doADiagonalX);
-  Uintah::parallel_for( rangey, doADiagonalY);
-  Uintah::parallel_for( rangez, doADiagonalZ);
+  Uintah::serial_for( rangex, doADiagonalX);
+  Uintah::serial_for( rangey, doADiagonalY);
+  Uintah::serial_for( rangez, doADiagonalZ);
 }
 
 //****************************************************************************
