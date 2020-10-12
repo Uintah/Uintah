@@ -136,7 +136,7 @@ void TH_Water::computeStableTimeStep(const Patch* patch,
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      particleIndex idx = *iter;
       // Compute wave speed at each particle, store the maximum
-      double press=(-1./3.)*pstress[idx].Trace() + d_ID.Pref;
+      double press=(-1./3.)*pstress[idx].Trace() /* + d_ID.Pref */;
       double rhoM=pmass[idx]/pvolume[idx];
       // dp_drho
       double a_press      = d_a * press;
@@ -182,6 +182,7 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
     double J,Jold,Jinc;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+/    double onethird = (1.0/3.0);
     Matrix3 Identity; Identity.Identity();
 
     Vector dx = patch->dCell();
@@ -225,10 +226,11 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
       Jinc = J/Jold;
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
-      //Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
-      //Matrix3 DPrime = D - Identity*onethird*D.Trace();
+//      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
+//      Matrix3 DPrime = D - Identity*onethird*D.Trace();
       // Viscous part of the stress
-      //Matrix3 Shear = DPrime*(2.*viscosity);
+//      double viscosity = 10.0;
+//      Matrix3 Shear = DPrime*(2.*viscosity);
 
       // Get the deformed volume and current density
       double rhoM = rho_orig/J;
@@ -252,7 +254,7 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
       double press  = term1 * (term2 - sqrt( vo_rhoM * (term3 + term4 ) ) );
 
       // compute the total stress (volumetric + deviatoric)
-      pstress[idx] = Identity*(-(press-d_ID.Pref));// + Shear;
+      pstress[idx] = Identity*(-(press /* -d_ID.Pref */)); // + Shear;
 
       // Temp increase due to P*dV work
       pdTdt[idx] = (-press)*(Jinc-1.)*(1./(rhoM*d_co))/delT;
@@ -391,9 +393,8 @@ void TH_Water::computePressEOSCM(const double rho_cur,double& pressure,
 
 double TH_Water::getCompressibility()
 {
-  cerr << "TH_Water::getCompressibility() not yet implemented" << endl;
-  //return 1.0/d_initialData.d_Bulk;
-  return 1.0;
+//  cerr << "TH_Water::getCompressibility() not yet implemented" << endl;
+  return d_ID.d_ko; //1.0/d_initialData.d_Bulk;
 }
 
 
