@@ -182,7 +182,7 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
     double J,Jold,Jinc;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-/    double onethird = (1.0/3.0);
+//    double onethird = (1.0/3.0);
     Matrix3 Identity; Identity.Identity();
 
     Vector dx = patch->dCell();
