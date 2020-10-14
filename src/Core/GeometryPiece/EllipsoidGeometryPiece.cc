@@ -195,7 +195,11 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
     
     // set flag such that rotation doesnt need to occur in inside()
     xyzAligned = true;
-      
+    d_m3E = Matrix3(1.0/(d_r1*d_r1), 0.0,               0.0,
+                    0.0,             1.0/(d_r2*d_r2), 	0.0,
+	                  0.0,             0.0,               1.0/(d_r3*d_r3));
+    boundOffset = Vector(d_r1, d_r2, d_r3);
+
   } else {
       throw ProblemSetupException("Input File Error: (Ellipsoid initialization) input radii (rx,ry,rz) must have values > 0.0", __FILE__, __LINE__, false );
   }
