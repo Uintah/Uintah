@@ -98,11 +98,12 @@ WARNING
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls) = 0;
+         
       protected:
          MPMLabel* lb;
          MPMFlags* flag;
          int    d_oneOrTwoStep;
-         
+
          ContactMaterialSpec d_matls;
       };
       

@@ -50,7 +50,7 @@ using namespace std;
 
 PenaltyContact::PenaltyContact(const ProcessorGroup* myworld,
                                ProblemSpecP& ps,MaterialManagerP& d_sS,
-                               MPMLabel* Mlb,MPMFlags* MFlag)
+                               MPMLabel* Mlb, MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
@@ -115,6 +115,12 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    bool useMinNormalDv = true;
+    
+    if(flag->d_doingDissolution && flag->d_currentPhase=="hold"){
+       useMinNormalDv = false;
+    }
+
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
@@ -174,21 +180,43 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
           // force based on the velocity (normalDeltaVel) is just enough 
           // to bring the material's velocity to the center of mass velocity.
 //          if(!compare(mass-centerOfMassMass,0.0)){
-            normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
+//            normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
 //          } else {
 //            normalDv = fabs(normalDv);
 //          }
+          if(useMinNormalDv){
+            normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
+          } else {
+            normalDv = fabs(normalDv);
+          }
 
           // Change in velocity in the normal direction
           Dv = normalDv*normal;
 
           // Create a vector that is the normal part of deltaVelocity
-          Vector normal_normaldV = -normal*normalDv;
+          Vector normalXnormaldV = normal*normalDeltaVel;
           // Subtract the normal part from the entire deltaVelocity
-          Vector dV_normalDV = deltaVelocity - normal_normaldV;
+          Vector dV_normalDV = deltaVelocity - normalXnormaldV;
           // Compute tangent unit vector in the direction of the
           // non-normal part of deltaVelocity
           Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
+
+#if 0
+          if(fabs(Dot(surfaceTangent,normal)) > 1.e-9){
+            cout << "n = "  << n << endl;
+            cout << "c = "  << c << endl;
+            cout << "Dot(surfaceTangent,normal) = "
+                 <<  Dot(surfaceTangent,normal) << endl;
+            cout << "deltaVelocity = "  << deltaVelocity << endl;
+            cout << "normalDeltaVel = " << normalDeltaVel << endl;
+            cout << "Dv = " << Dv << endl;
+            cout << "normalDv = " << normalDv << endl;
+            cout << "normal = " << normal << endl;
+            cout << "normalXnormaldV = " << normalXnormaldV << endl;
+            cout << "dV_normalDV = " << dV_normalDV << endl;
+            cout << "surfaceTangent = " << surfaceTangent << endl;
+          }
+#endif
 
           double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
           double frictionCoefficient=
@@ -196,7 +224,6 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
 
           // Change in velocity in the tangential direction
           Dv -= surfaceTangent*frictionCoefficient*normalDv;
-
 
           // Define contact algorithm imposed strain, find maximum
           Vector epsilon=(Dv/dx)*delT;

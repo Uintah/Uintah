@@ -1410,6 +1410,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                       this, &SerialMPM::interpolateToParticlesAndUpdate);
 
   t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::OldDW, lb->timeStepLabel);
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
@@ -1586,13 +1587,15 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,    gac,NGN);
-  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,    gac,NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,       gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,       gac,NGN+1);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
+  if (flags->d_doingDissolution) {
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
+  }
+
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
   t->requires(Task::OldDW, lb->tracerIDLabel,      tracer_matls, gnone);
-  if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
-  }
 
   t->computes(lb->pXLabel_preReloc,           tracer_matls);
   t->computes(lb->tracerIDLabel_preReloc,     tracer_matls);
@@ -1660,11 +1663,11 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
-  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
   if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
   }
   t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
@@ -1752,7 +1755,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
   t->computes(lb->gSurfaceAreaLabel,                mpm_matls);
@@ -3495,27 +3498,6 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
-
-#if 0
-        if (flags->d_doingDissolution) {
-           double delX = dxCell.x();
-           double rat = velocity_star[c].length()*delT/delX;
-           if(rat>flags->d_maxVelStarToDx_DtRatio && c.z()>=0){
-//            cout << "n = " << c << endl;
-//            cout << "mas = " << mass[c] << endl;
-//            cout << "mat = " << m << endl;
-//            cout << "rat = " << rat << endl;
-//            cout << "vel = " << velocity[c] << endl;
-//            cout << "vstar = " << velocity_star[c] << endl;
-//            cout << "acc = " << acceleration[c] << endl << endl;
-             velocity_star[c] = (velocity[c].length()/velocity_star[c].length())
-                              * velocity_star[c];
-//            acceleration[c] = (velocity_star[c] - velocity[c])/delT;
-//            cout << "vstar_new = " << velocity_star[c] << endl;
-//            cout << "acc_new = " << acceleration[c] << endl << endl;
-           } // if(rat> ...)
-        } // if doing dissolution
-#endif
       }
 
       // Check the integrated nodal velocity and if the product of velocity
@@ -3891,7 +3873,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   int curBHIndex=0;
   double geoTime_MYa=0.;
   double geoTemp_K=0.;
-  d_currentPhase = "null";
+  flags->d_currentPhase = "null";
 
   if (flags->d_useLoadCurves) {
     for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
@@ -3904,7 +3886,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         // get the load curve time (not the ID), use that to get the BH index
         curLCIndex = pbc->getLoadCurve()->getNextIndex(time)-1;
         int lastLCIndex = pbc->getLoadCurve()->getNextIndex(time-delT)-1;
-        d_currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
+        flags->d_currentPhase= pbc->getLoadCurve()->getPhase(curLCIndex);
         bool outputStep = false;
         if(lastLCIndex != curLCIndex){
           m_output->setOutputTimeStep(    true, grid );
@@ -3921,20 +3903,20 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
  
-          if(d_currentPhase=="hold"){
+          if(flags->d_currentPhase=="hold"){
             double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
             double startTemp = burialHistory->getTemperature_K(curBHIndex);
             double endTemp   = burialHistory->getTemperature_K(curBHIndex-1);
             geoTemp_K = startTemp + ((endTemp-startTemp)/uintahDisTime)
                                     *(time-holdStartTime);
-          } else if(d_currentPhase=="ramp") {
+          } else if(flags->d_currentPhase=="ramp") {
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex-1);
-          } else if(d_currentPhase=="settle"){
+          } else if(flags->d_currentPhase=="settle"){
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
           }
           geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
           bool EOC    = burialHistory->getEndOnCompletion(curBHIndex);
-          if(EOC && d_currentPhase=="ramp" && outputStep){
+          if(EOC && flags->d_currentPhase=="ramp" && outputStep){
             proc0cout << "Stopping per burial history specification" << endl;
             new_dw->put(bool_or_vartype(true), 
                         VarLabel::find(endSimulation_name));
@@ -3945,12 +3927,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                         VarLabel::find(endSimulation_name));
           } // endif
           burialHistory->setCurrentIndex(curBHIndex);
-          burialHistory->setCurrentPhaseType(d_currentPhase);
+          burialHistory->setCurrentPhaseType(flags->d_currentPhase);
 
           // DISSOLUTION
           if (flags->d_doingDissolution) {
            dissolutionModel->setTemperature(geoTemp_K);
-           dissolutionModel->setPhase(d_currentPhase);
+           dissolutionModel->setPhase(flags->d_currentPhase);
            dissolutionModel->setTimeConversionFactor(geoInterval/uintahDisTime);
           }
         }
@@ -4094,6 +4076,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                 DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 {
+  timeStep_vartype timeStep;
+  old_dw->get(timeStep, lb->timeStepLabel);
+  int timestep = timeStep;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -4242,9 +4228,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 
       double Cp=mpm_matl->getSpecificHeat();
+      Vector dx = patch->dCell();
 
-      if(flags->d_XPIC2 && !(d_currentPhase=="hold" && 
-                             flags->d_doingDissolution)){
+      // The following logic is intended to turn on every 10th dissolution step
+      // For problems not involving dissolution, or during phases of the
+      // dissolution simulation where dissolution isn't happening, XPIC is
+      // carried out as normal.
+      if((flags->d_XPIC2 && !(flags->d_currentPhase=="hold" && 
+                             flags->d_doingDissolution)) ||
+         (flags->d_XPIC2 && 
+          flags->d_currentPhase=="hold" && flags->d_doingDissolution 
+                                        && timestep%10==1)){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
@@ -4294,9 +4288,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                   maxDir=i;
                 }
               }
-//              cout << "maxDir   = " << maxDir << endl;
-//              cout << "maxDir+1 = " << (maxDir+1)%3 << endl;
-//              cout << "maxDir+2 = " << (maxDir+2)%3 << endl;
               int maxDirP1 = (maxDir+1)%3;
               int maxDirP2 = (maxDir+2)%3;
               pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
@@ -4315,12 +4306,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
               double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
               double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
-//              double a = dL2overdL1;
-//              double b = -(L2l+L1l*dL2overdL1);
-//              double c = deltaMassFrac*(L1l*L2l);
-//              double dL1 = (-b - sqrt(b*b-4.*a*c))/(2.*a);
-              // 2D version
-              //double dL1 = deltaMassFrac*(L1l*L2l)/(L2l+L1l*dL2overdL1);
 
               dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
                                          (Ll[maxDirP1]*Ll[maxDirP2] 
@@ -4337,18 +4322,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                       L[0].y(), L[1].y(), L[2].y(),
                                       L[0].z(), L[1].z(), L[2].z());
 
-//            This, and below, are my attempts to make the dissolving particles
-//            retreat, but it doesn't look great.
-//            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
-//            psizeNew[idx] = sizeRed*psize[idx];
-//            Matrix3 pszNew = sizeRed*psize[idx];
-//            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
-//            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-//            Vector deltaPos = 0.25*Vector(dL1*dx*pSN.x(),
-//                                          dL2*dy*pSN.y(),
-//                                          dL3*dz*pSN.z());
-//            cout << "deltaPos = " << deltaPos << endl;
-//            pxnew[idx] = pxnew[idx] - deltaPos;
+              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                           dL[1]*dx.y()*pSN.y(),
+                                           dL[2]*dx.z()*pSN.z());
+              pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
@@ -4368,7 +4345,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } else {  // Not XPIC(2)
         // Loop over particles
-        Vector dx = patch->dCell();
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -4455,11 +4431,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //            Matrix3 pszNew = sizeRed*psize[idx];
 //            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
 //            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-            Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
-                                          dL[1]*dx.y()*pSN.y(),
-                                          dL[2]*dx.z()*pSN.z());
+              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                           dL[1]*dx.y()*pSN.y(),
+                                           dL[2]*dx.z()*pSN.z());
 //            cout << "deltaPos = " << deltaPos << endl;
-            pxnew[idx] = pxnew[idx] - deltaPos;
+              pxnew[idx] = pxnew[idx] - deltaPos;
             } else {
               pmassNew[idx] = pmass[idx];
               psizeNew[idx] = psize[idx];
@@ -4821,12 +4797,12 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    BBox domain;
-    const Level* level = getLevel(patches);
-    level->getInteriorSpatialRange(domain);
+//    BBox domain;
+//    const Level* level = getLevel(patches);
+//    level->getInteriorSpatialRange(domain);
 //    Point dom_min = domain.min();
 //    Point dom_max = domain.max();
-    IntVector periodic = level->getPeriodicBoundaries();
+//    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -4836,19 +4812,20 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
+    Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,dwi, patch, gac, NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
-      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
       if (flags->d_doingDissolution){
-        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
+        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
       } else{
         NCVariable<Vector> gSN_create;
-        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+2);
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+1);
         gSN_create.initialize(Vector(0.));
         gSurfNorm[m] = gSN_create;                     // reference created data
       }
@@ -4887,7 +4864,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
 
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
@@ -5160,8 +5136,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing computeLineSegmentForces");
 
-//    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
-    ParticleInterpolator* interpolator=scinew cpdiInterpolator(patch);
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+//    ParticleInterpolator* interpolator=scinew cpdiInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -5231,7 +5207,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
          double vLength = v.length();
          double LSArea = vLength*dxCell.z();
          Matrix3 size0 = tsize0[tmo][idx0];
-         int nn = interpolator->findCellAndWeights(tx0[tmo][idx0],ni,S,size0);
+         int nn = interpolator->findCellAndWeights(px0,ni,S,size0);
          double totMass = 0.;
          for (int k = 0; k < nn; k++) {
            IntVector node = ni[k];
@@ -5241,12 +5217,27 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
          for (int k = 0; k < nn; k++) {
            IntVector node = ni[k];
            if(patch->containsNode(node)) {
-             SurfArea[adv_matl0][node] += LSArea*S[k]*gmass[adv_matl0][node]
+             SurfArea[adv_matl0][node] += 0.5*LSArea*S[k]*gmass[adv_matl0][node]
                                           /totMass;
            }
          }
-        }
-      }
+
+         nn = interpolator->findCellAndWeights(a,ni,S,size0);
+         totMass = 0.;
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           totMass += S[k]*gmass[adv_matl0][node];
+         }
+
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           if(patch->containsNode(node)) {
+             SurfArea[adv_matl0][node] += 0.5*LSArea*S[k]*gmass[adv_matl0][node]
+                                          /totMass;
+           }
+         }
+        } // loop over particles
+      }  // if doingDissolution
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
         LineSegmentMaterial* t_matl1 = (LineSegmentMaterial *) 
@@ -5587,14 +5578,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-//    Vector dx = patch->dCell();
 
-    BBox domain;
-    const Level* level = getLevel(patches);
-    level->getInteriorSpatialRange(domain);
+//    BBox domain;
+//    const Level* level = getLevel(patches);
+//    level->getInteriorSpatialRange(domain);
+//    Vector dx = patch->dCell();
 //    Point dom_min = domain.min();
 //    Point dom_max = domain.max();
-    IntVector periodic = level->getPeriodicBoundaries();
+//    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -5609,14 +5600,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
-      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
-      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
       if (flags->d_doingDissolution){
-        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
+        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
       } else{
         NCVariable<Vector> gSN_create;
-        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+2);
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+1);
         gSN_create.initialize(Vector(0.));
         gSurfNorm[m] = gSN_create;                     // reference created data
       }
@@ -5730,7 +5721,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
           }
           vel/=sumSk;
-  
+
           P[itv] += vel*delT;
           P[itv] += 2.*surf*delT;
 
@@ -5902,7 +5893,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
-                                                                     gac,NGN+2);
+                                                                     gac,NGN+3);
       LSContForce[m].initialize(Vector(0.0));
       SurfArea[m].initialize(0.0);
 //      sumTriForce[m]=Vector(0.0);
@@ -5919,7 +5910,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<std::vector<constParticleVariable<Vector>  > >
                                                     triMidToNodeVec(numLSMatls);
 
-    std::vector<constParticleVariable<Matrix3> >    tsize0(numLSMatls);
     std::vector<constParticleVariable<long64> >     triangle_ids(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
@@ -5940,7 +5930,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //      triInContact[tmo].resize(psetSize[tmo]);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
-      old_dw->get(tsize0[tmo],         lb->pSizeLabel,                pset0);
       old_dw->get(triMidToN0Vec[tmo],  lb->triMidToN0VectorLabel,     pset0);
       old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
       old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
@@ -6041,6 +6030,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
            continue;
           }
           Point px0=tx0[tmo][idx0] + triMidToNodeVec[tmo][iu][idx0];
+
           Vector ptNormal =Cross(triMidToN0Vec[tmo][idx0],
                                  triMidToN1Vec[tmo][idx0]);
           double pNL = ptNormal.length();

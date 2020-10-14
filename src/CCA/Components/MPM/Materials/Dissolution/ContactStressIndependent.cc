@@ -173,7 +173,7 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
-          if(inContactWithMatls[n]) {
+          if(n!=md && inContactWithMatls[n]) {
             inContactMatl = n;
           }
         }
@@ -183,13 +183,15 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
 //                                  *(8.*NC_CCweight[c]) / area;
 
         double surfArea = max(gSurfaceArea[md][c] + 
-                              gSurfaceArea[inContactMatl][c], 1.e-4*area);
+                              gSurfaceArea[inContactMatl][c], 1.e-2*area);
         double normtrac_ave = -1.*(gContactForce[md][c].length() + 
                                    gContactForce[inContactMatl][c].length())
                                    /surfArea;
 
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
+           gSurfaceArea[md][c] > 1.e-3*area &&
+           gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
           -normtrac_ave > d_StressThresh){   // Compressive stress is neg
             double rho = gmass[md][c]/gvolume[md][c];
             massBurnRate[md][c] += NC_CCweight[c]*rate*rho;
@@ -220,13 +222,12 @@ void ContactStressIndependent::addComputesAndRequiresMassBurnFrac(SchedulerP & s
 
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
-//  t->requires(Task::NewDW, lb->gNormTractionLabel,       Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,       Ghost::None);
-//  t->requires(Task::NewDW, lb->gSurfaceForceLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
+  t->modifies(lb->dLdtDissolutionLabel,  mss);
 
   sched->addTask(t, patches, ms);
 

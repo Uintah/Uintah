@@ -107,6 +107,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<bool> masterMatls(numMatls);
     std::vector<bool> inContactWithMatls(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
+
+
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
@@ -147,8 +149,12 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                    * exp(-d_Ea/(d_R*d_temperature))
                    * 2.0*3.1536e19*d_timeConversionFactor;
       double rate = dL_dt*area;
-//      cout << "rateD = " << rate << endl;
 //      int numNodesMBRGT0 = 0;
+//      double mBRSum = 0.;
+//      double normtrac_mean = 0.;
+//      double surfArea_mean = 0.;
+//      double contForceDis = 0.;
+//      double contForceTot = 0.;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -158,36 +164,58 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
-          if(inContactWithMatls[n]) {
+          if(n!=md && inContactWithMatls[n]) {
             inContactMatl = n;
           }
         }
 
         double surfArea = max(gSurfaceArea[md][c] + 
-                              gSurfaceArea[inContactMatl][c], 1.e-4*area);
+                              gSurfaceArea[inContactMatl][c], 1.e-2*area);
         double normtrac_ave = -1.*(gContactForce[md][c].length() + 
                                    gContactForce[inContactMatl][c].length())
                                    /surfArea;
 
+//        contForceTot += normtrac_ave*surfArea;
+//        contForceTot += gContactForce[md][c].length();
+
         if(gmass[md][c] >  1.e-100  &&
            gmass[md][c] != sumMass  && 
+           gSurfaceArea[md][c] > 1.e-3*area &&
+           gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
           -normtrac_ave > d_StressThresh){   // Compressive stress is neg
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 
 //                <<  gContactForce[inContactMatl][c] << endl;
-//           cout << "normtrac_ave = " << normtrac_ave << endl;
-//           cout << "surfArea = " << surfArea << endl;
+//            cout << "normtrac_ave = " << normtrac_ave << endl;
+//            cout << "surfArea = " << surfArea << endl;
+//            cout << "gSurfaceArea["<<md<<"]["<<c<<"] = " 
+//                 <<  gSurfaceArea[md][c] << endl;
+//            cout << "gSurfaceArea["<<inContactMatl<<"]["<<c<<"] = " 
+//                 <<  gSurfaceArea[inContactMatl][c] << endl;
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-normtrac_ave - d_StressThresh);
             massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
+//            mBRSum += massBurnRate[md][c];
+//            surfArea_mean += surfArea;
+//            contForceDis += normtrac_ave*surfArea;
             dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = " << NC_CCweight[c] << endl;
 //            numNodesMBRGT0++;
+//            normtrac_mean += normtrac_ave;
         }
       } // nodes
-//      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//      if(numNodesMBRGT0 > 0){
+//        cout << "md = " << md << endl;
+//        cout << "numNodesMBRGT0 = " << numNodesMBRGT0 << endl;
+//        cout << "mBRSum =" << mBRSum << endl;
+//        cout << "normtrac_mean = " << normtrac_mean/((double) numNodesMBRGT0) << endl;
+//        cout << "surfArea_total = " << surfArea_mean << endl;
+//        cout << "surfArea_mean = " << surfArea_mean/((double) numNodesMBRGT0) << endl;
+//        cout << "contForceDis = " << contForceDis << endl;
+//        cout << "contForceTot = " << contForceTot << endl;
+//      }
      } // endif a masterMaterial
     } // materials
   } // patches
@@ -215,6 +243,7 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
+  t->modifies(lb->dLdtDissolutionLabel,  mss);
 
   sched->addTask(t, patches, ms);
 
