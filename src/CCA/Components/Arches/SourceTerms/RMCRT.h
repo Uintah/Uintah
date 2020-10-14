@@ -101,13 +101,17 @@ public:
 
   void sched_initialize( const LevelP& level, SchedulerP& sched );
 
-  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
-
   void initialize( const ProcessorGroup* pg,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
+
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
+
+
+
+
 
   enum GRAPH_TYPE {
       TG_CARRY_FORWARD = 0              // carry forward taskgraph
@@ -152,7 +156,7 @@ public:
 private:
 
   // These tasks are used to "fake" out the taskgraph createDetailedDependency() logic
-  // Before you can require something from the new_dw there must be a compute() for that
+  // On a restart, before you can require something from the new_dw there must be a compute() for that
   // variable.
   void restartInitializeHack( const ProcessorGroup*,
                               const PatchSubset*,
@@ -167,6 +171,14 @@ private:
                                DataWarehouse*){};
 
   //__________________________________
+  //
+  void restartInitialize( const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw );
+
+  //__________________________________
   /** @brief Schedule compute of blackbody intensity */
   void sched_sigmaT4( const LevelP  & level,
                       SchedulerP    & sched );
@@ -178,7 +190,8 @@ private:
                 const PatchSubset    * patches,
                 const MaterialSubset * matls,
                 DataWarehouse        * old_dw,
-                DataWarehouse        * new_dw );
+                DataWarehouse        * new_dw,
+                Task::WhichDW          which_dw );
 
   //__________________________________
   /** @brief Schedule compute of blackbody intensity */
@@ -192,7 +205,8 @@ private:
                 const PatchSubset    * patches,
                 const MaterialSubset * matls,
                 DataWarehouse        * old_dw,
-                DataWarehouse        * new_dw );
+                DataWarehouse        * new_dw,
+                Task::WhichDW          which_dw );
 
   //______________________________________________________________________
   //   Boundary Conditions
@@ -282,6 +296,8 @@ private:
   std::vector<std::string>       m_partGas_absk_names;
   std::vector< const VarLabel*>  m_partGas_absk_Labels;
   std::vector< const VarLabel*>  m_partGas_temp_Labels;
+  std::map< const VarLabel*, double>  m_missingCkPt_Labels;   // map that contains varLabel and initialization value
+
   int m_nQn_part{0};
   int m_nPartGasLabels{1};                                // Always at least 1 label
 

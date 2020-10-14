@@ -171,6 +171,7 @@
                                                                           cloudBenchmark,
                                                                           sootVolumeFrac,
                                                                           gasRadProperties,
+                                                                          RMCRTgasRadProperties,
                                                                           partRadProperties,
                                                                           interpolation_var,
                                                                           CO,
@@ -180,7 +181,7 @@
                                                                           wall_thermal_resistance, 
                                                                           time_varying'">
 
-              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
+              <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties RMCRTgasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
               <scattering_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties "/> <!-- multiplicative modifier on particle scattering coefficients, is ignored when radiation scattering is turned off  -->
               <subModel                   spec="REQUIRED STRING  'constantCIF, basic, Coal,tabulated'"   need_applies_to="type partRadProperties" />
 
@@ -216,7 +217,7 @@
 
           <calculator                   spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim, GauthamWSGG'"
-                                        need_applies_to="type gasRadProperties"
+                                        need_applies_to="type gasRadProperties RMCRTgasRadProperties"
                                         >
 
             <temperature                  spec="OPTIONAL NO_DATA"
@@ -345,6 +346,8 @@
           <!-- for CO / equilibrium model -->
           <!-- defect label will be: model_label+"_defect"
                rate label will be: model_label+"_rate" -->
+          <new_on_restart               spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type CO"/> <!-- only use when model is added upon restart - subsequent restarts should have this removed -->
           <A                            spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- pre exponential factor kmole/m3/s-->
           <Ea                           spec="OPTIONAL DOUBLE"
@@ -2109,7 +2112,9 @@
             <!--                 Neumann isn't currently supported -->
             <!--                 Note that the value specified in any case is rho*u*phi (flux). -->
             <!--                 The code takes this value and multiplies by an area to compute the integral on a "face". -->
+            <!--                 The relatize_xyz specifies where (0,0,0) is located. Note that only the two changing dimensions matter -->
             <inputfile                  spec="OPTIONAL STRING" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
+            <relative_xyz               spec="REQUIRED VECTOR" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src"/>
 
             <!-- Radiation models -->
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 -->

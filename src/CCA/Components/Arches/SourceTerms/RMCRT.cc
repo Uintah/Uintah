@@ -64,7 +64,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
   m_materialManager  = labels->d_materialManager;
-  
+
   m_partGas_temp_names.push_back("radiation_temperature");      // HARDWIRED!!!
 
   //__________________________________
@@ -124,8 +124,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   ac_ps ->require( "gas_absk", gas_absk_name );
 
   m_partGas_absk_names.push_back( gas_absk_name );
-  
-  
+
+
   //__________________________________
   //  Bulletproofing:
   if( m_all_rk){
@@ -192,7 +192,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
     // Only read in the particle absk
     std::string pAbskName;
     icpr_ps->require( "particle_absk", pAbskName );
-    
+
     m_partGas_absk_names.push_back( pAbskName );
 #endif
     //-----------------------------------------
@@ -225,7 +225,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
       m_partGas_absk_names.push_back( absk.str() );
     }
 #endif
-    
+
   }
 }
 
@@ -241,6 +241,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
 
   m_boundaryCondition = bc;
 
+  DOUT( dbg, Uintah::Parallel::getMPIRank() << "Doing RMCRT_Radiation::extraSetup");
 
   //__________________________________
   //  create sumAbskLabel
@@ -296,7 +297,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   }
 
   proc0cout << "  - Absorption coefficient used in intensity calculation: (";
-  
+
   for (int i=0; i < m_nPartGasLabels; i++){
     proc0cout << m_partGas_absk_names[i] << (i<m_nPartGasLabels-1 ? " + " : ")\n");
   }
@@ -317,7 +318,7 @@ RMCRT_Radiation::extraSetup( GridP& grid,
   m_RMCRT->problemSetup(m_ps, rmcrt_ps, grid);
 
   m_RMCRT->BC_bulletproofing( rmcrt_ps, true, false );
-  
+
   //__________________________________
   //  Bulletproofing:
   // dx must get smaller as level-index increases
@@ -393,7 +394,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                                      m_RMCRT->d_radiationVolqLabel,            // ToDo: only carry forward saved vars
                                      m_RMCRT->d_abskgLabel,
                                      m_RMCRT->d_sigmaT4Label };
-                                                      
+
   VarLabelVec coarseLevelVarLabels = { m_RMCRT->d_abskgLabel,
                                        m_RMCRT->d_sigmaT4Label };
 
@@ -414,7 +415,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     // compute sigmaT4, sumAbsk on the finest level
     sched_sigmaT4( fineLevel, sched );
-    
+
     sched_sumAbsk( fineLevel, sched );
 
     // carry forward if it's time
@@ -542,9 +543,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                               m_RMCRT->d_sigmaT4Label,
                               radiometer->d_VRFluxLabel,
                               radiometer->d_VRIntensityLabel};
-                                                          
+
     m_RMCRT->sched_carryForward_VarLabels( level, sched, varLabels );
-    
+
     sched_sigmaT4( level, sched );
 
     sched_sumAbsk( level, sched );
@@ -666,7 +667,7 @@ RMCRT_Radiation::initialize( const ProcessorGroup *,
 
     CCVariable<double> radVolq;
     CCVariable<double> src;
-    CCVariable<Stencil7> RMCRTboundFlux ;
+    CCVariable<Stencil7> RMCRTboundFlux;
 
     //__________________________________
     // all levels
@@ -674,10 +675,10 @@ RMCRT_Radiation::initialize( const ProcessorGroup *,
     radVolq.initialize( 0.0 );  // needed for coal
 
     new_dw->allocateAndPut( RMCRTboundFlux, VarLabel::find("RMCRTboundFlux"), m_matl, patch );
-    Uintah::BlockRange range( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
-    Uintah::parallel_for( range,[&](int i, int j, int k){
-      RMCRTboundFlux(i,j,k).initialize(0.0);
-    });
+    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ) {
+      IntVector c = *iter;
+      RMCRTboundFlux[c].initialize(0.0);
+    }
 
     //__________________________________
     //  CFD level
@@ -765,6 +766,119 @@ RMCRT_Radiation::sched_restartInitialize( const LevelP& level,
   if( m_whichAlgo == radiometerOnly && !new_dw->exists( radiometer->d_VRFluxLabel, m_matl, firstPatch) ){
     radiometer->sched_initialize_VRFlux( level, sched );
   }
+
+  //__________________________________
+  //  If any of the absk or temperature variables are missing
+  //  from the checkpoint then initialize them
+
+  const double initAbsk = 1.0;             // initialization values  HARDWIRED!!!
+  const double initTemp = 300;
+
+  if ( myPatches->size() > 0 ){
+
+    for (int i=0 ; i< m_nPartGasLabels; i++){
+
+      const VarLabel * abskLabel  = m_partGas_absk_Labels[i];
+      if( !new_dw->exists( abskLabel,  m_matl, firstPatch ) ){
+        m_missingCkPt_Labels[ abskLabel ] = initAbsk;
+      }
+
+      const VarLabel * tempLabel  = m_partGas_temp_Labels[i];
+      if(  !new_dw->exists( tempLabel,  m_matl, firstPatch ) ){
+        m_missingCkPt_Labels[ tempLabel ] = initTemp;
+      }
+    }
+  }
+
+
+  if( m_missingCkPt_Labels.size() > 0 ){
+
+    std::string taskname = "RMCRT_Radiation::sched_restartInitialize";
+    printSchedule(level, dbg, taskname);
+
+    Task* t2 = scinew Task( taskname, this, &RMCRT_Radiation::restartInitialize);
+
+    for ( auto  iter = m_missingCkPt_Labels.begin(); iter != m_missingCkPt_Labels.end(); iter++){
+      t2->computes( iter->first );
+    }
+
+    sched->addTask( t2, archesLevel->eachPatch(), m_matlSet );
+  }
+
+  //__________________________________
+  // if sumAbsk or sigmaT4 is missing from checkpoint compute them
+
+  if( !new_dw->exists( m_sumAbsk_Label,         m_matl, firstPatch ) ||
+      !new_dw->exists( m_RMCRT->d_sigmaT4Label, m_matl, firstPatch ) ){
+
+    // Before you can require something from the new_dw
+    // there must be a compute() for that variable.
+    std::string taskname = "RMCRT_Radiation::sched_restartInitializeHack2";
+    printSchedule(level, dbg, taskname);
+
+    Task* t3 = scinew Task( taskname, this, &RMCRT_Radiation::restartInitializeHack2);
+
+    // Some variables may have been computed in RMCRT_Radiation::sched_restartInitialize
+    // Filter out those that have been computed.
+    std::set<const VarLabel*, VarLabel::Compare> computedVars;
+    computedVars = sched->getComputedVars();   // find all the computed vars
+
+    for (int i=0 ; i< m_nPartGasLabels; i++){
+
+      const VarLabel * abskLabel  = m_partGas_absk_Labels[i];
+      if( computedVars.find( abskLabel ) == computedVars.end() ) {
+        t3->computes( abskLabel );
+      }
+
+      const VarLabel * tempLabel  = m_partGas_temp_Labels[i];
+      if( computedVars.find( tempLabel ) == computedVars.end() ) {
+        t3->computes( tempLabel );
+      }
+    }
+
+    sched->addTask( t3, archesLevel->eachPatch(), m_matlSet );
+
+
+    sched_sumAbsk( level, sched );
+
+    sched_sigmaT4( level, sched );
+  }
+}
+
+//______________________________________________________________________
+//    Task to initialize variables that were not found in the checkpoints
+//______________________________________________________________________
+void
+RMCRT_Radiation::restartInitialize( const ProcessorGroup  * pg,
+                                    const PatchSubset     * patches,
+                                    const MaterialSubset  * matls,
+                                    DataWarehouse         * old_dw,
+                                    DataWarehouse         * new_dw )
+{
+  static bool doCout=( pg->myRank() == 0 );
+
+  DOUT( doCout, "__________________________________\n"
+             << "  RMCRT_Radiation::restartIntialize \n"
+             << "    These variables were not found in the checkpoints\n"
+             << "    and will be initialized\n");
+
+
+  printTask(patches,  dbg, "Doing RMCRT_Radiation::restartIntialize");
+
+
+  for ( auto  iter = m_missingCkPt_Labels.begin(); iter != m_missingCkPt_Labels.end(); iter++){
+    const VarLabel* QLabel = iter->first;
+    const double initValue = iter->second;
+    DOUT( doCout, "    Label:  " << QLabel-> getName() << ":" <<  initValue );
+
+    for (int p=0; p < patches->size(); p++){
+      const Patch* patch = patches->get(p);
+      CCVariable<double> Q;
+      new_dw->allocateAndPut( Q, QLabel, m_matl, patch);
+      Q.initialize( initValue );
+    }
+  }
+  doCout=false;
 }
 
 //______________________________________________________________________
@@ -779,22 +893,27 @@ RMCRT_Radiation::sched_sigmaT4( const LevelP & level,
   Task* tsk = nullptr;
   std::string type = "null";
 
+  Task::WhichDW oldNew_dw = Task::OldDW;
+  if ( sched->isRestartInitTimestep() ){
+    oldNew_dw = Task::NewDW;
+  }
+
   if ( m_FLT_DBL == TypeDescription::double_type ) {
     type = "double";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<double> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<double>, oldNew_dw );
   }
   else {
     type = "float";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<float> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sigmaT4<float>, oldNew_dw );
   }
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sigmaT4 (" +type+")");
 
-  tsk->requires( Task::OldDW, m_labels->d_volFractionLabel, m_gn, 0 );
+  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( Task::OldDW, m_partGas_absk_Labels[i], m_gn, 0 );
-    tsk->requires( Task::OldDW, m_partGas_temp_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_temp_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_RMCRT->d_sigmaT4Label );
@@ -809,8 +928,11 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
                           const PatchSubset     * patches,
                           const MaterialSubset  * matls,
                           DataWarehouse         * old_dw,
-                          DataWarehouse         * new_dw )
+                          DataWarehouse         * new_dw,
+                          Task::WhichDW           which_dw )
 {
+  DataWarehouse* oldNew_dw = new_dw->getOtherDataWarehouse(which_dw);
+
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -819,10 +941,10 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
     double sigma_over_pi = (m_RMCRT->d_sigma)/M_PI;
 
     constCCVariable<double> gasVolFrac;
-    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
+    oldNew_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
     // sigma T^4/pi
-    CCVariable< T > sigmaT4;  
+    CCVariable< T > sigmaT4;
     new_dw->allocateAndPut(sigmaT4, m_RMCRT->d_sigmaT4Label,m_matl, patch);
 
     // gas or  particle temperature & absk
@@ -830,12 +952,12 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
     std::vector<constCCVariable<double> > partGas_temp( m_nPartGasLabels );
 
     for (int i=0;  i< m_nPartGasLabels; i++){
-      old_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
-      old_dw->get( partGas_temp[i],  m_partGas_temp_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_temp[i],  m_partGas_temp_Labels[i], m_matl, patch, m_gn, 0);
     }
- 
+
     constCCVariable<double> radTemp = partGas_temp[0];               // radiation_temperature
- 
+
     //__________________________________
     //  sigmaT4: Gas radiation Only
 
@@ -859,31 +981,31 @@ RMCRT_Radiation::sigmaT4( const ProcessorGroup  *,
           double sumT    = 0.0;
           double sumAbsk = 0.0;
                                            // summations
-          for (int i=0; i< m_nPartGasLabels; i++){  
+          for (int i=0; i< m_nPartGasLabels; i++){
             double T_sqrd  = partGas_temp[i][c] * partGas_temp[i][c];
             sumT     += T_sqrd * T_sqrd * partGas_absk[i][c];
             sumAbsk  += partGas_absk[i][c];
           }
 
           sigmaT4[c] = 0.0;
-          
+
           // weighted average
           if ( sumAbsk > 1e-16 ){
             sigmaT4[c] = sigma_over_pi * sumT/sumAbsk;
-          }         
-        } 
+          }
+        }
         else {                          // walls or intrustions
           double T_sqrd = radTemp[c] * radTemp[c];
           sigmaT4[c]    = sigma_over_pi * T_sqrd * T_sqrd;
-          
+
         }  // intrusion or wall
       }  // loop
-    }  // particle 
+    }  // particle
   }  // patch
 }
 
 //______________________________________________________________________
-//    Schedule task to compute the absoprtion coefficient 
+//    Schedule task to compute the absoprtion coefficient
 //______________________________________________________________________
 void
 RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
@@ -894,28 +1016,33 @@ RMCRT_Radiation::sched_sumAbsk( const LevelP & level,
   Task* tsk = nullptr;
   std::string type = "null";
 
+  Task::WhichDW oldNew_dw = Task::OldDW;
+  if ( sched->isRestartInitTimestep() ){
+    oldNew_dw = Task::NewDW;
+  }
+
   if ( m_FLT_DBL == TypeDescription::double_type ) {
     type = "double";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<double> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<double>, oldNew_dw );
   }
   else {
     type = "float";
-    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<float> );
+    tsk = scinew Task( taskname, this, &RMCRT_Radiation::sumAbsk<float>, oldNew_dw);
   }
 
   printSchedule(level, dbg, "RMCRT_Radiation::sched_sumAbsk (" +type+")");
 
-  tsk->requires( Task::OldDW, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
+  tsk->requires( oldNew_dw, m_labels->d_volFractionLabel, m_gn, 0 );      // New or old dw???
 
   for (int i=0 ; i< m_nPartGasLabels; i++){
-    tsk->requires( Task::OldDW, m_partGas_absk_Labels[i], m_gn, 0 );
+    tsk->requires( oldNew_dw, m_partGas_absk_Labels[i], m_gn, 0 );
   }
 
   tsk->computes( m_sumAbsk_Label );
   sched->addTask( tsk, level->eachPatch(), m_matlSet, RMCRT_Radiation::TG_RMCRT );
 }
 //______________________________________________________________________
-//    Task to compute the absoprtion coefficient 
+//    Task to compute the absoprtion coefficient
 //______________________________________________________________________
 template< class T>
 void
@@ -923,21 +1050,24 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
                           const PatchSubset     * patches,
                           const MaterialSubset  * matls,
                           DataWarehouse         * old_dw,
-                          DataWarehouse         * new_dw )
+                          DataWarehouse         * new_dw,
+                          Task::WhichDW           which_dw )
 {
+  DataWarehouse* oldNew_dw = new_dw->getOtherDataWarehouse(which_dw);
+
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
 
     printTask(patches, patch, dbg, "Doing RMCRT_Radiation::sumAbsk");
-    
+
     constCCVariable<double> gasVolFrac;
-    old_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
+    oldNew_dw->get( gasVolFrac, m_labels->d_volFractionLabel, m_matl, patch, m_gn, 0);
 
     // gas and particle temperature & absk
     std::vector<constCCVariable<double> > partGas_absk( m_nPartGasLabels );
 
     for (int i=0;  i< m_nPartGasLabels; i++){
-      old_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
+      oldNew_dw->get( partGas_absk[i],  m_partGas_absk_Labels[i], m_matl, patch, m_gn, 0);
     }
 
     CCVariable<double> sumAbsk_tmp;
@@ -951,15 +1081,15 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
       for ( auto iter = patch->getCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
 
-        if (gasVolFrac[c] > 1e-16){ 
+        if (gasVolFrac[c] > 1e-16){
           sumAbsk_tmp[c] += partGas_absk[i][c];     // gas
-        }   
+        }
         else{
           sumAbsk_tmp[c] = 1.0;                    // walls  HARDWIRED
         }
       }
     }
-    
+
     //__________________________________
     //  Boundary Conditions                       // HARDWIRED!!
     std::vector<Patch::FaceType> bf;
@@ -972,15 +1102,15 @@ RMCRT_Radiation::sumAbsk( const ProcessorGroup  *,
 
       for( auto iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
         const IntVector& c = *iter;
-        sumAbsk_tmp[c] = 1.0;        
+        sumAbsk_tmp[c] = 1.0;
       }
     }
-    
+
     //__________________________________
     //  convert to double or float
     CCVariable< T > sumAbsk;
     new_dw->allocateAndPut( sumAbsk, m_sumAbsk_Label, m_matl, patch);
-    
+
     for ( auto iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       sumAbsk[c] = (T) sumAbsk_tmp[c];
@@ -1105,15 +1235,15 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup * pc,
           absk[c] = (T) 1.0;
         }
       }
-      
-      
+
+
       //__________________________________
       // loop over boundary faces and compute sigma T^4
       std::string Temp_name = m_gasTemp_Label->getName();
 
       BoundaryCondition_new* new_BC = m_boundaryCondition->getNewBoundaryCondition();
       new_BC->setExtraCellScalarValueBC< double >( pc, patch, temp,  Temp_name );
-      
+
       for( auto itr = bf.cbegin(); itr != bf.cend(); ++itr ){
         Patch::FaceType face = *itr;
 

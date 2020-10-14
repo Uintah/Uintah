@@ -150,6 +150,7 @@ private:
 
       _storage = Inject::readInputFile( file_name );
 
+      db->require("relative_xyz", m_rel_xyz);
 
     }
 
@@ -219,6 +220,26 @@ private:
 
             if ( spec->bcType == DIRICHLET ){
 
+              int i0; int i1; int zeroi;
+              if ( face == Patch::xminus || face == Patch::xplus ){
+                i0 = 1;
+                i1 = 2;
+                zeroi = 0;
+              } else if ( face == Patch::yminus || face == Patch::yplus ){
+                i0 = 2;
+                i1 = 0;
+                zeroi = 1;
+              } else {
+                i0 = 0;
+                i1 = 1;
+                zeroi = 2;
+              }
+
+              Vector DX = patch->dCell();
+
+              double area = DX[i0]*DX[i1];
+              double vol = DX[i0]*DX[i1]*DX[zeroi];
+
               const double value = spec->value;
 
               const int mysize = cell_iter.size();
@@ -226,7 +247,7 @@ private:
 
               for ( int i = 0; i < mysize; i++ ){
                 IntVector c = this_iter[i];
-                src[this_iter[i]] = value;
+                src[this_iter[i]] = value*area/vol;
               }
 
             } else if ( spec->bcType == CUSTOM ){
@@ -336,11 +357,6 @@ private:
     std::string variable = getString( file );
     double space1 = getDouble( file );
     double space2 = getDouble( file );
-    double relx = getDouble( file );
-    double rely = getDouble( file );
-    double relz = getDouble( file );
-    Point p(relx,rely,relz);
-    m_rel_xyz = p;
     int num_points = getInt( file );
     std::map<IntVector, double> result;
 

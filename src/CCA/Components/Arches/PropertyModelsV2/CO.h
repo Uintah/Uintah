@@ -23,7 +23,7 @@ public:
 
     void register_timestep_init( VIVec& variable_registry , const bool packed_tasks);
 
-    void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks){}
+    void register_restart_initialize( VIVec& variable_registry , const bool packed_tasks);
 
     void register_timestep_eval( VIVec& variable_registry, const int time_substep , const bool packed_tasks);
 
@@ -33,7 +33,7 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
-    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info ){}
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info );
 
@@ -129,6 +129,7 @@ private:
     double m_prNo;
     double m_T_crit;
 
+    bool m_new_on_restart{false};
     std::string m_conv_scheme;
     std::string m_CO_model_name;
     std::string m_CO_diff_name;
