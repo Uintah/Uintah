@@ -60,16 +60,20 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   /////////////////////////////////////////////////////////////////////
   // Default settings - nothing specified in the input file
   if (scheduler == "") {
-#if defined( UINTAH_ENABLE_KOKKOS ) && !defined( HAVE_CUDA )
-    scheduler = "KokkosOpenMP";
-#else
-    if (Uintah::Parallel::getNumThreads() > 0) {
-      scheduler = "Unified";
+    if ((Uintah::Parallel::getNumPartitions() > 0) && (Uintah::Parallel::getThreadsPerPartition() > 0)) {
+      if (Uintah::Parallel::usingDevice()) {
+        scheduler = "Kokkos";       // User passed '-npartitions <#> -nthreadsperpartition <#> -gpu'
+      }
+      else {
+        scheduler = "KokkosOpenMP"; // User passed '-npartitions <#> -nthreadsperpartition <#>'
+      }
+    }
+    else if (Uintah::Parallel::getNumThreads() > 0) {
+      scheduler = "Unified";        // User passed '-nthreads <#>'
     }
     else {
-      scheduler = "MPI";
+      scheduler = "MPI";            // User passed no scheduler-specific run-time parameters
     }
-#endif
   }
 
   /////////////////////////////////////////////////////////////////////
@@ -111,13 +115,13 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   //  bulletproofing
 
   // "-nthreads" at command line, something other than "Unified" specified in UPS file (w/ -do_not_validate)
-  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified") && (scheduler != "Kokkos")) {
-    throw ProblemSetupException("\nERROR<Scheduler>: Kokkos Scheduler or Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
+  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
+    throw ProblemSetupException("\nERROR<Scheduler>: Unified Scheduler needed for '-nthreads <n>' option.\n", __FILE__, __LINE__);
   }
 
   // "-gpu" provided at command line, but not using "Unified"
   if ((scheduler != "Unified") && (scheduler != "Kokkos") && Uintah::Parallel::usingDevice()) {
-    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Kokkos Scheduler or Unified Scheduler.  Add '-nthreads <n>' to the sus command line.\n";
+    std::string error = "\nERROR<Scheduler>: To use '-gpu' option you must invoke the Kokkos Scheduler or Unified Scheduler.  Add  '-npartitions <n> -nthreadsperpartition <n>' or '-nthreads <n>' to the sus command line.\n";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
