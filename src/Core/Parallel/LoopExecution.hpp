@@ -759,7 +759,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
       functor(i,j,k,tmp2);
       tmp1=min(tmp2,tmp1);
     }}
-  }, Kokkos::Experimental::Min<ReductionType>(tmp0));
+  }, Kokkos::Min<ReductionType>(tmp0));
 
   red = min(tmp0,red); 
 

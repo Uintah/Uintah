@@ -542,7 +542,9 @@ KokkosOpenMPScheduler::myRankThread()
 {
   std::ostringstream out;
 
-#ifdef KOKKOS_ENABLE_OPENMP
+#if defined( KOKKOS_ENABLE_OPENMP ) && defined( USING_LATEST_KOKKOS )
+  out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::impl_hardware_thread_id();
+#elif defined( KOKKOS_ENABLE_OPENMP ) && !defined( USING_LATEST_KOKKOS )
   out << Uintah::Parallel::getMPIRank()<< "." << Kokkos::OpenMP::hardware_thread_id();
 #else
   out << Uintah::Parallel::getMPIRank();
