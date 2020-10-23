@@ -123,7 +123,7 @@ public:
       return *this;
     }
     
-    inline int operator*() throw(ConsecutiveRangeSetException);
+    inline int operator*() noexcept(false);
 
     bool operator==(const iterator& it2) const
     { return range_ == it2.range_ && offset_ == it2.offset_; }
@@ -174,7 +174,7 @@ public:
   ConsecutiveRangeSet() : size_(0) {} // empty set
   
   // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
-  ConsecutiveRangeSet(const std::string& setstr) throw(ConsecutiveRangeSetException);
+  ConsecutiveRangeSet(const std::string& setstr) noexcept(false);
 
   ConsecutiveRangeSet(const ConsecutiveRangeSet& set2)
     : rangeSet_(set2.rangeSet_), size_(set2.size_) { }
@@ -187,7 +187,7 @@ public:
   // Add to the range set, asserting that value is greater or equal
   // to anything already in the set (if it is equal to something already
   // in teh set then the value is simply discarded).
-  void addInOrder(int value) throw(ConsecutiveRangeSetException);
+  void addInOrder(int value) noexcept(false);
   
   template <class AnyIterator>
   void addInOrder(const AnyIterator& begin, const AnyIterator& end)
@@ -241,7 +241,7 @@ private:
 };
 
 inline int ConsecutiveRangeSet::iterator::operator*()
-  throw(ConsecutiveRangeSetException)
+  noexcept(false)
 {
   CHECKARRAYBOUNDS(range_, 0, (long)set_->rangeSet_.size());
   return set_->rangeSet_[range_].low_ + offset_;
