@@ -651,6 +651,7 @@ int main( int argc, char *argv[], char *env[] )
       std::cout << "SVN: " << SVN_URL << "\n";
       std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       std::cout << "CFLAGS: " << CFLAGS << "\n";
+      std::cout << "CXXFLAGS: " << CXXFLAGS << "\n";
 
       // Run svn commands on Packages/Uintah 
       if (do_svnDiff || do_svnStat) {
