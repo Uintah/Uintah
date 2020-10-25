@@ -111,7 +111,6 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     std::vector<constNCVariable<Vector> > gContactForce(numMatls);
-//    std::vector<constNCVariable<double> > gnormtrac(numMatls);
     std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
     std::vector<NCVariable<double> >  dLdt(numMatls);
@@ -123,12 +122,10 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,         dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,       dwi, patch, gnone, 0);
-//      new_dw->get(gnormtrac[m], lb->gNormTractionLabel, dwi, patch, gnone, 0);
       new_dw->get(gSurfaceArea[m],
                                 lb->gSurfaceAreaLabel,  dwi, patch, gnone, 0);
       new_dw->get(gContactForce[m],
                                 lb->gLSContactForceLabel, dwi, patch, gnone, 0);
-//                                lb->gSurfaceForceLabel, dwi, patch, gnone, 0);
 
       new_dw->getModifiable(massBurnRate[m],
                                 lb->massBurnFractionLabel, dwi, patch);
@@ -154,14 +151,15 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
      if(masterMatls[m]){
       int md=m;
 
-      // Note the extra factor of 2.0 in the last line is to account for the
-      // NC_CCweight down below.  
-      // For the 1D case, NC_CCweight is 0.5 on edge nodes.
+      // Extra factor of 4.0 in the following equation is there in part to
+      // account for the NC_CCweight.  Also, 4.0 gives the best match to 
+      // expected outcomes.  This could still use some fine tuning.
       double dL_dt = (0.75*M_PI)
                    * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
                    * exp(-d_Ea/(d_R*d_temperature))*d_StressThresh
-                   * 2.0*3.1536e19*d_timeConversionFactor;
+                   * 4.0*3.1536e19*d_timeConversionFactor;
       double rate = dL_dt*area;
+//      cout << "dL_dt = " << dL_dt << endl;
 //      cout << "rateI = " << rate << endl;
 //      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -177,10 +175,6 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
             inContactMatl = n;
           }
         }
-
-//        double normtrac_ave = -.5*(gContactForce[md][c].length() + 
-//                                   gContactForce[inContactMatl][c].length())
-//                                  *(8.*NC_CCweight[c]) / area;
 
         double surfArea = max(gSurfaceArea[md][c] + 
                               gSurfaceArea[inContactMatl][c], 1.e-2*area);
