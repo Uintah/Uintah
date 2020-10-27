@@ -399,7 +399,7 @@ TriGeometryPiece::readPoints(const string& file)
     min = Min(*itr,min);
     max = Max(*itr,max);
   }
-  Vector fudge(1.e-5,1.e-5,1.e-5);
+  Vector fudge(3.14159e-6,2.71828e-6,8.65255e-6);
   min = min - fudge;
   max = max + fudge;
   d_box = Box(min,max);
