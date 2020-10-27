@@ -532,7 +532,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
                                    m_materialManager->getMaterial("Tracer", 0);
    Tracer* tr = tracer_matl->getTracer();
    tr->scheduleInitialize(level, sched, m_materialManager);
+
+   schedulePrintTracerCount(level, sched);
   }
+
 
   int numLineSegmentM = m_materialManager->getNumMatls("LineSegment");
   if(numLineSegmentM>0){
@@ -548,7 +551,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
                               m_materialManager->getMaterial("Triangle", 0);
    Triangle* ls = ls_matl->getTriangle();
    ls->scheduleInitialize(level, sched, m_materialManager);
+
+   schedulePrintTriangleCount(level, sched);
   }
+
 
   if (flags->d_deleteGeometryObjects) {
     scheduleDeleteGeometryObjects(level, sched);
@@ -589,45 +595,74 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "MPM" ));
 }
-//__________________________________
-//  Diagnostic task: compute the total number of particles
-void SerialMPM::scheduleTotalParticleCount(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
+
+//______________________________________________________________________
+void SerialMPM::schedulePrintTriangleCount(const LevelP& level,
+                                           SchedulerP& sched)
 {
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
-                           getLevel(patches)->getGrid()->numLevels())){
-    return;
-  }
-
-  Task* t = scinew Task("SerialMPM::totalParticleCount",
-                  this, &SerialMPM::totalParticleCount);
-  t->computes(lb->partCountLabel);
-
-  sched->addTask(t, patches,matls);
+  Task* t = scinew Task("MPM::printTriangleCount",
+                        this, &SerialMPM::printTriangleCount);
+  t->requires(Task::NewDW, lb->triangleCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "Triangle" ));
 }
-//__________________________________
-//  Diagnostic task: compute the total number of particles
-void SerialMPM::totalParticleCount(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
+
+//______________________________________________________________________
+void SerialMPM::printTriangleCount(const ProcessorGroup* pg,
+                                   const PatchSubset*,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
                                    DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    long int totalParticles = 0;
+  sumlong_vartype trcount;
+  new_dw->get(trcount, lb->triangleCountLabel);
 
-    for(int m=0;m<matls->size();m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
-      int dwi = mpm_matl->getDWIndex();
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total triangles" << std::endl;
+  }
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      int numParticles  = pset->end() - pset->begin();
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero triangles were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
+}
 
-      totalParticles+=numParticles;
-    }
-    new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+//______________________________________________________________________
+void SerialMPM::schedulePrintTracerCount(const LevelP& level,
+                                         SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printTracerCount",
+                        this, &SerialMPM::printTracerCount);
+  t->requires(Task::NewDW, lb->tracerCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "Tracer" ));
+}
+//______________________________________________________________________
+//
+void SerialMPM::printTracerCount(const ProcessorGroup* pg,
+                                 const PatchSubset*, 
+                                 const MaterialSubset*, 
+                                 DataWarehouse*, 
+                                 DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, lb->tracerCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total tracers" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero tracers were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
 

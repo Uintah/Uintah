@@ -560,6 +560,14 @@ MPMLabel::MPMLabel()
   partCountLabel = VarLabel::create("particleCount",
                                    sumlong_vartype::getTypeDescription());
 
+  // Reduction variables
+  triangleCountLabel = VarLabel::create("triangleCount",
+                                   sumlong_vartype::getTypeDescription());
+
+  // Reduction variables
+  tracerCountLabel = VarLabel::create("tracerCount",
+                                   sumlong_vartype::getTypeDescription());
+
   StrainEnergyLabel = VarLabel::create( "StrainEnergy",
                         sum_vartype::getTypeDescription() );
 

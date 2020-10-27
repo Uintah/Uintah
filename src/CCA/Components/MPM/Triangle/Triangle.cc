@@ -367,6 +367,7 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->triAreaLabel);
   t->computes(d_lb->triAreaAtNodesLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
+  t->computes(d_lb->triangleCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
 }
@@ -395,6 +396,7 @@ void Triangle::initialize(const ProcessorGroup*,
       createTriangles(triangle_matl, numTriangles,
                       patch, new_dw, filename);
     }
-    cout << "Total Triangles =  " << totalTriangles << endl;
+    new_dw->put(sumlong_vartype(totalTriangles), d_lb->triangleCountLabel);
+//    cout << "Total Triangles =  " << totalTriangles << endl;
   }
 }
