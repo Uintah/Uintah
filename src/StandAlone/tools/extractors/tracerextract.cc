@@ -97,7 +97,7 @@ main( int argc, char** argv )
   bool tsup_set = false;
   string filebase;
   vector<string> particleVariable;
-  long64 particleID = 0;
+  long64 particleID = -999999;
 
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
@@ -116,7 +116,6 @@ main( int argc, char** argv )
       if (particleVariable[particleVariable.size()-1][0] == '-') 
         usage("-partvar <particle variable name>", argv[0]);
     } else if(s == "-partid"){
-//      do_partid=true;
       string id = argv[++i];
       if (id[0] == '-') 
         usage("-partid <particle id>", argv[0]);
@@ -285,14 +284,27 @@ void printParticleVariables(DataArchive* da,
         da->query(value, "t.tracerID", matl, patch, t);
         ParticleSubset* pset = pos.getParticleSubset();
         if(pset->numParticles() > 0){
-         ParticleSubset::iterator iter = pset->begin();
-          for(;iter != pset->end(); iter++){
+         if(particleID < 0){
+          for(ParticleSubset::iterator iter = pset->begin();
+                                     iter != pset->end(); iter++){
             cout << time << " " << patchIndex << " " << matl; 
             cout << " " << pos[*iter].x()
                  << " " << pos[*iter].y()
                  << " " << pos[*iter].z() ;
             cout << " " << value[*iter] << endl;
           } // end of loop over particles
+         } else {
+          for(ParticleSubset::iterator iter = pset->begin();
+                                       iter != pset->end(); iter++){
+            if(value[*iter]==particleID){
+              cout << time << " " << patchIndex << " " << matl; 
+              cout << " " << pos[*iter].x()
+                   << " " << pos[*iter].y()
+                   << " " << pos[*iter].z() ;
+              cout << " " << value[*iter] << endl;
+            }
+          } // end of loop over particles
+         }
         } // if pset not empty
       } // end of patch loop
     } // end of level loop
