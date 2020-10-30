@@ -184,6 +184,7 @@ void Tracer::scheduleInitialize(const LevelP& level,
 
   t->computes(d_lb->pXLabel);
   t->computes(d_lb->tracerIDLabel);
+  t->computes(d_lb->tracerCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));
 }
@@ -212,6 +213,7 @@ void Tracer::initialize(const ProcessorGroup*,
       createTracers(tracer_matl, numTracers,
                     patch, new_dw, filename);
     }
-    cout << "Total Tracers " << totalTracers << endl;
+    new_dw->put(sumlong_vartype(totalTracers), d_lb->tracerCountLabel);
+    //cout << "Total Tracers " << totalTracers << endl;
   }
 }
