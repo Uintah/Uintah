@@ -36,6 +36,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <iostream>
 
@@ -55,20 +56,24 @@ ParticleTest1::~ParticleTest1()
   delete lb_;
 }
 
-void ParticleTest1::problemSetup(const ProblemSpecP& params, 
-                                 const ProblemSpecP& restart_prob_spec, 
+//______________________________________________________________________
+//
+void ParticleTest1::problemSetup(const ProblemSpecP& params,
+                                 const ProblemSpecP& restart_prob_spec,
                                  GridP& /*grid*/)
 {
   m_scheduler->setPositionVar(lb_->pXLabel);
-  
+
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");
-  pt1->getWithDefault("doOutput", doOutput_, 0);
-  pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
-  
+  pt1->getWithDefault("doOutput",     m_doOutput, 0);
+  pt1->getWithDefault("doGhostCells", m_doGhostCells , 0);
+
   mymat_ = scinew SimpleMaterial();
   m_materialManager->registerSimpleMaterial(mymat_);
 }
- 
+
+//______________________________________________________________________
+//
 void ParticleTest1::scheduleInitialize(const LevelP& level,
                                        SchedulerP& sched)
 {
@@ -79,12 +84,14 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
   task->computes(lb_->pParticleIDLabel);
   sched->addTask(task, level->eachPatch(), m_materialManager->allMaterials());
 }
- 
+
 void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
                                               SchedulerP& sched)
 {
 }
 
+//______________________________________________________________________
+//
 void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
                                           SchedulerP& sched)
 {
@@ -95,6 +102,8 @@ void ParticleTest1::scheduleComputeStableTimeStep(const LevelP& level,
 
 }
 
+//______________________________________________________________________
+//
 void
 ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
@@ -105,21 +114,21 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost
   // atound-node, and 2 mixes them
-  if (doGhostCells_ == 0) {
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::None, 0);
+  if (m_doGhostCells == 0) {
+    task->requires(Task::OldDW, lb_->pParticleIDLabel, m_gn, 0);
+    task->requires(Task::OldDW, lb_->pXLabel,          m_gn, 0);
+    task->requires(Task::OldDW, lb_->pMassLabel,       m_gn, 0);
   }
-  
-  else if (doGhostCells_ == 1) {
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::AroundNodes, 1);
+
+  else if (m_doGhostCells == 1) {
+    task->requires(Task::OldDW, lb_->pXLabel,          m_gan, 1);
+    task->requires(Task::OldDW, lb_->pMassLabel,       m_gan, 1);
+    task->requires(Task::OldDW, lb_->pParticleIDLabel, m_gan, 1);
   }
-  else if (doGhostCells_ == 2) {
-    task->requires(Task::OldDW, lb_->pXLabel, Ghost::None, 0);
-    task->requires(Task::OldDW, lb_->pMassLabel, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, lb_->pParticleIDLabel, Ghost::None, 0);
+  else if (m_doGhostCells == 2) {
+    task->requires(Task::OldDW, lb_->pXLabel,          m_gn, 0);
+    task->requires(Task::OldDW, lb_->pMassLabel,       m_gan, 1);
+    task->requires(Task::OldDW, lb_->pParticleIDLabel, m_gn, 0);
   }
 
   task->computes(lb_->pXLabel_preReloc);
@@ -129,6 +138,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   lb_->d_particleState.clear();
   lb_->d_particleState_preReloc.clear();
+
   for (int m = 0; m < matls->size(); m++) {
     vector<const VarLabel*> vars;
     vector<const VarLabel*> vars_preReloc;
@@ -149,6 +159,8 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
 }
 
+//______________________________________________________________________
+//
 void ParticleTest1::computeStableTimeStep(const ProcessorGroup* /*pg*/,
                                      const PatchSubset* patches,
                                      const MaterialSubset* /*matls*/,
@@ -158,6 +170,8 @@ void ParticleTest1::computeStableTimeStep(const ProcessorGroup* /*pg*/,
   new_dw->put(delt_vartype(1), getDelTLabel(),getLevel(patches));
 }
 
+//______________________________________________________________________
+//
 void ParticleTest1::initialize(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -193,44 +207,71 @@ void ParticleTest1::initialize(const ProcessorGroup*,
   }
 }
 
+//______________________________________________________________________
+//
 void ParticleTest1::timeAdvance(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw, DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
     for( int m = 0; m<matls->size(); ++m ){
       int matl = matls->get(m);
-      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
+
+
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew;
+
       constParticleVariable<double> pmass;
       ParticleVariable<double> pmassnew;
+
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pidsnew;
 
-      old_dw->get(pmass, lb_->pMassLabel,               pset);
-      old_dw->get(px,    lb_->pXLabel,                  pset);
-      old_dw->get(pids,  lb_->pParticleIDLabel,         pset);
+      //__________________________________
+      // particle sets
+      ParticleSubset* pset_gc = nullptr;
+      ParticleSubset* pset_gn = old_dw->getParticleSubset(matl, patch);
 
-      new_dw->allocateAndPut(pmassnew, lb_->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pxnew,    lb_->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(pidsnew,  lb_->pParticleIDLabel_preReloc, pset);
+      if (m_doGhostCells == 0) {
+        pset_gc = pset_gn;
+      }
+      else if (m_doGhostCells == 1) {
+        pset_gc = old_dw->getParticleSubset(matl, patch, m_gan, 1, lb_->pXLabel);
+      }
 
+
+      DOUT( true, "pset_GC: " << *pset_gc);
+      DOUT( true, "pset_GN: " << *pset_gn);
+      ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
+
+
+      old_dw->get(pmass, lb_->pMassLabel,               pset_gc);
+      old_dw->get(px,    lb_->pXLabel,                  pset_gc);
+      old_dw->get(pids,  lb_->pParticleIDLabel,         pset_gc);
+
+      new_dw->allocateAndPut(pmassnew, lb_->pMassLabel_preReloc,       pset_gn);
+      new_dw->allocateAndPut(pxnew,    lb_->pXLabel_preReloc,          pset_gn);
+      new_dw->allocateAndPut(pidsnew,  lb_->pParticleIDLabel_preReloc, pset_gn);
+
+
+      //__________________________________
       // every timestep, move down the +x axis, and decay the mass a little bit
-      for( unsigned i = 0; i < pset->numParticles(); ++i ){
+      for( unsigned i = 0; i < pset_gn->numParticles(); ++i ){
         Point pos( px[i].x() + .25, px[i].y(), px[i].z());
-        pxnew[i] = pos;
-        pidsnew[i] = pids[i];
+        pxnew[i]    = pos;
+        pidsnew[i]  = pids[i];
         pmassnew[i] = pmass[i] *.9;
-        if (doOutput_)
-          cout << " Patch " << patch->getID() << ": ID " 
-               << pidsnew[i] << ", pos " << pxnew[i] 
-               << ", mass " << pmassnew[i] << endl;
+        if (m_doOutput) {
+         DOUT( true, " Patch " << patch->getID()
+                      << ": ID " << pidsnew[i]
+                      << ", pos " << pxnew[i]
+                      << ", mass " << pmassnew[i] );
+        }
       }
       new_dw->deleteParticles(delset);
     }

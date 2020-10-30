@@ -107,8 +107,13 @@ WARNING
     ExamplesLabel* lb_;
     double delt_;
     SimpleMaterial* mymat_;
-    int doOutput_;
-    int doGhostCells_;
+    int m_doOutput;
+    int m_doGhostCells;
+    
+    Ghost::GhostType m_gac = Ghost::AroundCells;
+    Ghost::GhostType m_gan = Ghost::AroundNodes;
+    Ghost::GhostType  m_gn = Ghost::None;
+    
     ParticleTest1(const ParticleTest1&);
     ParticleTest1& operator=(const ParticleTest1&);
 
