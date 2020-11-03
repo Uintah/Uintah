@@ -98,17 +98,30 @@ WARNING
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, 
                                DataWarehouse* new_dw);
-                               
-    void timeAdvance(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    void schedTask1( const LevelP & level, 
+                     SchedulerP   & sched);    
+                
+    void task1(const ProcessorGroup *,
+               const PatchSubset    * patches,
+               const MaterialSubset * matls,
+               DataWarehouse        * old_dws, 
+               DataWarehouse        * new_dw);
+
+    void schedTask2( const LevelP & level, 
+                     SchedulerP   & sched);    
+                
+    void task2(const ProcessorGroup *,
+               const PatchSubset    * patches,
+               const MaterialSubset * matls,
+               DataWarehouse        * old_dws, 
+               DataWarehouse        * new_dw);
 
     ExamplesLabel* lb_;
     double delt_;
     SimpleMaterial* mymat_;
     int m_doOutput;
-    int m_doGhostCells;
+    int m_NumGC;
     
     Ghost::GhostType m_gac = Ghost::AroundCells;
     Ghost::GhostType m_gan = Ghost::AroundNodes;

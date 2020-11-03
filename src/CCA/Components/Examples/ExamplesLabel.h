@@ -75,8 +75,10 @@ namespace Uintah {
 
     // For ParticleTest1
     const VarLabel* pXLabel;
+    const VarLabel* pXLabel_1;
     const VarLabel* pXLabel_preReloc;
     const VarLabel* pMassLabel;
+    const VarLabel* pMassLabel_1;
     const VarLabel* pMassLabel_preReloc;
     const VarLabel* pParticleIDLabel;
     const VarLabel* pParticleIDLabel_preReloc;

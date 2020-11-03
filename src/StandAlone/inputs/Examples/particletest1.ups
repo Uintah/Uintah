@@ -21,7 +21,9 @@
         <filebase>particletest1.uda</filebase>
        <outputInterval>1</outputInterval>
        <save label = "p.mass"/>
+       <save label = "p.mass1"/>
        <save label = "p.x"/>
+       <save label = "p.x1"/>
        <save label = "p.particleID"/>
        <checkpoint cycle = "2" interval = "1"/>
    </DataArchiver>
@@ -32,7 +34,7 @@
    </LoadBalancer>
 
    <ParticleTest1>
-      <doOutput>1</doOutput>
+      <doOutput>     1 </doOutput>
       <doGhostCells> 1 </doGhostCells>
       
    </ParticleTest1>
@@ -40,10 +42,10 @@
     <Grid>
        <Level>
            <Box label = "1">
-              <lower>[0,0,0]</lower>
-              <upper>[50.0,50.0,50.0]</upper>
+              <lower>      [0,0,0]   </lower>
+              <upper>      [50,50,50]</upper>
                <resolution>[50,50,50]</resolution>
-              <patches>[2,1,1]</patches>
+              <patches>    [2,1,1]   </patches>
            </Box>
        </Level>
     </Grid>
