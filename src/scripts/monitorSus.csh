@@ -15,7 +15,7 @@ if($#argv != 6) then
   echo "Usage: $0 "
   echo "This script searches the output file every N minutes for"
   echo " an increase in the timestep number.  If the timestep"
-  echo " is not increasing the jobID is killed with a qdel command"
+  echo " is not increasing the jobID is killed with a scancel command"
   echo ""
   echo " Manditory inputs:"
   echo "   --jid      <job id that will be killed>"
@@ -52,10 +52,10 @@ while ($#argv)
    endsw
 end
 
-set tmp = (`which qdel`)
+set tmp = (`which scancel`)
 if ( $status ) then
   echo ""
-  echo " ERROR: Could not find the command qdel."
+  echo " ERROR: Could not find the command scancel."
   echo ""
   exit(-1)
 endif
@@ -71,7 +71,7 @@ while (1)
   if $ts == $ts_old then
     date
     echo "  MonitorSus.csh: Now killing job $jid on timestep $ts_old"
-    qdel $jid
+    scancel $jid
     
     exit(1)
   else
