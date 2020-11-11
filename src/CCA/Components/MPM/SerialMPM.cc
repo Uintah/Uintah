@@ -4916,7 +4916,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         vel/=sumSk;
 
         tx_new[idx] = tx[idx] + vel*delT;
-        tx_new[idx] += 2.*surf*delT;
+        tx_new[idx] += surf*delT;
 
 #if 0
         // Check to see if a tracer has left the domain
@@ -5085,7 +5085,7 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
         vel/=sumSk;
   
         right += vel*delT;
-        right += 2.*surf*delT;
+        right += surf*delT;
   
         // Next update the position of the "left" end of the segment
         // Get the node indices that surround the cell
@@ -5104,7 +5104,7 @@ void SerialMPM::updateLineSegments(const ProcessorGroup*,
         vel/=sumSk;
   
         left += vel*delT;
-        left += 2.*surf*delT;
+        left += surf*delT;
 
         tx_new[idx] = 0.5*(left+right);
 
@@ -5758,7 +5758,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           vel/=sumSk;
 
           P[itv] += vel*delT;
-          P[itv] += 2.*surf*delT;
+          P[itv] += surf*delT;
 
           // Check to see if a vertex has left the domain
           // If vertices are placed properly (on domain boundaries),
