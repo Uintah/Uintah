@@ -42,6 +42,8 @@
 
 #include <iostream>
 
+#define ONE 1                 // This changes the number of ghost cells added to task1.
+
 using namespace std;
 
 using namespace Uintah;
@@ -125,19 +127,22 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
     vector<const VarLabel*> vars;
     vector<const VarLabel*> vars_preReloc;
 
-    vars.push_back(lb_->pMassLabel);
-    vars.push_back(lb_->pParticleIDLabel);
+    vars.push_back( lb_->pMassLabel );
+    vars.push_back( lb_->pParticleIDLabel );
 
-    vars_preReloc.push_back(lb_->pMassLabel_preReloc);
-    vars_preReloc.push_back(lb_->pParticleIDLabel_preReloc);
+    vars_preReloc.push_back( lb_->pMassLabel_preReloc );
+    vars_preReloc.push_back( lb_->pParticleIDLabel_preReloc );
     lb_->d_particleState.push_back(vars);
     lb_->d_particleState_preReloc.push_back(vars_preReloc);
   }
 
-  sched->scheduleParticleRelocation(level, lb_->pXLabel_preReloc,
+  sched->scheduleParticleRelocation(level, 
+                                    lb_->pXLabel_preReloc,
                                     lb_->d_particleState_preReloc,
-                                    lb_->pXLabel, lb_->d_particleState,
-                                    lb_->pParticleIDLabel, matls);
+                                    lb_->pXLabel, 
+                                    lb_->d_particleState,
+                                    lb_->pParticleIDLabel, 
+                                    matls);
 
 }
 
@@ -209,8 +214,8 @@ ParticleTest1::schedTask1( const LevelP & level,
   }
   else if (m_NumGC > 0) {
     task->requires( Task::OldDW, lb_->pParticleIDLabel, m_gn, 0 );
-    task->requires( Task::OldDW, lb_->pXLabel,          m_gac, m_NumGC+1 );
-    task->requires( Task::OldDW, lb_->pMassLabel,       m_gac, m_NumGC+1 );
+    task->requires( Task::OldDW, lb_->pXLabel,          m_gac, m_NumGC+ONE );
+    task->requires( Task::OldDW, lb_->pMassLabel,       m_gac, m_NumGC+ONE );
   }
 
   task->computes( lb_->pXLabel_1 );
@@ -250,7 +255,7 @@ void ParticleTest1::task1(const ProcessorGroup * pg,
         pset_gc = pset_gn;
       }
       else if (m_NumGC >0 ) {
-        pset_gc = old_dw->getParticleSubset( matl, patch, m_gac, m_NumGC+1, lb_->pXLabel );
+        pset_gc = old_dw->getParticleSubset( matl, patch, m_gac, m_NumGC+ONE, lb_->pXLabel );
       }
 
       int rank = pg->myRank();
@@ -383,9 +388,9 @@ void ParticleTest1::task2(const ProcessorGroup * pg,
       for(auto iter = pset_gc->begin(); iter != pset_gc->end(); iter++){
         particleIndex idx = *iter;
 
-        //Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
+        Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
         
-        Point pos_new(px_1[idx]);
+        //Point pos_new(px_1[idx]);
 
         if ( patch->containsPoint(px_1[idx]) ){
           px_new[*i]    = pos_new;
