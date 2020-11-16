@@ -42,7 +42,7 @@
 
 #include <iostream>
 
-#define ONE 1                 // This changes the number of ghost cells added to task1.
+#define ONE 1                // This changes the number of ghost cells requested in task1.
 
 using namespace std;
 
@@ -136,12 +136,12 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level,
     lb_->d_particleState_preReloc.push_back(vars_preReloc);
   }
 
-  sched->scheduleParticleRelocation(level, 
+  sched->scheduleParticleRelocation(level,
                                     lb_->pXLabel_preReloc,
                                     lb_->d_particleState_preReloc,
-                                    lb_->pXLabel, 
+                                    lb_->pXLabel,
                                     lb_->d_particleState,
-                                    lb_->pParticleIDLabel, 
+                                    lb_->pParticleIDLabel,
                                     matls);
 
 }
@@ -259,8 +259,8 @@ void ParticleTest1::task1(const ProcessorGroup * pg,
       }
 
       int rank = pg->myRank();
-      DOUT( true, "["<<rank<<"] Task1: pset_GC: " << *pset_gc);
-      DOUT( true, "["<<rank<<"] Task1: pset_GN: " << *pset_gn);
+//      DOUTR( true, "-Task1: pset_GC: " << *pset_gc);
+//      DOUTR( true, "-Task1: pset_GN: " << *pset_gn);
       ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
 
 
@@ -278,22 +278,21 @@ void ParticleTest1::task1(const ProcessorGroup * pg,
       for(auto iter = pset_gc->begin(); iter != pset_gc->end(); iter++){
         particleIndex idx = *iter;
 
-        // Point pos( px[i].x() + .25, px[i].y(), px[i].z() );
-        // pmass_1[i] = pmass[i] *.9;
-
         if ( patch->containsPoint(px[idx]) ){
           // do nothing
           px_1[*i]    = px[idx];
           pmass_1[*i] = pmass[idx];
-
+#if 0
           if (m_doOutput) {
-           DOUT( true, "["<<rank<<"] Task 1 Patch " << patch->getID()
+           DOUTR( true, "] Task 1 Patch " << patch->getID()
                         << ": i " << *i
                         << ": ID "   << pids[*i]
                         << ", pos "  << px_1[*i].x()
                         << ", mass " << pmass_1[*i] );
-            ++i;
+
           }
+#endif
+          ++i;
         }
       }
       new_dw->deleteParticles(delset);
@@ -313,7 +312,7 @@ ParticleTest1::schedTask2( const LevelP & level,
   // atound-node, and 2 mixes them
   if (m_NumGC == 0) {
     task->requires( Task::NewDW, lb_->pXLabel_1,        m_gn, 0);
-    task->requires( Task::NewDW, lb_->pMassLabel_1,     m_gn, 0);
+    task->requires( Task::NewDW, lb_->pMassLabel,       m_gn, 0);
     task->requires( Task::NewDW, lb_->pParticleIDLabel, m_gn, 0);
   }
 
@@ -321,7 +320,7 @@ ParticleTest1::schedTask2( const LevelP & level,
     task->requires( Task::OldDW, lb_->pParticleIDLabel, m_gn, 0);
     task->requires( Task::OldDW, lb_->pXLabel,          m_gac, m_NumGC);
     task->requires( Task::NewDW, lb_->pXLabel_1,        m_gac, m_NumGC);
-    task->requires( Task::NewDW, lb_->pMassLabel_1,     m_gac, m_NumGC);
+    task->requires( Task::OldDW, lb_->pMassLabel,       m_gac, m_NumGC);
   }
 
   task->computes(lb_->pXLabel_preReloc);
@@ -349,7 +348,7 @@ void ParticleTest1::task2(const ProcessorGroup * pg,
       constParticleVariable<Point> px_1;
       ParticleVariable<Point>      px_new;
 
-      constParticleVariable<double> pmass_1;
+      constParticleVariable<double> pmass;
       ParticleVariable<double>      pmass_new;
       constParticleVariable<long64> pids;
       ParticleVariable<long64>      pids_new;
@@ -367,45 +366,63 @@ void ParticleTest1::task2(const ProcessorGroup * pg,
       }
 
       int rank = pg->myRank();
-      DOUT( true, "["<<rank<<"] Task2 pset_GC: " << *pset_gc);
-      DOUT( true, "["<<rank<<"] Task2 pset_GN: " << *pset_gn);
+      DOUTR( true, "-Task2 pset_gc: " << *pset_gc);
+      DOUTR( true, "-Task2 pset_GN: " << *pset_gn);
 
-      new_dw->get( pmass_1, lb_->pMassLabel_1,       pset_gc);
+      old_dw->get( pmass,   lb_->pMassLabel,         pset_gc);
+      old_dw->get( px_old,  lb_->pXLabel,            pset_gc );
       new_dw->get( px_1,    lb_->pXLabel_1,          pset_gc);
       old_dw->get( pids,    lb_->pParticleIDLabel,   pset_gn);
 
-      new_dw->allocateAndPut( pmass_new, lb_->pMassLabel_preReloc, pset_gn);
-      new_dw->allocateAndPut( px_new,    lb_->pXLabel_preReloc,    pset_gn);
+      new_dw->allocateAndPut( pmass_new, lb_->pMassLabel_preReloc,       pset_gn);
+      new_dw->allocateAndPut( px_new,    lb_->pXLabel_preReloc,          pset_gn);
       new_dw->allocateAndPut( pids_new,  lb_->pParticleIDLabel_preReloc, pset_gn);
 
       pids_new.copyData(pids);
-      
-      //__________________________________
-      // Move particles along +x axis, and decrement the mass
 
+
+      //__________________________________
+      //  Decrement the mass
       auto i = pset_gn->begin();
 
       for(auto iter = pset_gc->begin(); iter != pset_gc->end(); iter++){
         particleIndex idx = *iter;
 
-        Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
-        
-        //Point pos_new(px_1[idx]);
-
         if ( patch->containsPoint(px_1[idx]) ){
-          px_new[*i]    = pos_new;
-          pmass_new[*i] = pmass_1[idx] *.9;
+          pmass_new[*i] = pmass[idx] *.9;
 
-          if (m_doOutput) {
-           DOUT( true, "["<<rank<<"] Task2 Patch " << patch->getID()
-                        << ": i " << *i
-                        << ": ID " << pids[*i]
-                        << ": px " << px_new[*i].x()
-                        << ", mass " << pmass_new[*i] );
-          }
          ++i;
         }
       }
+
+      //__________________________________
+      // Move particles along +x axis
+      i = pset_gn->begin();
+
+      for(auto iter = pset_gc->begin(); iter != pset_gc->end(); iter++){
+        particleIndex idx = *iter;
+
+        if ( patch->containsPoint(px_1[idx]) ){
+          Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
+          px_new[*i]  = pos_new;
+
+         ++i;
+        }
+      }
+      //__________________________________
+      //
+      if (m_doOutput) {
+        for(auto iter = pset_gn->begin(); iter != pset_gn->end(); iter++){
+          particleIndex idx = *iter;
+
+           DOUTR( true, "-Task2 Patch " << patch->getID()
+                        << ": idx " << idx
+                        << ": ID " << pids[idx]
+                        << ": px " << px_new[idx].x()
+                        << ", mass " << pmass_new[idx] );
+          }
+      }
+
 
       if( i != pset_gn->end() ){
         throw InternalError("task2:: there's a problem with the pset_gn iterator", __FILE__, __LINE__);

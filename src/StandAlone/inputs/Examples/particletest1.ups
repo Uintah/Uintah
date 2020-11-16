@@ -21,9 +21,9 @@
         <filebase>particletest1.uda</filebase>
        <outputInterval>1</outputInterval>
        <save label = "p.mass"/>
-       <save label = "p.mass1"/>
+<!--       <save label = "p.mass1"/> -->
        <save label = "p.x"/>
-       <save label = "p.x1"/>
+ <!--      <save label = "p.x1"/> -->
        <save label = "p.particleID"/>
        <checkpoint cycle = "2" interval = "1"/>
    </DataArchiver>
