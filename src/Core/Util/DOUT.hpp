@@ -53,9 +53,9 @@
 #define DOUTR( cond, ... )                                 \
   if ( cond) {                                             \
     std::ostringstream dout_msg;                           \
-    dout_msg << __VA_ARGS__;                               \
-    dout_msg << "Rank ";                                   \
+    dout_msg << "Rank-";                                   \
     dout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
+    dout_msg << __VA_ARGS__;                               \
     printf("%s\n",dout_msg.str().c_str());                 \
   }
 
@@ -64,7 +64,7 @@
 #define DOUTALL( cond, ... )                               \
   if (cond) {                                              \
     std::ostringstream pout_msg;                           \
-    pout_msg << "Rank ";                                   \
+    pout_msg << "Rank-";                                   \
     pout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << " "; \
     pout_msg << __FILE__ << ":";                           \
     pout_msg << __LINE__ << " : ";                         \
@@ -76,7 +76,7 @@
 //  For threads, Rank and thread reported
 #define TOUT( ... ) {                                       \
     std::ostringstream tout_msg;                            \
-    tout_msg << "Rank ";                                    \
+    tout_msg << "Rank-";                                    \
     tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
     tout_msg << "Thread ";                                  \
     tout_msg << MPI::Impl::tid() << ") ";                   \
@@ -88,7 +88,7 @@
 //  For threads, with rank, thread, file, and line, reported
 #define TOUTALL( ... ) {                                    \
     std::ostringstream tout_msg;                            \
-    tout_msg << "Rank ";                                    \
+    tout_msg << "Rank-";                                    \
     tout_msg << MPI::Impl::prank( MPI_COMM_WORLD ) << "  "; \
     tout_msg << "Thread ";                                  \
     tout_msg << MPI::Impl::tid() << ") ";                   \

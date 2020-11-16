@@ -248,7 +248,7 @@ void MPIScheduler::initiateTask( DetailedTask * dtask
   if (only_old_recvs) {
     return;
   }
-
+  
   postMPIRecvs(dtask, only_old_recvs, abort_point, iteration);
 }
 
@@ -556,7 +556,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
       // The first thread that calls this on the batch will return true while subsequent threads
       // calling this will block and wait for that first thread to receive the data.
       if (!batch->makeMPIRequest()) {
-        DOUT(g_dbg, "Someone else already receiving it");
+        DOUTR(g_dbg, "Someone else already receiving it");
         continue;
       }
 
@@ -617,10 +617,10 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
           continue;
         }
 
-        DOUT(g_dbg, "Rank-" << my_rank << " <-- receiving " << *req << ", ghost type: " << "\""
-                            << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
-                            << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
-                            << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) << ", into dw " << dw->getID());
+        DOUTR(g_dbg,  " <-- receiving " << *req << ", ghost type: " << "\""
+                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
+                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
+                      << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) << ", into dw " << dw->getID());
 
         OnDemandDataWarehouse* posDW;
 
@@ -674,9 +674,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->nRanks());
 
-        DOUT(g_mpi_dbg, "Rank-" << my_rank << " Posting recv for message number "
-                                << batch->m_message_tag << " from rank-" << from
-                                << ", length: " << count << " (bytes)");
+        DOUTR(g_mpi_dbg, " Posting recv for message number "
+                          << batch->m_message_tag << " from rank-" << from
+                          << ", length: " << count << " (bytes)");
 
         //---------------------------------------------------------------------------
         // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
@@ -856,7 +856,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     numTasksDone++;
 
-    if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+//   if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
+    
+    if (g_task_order ) {
       std::ostringstream task_name;
       task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
 

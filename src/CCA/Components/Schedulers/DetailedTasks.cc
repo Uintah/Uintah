@@ -739,7 +739,8 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << "          USING PREVIOUSLY CREATED BATCH!");
   }
 
-  IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
+  IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX);
+  IntVector varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   // create the new dependency
   DetailedDep* new_dep = scinew DetailedDep(batch->m_head, comp, req, to, fromPatch, matl, low, high, cond);
@@ -755,6 +756,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
   // This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
   DetailedDep* insert_dep = parent_dep;
+
 
   // if we have matching dependencies we will extend the new dependency to include the old one and delete the old one
   while (matching_dep != nullptr) {
@@ -795,7 +797,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
       PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (req->m_var->getName() == "p.x") {
-        DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
+        DOUTR(g_detailed_tasks_dbg,  " erasing particles from " << fromresource << " to " << toresource << " var " << *req->m_var
                                            << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
                                            << " cond " << cond << " dw " << req->mapDataWarehouse());
       }
@@ -810,6 +812,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         // if the count is zero erase it from the sends list
         if (iter->count_ == 0) {
           m_particle_sends[toresource].erase(iter);
+          DOUTR(g_detailed_tasks_dbg,  " AAA erase Particle sends: " << *iter );
         }
       }
       else if (toresource == my_rank) {
@@ -821,9 +824,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
         // if the count is zero erase it from the recvs list
         if (iter->count_ == 0) {
           m_particle_recvs[fromresource].erase(iter);
+          DOUTR(g_detailed_tasks_dbg,  " AAA erase Particle recvs: " << *iter );
         }
       }
-    }
+    }  // particles
 
     //remove the matching_dep from the batch list
     if (parent_dep == nullptr) {
@@ -891,11 +895,14 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
 
     }
     if (req->m_var->getName() == "p.x") {
-      DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
-                                         << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
-                                         << req->mapDataWarehouse());
+      DOUTR(g_detailed_tasks_dbg, " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+                                   << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
+                                   << req->mapDataWarehouse());
+      
     }
   }
+
+
 
   if (g_detailed_tasks_dbg) {
     std::ostringstream message;
@@ -906,7 +913,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask     * from
     else {
       message << "nullptr";
     }
-    DOUT(true, message.str());
+    DOUTR(true, message.str());
   }
 }
 
@@ -1654,6 +1661,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
           {
         //add to the sends list
         m_particle_sends[toresource].insert(pmg);
+        DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " -- insert Particle sends: " << pmg );
       } else {
         //increment count
         iter->count_++;
@@ -1663,6 +1671,7 @@ void DetailedTasks::createInternalDependencyBatch(       DetailedTask     * from
       if (iter == m_particle_recvs[fromresource].end()) {
         // add to the recvs list
         m_particle_recvs[fromresource].insert(pmg);
+        DOUT(g_detailed_tasks_dbg, "Rank-" << my_rank << " -- insert Particle recvs: " << pmg );
       } else {
         // increment the count
         iter->count_++;

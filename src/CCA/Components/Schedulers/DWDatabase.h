@@ -38,6 +38,7 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <ostream>
 #include <sstream>
@@ -106,7 +107,7 @@ public:
 
   void merge( const KeyDatabase<DomainType>& newDB );
 
-  void print( std::ostream & out, int rank ) const;
+  void print( const int rank ) const;
 
 private:
 
@@ -180,7 +181,7 @@ class DWDatabase {
                         ) const;
 
 
-    void print( std::ostream & out, int rank ) const;
+    void print( const int rank ) const;
 
 
     void cleanForeign();
@@ -482,18 +483,20 @@ KeyDatabase<DomainType>::clear()
 //
 template<class DomainType>
 void
-KeyDatabase<DomainType>::print( std::ostream & out, int rank ) const
+KeyDatabase<DomainType>::print( const int rank ) const
 {
+  DOUT( true, "Rank-"<<rank<< " __________________________________DWDatabase ")
   for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     const DomainType* dom = vlm.m_domain;
     if (dom) {
-      out << rank << " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index << '\n';
+      DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index );
     }
     else {
-      out << rank << " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index << '\n';
+      DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index );
     }
   }
+  DOUT( true, "Rank-"<<rank<< " __________________________________")
 }
 
 //______________________________________________________________________
@@ -717,20 +720,24 @@ DWDatabase<DomainType>::getlist( const VarLabel               * label
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::print( std::ostream & out, int rank ) const
+DWDatabase<DomainType>::print( const int rank ) const
 {
+  DOUT( true, "Rank-"<<rank<< " __________________________________DWDatabase ")
+  
   for (auto keyiter = m_keyDB->m_keys.begin(); keyiter != m_keyDB->m_keys.end(); ++keyiter) {
     if (m_vars[keyiter->second]) {
       const VarLabelMatl<DomainType>& vlm = keyiter->first;
       const DomainType* dom = vlm.m_domain;
+      
       if (dom) {
-        out << rank << " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index << '\n';
+        DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index );
       }
       else {
-        out << rank << " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index << '\n';
+        DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index );
       }
     }
   }
+  DOUT( true, "Rank-"<<rank<< " __________________________________")
 }
 
 //______________________________________________________________________
