@@ -710,14 +710,16 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks * dts
         // make room for other multiple subsets pointing into one variable - additional subsets
         // referenced at the index above the last index of the previous subset
         if( data[i] > 0 && foreign_particles > 0 ) {
-          DOUT(g_particles_dbg, d_myworld->myRank() << "  adjusting particles by " << foreign_particles);
+          DOUTR(g_particles_dbg,  "  adjusting particles by " << foreign_particles);
+
           for( ParticleSubset::iterator iter = subset->begin(); iter != subset->end(); iter++ ) {
             *iter = *iter + foreign_particles;
           }
         }
         foreign_particles += data[i];
 
-        DOUT(g_particles_dbg, d_myworld->myRank() << "  Setting foreign particles of patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " " << foreign_particles);
+        DOUTR(g_particles_dbg, "  Setting foreign particles of patch " << pmg.patch_->getID()
+                               << " matl " << pmg.matl_ << " foreign_particles" << foreign_particles);
       }
       data_index++;
     }
@@ -748,12 +750,14 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->m_low;
+
+      IntVector low   = dep->m_low;
       IntVector high = dep->m_high;
 
       if (!m_var_DB.exists(label, matlIndex, patch)) {
         SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
       }
+
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( m_var_DB.get( label, matlIndex, patch ) );
 
       int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
@@ -775,23 +779,33 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch       * batch
       else {
         sendset = old_dw->m_send_state.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
       }
+
       if (!sendset) {
         // new dw send.  The NewDW doesn't yet know (on the first time) about this subset if it is on a different process.
         // Go ahead and calculate it, but there is no need to send it, since the other proc already knows about it.
         ASSERT( old_dw != this );
+
         ParticleSubset* pset = var->getParticleSubset();
         sendset = scinew ParticleSubset( 0, matlIndex, patch, low, high );
+
         constParticleVariable<Point> pos;
         old_dw->get( pos, pos_var, pset );
+
         for( auto iter = pset->begin(); iter != pset->end(); ++iter ) {
           particleIndex idx = *iter;
           if( Patch::containsIndex( low, high, patch->getCellIndex( pos[idx] ) ) ) {
             sendset->addParticle( idx );
           }
         }
+
         old_dw->m_send_state.add_sendset( sendset, dest, patch, matlIndex, low, high, old_dw->d_generation );
-        DOUT(g_particles_dbg, d_myworld->myRank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high);
+        DOUTR(g_particles_dbg, "  NO SENDSET: posVarLabel: " << pos_var->getName() << " Patch: " << patch->getID()
+                               << " matl " << matlIndex << " "
+                               << low << " " << high
+                               << " dest: " << dest <<"\n    " << *sendset);
+        old_dw->m_send_state.print();
       }
+
       ASSERT( sendset );
       if( sendset->numParticles() > 0 ) {
         var->getMPIBuffer( buffer, sendset );
@@ -855,12 +869,14 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch       * batch
       IntVector low = dep->m_low;
       IntVector high = dep->m_high;
       bool whole_patch_pset = false;
+
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
       //
       // if we already have a subset for the entire patch, there's little point
       // in getting another one (and if we did, it would cause synchronization problems - see
       // comment in sendMPI)
+
       ParticleSubset* recvset = nullptr;
       if( lb && (lb->getOldProcessorAssignment( patch ) == my_rank || lb->getPatchwiseProcessorAssignment( patch ) == my_rank) ) {
         // first part of the conditional means "we used to own the ghost data so use the same particles"
@@ -1000,7 +1016,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
     }
     count += sendcount;
   }
-  
+
   //__________________________________
   //
   int packsize;
@@ -1022,13 +1038,13 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
   }
 
   std::vector<char> recvbuf( packsize );
-  
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, name " << label->getName() 
+
+  DOUTR(g_mpi_dbg,  " allreduce, name " << label->getName()
        << " sendbuf.size() " << sendbuf.size() << " level " << (level ? level->getID() : -1));
 
   int error = Uintah::MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getGlobalComm( nComm ) );
 
-  DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " allreduce, done " << label->getName() 
+  DOUTR(g_mpi_dbg,  " allreduce, done " << label->getName()
       << " recvbuf.size() " << recvbuf.size() << " level " << (level ? level->getID() : -1));
 
   if( error ) {
@@ -1049,7 +1065,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
     }
     var->putMPIData( recvbuf, unpackindex );
   }
-  
+
   if( matls != inmatls ) {
     delete matls;
   }
@@ -1125,7 +1141,7 @@ OnDemandDataWarehouse::put( const SoleVariableBase & var
   checkPutAccess(label, matlIndex, nullptr, false);
 
   printDebuggingPutInfo( label, matlIndex, level, __LINE__ );
-  
+
   // Put it in the database
   if (!m_level_DB.exists(label, matlIndex, level)) {
     m_level_DB.put(label, matlIndex, level, var.clone(), d_scheduler->copyTimestep(), false);
@@ -1149,9 +1165,9 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex   numParticles
 
   if (g_dw_get_put_dbg.active()) {
     std::stringstream mesg;
-    mesg << d_myworld->myRank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+    mesg << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
          << " (" << low << ", " << high << ") size: " << numParticles << "\n";
-    DOUT(true, mesg.str());
+    DOUTR(true, mesg.str());
   }
 
   ASSERT(!patch->isVirtual());
@@ -1183,10 +1199,10 @@ OnDemandDataWarehouse::saveParticleSubset(       ParticleSubset * psubset
 
   if (g_dw_get_put_dbg.active()) {
     std::stringstream mesg;
-    mesg << d_myworld->myRank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
+    mesg << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
          << " P: " << patch->getID() << " (" << low << ", " << high << ") size: "
          << psubset->numParticles() << "\n";
-    DOUT(true, mesg.str());
+    DOUTR(true, mesg.str());
   }
 
   insertPSetRecord( m_pset_db, patch, low, high, matlIndex, psubset );
@@ -1197,15 +1213,14 @@ OnDemandDataWarehouse::saveParticleSubset(       ParticleSubset * psubset
 void
 OnDemandDataWarehouse::printParticleSubsets()
 {
-  std::cout << "----------------------------------------------\n";
-  std::cout << "-- Particle Subsets: \n\n";
+  DOUTR( true,  "----------------------------------------------");
+  DOUTR( true,  "-- Particle Subsets: Available psets on DW " << d_generation << ":" );
 
   psetDBType::iterator iter;
-  std::cout << d_myworld->myRank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = m_pset_db.begin(); iter != m_pset_db.end(); iter++) {
-    std::cout << d_myworld->myRank() << " " <<*(iter->second) << std::endl;
+    DOUTR( true, *(iter->second) );
   }
-  std::cout << "----------------------------------------------\n";
+  DOUTR( true,   "----------------------------------------------" );
 }
 
 //______________________________________________________________________
@@ -1226,7 +1241,7 @@ OnDemandDataWarehouse::insertPSetRecord(       psetDBType     & subsetDB
   ParticleSubset* subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
   if (subset != nullptr) {
     if (d_myworld->myRank() == 0) {
-      std::cout << d_myworld->myRank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << std::endl;
+      DOUTR( true, "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high );
       printParticleSubsets();
     }
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
@@ -2157,7 +2172,7 @@ OnDemandDataWarehouse::put(       GridVariableBase & var
 
   checkPutAccess(label, matlIndex, patch, replace);
 
-  DOUT(g_dw_get_put_dbg, "Putting: " << *label << " MI: " << matlIndex << " patch: " << *patch << " into DW: " << d_generation);
+  DOUTR(g_dw_get_put_dbg, "Putting: " << *label << " MI: " << matlIndex << " patch: " << *patch << " into DW: " << d_generation);
 
    // Put it in the database
    IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
@@ -2322,7 +2337,7 @@ OnDemandDataWarehouse::getLevel(       constGridVariableBase & constGridVar
 
   //__________________________________
   //  Diagnostics
-  DOUT(g_dw_get_put_dbg, d_myworld->myRank() << " getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex());
+  DOUTR(g_dw_get_put_dbg, " getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex());
 
   constGridVar = *dynamic_cast<GridVariableBase*>(gridVar);
   delete gridVar;
@@ -2554,9 +2569,9 @@ OnDemandDataWarehouse::getRegionModifiable(       GridVariableBase & var
 
   if (g_dw_get_put_dbg.active()) {
     std::ostringstream mesg;
-    mesg << d_myworld->myRank() << "  getRegionModifiable() Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
+    mesg << "  getRegionModifiable() Variable " << *label << ", matl " << matlIndex << ", L-" << level->getIndex()
          << " For region: " << reqLow << " " << reqHigh << "  has been copied";
-    DOUT(true, mesg.str());
+    DOUTR(true, mesg.str());
   }
 }
 
@@ -3245,11 +3260,11 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             if(!dtask) {
-              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."  
+              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."
                         << " You need to update the task's callback function to include more parameters which supplies this information."
-                        << " Then you need to pass that detailed task pointer into the transferFrom method." 
+                        << " Then you need to pass that detailed task pointer into the transferFrom method."
                         << " As an example, please see the parameters for UnifiedSchedulerTest::timeAdvanceUnified."   << std::endl;
-              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__); 
+              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__);
             }
             //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
             bool foundGPU = getGPUDW(0)->transferFrom(((DetailedTask*)dtask)->getCudaStreamForThisTask(0),
@@ -3450,14 +3465,14 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel         * label
           }
           if (g_dw_get_put_dbg.active()) {
             std::ostringstream mesg;
-            mesg << d_myworld->myRank() << " Task running is: " << runningTask->getName();
+            mesg << " Task running is: " << runningTask->getName();
             mesg << std::left;
             mesg.width(10);
             mesg << "\t" << varname;
             mesg << std::left;
             mesg.width(10);
             mesg << " \t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
-            DOUT(true , mesg.str());
+            DOUTR(true , mesg.str());
           }
         }
         else {
@@ -3944,8 +3959,8 @@ OnDemandDataWarehouse::print()
        << "  -----------------------";
   DOUT(true, mesg.str());
 
-  m_var_DB.print(std::cout, d_myworld->myRank());
-  m_level_DB.print(std::cout, d_myworld->myRank());
+  m_var_DB.print( d_myworld->myRank());
+  m_level_DB.print( d_myworld->myRank());
 }
 
 //______________________________________________________________________
@@ -3960,11 +3975,11 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
   if (g_dw_get_put_dbg.active()) {
     int L_indx = patch->getLevel()->getIndex();
     std::ostringstream mesg;
-    mesg << d_myworld->myRank() << " Putting (line: " << line << ") ";
+    mesg << " Putting (line: " << line << ") ";
     mesg << std::left;
     mesg.width(20);
     mesg << *label << " MI: " << matlIndex << " L-" << L_indx << " " << *patch << " \tinto DW: " << d_generation;
-    DOUT(true, mesg.str());
+    DOUTR(true, mesg.str());
   }
 }
 
@@ -3984,10 +3999,10 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel * label
     }
 
     std::ostringstream mesg;
-    mesg << d_myworld->myRank() << " Putting (line: "<<line<< ") ";
+    mesg << " Putting (line: "<<line<< ") ";
     mesg << std::left;
     mesg.width( 20 );
     mesg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" " << " \tinto DW: " << d_generation;
-    DOUT(true, mesg.str());
+    DOUTR(true, mesg.str());
   }
 }
