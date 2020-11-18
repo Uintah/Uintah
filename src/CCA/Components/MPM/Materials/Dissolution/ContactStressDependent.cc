@@ -24,6 +24,19 @@
 
 // ContactStressDependent.cc
 // One of the derived Dissolution classes.
+//
+// This dissolution model generates a rate of dissolution that is proportional
+// to the difference between the stress at an interface and a user specified 
+// threshold stress.
+// "rate of dissolution" is the velocity with which a surface is removed.
+// In this model, dissolution occurs if the following criteria are met:
+// 1.  The "master_material" (the material being dissolved), and at least
+//     one of the materials in the "materials" list is present.
+// 2.  The pressure exceeds the "thresholdPressure"
+// The dissolution rate is converted to a rate of mass decrease which is
+// then applied to identified surface particles in 
+// interpolateToParticlesAndUpdate
+
 #include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
@@ -107,7 +120,6 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<bool> inContactWithMatls(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
 
-
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,           dwi, patch, gnone, 0);
@@ -116,6 +128,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                 lb->gLSContactForceLabel, dwi, patch, gnone, 0);
       new_dw->get(gSurfaceArea[m],
                                 lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
+
       new_dw->getModifiable(massBurnRate[m],
                                 lb->massBurnFractionLabel,dwi, patch);
       new_dw->getModifiable(dLdt[m],
@@ -140,12 +153,15 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
      if(masterMatls[m]){
       int md=m;
 
-      // This isn't actually dL_dt yet, that is computed below as dLdt
+      // Extra factor of 8.0 in the following equation is there to
+      // account for the NC_CCweight. This could still use some fine tuning.
+      // In this stress dependent version of the model, dL_dt and rate are
+      // multiplied by a stress difference below.
       double dL_dt = (0.75*M_PI)
                    * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
                    * exp(-d_Ea/(d_R*d_temperature))
-                   * 4.0*3.1536e19*d_timeConversionFactor;
-      double rate = dL_dt*area;
+                   * 8.0*3.1536e19*d_timeConversionFactor;
+      double rate = 0.25*dL_dt*area;
 //      int numNodesMBRGT0 = 0;
 //      double mBRSum = 0.;
 //      double normtrac_mean = 0.;
@@ -161,25 +177,24 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           if(n==md || inContactWithMatls[n]) {
             sumMass+=gmass[n][c]; 
           }
-          if(n!=md && inContactWithMatls[n]) {
+          if(n!=md && inContactWithMatls[n] && gmass[n][c] > 1.e-100) {
             inContactMatl = n;
           }
         }
 
-        double surfArea = max(gSurfaceArea[md][c] + 
-                              gSurfaceArea[inContactMatl][c], 1.e-2*area);
-        double normtrac_ave = -1.*(gContactForce[md][c].length() + 
-                                   gContactForce[inContactMatl][c].length())
-                                   /surfArea;
-
-//        contForceTot += normtrac_ave*surfArea;
-//        contForceTot += gContactForce[md][c].length();
-
-        if(gmass[md][c] >  1.e-100  &&
-           gmass[md][c] != sumMass  && 
-           gSurfaceArea[md][c] > 1.e-3*area &&
-           gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
-          -normtrac_ave > d_StressThresh){   // Compressive stress is neg
+        if(gmass[md][c] > 1.e-100  && inContactMatl >= 0) {
+          double surfArea = max(gSurfaceArea[md][c] + 
+                                gSurfaceArea[inContactMatl][c], 1.e-2*area);
+          double normtrac_ave = -1.*(gContactForce[md][c].length() + 
+                                     gContactForce[inContactMatl][c].length())
+                                      /surfArea;
+          if( gSurfaceArea[md][c] > 1.e-3*area &&
+              gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
+             -normtrac_ave > d_StressThresh){   // Compressive stress is neg
+            double rho = gmass[md][c]/gvolume[md][c];
+            double stressDiff = (-normtrac_ave - d_StressThresh);
+            massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
+            dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 
@@ -190,18 +205,15 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
 //                 <<  gSurfaceArea[md][c] << endl;
 //            cout << "gSurfaceArea["<<inContactMatl<<"]["<<c<<"] = " 
 //                 <<  gSurfaceArea[inContactMatl][c] << endl;
-            double rho = gmass[md][c]/gvolume[md][c];
-            double stressDiff = (-normtrac_ave - d_StressThresh);
-            massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
-//            mBRSum += massBurnRate[md][c];
-//            surfArea_mean += surfArea;
-//            contForceDis += normtrac_ave*surfArea;
-            dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
+//          mBRSum += massBurnRate[md][c];
+//          surfArea_mean += surfArea;
+//          contForceDis += normtrac_ave*surfArea;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = " << NC_CCweight[c] << endl;
 //            numNodesMBRGT0++;
 //            normtrac_mean += normtrac_ave;
-        }
+          } // Stress threshold
+        } // mass is present
       } // nodes
 //      if(numNodesMBRGT0 > 0){
 //        cout << "md = " << md << endl;
@@ -235,7 +247,7 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
-  t->requires(Task::NewDW, lb->gLSContactForceLabel,       Ghost::None);
+  t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);

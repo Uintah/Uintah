@@ -53,7 +53,6 @@
 
 using namespace std;
 using namespace Uintah;
-using std::vector;
 
 ContactStressIndependent::ContactStressIndependent(const ProcessorGroup* myworld,
                                  ProblemSpecP& ps, MaterialManagerP& d_sS, 
@@ -118,19 +117,20 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<bool> masterMatls(numMatls);
     std::vector<bool> inContactWithMatls(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel,0, patch, gnone,0);
+
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,           dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,         dwi, patch, gnone, 0);
-      new_dw->get(gSurfaceArea[m],
-                                lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
       new_dw->get(gContactForce[m],
                                 lb->gLSContactForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(gSurfaceArea[m],
+                                lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
 
       new_dw->getModifiable(massBurnRate[m],
-                               lb->massBurnFractionLabel, dwi, patch);
+                                lb->massBurnFractionLabel,dwi, patch);
       new_dw->getModifiable(dLdt[m],
-                               lb->dLdtDissolutionLabel,  dwi, patch);
+                                lb->dLdtDissolutionLabel, dwi, patch);
 
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       if(mat->getModalID()==d_masterModalID){
@@ -185,19 +185,19 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
           if( gSurfaceArea[md][c] > 1.e-3*area &&
               gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
              -normtrac_ave > d_StressThresh){   // Compressive stress is neg
+            double rho = gmass[md][c]/gvolume[md][c];
 
-              double rho = gmass[md][c]/gvolume[md][c];
-              massBurnRate[md][c] += NC_CCweight[c]*rate*rho;
-              dLdt[md][c] += NC_CCweight[c]*dL_dt;
-//            if(massBurnRate[md][c] > 0.){
-//              numNodesMBRGT0++;
-//            }
+            massBurnRate[md][c] += NC_CCweight[c]*rate*rho;
+            dLdt[md][c] += NC_CCweight[c]*dL_dt;
+//            numNodesMBRGT0++;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = "   << NC_CCweight[c]      << endl;
-          }
-        }
+          } // Stress threshold
+        } // mass is present
       } // nodes
-//      cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//      if(numNodesMBRGT0 > 0){
+//        cout << "numNodesMBRGT0=" << numNodesMBRGT0 << endl;
+//      }
      } // endif a masterMaterial
     } // materials
   } // patches
