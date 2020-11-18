@@ -29,6 +29,7 @@
 #include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Util/DOUT.hpp>
 
 using namespace Uintah;
 
@@ -120,7 +121,7 @@ SendState::print()
     send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
 
     for (map_type::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
-      std::cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " << iter->first.second << std::endl;
+      DOUTR( true,  *(iter->second) << " src/dest: " << iter->first.second );
     }
   }
 }
