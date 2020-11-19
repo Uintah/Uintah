@@ -5,7 +5,7 @@
 #
 # $1 - location to build the 3P
 
-KOKKOS_TAG="2.5.00"
+KOKKOS_TAG="2.7.00"
 
 KOKKOS_DIR=$1
 
