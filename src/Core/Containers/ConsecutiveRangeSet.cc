@@ -77,7 +77,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(int low, int high)
 
 // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
 ConsecutiveRangeSet::ConsecutiveRangeSet(const std::string& setstr)
-  throw(ConsecutiveRangeSetException)
+  noexcept(false)
   : size_(0) // set to zero just to start
 {
   istringstream in(setstr);
@@ -156,7 +156,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(const std::string& setstr)
 // Add to the range set, asserting that value is greater or equal
 // to anything already in the set.
 void ConsecutiveRangeSet::addInOrder(int value)
-   throw(ConsecutiveRangeSetException)
+  noexcept(false)
 {
    if (rangeSet_.size() == 0)
       rangeSet_.push_back(Range(value, value));
