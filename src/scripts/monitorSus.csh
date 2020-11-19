@@ -52,23 +52,33 @@ while ($#argv)
    endsw
 end
 
+#__________________________________
+#  bulletproofing
 set tmp = (`which scancel`)
 if ( $status ) then
-  echo ""
-  echo " ERROR: Could not find the command scancel."
-  echo ""
+  printf "\n ERROR: Could not find the command scancel.\n"
   exit(-1)
 endif
 
+if ( ! -f $out ) then
+  printf "\n ERROR: Could not find the output ($out)\n"
+  exit(-1)
+endif
 
+#__________________________________
 @ ts_old = 0
 
 while (1)
   set minutes = $interval"m"
   sleep $minutes
   
+  # Has the simulation ended
+  grep --silent "Sus: going down successfully" $out
+  set hasEnded = $status
+  
   @ ts = `grep Timestep $out | tr -d '[:punct:]' | awk 'END {print $2}'`
-  if $ts == $ts_old then
+  if ( $ts == $ts_old || $hasEnded == 0 )then
+    echo "__________________________________"
     date
     echo "  MonitorSus.csh: Now killing job $jid on timestep $ts_old"
     scancel $jid
