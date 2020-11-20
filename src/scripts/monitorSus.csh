@@ -8,7 +8,7 @@
 #  if the timestep number has not increased then the job ID is killed.
 #______________________________________________________________________
 
-getopt -Q -q --long pid,out,interval -- $argv:q >& /dev/null
+getopt -Q -q --long pid,out,interval,internalInterval -- $argv:q >& /dev/null
 
 if($#argv != 8) then
   echo ""
