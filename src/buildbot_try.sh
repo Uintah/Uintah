@@ -42,6 +42,22 @@
 #______________________________________________________________________
 #
 
+set usage = "/tmp/usage"
+cat << EOF > $usage
+#______________________________________________________________________
+# Usage: buildbot_try.sh   [options]
+#             Options:
+#              trunk-opt                  Trunk:opt-full-try server
+#              trunk-debug/dbg            Trunk:dbg-full-try server
+#              trunk-gpu                  Trunk:opt-gpu-try server
+#              kokkos-opt                 Kokkos:opt-full-try server
+#              all                        run trunk(opt + dbg + gpu) try servers
+#              createPatch                run git diff on src/ and submit that patch
+#              myPatch      <patchFile>  submit the patchfile to the try servers
+#______________________________________________________________________
+EOF
+
+# Defaults
 set trunkServers = ("Trunk:opt-full-try" "Trunk:dbg-full-try" "Trunk:opt-gpu-try")
 
 set BUILDERS = ""
@@ -105,21 +121,28 @@ while ( $#argv )
       breaksw
     default:
       echo " Error parsing inputs ($1)."
-      echo " Usage: buildbot_try.sh   [options]"
-      echo "             Options:"
-      echo "              trunk-opt                  Trunk:opt-full-try server"
-      echo "              trunk-debug/dbg            Trunk:dbg-full-try server"
-      echo "              trunk-gpu                  Trunk:opt-gpu-try server"
-      echo "              kokkos-opt                 Kokkos:opt-full-try server"
-      echo "              all                        run trunk(opt + dbg + gpu) try servers"
-      echo "              createPatch                run git diff on src/ and submit that patch"
-      echo "              myPatch      <patchFile>  submit the patchfile to the try servers"
+      cat /tmp/usage
+      /bin/rm $usage
       echo "   Now exiting"
       exit(1)
       breaksw
   endsw
 end
 
+# bulletproofing
+if ( $CREATE_PATCH == "false" && $MY_PATCH == "false" ) then
+  echo "  ERROR: missing patch option.  Please select one of the following options:"
+  echo
+  echo "    createPatch               run git diff on src/ and submit that patch"
+  echo "    myPatch      <patchFile>  submit the patchfile to the try servers"
+
+  cat $usage
+  /bin/rm $usage
+  exit 1
+
+endif
+
+/bin/rm $usage
 #______________________________________________________________________
 #
 # Note normally svn will automatically create a patch.  It will
