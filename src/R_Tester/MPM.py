@@ -73,6 +73,9 @@ NIGHTLYTESTS = [
 
             ]
 
+PERFORMANCETESTS = [ ("mpm_perf_test",                       "inclinedPlaneSphere.ups",                 1, "All", ["do_performance_test"]),
+                ]
+
 AMRTESTS = [
                   ("advect_3L_1D",                        "advect_3L_1D.ups",           1,  "ALL", ["exactComparison"] ),
                   ("advect_3L_3D",                        "advect_3L_3D.ups",           4,  "ALL", ["no_restart"] ),
@@ -112,7 +115,7 @@ THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", 
                 ]
 
 # Tests that are run during local regression testing
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS + PERFORMANCETESTS
 
 LOCALTESTS = NIGHTLYTESTS
 DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All", ["exactComparison"] ),
