@@ -111,7 +111,9 @@ int GIMPInterpolator::findCellAndWeights(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3],fy[3],fz[3];
+  double fx[3] = {NAN,NAN,NAN};
+  double fy[3] = {NAN,NAN,NAN};
+  double fz[3] = {NAN,NAN,NAN};;
 
   if(px0 <= lx){
     fx[0] = 1. - (px0*px0 + (lx)*(lx))/(2*lx);
@@ -262,7 +264,12 @@ int GIMPInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3],fy[3],fz[3], dfx[3], dfy[3], dfz[3];
+  double fx[3]  = {NAN,NAN,NAN};;
+  double fy[3]  = {NAN,NAN,NAN};;
+  double fz[3]  = {NAN,NAN,NAN};;
+  double dfx[3] = {NAN,NAN,NAN};;
+  double dfy[3] = {NAN,NAN,NAN};;
+  double dfz[3] = {NAN,NAN,NAN};;
 
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
@@ -472,7 +479,12 @@ GIMPInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double pz0 = cellpos.z() - (iz);
   double pz1 = cellpos.z() - (iz+1);
   double pz2 = cellpos.z() - (iz + nnz);
-  double fx[3],fy[3],fz[3], dfx[3], dfy[3], dfz[3];
+  double fx[3]  = {NAN,NAN,NAN};
+  double fy[3]  = {NAN,NAN,NAN};
+  double fz[3]  = {NAN,NAN,NAN};
+  double dfx[3] = {NAN,NAN,NAN};
+  double dfy[3] = {NAN,NAN,NAN};
+  double dfz[3] = {NAN,NAN,NAN};
 
   if(px0 <= lx){
     fx[0]  = 1. - (px0*px0 + (lx)*(lx))/(2.*lx);
