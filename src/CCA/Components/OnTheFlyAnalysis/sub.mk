@@ -75,7 +75,8 @@ endif
 ifeq ($(BUILD_MPM),yes)
   SRCS += \
         $(SRCDIR)/flatPlate_heatFlux.cc \
-        $(SRCDIR)/particleExtract.cc
+        $(SRCDIR)/particleExtract.cc \
+        $(SRCDIR)/KEStats.cc
 
   PSELIBS += CCA/Components/MPM/Core \
              CCA/Components/MPM/Materials

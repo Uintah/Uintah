@@ -41,6 +41,7 @@
 #if !defined( NO_MPM )
   #include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
   #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
+  #include <CCA/Components/OnTheFlyAnalysis/KEStats.h>
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
@@ -124,6 +125,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 #if !defined( NO_MPM )
       else if ( module == "particleExtract" ) {
         modules.push_back( scinew particleExtract(     myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "KEStats" ) {
+        modules.push_back( scinew KEStats(     myworld, materialManager, module_ps ) );
       }
       else if ( module == "flatPlate_heatFlux" ) {
         modules.push_back( scinew flatPlate_heatFlux(  myworld, materialManager, module_ps ) );
