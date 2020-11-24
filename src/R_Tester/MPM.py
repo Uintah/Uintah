@@ -73,7 +73,7 @@ NIGHTLYTESTS = [
 
             ]
 
-PERFORMANCETESTS = [ ("mpm_perf_test",                       "inclinedPlaneSphere.ups",                 1, "All", ["do_performance_test"]),
+PERFORMANCETESTS = [ ("mpm_perf_test",                       "inclined_plane_sphere.ups",                 1, "All", ["do_performance_test"]),
                 ]
 
 AMRTESTS = [
