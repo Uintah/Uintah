@@ -62,6 +62,7 @@ KEStats::KEStats(const ProcessorGroup* myworld,
 {
   d_matl_set = 0;
   ps_lb = scinew KEStatsLabel();
+  M_lb  = scinew MPMLabel();
 }
 
 //__________________________________
@@ -271,12 +272,17 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
 {
   const Level* level = getLevel(patches);
 
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, M_lb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
   timeVars tv;
 
   max_vartype oldMeanKE;
   getTimeVars( old_dw, level, ps_lb->lastWriteTimeLabel, tv );
   putTimeVars( new_dw,        ps_lb->lastWriteTimeLabel, tv );
   old_dw->get( oldMeanKE,     ps_lb->meanKELabel);
+  double tminus = d_startTime - 1.0/m_analysisFreq;
   
   if( tv.isItTime == false ){
     new_dw->put( max_vartype( oldMeanKE ), ps_lb->meanKELabel );
@@ -297,23 +303,26 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
       string udaDir = m_output->getOutputLocation();
       string path = udaDir + "/KineticEnergy.dat";
 
-      // open the file
-      ifstream KEfile(path.c_str());
-      if(!KEfile){
-        cerr << "KineticEnergy.dat file not opened, exiting" << endl;
-        exit(1);
-      }
-
       double time, KE;
       int numLines=0;
       double meanKE=0;
-      while(KEfile >> time >> KE){
-        meanKE+=KE;
-        numLines++;
+      if(simTime > 0.){
+        // open the file
+        ifstream KEfile(path.c_str());
+        if(!KEfile){
+            cerr << "KineticEnergy.dat file not opened, exiting" << endl;
+            exit(1);
+        }
+
+        while(KEfile >> time >> KE){
+          meanKE+=KE;
+          numLines++;
+        }
+        meanKE/=((double) numLines-1);
+        cout << "meanKE = " << meanKE << endl;
+        cout << "numLines = " << numLines << endl;
+        cout << "prevAnlysTime = " << tv.prevAnlysTime << endl;
       }
-      meanKE/=((double) numLines-1);
-      cout << "meanKE = " << meanKE << endl;
-      cout << "numLines = " << numLines << endl;
       new_dw->put( max_vartype( meanKE ), ps_lb->meanKELabel );
     }  // proc==pg...
   }  // patches

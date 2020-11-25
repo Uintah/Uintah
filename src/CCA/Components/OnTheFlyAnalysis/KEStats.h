@@ -129,6 +129,7 @@ WARNING
     
     KEStatsLabel* ps_lb;
     MaterialSet* d_matl_set;
+    MPMLabel* M_lb;
        
     //__________________________________
     // global constants
