@@ -3537,25 +3537,28 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
       // Check the integrated nodal velocity and if the product of velocity
       // and timestep size is larger than half the cell size, restart the
-      // timestep with 10% as large of a timestep (see recomputeDelT in this
+      // timestep with 50% as large of a timestep (see recomputeDelT in this
       // file).
       if(flags->d_restartOnLargeNodalVelocity){
-       Vector dxCell = patch->dCell();
-       double cell_size_sq = dxCell.length2();
+       Vector dx = patch->dCell();
+       double cell_size_sq = dx.length2();
+//       double cell_size = dx.length();
+//       double cellVol = dx.x()*dx.y()*dx.z();
+//       double rho = mpm_matl->getInitialDensity();
        for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
         if(c.x()>=lowNode.x() && c.x()<highNode.x() &&
            c.y()>=lowNode.y() && c.y()<highNode.y() &&
            c.z()>=lowNode.z() && c.z()<highNode.z()){
-           //maxVelMag = max(maxVelMag,velocity_star[c].length());
-           if((velocity_star[c]*delT).length2() > 0.01*cell_size_sq){
-            cerr << "Restarting timestep, velocity star too large" << endl;
+           if((velocity_star[c]*delT).length2() > 0.25*cell_size_sq){
             cerr << "velocity_star[" << c << "] = " << velocity_star[c] << endl;
-            new_dw->put( bool_or_vartype(true), 
-                         VarLabel::find(abortTimeStep_name));
-            new_dw->put( bool_or_vartype(true), 
-                         VarLabel::find(recomputeTimeStep_name));
+            cerr << "mass[" << c << "] = " << mass[c] << endl;
+              cerr << "Restarting timestep, velocity star too large" << endl;
+              new_dw->put( bool_or_vartype(true), 
+                           VarLabel::find(abortTimeStep_name));
+              new_dw->put( bool_or_vartype(true), 
+                           VarLabel::find(recomputeTimeStep_name));
            }
         }
        }
@@ -4670,8 +4673,8 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
           cerr << "px = " << px[idx] << endl;
           cerr << "pvolume = " << pVolumeOld[idx] << endl;
           cerr << "J = " << pFNew[idx].Determinant() << endl;
-          cerr << "F is now reset to " << pFOld[idx] << endl;
-          pFNew[idx]=pFOld[idx];
+          cerr << "F is now reset to " << Identity << endl;
+          pFNew[idx]=Identity;
         }
 
         double J   =pFNew[idx].Determinant();
