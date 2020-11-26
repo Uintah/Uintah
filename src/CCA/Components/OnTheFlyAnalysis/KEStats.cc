@@ -298,7 +298,9 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
              << patch->getID()         << " which is on proc " << proc << endl;
     //__________________________________
     // do analysis if this processor owns this patch and if it's time to do it
-    if( proc == pg->myRank() ){
+//    if( proc == pg->myRank() ){
+//    if( pg->myRank() == 0 ){
+    if( patch->getID() == 0 ){
       // create the directory structure
       string udaDir = m_output->getOutputLocation();
       string path = udaDir + "/KineticEnergy.dat";
@@ -306,6 +308,7 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
       double time, KE;
       int numLines=0;
       double meanKE=0;
+      vector<double> KEvector, timevector;
       if(simTime > 0.){
         // open the file
         ifstream KEfile(path.c_str());
@@ -315,13 +318,24 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
         }
 
         while(KEfile >> time >> KE){
-          meanKE+=KE;
+          KEvector.push_back(KE);
+          timevector.push_back(time);
           numLines++;
         }
-        meanKE/=((double) numLines-1);
-        cout << "meanKE = " << meanKE << endl;
-        cout << "numLines = " << numLines << endl;
-        cout << "prevAnlysTime = " << tv.prevAnlysTime << endl;
+        if(numLines < d_numStepsAve){
+          for(unsigned int i=0;i<KEvector.size();i++){
+            meanKE+=KEvector[i];
+          }
+          meanKE/=((double) numLines);
+        } else {
+          for(int unsigned i=KEvector.size()-d_numStepsAve;i<KEvector.size();i++){
+            meanKE+=KEvector[i];
+          }
+          meanKE/=((double) d_numStepsAve);
+        }
+//        cout << "meanKE = " << meanKE << endl;
+//        cout << "numLines = " << numLines << endl;
+//        cout << "prevAnlysTime = " << tv.prevAnlysTime << endl;
       }
       new_dw->put( max_vartype( meanKE ), ps_lb->meanKELabel );
     }  // proc==pg...
