@@ -3281,7 +3281,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase & var
           delete srcvar;
         }
       }
-      if (Parallel::usingDevice()) {
+      if (Parallel::usingDevice() && no_reallocation_needed == true && numGhostCells == label->getMaxDeviceGhost()) {//this is need because rmcrt task graph might have different values of getMaxDeviceGhost. if condition avoids the conflict
         setValidWithGhostsOnCPU(label->getName().c_str(), patch->getID(), matlIndex, patch->getLevel()->getID() ); //ghosts are ready
       }
     }

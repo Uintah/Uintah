@@ -26,7 +26,7 @@ Need to verify physics.
   </Time>
   <DataArchiver>
     <filebase>methane_1m.uda</filebase>
-    <outputInterval>0</outputInterval>
+    <outputTimestepInterval>0</outputTimestepInterval>
     <save label="pressurePS" levels="-1"/>
     <save label="CCVelocity" levels="-1"/>
     <save label="uVelocitySPBC" levels="-1"/>
@@ -60,11 +60,11 @@ Need to verify physics.
         <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType label="enthalpy_rmcrt" var="Tabulated">
-          <value>adiabaticenthalpy</value>
+        <BCType label="enthalpy_rmcrt" var="Neumann">
+          <value>0.0</value>
         </BCType>
-        <BCType label="radiation_temperature" var="Tabulated">
-          <value>temperature</value>
+        <BCType label="radiation_temperature" var="Neumann">
+          <value>298</value>
         </BCType>
       </Face>
       <Face side="x+">
