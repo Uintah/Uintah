@@ -594,8 +594,8 @@ int main( int argc, char *argv[], char *env[] )
           std::cout << "\n__________________________________git status --branch --short\n";
           std::system(cmd.c_str());
 
-          cmd = "cd " + sdir + "; git log -1  --format="%ad %an %H"";
-          std::cout << "\n__________________________________git log -1"\n";
+          cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\"";
+          std::cout << "\n__________________________________git log -1\n";
           std::system(cmd.c_str());
         }
         std::cout << "____GIT_______________________________________________________________\n";
