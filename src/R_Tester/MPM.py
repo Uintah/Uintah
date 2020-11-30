@@ -125,7 +125,7 @@ DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All",
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS
+#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS PERFORMANCETESTS
 #__________________________________
 
 # returns the list
@@ -138,6 +138,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "PERFORMANCETESTS":
+    TESTS = PERFORMANCETESTS
   elif me == "AMRTESTS":
     TESTS = AMRTESTS
   elif me == "ARENATESTS":
