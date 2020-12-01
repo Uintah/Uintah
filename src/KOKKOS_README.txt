@@ -1,10 +1,15 @@
-This contains some build instruction notes for getting up and running on this Kokkos dev branch.  
+This contains some build instruction notes for getting up and running on this Kokkos dev branch.
 
-Grab Kokkos (I put mine in my ~/src directory)
+Grab Kokkos (I put mine in my ~/src directory):
 
 git clone https://github.com/kokkos/kokkos.git ~/src/kokkos
 
-Make a Kokkos folder (I put mine in ~/opt)
+Checkout Kokkos 2.7.00 if planning to use patches for asynchronous CUDA kernel execution:
+
+git checkout 2.7.00
+
+Make a Kokkos folder (I put mine in ~/opt):
+
 mkdir ~/opt/kokkos-openmp
 mkdir ~/opt/kokkos-openmp/build
 cd ~/opt/kokkos-openmp/build
@@ -20,10 +25,15 @@ Here is how I configure Kokkos for CUDA
 
 And here is how I configured Kokkos for both OpenMP and CUDA
 
-
 1) Apply my Kokkos patch for asynchronous, I have placed it in this Uintah branch's src directory. 
 
-git apply /path/to/patch/kokkos_brad_oct122018.patch (works from anywhere inside the kokkos source tree)
+git apply /path/to/patch/kokkos_2.7.00_async.patch (works from anywhere inside the kokkos source tree)
+
+Notes on available patches:
+ - kokkos_2.7.00_async.patch, kokkos_brad_jun082018_deprecated.patch, and kokkos_brad_oct122018_deprecated.patch apply to Kokkos release 2.7.00.
+ - Kokkos::parallel_reduce correctness issues were identified in kokkos_brad_jun082018_deprecated.patch.
+ - Kokkos::parallel_reduce performance issues were identified in kokkos_brad_oct122018_deprecated.patch.
+ - These are addressed in kokkos_2.7.00_async.patch, which is the preferred patch for kokkos_dev's latest use.
 
 2) Double check Kokkos's Makefile script, its bugged: 
 
