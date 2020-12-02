@@ -520,7 +520,7 @@ public:
                                              BoxPIterator   begin,
                                              BoxPIterator   end );
 
-  ~CompositeBox();
+  ~CompositeBox() noexcept(false);
 
   const std::set<CB*, typename SB::ValueCompare2>& getActiveConflicts() const { return activeConflicts_; }
 
@@ -1018,7 +1018,7 @@ makeCompositeBox(typename SBS::BoxHashMap& boxMap, BoxPIterator begin, BoxPItera
 
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
-CompositeBox<BoxP, Point, Volume, Value, Evaluator>::~CompositeBox()
+CompositeBox<BoxP, Point, Volume, Value, Evaluator>::~CompositeBox() noexcept(false)
 {
   // should have reactivated before deleting
   ASSERT(activatedSubSuperBoxes_.size() == 0);

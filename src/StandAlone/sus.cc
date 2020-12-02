@@ -180,8 +180,8 @@ static void usage( const std::string& message,
     std::cerr << "-postProcessUda             : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
     std::cerr << "-uda_suffix <number>        : Make a new uda dir with <number> as the default suffix\n";
     std::cerr << "-t <index>                  : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
-    std::cerr << "-svnDiff                    : runs svn diff <src/...../Packages/Uintah \n";
-    std::cerr << "-svnStat                    : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
+    std::cerr << "-gitDiff                    : runs git diff <src/...../Packages/Uintah \n";
+    std::cerr << "-gitStatus                  : runs git status & git log -1 <src/...../Packages/Uintah \n";
     std::cerr << "-copy                       : Copy from old uda when restarting\n";
     std::cerr << "-move                       : Move from old uda when restarting\n";
     std::cerr << "-nocopy                     : Default: Don't copy or move old uda timestep when restarting\n";
@@ -253,8 +253,8 @@ int main( int argc, char *argv[], char *env[] )
   bool   local_filesystem    = false;
   bool   restart             = false;
   bool   postProcessUda      = false;
-  bool   do_svnDiff          = false;
-  bool   do_svnStat          = false;
+  bool   do_gitDiff          = false;
+  bool   do_gitStatus        = false;
   bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
   bool   validateUps         = true;
@@ -487,11 +487,11 @@ int main( int argc, char *argv[], char *env[] )
       }
       layout = IntVector(ii, jj, kk);
     }
-    else if (arg == "-svnDiff") {
-      do_svnDiff = true;
+    else if (arg == "-gitDiff") {
+      do_gitDiff = true;
     }
-    else if (arg == "-svnStat") {
-      do_svnStat = true;
+    else if (arg == "-gitStatus") {
+      do_gitStatus = true;
     }
     else if (arg == "-validate") {
       onlyValidateUps = true;
@@ -653,30 +653,27 @@ int main( int argc, char *argv[], char *env[] )
       std::cout << "CFLAGS: " << CFLAGS << "\n";
       std::cout << "CXXFLAGS: " << CXXFLAGS << "\n";
 
-      // Run svn commands on Packages/Uintah 
-      if (do_svnDiff || do_svnStat) {
-        std::cout << "____SVN_____________________________________________________________\n";
+      // Run git commands Uintah 
+      if ( do_gitDiff || do_gitStatus ) {
+        std::cout << "____GIT_____________________________________________________________\n";
         std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
-        if (do_svnDiff) {
-          std::string cmd = "svn diff --username anonymous --password \"\" " + sdir;
-          int returnValue = std::system(cmd.c_str());
-          if (returnValue != 0) {
-            SCI_THROW("svn diff failed with non-zero return code.");
-          }
+
+        if (do_gitDiff) {
+          std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
+          std::cout << "\n__________________________________git diff\n";
+          std::system(cmd.c_str());
         }
-        if (do_svnStat) {
-          std::string cmd = "svn info  --username anonymous --password \"\" " + sdir;
-          int returnValue = std::system(cmd.c_str());
-          if (returnValue != 0) {
-            SCI_THROW("svn info failed with non-zero return code.");
-          }
-          cmd = "svn stat -u  --username anonymous --password \"\" " + sdir;
-          returnValue = std::system(cmd.c_str());
-          if (returnValue != 0) {
-            SCI_THROW("svn stat failed with non-zero return code.");
-          }
+
+        if (do_gitStatus) {
+          std::string cmd = "cd " + sdir + "; git status  --branch --short";
+          std::cout << "\n__________________________________git status --branch --short\n";
+          std::system(cmd.c_str());
+
+          cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\"";
+          std::cout << "\n__________________________________git log -1\n";
+          std::system(cmd.c_str());
         }
-        std::cout << "____SVN_______________________________________________________________\n";
+        std::cout << "____GIT_______________________________________________________________\n";
       }
     }
 

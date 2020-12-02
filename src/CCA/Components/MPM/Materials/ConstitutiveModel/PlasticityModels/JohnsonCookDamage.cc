@@ -214,7 +214,6 @@ JohnsonCookDamage::computeSomething( ParticleSubset    * pset,
   
   const double Tr = matl->getRoomTemperature();
   const double Tm = matl->getMeltTemperature();
-  const double invTempRange = 1.0/(Tm-Tr);
 
   //__________________________________
   //

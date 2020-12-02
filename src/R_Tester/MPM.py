@@ -73,6 +73,9 @@ NIGHTLYTESTS = [
 
             ]
 
+PERFORMANCETESTS = [ ("mpm_perf_test",                       "inclined_plane_sphere.ups",                 1, "All", ["do_performance_test"]),
+                ]
+
 AMRTESTS = [
                   ("advect_3L_1D",                        "advect_3L_1D.ups",           1,  "ALL", ["exactComparison"] ),
                   ("advect_3L_3D",                        "advect_3L_3D.ups",           4,  "ALL", ["no_restart"] ),
@@ -112,7 +115,7 @@ THREADEDTESTS = [ ("Charpy",    "Charpy.ups",    2,  "ALL", ["exactComparison", 
                 ]
 
 # Tests that are run during local regression testing
-NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS
+NIGHTLYTESTS = NIGHTLYTESTS + AMRTESTS + THREADEDTESTS + PERFORMANCETESTS
 
 LOCALTESTS = NIGHTLYTESTS
 DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All", ["exactComparison"] ),
@@ -122,7 +125,7 @@ DEBUGTESTS =[("Charpy",                "Charpy.ups",                  8,  "All",
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS
+#LIST: LOCALTESTS DAMAGETESTS DEBUGTESTS NIGHTLYTESTS AMRTESTS ARENATESTS BUILDBOTTESTS PERFORMANCETESTS
 #__________________________________
 
 # returns the list
@@ -135,6 +138,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "PERFORMANCETESTS":
+    TESTS = PERFORMANCETESTS
   elif me == "AMRTESTS":
     TESTS = AMRTESTS
   elif me == "ARENATESTS":

@@ -171,6 +171,7 @@ void ForcingTurbulence::compute_TKE( const Patch* patch, ArchesTaskInfoManager* 
   lvl->getGrid()->getLevel(0)->findCellIndexRange(min,max);
   IntVector period_bc = IntVector(1,1,1) - lvl->getPeriodicBoundaries();
 
+/*  Unused variables  -Todd
   Box domainBox = lvl->getBox(min+period_bc, max-period_bc);
   const double lowx = domainBox.lower().x();
   const double lowy = domainBox.lower().y();
@@ -183,7 +184,8 @@ void ForcingTurbulence::compute_TKE( const Patch* patch, ArchesTaskInfoManager* 
   const double Lx = upx - lowx;
   const double Ly = upy - lowy;
   const double Lz = upz - lowz;
-
+*/
+ 
   // Get the velocity field
   SFCXVariable<double>& uVel  = tsk_info->get_field<SFCXVariable<double> >(m_uVel_name);
   SFCYVariable<double>& vVel  = tsk_info->get_field<SFCYVariable<double> >(m_vVel_name);
@@ -247,6 +249,7 @@ void ForcingTurbulence::eval_scale_TKE( const Patch* patch, ArchesTaskInfoManage
   lvl->getGrid()->getLevel(0)->findCellIndexRange(min,max);
   IntVector period_bc = IntVector(1,1,1) - lvl->getPeriodicBoundaries();
 
+/*  unused variables --Todd
   Box domainBox = lvl->getBox(min+period_bc, max-period_bc);
   const double lowx = domainBox.lower().x();
   const double lowy = domainBox.lower().y();
@@ -259,7 +262,7 @@ void ForcingTurbulence::eval_scale_TKE( const Patch* patch, ArchesTaskInfoManage
   const double Lx = upx - lowx;
   const double Ly = upy - lowy;
   const double Lz = upz - lowz;
-
+*/
   // Get the velocity field
   SFCXVariable<double>& uVel  = tsk_info->get_field<SFCXVariable<double> >(m_uVel_name);
   SFCYVariable<double>& vVel  = tsk_info->get_field<SFCYVariable<double> >(m_vVel_name);

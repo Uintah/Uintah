@@ -122,7 +122,7 @@ namespace Uintah {
     }
   }
 
-  PatchBVHNode::~PatchBVHNode()
+  PatchBVHNode::~PatchBVHNode() noexcept(false)
   {
     //this class should only be made if there are more than 2 objects in the list thus both sides should exist
     ASSERT(left_!=nullptr);
