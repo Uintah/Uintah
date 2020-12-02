@@ -1622,11 +1622,15 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->gVelocityStarLabel, mpm_matls,       gac,NGN+1);
-  t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,       gac,NGN+1);
-  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,      gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+1);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,      gac,NGN+1);
+  t->requires(Task::NewDW, lb->gMassLabel,
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
+  t->requires(Task::NewDW, lb->gVelocityLabel,
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
   if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,      gac,NGN+1);
   }
 
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
@@ -1704,6 +1708,10 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   if (flags->d_doingDissolution) {
     t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
   }
+  t->requires(Task::NewDW, lb->gMassLabel,
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
+  t->requires(Task::NewDW, lb->gVelocityLabel,
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
   t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triangleIDLabel,         triangle_matls, gnone);
@@ -4830,7 +4838,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,
               "Doing updateTracers");
 
-//    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
@@ -4850,12 +4857,19 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
-    Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5);
+    Matrix3 size(0.5,0.,0.,0.,0.5,0.,0.,0.,0.5); // Placeholder, not used
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    constNCVariable<Vector>  gvelocityglobal;
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
+    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
+           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
-      Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
       new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
       new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
@@ -4916,10 +4930,27 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           sumSk += gmass[adv_matl][node]*S[k];
           surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
         }
-        vel/=sumSk;
+        if(sumSk > 1.e-90){
+          // This is the normal condition, when at least one of the nodes
+          // influencing a tracer has mass on it.
+          vel/=sumSk;
+          tx_new[idx] = tx[idx] + vel*delT;
+          tx_new[idx] += surf*delT;
+        } else {
+          // This is the rare "just in case" instance that none of the nodes
+          // influencing a tracer has mass on it.  In this case, use the
+          // "center of mass" velocity to move the vertex
+          double sumSkCoM=0.0;
+          Vector velCoM(0.0,0.0,0.0);
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            sumSkCoM += gmassglobal[node]*S[k];
+            velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+          }
+          velCoM/=sumSkCoM;
+          tx_new[idx] = tx[idx] + velCoM*delT;
+        }
 
-        tx_new[idx] = tx[idx] + vel*delT;
-        tx_new[idx] += surf*delT;
 
 #if 0
         // Check to see if a tracer has left the domain
@@ -5627,17 +5658,24 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+    Ghost::GhostType  gac = Ghost::AroundCells;
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls("MPM");
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
+
+    constNCVariable<Vector>  gvelocityglobal;
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
+    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
+           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
-      Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
       new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
       new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
@@ -5758,9 +5796,26 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             sumSk += gmass[adv_matl][node]*S[k];
             surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
           }
-          vel/=sumSk;
+          if(sumSk > 1.e-90){
+            // This is the normal condition, when at least one of the nodes
+            // influencing a vertex has mass on it.
+            vel/=sumSk;
+            P[itv] += vel*delT;
+          } else {
+            // This is the "just in case" instance that none of the nodes
+            // influencing a vertex has mass on it.  In this case, use the
+            // "center of mass" velocity to move the vertex
+            double sumSkCoM=0.0;
+            Vector velCoM(0.0,0.0,0.0);
+            for (int k = 0; k < NN; k++) {
+              IntVector node = ni[k];
+              sumSkCoM += gmassglobal[node]*S[k];
+              velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+            }
+            velCoM/=sumSkCoM;
+            P[itv] += velCoM*delT;
+          }
 
-          P[itv] += vel*delT;
           P[itv] += surf*delT;
 
           // Check to see if a vertex has left the domain
