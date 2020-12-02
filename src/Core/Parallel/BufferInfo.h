@@ -69,7 +69,7 @@ class BufferInfo {
 
     BufferInfo(){};
 
-    virtual ~BufferInfo();
+    virtual ~BufferInfo() noexcept(false);
 
     unsigned int count() const;
 

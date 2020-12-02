@@ -60,7 +60,7 @@ RefCounted::RefCounted()
   ASSERT(d_lockIndex >= 0);
 }
 
-RefCounted::~RefCounted()
+RefCounted::~RefCounted() noexcept(false)
 {
   ASSERTEQ(d_refCount, 0);
   int index = freeIndex.load(std::memory_order_seq_cst);

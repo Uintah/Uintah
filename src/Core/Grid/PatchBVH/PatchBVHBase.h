@@ -87,7 +87,7 @@ namespace Uintah {
   public:
     PatchBVHBase() {};
 
-    virtual ~PatchBVHBase() {} ;
+    virtual ~PatchBVHBase() noexcept(false) {} ;
 
     virtual void query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells)=0;
 
