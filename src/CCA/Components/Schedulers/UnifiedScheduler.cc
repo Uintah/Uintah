@@ -145,8 +145,7 @@ void set_affinity( const int proc_unit )
   unsigned int len = sizeof(mask);
   CPU_ZERO(&mask);
   CPU_SET(proc_unit, &mask);
-  //DS 12112019: commented sched_setaffinity. When two MPI ranks are assigned to the same node, both get pinned to zero'th core and GPU execution hangs. Need to figure out alternative.
-  //sched_setaffinity(0, len, &mask);
+  sched_setaffinity(0, len, &mask);
 #endif
 }
 
