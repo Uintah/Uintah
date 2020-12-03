@@ -54,6 +54,7 @@ namespace Uintah {
       const VarLabel* partCountLabel;
       const VarLabel* triangleCountLabel;
       const VarLabel* tracerCountLabel;
+      const VarLabel* meanKELabel;
       
       // Heat flux from fire
       const VarLabel* heatRate_CCLabel;
