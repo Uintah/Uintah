@@ -91,7 +91,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP    & matl_ps,
     return(scinew NullDamage( child ) );
   }
   else {
-    proc0cout << "**WARNING** Creating default null damage model" << endl;
+//    proc0cout << "**WARNING** Creating default null damage model" << endl;
     return( scinew NullDamage( child ) );
     //throw ProblemSetupException("Unknown Damage Model ("+dam_type+")", __FILE__, __LINE__);
   }
@@ -107,7 +107,7 @@ DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
     return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
  }
   else {
-    proc0cout << "**WARNING** Creating copy of default null damage model" << endl;
+//    proc0cout << "**WARNING** Creating copy of default null damage model" << endl;
     return(scinew NullDamage(dynamic_cast<const NullDamage*>(dm)));
     //throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
   }
