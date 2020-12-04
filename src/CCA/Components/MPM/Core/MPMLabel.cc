@@ -568,6 +568,9 @@ MPMLabel::MPMLabel()
   tracerCountLabel = VarLabel::create("tracerCount",
                                    sumlong_vartype::getTypeDescription());
 
+  meanKELabel = VarLabel::create("meanKE",
+                                   max_vartype::getTypeDescription());
+
   StrainEnergyLabel = VarLabel::create( "StrainEnergy",
                         sum_vartype::getTypeDescription() );
 
@@ -1193,6 +1196,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNegChargeRateLabel);
 
   VarLabel::destroy(partCountLabel);
+  VarLabel::destroy(tracerCountLabel);
+  VarLabel::destroy(triangleCountLabel);
+  VarLabel::destroy(meanKELabel);
   VarLabel::destroy(doMechLabel);
 
   VarLabel::destroy(AccStrainEnergyLabel);
