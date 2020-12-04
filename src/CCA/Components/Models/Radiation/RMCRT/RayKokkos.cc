@@ -1176,10 +1176,15 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   }
 
   // This operator() replaces the cellIterator loop used to solve DivQ
+  // When verifying correctness, parallel_reduce is used to confirm ray step consistency across implementations
+  // When benchmarking, parallel_for is used to improve performance by avoiding scalar reduction syncronization
+#ifdef FIXED_RANDOM_NUM
   KOKKOS_INLINE_FUNCTION
   void operator() ( const int i, const int j, const int k, value_type & m_nRaySteps ) const {
+#else
+  KOKKOS_INLINE_FUNCTION
+  void operator() ( const int i, const int j, const int k ) const {
 
-#ifndef FIXED_RANDOM_NUM
     rnd_type rand_gen = m_rand_pool.get_state(); // Each thread needs a unique state
 #endif
 
@@ -1523,7 +1528,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
           rayLength         += distanceTraveled;
           optical_thickness += m_abskg[prevLev]( prevCell[0], prevCell[1], prevCell[2] ) * distanceTraveled;
+#ifdef FIXED_RANDOM_NUM
           m_nRaySteps++;
+#endif
 
 // TODO: Add support for FAST_EXP
 /*`==========TESTING==========*/
@@ -1925,7 +1932,10 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //          B O U N D A R Y F L U X
     //______________________________________________________________________
 
+#ifdef FIXED_RANDOM_NUM
     unsigned long int nFluxRaySteps = 0ul;
+#endif
+
     if( d_solveBoundaryFlux){
 
       //__________________________________
@@ -1934,7 +1944,9 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
     }   // end if d_solveBoundaryFlux
 
+#ifdef FIXED_RANDOM_NUM
     unsigned long int nRaySteps = 0ul;
+#endif
 
     //______________________________________________________________________
     //         S O L V E   D I V Q
@@ -1974,8 +1986,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                                                                                                 , d_CCRays
                                                                                                 );
 
-      // This parallel_reduce_sum replaces the cellIterator loop used to solve DivQ
+      // This parallel pattern replaces the cellIterator loop used to solve DivQ
+      // When verifying correctness, parallel_reduce is used to confirm ray step consistency across implementations
+      // When benchmarking, parallel_for is used to improve performance by avoiding scalar reduction syncronization
+#ifdef FIXED_RANDOM_NUM
       Uintah::parallel_reduce_sum( execObj, range, functor, nRaySteps );
+#else
+      Uintah::parallel_for( execObj, range, functor );
+#endif
     }  // end of if(_solveDivQ)
 
     //__________________________________
@@ -1998,10 +2016,12 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
            << " RMCRT REPORT: Patch " << levelPatchID << endl
            << " Used "<< timer().milliseconds()
            << " milliseconds of CPU time. \n" << endl // Convert time to ms
+#ifdef FIXED_RANDOM_NUM
            << " nRaySteps: " << nRaySteps
            << " nFluxRaySteps: " << nFluxRaySteps << endl
            << " Efficiency: " << nRaySteps / timer().seconds()
            << " steps per sec" << endl
+#endif
            << endl;
     }
 
