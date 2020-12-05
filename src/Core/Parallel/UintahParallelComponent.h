@@ -67,7 +67,7 @@ class UintahParallelComponent {
 public:
   
   UintahParallelComponent( const ProcessorGroup* myworld );
-  virtual ~UintahParallelComponent();
+  virtual ~UintahParallelComponent() noexcept(false);
 
   //////////
   // Insert Documentation Here:

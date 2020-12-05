@@ -273,10 +273,6 @@ void TransIsoHypoFrictional::computeStressTensor(const PatchSubset* patches,
 		double fiberShear_J2;       // out-of-plane deviatoric stress J2 norm
 		double fiberShear_rootJ2;   // out-of-plane deviatoric stress magnitude
 
-		double stretch;   // stretch in fiber direction
-		double crimp;     // scaling for axial moduli based on fiber stretch.
-		double porosity;  // Current porosity assuming incompressible matrix.
-
 		Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 		Vector deformed_fiber_vector;  // deformed fiber vector (not normalized)
 		Vector n;                      // deformed fiber direction (unit vector)

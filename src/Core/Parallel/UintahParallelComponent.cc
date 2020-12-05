@@ -34,7 +34,7 @@ UintahParallelComponent::UintahParallelComponent(const ProcessorGroup* myworld)
   // nothing to do
 }
 
-UintahParallelComponent::~UintahParallelComponent()
+UintahParallelComponent::~UintahParallelComponent() noexcept(false)
 {
   auto iter = portmap.begin();
   for (; iter != portmap.end(); ++iter) {

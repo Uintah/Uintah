@@ -32,7 +32,7 @@ using namespace Uintah;
 
 //_____________________________________________________________________________
 //
-BufferInfo::~BufferInfo()
+BufferInfo::~BufferInfo() noexcept(false)
 {
   if (m_free_datatype) {
     ASSERT(m_datatype != MPI_DATATYPE_NULL);

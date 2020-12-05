@@ -84,7 +84,6 @@ namespace Uintah {
                                           ) const
   {
     Ghost::GhostType  gnone = Ghost::None;
-    Ghost::GhostType  gac   = Ghost::AroundCells;
     const MaterialSubset* matlset = matl->thisMaterial();
 
     if (flag->d_integrator == MPMFlags::Implicit) {
@@ -162,11 +161,8 @@ namespace Uintah {
 
     // TODO:  Sub in an appropriate symbolic constant here.
     Vector maxWaveSpeed(1.e-12, 1.e-12, 1.e-12);
-    double soundSpeed = 0.0;
 
     double oneThird = 1.0/3.0;
-
-    const double rho_0 = matl->getInitialDensity();
 
     const double K_elastic = m_elasticConstants.K;
     const double G_elastic = m_elasticConstants.G;
