@@ -70,7 +70,7 @@ public:
 
     };
 
-private:
+//private:
 
     int m_var_idx;
     const std::string m_var_name;
@@ -173,9 +173,12 @@ private:
 
     Uintah::parallel_initialize( execObj, 0.0, phi );
 
+    int x=nx,y=ny,z=nz;
+    double * data = m_data.data();
+
     Uintah::BlockRange range(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );
     Uintah::parallel_for( execObj, range, KOKKOS_LAMBDA (int i, int j, int k){
-      phi(i,j,k) = m_data[i*ny*nz+j*nz+k];
+      phi(i,j,k) = data[i*y*z+j*z+k];
 
     });
   }
