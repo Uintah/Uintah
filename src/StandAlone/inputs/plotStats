@@ -1,12 +1,21 @@
-#!/bin/csh -f
+#!/bin/csh -fx
 #______________________________________________________________________
 #  This script parses sus output and plots it using gnuplot.
-#  Usage:
-#     plotStat <sus output file> < output postScript and pdf files (y/Y), default is no>
-#
 #  This requires gnuplot 3.8 or greater.
 #______________________________________________________________________
 
+/bin/rm -rf scraps >&/dev/null
+
+mkdir scraps >&/dev/null
+
+cat << EOF > scraps/usage
+Usage: $0
+ 
+OPTIONS:
+     --file          <output file> [ manditory]  Name of the outputfile to parse
+     --timestepRange <low:high>    [ optional ]  x-axis range
+     --pdf                         [ optional ]  output a pdf file  
+EOF
 
 set tmp = (`which gnuplot`)
 
@@ -16,19 +25,51 @@ if ( $status ) then
 endif
 
 if( $#argv == 0 ) then
-  echo "plotStat <sus output file> <dump postScript File (y/Y), default is no>"
-  exit(1)
-endif
-set out = $argv[1]
-if ( !(-e $out) ) then
-    echo "Couldn't find your file $out"
+  cat scraps/usage
   exit(1)
 endif
 
+#__________________________________
+# parse inputs
 set hardcopy = "n"
-if ( $#argv == 2 ) then
-  set hardcopy = $argv[2]
+set Xrange   = ":"
+set out      = "null"
+
+while ($#argv)
+  set opt  = $2
+  switch ($1:q)
+
+   case --file:
+      set out = "$opt"
+      shift; shift;
+      breaksw
+   case --timestepRange:
+      set Xrange = "$opt"
+      shift; shift
+      breaksw
+   case --pdf:
+      set hardcopy = "y"
+      shift;
+      breaksw
+   case " ":
+      shift
+      break
+   default:
+      echo "Error: ($1) is not a valid option.  Now exiting"
+      cat scraps/usage
+      exit (1)
+  endsw 
+end
+
+if ( !(-e $out) ) then
+  echo "Couldn't find the file ($out)"
+  echo " Now exiting"
+  exit(1)
 endif
+
+set xLo = `echo "$Xrange" | cut -d":" -f1`
+set xHi = `echo "$Xrange" | cut -d":" -f2`
+echo "xLo: $xLo xHi: $xHi out: $out hardcopy: $hardcopy"
 
 unalias rm
 #__________________________________
@@ -59,6 +100,15 @@ echo "?" >> timePerTimestep
 
 paste -d "  " elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax>& data
 sed  -i s/","//g data    # eliminate any ","
+
+# prune data file is requested
+if( $xLo != "" && $xHi != "" ) then
+  echo " Now pruning data from $xLo -> $xHi"
+  sed -n ${xLo},${xHi}p data > data.pruned
+  cp data.pruned data
+endif
+
+
 
 @ procs     = `grep "MPI processes" tmp | awk '{print $2}'`
 @ threads   = `grep "threads per MPI process" tmp | awk '{print $2}'`
