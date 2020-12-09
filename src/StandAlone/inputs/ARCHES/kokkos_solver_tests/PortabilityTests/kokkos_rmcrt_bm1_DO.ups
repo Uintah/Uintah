@@ -28,7 +28,7 @@
     <filebase>kokkos_rmcrt_bm1_DO.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ" levels="-1"/>
-    <save label="RMCRTboundFlux" levels="-1"/>
+    <!-- <save label="RMCRTboundFlux" levels="-1"/> -->
     <!-- <save label="radiationFluxE" levels="-1"/> -->
     <!-- <save label="radiationFluxW" levels="-1"/> -->
     <!-- <save label="radiationFluxN" levels="-1"/> -->
