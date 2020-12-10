@@ -5846,6 +5846,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
               cout << "WARNING:  Even with a larger footprint triangle "
                    << triangle_ids[idx] << " of group " << adv_matl
                    << " is not getting any nodal input." << endl; 
+              cout << "Vertex position is " << P[itv] << endl;
             }
             P[itv] += vel*delT;
             P[itv] += surf*delT;
