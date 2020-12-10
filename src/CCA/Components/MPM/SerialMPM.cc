@@ -4916,7 +4916,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-
         // Get the node indices that surround the cell
         int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
         Vector vel(0.0,0.0,0.0);
@@ -4937,19 +4936,43 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           tx_new[idx] = tx[idx] + vel*delT;
           tx_new[idx] += surf*delT;
         } else {
-          // This is the rare "just in case" instance that none of the nodes
-          // influencing a tracer has mass on it.  In this case, use the
-          // "center of mass" velocity to move the vertex
-          double sumSkCoM=0.0;
-          Vector velCoM(0.0,0.0,0.0);
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            sumSkCoM += gmassglobal[node]*S[k];
-            velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+            // This is the "just in case" instance that none of the nodes
+            // influencing a vertex has mass on it.  In this case, use an
+            // interpolator with a larger footprint
+            ParticleInterpolator* cpdiInterp=scinew cpdiInterpolator(patch);
+            vector<IntVector> ni_cpdi(cpdiInterp->size());
+            vector<double> S_cpdi(cpdiInterp->size());
+            Matrix3 size; size.Identity();
+            int N = cpdiInterp->findCellAndWeights(tx[idx],ni_cpdi,S_cpdi,size);
+            vel  = Vector(0.0,0.0,0.0);
+            surf = Vector(0.0,0.0,0.0);
+            sumSk= 0.0;
+            for (int k = 0; k < N; k++) {
+             IntVector node = ni_cpdi[k];
+              vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
+              sumSk+= gmass[adv_matl][node]*S_cpdi[k];
+              surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            }
+            vel/=sumSk;
+            tx_new[idx] = tx[idx] + vel*delT;
+            tx_new[idx] += surf*delT;
+
+            delete cpdiInterp;
           }
-          velCoM/=sumSkCoM;
-          tx_new[idx] = tx[idx] + velCoM*delT;
-        }
+//        } else {
+//          // This is the rare "just in case" instance that none of the nodes
+//          // influencing a tracer has mass on it.  In this case, use the
+//          // "center of mass" velocity to move the vertex
+//          double sumSkCoM=0.0;
+//          Vector velCoM(0.0,0.0,0.0);
+//          for (int k = 0; k < NN; k++) {
+//            IntVector node = ni[k];
+//            sumSkCoM += gmassglobal[node]*S[k];
+//            velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+//          }
+//          velCoM/=sumSkCoM;
+//          tx_new[idx] = tx[idx] + velCoM*delT;
+//        }
 
 
 #if 0
@@ -5782,12 +5805,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
         // Loop over the vertices
         for(int itv = 0; itv < 3; itv++){
-
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
           Vector vel(0.0,0.0,0.0);
           Vector surf(0.0,0.0,0.0);
-  
           double sumSk=0.0;
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
@@ -5801,22 +5822,49 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             // influencing a vertex has mass on it.
             vel/=sumSk;
             P[itv] += vel*delT;
+            P[itv] += surf*delT;
           } else {
+            // This is the "just in case" instance that none of the nodes
+            // influencing a vertex has mass on it.  In this case, use an
+            // interpolator with a larger footprint
+            ParticleInterpolator* cpdiInterp=scinew cpdiInterpolator(patch);
+            vector<IntVector> ni_cpdi(cpdiInterp->size());
+            vector<double> S_cpdi(cpdiInterp->size());
+            Matrix3 size; size.Identity();
+            int N = cpdiInterp->findCellAndWeights(P[itv],ni_cpdi,S_cpdi,size);
+            vel=Vector(0.0,0.0,0.0);
+            surf=Vector(0.0,0.0,0.0);
+            sumSk=0.0;
+            for (int k = 0; k < N; k++) {
+             IntVector node = ni_cpdi[k];
+              vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
+              sumSk+= gmass[adv_matl][node]*S_cpdi[k];
+              surf -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S_cpdi[k];
+            }
+            vel/=sumSk;
+            if(sumSk<1.e-90){
+              cout << "WARNING:  Even with a larger footprint triangle "
+                   << triangle_ids[idx] << " of group " << adv_matl
+                   << " is not getting any nodal input." << endl; 
+            }
+            P[itv] += vel*delT;
+            P[itv] += surf*delT;
+            delete cpdiInterp;
+          }
+//          } else {
             // This is the "just in case" instance that none of the nodes
             // influencing a vertex has mass on it.  In this case, use the
             // "center of mass" velocity to move the vertex
-            double sumSkCoM=0.0;
-            Vector velCoM(0.0,0.0,0.0);
-            for (int k = 0; k < NN; k++) {
-              IntVector node = ni[k];
-              sumSkCoM += gmassglobal[node]*S[k];
-              velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
-            }
-            velCoM/=sumSkCoM;
-            P[itv] += velCoM*delT;
-          }
-
-          P[itv] += surf*delT;
+//            double sumSkCoM=0.0;
+//            Vector velCoM(0.0,0.0,0.0);
+//            for (int k = 0; k < NN; k++) {
+//              IntVector node = ni[k];
+//              sumSkCoM += gmassglobal[node]*S[k];
+//              velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+//            }
+//            velCoM/=sumSkCoM;
+//            P[itv] += velCoM*delT;
+//          }
 
           // Check to see if a vertex has left the domain
           // If vertices are placed properly (on domain boundaries),
@@ -6087,7 +6135,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
              }
            }
          }
-        } // loop over all triangles
+       } // loop over all triangles
       }   // only do this if a dissolution problem
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
@@ -6210,7 +6258,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             Vector v = Cross(c,a);
             Vector w = Cross(a,b);
             if(Dot(u,v) >= 0. && Dot(u,w) >= 0.){
-
               numInside++;
 //              triInContact[tmi][closest] = tmo;
               foundOne=true;
