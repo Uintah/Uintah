@@ -35,7 +35,7 @@ RefCounted::RefCounted()
 {
 }
 
-RefCounted::~RefCounted()
+RefCounted::~RefCounted() noexcept(false)
 {
   ASSERTEQ(d_refCount, 0);
 }

@@ -291,7 +291,6 @@ private:
   template <typename T>
   void TimeVaryingProperty<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info ){
 
-    typedef typename ArchesCore::VariableHelper<T>::ConstType CT;
     T& property = tsk_info->get_field<T>( m_task_name );
 
     const double time = tsk_info->get_time();

@@ -63,7 +63,7 @@ namespace Uintah {
     public:
       PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end);
 
-      ~PatchBVHNode();
+      ~PatchBVHNode() noexcept(false);
 
       void query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells);
     private:

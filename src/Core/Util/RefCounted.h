@@ -58,7 +58,7 @@ class RefCounted {
 
     RefCounted();
 
-    virtual ~RefCounted();
+    virtual ~RefCounted() noexcept(false);
 
     void addReference() const;
 
