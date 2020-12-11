@@ -222,6 +222,9 @@ namespace Uintah{
 
       ApplicationInterface* m_application{nullptr};
 
+      bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
+      IntVector m_virtual_ROI {IntVector(0,0,0)};
+
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 

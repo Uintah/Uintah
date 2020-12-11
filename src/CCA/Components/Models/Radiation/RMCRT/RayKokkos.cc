@@ -323,6 +323,37 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
       } else if ( type == "patch_based" ){
         d_ROI_algo = patch_based;
       }
+
+      //experimental virtual ROI.
+      const char* roi_str = std::getenv("VIR_ROI");
+      if(roi_str){
+        if(atoi(roi_str)){
+        if( grid->numLevels()>2 ){
+          printf("*** Error: Virtual ROI supported only for two levels as of now. At: %s %d  ***\n", __FILE__, __LINE__);
+          fflush(stdout);
+          exit(1);
+        }
+
+        const char* roi_size_str = std::getenv("VIR_ROI_SIZE");
+        if(roi_size_str){
+          char temp_str[20];
+          strcpy(temp_str, roi_size_str);
+          const char s[2] = ",";
+          char *token;
+          token = strtok(temp_str, s);  /* get the first token */
+          m_virtual_ROI[0] = atoi(token);
+          token = strtok(NULL, s);
+          m_virtual_ROI[1] =  atoi(token);
+          token = strtok(NULL, s);
+          m_virtual_ROI[2] =  atoi(token);
+
+          m_use_virtual_ROI = atoi(roi_str);
+
+          printf("Warning: Using experimental virtual ROI %d %d %d\n", m_virtual_ROI[0], m_virtual_ROI[1], m_virtual_ROI[2]);
+        }
+        }
+      }
+
     //__________________________________
     //  Data Onion Slim (
     } else if (type == "dataOnionSlim" ) {
@@ -1106,6 +1137,10 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   int                                 m_d_nDivQRays;
   bool                                m_d_CCRays;
 
+  bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
+  int       m_virtual_ROI [3];
+  int       m_haloCells [3];
+
   rayTrace_dataOnion_solveDivQFunctor( RandomGenerator                     rand_pool 
                                      , LevelParamsML                       levelParamsML[m_maxLevels]
                                      , double                              domain_BB_Lo[3]
@@ -1125,6 +1160,9 @@ struct rayTrace_dataOnion_solveDivQFunctor {
                                      , bool                                & d_allowReflect
                                      , int                                 & d_nDivQRays
                                      , bool                                & d_CCRays
+                                     , bool                                use_virtual_ROI    //Use virtual ROI set in environment variable VIR_ROI
+                                     , int                                 virtual_ROI [3]
+                                     , int                                 haloCells [3]
                                      )
     : m_rand_pool          ( rand_pool )
     , m_divQ_fine         ( divQ_fine )
@@ -1133,6 +1171,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     , m_d_allowReflect     ( d_allowReflect )
     , m_d_nDivQRays        ( d_nDivQRays )
     , m_d_CCRays           ( d_CCRays )
+    , m_use_virtual_ROI    ( use_virtual_ROI )
   {
     for ( int L = 0; L < m_maxLevels; L++ ) {
 
@@ -1173,6 +1212,14 @@ struct rayTrace_dataOnion_solveDivQFunctor {
     m_fineLevel_ROI_Hi[1] = fineLevel_ROI_Hi[1];
     m_fineLevel_ROI_Hi[2] = fineLevel_ROI_Hi[2];
 
+    m_virtual_ROI[0] = virtual_ROI[0];
+    m_virtual_ROI[1] = virtual_ROI[1];
+    m_virtual_ROI[2] = virtual_ROI[2];
+
+    m_haloCells[0] = haloCells[0];
+    m_haloCells[1] = haloCells[1];
+    m_haloCells[2] = haloCells[2];
+
   }
 
   // This operator() replaces the cellIterator loop used to solve DivQ
@@ -1187,6 +1234,31 @@ struct rayTrace_dataOnion_solveDivQFunctor {
 
     rnd_type rand_gen = m_rand_pool.get_state(); // Each thread needs a unique state
 #endif
+
+    int fineLevel_ROI_Lo[3], fineLevel_ROI_Hi[3], origin[3]={i,j,k};
+    if(m_use_virtual_ROI){
+      //origin[0] % m_virtual_ROI[0] gives additional cells over "virtual" lo boundary that will be defined if the patch size is set to m_virtual_ROI
+      //subtract that number from origin to get virtual Lo boundary. Subtract ghost cells d_haloCells to get fineLevel_ROI_Lo.
+      //To get fineLevel_ROI_Lo, compute virtual Lo boundary and add m_virtual_ROI to get virtual Hi of the patch assuming the patch size of m_virtual_ROI.
+      //Add d_haloCells. Exactly the same logic as "patch based", except uses manually defined ROI size rather than patch size to determine ROI
+
+      fineLevel_ROI_Lo[0] = (origin[0] - (origin[0] % m_virtual_ROI[0])) - m_haloCells[0];
+      fineLevel_ROI_Lo[1] = (origin[1] - (origin[1] % m_virtual_ROI[1])) - m_haloCells[1];
+      fineLevel_ROI_Lo[2] = (origin[2] - (origin[2] % m_virtual_ROI[2])) - m_haloCells[2];
+
+      fineLevel_ROI_Hi[0] = (origin[0] - (origin[0] % m_virtual_ROI[0])) + m_virtual_ROI[0] + m_haloCells[0];
+      fineLevel_ROI_Hi[1] = (origin[1] - (origin[1] % m_virtual_ROI[1])) + m_virtual_ROI[1] + m_haloCells[1];
+      fineLevel_ROI_Hi[2] = (origin[2] - (origin[2] % m_virtual_ROI[2])) + m_virtual_ROI[2] + m_haloCells[2];
+    }
+    else{
+      fineLevel_ROI_Lo[0] = m_fineLevel_ROI_Lo[0];
+      fineLevel_ROI_Lo[1] = m_fineLevel_ROI_Lo[1];
+      fineLevel_ROI_Lo[2] = m_fineLevel_ROI_Lo[2];
+
+      fineLevel_ROI_Hi[0] = m_fineLevel_ROI_Hi[0];
+      fineLevel_ROI_Hi[1] = m_fineLevel_ROI_Hi[1];
+      fineLevel_ROI_Hi[2] = m_fineLevel_ROI_Hi[2];
+    }
 
     //____________________________________________________________________________________________//
     //==== START for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++) ====//
@@ -1452,7 +1524,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
           //______________________________________//
           //==== END domain_BB.inside(CC_pos) ====//
 
-          bool ray_outside_ROI    = ( ( m_fineLevel_ROI_Lo[dir] <= cur[dir] && m_fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
+          bool ray_outside_ROI    = ( ( fineLevel_ROI_Lo[dir] <= cur[dir] && fineLevel_ROI_Hi[dir] > cur[dir] ) == false );
           bool ray_outside_Region = ( ( m_levelParamsML[L].regionLo[dir] <= cur[dir] && m_levelParamsML[L].regionHi[dir] > cur[dir] ) == false );
 
           bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
@@ -1984,6 +2056,9 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
                                                                                                 , d_allowReflect
                                                                                                 , d_nDivQRays
                                                                                                 , d_CCRays
+                                                                                                , m_use_virtual_ROI
+                                                                                                , m_virtual_ROI.get_pointer()
+                                                                                                , d_haloCells.get_pointer()
                                                                                                 );
 
       // This parallel pattern replaces the cellIterator loop used to solve DivQ

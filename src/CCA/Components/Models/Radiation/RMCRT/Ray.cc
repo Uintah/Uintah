@@ -276,6 +276,36 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
         d_ROI_algo = patch_based;
       }
 
+      //experimental virtual ROI.
+      const char* roi_str = std::getenv("VIR_ROI");
+      if(roi_str){
+        if(atoi(roi_str)){
+          if( grid->numLevels()>2 ){
+            printf("*** Error: Virtual ROI supported only for two levels as of now. At: %s %d  ***\n", __FILE__, __LINE__);
+            fflush(stdout);
+            exit(1);
+          }
+
+          const char* roi_size_str = std::getenv("VIR_ROI_SIZE");
+          if(roi_size_str){
+            char temp_str[20];
+            strcpy(temp_str, roi_size_str);
+            const char s[2] = ",";
+            char *token;
+            token = strtok(temp_str, s);  /* get the first token */
+            m_virtual_ROI[0] = atoi(token);
+            token = strtok(NULL, s);
+            m_virtual_ROI[1] =  atoi(token);
+            token = strtok(NULL, s);
+            m_virtual_ROI[2] =  atoi(token);
+
+            m_use_virtual_ROI = atoi(roi_str);
+
+            printf("Warning: Using experimental virtual ROI %d %d %d\n", m_virtual_ROI[0], m_virtual_ROI[1], m_virtual_ROI[2]);
+          }
+        }
+      }
+
     //__________________________________
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
@@ -2403,8 +2433,8 @@ void Ray::computeCellType( const ProcessorGroup*,
                            const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
-                           const IntVector& fineLevel_ROI_Lo,
-                           const IntVector& fineLevel_ROI_Hi,
+                           const IntVector& fineLevel_ROI_Lo1,
+                           const IntVector& fineLevel_ROI_Hi1,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
                            std::vector< constCCVariable< T > >& sigmaT4OverPi,
@@ -2414,6 +2444,25 @@ void Ray::computeCellType( const ProcessorGroup*,
                            double& sumI,
                            MTRand& mTwister)
 {
+  IntVector fineLevel_ROI_Lo = fineLevel_ROI_Lo1, fineLevel_ROI_Hi = fineLevel_ROI_Hi1;
+
+  if(m_use_virtual_ROI){
+    //dont have % operator overloaded in IntVector. So doing it manually now.
+    //origin[0] % m_virtual_ROI[0] gives additional cells over "virtual" lo boundary that will be defined if the patch size is set to m_virtual_ROI
+    //subtract that number from origin to get virtual Lo boundary. Subtract ghost cells d_haloCells to get fineLevel_ROI_Lo.
+    //To get fineLevel_ROI_Lo, compute virtual Lo boundary and add m_virtual_ROI to get virtual Hi of the patch assuming the patch size of m_virtual_ROI.
+    //Add d_haloCells. Exactly the same logic as "patch based", except uses manually defined ROI size rather than patch size to determine ROI
+
+    fineLevel_ROI_Lo[0] = (origin[0] - (origin[0] % m_virtual_ROI[0])) - d_haloCells[0];
+    fineLevel_ROI_Lo[1] = (origin[1] - (origin[1] % m_virtual_ROI[1])) - d_haloCells[1];
+    fineLevel_ROI_Lo[2] = (origin[2] - (origin[2] % m_virtual_ROI[2])) - d_haloCells[2];
+
+    fineLevel_ROI_Hi[0] = (origin[0] - (origin[0] % m_virtual_ROI[0])) + m_virtual_ROI[0] + d_haloCells[0];
+    fineLevel_ROI_Hi[1] = (origin[1] - (origin[1] % m_virtual_ROI[1])) + m_virtual_ROI[1] + d_haloCells[1];
+    fineLevel_ROI_Hi[2] = (origin[2] - (origin[2] % m_virtual_ROI[2])) + m_virtual_ROI[2] + d_haloCells[2];
+  }
+//  printf("ROI: %d %d %d %d %d %d\n", fineLevel_ROI_Lo[0], fineLevel_ROI_Lo[1], fineLevel_ROI_Lo[2], fineLevel_ROI_Hi[0], fineLevel_ROI_Hi[1], fineLevel_ROI_Hi[2]);
+
   int L       = maxLevels -1;  // finest level
   int prevLev = L;
 

@@ -143,6 +143,12 @@ namespace Uintah {
                                             SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
+
+      const char* hypre_superpatch_str = std::getenv("HYPRE_SUPERPATCH"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
+      if(hypre_superpatch_str){
+        m_superpatch = atoi(hypre_superpatch_str);
+      }
+
     }
 
     //---------------------------------------------------------------------------------------------
@@ -405,17 +411,59 @@ namespace Uintah {
         if (timeStep == 1 || do_setup || recompute) {
           HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
 
-          for(int p=0;p<patches->size();p++){
-            const Patch* patch = patches->get(p);
+          if(m_superpatch){ //if m_superpatch is set then pass patch(0).lo and patch(n-1).hi to HYPRE_StructGridSetExtents. Then hypre will treat the rank's subdomain as one giant superpatch
 
-            IntVector lo;
-            IntVector hi;
-            getPatchExtents( patch, lo, hi );
-            hi -= IntVector(1,1,1);
+            IntVector  lo, hi, superlo, superhi;
+            getPatchExtents( patches->get(0), superlo, hi );  //lo of 0th patch will be superlo
+            getPatchExtents( patches->get(patches->size()-1), lo, superhi ); //hi of n-1 th patch will be superhi
+            unsigned long supercells = (superhi[0] - superlo[0]) * (superhi[1] - superlo[1]) * (superhi[2] - superlo[2]); //num cells in super patch
+            unsigned long totcells = 0;
 
-            HYPRE_StructGridSetExtents(grid, lo.get_pointer(), hi.get_pointer());
+            if(m_superpatch_bulletproof==false){
+              //check whether all patches fall within superpatch boundary. Converse checked by comparing number of cells which should match.
+              for(int p=0;p<patches->size();p++){
+                const Patch* patch = patches->get(p);
+                getPatchExtents( patch, lo, hi );
+
+                if(superlo <= lo && hi <= superhi){  //patch falls within superpatch boundaries.
+                  totcells += (hi[0] - lo[0]) * (hi[1] - lo[1]) * (hi[2] - lo[2]);
+                }
+                else{//raise error if patch is outside superpatch boundaries
+                  printf("*** Error: super patch can not be used for this domain decomposition.  ***\n");
+                  printf("rank %d: superlo [%d %d %d], superhi [%d %d %d], lo [%d %d %d], hi [%d %d %d] for patch %d at %s %d\n",
+                         pg->myRank(), superlo[0], superlo[1], superlo[2], superhi[0], superhi[1], superhi[2], lo[0], lo[1], lo[2], hi[0], hi[1], hi[2], patch->getID(), __FILE__, __LINE__ );
+                  fflush(stdout);
+                  exit(1);
+                }
+              }
+              if(supercells != totcells){
+              printf("*** Error: super patch can not be used for this domain decomposition.  ***\n");
+              printf("rank %d: superlo [%d %d %d], superhi [%d %d %d] super patch has extra cells than the subdomain assigned to this rank at %s %d\n",
+                     pg->myRank(), superlo[0], superlo[1], superlo[2], superhi[0], superhi[1], superhi[2], __FILE__, __LINE__ );
+              fflush(stdout);
+              exit(1);
+              }
+              m_superpatch_bulletproof = true;
+            }
+
+            if(pg->myRank()==0){
+              printf("Warning: Using an experimental superpatch for hypre\n");
+            }
+            superhi -= IntVector(1,1,1);
+            HYPRE_StructGridSetExtents(grid, superlo.get_pointer(), superhi.get_pointer()); //pass super patch boundaries to hypre
           }
+          else{//add individual patches as they are without merging into super patch. Existing code as it is
+            for(int p=0;p<patches->size();p++){
+              const Patch* patch = patches->get(p);
 
+              IntVector lo;
+              IntVector hi;
+              getPatchExtents( patch, lo, hi );
+              hi -= IntVector(1,1,1);
+
+              HYPRE_StructGridSetExtents(grid, lo.get_pointer(), hi.get_pointer());
+            }
+          }
           // Periodic boundaries
           const Level* level = getLevel(patches);
           IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -1080,6 +1128,12 @@ namespace Uintah {
     SoleVariable<hypre_solver_structP> m_hypre_solverP;
     bool   m_firstPassThrough;
     double m_movingAverage;
+
+    //set by the environment variable HYPRE_SUPERPATCH. Hypre will combine all patches into a superpatch if set to HYPRE_SUPERPATCH 1
+    //superpatch works only if patch to rank assignment is aligned with the domain number of patches in x, y, and z dimensions.
+    //will work only if the subdomain assigned to the rank is rectangular/cubical.
+    bool   m_superpatch {false};
+    bool   m_superpatch_bulletproof {false}; //ensure all patches assigned to rank fall within the super-patch boundaries and set it to true. No need to do it for every timestep
 
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these

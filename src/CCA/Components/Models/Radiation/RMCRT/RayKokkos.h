@@ -369,6 +369,9 @@ namespace Uintah{
       // const VarLabel* d_divQFiltLabel;
       // const VarLabel* d_boundFluxFiltLabel;
 
+      bool      m_use_virtual_ROI {false};    //Use virtual ROI set in environment variable VIR_ROI
+      IntVector m_virtual_ROI {IntVector(0,0,0)};
+
       //__________________________________
       template<class T, typename ExecSpace, typename MemSpace>
       void rayTrace( const PatchSubset* patches,
