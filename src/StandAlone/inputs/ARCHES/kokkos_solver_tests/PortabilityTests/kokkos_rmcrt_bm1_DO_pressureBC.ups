@@ -6,6 +6,7 @@
 <!--   - Changing the resolution                              -->
 <!--   - Disabling the boundary flux solve                    -->
 <!--   - Replacing use of the jacobi preconditioner with pfmg -->
+<!--   - Adding a mass flow inlet for hypre iterations        -->
 <Uintah_specification>
   <Meta>
     <title>"rmcrt benchmark 1 "</title>
@@ -25,8 +26,13 @@
   </AMR>
   <!--__________________________________-->
   <DataArchiver>
-    <filebase>kokkos_rmcrt_bm1_DO.uda</filebase>
+    <filebase>kokkos_rmcrt_bm1_DO_pressureBC.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="pressurePS" levels="-1"/>
+    <save label="CCVelocity" levels="-1"/>
+    <save label="uVelocitySPBC" levels="-1"/>
+    <save label="vVelocitySPBC" levels="-1"/>
+    <save label="wVelocitySPBC" levels="-1"/>
     <save label="divQ" levels="-1"/>
     <!-- <save label="RMCRTboundFlux" levels="-1"/> -->
     <!-- <save label="radiationFluxE" levels="-1"/> -->
@@ -46,11 +52,11 @@
   <Grid doAMR="true">
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
-      <!-- Wall BC's -->
+      <!-- Flow Inlet -->
       <!--__________________________________ X- -->
       <Face side="x-" name="X-">
-        <BCType label="x- wall" var="WallBC">
-          <value>0</value>
+        <BCType label="x- inlet" var="MassFlowInlet">
+          <value>1</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
           <value>0.0</value>
@@ -63,9 +69,10 @@
           <value>0.0</value>
         </BCType>
       </Face>
+      <!-- Outlet -->
       <!--__________________________________ X+ -->
       <Face side="x+" name="X+">
-        <BCType label="x+ wall" var="WallBC">
+        <BCType label="x+ outlet" var="OutletBC">
           <value>0</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
@@ -79,9 +86,10 @@
           <value>0.0</value>
         </BCType>
       </Face>
+      <!-- Pressure BC's -->
       <!--__________________________________ Y- -->
       <Face side="y-" name="Y-">
-        <BCType label="y- wall" var="WallBC">
+        <BCType label="y- pressure" var="PressureBC">
           <value>0</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
@@ -97,7 +105,7 @@
       </Face>
       <!--__________________________________ Y+ -->
       <Face side="y+" name="Y+">
-        <BCType label="y+ wall" var="WallBC">
+        <BCType label="y+ pressure" var="PressureBC">
           <value>0</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
@@ -113,7 +121,7 @@
       </Face>
       <!--__________________________________ Z- -->
       <Face side="z-" name="Z-">
-        <BCType label="z- wall" var="WallBC">
+        <BCType label="z- pressure" var="PressureBC">
           <value>0</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
@@ -129,7 +137,7 @@
       </Face>
       <!--__________________________________ Z+ -->
       <Face side="z+" name="Z+">
-        <BCType label="z+ wall" var="WallBC">
+        <BCType label="z+ pressure" var="PressureBC">
           <value>0</value>
         </BCType>
         <BCType label="mixture_f" var="Neumann">
