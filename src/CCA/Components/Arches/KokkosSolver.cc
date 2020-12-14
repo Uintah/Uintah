@@ -270,12 +270,26 @@ KokkosSolver::computeTimestep( const LevelP     & level
       m_arches_spec->getRootNode()->findBlock("Time")->getWithDefault( "delt_init", m_dt_init, 1. );
     };
 
-    create_portable_tasks(taskDependencies, this,
+    //some race condition in kokkos::parallel_reduce. So combine all patches together in a single reduction task to avoid the multiple cpu threads calling parallel_reduce
+    //temp work around until the permanent solution
+    if ( Uintah::Parallel::usingDevice() ) {
+	  LoadBalancer * lb = sched->getLoadBalancer();
+	  //printf("warning: Creating per processor task for KokkosSolver::computeStableTimeStep due to race condition in kokkos cuda parallel_reduce %s %d\n", __FILE__, __LINE__);
+	  create_portable_tasks(taskDependencies, this,
+						  "KokkosSolver::computeStableTimeStep",
+						  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
+						  &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
+						  &KokkosSolver::computeStableTimeStep<KOKKOS_CUDA_TAG>,
+						  sched, lb->getPerProcessorPatchSet(level), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
+    }
+    else{
+      create_portable_tasks(taskDependencies, this,
                           "KokkosSolver::computeStableTimeStep",
                           &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
                           &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
                           &KokkosSolver::computeStableTimeStep<KOKKOS_CUDA_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
+    }
 
   } else {
 

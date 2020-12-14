@@ -89,6 +89,10 @@ namespace {
   Uintah::MasterLock g_mark_task_consumed_mutex{};  // allow only one task at a time to enter the task consumed section
   Uintah::MasterLock g_lb_mutex{};                  // load balancer lock
 
+  bool g_have_hypre_task{false};
+  DetailedTask* g_HypreTask;
+  CallBackEvent g_hypre_task_event;
+
 } // namespace
 
 
@@ -587,6 +591,9 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
 
   static int totaltasks;
 
+  //---------------------------------------------------------------------------
+
+  while ( m_num_tasks_done < m_num_tasks ) {
 #if defined( KOKKOS_ENABLE_OPENMP )
 
     auto task_runner = [&] ( int partition_id, int num_partitions ) {
@@ -610,6 +617,22 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
     this->runTasks( 0 );
 
 #endif // KOKKOS_ENABLE_OPENMP
+
+    if ( g_have_hypre_task ) {
+      DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );
+      runTask(g_HypreTask, m_curr_iteration, 0, g_hypre_task_event);
+#ifdef HAVE_CUDA
+      if(g_hypre_task_event == CallBackEvent::GPU)
+        m_detailed_tasks->addDeviceExecutionPending(g_HypreTask);
+#endif
+      g_have_hypre_task = false;
+    }
+
+  } // end while ( m_num_tasks_done < m_num_tasks )
+
+  //---------------------------------------------------------------------------
+
+
 
   //---------------------------------------------------------------------------
   // New way of managing single MPI requests - avoids MPI_Waitsome & MPI_Donesome - APH 07/20/16
@@ -712,7 +735,7 @@ void
 KokkosScheduler::runTasks( int thread_id )
 {
 
-  while( m_num_tasks_done < m_num_tasks ) {
+  while( m_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask  = nullptr;
@@ -743,6 +766,16 @@ KokkosScheduler::runTasks( int thread_id )
     // ----------------------------------------------------------------------------------
     //g_scheduler_mutex.lock();
     while (!havework) {
+      /*
+      * (1.0)
+      *
+      * If it is time for a Hypre task, exit partitions.
+      *
+      */
+      if ( g_have_hypre_task ) {
+        return;
+      }
+
       /*
        * (1.1)
        *
@@ -1081,6 +1114,12 @@ KokkosScheduler::runTasks( int thread_id )
       } else if (gpuRunReady) {
 
         // Run the task on the GPU!
+        if ( readyTask->getTask()->getType() == Task::Hypre ) { //get out of the partition master if there is a hypre task
+          g_hypre_task_event = CallBackEvent::GPU;
+          g_HypreTask = readyTask;
+          g_have_hypre_task = true;
+          return;
+        }
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::GPU);
 
         // See if we're dealing with 32768 ghost cells per patch.  If so,
@@ -1191,6 +1230,12 @@ KokkosScheduler::runTasks( int thread_id )
         } else if (cpuRunReady) {
 #endif
           // run CPU task.
+          if ( readyTask->getTask()->getType() == Task::Hypre ) { //get out of the partition master if there is a hypre task
+            g_hypre_task_event = CallBackEvent::CPU;
+            g_HypreTask = readyTask;
+            g_have_hypre_task = true;
+            return;
+          }
           runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::CPU);
 
 #ifdef HAVE_CUDA

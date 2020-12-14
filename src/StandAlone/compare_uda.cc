@@ -2045,10 +2045,14 @@ main( int argc, char** argv )
             }
           });
 
-          Level::const_patch_iterator iter;
+//          Level::const_patch_iterator iter;
 
-          for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
-            const Patch* patch = *iter;
+//          for(iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
+//            const Patch* patch = *iter;
+
+#pragma omp parallel for
+          for(int p=0; p<level->numPatches(); p++){
+            const Patch* patch = level->getPatch(p);
 
             ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, tstep);
 
