@@ -574,9 +574,10 @@ KokkosScheduler::execute( int tgnum       /* = 0 */
   m_phase_sync_task.resize(m_num_phases, nullptr);
   m_detailed_tasks->setTaskPriorityAlg(m_task_queue_alg);
 
-  // get the number of tasks in each task phase
+  // get the number of tasks in each task phase and initiate each task. Intiation will post MPI recvs and wont conflict with hypre later
   for (int i = 0; i < m_num_tasks; i++) {
     m_phase_tasks[m_detailed_tasks->localTask(i)->getTask()->m_phase]++;
+    MPIScheduler::initiateTask(m_detailed_tasks->localTask(i), m_abort, m_abort_point, m_curr_iteration);
   }
 
   if (g_dbg) {
@@ -1045,7 +1046,17 @@ KokkosScheduler::runTasks( int thread_id )
     // ----------------------------------------------------------------------------------
 
     if (initTask != nullptr) {
-      MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration);
+      //Moving initiateTask to executed Tasks. Observed crashes in some cases due an MPI conflict between Uintah and Hypre.
+      //Rank 0 sends an MPI message with a tag before hypre is called, but recv is not posted by the rank 1 before hypre.
+      //Later rank 1's Hypre task calls MPI_Iprobe with the same tag value expecting  a message from hypre but receives the
+      //message sent by rank 0's Uintah task rather than getting the message by Hypre task. Moving initiateTask posts recvs all
+      //tasks in advance  and matches the sequence.  Hopefully, it  will not conflict in another way that all recvs are
+      //placed in advance, uintah can not post send in advance from a task which is executed after Hypre and then hypre's
+      //send matches one of the uintah's advance receive starving hypre's recv :) Tried setting task->usesMPI(true); inside hypre's
+      //task dependencies with a hope that it will create a new phase for hypre task an no other task / MPI will be executed in parallel,
+      //but got some dependency errors. This approach is   complex but more robust.  Keeping it aside for now and can revisit later if conflict with hypre's  recv  starving occurs.
+
+      //MPIScheduler::initiateTask(initTask, m_abort, m_abort_point, m_curr_iteration);
 
       DOUT(g_task_dbg, myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: " << initTask->getExternalDepCount());
 
