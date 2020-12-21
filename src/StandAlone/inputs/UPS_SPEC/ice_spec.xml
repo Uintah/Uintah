@@ -73,10 +73,6 @@
           <maxHeight                    spec="REQUIRED DOUBLE" />
           <U_infinity                   spec="REQUIRED VECTOR" />
           <exponent                     spec="REQUIRED DOUBLE 'positive'" />
-          <variance                     spec="OPTIONAL NO_DATA">
-            <C_mu                       spec="REQUIRED DOUBLE 'positive'"/>
-            <frictionVel                spec="REQUIRED DOUBLE 'positive'"/>
-          </variance>
         </powerLawProfile>
         
         <powerLawProfile2               spec="OPTIONAL NO_DATA">

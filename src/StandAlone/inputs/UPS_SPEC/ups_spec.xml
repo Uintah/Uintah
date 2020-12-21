@@ -779,13 +779,10 @@
       <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
         <material           spec="REQUIRED STRING"/>
         <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
+        <vonKarmanConstant  spec="OPTIONAL DOUBLE '0,0.5'"    need_applies_to="type logWindProfile"/>  
         <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" /> 
         <verticalDirection  spec="REQUIRED INTEGER '0,2'" />
         <maxHeight          spec="OPTIONAL DOUBLE"            need_applies_to="type powerLawProfile"/>
-        <variance           spec="OPTIONAL NO_DATA">
-          <C_mu             spec="REQUIRED DOUBLE 'positive'"/>
-          <frictionVel      spec="REQUIRED DOUBLE 'positive'"/>
-        </variance>
       </inletVelocity>
       
     </BoundaryConditions>

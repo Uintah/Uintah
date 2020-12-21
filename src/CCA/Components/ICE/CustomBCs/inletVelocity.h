@@ -56,18 +56,12 @@ namespace Uintah {
     
     Point gridMin;
     Point gridMax;
-    
-    // variance
-    bool addVariance;             // add variance to the inlet velocity profile
-    double C_mu;                  // constant
-    double u_star;                // roughnes
-    
+
   }; 
   //____________________________________________________________
   // This struct contains additional local variables needed by setBC.
   struct inletVel_localVars{
     constCCVariable<Vector> vel_CC;
-    bool addVariance;
   };
   
   //____________________________________________________________
@@ -193,35 +187,7 @@ namespace Uintah {
          << bc_kind << ")\n" << std::endl;
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
-  //______________________________________________________________________
-  //  Addition of a 'kick' or variance to the mean velocity profile
-  //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
-  if ( gv->addVariance) {
-    
-    constCCVariable<Vector> vel_CC = lv->vel_CC;
-    
-    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-      IntVector c = *bound_ptr;
-      IntVector cc = c - oneCell;
-      
-      Point here   = level->getCellPosition(c);
-      double z     = here.asVector()[vDir];
-      
-      vel_FC[cc] = vel_CC[c][pDir];
 
-      // Clamp edge/corner values 
-      if(z < d || z > gridHeight){
-        vel_FC[cc] = 0;
-      }
-      
-      //if( cc.z() == 10){
-      //  std::cout << "cc: " << cc << " c " << c << ", vel_CC.x, " << vel_CC[c].x()<< " vel_FC: " << vel_FC[cc] <<std::endl;
-      //}
-    }
-  }  
-  
-  
-  
   return bound_ptr.size(); 
 }
 

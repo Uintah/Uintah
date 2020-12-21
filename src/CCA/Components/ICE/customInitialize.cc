@@ -162,7 +162,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
 
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
-    // and variance. the x & y plane
+    //  in the x & y plane
     ProblemSpecP pL_ps= c_init_ps->findBlock("powerLawProfile");
     if(pL_ps) {
       cib->whichMethod.push_back( "powerLaw" );
@@ -187,20 +187,11 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
       Vector lo = b.min().asVector();
       cib->powerLaw_vars.maxHeight = maxHeight - lo[ vDir ];
 
-      //__________________________________
-      //  Add variance to the velocity profile
-      cib->powerLaw_vars.addVariance = false;
-      ProblemSpecP var_ps = pL_ps->findBlock("variance");
-      if (var_ps) {
-        cib->powerLaw_vars.addVariance = true;
-        var_ps->get( "C_mu",        cib->powerLaw_vars.C_mu );
-        var_ps->get( "frictionVel", cib->powerLaw_vars.u_star );
-      }
     }  // powerLaw inputs
 
     //_______________________________________________
     //  Channel Flow initialized with powerlaw velocity profile
-    // and variance. the x & y plane
+    //  in the x & y plane
     ProblemSpecP pL2_ps= c_init_ps->findBlock("powerLawProfile2");
     if(pL2_ps) {
       cib->whichMethod.push_back( "powerLaw2" );
@@ -516,7 +507,7 @@ void customInitialization(const Patch* patch,
     } // mms_3
 
     //_______________________________________________
-    //  power law velocity profile + variance
+    //  power law velocity profile 
     // u = U_infinity * pow( h/height )^n
     if( whichMethod == "powerLaw" ){
       int vDir          =  cib->powerLaw_vars.verticalDir;
@@ -552,59 +543,6 @@ void customInitialization(const Patch* patch,
           vel_CC[c] = Vector(0,0,0);
         }
       }
-
-      //__________________________________
-      //  Addition of a 'kick' or variance to the mean velocity profile
-      //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
-      //   where:
-      //          C_mu:     empirical constant
-      //          u_star:  frictionVelocity
-      //          Z:       height above the ground
-      //          height:  Boundar layer height, assumed to be the domain height
-      //
-      //   TKE = 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2)
-      //    where sigma.x^2 = (1/N-1) * sum( u_mean - u)^2
-      //
-      //%  Reference: Castro, I, Apsley, D. "Flow and dispersion over topography;
-      //             A comparison between numerical and Laboratory Data for
-      //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
-      //             pp 839-850, 1997.
-
-      if (cib->powerLaw_vars.addVariance ){
-        MTRand mTwister;
-
-        double gridHeight =  cib->powerLaw_vars.gridMax(vDir);
-        double d          =  cib->powerLaw_vars.gridMin(vDir);
-        double inv_Cmu    = 1.0/cib->powerLaw_vars.C_mu;
-        double u_star2    = cib->powerLaw_vars.u_star * cib->powerLaw_vars.u_star;
-
-        for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
-          IntVector c = *iter;
-
-          Point here = level->getCellPosition(c);
-          double z   = here.asVector()[vDir] ;
-
-          double ratio = (z - d)/gridHeight;
-
-          double TKE = inv_Cmu * u_star2 * pow( (1 - ratio),2 );
-
-          // Assume that the TKE is evenly distrubuted between all three components of velocity
-          // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
-
-          const double variance = sqrt(0.66666 * TKE);
-
-          //__________________________________
-          // from the random number compute the new velocity knowing the mean velcity and variance
-          vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
-          vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
-          vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
-
-          // Clamp edge/c orner values
-          if(z < d || z > gridHeight ){
-            vel_CC[c] = Vector(0,0,0);
-          }
-        }
-      }  // add variance
     }
 
     //_______________________________________________

@@ -79,7 +79,7 @@ namespace Uintah {
   };
 
   //__________________________________
-  // powerlaw profile + variance
+  // powerlaw profile
   // u = U_infinity * pow( h/height )^n
   struct powerLaw{
     Vector U_infinity;            // freestream velocity
@@ -89,11 +89,6 @@ namespace Uintah {
     double maxHeight;             // max height of velocity profile before it's set to u_infinity
     Point gridMin;
     Point gridMax;
-
-    // variance
-    bool addVariance;             // add variance to the inlet velocity profile
-    double C_mu;                  // constant
-    double u_star;                // roughnes
     ~powerLaw() {};
   };
     
