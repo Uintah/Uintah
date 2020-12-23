@@ -936,6 +936,9 @@ void SerialMPM::scheduleModifyLoadCurves(const LevelP & level,
 
   t->requires(Task::OldDW, lb->simulationTimeLabel);
   t->requires(Task::OldDW, lb->delTLabel );
+  if(flags->d_useTimeAveragedKE){
+    t->requires(Task::OldDW, lb->TimeAveSpecificKELabel );
+  }
   t->requires(Task::OldDW, lb->KineticEnergyLabel );
   t->computes( VarLabel::find( endSimulation_name));
   t->setType(Task::OncePerProc);
@@ -1503,6 +1506,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   if(flags->d_reductionVars->mass){
     t->computes(lb->TotalMassLabel);
+    t->computes(lb->PistonMassLabel);
   }
   if(flags->d_reductionVars->volDeformed){
     t->computes(lb->TotalVolumeDeformedLabel);
@@ -1723,6 +1727,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triAreaLabel,            triangle_matls, gnone);
   t->requires(Task::OldDW, lb->triAreaAtNodesLabel,     triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->triClayLabel,            triangle_matls, gnone);
 //t->requires(Task::OldDW, lb->triNode0TriangleIDsLabel,triangle_matls, gnone);
 //t->requires(Task::OldDW, lb->triNode1TriangleIDsLabel,triangle_matls, gnone);
 //t->requires(Task::OldDW, lb->triNode2TriangleIDsLabel,triangle_matls, gnone);
@@ -1737,6 +1742,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(lb->triUseInPenaltyLabel_preReloc,        triangle_matls);
   t->computes(lb->triAreaLabel_preReloc,                triangle_matls);
   t->computes(lb->triAreaAtNodesLabel_preReloc,         triangle_matls);
+  t->computes(lb->triClayLabel_preReloc,                triangle_matls);
 //t->computes(lb->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
 //t->computes(lb->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
 //t->computes(lb->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
@@ -1798,10 +1804,14 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triClayLabel,         triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
-  t->computes(lb->gSurfaceAreaLabel,                mpm_matls);
+  if (flags->d_doingDissolution) {
+    t->computes(lb->gSurfaceAreaLabel,              mpm_matls);
+    t->computes(lb->gSurfaceClayLabel,              mpm_matls);
+  }
 //  t->computes(lb->triInContactLabel,                triangle_matls);
 
   sched->addTask(t, patches, matls);
@@ -3786,9 +3796,17 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double time = simTimeVar;
   sum_vartype KE;
+  max_vartype timeAveKE;
   delt_vartype delT;
-  old_dw->get(KE,   lb->KineticEnergyLabel);
+  double KELoadCurve;
   old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+  old_dw->get(KE,   lb->KineticEnergyLabel);
+  if(flags->d_useTimeAveragedKE){
+   old_dw->get(timeAveKE,   lb->TimeAveSpecificKELabel);
+   KELoadCurve=timeAveKE;
+  } else {
+   KELoadCurve=KE;
+  }
 
   for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -3804,9 +3822,13 @@ void SerialMPM::modifyLoadCurves(const ProcessorGroup* ,
       if(timeToNextLoad < delT){
         proc0cout << "timeToNextLoad = " << timeToNextLoad << endl;
         proc0cout << "KE = " << KE << endl;
+        if(flags->d_useTimeAveragedKE){
+         proc0cout << "timeAverageKE = " << timeAveKE << endl;
+        }
+        proc0cout << "KELoadCurve = " << KELoadCurve << endl;
         proc0cout << "pbc->getLoadCurve()->getMaxKE(nextIndex) = "
-             << pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
-        if(KE > pbc->getLoadCurve()->getMaxKE(nextIndex)){
+                  <<  pbc->getLoadCurve()->getMaxKE(nextIndex) << endl;
+        if(KELoadCurve > pbc->getLoadCurve()->getMaxKE(nextIndex)){
           for(int i=nextIndex;i<numPOLC;i++){
             double loadTime = pbc->getLoadCurve()->getTime(i);
             pbc->getLoadCurve()->setTime(i,loadTime+1.0);
@@ -4142,7 +4164,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
-    double totalmass = 0;
+    double totalmass  = 0;
+    double pistonmass = 0;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
     double ke=0;
@@ -4387,6 +4410,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
+          pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
       } else {  // Not XPIC(2)
@@ -4497,6 +4521,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
+          pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
       } // use XPIC(2) or not
@@ -4528,6 +4553,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     //  reduction variables
     if(flags->d_reductionVars->mass){
       new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+      new_dw->put(sum_vartype(pistonmass),     lb->PistonMassLabel);
     }
     if(flags->d_reductionVars->momentum){
       new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
@@ -5738,8 +5764,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                triMidToN1Vec_new,triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
-      constParticleVariable<double> triArea;
-      ParticleVariable<double>      triArea_new;
+      constParticleVariable<double> triArea, triClay;
+      ParticleVariable<double>      triArea_new, triClay_new;
       constParticleVariable<Vector> triAreaAtNodes;
       ParticleVariable<Vector>      triAreaAtNodes_new;
 //    ParticleVariable<Stencil7>    triNode0TriIDs_new, 
@@ -5757,6 +5783,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triUseInPenalty, lb->triUseInPenaltyLabel,            pset);
       old_dw->get(triArea,         lb->triAreaLabel,                    pset);
       old_dw->get(triAreaAtNodes,  lb->triAreaAtNodesLabel,             pset);
+      old_dw->get(triClay,         lb->triClayLabel,                    pset);
 //    old_dw->get(triNode0TriIDs,  lb->triNode0TriangleIDsLabel,        pset);
 //    old_dw->get(triNode1TriIDs,  lb->triNode1TriangleIDsLabel,        pset);
 //    old_dw->get(triNode2TriIDs,  lb->triNode2TriangleIDsLabel,        pset);
@@ -5777,6 +5804,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                        lb->triAreaLabel_preReloc,         pset);
       new_dw->allocateAndPut(triAreaAtNodes_new,
                                        lb->triAreaAtNodesLabel_preReloc,  pset);
+      new_dw->allocateAndPut(triClay_new,
+                                       lb->triClayLabel_preReloc,         pset);
 //    new_dw->allocateAndPut(triNode0TriIDs_new,
 //                                lb->triNode0TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode1TriIDs_new,
@@ -5788,6 +5817,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       tF_new.copyData(tF);
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
+      triClay_new.copyData(triClay);
 //    triNode0TriIDs_new.copyData(triNode0TriIDs);
 //    triNode1TriIDs_new.copyData(triNode1TriIDs);
 //    triNode2TriIDs_new.copyData(triNode2TriIDs);
@@ -5799,10 +5829,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
         Point P[3];
         // Update the positions of the triangle vertices
-        P[0] = tx[idx]+triMidToN0Vec[idx];
-        P[1] = tx[idx]+triMidToN1Vec[idx];
-        P[2] = tx[idx]+triMidToN2Vec[idx];
-
+        P[0] = tx[idx] + triMidToN0Vec[idx];
+        P[1] = tx[idx] + triMidToN1Vec[idx];
+        P[2] = tx[idx] + triMidToN2Vec[idx];
+ 
         // Loop over the vertices
         for(int itv = 0; itv < 3; itv++){
           // Get the node indices that surround the point
@@ -6022,6 +6052,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
+    std::vector<NCVariable<double> > SurfClay(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
 //    std::vector<Vector> sumTriForce(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -6033,11 +6064,16 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       stiffness[m] = 1./inv_stiff;
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
-      new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
+      LSContForce[m].initialize(Vector(0.0));
+
+      if (flags->d_doingDissolution) {
+        new_dw->allocateAndPut(SurfArea[m], lb->gSurfaceAreaLabel,   dwi,patch);
+        new_dw->allocateAndPut(SurfClay[m], lb->gSurfaceClayLabel,   dwi,patch);
+        SurfArea[m].initialize(0.0);
+        SurfClay[m].initialize(0.0);
+      }
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+3);
-      LSContForce[m].initialize(Vector(0.0));
-      SurfArea[m].initialize(0.0);
 //      sumTriForce[m]=Vector(0.0);
     }
 
@@ -6053,6 +6089,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                                     triMidToNodeVec(numLSMatls);
 
     std::vector<constParticleVariable<long64> >     triangle_ids(numLSMatls);
+    std::vector<constParticleVariable<double> >     triClay(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
@@ -6078,6 +6115,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triUseInPenalty[tmo],lb->triUseInPenaltyLabel,      pset0);
       old_dw->get(triAreaAtNodes[tmo], lb->triAreaAtNodesLabel,       pset0);
       old_dw->get(triangle_ids[tmo],   lb->triangleIDLabel,           pset0);
+      old_dw->get(triClay[tmo],        lb->triClayLabel,              pset0);
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
@@ -6133,10 +6171,17 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
              if(patch->containsNode(node)) {
                SurfArea[adv_matl0][node] += thirdTriArea*S[k]
                                            *gmass[adv_matl0][node]/totMass;
+               SurfClay[adv_matl0][node] += thirdTriArea*triClay[tmo][idx0]*S[k]
+                                           *gmass[adv_matl0][node]/totMass;
              }
            }
          }
        } // loop over all triangles
+       for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+         IntVector c = *iter;
+         SurfClay[adv_matl0][c]/=(SurfArea[adv_matl0][c]+1.e-100);
+       } // loop over all nodes
       }   // only do this if a dissolution problem
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {

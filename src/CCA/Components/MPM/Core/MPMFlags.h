@@ -102,6 +102,7 @@ class Output;
     unsigned int d_containerMaterial;
     double       d_containerRadius;
     int          d_KEMaterial;
+    bool         d_useTimeAveragedKE;
     std::string  d_currentPhase;                               // For use in dissolution simulations
 
     int         d_extraSolverFlushes;                          // Have PETSc flush more to save memory

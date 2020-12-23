@@ -441,6 +441,9 @@ MPMLabel::MPMLabel()
   gSurfaceAreaLabel = VarLabel::create( "g.surfacearea",
                    NCVariable<double>::getTypeDescription() );
 
+  gSurfaceClayLabel = VarLabel::create( "g.surfaceclay",
+                   NCVariable<double>::getTypeDescription() );
+
   gNormTractionLabel = VarLabel::create( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
@@ -568,7 +571,7 @@ MPMLabel::MPMLabel()
   tracerCountLabel = VarLabel::create("tracerCount",
                                    sumlong_vartype::getTypeDescription());
 
-  meanKELabel = VarLabel::create("meanKE",
+  TimeAveSpecificKELabel = VarLabel::create("TimeAveSpecificKE",
                                    max_vartype::getTypeDescription());
 
   StrainEnergyLabel = VarLabel::create( "StrainEnergy",
@@ -584,6 +587,9 @@ MPMLabel::MPMLabel()
                         sum_vartype::getTypeDescription() );
 
   TotalMassLabel = VarLabel::create( "TotalMass",
+                                 sum_vartype::getTypeDescription() );
+
+  PistonMassLabel = VarLabel::create( "PistonMass",
                                  sum_vartype::getTypeDescription() );
 
   AddedParticlesLabel = VarLabel::create("AddedParticles",
@@ -930,6 +936,12 @@ MPMLabel::MPMLabel()
   triAreaLabel_preReloc = VarLabel::create("tri.Area+",
 			ParticleVariable<double>::getTypeDescription() );
 
+  triClayLabel        = VarLabel::create("tri.Clay",
+			ParticleVariable<double>::getTypeDescription() );
+
+  triClayLabel_preReloc = VarLabel::create("tri.Clay+",
+			ParticleVariable<double>::getTypeDescription() );
+
   triAreaAtNodesLabel = VarLabel::create("tri.AreaAtNodes",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -1066,6 +1078,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(triAreaLabel_preReloc);
   VarLabel::destroy(triAreaAtNodesLabel);
   VarLabel::destroy(triAreaAtNodesLabel_preReloc);
+  VarLabel::destroy(triClayLabel);
+  VarLabel::destroy(triClayLabel_preReloc);
 #if 0
   VarLabel::destroy(triNode0TriangleIDsLabel);
   VarLabel::destroy(triNode1TriangleIDsLabel);
@@ -1145,6 +1159,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
   VarLabel::destroy(gSurfaceAreaLabel);
+  VarLabel::destroy(gSurfaceClayLabel);
   VarLabel::destroy(gNormTractionLabel);
   VarLabel::destroy(gNormTractionF0Label);
   VarLabel::destroy(gNormTractionF1Label);
@@ -1198,7 +1213,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(partCountLabel);
   VarLabel::destroy(tracerCountLabel);
   VarLabel::destroy(triangleCountLabel);
-  VarLabel::destroy(meanKELabel);
+  VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
 
   VarLabel::destroy(AccStrainEnergyLabel);
@@ -1207,6 +1222,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(AddedParticlesLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
+  VarLabel::destroy(PistonMassLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);

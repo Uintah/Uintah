@@ -122,7 +122,7 @@ WARNING
     class KEStatsLabel {
     public:
       VarLabel* lastWriteTimeLabel;
-      VarLabel* meanKELabel;
+      VarLabel* TimeAveSpecificKELabel;
 //      VarLabel* filePointerLabel;
 //      VarLabel* filePointerLabel_preReloc;
     };

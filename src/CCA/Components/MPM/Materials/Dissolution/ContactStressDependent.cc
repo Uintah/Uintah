@@ -72,6 +72,8 @@ ContactStressDependent::ContactStressDependent(const ProcessorGroup* myworld,
   ps->require("Vm_cm3_mol",           d_Vm);
   ps->require("StressThreshold",      d_StressThresh);
   ps->getWithDefault("Temperature",   d_temperature, 300.0);
+  ps->getWithDefault("Ao_clay_mol_cm2-us",        d_Ao_clay, d_Ao);
+  ps->getWithDefault("Ea_clay_ug-cm2_us2-mol",    d_Ea_clay, d_Ea);
 }
 
 ContactStressDependent::~ContactStressDependent()
@@ -90,6 +92,8 @@ void ContactStressDependent::outputProblemSpec(ProblemSpecP& ps)
   dissolution_ps->appendElement("Vm_cm3_mol",           d_Vm);
   dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
   dissolution_ps->appendElement("Temperature",          d_temperature);
+  dissolution_ps->appendElement("Ao_clay_mol_cm2-us",     d_Ao_clay);
+  dissolution_ps->appendElement("Ea_clay_ug-cm2_us2-mol", d_Ea_clay);
 }
 
 void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
@@ -113,6 +117,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     std::vector<constNCVariable<Vector> > gContactForce(numMatls);
     std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
+    std::vector<constNCVariable<double> > gSurfaceClay(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
     std::vector<NCVariable<double> >  dLdt(numMatls);
     constNCVariable<double> NC_CCweight;
@@ -128,6 +133,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                                 lb->gLSContactForceLabel, dwi, patch, gnone, 0);
       new_dw->get(gSurfaceArea[m],
                                 lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gSurfaceClay[m],
+                                lb->gSurfaceClayLabel,    dwi, patch, gnone, 0);
 
       new_dw->getModifiable(massBurnRate[m],
                                 lb->massBurnFractionLabel,dwi, patch);
@@ -162,6 +169,11 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                    * exp(-d_Ea/(d_R*d_temperature))
                    * 8.0*3.1536e19*d_timeConversionFactor;
       double rate = 0.25*dL_dt*area;
+      double dL_dt_clay = (0.75*M_PI)
+                        * ((d_Vm*d_Vm)*d_Ao_clay)/(d_R*d_temperature)
+                        * exp(-d_Ea_clay/(d_R*d_temperature))
+                        * 8.0*3.1536e19*d_timeConversionFactor;
+      double rate_clay = 0.25*dL_dt*area;
 //      int numNodesMBRGT0 = 0;
 //      double mBRSum = 0.;
 //      double normtrac_mean = 0.;
@@ -193,8 +205,13 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
              -normtrac_ave > d_StressThresh){   // Compressive stress is neg
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-normtrac_ave - d_StressThresh);
-            massBurnRate[md][c] += NC_CCweight[c]*rate*stressDiff*rho;
-            dLdt[md][c] += NC_CCweight[c]*dL_dt*stressDiff;
+            double surfClay = max(gSurfaceClay[md][c], 
+                                  gSurfaceClay[inContactMatl][c]);
+
+            massBurnRate[md][c] += NC_CCweight[c]*rho*stressDiff*
+                                   (rate*(1.-surfClay)  + rate_clay*surfClay);
+            dLdt[md][c] += NC_CCweight[c]*stressDiff*
+                                   (dL_dt*(1.-surfClay) + dL_dt_clay*surfClay);
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 
@@ -247,6 +264,7 @@ void ContactStressDependent::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfaceClayLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 

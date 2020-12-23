@@ -74,7 +74,7 @@ KEStats::~KEStats()
   }
   
   VarLabel::destroy(ps_lb->lastWriteTimeLabel);
-  VarLabel::destroy(ps_lb->meanKELabel);
+  VarLabel::destroy(ps_lb->TimeAveSpecificKELabel);
 //  VarLabel::destroy(ps_lb->filePointerLabel);
 //  VarLabel::destroy(ps_lb->filePointerLabel_preReloc);
   delete ps_lb;
@@ -108,8 +108,8 @@ void KEStats::problemSetup(const ProblemSpecP& ,
   ps_lb->lastWriteTimeLabel =
     VarLabel::create("lastWriteTime_partE", max_vartype::getTypeDescription());
 
-  ps_lb->meanKELabel =
-    VarLabel::create("meanKE", max_vartype::getTypeDescription());
+  ps_lb->TimeAveSpecificKELabel =
+    VarLabel::create("TimeAveSpecificKE", max_vartype::getTypeDescription());
                                             
 //  ps_lb->filePointerLabel =
 //    VarLabel::create("filePointer", ParticleVariable< FILE* >::getTypeDescription() );
@@ -144,7 +144,7 @@ void KEStats::scheduleInitialize(SchedulerP   & sched,
                   this, &KEStats::initialize);
   
   t->computes( ps_lb->lastWriteTimeLabel );
-  t->computes( ps_lb->meanKELabel );
+  t->computes( ps_lb->TimeAveSpecificKELabel );
   sched->addTask( t, level->eachPatch(), d_matl_set );
 }
 //______________________________________________________________________
@@ -160,7 +160,7 @@ void KEStats::initialize(const ProcessorGroup *,
      
     double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put( max_vartype( tminus ), ps_lb->lastWriteTimeLabel );
-    new_dw->put( max_vartype( 9.e9 ), ps_lb->meanKELabel );
+    new_dw->put( max_vartype( 9.e9 ), ps_lb->TimeAveSpecificKELabel );
 
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = m_output->getOutputLocation();
@@ -255,8 +255,8 @@ void KEStats::scheduleDoAnalysis(SchedulerP& sched,
                    this,&KEStats::doAnalysis);
                      
   sched_TimeVars( t, level, ps_lb->lastWriteTimeLabel, true );
-  t->computes( ps_lb->meanKELabel );
-  t->requires( Task::OldDW, ps_lb->meanKELabel );
+  t->computes( ps_lb->TimeAveSpecificKELabel );
+  t->requires( Task::OldDW, ps_lb->TimeAveSpecificKELabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -281,11 +281,11 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
   max_vartype oldMeanKE;
   getTimeVars( old_dw, level, ps_lb->lastWriteTimeLabel, tv );
   putTimeVars( new_dw,        ps_lb->lastWriteTimeLabel, tv );
-  old_dw->get( oldMeanKE,     ps_lb->meanKELabel);
+  old_dw->get( oldMeanKE,     ps_lb->TimeAveSpecificKELabel);
   double tminus = d_startTime - 1.0/m_analysisFreq;
   
   if( tv.isItTime == false ){
-    new_dw->put( max_vartype( oldMeanKE ), ps_lb->meanKELabel );
+    new_dw->put( max_vartype( oldMeanKE ), ps_lb->TimeAveSpecificKELabel );
     return;
   }
 
@@ -304,16 +304,23 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
       // create the directory structure
       string udaDir = m_output->getOutputLocation();
       string path = udaDir + "/KineticEnergy.dat";
+      string massPath = udaDir + "/PistonMass.dat";
 
-      double time, KE;
+      double time, KE, massTime, pistonMass=1.e-100;
       int numLines=0;
-      double meanKE=0;
+      double timeAveKE=0;
       vector<double> KEvector, timevector;
       if(simTime > 0.){
         // open the file
         ifstream KEfile(path.c_str());
         if(!KEfile){
             cerr << "KineticEnergy.dat file not opened, exiting" << endl;
+            exit(1);
+        }
+
+        ifstream Massfile(massPath.c_str());
+        if(!Massfile){
+            cerr << "PistonMass.dat file not opened, exiting" << endl;
             exit(1);
         }
 
@@ -324,20 +331,25 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
         }
         if(numLines < d_numStepsAve){
           for(unsigned int i=0;i<KEvector.size();i++){
-            meanKE+=KEvector[i];
+            timeAveKE+=KEvector[i];
           }
-          meanKE/=((double) numLines);
+          timeAveKE/=((double) numLines);
         } else {
           for(int unsigned i=KEvector.size()-d_numStepsAve;i<KEvector.size();i++){
-            meanKE+=KEvector[i];
+            timeAveKE+=KEvector[i];
           }
-          meanKE/=((double) d_numStepsAve);
+          timeAveKE/=((double) d_numStepsAve);
         }
-//        cout << "meanKE = " << meanKE << endl;
+        // Just need the last value.  There's almost certainly a more efficient
+        // way to do this.
+        while(Massfile >> massTime >> pistonMass){
+        }
+//        cout << "timeAveKE = " << timeAveKE << endl;
 //        cout << "numLines = " << numLines << endl;
 //        cout << "prevAnlysTime = " << tv.prevAnlysTime << endl;
       }
-      new_dw->put( max_vartype( meanKE ), ps_lb->meanKELabel );
+      new_dw->put( max_vartype(timeAveKE/pistonMass ),
+                                                ps_lb->TimeAveSpecificKELabel);
     }  // proc==pg...
   }  // patches
 }

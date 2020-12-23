@@ -73,6 +73,10 @@ Triangle::createTriangles(TriangleMaterial* matl,
   string ptsfilename = fileroot + ".pts";
   string trifilename = fileroot + ".tri";
 
+  // Open clay attribute file
+  string clayfilename = fileroot + ".clay";
+  bool haveClay = false;
+
   std::ifstream pts(ptsfilename.c_str());
   if (!pts ){
     throw ProblemSetupException(
@@ -85,6 +89,13 @@ Triangle::createTriangles(TriangleMaterial* matl,
     throw ProblemSetupException(
       "ERROR Opening tri file "+trifilename+" in createTriangles \n",
                                                          __FILE__, __LINE__);
+  }
+
+  std::ifstream clay(clayfilename.c_str());
+  if (!clay ){
+   proc0cout << "No clay file "+clayfilename+" in createTriangles \n";
+  } else {
+   haveClay=true;
   }
 
   // Read in pts files
@@ -155,13 +166,25 @@ Triangle::createTriangles(TriangleMaterial* matl,
     if(triangles[i].size() > 30){
        cout << "This node has " << triangles[i].size() << " triangles" << endl;
     }
-  } // while lines in the pts file
+  } // for lines in the pts file
+
+  // Read in clay file if it exists
+  vector<double> triClay(numtri,0);
+  if(haveClay){
+    double clayAttribute;
+    int iClay = 0;
+    while (clay >> clayAttribute) {
+     triClay[iClay]=clayAttribute;
+     iClay++;
+    } // while lines in the clay file
+    clay.close();
+  }
 
   vector<int>       useInPen(numpts,1);
   vector<IntVector> useInPenVector(numtri,IntVector(99,99,99));
 
   // make triangles from subsequent points if their midpoint is on patch
-  // Choose which points to use in penalty contact so that each point is
+  // Choose which vertices to use in penalty contact so that each vertex is
   // used just once.
   for(unsigned int i = 0; i<numtri; i++){
       useInPenVector[i] = IntVector(useInPen[i0[i]],
@@ -184,6 +207,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
       triangle_pos[pidx]   = test;
       triangleID[pidx]     = TID[i];
       triangleArea[pidx]   = triAreaNow[i];
+      triangleClay[pidx]   = triClay[i];
       triangleMidToNode0[pidx] = P0 - test;
       triangleMidToNode1[pidx] = P1 - test;
       triangleMidToNode2[pidx] = P2 - test;
@@ -242,6 +266,7 @@ Triangle::allocateVariables(particleIndex numTriangles,
   new_dw->allocateAndPut(triangleUseInPenalty,
                                          d_lb->triUseInPenaltyLabel,    subset);
   new_dw->allocateAndPut(triangleArea,   d_lb->triAreaLabel,            subset);
+  new_dw->allocateAndPut(triangleClay,   d_lb->triClayLabel,            subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
                                          d_lb->triAreaAtNodesLabel,     subset);
 
@@ -337,6 +362,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_lb->triUseInPenaltyLabel);
   d_triangle_state.push_back(d_lb->triAreaAtNodesLabel);
   d_triangle_state.push_back(d_lb->triAreaLabel);
+  d_triangle_state.push_back(d_lb->triClayLabel);
 
   d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -348,6 +374,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_lb->triUseInPenaltyLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triAreaAtNodesLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triAreaLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triClayLabel_preReloc);
 }
 //__________________________________
 //
@@ -365,6 +392,7 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->triMidToN2VectorLabel);
   t->computes(d_lb->triUseInPenaltyLabel);
   t->computes(d_lb->triAreaLabel);
+  t->computes(d_lb->triClayLabel);
   t->computes(d_lb->triAreaAtNodesLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
   t->computes(d_lb->triangleCountLabel);

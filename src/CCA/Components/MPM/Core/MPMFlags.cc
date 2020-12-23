@@ -120,6 +120,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_useTriangles                       =  false;
   d_outputDataOnLoadCurveChange        =  true;
   d_currentPhase                       =  "null";
+  d_useTimeAveragedKE                  =  false;
   
   d_reductionVars = scinew reductionVars();
   d_reductionVars->mass             = false;
@@ -270,6 +271,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("use_triangles",     d_useTriangles);
   mpm_flag_ps->get("OutputDataOnLoadCurveChange",       
                                         d_outputDataOnLoadCurveChange);
+  mpm_flag_ps->get("useTimeAveragedKE", d_useTimeAveragedKE);
 
   mpm_flag_ps->get("DoAuthigenesis",     d_doAuthigenesis);
   mpm_flag_ps->get("AuthigenesisBaseFilename",d_authigenesisBaseFilename);
@@ -509,6 +511,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("containerMaterial", d_containerMaterial);
   ps->appendElement("containerRadius",   d_containerRadius);
   ps->appendElement("KEMaterial",        d_KEMaterial);
+  ps->appendElement("useTimeAveragedKE", d_useTimeAveragedKE);
   ps->appendElement("use_tracers",       d_useTracers);
   ps->appendElement("use_linesegments",  d_useLineSegments);
   ps->appendElement("use_triangles",     d_useTriangles);

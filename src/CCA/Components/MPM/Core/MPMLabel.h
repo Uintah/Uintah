@@ -54,7 +54,7 @@ namespace Uintah {
       const VarLabel* partCountLabel;
       const VarLabel* triangleCountLabel;
       const VarLabel* tracerCountLabel;
-      const VarLabel* meanKELabel;
+      const VarLabel* TimeAveSpecificKELabel;
       
       // Heat flux from fire
       const VarLabel* heatRate_CCLabel;
@@ -190,6 +190,7 @@ namespace Uintah {
       const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gSurfaceAreaLabel;
+      const VarLabel* gSurfaceClayLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gNormTractionF0Label;
       const VarLabel* gNormTractionF1Label;
@@ -234,6 +235,7 @@ namespace Uintah {
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* PistonMassLabel;
       const VarLabel* AddedParticlesLabel;
       const VarLabel* BndyForceLabel[6];
       const VarLabel* BndyTractionLabel[6];
@@ -383,6 +385,8 @@ namespace Uintah {
       const VarLabel* triAreaLabel_preReloc; 
       const VarLabel* triAreaAtNodesLabel; 
       const VarLabel* triAreaAtNodesLabel_preReloc; 
+      const VarLabel* triClayLabel; 
+      const VarLabel* triClayLabel_preReloc; 
 //      const VarLabel* triNode0TriangleIDsLabel;
 //      const VarLabel* triNode1TriangleIDsLabel;
 //      const VarLabel* triNode2TriangleIDsLabel;

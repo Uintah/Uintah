@@ -11,6 +11,7 @@
       <refine_particles                   spec="OPTIONAL BOOLEAN" />
       <CanAddParticles                    spec="OPTIONAL BOOLEAN" />
       <XPIC2                              spec="OPTIONAL BOOLEAN" />
+      <useTimeAveragedKE                  spec="OPTIONAL BOOLEAN" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
@@ -192,6 +193,8 @@
         <R_ug-cm2_us2-mol-K              spec="REQUIRED DOUBLE 'positive'" /> 
         <Ao_mol_cm2-us                   spec="REQUIRED DOUBLE 'positive'" /> 
         <Ea_ug-cm2_us2-mol               spec="REQUIRED DOUBLE 'positive'" /> 
+        <Ao_clay_mol_cm2-us              spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ea_clay_ug-cm2_us2-mol          spec="OPTIONAL DOUBLE 'positive'" /> 
         <StressThreshold                 spec="REQUIRED DOUBLE 'positive'" />
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />

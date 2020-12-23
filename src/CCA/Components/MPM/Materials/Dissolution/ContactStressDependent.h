@@ -77,6 +77,8 @@ WARNING
         double d_StressThresh;
         double d_Ao;
         double d_Ea;
+        double d_Ao_clay; // Modified value in the presence of clay
+        double d_Ea_clay; // Modified value in the presence of clay
         // master material
         int    d_masterModalID;
         int    d_inContactWithModalID;
