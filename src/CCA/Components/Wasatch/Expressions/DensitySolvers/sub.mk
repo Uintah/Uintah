@@ -33,9 +33,10 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=               \
-     DensityFromMixFrac            \
-     DensityFromMixFracAndHeatLoss \
+CUDA_ENABLED_SRCS :=                  \
+     DensityFromMixFrac               \
+     DensityFromMixFracAndHeatLoss    \
+     DensityFromSpeciesAndEnthalpy \
      TwoStreamMixingDensity
 
 ifeq ($(HAVE_CUDA),yes)
@@ -69,4 +70,14 @@ ifeq ($(HAVE_CUDA),yes)
   $(foreach file,$(CUDA_ENABLED_SRCS),$(eval $(call make-cuda-target,$(file))))
 
 endif
+
+########################################################################
+#
+# Recursively build subdirectories...
+#
+
+# SUBDIRS := \
+#         $(SRCDIR)/SpeciesAndEnthalpyExpressions
+
+# include $(SCIRUN_SCRIPTS)/recurse.mk
 
