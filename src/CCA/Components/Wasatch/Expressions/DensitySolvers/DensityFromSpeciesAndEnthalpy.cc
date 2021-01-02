@@ -112,7 +112,9 @@ namespace WasatchCore{
     this->template create_field_vector_request<FieldT>( rhoYTags, rhoY_ );
     this->template create_field_vector_request<FieldT>( yOldTags, yOld_ );
 
+    rhoH_           = this->template create_field_request<FieldT>( rhoHTag           );
     rhoOld_         = this->template create_field_request<FieldT>( rhoOldTag         );
+    hOld_           = this->template create_field_request<FieldT>( hOldTag           );
     temperatureOld_ = this->template create_field_request<FieldT>( temperatureOldTag );
     mmwOld_         = this->template create_field_request<FieldT>( mmwOldTag         );
     pressure_       = this->template create_field_request<FieldT>( pressureTag       );
@@ -145,12 +147,14 @@ namespace WasatchCore{
     const TagNames& tagNames = TagNames::self();
     typedef typename Expr::PlaceHolder<FieldT>::Builder PlcHldr;
 
+    factory.register_expression(new PlcHldr( this->densityOldTag_ ));
     factory.register_expression(new PlcHldr( pressureTag_ ));
     factory.register_expression(new PlcHldr( mmwOldTag_   ));
+    factory.register_expression(new PlcHldr( hOldTag_     ));
 
     for(int i=0; i<this->nEq_; ++i)
     {
-      factory.register_expression(new PlcHldr( this->rhoPhiTags_   [i] ));
+      factory.register_expression(new PlcHldr( this->rhoPhiTags_ [i] ));
       factory.register_expression(new PlcHldr( this->betaOldTags_[i] ));
     }
 
@@ -180,11 +184,14 @@ namespace WasatchCore{
                                                          pokitt::MASS ));
     rootIDs.insert( id );
 
+    id = 
     factory.register_expression( new typename
                                       pokitt::Enthalpy
-                                      <FieldT>::Builder( hOldTag_,
-                                                         temperatureOldTag_,
-                                                         yOldTags_ ));
+                                      <FieldT>::Builder( hNewTag_,
+                                                         temperatureNewTag_,
+                                                         yNewTags_ ));
+    rootIDs.insert( id );
+
     id = 
     factory.register_expression( new typename
                                       pokitt::Density
@@ -193,14 +200,17 @@ namespace WasatchCore{
                                                          pressureTag_,
                                                          mmwNewTag_ ));
     rootIDs.insert( id );
-    // id =
+
+    // const Expr::Tag temperatureRefinedTag("temperature_refined", Expr::STATE_NONE);
+
     // factory.register_expression( new typename
     //                                   pokitt::Temperature
-    //                                   <FieldT>::Builder( tResultTag_,
-    //                                                       yOldTags_,,
-    //                                                       hOldTag_,
-    //                                                       temperatureOldTag_ ));
-    // dRhodPhiRootIDs.insert(id);
+    //                                   <FieldT>::Builder( temperatureRefinedTag,
+    //                                                       yNewTags_,
+    //                                                       hNewTag_,
+    //                                                       temperatureNewTag_ ));
+
+    // factory.attach_modifier_expression( temperatureRefinedTag, temperatureNewTag_ );
 
     factory.register_expression( new typename
                                       pokitt::HeatCapacity_Cp
@@ -298,12 +308,12 @@ namespace WasatchCore{
 
     // clip updated species mass fractions
     typedef Expr::ClipValue<FieldT> Clipper;
-    const typename Clipper::Options clipOpt = Clipper::CLIP_MIN_ONLY;
-    for(const Expr::Tag& tag : yNewTags_)
+    // const typename Clipper::Options clipOpt = Clipper::CLIP_MIN_ONLY;
+    for(int i = 0; i<nSpec_-1; ++i)
     {
-      const Expr::Tag clipTag = Expr::Tag(tag.name()+"_clip", Expr::STATE_NONE);
-      factory.register_expression( new typename Clipper::Builder( clipTag, 0., 1., clipOpt ) );
-  //    factory.attach_modifier_expression( clipTag, tag );
+      const Expr::Tag clipTag = Expr::Tag(yNewTags_[i].name()+"_clip", Expr::STATE_NONE);
+      factory.register_expression( new typename Clipper::Builder( clipTag, 0., 1. ) );
+      factory.attach_modifier_expression( clipTag, yNewTags_[i] );
     }
 
     return rootIDs;
@@ -324,6 +334,7 @@ namespace WasatchCore{
     FieldT& ynOld = fieldTManager.field_ref(yOldTags_[nSpec_-1]);
     ynOld <<= fieldTManager.field_ref(yNewTags_[nSpec_-1]);
   }
+
   //--------------------------------------------------------------------
 
   template< typename FieldT >
@@ -342,10 +353,24 @@ namespace WasatchCore{
     FieldT& mmw = fieldManager.field_ref( mmwOldTag_ );
     mmw <<= mmwOld_->field_ref();
 
-    for(int i=0; i<nSpec_; ++i){
+    FieldT& pressure = fieldManager.field_ref( pressureTag_ );
+    pressure <<= pressure_->field_ref();
+
+    for(int i=0; i<nSpec_-1; ++i){
       FieldT& yiGuess = fieldManager.field_ref( yOldTags_[i] );
       yiGuess <<= yOld_[i]->field_ref();
+
+      FieldT& rhoYi = fieldManager.field_ref( rhoYTags_[i] );
+      rhoYi <<= rhoY_[i]->field_ref();
     }
+      FieldT& ynGuess = fieldManager.field_ref( yOldTags_[nSpec_-1] );
+      ynGuess <<= yOld_[nSpec_-1]->field_ref();
+
+      FieldT& hOld = fieldManager.field_ref( hOldTag_ );
+      hOld <<= hOld_->field_ref();
+
+      FieldT& rhoH = fieldManager.field_ref( rhoHTag_ );
+      rhoH <<= rhoH_->field_ref();
   }
 
   //--------------------------------------------------------------------
@@ -357,7 +382,7 @@ namespace WasatchCore{
   {
     using namespace SpatialOps;
     typedef typename Expr::Expression<FieldT>::ValVec SVolFieldVec;
-    SVolFieldVec& results = this->get_value_vec();
+    typename Expr::Expression<FieldT>::ValVec& results = this->get_value_vec();
 
 
     this->newton_solve();
@@ -417,6 +442,7 @@ namespace WasatchCore{
       hOldTag_          ( hOldTag           ),
       temperatureOldTag_( temperatureOldTag ),
       mmwOldTag_        ( mmwOldTag         ),
+      pressureTag_      ( pressureTag       ),
       rtol_             ( rTol              ),
       maxIter_          ( maxIter           )
   {}

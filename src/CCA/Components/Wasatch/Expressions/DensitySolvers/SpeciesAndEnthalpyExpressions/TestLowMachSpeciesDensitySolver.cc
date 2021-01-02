@@ -54,7 +54,6 @@ void test_low_mach_species_density_solver( Uintah::ProblemSpecP&  params,
 
   std::string canteraInputFileName, canteraGroupName;
 
-  double perturbFactor;  // = (guess value)/(true value)
   double rTol;           // residual tolerance
   int    maxIter;        // maximum number of iterations
 

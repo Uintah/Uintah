@@ -219,11 +219,17 @@ namespace WasatchCore{
           converged = (maxError <= this->rTol_);
 
           for(unsigned i=0; i<this->nEq_; i++){
+            #ifndef NDEBUG
+            std::cout << "\nUpdtating field with tag " << this->betaOldTags_[i] << "\n";
+            #endif
             FieldT& betaOld = fieldTManager.field_ref( this->betaOldTags_[i] );
             betaOld <<= fieldTManager.field_ref( this->betaNewTags_[i] );
           }
           
           for(const unsigned& i : phiUpdateIndecices_){
+            #ifndef NDEBUG
+            std::cout << "\nUpdtating field with tag " << this->phiOldTags_[i] << "\n";
+            #endif
             FieldT& phiOld  = fieldTManager.field_ref( this->phiOldTags_[i] );
             phiOld <<= fieldTManager.field_ref( this->phiNewTags_[i] );
           }
@@ -242,7 +248,8 @@ namespace WasatchCore{
         }
         #ifndef NDEBUG
         else{
-          std::cout << "\tSolve for density completed (max error = " << maxError << ") after " << numIter << " iterations.\n";
+          std::cout << "\tSolve for density completed (max error = " << maxError << " field: "<< badTag.name() << ") after " 
+                    << numIter << " iterations.\n";
         }
         #endif
 

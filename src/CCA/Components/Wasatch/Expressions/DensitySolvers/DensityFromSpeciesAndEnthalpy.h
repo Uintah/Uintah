@@ -60,7 +60,7 @@ namespace WasatchCore{
   class DensityFromSpeciesAndEnthalpy : protected DensityCalculatorBase<FieldT>
   {
     const int nSpec_;
-    const Expr::TagList &yOldTags_, &yNewTags_, &rhoYTags_,  &dRhodYTags_;
+    const Expr::TagList yOldTags_, yNewTags_, rhoYTags_,  dRhodYTags_;
     const Expr::Tag     &hOldTag_, &hNewTag_, &rhoHTag_, &dRhodHTag_, &temperatureOldTag_, 
                         &temperatureNewTag_, mmwOldTag_, mmwNewTag_, &dRhodTempertureTag_, 
                         pressureTag_, cpTag_;
@@ -84,7 +84,8 @@ namespace WasatchCore{
     
     //todo: decide if this should be different 
     inline double get_normalization_factor( const unsigned i ) const{
-      return 0.5; // nominal value for each species and enthalpy
+      if(i < nSpec_-1) return 0.5; // nominal value for each species
+      else return 500; // nominal value for temperature
     }
 
 
@@ -106,6 +107,7 @@ namespace WasatchCore{
        *  @param rhoHTag density weighted enthalpy
        *  @param yOldTags the species mass fractions from the previous timestep (used as a guess)
        *  @param hOldTag the enthalpy from the previous timestep (used as a guess)
+       *  @param mmwOldTag the mixture molecular weight from the previous timestep
        *  @param temperatureOldTag the heat loss from the previous timestep (used as a guess)
        *  @param pressureTag the heat loss from the previous timestep (used as a guess)
        *  @param rTol  relative solver tolerance
