@@ -85,7 +85,10 @@ namespace WasatchCore{
     const Expr::Tag
     soundspeed,
     heatCapacity, cp, cv,
-    thermalConductivity,    
+    thermalConductivity,
+    thermodynamicPressure,
+    thermodynamicPressureNP1,
+    backgroundPressure,
     dudx, dvdy, dwdz,
     dpdx, dpdy, dpdz;
     
@@ -121,8 +124,13 @@ namespace WasatchCore{
     convectiveflux, diffusiveflux;
     
     const Expr::Tag
-    pressuresrc,divu,
-    drhodt,drhodtnp1,unconvergedpts;
+    pressuresrc,
+    divu,
+    drhodt, drhodtnp1,
+    unconvergedpts,
+    DPDt, DPDtNP1,
+    partialDPDt,
+    adiabaticIndex;
 
     // mms varden
     const Expr::Tag

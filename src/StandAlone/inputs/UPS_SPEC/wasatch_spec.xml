@@ -848,10 +848,15 @@
       <!-- The enthalpy equation does special treatment for diffusive
            fluxes, and requires the thermal conductivity and viscosity.
         -->
-      <ThermalConductivity  spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+      
+      <!-- if this block is specified, get properties from
+       -->
+      <PropertiesFromPoKiTT spec="OPTIONAL NO_DATA" />
+      
+      <ThermalConductivity  spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
         <NameTag            spec="REQUIRED" />
       </ThermalConductivity>
-      <HeatCapacity         spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+      <HeatCapacity         spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
         <NameTag            spec="REQUIRED" />
       </HeatCapacity>
       <RadiativeSourceTerm  spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
@@ -1204,6 +1209,15 @@
     </TwoStreamMixing>
     
     <!--
+     Calculate density from fluid composition and temperature.
+     -->
+    <ModelBasedOnSpeciesAndEnthalpy spec="OPTIONAL NO_DATA">
+        <tolerance                  spec="OPTIONAL DOUBLE" />
+        <maxIterations              spec="OPTIONAL INTEGER"/>
+    </ModelBasedOnSpeciesAndEnthalpy>
+        
+        
+    <!--
         Tabular property specification.  Use this to specify property
         evaluation from a TabProps file.
       -->
@@ -1497,13 +1511,21 @@
    <!-- Test epression tree execution within an expression -->
    <!-- ================== -->
 
-   <TestNestedExpression spec="OPTIONAL NO_DATA">
-       <NameTag spec="REQUIRED"/>
-       <numIterations      spec="REQUIRED INTEGER"/>
-       <dependentVariables spec="REQUIRED NO_DATA">
-         <NameTag spec="MULTIPLE" />
-       </dependentVariables>
-   </TestNestedExpression>
+    <TestNestedExpression spec="OPTIONAL NO_DATA">
+        <NameTag spec="REQUIRED"/>
+        <numIterations      spec="REQUIRED INTEGER"/>
+        <dependentVariables spec="REQUIRED NO_DATA">
+          <NameTag spec="MULTIPLE" />
+        </dependentVariables>
+    </TestNestedExpression>
+    
+    <TestSpeciesEnthalpyDensitySolver spec="OPTIONAL NO_DATA">
+        <CanteraInputFile             spec="REQUIRED STRING" />
+        <CanteraGroup                 spec="REQUIRED STRING" />
+        <tolerance                    spec="REQUIRED DOUBLE" />
+        <maxIterations                spec="REQUIRED INTEGER"/>
+    </TestSpeciesEnthalpyDensitySolver>
+
 
   </Wasatch>
 
