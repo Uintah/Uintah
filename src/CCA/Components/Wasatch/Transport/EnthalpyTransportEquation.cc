@@ -43,7 +43,17 @@
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
-// Put PoKiTT includes here
+#ifdef HAVE_POKITT
+#include <CCA/Components/Wasatch/Expressions/QuotientFunction.h>
+#include <CCA/Components/Wasatch/Expressions/PressureMaterialDerivativePartial.h>
+#include <CCA/Components/Wasatch/Expressions/PressureMaterialDerivative.h>
+#include <CCA/Components/Wasatch/Expressions/AdiabaticIndex.h>
+#include <pokitt/thermo/Temperature.h>
+#include <pokitt/thermo/Enthalpy.h>
+#include <pokitt/transport/ThermalCondMix.h>
+#include <pokitt/thermo/HeatCapacity_Cp.h>
+#include <pokitt/transport/HeatFlux.h>
+#endif
 
 namespace WasatchCore {
 
@@ -130,7 +140,26 @@ struct EnthalpyBoundaryTyper
     }
   };
 
- //#ifdef HAVE_POKITT block for method species_diffusive_flux_tags() here
+#ifdef HAVE_POKITT
+  //---------------------------------------------------------------------------
+
+  /* defines a TagList corresponding to species diffusive flux given a string
+   * defining a direction and an Expr::Context
+   */
+  Expr::TagList species_diffusive_flux_tags( std::string dir,
+                                             Expr::Context context )
+  {
+    assert( dir=="X" || dir=="Y" || dir=="Z" );
+
+    Expr::TagList diffFluxTags;
+    for( const std::string specName : CanteraObjects::species_names()){
+      diffFluxTags.push_back(Expr::Tag(specName + TagNames::self().diffusiveflux + dir, context));
+    }
+    return diffFluxTags;
+  }
+
+  //---------------------------------------------------------------------------
+#endif
 
   //===========================================================================
 
@@ -144,7 +173,9 @@ struct EnthalpyBoundaryTyper
                              std::set<std::string>& persistentFields )
   : ScalarTransportEquation<FieldT>( enthalpyName, params, gc, densityTag, turbulenceParams, persistentFields, false ),
     wasatchSpec_( wasatchParams ),
-    diffCoeffTag_( enthalpyName+"_diffusivity", Expr::STATE_NONE )
+    diffCoeffTag_( enthalpyName+"_diffusivity", Expr::STATE_NONE ),
+    temperatureTag_(TagNames::self().temperature),
+    usePokitt_( params->findBlock("PropertiesFromPoKiTT") )
   {
     // todo: allow enthalpy to be parsed like TotalInternalEnergy. That way, most of the mess below can be removed.
     const TagNames& tags = TagNames::self();
@@ -158,9 +189,49 @@ struct EnthalpyBoundaryTyper
 
     const bool propertiesSpecified = ( lambdaParams != nullptr && cpParams != nullptr);
 
-// #ifdef HAVE_POKITT block for parsing 
+#   ifdef HAVE_POKITT
+    specParams_ = wasatchSpec_->findBlock("SpeciesTransportEquations");
 
     // determine if species diffusion
+    if( usePokitt_ ){
+      if( propertiesSpecified ){
+        std::ostringstream msg;
+        msg << "Specification of a 'TransportEquation equation=\"enthalpy\"' block requires" << std::endl
+            << "sub-blocks for 'ThermalConductivity' and 'HeatCapacity' or a"                << std::endl
+            << "'PropertiesFromPoKiTT' sub-block, but not both. Please remove either the "   << std::endl
+            << "'PropertiesFromPoKiTT' sub-block, or the  'ThermalConductivity' and"         << std::endl
+            << "'HeatCapacity' sub-blocks."
+            << std::endl;
+        throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+      }
+      lambdaTag = tags.thermalConductivity;
+      cpTag     = tags.heatCapacity;
+
+      Expr::Context contextN = flowTreatment_ == LOWMACH ? Expr::STATE_N : Expr::STATE_NONE;
+      yiTags_.clear(); yiNP1Tags_.clear(); yiInitTags_.clear();
+      for( int i=0; i<CanteraObjects::number_species(); ++i ){
+        const std::string specName = CanteraObjects::species_name(i);
+        yiTags_    .push_back( Expr::Tag( specName, contextN         ) );
+        yiNP1Tags_ .push_back( Expr::Tag( specName, Expr::STATE_NP1  ) );
+        yiInitTags_.push_back( Expr::Tag( specName, Expr::STATE_NONE ) );
+      }
+      const Expr::TagList& yiTags = flowTreatment_ == LOWMACH ? yiNP1Tags_ : yiTags_;
+      // temperature calculation
+      const Expr::Tag temperatureTag = tags.temperature;
+
+      typedef pokitt::HeatCapacity_Cp<FieldT>::Builder Cp;
+      typedef pokitt::ThermalConductivity<FieldT>::Builder ThermCond;
+
+      solnFactory.register_expression( scinew Cp( cpTag, temperatureTag, yiTags ) );
+      solnFactory.register_expression( scinew ThermCond( lambdaTag, temperatureTag,  yiTags, tags.mixMW ) );
+
+      if( flowTreatment_ == LOWMACH ){
+        icFactory.register_expression( scinew Cp( cpTag, temperatureTag, yiInitTags_ ) );
+        icFactory.register_expression( scinew ThermCond( lambdaTag, temperatureTag,  yiInitTags_, tags.mixMW ) );
+      }
+    }
+      else
+#   endif
     if( propertiesSpecified ){
       lambdaTag = parse_nametag( lambdaParams->findBlock("NameTag") );
       cpTag     = parse_nametag( cpParams    ->findBlock("NameTag") );
@@ -170,7 +241,8 @@ struct EnthalpyBoundaryTyper
       else{
         std::ostringstream msg;
         msg << "Specification of a 'TransportEquation equation=\"enthalpy\"' block requires" << std::endl
-            << "sub-blocks for 'ThermalConductivity' and 'HeatCapacity'"                     << std::endl
+            << "sub-blocks for 'ThermalConductivity' and 'HeatCapacity' or a"                << std::endl
+            << "'PropertiesFromPoKiTT' sub-block"
             << std::endl;
         throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
       }
@@ -252,8 +324,108 @@ struct EnthalpyBoundaryTyper
 
     bool doX = false, doY = false, doZ = false;
 
-// #ifdef HAVE_POKITT diffusive flux stuff here
+#   ifdef HAVE_POKITT
 
+    if( specParams_ ){
+      if( params_->findBlock("DiffusiveFlux") ){
+        std::ostringstream msg;
+        msg << "ERROR: When using species transport, the enthalpy diffusive flux will be automatically calculated.\n"
+            << "       Do not specify it in your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+
+      if( enableTurbulence_ ){
+        throw Uintah::ProblemSetupException( "Turbulent transport of enthalpy + species transport not yet supported.",
+                                             __FILE__, __LINE__ );
+      }
+
+      typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<FieldT>::XFace >::Builder XFlux;
+      typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<FieldT>::YFace >::Builder YFlux;
+      typedef pokitt::HeatFlux< typename SpatialOps::FaceTypes<FieldT>::ZFace >::Builder ZFlux;
+
+      Expr::TagList specEnthTags, specEngyTags;
+      const Expr::Tag thermCondTag = tagNames.thermalConductivity;
+      const Expr::TagList emptyTagList;
+
+      typedef pokitt::SpeciesEnthalpy<FieldT>::Builder SpecEnth;
+      for( int i=0; i<CanteraObjects::number_species(); ++i ){
+        const std::string specName = CanteraObjects::species_name(i);
+        specEnthTags.push_back( Expr::Tag( specName+"_"+tagNames.enthalpy.name(), Expr::STATE_NONE ) );
+
+        factory.register_expression( scinew SpecEnth( specEnthTags[i], temperatureTag_, i ) );
+      }
+
+      const Expr::TagList xSpecFluxTags = species_diffusive_flux_tags("X",context);
+      const Expr::TagList ySpecFluxTags = species_diffusive_flux_tags("Y",context);
+      const Expr::TagList zSpecFluxTags = species_diffusive_flux_tags("Z",context);
+
+      for( Uintah::ProblemSpecP diffFluxParams=specParams_->findBlock("DiffusiveFlux");
+          diffFluxParams != nullptr;
+          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
+      {
+        /* If a "MixtureAveraged" sub-block is found in the species diffusion block,
+         * then we may have differential diffusion and we must account for its effects
+         * on the heat flux. If a "MixtureAveraged" sub-block is not found, an empty
+         * TagList (emptyTagList) is used in place of species diffusive fluxes and pure
+         * species enthalpies.
+         */
+        Uintah::ProblemSpecP mixAvgParams = diffFluxParams->findBlock("MixtureAveraged");
+
+        std::string direction;
+        diffFluxParams->getAttribute("direction",direction);
+        for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
+          const std::string dir(1,*it);
+          if( dir == "X" ){
+            doX = true;
+            const Expr::ExpressionID id =
+            factory.register_expression( scinew XFlux( xDiffFluxTag,
+                                                       temperatureTag_,
+                                                       thermCondTag,
+                                                       mixAvgParams ? specEnthTags  : emptyTagList,
+                                                       mixAvgParams ? xSpecFluxTags : emptyTagList ) );
+
+            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+            info[DIFFUSIVE_FLUX_X] = xDiffFluxTag;
+          }
+          else if( dir == "Y" ){
+            doY = true;
+            const Expr::ExpressionID id =
+            factory.register_expression( scinew YFlux( yDiffFluxTag,
+                                                       temperatureTag_,
+                                                       thermCondTag,
+                                                       mixAvgParams ? specEnthTags  : emptyTagList,
+                                                       mixAvgParams ? ySpecFluxTags : emptyTagList ) );
+
+            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+            info[DIFFUSIVE_FLUX_Y] = yDiffFluxTag;
+          }
+          else if( dir == "Z" ){
+            doZ = true;
+            const Expr::ExpressionID id =
+            factory.register_expression( scinew ZFlux( zDiffFluxTag,
+                                                       temperatureTag_,
+                                                       thermCondTag,
+                                                       mixAvgParams ? specEnthTags  : emptyTagList,
+                                                       mixAvgParams ? zSpecFluxTags : emptyTagList ) );
+
+            if(cat == ADVANCE_SOLUTION) factory.cleave_from_children( id );
+
+            info[DIFFUSIVE_FLUX_Z] = zDiffFluxTag;
+          }
+        }
+      }
+
+      // todo: this will need to be changed when turbulence is enabled
+      if(context == Expr::STATE_NP1){
+        if(doX) speciesInfoNP1_[DIFFUSIVE_FLUX_X] = xSpecFluxTags;
+        if(doY) speciesInfoNP1_[DIFFUSIVE_FLUX_Y] = ySpecFluxTags;
+        if(doZ) speciesInfoNP1_[DIFFUSIVE_FLUX_Z] = zSpecFluxTags;
+      }
+    }
+    else
+#   endif
     {
       // jcs how will we determine if we have each direction on???
       doX=true, doY=true, doZ=true;
@@ -583,17 +755,17 @@ struct EnthalpyBoundaryTyper
     // if the flow treatment is low-Mach, diffusive fluxes for STATE_NP1 are used to estimate div(u) so we must
     // set boundary conditions at STATE_NP1 as well as STATE_NONE when initial conditions are set
     const Expr::Context diffFluxContext = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
-    const std::string normalDiffFluxName_nodir = this->solnVarTag_.name() + "_diffFlux_";
+    const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', diffFluxContext ), taskCat, setOnExtraOnly);
 
     if(isLowMach){
       const Category initCat = INITIALIZATION;
-     const Expr::Context initContext = Expr::STATE_NONE;
-     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
-     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
-     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
+      const Expr::Context initContext = Expr::STATE_NONE;
+      bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', initContext), initCat, setOnExtraOnly);
+      bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', initContext), initCat, setOnExtraOnly);
+      bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', initContext), initCat, setOnExtraOnly);
     }
   }
 
@@ -645,7 +817,7 @@ struct EnthalpyBoundaryTyper
       }
 
       const Expr::Tag scalEOSTag = Expr::Tag(primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
-      const Expr::Tag dRhoDhTag  = tagNames.derivative_tag( densityTag_, primVarTag_.name() );
+      const Expr::Tag dRhoDfTag  = tagNames.derivative_tag( densityTag_, primVarTag_ );
 
       // register an expression for divu. divu is just a constant expression to which we add the
       // necessary couplings from the scalars that represent the equation of state.
@@ -658,12 +830,122 @@ struct EnthalpyBoundaryTyper
         initFactory.register_expression( scinew ConstBuilder(tagNames.divu, 0.0));
       }
 
+      // For enthalpy transport, we treat derivative, DP/Dt as a source term. Because DP/Dt depends on velocity divergence (divu),
+      // which is calculated from non-convective scalar RHSs, we need to split DP/Dt into 2 parts:
+      //    - a divergence-free portion (with associated tag 'partialDPDtTag')
+      //    - the part that depends on divu, which is not explicitly calculated
+      //
+      // 'partialDPDtTag' is included in scalarEOSsrcTags, but is not added the RHS of the enthalpy transport equation. Instead,
+      // DP/Dt is calculated from the divergence-free part of DP/Dt at STATE_NP1, and added to the enthalpy RHS during the
+      // subsequent time step, so a placeholder for DP/Dt is registered for STATE_N. For now, we assume DP/Dt is zero unless we
+      // are transporting species (rather than mixture fraction).
+
       Expr::TagList scalarEOSsrcTags = srcTags;
 
-      //#ifdef HAVE_POKITT stuff here for low-Mach species transport
+#ifdef HAVE_POKITT
+      typedef AdiabaticIndex                   <FieldT>::Builder AdiabaticIndex;
+      typedef PressureMaterialDerivativePartial<FieldT>::Builder DPDtPartial;
+      typedef PressureMaterialDerivative       <FieldT>::Builder DPDt;
+      typedef QuotientFunction                 <FieldT>::Builder Quotient;
 
-      solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , scalarEOSsrcTags, densityNP1Tag_ , dRhoDhTag, isStrong_) );
-      initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, scalarEOSsrcTags, densityInitTag_, dRhoDhTag, isStrong_) );
+      const Expr::Tag gammaTag           = tagNames.adiabaticIndex;
+      const Expr::Tag fullDPDtTag        = tagNames.DPDt;
+      const Expr::Tag fullDPDtNP1Tag     = tagNames.DPDtNP1;
+      const Expr::Tag partialDPDtTag     = tagNames.partialDPDt;
+      const Expr::Tag divuTag            = tagNames.divu;
+      const Expr::Tag divuModifierTag    = Expr::Tag( divuTag.name()+"_enthalpy_modifier", Expr::STATE_NONE );
+      const Expr::Tag heatCapacityTag    = tagNames.heatCapacity;
+      const Expr::Tag mixMWTag           = tagNames.mixMW;
+
+      // tags only needed at initialization
+      const Expr::Tag fullDPDtInitTag = Expr::Tag( fullDPDtTag.name(), Expr::STATE_NONE );
+
+      FieldTagListInfo speciesInfoInit;
+
+      speciesInfoNP1_[PRIMITIVE_VARIABLE] = yiNP1Tags_ ;
+      speciesInfoInit[PRIMITIVE_VARIABLE] = yiInitTags_;
+
+      // set species diffusive flux info corresponding to the initial condition
+      const std::set<FieldSelector> fsSet = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
+      for( FieldSelector fs : fsSet ){
+
+       if( info.find(fs) != info.end() ){
+         speciesInfoInit[fs] = Expr::TagList();
+         for(const Expr::Tag& specDiffFluxTag : speciesInfoNP1_[fs] )
+           speciesInfoInit[fs].push_back( Expr::Tag(specDiffFluxTag.name(), Expr::STATE_NONE) );
+        }
+      }// for( FieldSelector fs : fsSet )
+
+        const bool kineticsEnabled = specParams_->findBlock("DetailedKinetics");
+
+        Expr::TagList specEnthTags;
+
+        for( int i=0; i<CanteraObjects::number_species(); ++i ){
+          const std::string specName = CanteraObjects::species_name(i);
+          specEnthTags.push_back( Expr::Tag( specName+"_"+tagNames.enthalpy.name(), Expr::STATE_NONE ) );
+
+          if(kineticsEnabled){
+            const std::string rrName = "rr_" + CanteraObjects::species_name(i);
+
+            speciesInfoNP1_[SOURCE_TERM].push_back(Expr::Tag( rrName, Expr::STATE_NP1  ));
+            speciesInfoInit[SOURCE_TERM].push_back(Expr::Tag( rrName, Expr::STATE_NONE ));
+          }
+        }
+
+      solnFactory.register_expression( scinew AdiabaticIndex( gammaTag, heatCapacityTag, mixMWTag) );
+      initFactory.register_expression( scinew AdiabaticIndex( gammaTag, heatCapacityTag, mixMWTag) );
+
+      solnFactory.register_expression( scinew DPDtPartial( partialDPDtTag,
+                                                           densityNP1Tag_,
+                                                           temperatureTag_,
+                                                           mixMWTag,
+                                                           gammaTag,
+                                                           specEnthTags,
+                                                           infoNP1_,
+                                                           speciesInfoNP1_ ) );
+
+      initFactory.register_expression( scinew DPDtPartial( partialDPDtTag,
+                                                           densityInitTag_,
+                                                           temperatureTag_,
+                                                           mixMWTag,
+                                                           gammaTag,
+                                                           specEnthTags,
+                                                           infoInit_,
+                                                           speciesInfoInit ) );
+
+      const Expr::Tag thermoPNP1Tag  = tagNames.thermodynamicPressureNP1;
+      const Expr::Tag thermoPInitTag = Expr::Tag(thermoPNP1Tag.name(), Expr::STATE_NONE);
+
+      Expr::ExpressionID fullDPDtID;
+
+      fullDPDtID =
+      solnFactory.register_expression( scinew DPDt( fullDPDtNP1Tag,
+                                                    partialDPDtTag,
+                                                    gammaTag,
+                                                    thermoPNP1Tag,
+                                                    divuTag ));
+
+      gc_[ADVANCE_SOLUTION]->rootIDs.insert(fullDPDtID);
+
+      fullDPDtID =
+      initFactory.register_expression( scinew DPDt( fullDPDtInitTag,
+                                                    partialDPDtTag,
+                                                    gammaTag,
+                                                    thermoPInitTag,
+                                                    divuTag ));
+
+      gc_[INITIALIZATION]->rootIDs.insert(fullDPDtID);
+
+      solnFactory.register_expression( scinew PlaceHolder(fullDPDtTag) );
+
+      solnFactory.attach_dependency_to_expression(fullDPDtTag, rhsTag_);
+
+      persistentFields_.insert( fullDPDtTag.name() );
+
+#endif
+
+      solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , scalarEOSsrcTags, densityNP1Tag_ , dRhoDfTag, isStrong_) );
+      initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, scalarEOSsrcTags, densityInitTag_, dRhoDfTag, isStrong_) );
 
       solnFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
       initFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
@@ -679,7 +961,22 @@ struct EnthalpyBoundaryTyper
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // initial condition for enthalpy
-    //#ifdef HAVE_POKITT stuff here for low-Mach species transport
+#ifdef HAVE_POKITT
+   if( usePokitt_ ){
+      const TagNames& tags = TagNames::self();
+
+      typedef pokitt::Enthalpy<FieldT>::Builder EnthalpyIC;
+      icFactory.register_expression( scinew EnthalpyIC( primVarInitTag_,
+                                                        tags.temperature,
+                                                        yiInitTags_ ) );
+
+      typedef ExprAlgebra<FieldT> ExprAlgbr;
+      return icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
+                                                                    tag_list( primVarInitTag_, densityInitTag_ ),
+                                                                    ExprAlgbr::PRODUCT ) );
+    }
+    else
+#endif
     {
       return ScalarTransportEquation<FieldT>::initial_condition(icFactory);
     }

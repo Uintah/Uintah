@@ -85,8 +85,7 @@ namespace WasatchCore{
       Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
       typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-      if (!factory.have_entry(turbDiffTag_))
-        factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+      factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
     } // if(enableTurbulence_)
 
     // define the primitive variable and solution variable tags and trap errors
@@ -210,30 +209,27 @@ namespace WasatchCore{
                                                           infoNP1_,
                                                           Expr::STATE_NP1 );
 
-                 // fieldTagInfo used for diffusive fluxes calculated at initialization
-                 FieldTagInfo infoInit;
-
                  assert(primVarInitTag_.context() == Expr::STATE_NONE);
                  setup_diffusive_flux_expression<FieldT>( diffFluxParams,
                                                           densityInitTag_,
                                                           primVarInitTag_,
                                                           turbDiffTag_,
                                                           iFactory,
-                                                          infoInit,
+                                                          infoInit_,
                                                           primVarInitTag_.context() );
 
                  // set info for diffusive flux based on infoNP1_, add tag names to set of persistent fields
-                 const std::vector<FieldSelector> fsVec = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
-                 for( FieldSelector fs : fsVec ){
+                 const std::set<FieldSelector> fsSet = {DIFFUSIVE_FLUX_X, DIFFUSIVE_FLUX_Y, DIFFUSIVE_FLUX_Z};
+                 for( FieldSelector fs : fsSet ){
                   if( infoNP1_.find(fs) != infoNP1_.end() ){
                     const std::string diffFluxName = infoNP1_[fs].name();
                     info[fs] = Expr::Tag(diffFluxName, Expr::STATE_N);
                     persistentFields_.insert(diffFluxName);
 
                     // Force diffusive flux expression on initialization graph.
-                    const Expr::ExpressionID id = iFactory.get_id( infoInit[fs] );
+                    const Expr::ExpressionID id = iFactory.get_id( infoInit_[fs] );
                     gc_[INITIALIZATION]->rootIDs.insert(id);
-                  }
+                   }
                  }
 
                  // Register placeholders for diffusive flux parameters at STATE_N
@@ -315,16 +311,6 @@ namespace WasatchCore{
          sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ) {
       srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
     }
-    
-    for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("TargetValueSource");
-        sourceTermParams != nullptr;
-        sourceTermParams=sourceTermParams->findNextBlock("TargetValueSource") ) {
-      
-      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      
-      srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
-    }
-
   }
 
   //------------------------------------------------------------------
@@ -334,55 +320,64 @@ namespace WasatchCore{
   ScalarTransportEquation<FieldT>::setup_rhs( FieldTagInfo& info,
                                               const Expr::TagList& srcTags )
   {
-
     typedef typename ScalarRHS<FieldT>::Builder RHSBuilder;
     typedef typename ScalarEOSCoupling<FieldT>::Builder ScalarEOSBuilder;
-    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& solnFactory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& initFactory = *gc_[INITIALIZATION  ]->exprFactory;
     const TagNames& tagNames = TagNames::self();
 
     info[PRIMITIVE_VARIABLE] = primVarTag_;
 
     if( flowTreatment_ == COMPRESSIBLE ){
-      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+      solnFactory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
     }
 
     // for variable density flows:
     if( flowTreatment_ == LOWMACH ){
-      const Expr::Tag rhsNP1Tag     = Expr::Tag(rhsTag_.name(), Expr::STATE_NP1);
-      infoNP1_[PRIMITIVE_VARIABLE]  = primVarNP1Tag_;
+      infoNP1_ [PRIMITIVE_VARIABLE]  = primVarNP1Tag_;
+      infoInit_[PRIMITIVE_VARIABLE]  = primVarInitTag_;
 
       EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
       if( vNames.has_embedded_geometry() ){
-        infoNP1_
-        [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
-        infoNP1_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
-        infoNP1_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
-        infoNP1_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+        infoNP1_ [VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+        infoNP1_ [AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+        infoNP1_ [AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+        infoNP1_ [AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+
+        infoInit_[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+        infoInit_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+        infoInit_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+        infoInit_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
       }
 
       if(isStrong_){
-        const Expr::ExpressionID primVarNP1ID = 
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag_, this->solnvar_np1_tag(), densityNP1Tag_ ) );
-        factory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder(primVarTag_) );
-
-        gc_[ADVANCE_SOLUTION]->rootIDs.insert(primVarNP1ID);
+        solnFactory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarNP1Tag_, this->solnvar_np1_tag(), densityNP1Tag_ ) );
+        solnFactory.register_expression( new typename Expr::PlaceHolder<FieldT>::Builder(primVarTag_) );
       }
 
-      const Expr::Tag scalEOSTag (primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
-      const Expr::Tag dRhoDfTag = tagNames.derivative_tag(densityTag_,primVarTag_);
-      factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_, srcTags, densityNP1Tag_, dRhoDfTag, isStrong_) );
+      const Expr::Tag scalEOSTag = Expr::Tag(primVarTag_.name() + "_EOS_Coupling", Expr::STATE_NONE);
+      const Expr::Tag dRhoDfTag  = tagNames.derivative_tag( densityTag_, primVarTag_ );
+
+      // todo: check whether or not 'srcTags' should be for ScalarEOSBuilder at initialization
+      solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , srcTags, densityNP1Tag_ , dRhoDfTag, isStrong_) );
+      initFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoInit_, srcTags, densityInitTag_, dRhoDfTag, isStrong_) );
 
       // register an expression for divu. divu is just a constant expression to which we add the
       // necessary couplings from the scalars that represent the equation of state.
-      if( !factory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
-        typedef typename Expr::ConstantExpr<SVolField>::Builder divuBuilder;
-        factory.register_expression( new divuBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
+      typedef typename Expr::ConstantExpr<SVolField>::Builder ConstBuilder;
+
+      if( !solnFactory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
+        solnFactory.register_expression( new ConstBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
+      }
+      if( !initFactory.have_entry( tagNames.divu ) ) {
+        initFactory.register_expression( new ConstBuilder(tagNames.divu, 0.0));
       }
 
-      factory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+      solnFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+      initFactory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
     }
 
-    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.divrhou ) );
+    return solnFactory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.divrhou ) );
   }
 
   //------------------------------------------------------------------

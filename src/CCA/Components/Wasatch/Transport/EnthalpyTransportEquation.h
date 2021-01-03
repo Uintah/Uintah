@@ -133,8 +133,16 @@ namespace WasatchCore {
 
     Uintah::ProblemSpecP wasatchSpec_;
     const Expr::Tag diffCoeffTag_;
+    const Expr::Tag temperatureTag_;
+    const bool usePokitt_;
 
-    // #ifdef HAVE_POKITT stuff here
+#   ifdef HAVE_POKITT
+    Expr::TagList yiTags_, yiNP1Tags_, yiInitTags_;
+
+    FieldTagListInfo speciesInfoNP1_;
+
+    Uintah::ProblemSpecP specParams_;
+#   endif
 
   };
 

@@ -655,14 +655,14 @@ namespace WasatchCore{
     Uintah::ProblemSpecP momEqnParams = wasatchSpec_->findBlock("MomentumEquations");
     if( specEqnParams ){
       EquationAdaptors specEqns = parse_species_equations( specEqnParams,
-                                                      wasatchSpec_,
-                                                      momEqnParams,
-                                                      turbParams,
-                                                      densityTag,
-                                                      graphCategories_,
-                                                      *dualTimeMatrixInfo_,
-                                                      dualTimeMatrixInfo_->doBlockImplicit );
-
+                                                           wasatchSpec_,
+                                                           momEqnParams,
+                                                           turbParams,
+                                                           densityTag,
+                                                           graphCategories_,
+                                                           persistentFields_,
+                                                           *dualTimeMatrixInfo_,
+                                                           dualTimeMatrixInfo_->doBlockImplicit );
       adaptors_.insert( adaptors_.end(), specEqns.begin(), specEqns.end() );
     }
 
@@ -743,6 +743,17 @@ namespace WasatchCore{
       PreconditioningParser precondParser( wasatchSpec_, graphCategories_ );
     }
 
+    if( specEqnParams && (flow_treatment() == LOWMACH) ){
+      // add an equation for the thermodynamic pressure if the flow treatment is low-Mach
+      // and we are transporting species
+      adaptors_.push_back( parse_thermodynamic_pressure_equation( wasatchSpec_,
+                                                                  graphCategories_,
+                                                                  persistentFields_ ));
+    }
+
+    //
+    // get the 2D variable density, oscillating (and periodic) mms params, if any, and parse them.
+    //
     Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
     if (varDenOscillatingMMSParams) {
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");

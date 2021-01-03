@@ -189,8 +189,7 @@ namespace WasatchCore{
     virtual void setup_diffusive_flux( FieldTagInfo& );
     virtual void setup_convective_flux( FieldTagInfo& );
     virtual void setup_source_terms( FieldTagInfo&, Expr::TagList& );
-    virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
-                                          const Expr::TagList& srcTags  );
+    virtual Expr::ExpressionID setup_rhs( FieldTagInfo&, const Expr::TagList& );
 
     Uintah::ProblemSpecP params_;
     const bool hasConvection_;

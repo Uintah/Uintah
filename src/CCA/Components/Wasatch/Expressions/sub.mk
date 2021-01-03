@@ -50,6 +50,7 @@ CUDA_ENABLED_SRCS :=      \
      PrimVar              \
      ScalabilityTestSrc   \
      ScalarEOSCoupling    \
+     ScalarEOSHelper      \
      ScalarRHS            \
      SimpleEmission       \
      SolnVarEst           \
