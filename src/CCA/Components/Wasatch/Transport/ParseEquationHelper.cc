@@ -357,14 +357,6 @@ template< typename FluxT >
       factory.register_expression( new BuilderZ(diffFluxTag) );
       hasDiffusiveFlux = true;
     }
-
-    if(!hasDiffusiveFlux){
-      std::ostringstream msg;
-      msg << "Attempted to register Placeholders for diffusive flux expressions but no valid tags were detected. "
-          << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
   }
 
   //------------------------------------------------------------------

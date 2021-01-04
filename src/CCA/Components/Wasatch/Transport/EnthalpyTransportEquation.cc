@@ -755,7 +755,7 @@ struct EnthalpyBoundaryTyper
     // if the flow treatment is low-Mach, diffusive fluxes for STATE_NP1 are used to estimate div(u) so we must
     // set boundary conditions at STATE_NP1 as well as STATE_NONE when initial conditions are set
     const Expr::Context diffFluxContext = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
-    const std::string normalDiffFluxName_nodir = primVarTag_.name() + "_diffFlux_";
+    const std::string normalDiffFluxName_nodir = this->solnVarTag_.name() + "_diffFlux_";
     bcHelper.apply_boundary_condition<XFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'X', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<YFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Y', diffFluxContext ), taskCat, setOnExtraOnly);
     bcHelper.apply_boundary_condition<ZFaceT>(Expr::Tag(normalDiffFluxName_nodir + 'Z', diffFluxContext ), taskCat, setOnExtraOnly);
@@ -846,7 +846,6 @@ struct EnthalpyBoundaryTyper
       typedef AdiabaticIndex                   <FieldT>::Builder AdiabaticIndex;
       typedef PressureMaterialDerivativePartial<FieldT>::Builder DPDtPartial;
       typedef PressureMaterialDerivative       <FieldT>::Builder DPDt;
-      typedef QuotientFunction                 <FieldT>::Builder Quotient;
 
       const Expr::Tag gammaTag           = tagNames.adiabaticIndex;
       const Expr::Tag fullDPDtTag        = tagNames.DPDt;
@@ -898,7 +897,6 @@ struct EnthalpyBoundaryTyper
       solnFactory.register_expression( scinew DPDtPartial( partialDPDtTag,
                                                            densityNP1Tag_,
                                                            temperatureTag_,
-                                                           mixMWTag,
                                                            gammaTag,
                                                            specEnthTags,
                                                            infoNP1_,
@@ -907,7 +905,6 @@ struct EnthalpyBoundaryTyper
       initFactory.register_expression( scinew DPDtPartial( partialDPDtTag,
                                                            densityInitTag_,
                                                            temperatureTag_,
-                                                           mixMWTag,
                                                            gammaTag,
                                                            specEnthTags,
                                                            infoInit_,

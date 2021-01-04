@@ -83,7 +83,7 @@ class PressureMaterialDerivativePartial : public Expr::Expression<FieldT>
   typedef boost::shared_ptr< const Expr::FieldRequest<YFluxT> > YFluxRequestT;
   typedef boost::shared_ptr< const Expr::FieldRequest<ZFluxT> > ZFluxRequestT;
 
-  DECLARE_FIELDS( FieldT, density_, enthalpy_, temperature_, mixMW_, gamma_ )
+  DECLARE_FIELDS( FieldT, density_, enthalpy_, temperature_, gamma_ )
   DECLARE_FIELD( FieldT, enthalpySrc_ )
 
   DECLARE_VECTOR_OF_FIELDS( FieldT, speciesSrcs_       )
@@ -113,7 +113,6 @@ class PressureMaterialDerivativePartial : public Expr::Expression<FieldT>
 
   PressureMaterialDerivativePartial( const Expr::Tag&        densityTag,
                                      const Expr::Tag&        temperatureTag,
-                                     const Expr::Tag&        mixMWTag,
                                      const Expr::Tag&        gammaTag,
                                      const Expr::TagList&    specEnthalpyTags,
                                      const FieldTagInfo&     enthalpyInfo,
@@ -142,7 +141,6 @@ public:
     Builder( const Expr::Tag&        dpdtPartTag,
              const Expr::Tag&        densityTag,
              const Expr::Tag&        temperatureTag,
-             const Expr::Tag&        mixMWTag,
              const Expr::Tag&        gammaTag,
              const Expr::TagList&    specEnthalpyTags,
              const FieldTagInfo&     enthalpyInfo,
@@ -151,7 +149,6 @@ public:
     Expr::ExpressionBase* build() const{
       return new PressureMaterialDerivativePartial( densityTag_,
                                                     temperatureTag_,
-                                                    mixMWTag_,
                                                     gammaTag_,
                                                     specEnthalpyTags_,
                                                     enthalpyInfo_,
@@ -159,13 +156,11 @@ public:
     }
 
   private:
-    const Expr::Tag densityTag_, temperatureTag_, cpTag_, mixMWTag_, gammaTag_;
-
-    const FieldTagInfo enthalpyInfo_;
-
-    const FieldTagListInfo speciesInfo_;
-
+    const Expr::Tag densityTag_, temperatureTag_, gammaTag_;
     const Expr::TagList specEnthalpyTags_;
+
+    const FieldTagInfo     enthalpyInfo_;
+    const FieldTagListInfo speciesInfo_;
   };
 
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -190,7 +185,6 @@ template<typename FieldT>
 PressureMaterialDerivativePartial<FieldT>::
 PressureMaterialDerivativePartial( const Expr::Tag&        densityTag,
                                    const Expr::Tag&        temperatureTag,
-                                   const Expr::Tag&        mixMWTag,
                                    const Expr::Tag&        gammaTag,
                                    const Expr::TagList&    specEnthalpyTags,
                                    const FieldTagInfo&     enthalpyInfo,
@@ -289,7 +283,6 @@ PressureMaterialDerivativePartial( const Expr::Tag&        densityTag,
   density_      = this->template create_field_request<FieldT>( densityTag     );
   enthalpy_     = this->template create_field_request<FieldT>( enthalpyTag    );
   temperature_  = this->template create_field_request<FieldT>( temperatureTag );
-  mixMW_        = this->template create_field_request<FieldT>( mixMWTag       );
   gamma_        = this->template create_field_request<FieldT>( gammaTag       );
 
   this->template create_field_vector_request<FieldT>( specEnthalpyTags   , speciesEnthalpies_ );
@@ -408,14 +401,11 @@ PressureMaterialDerivativePartial<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef typename Expr::Expression<FieldT>::ValVec ResultVecT;
-
   FieldT& dPdtPart = this->value();
 
   const FieldT& density     = density_    ->field_ref();
   const FieldT& enthalpy    = enthalpy_   ->field_ref();
   const FieldT& temperature = temperature_->field_ref();
-  const FieldT& mixMW       = mixMW_      ->field_ref();
   const FieldT& gamma       = gamma_      ->field_ref();
 
   /**
@@ -505,7 +495,6 @@ PressureMaterialDerivativePartial<FieldT>::
 Builder::Builder( const Expr::Tag&        dpdtPartTag,
                   const Expr::Tag&        densityTag,
                   const Expr::Tag&        temperatureTag,
-                  const Expr::Tag&        mixMWTag,
                   const Expr::Tag&        gammaTag,
                   const Expr::TagList&    specEnthalpyTags,
                   const FieldTagInfo&     enthalpyInfo,
@@ -513,7 +502,6 @@ Builder::Builder( const Expr::Tag&        dpdtPartTag,
   : ExpressionBuilder( dpdtPartTag ),
     densityTag_            ( densityTag             ),
     temperatureTag_        ( temperatureTag         ),
-    mixMWTag_              ( mixMWTag               ),
     gammaTag_              ( gammaTag               ),
     specEnthalpyTags_      ( specEnthalpyTags       ),
     enthalpyInfo_          ( enthalpyInfo           ),

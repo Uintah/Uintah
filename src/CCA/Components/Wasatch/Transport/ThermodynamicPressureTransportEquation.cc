@@ -420,7 +420,6 @@ const Expr::Tag&         pRHSTag );
   ThermodymamicPressureTransportEquation::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    std::cout << "\n\nThermodymamicPressureTransportEquation::initial_condition \n\n";
     // set the initial condition based on the background pressure
     const Expr::Tag& bgpTag = TagNames::self().backgroundPressure;
 

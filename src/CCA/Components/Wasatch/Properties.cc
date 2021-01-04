@@ -507,7 +507,7 @@ namespace WasatchCore{
     //====================================================================
 
   void
-  parse_ideal_gas_density_from_composition( Uintah::ProblemSpecP params,
+  parse_spcies_and_enthalpy_density_solver( Uintah::ProblemSpecP params,
                                             Uintah::ProblemSpecP solverSpec,
                                             GraphCategories& gc,
                                             std::set<std::string>& persistentFields )
@@ -624,20 +624,33 @@ namespace WasatchCore{
     // register placeholder for the old density
     Expr::Tag densityOldTag( densityTag.name(), Expr::STATE_N );
     persistentFields.insert(densityTag.name());
+    id =
     gh.exprFactory->register_expression( scinew PlcHolder(densityOldTag) );
+    // gh.exprFactory->cleave_from_parents(id);
+
+    // register placeholder for the old mixture molecular weight
+    Expr::Tag mmwOldTag(tagNames.mixMW.name(), Expr::STATE_N);
+    persistentFields.insert(mmwOldTag.name());
+    gh.exprFactory->register_expression( scinew PlcHolder(mmwOldTag) );
 
     // register placeholder for the old temperature
     persistentFields.insert(temperatureTag.name());
     const Expr::Tag temperatureOldTag = Expr::Tag(temperatureTag.name(), Expr::STATE_N);
+
+    id =
     gh.exprFactory->register_expression( scinew PlcHolder(temperatureOldTag) );
+    // gh.exprFactory->cleave_from_parents(id);
 
     persistentFields.insert(thermoPTag.name());
 
     double rTol;    // residual tolerance
     int    maxIter; // maximum number of iterations
 
-    params->get("tolerance", rTol   );
-    params->get("maxiter"  , maxIter);
+    solverSpec->get("tolerance"    , rTol   );
+    solverSpec->get("maxIterations", maxIter);
+
+    proc0cout << "\ntolerance: " << rTol
+              << "\nmaxIter  : " << maxIter << "\n"; 
 
     typedef DensityFromSpeciesAndEnthalpy<SVolField>::Builder DensBuilder;
     gh.exprFactory->
@@ -651,7 +664,7 @@ namespace WasatchCore{
                                          yiOldTags,
                                          enthalpyOldTag,
                                          temperatureOldTag,
-                                         tagNames.mixMW,
+                                         mmwOldTag,
                                          thermoPTag,
                                          rTol,
                                          maxIter ) );
@@ -822,7 +835,7 @@ namespace WasatchCore{
        if( !wasatchSpec->findBlock("SpeciesTransportEquations") ){
          throw Uintah::ProblemSetupException( "inclusion of a <"+blockName+"> block requires a <SpeciesTransportEquations> block", __FILE__, __LINE__ );
        }
-       parse_ideal_gas_density_from_composition( wasatchSpec, igSolverSpec, gc, persistentFields );
+       parse_spcies_and_enthalpy_density_solver( wasatchSpec, igSolverSpec, gc, persistentFields );
      }
   }
 

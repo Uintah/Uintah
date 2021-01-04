@@ -29,7 +29,7 @@
 #define PressureMaterialDerivative_h
 
 /**
- *  \class PressureMaterialDerivativePartial
+ *  \class PressureMaterialDerivative
  *  \author Josh McConnell
  *  \date   November 2018
  *
