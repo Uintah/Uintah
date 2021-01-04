@@ -1212,9 +1212,16 @@
      Calculate density from fluid composition and temperature.
      -->
     <ModelBasedOnSpeciesAndEnthalpy spec="OPTIONAL NO_DATA">
-        <tolerance                  spec="OPTIONAL DOUBLE" />
-        <maxIterations              spec="OPTIONAL INTEGER"/>
+        <tolerance                  spec="REQUIRED DOUBLE" />
+        <maxIterations              spec="REQUIRED INTEGER"/>
     </ModelBasedOnSpeciesAndEnthalpy>
+
+    <TestSpeciesEnthalpyDensitySolver spec="OPTIONAL NO_DATA">
+        <CanteraInputFile             spec="REQUIRED STRING" />
+        <CanteraGroup                 spec="REQUIRED STRING" />
+        <tolerance                    spec="REQUIRED DOUBLE" />
+        <maxIterations                spec="REQUIRED INTEGER"/>
+    </TestSpeciesEnthalpyDensitySolver>
         
         
     <!--
@@ -1518,14 +1525,6 @@
           <NameTag spec="MULTIPLE" />
         </dependentVariables>
     </TestNestedExpression>
-    
-    <TestSpeciesEnthalpyDensitySolver spec="OPTIONAL NO_DATA">
-        <CanteraInputFile             spec="REQUIRED STRING" />
-        <CanteraGroup                 spec="REQUIRED STRING" />
-        <tolerance                    spec="REQUIRED DOUBLE" />
-        <maxIterations                spec="REQUIRED INTEGER"/>
-    </TestSpeciesEnthalpyDensitySolver>
-
 
   </Wasatch>
 

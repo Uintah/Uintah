@@ -60,7 +60,7 @@ void test_low_mach_species_density_solver( Uintah::ProblemSpecP&  params,
   params->get("CanteraInputFile"  , canteraInputFileName);
   params->get("CanteraGroup"      , canteraGroupName    );
   params->get("tolerance"         , rTol                );
-  params->get("maxiter"           , maxIter             );
+  params->get("maxIterations"     , maxIter             );
 
   CanteraObjects::Setup canteraSetup( "Mix", canteraInputFileName, canteraGroupName );
   CanteraObjects::setup_cantera( canteraSetup );
