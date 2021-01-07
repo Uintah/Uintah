@@ -843,6 +843,7 @@ struct EnthalpyBoundaryTyper
       Expr::TagList scalarEOSsrcTags = srcTags;
 
 #ifdef HAVE_POKITT
+    if(this->specParams_ != nullptr){
       typedef AdiabaticIndex                   <FieldT>::Builder AdiabaticIndex;
       typedef PressureMaterialDerivativePartial<FieldT>::Builder DPDtPartial;
       typedef PressureMaterialDerivative       <FieldT>::Builder DPDt;
@@ -938,7 +939,7 @@ struct EnthalpyBoundaryTyper
       solnFactory.attach_dependency_to_expression(fullDPDtTag, rhsTag_);
 
       persistentFields_.insert( fullDPDtTag.name() );
-
+    }
 #endif
 
       solnFactory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoNP1_ , scalarEOSsrcTags, densityNP1Tag_ , dRhoDfTag, isStrong_) );
