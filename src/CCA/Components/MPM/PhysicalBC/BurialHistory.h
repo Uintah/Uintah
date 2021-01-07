@@ -203,6 +203,7 @@ WARNING
       double d_ramp_time;
       double d_stableKE;
       double d_settle_time;
+      double d_hold_time;
       double d_CI;
       std::string d_currentPhaseType;
       std::vector<double> d_time_Ma;

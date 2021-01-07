@@ -3971,7 +3971,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
  
-          if(flags->d_currentPhase=="hold"){
+          if(flags->d_currentPhase=="hold" ||
+             flags->d_currentPhase=="dissolution"){
             double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
             double startTemp = burialHistory->getTemperature_K(curBHIndex);
             double endTemp   = burialHistory->getTemperature_K(curBHIndex-1);
@@ -4303,10 +4304,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // For problems not involving dissolution, or during phases of the
       // dissolution simulation where dissolution isn't happening, XPIC is
       // carried out as normal.
-      if((flags->d_XPIC2 && !(flags->d_currentPhase=="hold" && 
-                             flags->d_doingDissolution)) ||
+      if((flags->d_XPIC2 && !(flags->d_currentPhase=="dissolution" && 
+                              flags->d_doingDissolution)) ||
          (flags->d_XPIC2 && 
-          flags->d_currentPhase=="hold" && flags->d_doingDissolution 
+          flags->d_currentPhase=="dissolution" && flags->d_doingDissolution 
                                         && timestep%10==1)){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
@@ -4837,11 +4838,11 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
             (pLocalized[idx]==-999) || 
              pVolNew[idx]<flags->d_min_partVolToCellVolRatio*cell_vol){
-//          cout << "Adding to delset, m = " << m << endl;
-//          cout << "pmassNew[idx] = " << pmassNew[idx] << endl;
-//          cout << "pTempNew[idx] = " << pTempNew[idx] << endl;
-//          cout << "pdTdt[idx] = " << pdTdt[idx] << endl;
-//          cout << "pLocalized[idx] = " << pLocalized[idx] << endl;
+          cout << "Adding to delset, m = " << m << endl;
+          cout << "pmassNew[idx] = " << pmassNew[idx] << endl;
+          cout << "pTempNew[idx] = " << pTempNew[idx] << endl;
+          cout << "pdTdt[idx] = " << pdTdt[idx] << endl;
+          cout << "pLocalized[idx] = " << pLocalized[idx] << endl;
           delset->addParticle(idx);
         }
 

@@ -186,10 +186,11 @@ WARNING
         throw ProblemSetupException("**ERROR** No burial history specified.", 
                                      __FILE__, __LINE__);
       } else {
-        double p_c_f, ramp_time, settle_time, stableKE;
+        double p_c_f, ramp_time, settle_time, hold_time, stableKE;
         burHist->getWithDefault("pressure_conversion_factor", p_c_f,       1.0);
         burHist->getWithDefault("ramp_time",                  ramp_time,   1.0);
         burHist->getWithDefault("settle_time",                settle_time, 2.0);
+        burHist->getWithDefault("hold_time",                  hold_time,   1.0);
         burHist->getWithDefault("stableKE",                   stableKE,    2.0e-6);
         std::vector<double> time_Ma;
         std::vector<double> effectiveStress_bar;
@@ -235,13 +236,22 @@ WARNING
           d_maxKE.push_back(stableKE);
           d_BHIndex.push_back(i);
 
-          // hold phase (maybe doing dissolution here)
-          d_phaseType.push_back("hold");
-          uintahTime+=UintahDissolutionTime[i];
-          d_time.push_back(uintahTime);
-          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
-          d_maxKE.push_back(maxKE);
-          d_BHIndex.push_back(i);
+          // hold or dissolution phase
+          if(UintahDissolutionTime[i] > 0.){
+            d_phaseType.push_back("dissolution");
+            uintahTime+=UintahDissolutionTime[i];
+            d_time.push_back(uintahTime);
+            d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+            d_maxKE.push_back(maxKE);
+            d_BHIndex.push_back(i);
+          } else {
+            d_phaseType.push_back("hold");
+            uintahTime+=hold_time;
+            d_time.push_back(uintahTime);
+            d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+            d_maxKE.push_back(maxKE);
+            d_BHIndex.push_back(i);
+          }
         }
         d_phaseType.push_back("hold");
 //      for(unsigned int i=0;i<d_time.size();i++){
@@ -270,7 +280,7 @@ WARNING
        }
        for(int i = 1; i<(int)d_time.size(); i++){
          if (d_time[i]==d_time[i-1]){
-           throw ProblemSetupException("**ERROR** Identical time entries in Load Curve",
+         throw ProblemSetupException("**ERROR** Identical time entries in Load Curve",
                                         __FILE__, __LINE__);
          }
        }
@@ -278,7 +288,7 @@ WARNING
 
      for(int i = 1; i<(int)d_time.size(); i++){
        if (d_time[i]==d_time[i-1]){
-         throw ProblemSetupException("**ERROR** Identical time entries in Load Curve",
+           throw ProblemSetupException("**ERROR** Identical time entries in Load Curve built from burial history",
                                       __FILE__, __LINE__);
        }
      }

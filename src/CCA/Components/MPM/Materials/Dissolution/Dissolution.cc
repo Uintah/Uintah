@@ -44,8 +44,8 @@ void Dissolution::setTemperature(double BHTemp)
 
 void Dissolution::setPhase(std::string LCPhase)
 {
-  // phase is "ramp", "settle" or "hold"  Only do dissolution
-  // during the "hold" phase
+  // phase is "ramp", "settle",  "hold" or "dissolution"  Only do dissolution
+  // during the "dissolution" phase
 
   d_phase = LCPhase;
 }

@@ -49,6 +49,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
                           d_pressure_conversion_factor, 1.0);
    burHist->getWithDefault("ramp_time",   d_ramp_time,  1.0);
    burHist->getWithDefault("settle_time", d_settle_time,2.0);
+   burHist->getWithDefault("hold_time",   d_hold_time,  1.0);
    burHist->getWithDefault("stableKE",    d_stableKE,   2.0e-6);
    for( ProblemSpecP timePoint = burHist->findBlock("time_point");
        timePoint != nullptr;
@@ -64,9 +65,9 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double sigma_h   = 0.0;
      double sigma_H   = 0.0;
      bool   EOC       = false;
-     timePoint->require("time_Ma",               time);
-     timePoint->require("temperature_K",         temp);
-     timePoint->require("effectiveStress_bar",   effStress);
+     timePoint->require("time_Ma",                      time);
+     timePoint->require("temperature_K",                temp);
+     timePoint->require("effectiveStress_bar",          effStress);
      timePoint->getWithDefault("depth_m",               depth,   1.0);
      timePoint->getWithDefault("fluidOverPressure_bar", fluidOP, 0.0);
      timePoint->getWithDefault("fluidPressure_bar",     fluidP,  0.0);
@@ -101,6 +102,7 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
                       d_pressure_conversion_factor);
   lc_ps->appendElement("ramp_time",     d_ramp_time);
   lc_ps->appendElement("settle_time",   d_settle_time);
+  lc_ps->appendElement("hold_time",     d_hold_time);
   lc_ps->appendElement("current_index", d_CI);
   lc_ps->appendElement("stableKE",      d_stableKE);
   for (int i = 0; i<(int)d_time_Ma.size();i++) {
