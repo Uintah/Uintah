@@ -10,11 +10,11 @@ mkdir scraps >&/dev/null
 
 cat << EOF > scraps/usage
 Usage: $0
- 
+
 OPTIONS:
      --file          <output file> [ manditory]  Name of the outputfile to parse
      --timestepRange <low:high>    [ optional ]  x-axis range
-     --pdf                         [ optional ]  output a pdf file  
+     --pdf                         [ optional ]  output a pdf file
 EOF
 
 set tmp = (`which gnuplot`)
@@ -32,7 +32,7 @@ endif
 #__________________________
 # parse inputs
 set hardcopy = "n"
-set Xrange   = "[:]"
+set Xrange   = ":"
 set out      = "null"
 
 while ($#argv)
@@ -44,7 +44,7 @@ while ($#argv)
       shift; shift;
       breaksw
    case --timestepRange:
-      set Xrange = "[$opt]"
+      set Xrange = "$opt"
       shift; shift
       breaksw
    case --pdf:
@@ -58,7 +58,7 @@ while ($#argv)
       echo "Error: ($1) is not a valid option.  Now exiting"
       cat scraps/usage
       exit (1)
-  endsw 
+  endsw
 end
 
 if ( !(-e $out) ) then
@@ -67,8 +67,9 @@ if ( !(-e $out) ) then
   exit(1)
 endif
 
-echo "Xrange: $Xrange out: $out hardcopy: $hardcopy"
-
+set xLo = `echo "$Xrange" | cut -d":" -f1`
+set xHi = `echo "$Xrange" | cut -d":" -f2`
+echo "xLo: $xLo xHi: $xHi out: $out hardcopy: $hardcopy"
 
 unalias rm
 #__________________________________
@@ -88,12 +89,19 @@ echo "Now extracting the data"
 grep "solve only" tmp   |  cut -d: -f2 | awk '{print $1}' >& solverTime
 grep "solve only" tmp   |  awk '{ match ($0, "solve only"); print substr($0, RSTART) }' | awk '{print $(NF -4)}' >& solverIters
 
+grep Timestep    rawData.clean | cut -d" " -f2 | awk '{print $1}' >& timestep
 grep "Wall Time" rawData.clean | cut -d"=" -f4 | awk '{print $1}' >& elapsedTime
-grep EMA  rawData.clean        | cut -d"=" -f5 | awk '{print $1}' >& meanTime
+grep EMA         rawData.clean | cut -d"=" -f5 | awk '{print $1}' >& meanTime
 
-paste -d "  " elapsedTime meanTime solverTime solverIters >& data
-sed  -i s/","//g data    # eliminate any "," 
+paste -d "  " timestep elapsedTime meanTime solverTime solverIters >& data
+sed  -i s/","//g data    # eliminate any ","
 
+# prune data file if this is requested
+if( $xLo != "" && $xHi != "" ) then
+  echo " Now pruning data from $xLo -> $xHi"
+  awk -v xLo=$xLo -v xHi=$xHi '{ if ( $1 >= xLo && $1 <= xHi ) print }' data > data.pruned
+  cp data.pruned data
+endif
 
 echo "Done extracting data"
 
@@ -129,7 +137,7 @@ cat >> gp << fin
 #__________________________________
 # compute stats this version of gnuplot is > 3.8
 if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
-  print "Computing the statistics of the mean time per timestep"; 
+  print "Computing the statistics of the mean time per timestep";
 } else {
   print " This version of gnuplot does not support computing statistics.";
   print " Now exiting...."
@@ -137,17 +145,15 @@ if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) {
 }
 
 # compute statistics of mean time and scale the results
-stats 'data' using 2 name "A"; 
-stats 'data' using 3 name "B"; 
-stats 'data' using 4 name "C"; 
+#    1         2         3         4          5
+#timestep elapsedTime meanTime solverTime solverIters
+stats 'data' using 3 name "A";
+stats 'data' using 4 name "B";
+stats 'data' using 5 name "C";
 
 set multiplot
 set size   1.0, 0.33
-
-
-set xrange $Xrange
-
-
+set autoscale
 set origin 0.0, 0.666
 set grid xtics ytics
 
@@ -156,7 +162,7 @@ set xlabel 'Timesteps'
 set ylabel 'Time [s]'        textcolor lt 2
 set yrange[A_lo_quartile - A_median:A_up_quartile + A_median]
 
-plot 'data' using 2   t 'meanTime/timestep' with lines
+plot 'data' using 1:3   t 'meanTime/timestep' with lines
 
 #__________________________________
 unset title
@@ -164,14 +170,14 @@ set yrange[B_lo_quartile - B_median:B_up_quartile + B_median]
 set ylabel 'Solver Time [s]' textcolor lt 2
 set origin 0.0,0.333
 
-plot 'data' using 3  t 'solver Time ' with lines
+plot 'data' using 1:4  t 'solver Time ' with lines
 
 #__________________________________
 set origin 0.0,0.0
 set ylabel 'Solver iterations'
 set yrange[C_lo_quartile - C_stddev -1 :C_up_quartile + C_stddev + 1]
 
-plot 'data' using 4 t 'solver iterations' with lines
+plot 'data' using 1:5 t 'solver iterations' with lines
 
 set nomultiplot
 fin
