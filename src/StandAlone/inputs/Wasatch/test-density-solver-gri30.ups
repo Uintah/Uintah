@@ -6,29 +6,39 @@
       <Constant value="1" name="dont_use_this_tag"/>
     </Density>
 
+
 <!-- 
+    Exact and guess values of species mass fractions and temperature.
+    Any species which is not listed is initialized to zero.
+ -->
+ 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="thermodynamic_pressure"/>
-      <GaussianFunction amplitude="0." deviation="0.15" mean="0.1" baseline="101325">
+      <NameTag name="CH4"/>
+      <GaussianFunction amplitude="-0.1" deviation="0.15" mean="0.1" baseline="0.1">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression>
- -->
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="CH2"/>
+      <GaussianFunction amplitude="-9e-4" deviation="0.15" mean="0.1" baseline="1e-3">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
  
-<!-- 
-    <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="N2_calc"/>
-    </ForceOnGraph>
- -->
-
-<!-- 
-    the exact and guess values 
- -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H"/>
+      <GaussianFunction amplitude="1e-3" deviation="0.12" mean="0.1" baseline="1e-6">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
         
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="A"/>
+      <NameTag name="H2"/>
       <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.18">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -36,7 +46,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="A_guess"/>
+      <NameTag name="H2_guess"/>
       <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.22">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -44,7 +54,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="B"/>
+      <NameTag name="O2"/>
       <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.07">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -52,7 +62,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="B_guess"/>
+      <NameTag name="O2_guess"/>
       <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.02">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -60,7 +70,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="C"/>
+      <NameTag name="H2O"/>
       <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -68,7 +78,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="C_guess"/>
+      <NameTag name="H2O_guess"/>
       <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -77,7 +87,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="Temperature"/>
-      <GaussianFunction amplitude="20" deviation="0.1" mean="0.1" baseline="308.5052631578947">
+      <GaussianFunction amplitude="20" deviation="0.1" mean="0.1" baseline="500">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression> 
@@ -85,7 +95,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="Temperature_guess"/>
-      <GaussianFunction amplitude="0" deviation="0.1" mean="0.1" baseline="300">
+      <GaussianFunction amplitude="0" deviation="0.1" mean="0.1" baseline="510">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression> 
@@ -93,12 +103,14 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="thermodynamic_pressure" state="STATE_N"/>
-      <Constant>101325</Constant>
+      <GaussianFunction amplitude="1e5." deviation="0.15" mean="0.1" baseline="101325">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
     </BasicExpression>    
     
     <TestSpeciesEnthalpyDensitySolver>
-      <CanteraInputFile>inputs/Wasatch/rxn_example.xml</CanteraInputFile>
-      <CanteraGroup>rxn_example</CanteraGroup>
+      <CanteraInputFile>inputs/Wasatch/gri30.xml</CanteraInputFile>
+      <CanteraGroup>gri30</CanteraGroup>
       <maxIterations>20</maxIterations>
       <tolerance>1e-8</tolerance>
     </TestSpeciesEnthalpyDensitySolver>
@@ -115,39 +127,26 @@
   </Time>
 
   <DataArchiver>
-    <filebase>testDensitySolver.uda</filebase>
+    <filebase>test-density-solver-gri30.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <compression>gzip</compression>
-    <save label="Temperature"/>
-    <save label="Temperature_calc"/>
-    <save label="Temperature_guess"/>
     <save label="Temperature_error"/>
-        
-    <save label="A"/>
-    <save label="A_calc"/>
-    <save label="A_guess"/>
-    <save label="A_error"/>
+    <save label="H_error"/>
+    <save label="H2_error"/>
+    <save label="H2O_error"/>
+    <save label="CH4_error"/>
+    <save label="CH2_error"/>
+    <save label="O2_error"/>
     
-    <save label="B"/>
-    <save label="B_calc"/>
-    <save label="B_guess"/>
-    <save label="B_error"/>
-    
-    <save label="D"/>
-    <save label="D_calc"/>
-    <save label="D_guess"/>
-    <save label="D_error"/>
-    
-    <save label="rho_enthalpy"/>
-    <save label="rho"/>
-    <save label="rho_calc"/>
     <save label="rho_error"/>
 
-   <save label="d_rho_d_A"/>
-   <save label="d_rho_d_B"/>
-   <save label="d_rho_d_C"/>
    <save label="d_rho_d_enthalpy"/>
-
+   <save label="d_rho_d_H"/>
+   <save label="d_rho_d_H2"/>
+   <save label="d_rho_d_H2O"/>
+   <save label="d_rho_d_CH4"/>
+   <save label="d_rho_d_CH2"/>
+   <save label="d_rho_d_O2"/>
   </DataArchiver>
 
   <Grid>
@@ -155,9 +154,8 @@
       <Box label="1">
         <lower>[-0.5,0,0]</lower>
         <upper>[ 0.5,1,1]</upper>
-        <resolution>[16,1,1]</resolution>
+        <resolution>[32,1,1]</resolution>
         <patches>[2,1,1]</patches>
-<!--         <extraCells>[0, 0, 0]</extraCells> -->
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
