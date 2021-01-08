@@ -138,6 +138,10 @@ void test_low_mach_species_density_solver( Uintah::ProblemSpecP&  params,
     register_expression( scinew Algebra::Builder( rhoYiTag,
                                                   Expr::tag_list(densityExactTag, yiTrueTag),
                                                   Algebra::PRODUCT ));
+
+    if( !gh.exprFactory->have_entry( yiGuessTags[i] ) ){
+      gh.exprFactory->register_expression( scinew ConstBuilder(yiGuessTags[i], 0.) );
+    }
   }
 
   gh.exprFactory->
