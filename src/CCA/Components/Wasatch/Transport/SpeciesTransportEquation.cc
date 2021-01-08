@@ -471,8 +471,6 @@ SpeciesTransportEquation::apply_initial_boundary_conditions( const GraphHelper& 
                                                              WasatchBCHelper& bcHelper )
 {
   const Category taskCat = INITIALIZATION;
-  std::cout << "taskCat set to INITIALIZATION\n";
-
   Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
   // multiply the initial condition by the volume fraction for embedded geometries
@@ -511,7 +509,6 @@ SpeciesTransportEquation::apply_boundary_conditions( const GraphHelper& graphHel
   const bool isLowMach = flowTreatment_ == LOWMACH;
   const bool setOnExtraOnly = isLowMach;
   const Category taskCat = ADVANCE_SOLUTION;
-  std::cout << "taskCat set to ADVANCE_SOLUTION\n";
   bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
   bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true ); // apply the rhs bc directly inside the extra cell
 
