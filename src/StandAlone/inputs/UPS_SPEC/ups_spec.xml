@@ -1218,7 +1218,7 @@
   <!--  Particle Test Component -->
   <ParticleTest1              spec="OPTIONAL NO_DATA" >
     <doOutput                 spec="OPTIONAL INTEGER" />
-    <doGhostCells             spec="OPTIONAL INTEGER" />
+    <nGhostCells              spec="OPTIONAL INTEGER" />
   </ParticleTest1>
   
   <!--  Wave  Component -->

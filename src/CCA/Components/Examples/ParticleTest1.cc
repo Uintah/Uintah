@@ -69,8 +69,8 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
   m_scheduler->setPositionVar(lb_->pXLabel);
 
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");
-  pt1->getWithDefault("doOutput",     m_doOutput,      0);
-  pt1->getWithDefault("doGhostCells", m_NumGC, 0);
+  pt1->getWithDefault("doOutput",     m_doOutput, 0);
+  pt1->getWithDefault("nGhostCells",  m_NumGC,    0);
 
   mymat_ = scinew SimpleMaterial();
   m_materialManager->registerSimpleMaterial(mymat_);
@@ -164,10 +164,14 @@ void ParticleTest1::initialize(const ProcessorGroup*,
                           const MaterialSubset* matls,
                           DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
+
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
-    const Point low = patch->cellPosition(patch->getCellLowIndex());
-    const Point high = patch->cellPosition(patch->getCellHighIndex());
+    const Point low  = patch->getNodePosition(patch->getCellLowIndex());
+    const Point high = patch->getNodePosition(patch->getCellHighIndex());
+    const Vector dx  = patch->dCell();
+
+    cout << " low: " << low << " high: " << high << endl;
 
     for(int m = 0;m<matls->size();m++){
       srand(1);
@@ -188,12 +192,20 @@ void ParticleTest1::initialize(const ProcessorGroup*,
         //                 (((float) rand()) / RAND_MAX * ( high.y() - low.y()-1) + low.y()),
        //                  (((float) rand()) / RAND_MAX * ( high.z() - low.z()-1) + low.z()) );
 
-        const Point pos( ( ((double) i/numParticles)   * ( high.x() - low.x()-1) + low.x() ),
-                         ( ((float) rand()) / RAND_MAX * ( high.y() - low.y()-1) + low.y()),
-                         ( ((float) rand()) / RAND_MAX * ( high.z() - low.z()-1) + low.z()) );
+        const Point pos( ( ((double) i/numParticles)   *  ( high.x() - low.x() ) + low.x() + dx.x()/2 ),
+                         ( ((float) rand()) / RAND_MAX) * ( high.y() - low.y() ) + low.y(),
+                         ( ((float) rand()) / RAND_MAX) * ( high.z() - low.z() ) + low.z()  );
         px[i] = pos;
         pids[i] = patch->getID()*numParticles+i;
         pmass[i] = ((float) rand()) / RAND_MAX * 10;
+        
+        if (m_doOutput) {
+           DOUTR( true, " initialization Patch " << patch->getID()
+                        << ": i " << i
+                        << ": ID "   << pids[i]
+                        << ", pos "  << px[i]
+                        << ", mass " << pmass[i] );
+        }
       }
     }
   }
@@ -403,8 +415,10 @@ void ParticleTest1::task2(const ProcessorGroup * pg,
         particleIndex idx = *iter;
 
         if ( patch->containsPoint(px_1[idx]) ){
-          Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
-          px_new[*i]  = pos_new;
+          //Point pos_new( px_1[idx].x() + 0.5, px_1[idx].y(), px_1[idx].z());
+          //px_new[*i]  = pos_new;
+          
+          px_new[*i] = px_1[idx];
 
          ++i;
         }

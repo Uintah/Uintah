@@ -3,52 +3,51 @@
 <!-- @version: Updated 7/31/00-->
 <Uintah_specification>
 
-   <Meta>
-       <title>Poisson1 test</title>
-   </Meta>
+  <Meta>
+      <title>Poisson1 test</title>
+  </Meta>
 
-   <SimulationComponent type="particletest" />
+  <SimulationComponent type="particletest" />
 
-   <Time>
-       <maxTime>1000.0</maxTime>
-       <initTime>0.0</initTime>
-       <delt_min>1</delt_min>
-       <delt_max>1</delt_max>
-       <timestep_multiplier>1</timestep_multiplier>
-       <max_Timesteps> 10 </max_Timesteps>
-   </Time>
-   <DataArchiver>
-        <filebase>particletest1.uda</filebase>
-       <outputInterval>1</outputInterval>
-       <save label = "p.mass"/>
-<!--       <save label = "p.mass1"/> -->
-       <save label = "p.x"/>
- <!--      <save label = "p.x1"/> -->
-       <save label = "p.particleID"/>
-       <checkpoint cycle = "2" interval = "1"/>
-   </DataArchiver>
-<!--
-   <LoadBalancer type="DLB">
-     <timestepInterval>2</timestepInterval>
-     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
-   </LoadBalancer>
--->
-   <ParticleTest1>
-      <doOutput>     1 </doOutput>
-      <doGhostCells> 1 </doGhostCells>
-      
-   </ParticleTest1>
+  <Time>
+      <maxTime>1000.0</maxTime>
+      <initTime>0.0</initTime>
+      <delt_min>1</delt_min>
+      <delt_max>1</delt_max>
+      <timestep_multiplier>1</timestep_multiplier>
+      <max_Timesteps> 10 </max_Timesteps>
+  </Time>
 
-    <Grid>
-       <Level>
-           <Box label = "1">
-              <lower>      [0,0,0]   </lower>
-              <upper>      [50,50,50]</upper>
-               <resolution>[50,50,50]</resolution>
-              <patches>    [2,1,1]   </patches>
-           </Box>
-       </Level>
-    </Grid>
+  <DataArchiver>
+
+  <filebase>particletest1.uda</filebase>
+      <outputInterval>0</outputInterval>
+   <!--
+      <save label = "p.mass"/>
+      <save label = "p.mass1"/>
+      <save label = "p.x"/>
+      <save label = "p.x1"/> 
+      <save label = "p.particleID"/>
+      <checkpoint cycle = "2" interval = "1"/>
+   -->
+  </DataArchiver>
+
+  <ParticleTest1>
+     <doOutput>     1 </doOutput>
+     <nGhostCells> 1 </nGhostCells>
+
+  </ParticleTest1>
+
+   <Grid>
+      <Level>
+          <Box label = "1">
+             <lower>      [0,0,0]   </lower>
+             <upper>      [20,1,1]</upper>
+              <resolution>[20,1,1]  </resolution>
+             <patches>    [2,1,1]   </patches>
+          </Box>
+      </Level>
+   </Grid>
 
 </Uintah_specification>
 
