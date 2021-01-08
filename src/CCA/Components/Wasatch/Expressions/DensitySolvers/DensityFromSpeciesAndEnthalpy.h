@@ -141,8 +141,6 @@ namespace WasatchCore{
       const unsigned maxIter_; ///< maximum number of iterations  
     };
 
-    // void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-
     ~DensityFromSpeciesAndEnthalpy();
     void update_other_fields(Expr::UintahFieldManager<FieldT>& fieldTManager) override;
     void set_initial_guesses();

@@ -201,17 +201,6 @@ namespace WasatchCore{
                                                          mmwNewTag_ ));
     rootIDs.insert( id );
 
-    // const Expr::Tag temperatureRefinedTag("temperature_refined", Expr::STATE_NONE);
-
-    // factory.register_expression( new typename
-    //                                   pokitt::Temperature
-    //                                   <FieldT>::Builder( temperatureRefinedTag,
-    //                                                       yNewTags_,
-    //                                                       hNewTag_,
-    //                                                       temperatureNewTag_ ));
-
-    // factory.attach_modifier_expression( temperatureRefinedTag, temperatureNewTag_ );
-
     factory.register_expression( new typename
                                       pokitt::HeatCapacity_Cp
                                       <FieldT>::Builder( cpTag_,
