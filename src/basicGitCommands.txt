@@ -31,6 +31,14 @@ Notes:
 - git pull incurs a git merge and may create a new merge commit
 - git revert creates a new commit reversing the specified commit(s)
 
+If you have changes, and you want/need to grab someone else's changes:
+
+git stash
+git pull
+git stash pop
+
+At this point, you can add, commit and push your changes if you want.
+
 
 
 //__________________________________
