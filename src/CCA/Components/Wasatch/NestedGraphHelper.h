@@ -33,7 +33,7 @@
 
 #include <expression/ExprLib.h>
 
-// forward decalrations -----
+// forward declarations -----
 struct AllocInfo;
 
 namespace Uintah{ class Patch; }

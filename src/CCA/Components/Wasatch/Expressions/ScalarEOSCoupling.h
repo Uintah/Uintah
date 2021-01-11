@@ -33,7 +33,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/structured/FVStaggered.h>
 
-#include "RHSTerms.h"
+#include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
 
 /**

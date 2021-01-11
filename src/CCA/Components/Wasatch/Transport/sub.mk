@@ -47,6 +47,7 @@ ifeq ($(HAVE_POKITT),yes)
 # the species transport equation is broken into
 # pieces because of long compilation times.
    CUDA_ENABLED_SRCS += 					\
+    ThermodynamicPressureTransportEquation  \
 		SpeciesTransportEquation			\
 		SpeciesTransportEquation_diffusion	\
 		SpeciesTransportEquation_reaction

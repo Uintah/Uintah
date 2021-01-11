@@ -37,6 +37,17 @@
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromMixFracAndHeatLoss.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/TwoStreamMixingDensity.h>
 
+#include <sci_defs/wasatch_defs.h>
+
+#ifdef HAVE_POKITT
+#include <pokitt/CanteraObjects.h>
+#include <pokitt/thermo/Density.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromSpeciesAndEnthalpy.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/DRhoDY.h>
+#include <CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/DRhoDEnthalpy.h>
+#endif
+
+
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
 
@@ -493,6 +504,173 @@ namespace WasatchCore{
     }
 
   }
+    //====================================================================
+
+  void
+  parse_spcies_and_enthalpy_density_solver( Uintah::ProblemSpecP params,
+                                            Uintah::ProblemSpecP solverSpec,
+                                            GraphCategories& gc,
+                                            std::set<std::string>& persistentFields )
+  {
+   #ifdef HAVE_POKITT
+
+    Expr::ExpressionID id;
+    std::vector<Expr::ExpressionID> ids;
+
+    const std::string prefix = "rho_";
+    const TagNames& tagNames =  TagNames::self();
+
+    std::string densityName;
+    params->findBlock("Density")
+          ->findBlock("NameTag")
+          ->getAttribute( "name", densityName );
+    const Expr::Tag densityTag     = Expr::Tag(densityName, Expr::STATE_NP1);
+    const Expr::Tag temperatureTag = tagNames.temperature;
+    const Expr::Tag thermoPTag     = tagNames.thermodynamicPressureNP1;
+
+    // todo: check if density needs to be persistent
+    persistentFields.insert( densityTag.name() );
+
+    /* check if a transport equation for enthalpy has been specified.
+     * This mess exists because the transport equation for enthalpy is parsed like a generic scalar
+     * equation. It may be best to enable standalone parsing like what is done for TotalInternalEnergy
+     */
+    Expr::Tag rhoEnthTag;
+    Expr::Tag enthTag;
+    for( Uintah::ProblemSpecP transEqnParams=params->findBlock("TransportEquation");
+         transEqnParams != nullptr;
+         transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
+    {
+      std::string eqnLabel, solnVariable, primitiveVariable;
+      transEqnParams->getAttribute( "equation", eqnLabel );
+      if( eqnLabel =="enthalpy" ){
+
+        // ensure properties are calculated using PoKiTT
+        if( !transEqnParams->findBlock("PropertiesFromPoKiTT") ){
+          std::ostringstream msg;
+          msg << "Using the low-Mach solver with species transport requires a " << std::endl
+              << "'PropertiesFromPoKiTT' sub-block within the "                 << std::endl
+              << "'TransportEquation equation=\"enthalpy\"' block"
+              << std::endl;
+          throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+        }
+        transEqnParams->get( "SolutionVariable" , solnVariable );
+        rhoEnthTag = Expr::Tag(solnVariable, Expr::STATE_NP1 );
+
+        transEqnParams->get( "PrimitiveVariable" , primitiveVariable );
+        enthTag = Expr::Tag(primitiveVariable, Expr::STATE_NP1 );
+      }
+    }
+    // throw an error if rhoEnthTag is not set
+    if( rhoEnthTag.name() == ""){
+      std::ostringstream msg;
+      msg << "There was a problem parsing tags for density-weighted enthalpy. Check your input file"
+          << "and ensure a TransportEquation equation=\"enthalpy\"' block exists"
+          << std::endl;
+      throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+    }
+
+    // define TagLists for species mass fractions
+    Expr::TagList yiTags, yiOldTags, rhoYiTags, dRhodYiTags, dRhodPhiTags;
+    const int nSpec = CanteraObjects::number_species();
+    for( int i=0; i<nSpec; ++i ){
+      const std::string specName = CanteraObjects::species_name(i);
+      yiTags   .push_back( Expr::Tag(specName, Expr::STATE_NP1) );
+      yiOldTags.push_back( Expr::Tag(specName, Expr::STATE_N  ) );
+
+      if(i == nSpec -1)
+        continue;
+      rhoYiTags.push_back( Expr::Tag(prefix+specName, Expr::STATE_NP1 ) );
+
+      Expr::Tag dRhodYiTag = tagNames.derivative_tag(densityTag, specName);
+      dRhodYiTags .push_back( dRhodYiTag );
+      dRhodPhiTags.push_back( dRhodYiTag );
+    }
+
+    const Expr::Tag enthalpyOldTag(tagNames.enthalpy.name(), Expr::STATE_N);
+
+    const Expr::Tag dRhodEnthalpyTag = tagNames.derivative_tag(densityTag, tagNames.enthalpy);
+    dRhodPhiTags.push_back( dRhodEnthalpyTag );
+
+    GraphHelper& igh = *gc[INITIALIZATION  ];
+    GraphHelper& gh  = *gc[ADVANCE_SOLUTION];
+
+    // initial conditions
+    const Expr::Tag thermoPInitTag = Expr::Tag(thermoPTag.name(), Expr::STATE_NONE);
+    {
+      const Expr::Tag densityInitTag( densityTag.name(), Expr::STATE_NONE );
+      id =
+      igh.exprFactory->register_expression( new pokitt:: Density<SVolField>::
+                                            Builder(densityInitTag,
+                                                    tagNames.temperature,
+                                                    thermoPInitTag,
+                                                    tagNames.mixMW) );
+      igh.rootIDs.insert( id );
+
+      igh.exprFactory->register_expression( new DRhoDY<SVolField>::
+                                            Builder(dRhodYiTags,
+                                                    densityInitTag,
+                                                    tagNames.mixMW) );
+
+      igh.exprFactory->register_expression( new DRhoDEnthalpy<SVolField>::
+                                            Builder(dRhodEnthalpyTag,
+                                                    densityInitTag,
+                                                    tagNames.heatCapacity,
+                                                    tagNames.temperature) );
+    }
+
+    typedef Expr::PlaceHolder<SVolField>::Builder PlcHolder;
+
+    // register placeholder for the old density
+    Expr::Tag densityOldTag( densityTag.name(), Expr::STATE_N );
+    persistentFields.insert(densityTag.name());
+    id =
+    gh.exprFactory->register_expression( scinew PlcHolder(densityOldTag) );
+    // gh.exprFactory->cleave_from_parents(id);
+
+    // register placeholder for the old mixture molecular weight
+    Expr::Tag mmwOldTag(tagNames.mixMW.name(), Expr::STATE_N);
+    persistentFields.insert(mmwOldTag.name());
+    gh.exprFactory->register_expression( scinew PlcHolder(mmwOldTag) );
+
+    // register placeholder for the old temperature
+    persistentFields.insert(temperatureTag.name());
+    const Expr::Tag temperatureOldTag = Expr::Tag(temperatureTag.name(), Expr::STATE_N);
+
+    id =
+    gh.exprFactory->register_expression( scinew PlcHolder(temperatureOldTag) );
+    // gh.exprFactory->cleave_from_parents(id);
+
+    persistentFields.insert(thermoPTag.name());
+
+    double rTol;    // residual tolerance
+    int    maxIter; // maximum number of iterations
+
+    solverSpec->get("tolerance"    , rTol   );
+    solverSpec->get("maxIterations", maxIter);
+
+    proc0cout << "\ntolerance: " << rTol
+              << "\nmaxIter  : " << maxIter << "\n"; 
+
+    typedef DensityFromSpeciesAndEnthalpy<SVolField>::Builder DensBuilder;
+    gh.exprFactory->
+    register_expression(new DensBuilder( densityTag,
+                                         temperatureTag,
+                                         dRhodYiTags,
+                                         dRhodEnthalpyTag,
+                                         densityOldTag,
+                                         rhoYiTags,
+                                         rhoEnthTag,
+                                         yiOldTags,
+                                         enthalpyOldTag,
+                                         temperatureOldTag,
+                                         mmwOldTag,
+                                         thermoPTag,
+                                         rTol,
+                                         maxIter ) );
+#endif
+  }
+
   //====================================================================
 
   void
@@ -639,6 +817,26 @@ namespace WasatchCore{
       const Category cat = parse_tasklist( tabPropsParams,false);
       parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, persistentFields, weakForm );
     }
+
+     const std::string blockName = "ModelBasedOnSpeciesAndEnthalpy";
+     Uintah::ProblemSpecP igSolverSpec = wasatchSpec->findBlock(blockName);
+     if(igSolverSpec){
+       proc0cout << "\nDensity set based on species mass fractions and enthalpy\n";
+       // ensure that we are using the low-Mach formulation
+       std::string flowTreatment;
+       densityParams->getAttribute( "method", flowTreatment );
+       const bool isLowMach = flowTreatment == "LOWMACH";
+
+       if( !isLowMach){
+         throw Uintah::ProblemSetupException( "inclusion of a <"+blockName+"> block is only valid when the 'LOWMACH' density method is used", __FILE__, __LINE__ );
+       }
+
+       // ensure that we are solving transport equations for species
+       if( !wasatchSpec->findBlock("SpeciesTransportEquations") ){
+         throw Uintah::ProblemSetupException( "inclusion of a <"+blockName+"> block requires a <SpeciesTransportEquations> block", __FILE__, __LINE__ );
+       }
+       parse_spcies_and_enthalpy_density_solver( wasatchSpec, igSolverSpec, gc, persistentFields );
+     }
   }
 
   //====================================================================

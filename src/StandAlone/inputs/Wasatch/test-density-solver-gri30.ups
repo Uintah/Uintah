@@ -1,0 +1,164 @@
+<Uintah_specification>
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1" name="dont_use_this_tag"/>
+    </Density>
+
+
+<!-- 
+    Exact and guess values of species mass fractions and temperature.
+    Any species which is not listed is initialized to zero.
+ -->
+ 
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="CH4"/>
+      <GaussianFunction amplitude="-0.1" deviation="0.15" mean="0.1" baseline="0.1">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="CH2"/>
+      <GaussianFunction amplitude="-9e-4" deviation="0.15" mean="0.1" baseline="1e-3">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+ 
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H"/>
+      <GaussianFunction amplitude="1e-3" deviation="0.12" mean="0.1" baseline="1e-6">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+        
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H2"/>
+      <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.18">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H2_guess"/>
+      <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.22">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="O2"/>
+      <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.07">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="O2_guess"/>
+      <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.02">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H2O"/>
+      <GaussianFunction amplitude="0.1" deviation="0.15" mean="0.1" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="H2O_guess"/>
+      <GaussianFunction amplitude="0.0" deviation="0.15" mean="0.1" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Temperature"/>
+      <GaussianFunction amplitude="20" deviation="0.1" mean="0.1" baseline="500">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression> 
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Temperature_guess"/>
+      <GaussianFunction amplitude="0" deviation="0.1" mean="0.1" baseline="510">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression> 
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="thermodynamic_pressure" state="STATE_N"/>
+      <GaussianFunction amplitude="1e5." deviation="0.15" mean="0.1" baseline="101325">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>    
+    
+    <TestSpeciesEnthalpyDensitySolver>
+      <CanteraInputFile>inputs/Wasatch/gri30.xml</CanteraInputFile>
+      <CanteraGroup>gri30</CanteraGroup>
+      <maxIterations>20</maxIterations>
+      <tolerance>1e-8</tolerance>
+    </TestSpeciesEnthalpyDensitySolver>
+    
+  </Wasatch>
+
+  <Time>
+    <maxTime>0.01</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps>1</max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>test-density-solver-gri30.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <compression>gzip</compression>
+    <save label="Temperature_error"/>
+    <save label="H_error"/>
+    <save label="H2_error"/>
+    <save label="H2O_error"/>
+    <save label="CH4_error"/>
+    <save label="CH2_error"/>
+    <save label="O2_error"/>
+    
+    <save label="rho_error"/>
+
+   <save label="d_rho_d_enthalpy"/>
+   <save label="d_rho_d_H"/>
+   <save label="d_rho_d_H2"/>
+   <save label="d_rho_d_H2O"/>
+   <save label="d_rho_d_CH4"/>
+   <save label="d_rho_d_CH2"/>
+   <save label="d_rho_d_O2"/>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[-0.5,0,0]</lower>
+        <upper>[ 0.5,1,1]</upper>
+        <resolution>[32,1,1]</resolution>
+        <patches>[2,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

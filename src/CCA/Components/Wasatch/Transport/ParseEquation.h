@@ -131,8 +131,14 @@ namespace WasatchCore{
                            const TurbulenceParameters& turbParams,
                            const Expr::Tag& densityTag,
                            GraphCategories& gc,
+                           std::set<std::string>& persistentFields,
                            WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
                            bool computeKineticsJacobian );
+
+  EqnTimestepAdaptorBase*
+  parse_thermodynamic_pressure_equation( Uintah::ProblemSpecP wasatchSpec,
+                                         GraphCategories& gc,
+                                         std::set<std::string>& persistentFields );
 
   std::vector<EqnTimestepAdaptorBase*>
   parse_tar_and_soot_equations( Uintah::ProblemSpecP params,

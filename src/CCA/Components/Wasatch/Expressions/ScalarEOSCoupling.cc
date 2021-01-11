@@ -25,21 +25,15 @@
 //-- Uintah Includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
+#include <CCA/Components/Wasatch/Expressions/ScalarEOSHelper.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-
-Expr::Tag
-resolve_tag( const FieldSelector field,
-                   const FieldTagInfo& info )
-{
-  Expr::Tag tag;
-  const FieldTagInfo::const_iterator ifld = info.find( field );
-  if( ifld != info.end() ) tag = ifld->second;
-  return tag;
-}
+using ScalarEOS::resolve_tag;
+using ScalarEOS::assemble_src_tags;
 
 //------------------------------------------------------------------
 
@@ -216,7 +210,7 @@ ScalarEOSCoupling<FieldT>::Builder::Builder( const Expr::Tag& result,
 
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
-    srcT_          ( sources        ),
+    srcT_          ( assemble_src_tags( sources, fieldInfo ) ),
     rhoStarTag_    ( rhoStarTag     ),
     dRhoDPhiTag_      ( dRhoDPhiTag ),
     isStrongForm_  ( isStrongForm   )
@@ -232,6 +226,7 @@ ScalarEOSCoupling<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const bool isStrongForm)
   : ExpressionBuilder(result),
     info_          ( fieldInfo      ),
+    srcT_          ( assemble_src_tags( Expr::TagList(), fieldInfo ) ),
     rhoStarTag_    ( rhoStarTag     ),
     dRhoDPhiTag_   ( dRhoDPhiTag    ),
     isStrongForm_  ( isStrongForm   )

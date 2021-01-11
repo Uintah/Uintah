@@ -49,17 +49,43 @@ SpeciesTransportEquation::setup_source_terms( FieldTagInfo& info, Expr::TagList&
   }
 
   if( specNum_ == 0 ){
-    Expr::TagList srcTags;
+    Expr::TagList srcTags, srcNP1Tags, srcInitTags;
     for( int i=0; i<nspec_; ++i ){
-      srcTags.push_back( Expr::Tag( "rr_"+CanteraObjects::species_name(i), Expr::STATE_NONE ) );
+      const std::string srcName = "rr_"+CanteraObjects::species_name(i);
+      srcTags    .push_back( Expr::Tag( srcName, primVarTag_    .context() ) );
+      srcNP1Tags .push_back( Expr::Tag( srcName, primVarNP1Tag_ .context() ) );
+      srcInitTags.push_back( Expr::Tag( srcName, primVarInitTag_.context() ) );
     }
-    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    Expr::ExpressionFactory& icFactory = *gc_[INITIALIZATION  ]->exprFactory;
     typedef pokitt::ReactionRates<FieldT>::Builder RxnRates;
-    factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_, jacobian_ ) );
+    if( flowTreatment_ == LOWMACH ){
+      const Expr::ExpressionID id =
+      icFactory.register_expression( scinew RxnRates( srcInitTags, temperatureTag_, densityInitTag_, yiInitTags_, mmwTag_, jacobian_ ) );
+      factory  .register_expression( scinew RxnRates( srcNP1Tags , temperatureTag_, densityNP1Tag_ , yiNP1Tags_ , mmwTag_, jacobian_ ) );
+
+      gc_[INITIALIZATION]->rootIDs.insert(id);
+
+      typedef Expr::PlaceHolder<FieldT>::Builder PlaceHolder;
+      for( const Expr::Tag& srcTag : srcTags ){
+        factory.register_expression( scinew PlaceHolder( srcTag ) );
+        persistentFields_.insert( srcTag.name() );
+      }
+    }
+
+    else{
+      factory.register_expression( scinew RxnRates( srcTags, temperatureTag_, densityTag_, yiTags_, mmwTag_, jacobian_ ) );
+    }
+
+    // todo: consider what needs to be done if both the low-Mach model and dual timestepping are enabled
     dualTimeMatrixInfo_.set_production_rates( srcTags );
   }
+  const std::string srcName = "rr_"+primVarTag_.name();
+  info[SOURCE_TERM] = Expr::Tag( srcName, primVarTag_.context() );
 
-  info[SOURCE_TERM] = Expr::Tag( "rr_"+primVarTag_.name(), Expr::STATE_NONE );
+  if( flowTreatment_ == LOWMACH ){
+    infoNP1_[SOURCE_TERM] = Expr::Tag( srcName, primVarNP1Tag_.context() );
+  }
 }
 
 //------------------------------------------------------------------------------
