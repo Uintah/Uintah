@@ -24,6 +24,13 @@
 #ifndef test_species_density_solver_h
 #define test_species_density_solver_h
 
+#include <sci_defs/wasatch_defs.h>
+
+#ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
+#error test code for the density solver for low-Mach species transport requires PoKiTT.
+#endif
+
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 

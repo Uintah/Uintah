@@ -25,6 +25,13 @@
 #ifndef Wasatch_ThermodymamicPressureTransportEquation_h
 #define Wasatch_ThermodymamicPressureTransportEquation_h
 
+#include <sci_defs/wasatch_defs.h>
+
+#ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
+#error transport equation for thermodynamic pressure requires PoKiTT.
+#endif
+
 //-- ExprLib includes --//
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 

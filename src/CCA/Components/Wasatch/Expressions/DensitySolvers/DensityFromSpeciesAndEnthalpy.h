@@ -25,6 +25,13 @@
 #ifndef Wasatch_DensityFromSpeciesAndEnthalpy_h
 #define Wasatch_DensityFromSpeciesAndEnthalpy_h
 
+#include <sci_defs/wasatch_defs.h>
+
+#ifndef HAVE_POKITT
+// kill compilation if we don't have pokitt.
+#error density solver for low-Mach species transport requires PoKiTT.
+#endif
+
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityCalculatorBase.h>
 
 namespace WasatchCore{

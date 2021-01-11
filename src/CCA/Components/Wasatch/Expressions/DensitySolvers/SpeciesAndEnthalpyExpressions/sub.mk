@@ -36,8 +36,13 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyEx
 # Do not put the .cc on the file name as the .cc or .cu will be added automatically
 # as needed.
 #
-CUDA_ENABLED_SRCS :=                 \
-     TestLowMachSpeciesDensitySolver \
+
+CUDA_ENABLED_SRCS :=
+
+ifeq ($(HAVE_POKITT),yes)
+   CUDA_ENABLED_SRCS += \
+    TestLowMachSpeciesDensitySolver
+endif
 
 ifeq ($(HAVE_CUDA),yes)
 

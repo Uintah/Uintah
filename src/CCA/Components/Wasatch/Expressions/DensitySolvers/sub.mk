@@ -36,8 +36,12 @@ SRCDIR := CCA/Components/Wasatch/Expressions/DensitySolvers
 CUDA_ENABLED_SRCS :=                  \
      DensityFromMixFrac               \
      DensityFromMixFracAndHeatLoss    \
-     DensityFromSpeciesAndEnthalpy \
      TwoStreamMixingDensity
+
+ifeq ($(HAVE_POKITT),yes)
+   CUDA_ENABLED_SRCS += 					\
+    DensityFromSpeciesAndEnthalpy
+endif
 
 ifeq ($(HAVE_CUDA),yes)
    # CUDA enabled files, listed here (and with a rule at the end of
