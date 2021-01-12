@@ -115,11 +115,11 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    bool useMinNormalDv = true;
+//    bool useMinNormalDv = true;
     
-    if(flag->d_doingDissolution && flag->d_currentPhase=="hold"){
-       useMinNormalDv = false;
-    }
+//    if(flag->d_doingDissolution && flag->d_currentPhase=="hold"){
+//       useMinNormalDv = false;
+//    }
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
@@ -184,11 +184,11 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
 //          } else {
 //            normalDv = fabs(normalDv);
 //          }
-          if(useMinNormalDv){
+//          if(useMinNormalDv){
             normalDv = Min(fabs(normalDv), fabs(normalDeltaVel));
-          } else {
-            normalDv = fabs(normalDv);
-          }
+//          } else {
+//            normalDv = fabs(normalDv);
+//          }
 
           // Change in velocity in the normal direction
           Dv = normalDv*normal;
@@ -205,6 +205,7 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
           if(fabs(Dot(surfaceTangent,normal)) > 1.e-9){
             cout << "n = "  << n << endl;
             cout << "c = "  << c << endl;
+            cout << "gtrcontactforce = "  << gtrcontactforce[n][c] << endl;
             cout << "Dot(surfaceTangent,normal) = "
                  <<  Dot(surfaceTangent,normal) << endl;
             cout << "deltaVelocity = "  << deltaVelocity << endl;
