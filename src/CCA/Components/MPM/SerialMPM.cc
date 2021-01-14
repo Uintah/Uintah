@@ -6735,8 +6735,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           massTop     += gmass[TopMat][node]*S[k];
           massBot     += gmass[BotMat][node]*S[k];
         }
-        velTop/=sumSTop;
-        velBot/=sumSBot;
+        velTop/=(sumSTop+1.e-100);
+        velBot/=(sumSBot+1.e-100);
 
         // Update the cohesive zone's position and displacements
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
