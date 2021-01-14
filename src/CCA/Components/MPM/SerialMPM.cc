@@ -4495,8 +4495,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           massTop     += gmass[TopMat][node]*S[k];
           massBot     += gmass[BotMat][node]*S[k];
         }
-        velTop/=sumSTop;
-        velBot/=sumSBot;
+        velTop/=(sumSTop+1.e-100);
+        velBot/=(sumSBot+1.e-100);
 
 #if 0
         // I'm not sure what this was here for in the first place,
