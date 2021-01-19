@@ -562,7 +562,7 @@ endif
 #########################################################################################################
 # Targets for regression testing...
 
-gold_standards :
+gold_standards goldStandards :
 	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                        \
          echo -n "Started at: "; date;                                                                           \
          cd $(OBJTOP_ABS)/TestData;                                                                              \

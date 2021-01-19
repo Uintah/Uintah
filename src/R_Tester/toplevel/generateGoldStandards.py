@@ -188,8 +188,13 @@ def generateGS() :
 
     ##############################################################
     # Determine if the code has been modified (svn stat)
-
-    process = subprocess.Popen( "svn stat " + options.src_directory, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    cmd = "cd %s; git status" % options.src_directory
+    
+    process = subprocess.Popen( cmd , 
+                                shell=True, 
+                                stdout=subprocess.PIPE, 
+                                stderr=subprocess.PIPE )
+                                
     ( stdout, sterr ) = process.communicate()
     result = process.returncode
 
@@ -371,8 +376,8 @@ def generateGS() :
                     os.environ['MALLOC_STATS'] = "malloc_stats"
                     MALLOC_FLAG = " -x MALLOC_STATS "
 
-            SVN_FLAGS = " -svnStat -svnDiff "
-            #SVN_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
+            GIT_FLAGS = " -gitStatus -gitDiff "
+            #GIT_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
             
             # adjustments for openmpi and mvapich
             # openmpi
@@ -388,7 +393,7 @@ def generateGS() :
             np = int( np )
             my_mpirun = "%s -n %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
+            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 " 
 
             print( "Running command: " + command )
 
