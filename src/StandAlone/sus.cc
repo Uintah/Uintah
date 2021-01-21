@@ -78,7 +78,7 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include <svn_info.h>
+#include <git_info.h>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -570,14 +570,14 @@ int main( int argc, char *argv[], char *env[] )
       char name[256];
       gethostname(name, 256);
 
-      std::cout << "Date:    " << time_string;  // has its own newline
-      std::cout << "Machine: " << name << "\n";
-      std::cout << "SVN: " << SVN_REVISION << "\n";
-      std::cout << "SVN: " << SVN_DATE << "\n";
-      std::cout << "SVN: " << SVN_URL << "\n";
+      std::cout << "Date:       " << time_string;  // has its own newline
+      std::cout << "Machine:    " << name << "\n";
+      std::cout << "git branch:"  << GIT_BRANCH << "\n";
+      std::cout << "git date:   " << GIT_DATE << "\n";
+      std::cout << "git hash:   " << GIT_HASH << "\n";
       std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
-      std::cout << "CFLAGS: " << CFLAGS << "\n";
-
+      std::cout << "CFLAGS:          " << CFLAGS << "\n";
+      std::cout << "______________________________________________________________________\n";
       // Run git commands Uintah 
       if ( do_gitDiff || do_gitStatus ) {
         std::cout << "____GIT_____________________________________________________________\n";

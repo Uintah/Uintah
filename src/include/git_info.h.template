@@ -1,0 +1,4 @@
+// Current git hash, date and branch.
+#define GIT_BRANCH "unknown_branch"
+#define GIT_DATE   "unknown_date"
+#define GIT_HASH   "unknown_hash"

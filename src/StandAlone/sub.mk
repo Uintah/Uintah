@@ -218,7 +218,7 @@ link_localRT:
 
 sus: prereqs StandAlone/sus
 
-$(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/svn_info.h
+$(OBJTOP)/StandAlone/sus.o : $(OBJTOP_ABS)/include/git_info.h
 
 tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
