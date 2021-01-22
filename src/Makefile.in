@@ -329,46 +329,12 @@ ETAGS := @ETAGS@
 CTAGS := ctags
 
 ################################################################################
-# Place git log information in include/git_info.h.  This target
-# will execute every time you run make.  The variables in git_info are 
+# Call a shell script that updates the git log information in include/git_info.h. 
+# This target will execute every time you run make.  The variables in git_info are
 # output by sus
 
 $(OBJTOP_ABS)/include/git_info.h : .FORCE
-	@IFS=' ';                                                                                 \
-         # copy template file if it doesn't exist                                                 \
-         if [ ! -f $(OBJTOP_ABS)/include/git_info.h ]; then                                       \
-           cp $(SRCTOP_ABS)/include/git_info.h.template  $(OBJTOP_ABS)/include/git_info.h;        \
-         fi;                                                                                      \
-                                                                                                  \
-         git_log=`git -C $(SRCTOP_ABS) log -1 --format="%ad|%d|%H"   2> /dev/null` ;              \
-                                                                                                  \
-         # update git log info if the git log command was successful and it has changed           \
-                                                                                                  \
-         if [ $$? -eq 0 ]; then                                                                   \
-            hash=`  echo $$git_log | cut -f 3 -d \|`;                                             \
-            branch=`echo $$git_log | cut -f 2 -d \|`;                                             \
-            date=`  echo $$git_log | cut -f 1 -d \|`;                                             \
-                                                                                                  \
-            grep $$hash  $(OBJTOP_ABS)/include/git_info.h > /dev/null 2>&1;                       \
-                                                                                                  \
-            if [ $$? -ne 0 ]; then                                                                \
-              echo "Updating git log information in include/git_info.h";                          \
-              sed -e "s%unknown_hash%$$hash%"                                                     \
-                  -e "s%unknown_date%$$date%"                                                     \
-                  -e "s%unknown_branch%$$branch%"                                                 \
-                  $(SRCTOP_ABS)/include/git_info.h.template > $(OBJTOP_ABS)/include/git_info.h;   \
-                                                                                                  \
-              echo "  date:   $$date ";                                                           \
-              echo "  hash:   $$hash ";                                                           \
-              echo "  branch: $$branch ";                                                         \
-            fi;                                                                                   \
-         else                                                                                     \
-            echo "______________________________________________________________________";        \
-            echo "Info: git log command failed, no updates to include/git_info.h ";               \
-            echo "         The output from sus may not have accurate git information";            \
-            echo "______________________________________________________________________";        \
-         fi;                                                                                      \
-
+	$(SRCTOP_ABS)/include/git_info.sh $(SRCTOP_ABS) $(OBJTOP_ABS)
 # Dummy target to force above git_info target to kick off every time.
 .FORCE :
 
