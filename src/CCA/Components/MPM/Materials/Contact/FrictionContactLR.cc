@@ -119,8 +119,10 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    // First, calculate the gradient of the mass everywhere
-    // normalize it, and stick it in surfNorm
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+         d_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
+
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
@@ -168,7 +170,8 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
             double mass=gmass[n][c];
-            if(mass>1.e-16){ // There is mass of material beta at this node
+            if(gmass[n][c] > 1.e-8*gmassglobal[c]){ 
+              // There is mass of material beta at this node
               // Check relative separation of the material prominence
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
@@ -251,6 +254,10 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
     new_dw->get(normAlphaToBeta,  lb->gNormAlphaToBetaLabel,0,patch, gnone, 0);
 
     // Retrieve necessary data from DataWarehouse
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+         d_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
+
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
@@ -297,7 +304,7 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
             double mass=gmass[n][c];
-            if(mass>1.e-16){
+            if(gmass[n][c] > 1.e-8*gmassglobal[c]){ 
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
 //              if(separation <= 0.0){
@@ -361,6 +368,8 @@ void FrictionContactLR::addComputesAndRequiresInterpolated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                  Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,
+           d_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
@@ -388,6 +397,8 @@ void FrictionContactLR::addComputesAndRequiresIntegrated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                  Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,
+           d_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
