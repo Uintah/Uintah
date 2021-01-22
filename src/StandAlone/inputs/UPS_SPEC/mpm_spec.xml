@@ -88,6 +88,7 @@
     <BurialHistory             spec="OPTIONAL NO_DATA" >
       <pressure_conversion_factor spec="OPTIONAL DOUBLE" />
       <ramp_time               spec="OPTIONAL DOUBLE" />
+      <hold_time               spec="OPTIONAL DOUBLE" />
       <settle_time             spec="OPTIONAL DOUBLE" />
       <stableKE                spec="OPTIONAL DOUBLE" />
       <currentIndex            spec="OPTIONAL INTEGER" />
