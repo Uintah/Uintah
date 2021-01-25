@@ -69,8 +69,8 @@
         </counterflow>
         
         <powerLawProfile                spec="OPTIONAL NO_DATA"> 
-          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
-          <maxHeight                    spec="REQUIRED DOUBLE" />
+          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
+          <profileHeight                spec="REQUIRED DOUBLE" />
           <U_infinity                   spec="REQUIRED VECTOR" />
           <exponent                     spec="REQUIRED DOUBLE 'positive'" />
         </powerLawProfile>
@@ -85,7 +85,7 @@
         </powerLawProfile2> 
         
         <DNS_Moser                      spec="OPTIONAL NO_DATA">
-          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
+          <verticalDir                  spec="REQUIRED INTEGER '0,2'" />
           <dpdx                         spec="REQUIRED DOUBLE" />
         </DNS_Moser>
                 

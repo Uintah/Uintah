@@ -31,8 +31,19 @@
 namespace Uintah {
 
   class ICEMaterial;
+  class BBox;
 
- // multiple vortices
+  //__________________________________
+  //  common
+  struct common{
+    int verticalDir  {-9};             // vertical direction
+    int principalDir {-9};             // The component of velocity to set
+    BBox domain;                       // Interior spatial computational domain 
+    ~common() {};
+  };
+  
+  //__________________________________
+  // multiple vortices
   struct vortices{    
     std::vector<Point>  origin;
     std::vector<double> strength;
@@ -84,11 +95,8 @@ namespace Uintah {
   struct powerLaw{
     Vector U_infinity;            // freestream velocity
     double exponent;
-
-    int verticalDir;              // vertical direction
-    double maxHeight;             // max height of velocity profile before it's set to u_infinity
-    Point gridMin;
-    Point gridMax;
+    double profileHeight;        // max height of velocity profile before it's set to u_infinity
+                                 // default is the domain height
     ~powerLaw() {};
   };
     
@@ -96,11 +104,7 @@ namespace Uintah {
   //
   struct powerLaw2{ 
     double Re_tau;                // Reynolds number based on uTau
-    int verticalDir;              // vertical direction
-    int principalDir;             // component of velocity to set
     double halfChanHeight;        // half channel height
-    double floor;                 // channel floor, above mpm particles
-    double ceiling;               // channel ceiling, below mpm particles
     ~powerLaw2() {};
   };
 
@@ -109,11 +113,7 @@ namespace Uintah {
   // "Direct Numerical Simulation of turbulent channel Flow up to Re_tau=590
   // Physics of Fluids, pp:943-945, Vol 11, Number 4, 1999
   struct DNS_Moser{
-    double    dpdx;              // streamwise pressure gradient
-    int       verticalDir;       // vertical direction
-    Point     gridFloor;         // domain floor
-    Point     gridCeil;          // domain ceiling
-    vortices  vortex_vars;
+    double  dpdx;                 // streamwise pressure gradient
 
     ~DNS_Moser() {};
   };
@@ -121,6 +121,7 @@ namespace Uintah {
   //__________________________________
   //
   struct customInitialize_basket{
+    common       common_vars;
     vortices     vortex_vars;
     vortexPairs  vortexPairs_vars;
     mms          mms_vars;
@@ -134,8 +135,8 @@ namespace Uintah {
   };
 
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
-                                        customInitialize_basket* cib,
-                                        GridP& grid);
+                                          customInitialize_basket* cib,
+                                          GridP& grid);
 
   void customInitialization(const Patch* patch,
                             CCVariable<double>& rho_CC,
