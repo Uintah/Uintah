@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __PROBLEM_SPEC_READER_H__ 
+#ifndef __PROBLEM_SPEC_READER_H__
 #define __PROBLEM_SPEC_READER_H__
 
 #include <CCA/Ports/ProblemSpecInterface.h>
@@ -34,7 +34,7 @@
 #include <vector>
 
 namespace Uintah {
-      
+
   struct Tag;
 
   class ProblemSpecReader : public ProblemSpecInterface {
@@ -44,8 +44,8 @@ namespace Uintah {
 
     // Reads in an XML problem spec file.  (See 2nd version below, too).
 
-    virtual ProblemSpecP readInputFile( const std::string      & filename,
-                                        const bool               validate = false );
+    virtual ProblemSpecP readInputFile( const std::string & filename,
+                                        const bool validate = false );
 
     // This function is designed to remove <Patch> sections of the xml input 'filename' before
     // creating the XML DOM object, where the patches passed in are just the ones assigned to
@@ -67,8 +67,8 @@ namespace Uintah {
 
     ProblemSpecReader(const ProblemSpecReader&);
     ProblemSpecReader& operator=(const ProblemSpecReader&);
-    
-    ////////////////////////////////////////////////////////////////////////////////
+
+    //__________________________________
     // Variables:
 
     // d_upsFilename[0] is the main file... but each subsequent string
@@ -77,7 +77,7 @@ namespace Uintah {
 
     ProblemSpecP d_xmlData;
 
-    ////////////////////////////////////////////////////////////////////////////////
+    //__________________________________
     // Functions:
 
     void         parseValidationFile();
