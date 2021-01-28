@@ -6768,23 +6768,29 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
 
         // Determine if a CZ has failed.
         double czf=0.0;
-        if(czFailed[idx]>0 ){
+        if(czFailed[idx]!=0 ){
           if(disp>=disp_old){
-           czFailed_new[idx]=min(czFailed[idx]+1,1000);
+           if(czFailed[idx]>0){
+             czFailed_new[idx]=min(czFailed[idx]+1, 1000);
+           } else{
+             czFailed_new[idx]=max(czFailed[idx]-1,-1000);
+           }
           } else {
            czFailed_new[idx]=czFailed[idx];
           }
-          czf =.001*((double) czFailed_new[idx]);
+          czf =.001*fabs((double) czFailed_new[idx]);
         }
         else if(fabs(D_n) > delta_n_fail){
-          cout << "czFailed, D_n =  " << endl;
+          cout << "czFailed, D_n =  " << D_n << endl;
           czFailed_new[idx]=1;
         }
         else if( fabs(D_t1) > delta_t_fail){
-          czFailed_new[idx]=1;
+          cout << "czFailed, D_t1 =  " << D_t1 << endl;
+          czFailed_new[idx]=-1;
         }
         else if( fabs(D_t2) > delta_t_fail){
-          czFailed_new[idx]=1;
+          cout << "czFailed, D_t2 =  " << D_t2 << endl;
+          czFailed_new[idx]=-1;
         }
         else {
           czFailed_new[idx]=0;
@@ -8072,7 +8078,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       IntVector c = *iter;
       double maxMass=-9.e99;
       for(unsigned int m = 0; m < numMPMMatls; m++){
-        if(gmass[m][c] > 1.e-8*gmassglobal[c]){
+        if(gmass[m][c] > 1.e-8*gmassglobal[c] && gmass[m][c] > 1.e-16){
           NumMatlsOnNode[c]++;
           if(gmass[m][c]>maxMass){
             // This is the alpha material, all other matls are beta

@@ -169,7 +169,6 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
           for(int n = 0; n < numMatls; n++){
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
-            double mass=gmass[n][c];
             if(gmass[n][c] > 1.e-8*gmassglobal[c]){ 
               // There is mass of material beta at this node
               // Check relative separation of the material prominence
@@ -303,8 +302,7 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
           for(int n = 0; n < numMatls; n++){
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
-            double mass=gmass[n][c];
-            if(gmass[n][c] > 1.e-8*gmassglobal[c]){ 
+            if(gmass[n][c] > 1.e-8*gmassglobal[c] && gmass[n][c] > 1.e-16){ 
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
 //              if(separation <= 0.0){
