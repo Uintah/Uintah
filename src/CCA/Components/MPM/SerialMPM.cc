@@ -517,13 +517,13 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
-  // The following CZ code needs to be fixed in the same manner as the tracer
-  // code below
-  unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
-  for(unsigned int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
-    CohesiveZone* ch = cz_matl->getCohesiveZone();
-    ch->scheduleInitialize(level, sched, cz_matl);
+  int numCZM = m_materialManager->getNumMatls( "CZ" );
+  if(numCZM>0){
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", 0);
+    CohesiveZone* cz = cz_matl->getCohesiveZone();
+    cz->scheduleInitialize(level, sched, m_materialManager);
+
+    schedulePrintCZCount(level, sched);
   }
 
   int numTracerM = m_materialManager->getNumMatls("Tracer");
@@ -662,6 +662,41 @@ void SerialMPM::printTracerCount(const ProcessorGroup* pg,
   if(trcount == 0){
     ostringstream msg;
     msg << "\n ERROR: zero tracers were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
+}
+
+//______________________________________________________________________
+void SerialMPM::schedulePrintCZCount(const LevelP& level,
+                                         SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printCZCount",
+                        this, &SerialMPM::printCZCount);
+  t->requires(Task::NewDW, lb->czCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "CZ" ));
+}
+//______________________________________________________________________
+//
+void SerialMPM::printCZCount(const ProcessorGroup* pg,
+                                 const PatchSubset*, 
+                                 const MaterialSubset*, 
+                                 DataWarehouse*, 
+                                 DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, lb->czCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total cohesive zones" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero cohesive zones were created.";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
@@ -1139,11 +1174,11 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czBotMatLabel_preReloc,      cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->gMassLabel,                  mpm_matls,gac,NGN);
+  t->requires(Task::OldDW, lb->pXLabel,                     cz_matls,  gan, 1);
+  t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls,  gan, 1);
+  t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls,  gan, 1);
+  t->requires(Task::NewDW, lb->czBotMatLabel_preReloc,      cz_matls,  gan, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,                  mpm_matls, gac, 2);
 
   t->modifies(lb->gExternalForceLabel, mpm_matls);
 
@@ -3022,20 +3057,20 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > gext_force(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl=(MPMMaterial*) m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
 
-      new_dw->getModifiable(gext_force[m], lb->gExternalForceLabel, dwi, patch);
-      new_dw->get(gmass[m],                lb->gMassLabel,dwi, patch, gac, NGN);
+      new_dw->getModifiable(gext_force[m],lb->gExternalForceLabel,   dwi,patch);
+      new_dw->get(gmass[m],               lb->gMassLabel,dwi, patch, gac,2);
     }
 
     unsigned int numCZMatls=m_materialManager->getNumMatls( "CZ" );
     for(unsigned int m = 0; m < numCZMatls; m++){
-      CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ",  m );
+      CZMaterial* cz_matl=(CZMaterial*) m_materialManager->getMaterial( "CZ",m);
       int dwi = cz_matl->getDWIndex();
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       gan, NGP, lb->pXLabel);
+                                                       gan, 1, lb->pXLabel);
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> czx;
@@ -6621,12 +6656,12 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
+      Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);
+      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
     }
 
     unsigned int numCZMatls=m_materialManager->getNumMatls( "CZ" );
@@ -7982,8 +8017,6 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,
-           m_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computes(lb->gMatlProminenceLabel);
@@ -8059,10 +8092,6 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // particles around that node.  Rather than store the positions, for now,
     // store a list of particle indices for each material at each node and
     // use those to point into the particle set to get the particle positions
-    constNCVariable<double>  gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel,
-         m_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
-
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -8158,7 +8187,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
        bool converged = false;
        int num_iters=0;
        double tol = 1.e-7;
-       double phi[4]={0.,0.,0.,0.};
+       double phi[4]={0.,0.,1.,0.};
        Vector nhat_k(phi[0],phi[1],phi[2]);
        Vector nhat_backup(0.);
        double error_min=1.0;
@@ -8228,9 +8257,9 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
           error_min = error;
           nhat_backup = nhat_kp1;
         }
-        if(error < tol || num_iters > 25){
+        if(error < tol || num_iters > 50){
           converged=true;
-          if(num_iters > 25){
+          if(num_iters > 100){
            normAlphaToBeta[c] = nhat_backup;
           } else {
            normAlphaToBeta[c] = nhat_kp1;
