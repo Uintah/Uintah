@@ -39,6 +39,12 @@ git stash pop
 
 At this point, you can add, commit and push your changes if you want.
 
+To see what is stashed, do:
+
+git stash list
+and then:
+git stash show -p stash@{stash_id}
+
 
 
 //__________________________________
