@@ -310,39 +310,49 @@ KEStats::doAnalysis( const ProcessorGroup * pg,
       int numLines=0;
       double timeAveKE=0;
       vector<double> KEvector, timevector;
+      bool KEFileExists = true;
+      bool MassFileExists = true;
       if(simTime > 0.){
         // open the file
         ifstream KEfile(path.c_str());
         if(!KEfile){
-            cerr << "KineticEnergy.dat file not opened, exiting" << endl;
-            exit(1);
+            cerr << "KineticEnergy.dat file not opened, faking it" << endl;
+            KEFileExists = false;
+            //exit(1);
         }
 
         ifstream Massfile(massPath.c_str());
         if(!Massfile){
-            cerr << "PistonMass.dat file not opened, exiting" << endl;
-            exit(1);
+            cerr << "PistonMass.dat file not opened, faking it" << endl;
+            MassFileExists = false;
+            //exit(1);
         }
 
-        while(KEfile >> time >> KE){
-          KEvector.push_back(KE);
-          timevector.push_back(time);
-          numLines++;
-        }
-        if(numLines < d_numStepsAve){
-          for(unsigned int i=0;i<KEvector.size();i++){
-            timeAveKE+=KEvector[i];
+        if(KEFileExists){
+          while(KEfile >> time >> KE){
+            KEvector.push_back(KE);
+            timevector.push_back(time);
+            numLines++;
           }
-          timeAveKE/=((double) numLines);
-        } else {
-          for(int unsigned i=KEvector.size()-d_numStepsAve;i<KEvector.size();i++){
-            timeAveKE+=KEvector[i];
+          if(numLines < d_numStepsAve){
+            for(unsigned int i=0;i<KEvector.size();i++){
+              timeAveKE+=KEvector[i];
+            }
+            timeAveKE/=((double) numLines);
+          } else {
+            for(int unsigned i=KEvector.size()-d_numStepsAve;i<KEvector.size();i++){
+              timeAveKE+=KEvector[i];
+            }
+            timeAveKE/=((double) d_numStepsAve);
           }
-          timeAveKE/=((double) d_numStepsAve);
         }
         // Just need the last value.  There's almost certainly a more efficient
         // way to do this.
-        while(Massfile >> massTime >> pistonMass){
+        if(MassFileExists){
+          while(Massfile >> massTime >> pistonMass){
+          }
+        } else {
+           pistonMass = 1.;
         }
 //        cout << "timeAveKE = " << timeAveKE << endl;
 //        cout << "numLines = " << numLines << endl;
