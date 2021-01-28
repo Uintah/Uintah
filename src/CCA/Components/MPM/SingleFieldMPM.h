@@ -108,6 +108,8 @@ public:
   virtual void restartInitialize();
 
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
+
+  void schedulePrintCZCount(const LevelP& level, SchedulerP& sched);
   
   void scheduleTotalParticleCount(SchedulerP& sched,
                                  const PatchSet* patches,
@@ -175,6 +177,12 @@ protected:
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
+                          
+  void printCZCount(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
                           
   void totalParticleCount(const ProcessorGroup*,
                           const PatchSubset* patches,

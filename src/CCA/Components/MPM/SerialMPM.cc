@@ -6656,12 +6656,12 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
 
+    Ghost::GhostType  gac = Ghost::AroundCells;
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
-      Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
-      new_dw->get(gmass[m],     lb->gMassLabel,        dwi, patch, gac, NGN);
+      new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);
     }
 
     unsigned int numCZMatls=m_materialManager->getNumMatls( "CZ" );
@@ -8017,6 +8017,8 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
   t->requires(Task::NewDW, lb->pCurSizeLabel,            particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,      particle_ghost_type, particle_ghost_layer);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,
+           m_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
 
   t->computes(lb->gMatlProminenceLabel);
@@ -8092,6 +8094,10 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // particles around that node.  Rather than store the positions, for now,
     // store a list of particle indices for each material at each node and
     // use those to point into the particle set to get the particle positions
+    constNCVariable<double>  gmassglobal;
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+         m_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
+
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = 
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -8187,7 +8193,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
        bool converged = false;
        int num_iters=0;
        double tol = 1.e-7;
-       double phi[4]={0.,0.,1.,0.};
+       double phi[4]={0.,0.,0.,0.};
        Vector nhat_k(phi[0],phi[1],phi[2]);
        Vector nhat_backup(0.);
        double error_min=1.0;
@@ -8259,7 +8265,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }
         if(error < tol || num_iters > 50){
           converged=true;
-          if(num_iters > 100){
+          if(num_iters > 50){
            normAlphaToBeta[c] = nhat_backup;
           } else {
            normAlphaToBeta[c] = nhat_kp1;

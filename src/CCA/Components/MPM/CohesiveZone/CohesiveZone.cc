@@ -250,8 +250,8 @@ void CohesiveZone::registerPermanentCohesiveZoneState(CZMaterial* czmat)
 //__________________________________
 //
 void CohesiveZone::scheduleInitialize(const LevelP& level, 
-                                      SchedulerP& sched,
-                                      CZMaterial* czmat)
+                                            SchedulerP& sched,
+                                            MaterialManagerP &mm)
 {
   Task* t = scinew Task("CohesiveZone::initialize",
                   this, &CohesiveZone::initialize);
@@ -272,15 +272,18 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->czBotMatLabel);
   t->computes(d_lb->czFailedLabel);
   t->computes(d_lb->czIDLabel);
+  t->computes(d_lb->czCountLabel);
   t->computes(d_lb->pCellNACZIDLabel,zeroth_matl);
 
-  vector<int> m(1);
-  m[0] = czmat->getDWIndex();
-  MaterialSet* cz_matl_set = scinew MaterialSet();
-  cz_matl_set->addAll(m);
-  cz_matl_set->addReference();
+//  vector<int> m(1);
+//  m[0] = czmat->getDWIndex();
+//  MaterialSet* cz_matl_set = scinew MaterialSet();
+//  cz_matl_set->addAll(m);
+//  cz_matl_set->addReference();
 
-  sched->addTask(t, level->eachPatch(), cz_matl_set);
+//  sched->addTask(t, level->eachPatch(), cz_matl_set);
+
+  sched->addTask(t, level->eachPatch(), mm->allMaterials("CZ"));
 
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
@@ -306,15 +309,13 @@ void CohesiveZone::initialize(const ProcessorGroup*,
     cellNACZID.initialize(0);
 
     for(int m=0;m<cz_matls->size();m++){
-      CZMaterial* cz_matl = (CZMaterial*) d_materialManager->getMaterial( "CZ",  m );
+      CZMaterial* cz_matl=(CZMaterial*) d_materialManager->getMaterial("CZ", m);
       string filename = cz_matl->getCohesiveFilename();
       particleIndex numCZs = countCohesiveZones(patch,filename);
       totalCZs+=numCZs;
 
-      cout << "Total CZs " << totalCZs << endl;
-
-      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw,filename);
+      createCohesiveZones(cz_matl, numCZs, cellNACZID, patch, new_dw, filename);
     }
+    new_dw->put(sumlong_vartype(totalCZs), d_lb->czCountLabel);
   }
-
 }

@@ -461,11 +461,19 @@ void SingleFieldMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
-  unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
-  for(unsigned int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ", m);
-    CohesiveZone* ch = cz_matl->getCohesiveZone();
-    ch->scheduleInitialize(level, sched, cz_matl);
+//  unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
+//  for(unsigned int m = 0; m < numCZM; m++){
+//    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ", m);
+//    CohesiveZone* ch = cz_matl->getCohesiveZone();
+//    ch->scheduleInitialize(level, sched, cz_matl);
+//  }
+  int numCZM = m_materialManager->getNumMatls( "CZ" );
+  if(numCZM>0){
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", 0);
+    CohesiveZone* cz = cz_matl->getCohesiveZone();
+    cz->scheduleInitialize(level, sched, m_materialManager);
+
+    schedulePrintCZCount(level, sched);
   }
 
   if (flags->d_deleteGeometryObjects) {
@@ -547,6 +555,41 @@ void SingleFieldMPM::totalParticleCount(const ProcessorGroup*,
       totalParticles+=numParticles;
     }
     new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+  }
+}
+
+//______________________________________________________________________
+void SingleFieldMPM::schedulePrintCZCount(const LevelP& level,
+                                         SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printCZCount",
+                        this, &SingleFieldMPM::printCZCount);
+  t->requires(Task::NewDW, lb->czCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "CZ" ));
+}
+//______________________________________________________________________
+//
+void SingleFieldMPM::printCZCount(const ProcessorGroup* pg,
+                                 const PatchSubset*, 
+                                 const MaterialSubset*, 
+                                 DataWarehouse*, 
+                                 DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, lb->czCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total cohesive zones" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero cohesive zones were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
 

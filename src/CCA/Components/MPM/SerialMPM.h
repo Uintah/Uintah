@@ -121,6 +121,8 @@ public:
   
   void schedulePrintTracerCount(const LevelP& level, SchedulerP& sched);
   
+  void schedulePrintCZCount(const LevelP& level, SchedulerP& sched);
+  
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimeStep(const LevelP& level, SchedulerP&);
@@ -197,6 +199,12 @@ protected:
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);
+                          
+  void printCZCount(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
                           
   //////////
   // Initialize particle data with a default values in the
