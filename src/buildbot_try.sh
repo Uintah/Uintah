@@ -74,6 +74,18 @@ if ($#argv == 0) then
 endif
 
 #__________________________________
+#  check version of buildbot
+#  This requires a gnu:sort
+set ver    = `buildbot try --version | awk '{print $3}'`
+set reqVer = "18.8.0"
+echo "$ver $reqVer" | tr " " "\n" | sort -C --version-sort
+
+if( $status == 0 ) then
+  echo "WARNING:  The version of buildbot ($ver) is not compatible with the version on the server this script may not work properly."
+  echo "          Server version: $reqVer"
+endif
+
+#__________________________________
 # parse inputs
 while ( $#argv )
   #echo "($1)"
