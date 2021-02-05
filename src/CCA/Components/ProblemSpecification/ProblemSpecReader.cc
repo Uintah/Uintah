@@ -47,6 +47,7 @@
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>
+#include <libxml/xmlstring.h>
 
 using namespace Uintah;
 
@@ -2244,121 +2245,185 @@ ProblemSpecReader::findFileNamePtr( const std::string & filename )
   return nullptr;
 }
 
+
+//______________________________________________________________________
+//
+std::string
+ProblemSpecReader::getNodeName( xmlNode * node )
+{
+  std::string name = (const char *)(node->name);
+  return name;
+}
+
+//______________________________________________________________________
+//  This method searches the node tree for the last element in the xmlpath and
+//  returns only that node element.
+//  For example given the ups spec below the node "pears" would be returned.
+//    <include href="fruit.xml" section="apples/bannas/pears"/>
+//______________________________________________________________________
+
+xmlNode *
+ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
+                                            std::string xmlPath,
+                                            const int   depth )
+{
+  using std::vector;
+  using std::string;
+
+  // break up the string into a vector of elements
+  std::vector<char>   separator{'/'};
+  std::vector<std::string> elements = split_string( xmlPath, separator );
+
+  xmlNode * foundNode = nullptr;
+
+  // loop over all elements in the xmlPath.  The xmlPath may contain
+  // multiple elements you must recursively search them.
+  for ( unsigned int i=depth; i < elements.size(); i++ ){
+    const std::string targetElement =  elements[i];
+
+    for ( xmlNode * node = nodeTree; node != nullptr; node = node->next){
+
+      std::string name = getNodeName(node);
+
+      if( (node->type == XML_ELEMENT_NODE) && (name == targetElement) ){
+
+        // If this is the last element in the xmlPath return the node
+        if (i == elements.size() -1){
+
+          foundNode = xmlCopyNode(node, 1);
+          return foundNode;
+        }
+
+        // Recursively walk down the children nodes until you find the correct node
+        if( node->children != NULL ){
+
+          foundNode = recursiveFindElementTag(node->children, xmlPath, i+1 );
+          return foundNode;
+        }
+      }
+    }
+  }
+
+  return foundNode;
+}
+
 //______________________________________________________________________
 //
 void
-ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
+ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
+                                    xmlNode * parentNode,
+                                    int depth /* = 0 */ )
 {
-  while( child != nullptr ) {
-    if( child->type == XML_ELEMENT_NODE ) {
-      std::string name1 = (const char *)(child->name);
-      if( name1 == "include" ) {
-        ProblemSpec temp( child );
-        std::map<std::string, std::string> attributes;
-        temp.getAttributes( attributes );
-        xmlNode * prevChild = child->prev;
+  for ( xmlNode * node = nodeTree; node != NULL; node = node->next){
+    std::string name = getNodeName(node);
 
-        std::string filename;
-        std::string section = attributes[ "section" ];
-        if( child->_private ) {
-          filename = validateFilename( attributes["href"], child );
-        }
-        else {
-          filename = validateFilename( attributes["href"], parent );
-        }
+    if( node->type == XML_ELEMENT_NODE  &&  name == "include" ) {
 
-        xmlDocPtr  doc     = xmlReadFile( filename.c_str(), 0, XML_PARSE_PEDANTIC );
-        xmlNode  * include = xmlDocGetRootElement(doc);
-        std::string * strPtr = new std::string( filename );
-        d_upsFilename.push_back( strPtr );
+      //__________________________________
+      // validate the include filename specified by the user
+      ProblemSpec temp( node );
+      std::map<std::string, std::string> nodeAttributes;
+      temp.getAttributes( nodeAttributes );
 
-        // nodes to be substituted must be enclosed in a
-        // "Uintah_Include" node
-
-        std::string name = (const char *)( include->name );
-        if( name == "Uintah_Include" || name == "Uintah_specification" ) {
-          xmlNode * incChild = include->children;
-
-          if( section != "" ) {  // Find the right section of the included file (to include).
-
-            std::vector<std::string> sections;
-            std::vector<char>   separators;
-            separators.push_back( '/' );
-            sections = split_string( section, separators );
-
-            std::cout << " sectionSize: " << sections.size() <<  std::endl;
-            for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
-              bool done = false;
-              while( !done ) {
-                if( incChild == nullptr ) {
-                  throw ProblemSetupException("Error parsing included file '" + filename + "' section '" + section + "'", __FILE__, __LINE__);
-                }
-
-                std::string childName = (const char *)(incChild->name);
-
-                if( ( incChild->type == XML_ELEMENT_NODE ) && ( childName == sections[ pos ] ) ) {
-                  if( pos != sections.size()-1 ) { // Not the last section, so descend.
-                    incChild = incChild->children;
-                  }
-                  done = true;
-                }
-                else {
-                  incChild = incChild->next;
-                }
-              }
-            }
-          }
-
-          while( incChild != 0 ) {
-            // Make include be created from same document that created params...
-            //ProblemSpecP newnode = tempParentPS.importNode( incChild, true );
-
-            xmlNode * newnode = xmlDocCopyNode( incChild, parent->doc, true );
-            if( prevChild == nullptr ) {
-              prevChild = newnode;
-            }
-
-            // Record the newnode's real file info...
-            newnode->_private = strPtr;
-            xmlAddPrevSibling( child, newnode );
-            incChild = incChild->next;
-          }
-
-          // Remove the <include>
-          xmlUnlinkNode( child );
-          xmlFreeNode(   child );
-
-          // Once all the 'included' tags have been added to the parent, and the <include>
-          // has been removed, we need to start parsing at the first included tag.
-          child = prevChild;
-        }
-        else {
-          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
-        }
-        xmlFreeDoc( doc );
+      std::string filename;
+      if( node->_private ) {
+        filename = validateFilename( nodeAttributes["href"], node );
       }
-      else { // !"include"
-        indent( dbg, depth );
-        dbg << " * " << name1 << "\n";
-        if( child->_private == nullptr ) {
-          child->_private = parent->_private;
-        }
+      else {
+        filename = validateFilename( nodeAttributes["href"], parentNode );
       }
 
-      if( child != nullptr ) {
-        // Child can be nullptr if an <include> is the last 'child'... as the <include> is
-        // removed from the tree above.
-        xmlNode * grandchild = child->children;
+      //__________________________________
+      //  Read the include xml file
+      // The root node must be either "Uintah_Include" or Uintah_specification"
+      xmlDocPtr  doc     = xmlReadFile( filename.c_str(), 0, XML_PARSE_PEDANTIC );
+      xmlNode  * include = xmlDocGetRootElement( doc );
 
-        if( grandchild != nullptr ) {
-          resolveIncludes( grandchild, child, depth+1 );
+      std::string rootName = getNodeName( include );
+
+      // bulletproofing
+      if( rootName != "Uintah_Include" && rootName != "Uintah_specification" ) {
+        std::ostringstream error;
+        error << " ERROR:  Could not find the root node \"Uintah_Include\" or \"Uintah_specification\" in the included"
+              << " file (" << filename << ")\n";
+        throw ProblemSetupException( error.str() , __FILE__, __LINE__);
+      }
+
+      // update the upsFileName vector
+      std::string * filename_strPtr = new std::string( filename );
+      d_upsFilename.push_back( filename_strPtr );
+
+      // Nodes to be included from the file
+      xmlNode * incNodes = nullptr;
+
+      //__________________________________
+      // If the user has a "section" specified
+      // find that node
+      std::string section = nodeAttributes[ "section" ];
+
+      if( section != "" ) {
+
+        xmlNode * includeFileNodes = include->children;
+        incNodes = recursiveFindElementTag( includeFileNodes, section, 0 );
+
+        if ( incNodes == nullptr ){
+          std::ostringstream error;
+          error << " ERROR:  The xml section (" << section << ") was not found in the file (" << filename << ")\n";
+          throw ProblemSetupException( error.str(), __FILE__, __LINE__);
         }
       }
-    } // end if( child->getNodeType() == XML_ELEMENT_NODE ) {
+      else{
+        // all xml nodes in the include file
+        incNodes = include->children;
+      }
 
-    child = child->next;
+      //__________________________________
+      // Process the include nodes
+      xmlNode * prevNode = node->prev;
 
-  } // end while( child != nullptr )
+      for ( xmlNode * incNode = incNodes; incNode !=nullptr; incNode = incNode->next){
+        // Make include be created from same document that created params...
+        //ProblemSpecP newNode = tempParentPS.importNode( incNodes, true );
 
+        xmlNode * newNode = xmlDocCopyNode( incNode, parentNode->doc, true );
+
+        if( prevNode == nullptr ) {
+          prevNode = newNode;
+        }
+
+        // Record the newNode's real file info...
+        newNode->_private = filename_strPtr;
+        xmlAddPrevSibling( node, newNode );
+      }
+
+      // Remove the <include> node
+      xmlUnlinkNode( node );
+      xmlFreeNode(   node );
+
+      // Once all the 'included' tags have been added to the parent, and the <include>
+      // has been removed, we need to start parsing at the first included tag.
+      node = prevNode;
+      xmlFreeDoc( doc );
+    }
+    //__________________________________
+    //  If this is not an include node
+    else {
+      indent( dbg, depth );
+      dbg << " * " << name << "\n";
+      if( node->_private == nullptr ) {
+        node->_private = parentNode->_private;
+      }
+    }
+
+    //__________________________________
+    //  recursively process the node
+    if( node != nullptr ) {
+      xmlNode * childNodes = node->children;
+
+      if( childNodes != nullptr) {
+        resolveIncludes( childNodes, node, depth+1 );
+      }
+    }
+  } // Loop over nodes
 } // end resolveIncludes()
 

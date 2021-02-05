@@ -84,6 +84,12 @@ namespace Uintah {
     void         validateProblemSpec( ProblemSpecP & prob_spec );
     std::string* findFileNamePtr( const std::string & filename );
 
+    std::string  getNodeName( xmlNode * node );
+
+    xmlNode *    recursiveFindElementTag( xmlNode * startNode,
+                                          std::string xmlPath,
+                                          const int depth );
+
     // Replaces <include> tags with xml file tree.
     void resolveIncludes( xmlNode * child, xmlNode * parent, int depth = 0 );
    };

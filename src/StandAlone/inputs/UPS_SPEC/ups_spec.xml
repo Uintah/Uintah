@@ -1131,16 +1131,18 @@
     <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
+  <!--__________________________________-->
   <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/ESMPM" />
 
+  <!--__________________________________-->
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                            attribute1="add OPTIONAL BOOLEAN" >
     <include href="mpm_spec.xml" section="MaterialProperties/MPM" />
     <include href="ice_spec.xml" section="MaterialProperties/ICE" />
+    <include href="ice_spec.xml" section="MaterialProperties/exchange_properties" />
     <include href="fvm_spec.xml" section="MaterialProperties/FVM" />
-
   </MaterialProperties>
   
   <!--  Models        -->
