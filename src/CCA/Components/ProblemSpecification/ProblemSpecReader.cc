@@ -2399,6 +2399,9 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       // Remove the <include> node
       xmlUnlinkNode( node );
       xmlFreeNode(   node );
+      
+      xmlUnlinkNode( incNodes );
+      xmlFreeNode(   incNodes );
 
       // Once all the 'included' tags have been added to the parent, and the <include>
       // has been removed, we need to start parsing at the first included tag.
