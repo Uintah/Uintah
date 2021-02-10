@@ -77,18 +77,23 @@ namespace Uintah {
 
     ProblemSpecP d_xmlData;
 
+    typedef std::map<std::string, std::string> nodeAttrMap;
+
     //__________________________________
     // Functions:
-
     void         parseValidationFile();
     void         validateProblemSpec( ProblemSpecP & prob_spec );
     std::string* findFileNamePtr( const std::string & filename );
 
     std::string  getNodeName( xmlNode * node );
 
-    xmlNode *    recursiveFindElementTag( xmlNode * startNode,
-                                          std::string xmlPath,
-                                          const int depth );
+    bool findAttributeValue(xmlNode *   node,
+                            nodeAttrMap nodeAttributes,
+                            const int   depth );
+
+    xmlNode *    recursiveFindElementTag( xmlNode *   nodeTree,
+                                          nodeAttrMap nodeAttributes,
+                                          const int   depth );
 
     // Replaces <include> tags with xml file tree.
     void resolveIncludes( xmlNode * child, xmlNode * parent, int depth = 0 );

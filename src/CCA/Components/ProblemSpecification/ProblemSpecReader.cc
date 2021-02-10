@@ -2256,28 +2256,91 @@ ProblemSpecReader::getNodeName( xmlNode * node )
 }
 
 //______________________________________________________________________
-//  This method searches the node tree for the last element in the xmlpath and
-//  returns only that node element.
-//  For example given the ups spec below the node "pears" would be returned.
-//    <include href="fruit.xml" section="apples/bannas/pears"/>
+// Returns true if the xmlNode contains all of attribute(s) and value(s)
+// in the nodeAttributes map
+// For example:
+//
+// <include href="fruitVegtables.xml" section="fruit/apples" type="granny"/>
+//  or
+// <include href="include.xml" section="Face" circle="y-" origin="0.0 0.0 0.0" radius="0.5"/>
+//______________________________________________________________________
+
+bool
+ProblemSpecReader::findAttributeValue(xmlNode * node,
+                                      nodeAttrMap nodeAttributes,
+                                      const int depth )
+{
+  // erase these items
+  nodeAttributes.erase("href");             // already found by calling method
+  nodeAttributes.erase("section");          // already found by calling method
+  nodeAttributes.erase("need_applies_to");  // Ignore.  Used by ups validation spec
+
+  // if there are no attributes after cleanup.
+  if( nodeAttributes.size() < 1 ){
+    return true;
+  }
+
+  // set where to start iterating. It will chang if this is called recursively
+  nodeAttrMap::iterator begin = std::next( nodeAttributes.begin(), depth );
+
+  bool foundAllAttr = false;
+  auto lastItem = std::prev( nodeAttributes.end() );
+
+  // loop over the node's attributes and compare against values
+  for (auto it = begin; it != nodeAttributes.end(); ++it) {
+
+    std::string targetAttribute =  (*it).first;
+    std::string targetValue     =  (*it).second;
+
+    // compare against the node
+    xmlChar * tag   = xmlCharStrdup( targetAttribute.c_str() );
+    xmlChar * value = xmlCharStrdup( targetValue.c_str() );
+    xmlChar * nodeValue = xmlGetProp( node, tag );
+
+    if ( xmlStrEqual( nodeValue, value) ){
+
+      // search through all of the attributes/values until the lastItem
+      if ( it == lastItem){
+        return true;
+      }
+      else {  // there could be more than one attribute/value to match
+        foundAllAttr = findAttributeValue( node, nodeAttributes, depth +1  );
+        return foundAllAttr;
+      }
+    }
+    xmlFree( nodeValue );
+  }
+  return false;
+}
+
+
+//______________________________________________________________________
+//  This method searches the node tree for the last element in the xmlpath 
+//  and for all of the requested attributes.  It returns only that node element.
+//  For example given the ups spec below the node "apples" with 
+//  attributenns/value "granny" and "small" would be returned.
+//
+//    <include href="inputs/ICE/fruitVegtables.xml" section="fruit/apples" type="granny" size="small"/>
 //______________________________________________________________________
 
 xmlNode *
 ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
-                                            std::string xmlPath,
+                                            nodeAttrMap nodeAttributes,
                                             const int   depth )
 {
   using std::vector;
   using std::string;
 
-  // break up the string into a vector of elements
+  // break up the xmlPath into a vector of elements
+  std::string xmlPath = nodeAttributes["section"];
   std::vector<char>   separator{'/'};
   std::vector<std::string> elements = split_string( xmlPath, separator );
 
   xmlNode * foundNode = nullptr;
 
   // loop over all elements in the xmlPath.  The xmlPath may contain
-  // multiple elements you must recursively search them.
+  // multiple elements you must recursively search them ("fruit/apples").
+
   for ( unsigned int i=depth; i < elements.size(); i++ ){
     const std::string targetElement =  elements[i];
 
@@ -2285,10 +2348,20 @@ ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
 
       std::string name = getNodeName(node);
 
+
       if( (node->type == XML_ELEMENT_NODE) && (name == targetElement) ){
 
-        // If this is the last element in the xmlPath return the node
-        if (i == elements.size() -1){
+        // If this is the last element in the xmlPath "apples" then search
+        // for the correct attribute(s) "type" & "size" and value(s) "granny" & "small"
+
+        if ( (i == elements.size() -1 ) ){
+
+          const int depth = 0;
+          bool foundAllAttr = findAttributeValue( node, nodeAttributes, depth );
+
+          if( foundAllAttr == false ){
+            continue;
+          }
 
           foundNode = xmlCopyNode(node, 1);
           return foundNode;
@@ -2297,7 +2370,7 @@ ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
         // Recursively walk down the children nodes until you find the correct node
         if( node->children != NULL ){
 
-          foundNode = recursiveFindElementTag(node->children, xmlPath, i+1 );
+          foundNode = recursiveFindElementTag(node->children, nodeAttributes, i+1 );
           return foundNode;
         }
       }
@@ -2364,7 +2437,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       if( section != "" ) {
 
         xmlNode * includeFileNodes = include->children;
-        incNodes = recursiveFindElementTag( includeFileNodes, section, 0 );
+        incNodes = recursiveFindElementTag( includeFileNodes, nodeAttributes, 0 );
 
         if ( incNodes == nullptr ){
           std::ostringstream error;
@@ -2399,7 +2472,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       // Remove the <include> node
       xmlUnlinkNode( node );
       xmlFreeNode(   node );
-      
+
       xmlUnlinkNode( incNodes );
       xmlFreeNode(   incNodes );
 
