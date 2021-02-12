@@ -18,7 +18,7 @@ import subprocess # needed to accurately get return codes
 from os                       import system
 from optparse                 import OptionParser
 from sys                      import argv, exit
-from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags, cmdline
+from helpers.runSusTests_git  import getTestName, getTestOS, getUpsFile, getMPISize, getTestOS, setInputsDir, getTestFlags, cmdline, isValid_inputFile
 from helpers.modUPS           import modUPS
 
 ####################################################################################
@@ -310,6 +310,8 @@ def generateGS() :
             #  Defaults
             sus_options  = ""
             do_gpu       = 0    # run test if gpu is supported
+            testname     = getTestName( test )
+            upsFile      = inputs + "/" + component + "/" + getUpsFile( test )
 
             #__________________________________
             # parse user flags for the gpu and sus_options
@@ -342,9 +344,16 @@ def generateGS() :
                 print( "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n" )
                 continue
 
-            print( "About to run test: " + getTestName( test ) )
-            os.mkdir( getTestName( test ) )
-            os.chdir( getTestName( test ) )
+            print( "About to run test: " + testname )
+
+            #__________________________________
+            #
+            if isValid_inputFile( upsFile, "null", 1 ) == False:
+              print ("    Now skipping test %s \n" % testname)
+              continue
+
+            os.mkdir( testname )
+            os.chdir( testname )
 
             # Create (yet) another symbolic link to the 'inputs' directory so some .ups files will be able
             # to find what they need...  (Needed for, at least, methane8patch (ARCHES) test.)
@@ -386,7 +395,7 @@ def generateGS() :
             np = int( getMPISize( test ) )
             my_mpirun = "%s -n %s  " % (MPIHEAD, np)
 
-            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + getUpsFile( test )  + " > sus_log.txt 2>&1 "
+            command = my_mpirun + sus + " " + GIT_FLAGS + " " + sus_options + " " + upsFile  + " > sus_log.txt 2>&1 "
 
             print( "Running command: " + command )
 

@@ -147,7 +147,6 @@
     <!--____________________________________________________________________-->
     <DataArchiver>
       <filebase>advect_slipExch.uda</filebase>
-      <outputInitTimestep/>
       <outputTimestepInterval>10</outputTimestepInterval>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>

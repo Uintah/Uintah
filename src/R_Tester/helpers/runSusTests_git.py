@@ -105,7 +105,7 @@ def isValid_inputFile( inputxml, startFrom, do_restart ):
    
   if ( initTS != None and intrvl > 1 ):
     print('     isValid_inputFile %s'% inputxml)
-    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed in regression testing.")
+    print( "    *** ERROR: The xml file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.")
     return False
   else:
     return True
@@ -464,7 +464,9 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     #________________________________
     # is the input file valid
     if isValid_inputFile( inputxml, startFrom, do_restart ) == False:
+      failcode = 1
       print ("    Now skipping test %s " % testname)
+      system("echo '  :%s:  The ups file is not valid, (DataArchiver:outputInitTimestep) is not allowed for regression testing.' >> %s/%s-short.log" % (testname,startpath,application))
       continue
         
     #__________________________________
