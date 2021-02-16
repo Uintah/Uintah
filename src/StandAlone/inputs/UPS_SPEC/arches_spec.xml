@@ -178,7 +178,7 @@
                                                                           spectralProperties,
                                                                           constant_scalar_diffusion_coef,
                                                                           gas_kinetic_energy,
-                                                                          wall_thermal_resistance, 
+                                                                          wall_thermal_resistance,
                                                                           time_varying'">
 
               <absorption_modifier        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type partRadProperties gasRadProperties RMCRTgasRadProperties spectralProperties"/> <!-- multiplicative modifier on gas or particle absorption coefficients, does not affect scattering coefficients -->
@@ -2213,6 +2213,7 @@
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, momic_soot, mono_soot, psNOx, zzNox_Solid"/> <!-- o2 label (default = O2) -->
+            <cstar_label                spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, momic_soot, mono_soot"/> <!-- cstar label (default = C*H4) -->
             <oh_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox, brown_soot, momic_soot, mono_soot"/> <!-- oh label (default = OH) -->
             <co2_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, momic_soot, mono_soot"/> <!-- co2 label (default = CO2) -->
             <h2o_label                  spec="OPTIONAL STRING" need_applies_to="type brown_soot, momic_soot, mono_soot, psNOx, zzNox_Solid"/> <!-- h2o label (default = H2O) -->

@@ -15,7 +15,7 @@
     <max_Timesteps>200</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>methane_RCCE.uda</filebase>
+    <filebase>methane_RCCE_wInert.uda</filebase>
     <outputInterval>0.1</outputInterval>
     <save label="cellType"/>
     <save label="totalKineticEnergy"/>
@@ -23,7 +23,7 @@
     <save label="CCVelocity"/>
     <save label="viscosityCTS"/>
     <save label="div_q"/>
-    <save label="scalar_var"/>
+    <!--<save label="scalar_var"/>-->
     <save label="mixture_fraction"/>
     <save label="mixture_fraction_2"/>
     <save label="heat_loss"/>
@@ -365,15 +365,15 @@
           <temperature_label>temperature</temperature_label>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
         </model>
-        <model type="scalsim_variance" label="scalar_var">
-          <initialization type="constant">
-            <constant>0.0</constant>
-          </initialization>
-          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-          <density_label>density</density_label>
-          <variance_coefficient>0.14</variance_coefficient>
-          <!-- Warning: not a good default value -->
-        </model>
+        <!--<model type="scalsim_variance" label="scalar_var">-->
+          <!--<initialization type="constant">-->
+            <!--<constant>0.0</constant>-->
+          <!--</initialization>-->
+          <!--<mixture_fraction_label>mixture_fraction</mixture_fraction_label>-->
+          <!--<density_label>density</density_label>-->
+          <!--<variance_coefficient>0.14</variance_coefficient>-->
+          <!--[> Warning: not a good default value <]-->
+        <!--</model>-->
       </PropertyModels>
       <PropertyModelsV2>
         <model type="variable_stats" label="balance_stats">

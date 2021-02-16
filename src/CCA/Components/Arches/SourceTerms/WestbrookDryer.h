@@ -224,6 +224,7 @@ private:
   std::string d_rho_label;
   std::string d_T_label;
   std::string d_o2_label;
+  std::string d_cstar_label;
   std::string _diluent_label_name;
 
   const VarLabel* _temperatureLabel;
@@ -233,6 +234,7 @@ private:
   const VarLabel* _FpLabel;
   const VarLabel* _XiLabel;
   const VarLabel* _O2MassFracLabel;
+  const VarLabel* _CstarMassFracLabel;
   const VarLabel* _CstarStripLabel;
   const VarLabel* _diluentLabel;
 

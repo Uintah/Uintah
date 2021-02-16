@@ -7,11 +7,13 @@
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <Time>
-    <maxTime>0.25</maxTime>
+    <!--<maxTime>0.25</maxTime>-->
+    <maxTime>1.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
+    <max_Timesteps>200</max_Timesteps>
   </Time>
   <DataArchiver>
     <filebase>methane_RCCE.uda</filebase>

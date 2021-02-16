@@ -72,6 +72,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   }
 
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
+  db->getWithDefault("cstar_label", d_cstar_label, "C*H4");                      // The name of the CH4 label
 
   if ( db->findBlock("temperature_clip") ){
     db->getWithDefault("temperature_clip", d_T_clip, 10000);                  // [K], Turns off the rate below this T.
@@ -118,6 +119,7 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   // add for table lookup
   ChemHelper& helper = ChemHelper::self();
   helper.add_lookup_species( d_o2_label );
+  helper.add_lookup_species( d_cstar_label );
   helper.add_lookup_species( d_rho_label );
   helper.add_lookup_species( d_T_label );
 
@@ -192,6 +194,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   }
 
   _O2MassFracLabel    = VarLabel::find( d_o2_label );
+  _CstarMassFracLabel   = VarLabel::find( d_cstar_label );
 
   if ( _use_flam_limits && !_const_diluent ){
     _diluentLabel       = VarLabel::find( _diluent_label_name );
@@ -214,6 +217,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     }
     tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 );
     tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 );
+    tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 );
     if ( _use_flam_limits && !_const_diluent ){
       tsk->requires( Task::OldDW, _diluentLabel, Ghost::None, 0 );
     }
@@ -233,6 +237,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     }
     tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 );
     tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 );
+    tsk->requires( Task::NewDW, _CstarMassFracLabel,  Ghost::None, 0 );
     if ( _use_flam_limits && !_const_diluent ){
       tsk->requires( Task::NewDW, _diluentLabel, Ghost::None, 0 );
     }
@@ -285,6 +290,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> Fp;     // mass fraction of fp
     constCCVariable<double> Xi;     // total mixture fraction
     constCCVariable<double> O2;     // O2 mass fraction
+    constCCVariable<double> CStar;     // Cstar mass fraction
     constCCVariable<double> diluent; // Diluent mass fraction
 
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
@@ -305,6 +311,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
         new_dw->get( Fp    , _FpLabel           , matlIndex , patch , Ghost::None , 0 );
       }
       new_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 );
+      new_dw->get( CStar    , _CstarMassFracLabel    , matlIndex , patch , Ghost::None , 0 );
       if ( _use_flam_limits && !_const_diluent ){
         new_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 );
       }
@@ -328,6 +335,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
         old_dw->get( Fp  , _FpLabel , matlIndex , patch , Ghost::None , 0 );
       }
       old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 );
+      old_dw->get( CStar    , _CstarMassFracLabel, matlIndex , patch , Ghost::None , 0 );
       if ( _use_flam_limits && !_const_diluent ){
         old_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 );
       }
@@ -369,14 +377,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       if ( _use_T_clip ){
 
         double fake_diluent = 0.0;
-        rate = getRate( T[c], Fp[c], O2[c], fake_diluent, f, den[c], dt, vol );
+        rate = getRate( T[c], CStar[c], O2[c], fake_diluent, f, den[c], dt, vol );
 
       } else {
 
         if ( _const_diluent ){
-          rate = getRate( T[c], Fp[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol );
+          rate = getRate( T[c], CStar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol );
         } else {
-          rate = getRate( T[c], Fp[c], O2[c], diluent[c], f, den[c], dt, vol );
+          rate = getRate( T[c], CStar[c], O2[c], diluent[c], f, den[c], dt, vol );
         }
 
       }
@@ -396,12 +404,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
             if ( g_piece->inside(P) && simTime > _start_time_hot_spot && simTime < _stop_time_hot_spot ){
               if ( _use_T_clip ){
                 double fake_diluent = 0.0;
-                rate = getRate( _T_hot_spot, Fp[c], O2[c], fake_diluent, f, den[c], dt, vol );
+                rate = getRate( _T_hot_spot, CStar[c], O2[c], fake_diluent, f, den[c], dt, vol );
               } else {
                 if ( _const_diluent ){
-                  rate = getRate( _T_hot_spot, Fp[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol );
+                  rate = getRate( _T_hot_spot, CStar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol );
                 } else {
-                  rate = getRate( _T_hot_spot, Fp[c], O2[c], diluent[c], f, den[c], dt, vol );
+                  rate = getRate( _T_hot_spot, CStar[c], O2[c], diluent[c], f, den[c], dt, vol );
                 }
               }
 
