@@ -170,7 +170,7 @@
       <save label="p.volume"/>
       <save label="p.velocity"/>
       <save label="TotalMomentum"/>
-      <checkpoint timestepInterval="7" cycle="1"/>
+      <checkpoint timestepInterval="10" cycle="1"/>
     </DataArchiver>
 
     <!--____________________________________________________________________-->
