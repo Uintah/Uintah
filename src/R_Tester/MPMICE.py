@@ -54,7 +54,7 @@ AMRTESTS   = [
 
 LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "ALL", ["exactComparison"]),
                  ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
-                 ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison"]),
+                 ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison","no_restart"]),
                  ("advectSlipExch_On",        advectSlipExchOn_ups,        8,  "ALL", ["exactComparison"]),
                  ("massX",                    "massX.ups",                 1,  "ALL", ["exactComparison"]),
                  ("pistonVal",                "pistonValidation.ups",      2,  "ALL", ["exactComparison"]),
