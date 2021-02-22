@@ -106,8 +106,7 @@ namespace Uintah {
                        const PatchSet* perProcPatches,
                        const HypreInterface& interface = HypreInterfaceNA) :
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
-                  b,which_b_dw,guess,which_guess_dw,params,perProcPatches,interface),
-      _vars(0)
+                  b,which_b_dw,guess,which_guess_dw,params,perProcPatches,interface)
       {
         _exists.resize(SStructNumData);
         for (unsigned i = 0; i < _exists.size(); i++) {
@@ -301,7 +300,6 @@ namespace Uintah {
     //---------- Data members ----------
     // Hypre SStruct interface objects
     HYPRE_SStructGrid        _grid;         // level&patch hierarchy
-    HYPRE_SStructVariable*   _vars;         // Types of Hypre variables used
     HYPRE_SStructStencil     _stencil;      // Same stencil@all levls
     HYPRE_SStructMatrix      _HA;           // Left-hand-side matrix
     HYPRE_SStructVector      _HB;           // Right-hand-side vector
