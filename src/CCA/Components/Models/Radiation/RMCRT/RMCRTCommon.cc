@@ -65,6 +65,8 @@ bool        RMCRTCommon::d_isSeedRandom;
 bool        RMCRTCommon::d_allowReflect;
 int         RMCRTCommon::d_matl;
 int         RMCRTCommon::d_whichAlgo{singleLevel};
+int         RMCRTCommon::d_destructorCount{0};
+
 std::string RMCRTCommon::d_abskgBC_tag;
 std::map<std::string,Task::WhichDW>    RMCRTCommon::d_abskg_dw;
 
@@ -128,12 +130,12 @@ RMCRTCommon::~RMCRTCommon()
   }
 
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
-  if( d_matlSet ) {
-    if ( d_matlSet->getReferenceCount() == 1 ){
-      d_matlSet->removeReference();
+  if(d_destructorCount == 0 ){
+    if( d_matlSet && d_matlSet->removeReference() ){ 
       delete d_matlSet;
     }
   }
+  d_destructorCount ++;
 }
 
 //______________________________________________________________________

@@ -81,17 +81,16 @@ controlVolFluxes::controlVolFluxes( const ProcessorGroup  * myworld,
 controlVolFluxes::~controlVolFluxes()
 {
   DOUT(cout_OTF_CVF, " Doing: destorying fluxes " );
+
+  // Don't delete m_zeroMatl and m_matl they are deleted when 
+  // m_zeroMatlSet and m_matlSet are deleted.  If you do then 
+  // you'll get AddressSanitizer: heap-use-after-free error
+
   if( m_zeroMatlSet  && m_zeroMatlSet->removeReference() ) {
     delete m_zeroMatlSet;
   }
-  if( m_zeroMatl && m_zeroMatl->removeReference() ) {
-    delete m_zeroMatl;
-  }
   if( m_zeroPatch && m_zeroPatch->removeReference() ) {
     delete m_zeroPatch;
-  }
-  if( m_matl && m_matl->removeReference() ) {
-    delete m_matl;
   }
   if( m_matlSet && m_matlSet->removeReference() ) {
     delete m_matlSet;
@@ -118,8 +117,6 @@ controlVolFluxes::~controlVolFluxes()
   for( size_t i=0; i< m_controlVols.size(); i++ ){
     delete m_controlVols[i];
   }
-
-
 }
 
 //______________________________________________________________________

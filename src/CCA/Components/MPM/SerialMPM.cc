@@ -113,32 +113,30 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
-  contactModel        = 0;
-  thermalContactModel = 0;
-  heatConductionModel = 0;
+  contactModel        = nullptr;
+  thermalContactModel = nullptr;
+  heatConductionModel = nullptr;
   NGP     = 1;
   NGN     = 1;
   d_loadCurveIndex=0;
-  d_switchCriteria = 0;
+  d_switchCriteria = nullptr;
 
   d_fracture = false;
 
   // Diffusion related
-  d_fluxBC = nullptr;
+  d_fluxBC           = nullptr;
   d_sdInterfaceModel = nullptr;
 }
 
 SerialMPM::~SerialMPM()
 {
-  delete flags;
   delete contactModel;
   delete thermalContactModel;
   delete heatConductionModel;
-
   delete d_fluxBC;
-  if (flags->d_doScalarDiffusion) {
-    delete d_sdInterfaceModel;
-  }
+  delete d_sdInterfaceModel;
+  delete flags;
+  delete d_switchCriteria;
 
   MPMPhysicalBCFactory::clean();
 
@@ -150,10 +148,6 @@ SerialMPM::~SerialMPM()
       am->releaseComponents();
       delete am;
     }
-  }
-
-  if(d_switchCriteria) {
-    delete d_switchCriteria;
   }
 }
 

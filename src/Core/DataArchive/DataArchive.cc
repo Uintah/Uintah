@@ -563,6 +563,7 @@ DataArchive::queryVariables( vector<string>                         & names,
 //
 void
 DataArchive::queryGlobals( vector<string>                         & names,
+                           vector<int>                            & num_matls,
                            vector<const Uintah::TypeDescription*> & types )
 {
   Timers::Simple timer;
@@ -578,8 +579,6 @@ DataArchive::queryGlobals( vector<string>                         & names,
     d_lock.unlock();
     return;
   }
-
-  vector<int> num_matls; // Globals don't have multiple materials so this can be ignored...
 
   queryVariables( d_indexFile, names, num_matls, types, true );
 
@@ -1438,7 +1437,7 @@ DataArchive::restartInitialize( const int                timestep_index,
   vector< int >                    num_matls;
   vector< const TypeDescription *> typeDescriptions;
   queryVariables( names, num_matls, typeDescriptions );
-  queryGlobals(   names, typeDescriptions );
+  queryGlobals(   names, num_matls, typeDescriptions );
 
   map<string, VarLabel*> varMap;
 
@@ -1460,6 +1459,7 @@ DataArchive::restartInitialize( const int                timestep_index,
       d_createdVarLabels[names[i]] = vl;
     }
     varMap[ names[i] ] = vl;
+
     varNameToNumMatlsMap[ names[i] ] = num_matls[ i ];
   }
 
@@ -1800,7 +1800,7 @@ DataArchive::postProcess_ReadUda( const ProcessorGroup   * pg,
 
   queryTimesteps( timesteps, times );
   queryVariables( names, num_matls, typeDescriptions );
-  queryGlobals(   names, typeDescriptions );
+  queryGlobals(   names, num_matls, typeDescriptions );
 
   // create varLabels if they don't already exist
   map<string, VarLabel*> varMap;

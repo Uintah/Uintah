@@ -113,13 +113,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
 
   // Step 3 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
+  d_sdm = nullptr;
   if(flags->d_doScalarDiffusion){
-    d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
-  }else{
-    d_sdm = nullptr;
+    d_sdm = ScalarDiffusionModelFactory::create(ps, ss, flags);
   }
-  
-  
 
   // Step 4 -- get the general material properties
 
@@ -214,12 +211,10 @@ MPMMaterial::~MPMMaterial()
   delete d_damageModel;
   delete d_erosionModel;
   delete d_particle_creator;
+  delete d_sdm;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
-  }
-  if(d_sdm){
-    delete d_sdm;
   }
 }
 

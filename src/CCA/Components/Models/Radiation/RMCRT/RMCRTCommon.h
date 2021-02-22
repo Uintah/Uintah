@@ -277,6 +277,7 @@ namespace Uintah{
 
       static bool d_isSeedRandom;                   // are seeds random
       static bool d_allowReflect;                   // specify as false when doing DOM comparisons
+      static int  d_destructorCount;                // number of times through the destructor
 
       // These are initialized once in registerVarLabels().
       static int           d_matl;

@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
-#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/AMR.h>
@@ -52,7 +51,9 @@ ScalarDiffusionModel::ScalarDiffusionModel(
                                           ) 
 {
   d_Mflag = Mflag;
-  d_materialManager = sS;
+//  d_materialManager = sS;
+// This assignment creates a memory leak at shutdown.  The MPMMaterial destructor for some reason isn't executed. --Todd 02/21
+// This variable currently isn't used
 
   d_lb = scinew MPMLabel;
 
@@ -98,10 +99,12 @@ ScalarDiffusionModel::ScalarDiffusionModel(
 }
 
 ScalarDiffusionModel::~ScalarDiffusionModel() {
-  delete d_lb;
 
-  if (d_one_matl->removeReference())
+  delete d_lb;
+ 
+  if (d_one_matl->removeReference()){
     delete d_one_matl;
+  }
 
   if(d_conductivity_equation){
     delete d_conductivity_equation;
@@ -230,6 +233,7 @@ void ScalarDiffusionModel::computeDivergence(
       }
     }
   } // End of Particle Loop
+  delete interpolator;
 }
 
 void ScalarDiffusionModel::scheduleComputeDivergence_CFI(      Task         * t,

@@ -101,7 +101,6 @@ NonLinearDiff1::NonLinearDiff1(
 
 NonLinearDiff1::~NonLinearDiff1()
 {
-
 }
 
 void NonLinearDiff1::addInitialComputesAndRequires(
@@ -258,6 +257,9 @@ void NonLinearDiff1::computeFlux(
     timestep = std::min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
+  
+  delete interpolator;
+  
 }
 
 void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* matl,

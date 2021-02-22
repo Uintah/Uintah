@@ -134,7 +134,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld,
 
   d_SMALL_NUM_MPM=1e-200;
   contactModel   = 0;
-  d_sdInterfaceModel = 0;
+  d_sdInterfaceModel = nullptr;
   NGP     = -9;
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
@@ -181,10 +181,7 @@ AMRMPM::~AMRMPM()
 {
 //  delete lb;
 //  delete flags;
-  if(flags->d_doScalarDiffusion){
-    delete d_sdInterfaceModel;
-  }
-  
+  delete d_sdInterfaceModel;
   delete d_fluxbc;
 
   VarLabel::destroy(pDbgLabel);

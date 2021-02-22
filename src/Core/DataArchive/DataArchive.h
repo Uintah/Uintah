@@ -156,6 +156,7 @@ public:
                        std::vector<const TypeDescription *>  & types );
 
   void queryGlobals(   std::vector<std::string>              & names,
+                       std::vector<int>                      & num_matls,
                        std::vector<const TypeDescription *>  &  );
 
   void queryTimesteps( std::vector<int>                      & index,
