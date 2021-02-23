@@ -27,9 +27,9 @@
 
 #define MAKE_COMMAND "@MAKE@"
 
-// This define is used to allow the code to display (some of) the
-// flags that were used to compile it.
+// Display flags that were used to compile it.
 #define CFLAGS "@CFLAGS@"
+#define CXXFLAGS "@CXXFLAGS@"
 
 @STATIC_BUILD_DEF@
 

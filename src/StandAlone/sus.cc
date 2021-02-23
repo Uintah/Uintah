@@ -577,6 +577,7 @@ int main( int argc, char *argv[], char *env[] )
       std::cout << "git hash:   " << GIT_HASH << "\n";
       std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       std::cout << "CFLAGS:          " << CFLAGS << "\n";
+      std::cout << "CXXFLAGS:        " << CXXFLAGS << "\n";
       std::cout << "______________________________________________________________________\n";
       // Run git commands Uintah 
       if ( do_gitDiff || do_gitStatus ) {
