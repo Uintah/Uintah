@@ -95,12 +95,8 @@ RMCRT_Radiation::~RMCRT_Radiation()
   VarLabel::destroy( m_radFluxT_Label );
   VarLabel::destroy( m_radFluxB_Label );
   VarLabel::destroy( m_sumAbsk_Label );
-
-  if( m_matlSet ) {
-    m_matlSet->removeReference();
-    delete m_matlSet;
-  }
-
+  
+  // m_matlSet is deleted by MaterialManager::clearMaterials()
 }
 
 //---------------------------------------------------------------------------
