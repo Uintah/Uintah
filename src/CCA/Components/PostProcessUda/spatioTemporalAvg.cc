@@ -154,6 +154,7 @@ void spatioTemporalAvg::problemSetup()
   //__________________________________
   //  
   ProblemSpecP temp_ps = d_prob_spec->findBlock("TemporalAvg");
+  
   map<string,string> attribute;
   temp_ps->getAttributes(attribute);
   if ( attribute["OnOff"] == "on" ){
@@ -241,8 +242,6 @@ void spatioTemporalAvg::scheduleInitialize(SchedulerP   & sched,
   Task* t = scinew Task("spatioTemporalAvg::initialize",
                    this,&spatioTemporalAvg::initialize);
 
-
-
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     const Qstats Q = d_Qstats[i];
     t->computes ( Q.avgLabel );
@@ -312,7 +311,7 @@ void spatioTemporalAvg::scheduleDoAnalysis(SchedulerP   & sched,
     matSubSet->addReference();
 
     t->requires( Task::NewDW, Q.Q_Label, matSubSet, gn, 0 );
-    t->computes ( Q.avgLabel,        matSubSet );
+    t->computes ( Q.avgLabel,       matSubSet );
     t->computes ( Q.varianceLabel,  matSubSet );
 
     if(matSubSet && matSubSet->removeReference()){
@@ -376,7 +375,8 @@ void spatioTemporalAvg::computeAvgWrapper( DataWarehouse     * old_dw,
   if(simTime < d_startTime || simTime > d_stopTime){
     //proc0cout << " IGNORING------------DataAnalysis: spatioTemporalAvg" << endl;
     allocateAndZeroLabels< T >( new_dw, patch, Q );
-  }else {
+  }
+  else {
     //proc0cout << " Computing------------DataAnalysis: spatioTemporalAvg" << endl;
 
     computeAvg< T >(old_dw, new_dw, patch, Q);
@@ -395,25 +395,24 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
 {
   timeStep_vartype timeStep;
   old_dw->get( timeStep, m_timeStepLabel );
-
+  timeStep = timeStep -1;  
+  
   static proc0patch0cout mesg( d_Qstats.size() );
   ostringstream msg;
   msg <<"    spatioTemporalAvg::computeAvg( "<< Q.Q_Label->getName() << " )\n";
   mesg.print(patch, msg );
-  //__________________________________
   
+  //__________________________________
   
   const int matl = Q.matl;
 
   constCCVariable<T> Qvar_old;
  
   if ( d_doTemporalAvg ){
-  
-//    cout << "   OLD_DW: " << old_dw->getID() <<  " exists: " << old_dw->exists( Q.Q_Label, matl, patch) << endl;
     old_dw->get ( Qvar_old, Q.Q_Label, matl, patch, Ghost::None, 0 );
   }
   
-  bool doComputeTimeAverage = ( d_doTemporalAvg && timeStep >= (unsigned int) d_baseTimestep );
+  bool doComputeTimeAverage = ( d_doTemporalAvg && timeStep > (unsigned int) d_baseTimestep );
   
   constCCVariable<T> Qvar;
   new_dw->get ( Qvar,     Q.Q_Label, matl, patch, Ghost::None, 0 );
@@ -434,8 +433,9 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
 
     CellIterator iter = patch->getCellIterator();
 
-    if( doComputeTimeAverage )
+    if( doComputeTimeAverage ){
       computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg, timeStep);
+    }
     spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, d_avgBoxCells, iter);
   }
 
@@ -454,8 +454,11 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
       avgPanelCells[pDir] = 1;
 
       CellIterator iter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
-      if( doComputeTimeAverage )
+      
+      if( doComputeTimeAverage ){
         computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg, timeStep);
+      }
+      
       spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, avgPanelCells, iter);
 
     }  // face loop
@@ -486,13 +489,15 @@ void spatioTemporalAvg::computeTimeAverage( const Patch         * patch,
                                             CCVariable< T >     & Qavg,
                                             const int           & timeStep )
 {
-
   T deltaTime = T( d_udaTimes[timeStep] - d_udaTimes[d_baseTimestep] );
- 
+
 #if 0
-  proc0cout << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
-            << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
-            << " deltaTime: " << deltaTime << endl;
+  static proc0patch0cout mesg( 1 );
+  ostringstream msg;
+  msg << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
+      << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
+      << " deltaTime: " << deltaTime << endl;
+  mesg.print(patch, msg );
 #endif
 
   for (;!iter.done();iter++){

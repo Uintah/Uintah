@@ -107,7 +107,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
   proc0cout << "Time information from the original uda\n";
   for (unsigned int t = 0; t< d_udaTimesteps.size(); t++ ){
-    proc0cout << " *** timesteps " << d_udaTimesteps[t] << " times: " << d_udaTimes[t] << endl;
+    proc0cout << " *** " << t << " sim timestep " << d_udaTimesteps[t] << " sim time: " << d_udaTimes[t] << endl;
   }
 
 
@@ -234,21 +234,22 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
     // this processor owns. The DataArchiver::output task
     // will then pick and choose which variables to write to the new uda based on the input file
     t->computes(label, patches, matlSet->getUnion());
+    delete matlSet;
    
   }  // loop savedLabels
 
-  // clean out duplicate entries in the material set
-  sort( allMatls_vec.begin(), allMatls_vec.end() );
-  vector<int>::iterator it;
-  it = unique( allMatls_vec.begin(), allMatls_vec.end() );
-  allMatls_vec.erase(it, allMatls_vec.end() );
-
+  // Create material set without duplicate entries
   MaterialSet * allMatls = scinew MaterialSet();
-  allMatls->addAll(allMatls_vec);
+  allMatls->addAll_unique(allMatls_vec);
   allMatls->addReference();
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, perProcPatches, allMatls );
+  
+  if (allMatls && allMatls->removeReference()){
+    delete allMatls;
+  }
+
 }
 
 //______________________________________________________________________
@@ -292,7 +293,7 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
     }
   }
   
-  proc0cout << "    __________________________________ PostProcessUda::readDataArchive: " << endl;
+  proc0cout << "    Reading data archive " << endl;
 
   if( old_dw_timestep != NOTUSED && udaTimestep >= old_dw_timestep && udaTimestep > 1){
     
@@ -314,7 +315,7 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
   }
 
   // new dw
-  proc0cout << "    NEW_DW  ";
+  proc0cout << "    NEW_DW\n";
   d_dataArchive->postProcess_ReadUda(pg, d_simTimestep, d_oldGrid, patches, new_dw, m_loadBalancer);
   d_simTimestep++;
 //  new_dw->print();
@@ -349,7 +350,7 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
                                  DataWarehouse* new_dw)
 
 {
-  ASSERT( d_simTimestep >= 0);
+  ASSERT( d_simTimestep >= 0 );
 
   double delt;
 
@@ -358,15 +359,15 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
   // differential between the time steps. Until the last which is moot.
   if ( d_simTimestep == 0 ) {
     delt = d_udaTimes[d_simTimestep];    
-  } else if ( d_simTimestep < (int) d_udaTimes.size() ) {
+  } 
+  else if ( d_simTimestep < (int) d_udaTimes.size() ) {
     delt = d_udaTimes[d_simTimestep] - d_udaTimes[d_simTimestep-1];
-  } else {
+  } 
+  else {
     delt = 1e99;
   }
 
   new_dw->put(delt_vartype(delt), getDelTLabel());
-  
-  proc0cout << "    *** delT (" << delt << ")\n" <<endl;
 }
 
 //______________________________________________________________________
