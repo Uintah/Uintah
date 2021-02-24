@@ -580,6 +580,8 @@ ArchesTable::setup(const bool cerrSwitch)
   }
 
   // Free up the input deps
+  gzclose( gzFp );
+  
   delete[] idx;
   delete[] w;
   for(int i=0;i<(int)in_inds.size();i++)
