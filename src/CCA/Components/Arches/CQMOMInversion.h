@@ -220,8 +220,8 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   char matType = 'U';
   DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], &wkopt, &lwork, &info ); //with -1 this finds work size
   lwork = (int)wkopt;
-  //  work_.resize(lwork);
-  work = new double[lwork];
+  work = (double*)malloc( lwork*sizeof(double) );
+    
   // Solve eigenproblem. eigenvectors are stored in the z_ matrix, columnwise
   //  dsyev_( &jobz, &matType, &n, &z_[0], &lda, &eigenVal[0], &work_[0], &lwork, &info );
   DSYEV( &jobz, &matType, &nEnv, &z_[0], &lda, &eigenVal[0], work, &lwork, &info );
@@ -242,7 +242,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
     w[i] = moments[0] * z_[i*nEnv] * z_[i*nEnv];
     x[i] = eigenVal[i];
   }
-  delete work;
+  free( (void*)work );
 }
 
 
