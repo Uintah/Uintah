@@ -124,17 +124,20 @@ RMCRTCommon::~RMCRTCommon()
   VarLabel::destroy( d_boundFluxLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
-  // when the radiometer class (float) is invoked d_abskgLabel is deleted twice.  This prevents that
- if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type && d_abskgLabel->getReferenceCount() == 1 ){
-    VarLabel::destroy( d_abskgLabel );
-  }
-
-  // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
+  // This prevents double deletion
   if(d_destructorCount == 0 ){
+  
+    // only delete if the label was created in this class
+    // it could have been created upstream
+    if ( d_abskgLabel->equals( d_compAbskgLabel ) == false ){
+      VarLabel::destroy( d_abskgLabel );
+    }
+
     if( d_matlSet && d_matlSet->removeReference() ){ 
       delete d_matlSet;
     }
   }
+  
   d_destructorCount ++;
 }
 
