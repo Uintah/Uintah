@@ -433,12 +433,14 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patches->get(0),cout_doing,"Doing MPM::integrateTemperatureRate");
+    printTask(patches, patches->get(0),cout_doing,
+                                         "Doing MPM::integrateTemperatureRate");
 
     Ghost::GhostType  gnone = Ghost::None;
     string interp_type = d_flag->d_interpolator_type;
     for(unsigned int m = 0; m < d_materialManager->getNumMatls( "MPM" ); m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                     (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
       constNCVariable<double> temp_old,temp_oldNoBC;
