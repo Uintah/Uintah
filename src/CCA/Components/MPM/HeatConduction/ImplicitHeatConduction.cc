@@ -167,9 +167,9 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
 
   t->requires(Task::OldDW,d_lb->delTLabel);
-  t->requires(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pTemperatureLabel,          Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,d_lb->pXLabel,                  Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,d_lb->pVolumeLabel,             Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,d_lb->pTemperatureLabel,        Ghost::AroundNodes,1);
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
@@ -184,10 +184,11 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
   t->requires(Task::OldDW,d_lb->delTLabel);
-  t->requires(Task::NewDW,d_lb->gTemperatureLabel, one_matl,Ghost::AroundCells,1);
-  t->requires(Task::NewDW,d_lb->gExternalHeatRateLabel,     Ghost::AroundCells,1);
-  t->requires(Task::OldDW,d_lb->pXLabel,                    Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,d_lb->pVolumeLabel,               Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,d_lb->gTemperatureLabel,one_matl,
+                                                          Ghost::AroundCells,1);
+  t->requires(Task::NewDW,d_lb->gExternalHeatRateLabel,   Ghost::AroundCells,1);
+  t->requires(Task::OldDW,d_lb->pXLabel,                  Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,d_lb->pVolumeLabel,             Ghost::AroundNodes,1);
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -305,7 +306,8 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
     visited.initialize(0);
     
     for (unsigned int m = 0; m < numMatls; m++){                                                                                
-      MPMMaterial* mpm_matl = (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       constParticleVariable<Point> px;
       ParticleSubset* pset;
