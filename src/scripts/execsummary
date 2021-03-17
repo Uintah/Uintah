@@ -91,7 +91,8 @@ mkdir scratch
 
 fname=TaskStats
 count=$( ls -1 $fname* | wc -l )
-timesteps=$( cat $fname* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}' )
+#timesteps=$( cat $fname* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}' )
+timesteps=$( awk -F "timesteps" '/timesteps/{print $2}' $fname.*.0 )
 
 cat $fname.* > scratch/$fname.all
 
@@ -104,8 +105,10 @@ sed -i s/"Task: "/\|/g scratch/$fname.all
 #     2) delete "  Rank: "
 sed -i s/"  Rank: "//g scratch/$fname.all
 
-#     3) clean out the header lines and squeeze the repeative spaces
-sed /"Reported values are cumulative"/,+1d scratch/$fname.all >  scratch/$fname.clean
+#     3) clean out the header lines (#)
+sed /^#/d scratch/$fname.all >  scratch/$fname.clean
+
+#     4 squeeze teh repeative spaces
 grep ExecTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/ExecTime
 grep WaitTime scratch/$fname.clean | tr --squeeze-repeats " " > scratch/WaitTime
 
@@ -123,9 +126,10 @@ awk -F "|" '{ gsub(/ /, "_", $2); print $1 " " $2 " " $3 }' scratch/WaitTime > s
 
 cat > ExecTime.summary << fin
 #----------------------------------------------------------
-#   Ave:  Time spent executing task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
+#   Ave:  Time spent executing a task, summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
 #   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
 #   Min:  Minimum time spent executing the task summed over 10 timesteps $timesteps.
+#   Tasks run inside a subscheduler are not included.
 #----------------------------------------------------------
 # Processes: $count
 fin
@@ -135,6 +139,7 @@ cat > WaitTime.summary << fin
 #   Ave:  The elapsed time from when a task was initiated until it actually executed (in seconds), summed over 10 timesteps $timesteps and averaged by $count mpi ranks.
 #   Max:  Maximum time spent executing the task summed over 10 timesteps $timesteps.
 #   Min:  Minimum time spent executing the task summed over 10 timesteps $timesteps.
+#   Tasks run inside a subscheduler are not included.
 #----------------------------------------------------------
 # Processes: $count
 fin

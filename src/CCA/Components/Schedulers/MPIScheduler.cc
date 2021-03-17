@@ -267,10 +267,16 @@ MPIScheduler::initiateReduction( DetailedTask* dtask )
   Timers::Simple timer;
 
   timer.start();
-  runReductionTask(dtask);
-  timer.stop();
 
+  runReductionTask(dtask);
+
+  timer.stop();
   m_mpi_info[TotalReduce] += timer().seconds();
+  
+  if (g_exec_out || do_task_exec_stats) {
+    m_task_info[dtask->getTask()->getName()][TaskStatsEnum::ExecTime] += timer().seconds();
+    m_task_info[dtask->getTask()->getName()][TaskStatsEnum::WaitTime] = 0.0;
+  }
 }
 
 //______________________________________________________________________
@@ -861,6 +867,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
 
     numTasksDone++;
 
+    //__________________________________
+    //  SCIDebug output
     if (g_task_order && d_myworld->myRank() == d_myworld->nRanks() / 2) {
       std::ostringstream task_name;
       task_name << "  Running task: \"" << dtask->getTask()->getName() << "\" ";
@@ -875,6 +883,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
                   << std::setw(18) << " scheduled order: " << std::setw(3) << std::left << numTasksDone);
     }
 
+    //__________________________________
+    //
     DOUTR(g_task_dbg, " Initiating task:  " << *dtask);
 
     if ( dtask->getTask()->getType() == Task::Reduction ) {
@@ -1014,34 +1024,13 @@ MPIScheduler::outputTimingStats( const char* label )
                  << m_application->getTimeStep()
                  << " ONLY";
       } else {
-        preamble << "Reported values are cumulative over "
+        preamble << "# Reported values are cumulative over "
                  << count << " timesteps ("
                  << m_application->getTimeStep()-(count-1)
                  << " through "
-                 << m_application->getTimeStep()
-                 << ")";
+                 << m_application->getTimeStep() << ")\n"
+                 << "# Tasks run inside a subscheduler are not included";
       }
-
-      // This code writes out the exec time only in the "old"
-      // style. It is being left in for now just in case there is a
-      // script that parses this output.
-      
-      // std::string filename = std::string("exectimes.") +
-      //   std::to_string( my_comm_size ) + "." + std::to_string(my_rank);
-
-      // std::ofstream fout;
-      // fout.open(filename);
-      // fout << preamble.str() << std::endl;
-      
-      // for( unsigned int i=0; i<m_task_info.size(); ++i ) {
-      //   std::string task = m_task_info.getKey(i);
-          
-      //   fout << std::fixed << "Rank-" << my_rank
-      //        << ": TaskExecTime(s): " << m_task_info[task][ExecTime]
-      //        << " Task:" << task << std::endl;
-      // }
-
-      // fout.close();
 
       // Report the stats for each task. Writing over any previous
       // files.

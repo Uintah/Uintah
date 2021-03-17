@@ -1255,7 +1255,7 @@ public:
     if( !preamble.empty() )
       header << preamble << std::endl;
 
-    header << "--" << std::left
+    header << "# " << std::left
            << "Rank: " << std::setw(5) << rank << "  "
            << statsName << " stats for "
            << "time step " << timeStep
@@ -1929,7 +1929,7 @@ public:
     if( !preamble.empty() )
       header << preamble << std::endl;
 
-    header << "--" << std::left
+    header << "# " << std::left
            << "Rank: " << std::setw(maxRankStrLength) << rank << "  "
            << statsName << " stats for "
            << "time step " << timeStep
@@ -2643,7 +2643,7 @@ public:
     if( !preamble.empty() )
       header << preamble << std::endl;
 
-    header << "--" << std::left
+    header << "# " << std::left
            << "Rank: " << std::setw(maxRankStrLength) << rank << "  "
            << statsName << " stats for "
            << "time step " << timeStep
