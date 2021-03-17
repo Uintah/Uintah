@@ -147,6 +147,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   m_task_info.calculateMinimum( true );
   m_task_info.calculateMaximum( true );
   m_task_info.calculateStdDev( true );
+  m_num_schedulers +=1;
 }
 
 //______________________________________________________________________
@@ -183,6 +184,10 @@ MPIScheduler::createSubScheduler()
 
   newsched->setComponents( this );
   newsched->m_materialManager = m_materialManager;
+  
+  newsched->m_num_schedulers +=1;
+  m_num_schedulers +=1;
+  
   return newsched;
 }
 
@@ -296,6 +301,8 @@ MPIScheduler::runTask( DetailedTask * dtask
 
   dtask->done(m_dws);
 
+  //__________________________________
+  //  timers
   g_lb_mutex.lock();
   {
     // Do the global and local per task monitoring
@@ -795,7 +802,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */
     m_task_info.reset(0);
   }
   
-  RuntimeStats::initialize_timestep(m_task_graphs);
+  // create the various timers
+  RuntimeStats::initialize_timestep( m_num_schedulers, m_task_graphs );
 
   ASSERTRANGE( tgnum, 0, static_cast<int>(m_task_graphs.size()) );
   TaskGraph* tg = m_task_graphs[tgnum];
