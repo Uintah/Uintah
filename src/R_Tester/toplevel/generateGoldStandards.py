@@ -309,6 +309,7 @@ def generateGS() :
 
             #  Defaults
             sus_options  = ""
+            do_restart   = 1
             do_gpu       = 0    # run test if gpu is supported
             testname     = getTestName( test )
             upsFile      = inputs + "/" + component + "/" + getUpsFile( test )
@@ -324,6 +325,9 @@ def generateGS() :
               for i in range(len(flags)):
                 if flags[i] == "gpu":
                   do_gpu = 1
+
+                if flags[i] == "no_restart":
+                  do_restart = 0
 
                 tmp = flags[i].rsplit('=')
                 if tmp[0] == "sus_options":
@@ -348,7 +352,7 @@ def generateGS() :
 
             #__________________________________
             #
-            if isValid_inputFile( upsFile, "null", 1 ) == False:
+            if isValid_inputFile( upsFile, "null", do_restart ) == False:
               print ("    Now skipping test %s \n" % testname)
               continue
 
