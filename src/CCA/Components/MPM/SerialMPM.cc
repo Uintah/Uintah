@@ -5784,7 +5784,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
       // Not populating the delset, but we need this to satisfy Relocate
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-      new_dw->deleteParticles(delset);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -5870,6 +5869,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         P[2] = tx[idx] + triMidToN2Vec[idx];
  
         // Loop over the vertices
+        bool needToDelete = false;
         for(int itv = 0; itv < 3; itv++){
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
@@ -5913,6 +5913,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                    << triangle_ids[idx] << " of group " << adv_matl
                    << " is not getting any nodal input." << endl; 
               cout << "Vertex position is " << P[itv] << endl;
+              needToDelete=true;
             }
             P[itv] += vel*delT;
             P[itv] += surf*delT;
@@ -5974,6 +5975,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           } // if vertex has left domain
 #endif
         } // loop over vertices
+        if(needToDelete){
+          delset->addParticle(idx);
+        }
 
         tx_new[idx] = (P[0]+P[1]+P[2])/3.;
         triArea_new[idx]=0.5*Cross(P[1]-P[0],P[2]-P[0]).length();
@@ -5995,6 +5999,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         tsize_new[idx] = tsize[idx];
 
       } // Loop over triangles
+      new_dw->deleteParticles(delset);
 
 #if 0
       // This is for computing updated triAreaAtNodes. Need to create a
