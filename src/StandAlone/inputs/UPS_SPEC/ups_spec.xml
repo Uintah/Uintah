@@ -868,7 +868,7 @@
       </controlVolumes>
       
       <!--  KEStats ______________________________________-->
-      <numStepsAve                        spec="REQUIRED INTEGER" need_applies_to="name KEStats">
+      <numStepsAve                        spec="REQUIRED INTEGER" need_applies_to="name KEStats"/>
       
       <!--  lineExtract __________________________________-->
       <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">
