@@ -5894,9 +5894,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             vertexVel[itv] = vel + surf;
             populatedVertex[itv] = 1.;
           } else {
-//            cout << "WARNING: " << triangle_ids[idx] << " of group " << adv_matl
-//                 << " is not getting any nodal input." << endl; 
-//            cout << "Vertex position is " << P[itv] << endl;
+//          cout << "WARNING: " << triangle_ids[idx] << " of group " << adv_matl
+//               << " is not getting any nodal input." << endl; 
+//          cout << "Vertex position is " << P[itv] << endl;
             deleteThisTriangle++;
           }
         } // loop over vertices
@@ -5915,7 +5915,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           } // loop over vertices
           velMean/=populatedVertices;
           for(int itv = 0; itv < 3; itv++){
-            P[itv] += velMean*(1. - populatedVertex[itv]);
+            P[itv] += velMean*(1. - populatedVertex[itv])*delT;
           } // loop over vertices
         }
 
