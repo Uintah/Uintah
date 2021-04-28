@@ -5784,7 +5784,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
       // Not populating the delset, but we need this to satisfy Relocate
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
-      new_dw->deleteParticles(delset);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -5870,6 +5869,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         P[2] = tx[idx] + triMidToN2Vec[idx];
  
         // Loop over the vertices
+        int deleteThisTriangle = 0;
+        Vector vertexVel[3];
+        double populatedVertex[3]={0.,0.,0.};
         for(int itv = 0; itv < 3; itv++){
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
@@ -5889,91 +5891,33 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             vel/=sumSk;
             P[itv] += vel*delT;
             P[itv] += surf*delT;
+            vertexVel[itv] = vel + surf;
+            populatedVertex[itv] = 1.;
           } else {
-            // This is the "just in case" instance that none of the nodes
-            // influencing a vertex has mass on it.  In this case, use an
-            // interpolator with a larger footprint
-            ParticleInterpolator* cpdiInterp=scinew cpdiInterpolator(patch);
-            vector<IntVector> ni_cpdi(cpdiInterp->size());
-            vector<double> S_cpdi(cpdiInterp->size());
-            Matrix3 size; size.Identity();
-            int N = cpdiInterp->findCellAndWeights(P[itv],ni_cpdi,S_cpdi,size);
-            vel=Vector(0.0,0.0,0.0);
-            surf=Vector(0.0,0.0,0.0);
-            sumSk=0.0;
-            for (int k = 0; k < N; k++) {
-             IntVector node = ni_cpdi[k];
-              vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
-              sumSk+= gmass[adv_matl][node]*S_cpdi[k];
-              surf -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S_cpdi[k];
-            }
-            vel/=sumSk;
-            if(sumSk<1.e-90){
-              cout << "WARNING:  Even with a larger footprint triangle "
-                   << triangle_ids[idx] << " of group " << adv_matl
-                   << " is not getting any nodal input." << endl; 
-              cout << "Vertex position is " << P[itv] << endl;
-            }
-            P[itv] += vel*delT;
-            P[itv] += surf*delT;
-            delete cpdiInterp;
+//          cout << "WARNING: " << triangle_ids[idx] << " of group " << adv_matl
+//               << " is not getting any nodal input." << endl; 
+//          cout << "Vertex position is " << P[itv] << endl;
+            deleteThisTriangle++;
           }
-//          } else {
-            // This is the "just in case" instance that none of the nodes
-            // influencing a vertex has mass on it.  In this case, use the
-            // "center of mass" velocity to move the vertex
-//            double sumSkCoM=0.0;
-//            Vector velCoM(0.0,0.0,0.0);
-//            for (int k = 0; k < NN; k++) {
-//              IntVector node = ni[k];
-//              sumSkCoM += gmassglobal[node]*S[k];
-//              velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
-//            }
-//            velCoM/=sumSkCoM;
-//            P[itv] += velCoM*delT;
-//          }
-
-          // Check to see if a vertex has left the domain
-          // If vertices are placed properly (on domain boundaries),
-          // this shouldn't be needed.
-#if 0
-          if(!domain.inside(P[itv])){
-            double epsilon = 1.e-15;
-            static ProgressiveWarning warn("A vertex has moved outside the domain through an x boundary. Pushing it back in. This is a ProgressiveWarning.",10);
-            Point txn = P[itv];
-            if(P[itv].x()<dom_min.x()){
-             P[itv] = Point(dom_min.x()+epsilon, txn.y(), txn.z());
-             txn = P[itv];
-             warn.invoke();
-            }
-            if(P[itv].x()>dom_max.x()){
-             P[itv] = Point(dom_max.x()-epsilon, txn.y(), txn.z());
-             txn = P[itv];
-             warn.invoke();
-            }
- 
-            if(P[itv].y()<dom_min.y()){
-             P[itv] = Point(txn.x(),dom_min.y()+epsilon, txn.z());
-             txn = P[itv];
-             warn.invoke();
-            }
-            if(P[itv].y()>dom_max.y()){
-             P[itv] = Point(txn.x(),dom_max.y()-epsilon, txn.z());
-             txn = P[itv];
-             warn.invoke();
-            }
-
-            if(P[itv].z()<dom_min.z()){
-             P[itv] = Point(txn.x(),txn.y(),dom_min.z()+epsilon);
-             warn.invoke();
-            }
-            if(P[itv].z()>dom_max.z()){
-             P[itv] = Point(txn.x(),txn.y(),dom_max.z()-epsilon);
-             warn.invoke();
-            }
-          } // if vertex has left domain
-#endif
         } // loop over vertices
+
+        // Handle the triangles that have vertices that are not near nodes with mass
+        if(deleteThisTriangle==3){
+          cout << "NOTICE: Deleting " << triangle_ids[idx] << " of group " << adv_matl
+               << " because none of its vertices are getting any nodal input." << endl; 
+          delset->addParticle(idx);
+        } else if(deleteThisTriangle>0){
+          Vector velMean(0.);
+          double populatedVertices=0.;
+          for(int itv = 0; itv < 3; itv++){
+            velMean += vertexVel[itv]*populatedVertex[itv];
+            populatedVertices+=populatedVertex[itv]; 
+          } // loop over vertices
+          velMean/=populatedVertices;
+          for(int itv = 0; itv < 3; itv++){
+            P[itv] += velMean*(1. - populatedVertex[itv])*delT;
+          } // loop over vertices
+        }
 
         tx_new[idx] = (P[0]+P[1]+P[2])/3.;
         triArea_new[idx]=0.5*Cross(P[1]-P[0],P[2]-P[0]).length();
@@ -5995,6 +5939,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         tsize_new[idx] = tsize[idx];
 
       } // Loop over triangles
+      new_dw->deleteParticles(delset);
 
 #if 0
       // This is for computing updated triAreaAtNodes. Need to create a

@@ -28,6 +28,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/Math/Matrix3.h>
 #include <fstream>
 
@@ -60,7 +61,13 @@ Triangle::createTriangles(TriangleMaterial* matl,
 {
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
-  double gridLength = dx.minComponent();
+
+  BBox domain;
+  const Level* level = patch->getLevel();
+  level->getInteriorSpatialRange(domain);
+  Point dom_min = domain.min();
+  Point dom_max = domain.max();
+
   Matrix3 Identity; Identity.Identity();
   ParticleSubset* subset = allocateVariables(numTriangles,dwi,patch,new_dw);
   ParticleSubset::iterator iter = subset->begin();
@@ -124,34 +131,23 @@ Triangle::createTriangles(TriangleMaterial* matl,
   vector<long64> TID;
   int ip0,ip1,ip2;
   unsigned int numtri = 0;
-  vector<double> triAreaNow(numtri);
+  vector<double> triAreaNow;
   while (tri >> ip0 >> ip1 >> ip2) {
-   long64 tid = numtri;
-   i0.push_back(ip0);
-   i1.push_back(ip1);
-   i2.push_back(ip2);
-   TID.push_back(tid);
-   triangles[ip0].insert(numtri);
-   triangles[ip1].insert(numtri);
-   triangles[ip2].insert(numtri);
-   Point P0(px[ip0], py[ip0], pz[ip0]);
-   Point P1(px[ip1], py[ip1], pz[ip1]);
-   Point P2(px[ip2], py[ip2], pz[ip2]);
-   Vector A = P1-P0;
-   Vector B = P2-P0;
-   Vector C = P2-P1;
-   if(A.length() > 3.*gridLength || 
-      B.length() > 3.*gridLength ||
-      C.length() > 3.*gridLength){
-    ostringstream warn;
-    warn <<"Triangle " << numtri << " in " << trifilename 
-         << " is too large relative to the grid cell size\n" 
-         << "Its points are = \n"
-         << P0 << "\n" << P1 << "\n" << P2 << "\n";
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-   triAreaNow.push_back(0.5*Cross(A,B).length());
-   numtri++;
+    long64 tid = numtri;
+    i0.push_back(ip0);
+    i1.push_back(ip1);
+    i2.push_back(ip2);
+    TID.push_back(tid);
+    triangles[ip0].insert(numtri);
+    triangles[ip1].insert(numtri);
+    triangles[ip2].insert(numtri);
+    Point P0(px[ip0], py[ip0], pz[ip0]);
+    Point P1(px[ip1], py[ip1], pz[ip1]);
+    Point P2(px[ip2], py[ip2], pz[ip2]);
+    Vector A = P1-P0;
+    Vector B = P2-P0;
+    triAreaNow.push_back(0.5*Cross(A,B).length());
+    numtri++;
   } // while lines in the tri file
 
   // Compute the area at each vertex by putting 1/3 of the area of each
@@ -164,7 +160,8 @@ Triangle::createTriangles(TriangleMaterial* matl,
     }
     totalArea+=ptArea[i];
     if(triangles[i].size() > 30){
-       cout << "This node has " << triangles[i].size() << " triangles" << endl;
+       cout << "Node " << i << " has " << triangles[i].size() 
+            << " triangles in grain " << trifilename << endl;
     }
   } // for lines in the pts file
 
@@ -187,12 +184,12 @@ Triangle::createTriangles(TriangleMaterial* matl,
   // Choose which vertices to use in penalty contact so that each vertex is
   // used just once.
   for(unsigned int i = 0; i<numtri; i++){
-      useInPenVector[i] = IntVector(useInPen[i0[i]],
-                                    useInPen[i1[i]],
-                                    useInPen[i2[i]]);
-      useInPen[i0[i]]=0;
-      useInPen[i1[i]]=0;
-      useInPen[i2[i]]=0;
+    useInPenVector[i] = IntVector(useInPen[i0[i]],
+                                  useInPen[i1[i]],
+                                  useInPen[i2[i]]);
+    useInPen[i0[i]]=0;
+    useInPen[i1[i]]=0;
+    useInPen[i2[i]]=0;
   }
 
   for(unsigned int i = 0; i<numtri; i++){
@@ -203,24 +200,52 @@ Triangle::createTriangles(TriangleMaterial* matl,
                (py[i0[i]]+py[i1[i]]+py[i2[i]])/3.,
                (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
     if(patch->containsPoint(test)){
-      particleIndex pidx   = start;
-      triangle_pos[pidx]   = test;
-      triangleID[pidx]     = TID[i];
-      triangleArea[pidx]   = triAreaNow[i];
-      triangleClay[pidx]   = triClay[i];
-      triangleMidToNode0[pidx] = P0 - test;
-      triangleMidToNode1[pidx] = P1 - test;
-      triangleMidToNode2[pidx] = P2 - test;
+      bool edge = false;
+      if(fabs(test.x() - dom_min.x()) < 0.02*dx.x()){
+        edge = true;
+      } else if(fabs(test.x() - dom_max.x()) < 0.02*dx.x()){
+        edge = true;
+      } else if(fabs(test.y() - dom_min.y()) < 0.02*dx.y()){
+         edge = true;
+      } else if(fabs(test.y() - dom_max.y()) < 0.02*dx.y()){
+        edge = true;
+      } else if(fabs(test.z() - dom_min.z()) < 0.02*dx.z()){
+        edge = true;
+      } else if(fabs(test.z() - dom_max.z()) < 0.02*dx.z()){
+        edge = true;
+      }
+      if(!edge){ 
+        particleIndex pidx   = start;
+        triangle_pos[pidx]   = test;
+        triangleID[pidx]     = TID[i];
+        triangleArea[pidx]   = triAreaNow[i];
+        triangleClay[pidx]   = triClay[i];
+        triangleMidToNode0[pidx] = P0 - test;
+        triangleMidToNode1[pidx] = P1 - test;
+        triangleMidToNode2[pidx] = P2 - test;
+//        Vector A = P1-P0;
+//        Vector B = P2-P0;
+//        Vector C = P2-P1;
+//        if(A.length() > 3.*gridLength || 
+//           B.length() > 3.*gridLength ||
+//           C.length() > 3.*gridLength){
+//          ostringstream warn;
+//          warn << "Triangle " << numtri << " in " << trifilename 
+//               << " is too large relative to the grid cell size\n"
+//               << "Its points are = \n"
+//               << P0 << "\n" << P1 << "\n" << P2 << "\n";
+//          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+//        }
+  
+        triangleAreaAtNodes[pidx]+=Vector(ptArea[i0[i]], 
+                                          ptArea[i1[i]], 
+                                          ptArea[i2[i]]);
 
-      triangleAreaAtNodes[pidx]+=Vector(ptArea[i0[i]], 
-                                        ptArea[i1[i]], 
-                                        ptArea[i2[i]]);
+        triangleUseInPenalty[pidx] = useInPenVector[i];
 
-      triangleUseInPenalty[pidx] = useInPenVector[i];
-
-      triangleSize[pidx]    = Identity;
-      triangleDefGrad[pidx] = Identity;
-      start++;
+        triangleSize[pidx]    = Identity;
+        triangleDefGrad[pidx] = Identity;
+        start++;
 #if 0
       Vector r0 = P1 - P0;
       Vector r1 = P2 - P0;
@@ -235,8 +260,9 @@ Triangle::createTriangles(TriangleMaterial* matl,
       }
       triangleSize[pidx]    = size;
 #endif
-    }
-  }
+      } // not on an edge
+    } // patch contains point
+  }  // loop over all the triangles
 
   tri.close();
   pts.close();
@@ -279,6 +305,16 @@ particleIndex
 Triangle::countTriangles(const Patch* patch, const string fileroot)
 {
   particleIndex sum = 0;
+
+  Vector dx = patch->dCell();
+
+  BBox domain;
+  const Level* level = patch->getLevel();
+  level->getInteriorSpatialRange(domain);
+  Point dom_min = domain.min();
+  Point dom_max = domain.max();
+
+  double gridLength = dx.minComponent();
 
   string ptsfilename = fileroot + ".pts";
   string trifilename = fileroot + ".tri";
@@ -327,8 +363,40 @@ Triangle::countTriangles(const Patch* patch, const string fileroot)
                (pz[i0[i]]+pz[i1[i]]+pz[i2[i]])/3.);
     
     if(patch->containsPoint(test)){
-      sum++;
-    }
+      bool edge = false;
+      if(fabs(test.x() - dom_min.x()) < 0.02*dx.x()){
+        edge = true;
+      } else if(fabs(test.x() - dom_max.x()) < 0.02*dx.x()){
+        edge = true;
+      } else if(fabs(test.y() - dom_min.y()) < 0.02*dx.y()){
+         edge = true;
+      } else if(fabs(test.y() - dom_max.y()) < 0.02*dx.y()){
+        edge = true;
+      } else if(fabs(test.z() - dom_min.z()) < 0.02*dx.z()){
+        edge = true;
+      } else if(fabs(test.z() - dom_max.z()) < 0.02*dx.z()){
+        edge = true;
+      }
+      if(!edge){ 
+        Point P0(px[i0[i]], py[i0[i]], pz[i0[i]]);
+        Point P1(px[i1[i]], py[i1[i]], pz[i1[i]]);
+        Point P2(px[i2[i]], py[i2[i]], pz[i2[i]]);
+        Vector A = P1-P0;
+        Vector B = P2-P0;
+        Vector C = P2-P1;
+        if(A.length() > 3.*gridLength || 
+           B.length() > 3.*gridLength ||
+           C.length() > 3.*gridLength){
+          ostringstream warn;
+          warn << "Triangle " << numtri << " in " << trifilename 
+               << " is too large relative to the grid cell size\n"
+               << "Its points are = \n"
+               << P0 << "\n" << P1 << "\n" << P2 << "\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+        sum++;
+      } // not on edge
+    } // in patch
   }
   
   tri.close();
