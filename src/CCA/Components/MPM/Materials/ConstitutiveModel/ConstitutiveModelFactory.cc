@@ -37,6 +37,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElastic.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/Salt.h>
 
 #if !defined(NO_FORTRAN)
 #  include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticFortran.h>
@@ -236,6 +237,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       }
       return(scinew HypoElasticImplicit(child,flags));
     }
+  }
+  else if (cm_type ==  "salt") {
+      return(scinew Salt(child,flags));
   }
 
 #if !defined(NO_FORTRAN)

@@ -39,12 +39,13 @@ SRCS   += \
         $(SRCDIR)/CNH_MMS.cc                    \
         $(SRCDIR)/TransIsoHyper.cc              \
         $(SRCDIR)/TransIsoHyperImplicit.cc      \
-        $(SRCDIR)/TransIsoHypoFrictional.cc              \
+        $(SRCDIR)/TransIsoHypoFrictional.cc     \
         $(SRCDIR)/ViscoTransIsoHyper.cc         \
         $(SRCDIR)/ViscoTransIsoHyperImplicit.cc \
         $(SRCDIR)/ViscoScram.cc                 \
         $(SRCDIR)/ViscoSCRAMHotSpot.cc          \
         $(SRCDIR)/HypoElastic.cc                \
+        $(SRCDIR)/Salt.cc                       \
         $(SRCDIR)/HypoElasticImplicit.cc        \
         $(SRCDIR)/ViscoScramImplicit.cc         \
         $(SRCDIR)/MWViscoElastic.cc             \
