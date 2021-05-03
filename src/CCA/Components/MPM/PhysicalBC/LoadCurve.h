@@ -114,6 +114,9 @@ WARNING
       // Get the load curve id
       inline int getID() const {return d_id;}
 
+      // Get the load curve id
+      inline int getMatl() const {return d_matl;}
+
       // Get the load at time t
       inline T getLoad(double t) {
 
@@ -161,6 +164,7 @@ WARNING
       std::vector<std::string> d_phaseType;
       std::vector<int>    d_BHIndex;
       int d_id;
+      int d_matl;
       double d_curTime;
       bool d_UBH;
    };

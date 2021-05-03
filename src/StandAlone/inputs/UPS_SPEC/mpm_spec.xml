@@ -133,6 +133,7 @@
           <load_curve             spec="REQUIRED NO_DATA" >
             <use_burial_history   spec="OPTIONAL BOOLEAN" />
             <id                   spec="REQUIRED INTEGER" />
+            <material             spec="OPTIONAL INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />

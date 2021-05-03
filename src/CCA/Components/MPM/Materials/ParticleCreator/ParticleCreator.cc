@@ -414,7 +414,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
 IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps)
+                                          Vector& areacomps, int dwi)
 {
   IntVector ret(0,0,0);
   int k=0;
@@ -425,7 +425,8 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)) {
+      if (pbc->flagMaterialPoint(pp, dxpp) 
+       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
          ret(k) = pbc->loadCurveID(); 
          k++;
       }
