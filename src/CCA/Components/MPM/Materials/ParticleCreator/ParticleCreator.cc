@@ -385,7 +385,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp,d_flags->d_ndim)) {
           Vector areacomps;
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
 #if 0
           if (d_doScalarDiffusion) {
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
