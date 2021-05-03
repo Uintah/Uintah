@@ -407,7 +407,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp)) {
           Vector areacomps;
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
           if (d_doScalarDiffusion) {
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
                                      pvars.parea[pidx].y()*areacomps.y(),
@@ -432,7 +432,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
 IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                          Vector& areacomps)
+                                          Vector& areacomps, int dwi)
 {
   IntVector ret(0,0,0);
   int k=0;
@@ -443,7 +443,8 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)) {
+      if (pbc->flagMaterialPoint(pp, dxpp) 
+       && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
          ret(k) = pbc->loadCurveID(); 
          k++;
       }
