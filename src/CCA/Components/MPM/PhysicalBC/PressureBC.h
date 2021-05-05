@@ -88,6 +88,9 @@ WARNING
       // Get the load curve number for this pressure BC
       inline int loadCurveID() const {return d_loadCurve->getID();}
 
+      // Get the load curve number for this pressure BC
+      inline int loadCurveMatl() const {return d_loadCurve->getMatl();}
+
       // Get the surface 
       inline GeometryPiece* getSurface() const {return d_surface;}
 

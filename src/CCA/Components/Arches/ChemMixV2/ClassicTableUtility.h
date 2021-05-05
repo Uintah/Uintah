@@ -377,7 +377,7 @@ Interp_class* SCINEW_ClassicTable(std::string tableFileName, std::vector<std::st
       Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
-    table_contents = scinew char[table_size];
+    table_contents = scinew char[table_size+1];
   }
 
   Uintah::MPI::Bcast(table_contents, table_size, MPI_CHAR, 0,

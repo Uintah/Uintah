@@ -301,6 +301,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     const VarLabel* m_reloc_new_pos_label{nullptr};
 
     void setRuntimeStats( ReductionInfoMapper< RuntimeStatsEnum, double > *runtimeStats) { m_runtimeStats = runtimeStats; };
+    
+    // number of schedulers and subschedulers
+    int m_num_schedulers {0};
 
   protected:
 
