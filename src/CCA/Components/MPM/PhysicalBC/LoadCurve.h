@@ -304,6 +304,7 @@ WARNING
      {
        ProblemSpecP lc_ps = ps->appendChild("load_curve");
        lc_ps->appendElement("id",d_id);
+       lc_ps->appendElement("material",d_matl);
        lc_ps->appendElement("use_burial_history", false);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
