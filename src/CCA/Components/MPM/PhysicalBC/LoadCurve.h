@@ -179,6 +179,7 @@ WARNING
                                      __FILE__, __LINE__);
      }
      loadCurve->require("id", d_id);
+     loadCurve->getWithDefault("material", d_matl, -99);
      loadCurve->getWithDefault("use_burial_history", d_UBH, false);
      if(d_UBH){
       ProblemSpecP root = ps->getRootNode();
