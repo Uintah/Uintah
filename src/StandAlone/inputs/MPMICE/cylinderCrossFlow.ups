@@ -6,6 +6,7 @@
        <title>cylinder in a crossflow</title>
    </Meta>
    <SimulationComponent type="rmpmice" />
+   <Solver type="hypre" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -19,12 +20,13 @@
        <timestep_multiplier>0.8 </timestep_multiplier>
        <!--<max_Timesteps>         16 </max_Timesteps> -->
    </Time>
-   
+
+<!--
    <LoadBalancer type="DLB">
       <hasParticles>   true     </hasParticles>
       <timestepInterval>  200        </timestepInterval>
    </LoadBalancer>
-
+-->
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -162,8 +164,8 @@
               <lower>        [-0.1, -0.075,  0.00]        </lower>
               <upper>        [ 0.2, 0.075,  0.001]        </upper>
               <extraCells>   [1,1,1]                    </extraCells>
-              <patches>      [4,2,1]                    </patches>
-              <resolution>   [200,150,1]               </resolution>
+              <patches>      [4,3,1]                    </patches>
+              <resolution>   [400,300,1]               </resolution>
             </Box>
        </Level>
     </Grid>
@@ -190,8 +192,7 @@
 -->
       <save label = "TotalMass"/>
       <save label = "TotalMomentum"/>
-      <save label = "p.x"             levels = "-1"/>
-      <save label = "p.volume"        levels = "-1"/>
+      <save label = "p.x" /> 
       <checkpoint cycle = "2" timestepInterval = "100"/>
    </DataArchiver>
 
@@ -199,7 +200,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.3</cfl>
+       <cfl>0.2</cfl>
        <ICE>
         <advection type = "SecondOrder"/> 
         <TimeStepControl>
@@ -209,7 +210,7 @@
 
         <ImplicitSolver>
            <max_outer_iterations>      10    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-9  </outer_iteration_tolerance>
            <iters_before_timestep_restart> 3 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
            <!-- uintah cg solver -->
@@ -218,7 +219,7 @@
             <!-- hypre -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-10  </tolerance>
+            <tolerance>      1.e-11  </tolerance>
             <maxiterations>  7500    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
