@@ -2441,7 +2441,14 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
 
         if ( incNodes == nullptr ){
           std::ostringstream error;
-          error << " ERROR:  The xml section (" << section << ") was not found in the file (" << filename << ")\n";
+          error << " ERROR:  The xml attributes:";
+
+          for (auto iter = nodeAttributes.cbegin(); iter != nodeAttributes.cend(); ++iter) {
+            error << iter->first << "=(" << iter->second << ") ";
+          }
+
+          error << " were not found in the include file (" << filename << ")."
+                << "  Check for white spaces or misspellings.\n";
           throw ProblemSetupException( error.str(), __FILE__, __LINE__);
         }
       }
