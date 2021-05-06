@@ -6035,11 +6035,13 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<NCVariable<double> > SurfClay(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
+    std::vector<bool> PistonMaterial(numMPMMatls);
 //    std::vector<Vector> sumTriForce(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl =
                      (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
+      PistonMaterial[m] = mpm_matl->getIsPistonMaterial();
 
       double inv_stiff = mpm_matl->getConstitutiveModel()->getCompressibility();
       stiffness[m] = 1./inv_stiff;
@@ -6106,7 +6108,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //        particleIndex idx0 = *iter0;
 //        triInContact[tmo][idx0] = -1;
 //      }
-    }
+    } // end loop over triangle materials to get data from DW
 
     int numOverlap=0;
     int numInside=0;
@@ -6170,7 +6172,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                               m_materialManager->getMaterial("Triangle",tmi);
         int adv_matl1 = t_matl1->getAssociatedMaterial();
 
-        if(adv_matl0==adv_matl1){
+        if(adv_matl0==adv_matl1 || 
+           (PistonMaterial[adv_matl0] && PistonMaterial[adv_matl1])){
           continue;
         }
 
