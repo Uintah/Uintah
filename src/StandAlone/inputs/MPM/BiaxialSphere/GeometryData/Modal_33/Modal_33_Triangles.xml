@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<Uintah_Include>
+  <Triangle>
+     <triangle_filename> GeometryData/Modal_33/Group_1/Group_1_Triangles  </triangle_filename>
+    <associated_material> 0 </associated_material>
+  </Triangle>
+</Uintah_Include>

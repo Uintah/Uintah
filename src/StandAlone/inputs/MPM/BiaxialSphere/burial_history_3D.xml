@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Example Burial History -->
+<Uintah_Include>
+ <BurialHistory>
+   <ramp_time>2.0</ramp_time>
+   <settle_time>2.0</settle_time>
+   <stableKE> 1.e-12 </stableKE>
+   <time_point>
+     <time_Ma> -1.0 </time_Ma>
+     <temperature_K> 500.0 </temperature_K>
+     <depth_m> 4670.9 </depth_m>
+     <fluidOverPressure_bar> 33.8 </fluidOverPressure_bar>
+     <effectiveStress_bar> 500.0 </effectiveStress_bar>
+     <waterSaturation_pct> 1000 </waterSaturation_pct>
+     <fluidPressure_bar> 514.7618 </fluidPressure_bar>
+     <UintahDissolutionTime> 0.01 </UintahDissolutionTime>
+   </time_point>
+   <time_point>
+     <time_Ma> 0 </time_Ma>
+     <temperature_K> 500.0 </temperature_K>
+     <depth_m> 4670.9 </depth_m>
+     <fluidOverPressure_bar> 33.8 </fluidOverPressure_bar>
+     <effectiveStress_bar> 500.0 </effectiveStress_bar>
+     <waterSaturation_pct> 1000 </waterSaturation_pct>
+     <fluidPressure_bar> 514.7618 </fluidPressure_bar>
+     <UintahDissolutionTime> 0.01 </UintahDissolutionTime>
+   </time_point>
+   <time_point>
+     <time_Ma> 10.41 </time_Ma>
+     <temperature_K> 500.0 </temperature_K>
+     <depth_m> 4625.57 </depth_m>
+     <fluidOverPressure_bar> 21.3 </fluidOverPressure_bar>
+     <effectiveStress_bar> 10.0  </effectiveStress_bar>
+     <waterSaturation_pct> 1000 </waterSaturation_pct>
+     <fluidPressure_bar> 497.5941 </fluidPressure_bar>
+     <UintahDissolutionTime> 0.0 </UintahDissolutionTime>
+   </time_point>
+ </BurialHistory>
+</Uintah_Include>

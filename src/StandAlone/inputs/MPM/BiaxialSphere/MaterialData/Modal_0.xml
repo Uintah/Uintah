@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Elastic Quartz to represent piston -->
+<Uintah_Include>
+<!--
+   <categoryName>piston</categoryName>
+   <subCategory>piston</subCategory>
+   <superCategory>piston</superCategory>
+-->
+   <modalID>0</modalID>
+   <include href="MaterialData/Mat_QuartzElastic.xml" />
+</Uintah_Include>

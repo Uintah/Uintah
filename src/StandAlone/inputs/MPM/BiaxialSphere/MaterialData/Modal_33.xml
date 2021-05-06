@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Monocrystalline quartz grains -->
+<Uintah_Include>
+<!--
+   <categoryName> Monocrystalline quartz grains </categoryName>
+   <subCategory> Quartz grains </subCategory>
+   <superCategory> Grains </superCategory>
+-->
+   <modalID> 33 </modalID>
+   <include href="Mat_QuartzNew.xml"/>
+</Uintah_Include>
