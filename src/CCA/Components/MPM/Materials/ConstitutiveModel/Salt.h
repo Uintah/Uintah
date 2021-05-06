@@ -48,8 +48,17 @@ namespace Uintah {
   private:
   public:
     struct CMData {
-      double G;
-      double K;
+      double G;  // Shear modulus
+      double K;  // Bulk  modulus
+      double A1;
+      double A2;
+      double n1;
+      double n2;
+      double B1;
+      double B2;
+      double wc;
+      double wt;
+      double D;
     };
 
     const VarLabel* pViscoPlasticStrainLabel;      //ViscoPlastic Strain

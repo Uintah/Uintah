@@ -51,6 +51,15 @@ Salt::Salt(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
+  ps->require("A1",d_initialData.A1);
+  ps->require("A2",d_initialData.A2);
+  ps->require("n1",d_initialData.n1);
+  ps->require("n2",d_initialData.n2);
+  ps->require("omega_c",d_initialData.wc);
+  ps->require("omega_t",d_initialData.wt);
+  ps->require("B1",d_initialData.B1);
+  ps->require("B2",d_initialData.B2);
+  ps->require("D",d_initialData.D);
 
   initializeLocalMPMLabels();
 }
@@ -68,11 +77,20 @@ void Salt::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","hypo_elastic");
+    cm_ps->setAttribute("type","salt");
   }
 
   cm_ps->appendElement("G",d_initialData.G);
   cm_ps->appendElement("K",d_initialData.K);
+  cm_ps->appendElement("A1",d_initialData.A1);
+  cm_ps->appendElement("A2",d_initialData.A2);
+  cm_ps->appendElement("n1",d_initialData.n1);
+  cm_ps->appendElement("n2",d_initialData.n2);
+  cm_ps->appendElement("omega_c",d_initialData.wc);
+  cm_ps->appendElement("omega_t",d_initialData.wt);
+  cm_ps->appendElement("B1",d_initialData.B1);
+  cm_ps->appendElement("B2",d_initialData.B2);
+  cm_ps->appendElement("D",d_initialData.D);
 }
 
 Salt* Salt::clone()
@@ -203,16 +221,15 @@ void Salt::computeStressTensor(const PatchSubset* patches,
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
-
-    double A1 = 2.154e-6; // units 1/seconds
-    double n1 = 1.595;  
-    double A2 = 1.693e9;  // units 1/seconds 
-    double n2 = 6.279;
-    double wc = 0.999999;
-    double wt = 0.5;
-    double m_D= 5.0e4;
-    double B1 = -2.e6;
-    double B2 =  1.0;
+    double A1 = d_initialData.A1; // units 1/seconds
+    double n1 = d_initialData.n1;  
+    double A2 = d_initialData.A2;  // units 1/seconds 
+    double n2 = d_initialData.n2;
+    double wc = d_initialData.wc;
+    double wt = d_initialData.wt;
+    double B1 = d_initialData.B1;
+    double B2 = d_initialData.B2;
+    double Dam= d_initialData.D;
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -231,7 +248,8 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       double P_old = onethird*pstress[idx].Trace();
       Matrix3  tensorS = pstress[idx] - P_old*Identity;
       // Compute trial deviatoric stress based, assuming elastic behavior
-      Matrix3  trialS  = tensorS + DPrime*(2*G*delT);
+//      Matrix3  trialS  = tensorS + DPrime*(2*G*delT);
+      Matrix3  trialS  = tensorS;
 
       Vector  eigVal;
       Matrix3 eigVec;
@@ -266,13 +284,13 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       // Compute the vonMises equivalent shear stress (Eq. 2.7)
       double KachPress = onethird*KachStress.Trace();
       Matrix3 KachDev  = KachStress - KachPress*Identity;
-      double vonMisesKach = sqrtThreeHalves*KachDev.Norm();
+      double vonMisesKach = sqrtThreeHalves*KachDev.Norm()+1.e-100;
 
       // Compute scalar representation of the viscoplastic strain rate (Eq. 2.9)
       double epsDotBar_vp = A1*pow(vonMisesKach/G, n1) 
                           + A2*pow(vonMisesKach/G, n2);
 
-//      cout << "vonMisesKach/G = " << vonMisesKach/G << endl;
+//      cout << "vonMisesKach = " << vonMisesKach << endl;
 //      cout << "epsDotBar_vp = " << epsDotBar_vp << endl;
 
       // Integrate total scalar viscoplastic strain
@@ -280,26 +298,27 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       double epsDotVec_vp[3];
 
       // Compute viscoplastic strain based on associated flow (Eq. 2.8)
-      epsDotVec_vp[0] = epsDotBar_vp*twothird
+      epsDotVec_vp[0] = (epsDotBar_vp*twothird/vonMisesKach)
                       * (KachDev(0,0) - 0.5*(KachDev(1,1)+KachDev(2,2)));
-      epsDotVec_vp[1] = epsDotBar_vp*twothird 
+      epsDotVec_vp[1] = (epsDotBar_vp*twothird/vonMisesKach)
                       * (KachDev(1,1) - 0.5*(KachDev(0,0)+KachDev(2,2)));
-      epsDotVec_vp[2] = epsDotBar_vp*twothird
+      epsDotVec_vp[2] = (epsDotBar_vp*twothird/vonMisesKach)
                       * (KachDev(2,2) - 0.5*(KachDev(0,0)+KachDev(1,1)));
 
 
       Matrix3 epsDotMat_vp(0.);
       for(int i=0;i<3;i++){
+//      cout << "epsDotVec_vp[" << i << "] = " << epsDotVec_vp[i] << endl;
         epsDotMat_vp += epsDotVec_vp[i]*Matrix3(eigVector[i],eigVector[i]);
       }
       // This is Eq. 2.10 modified with some personal communication
       // with Ben Reedlun of SNL
-      double sigKachDB =  B2*(KachPress - B1/(1. - w.length() ));
+      double sigKachDB =  B2*(KachPress - B1/(1. - w.maxComponent() ));
 
       double wdot = 0.;
       if(vonMisesKach > sigKachDB){
-//        wdot = (m_D/G)*epsDotBar_vp;
-        wdot = (m_D/G)*(vonMisesKach - sigKachDB)*epsDotBar_vp;
+//        wdot = (D/G)*epsDotBar_vp;
+        wdot = (Dam/G)*(vonMisesKach - sigKachDB)*epsDotBar_vp;
 //        cout << "Evolving damage" << endl;
 //        wdot = 0.;
       }
