@@ -475,7 +475,6 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
     create_gs = "%s-%s" % (create_gs0, startFrom)
     
     rc = runSusTest(test, susdir, inputxml, compare_root, application, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom, varBucket, create_gs)
-    system("rm inputs")
       
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
@@ -501,7 +500,6 @@ def runSusTests(argv, TESTS, application, callback = nullCallback):
 
         if rc > 0:
           failcode = 1
-        system("rm inputs")
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
