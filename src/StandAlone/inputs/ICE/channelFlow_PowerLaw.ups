@@ -22,7 +22,7 @@
        <delt_init>          1.0e-9      </delt_init>
        <max_delt_increase>  2           </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-     <!--  <max_Timesteps>      20           </max_Timesteps>  -->
+       <max_Timesteps>      1           </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -30,14 +30,9 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-    
-      <inletVelocity type="powerLawProfile">
-        <verticalDirection> 1           </verticalDirection>
-        <exponent>          0.21        </exponent>
-        <maxHeight>         0.5        </maxHeight>
-        <material>          atmosphere  </material>
-      </inletVelocity>
- 
+      
+      <include href="inputs/ICE/channelFlow.xml" section="inletVelocity" type="powerLawProfile"/>
+
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
                             <value> 0 </value> 
@@ -121,10 +116,10 @@
        <Level>
            <Box label="1">
               <lower>        [0, 0.0,0]          </lower>
-              <upper>        [1, 0.5,0.005]     </upper>
+              <upper>        [1, 0.5,0.05]     </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [4,2,1]             </patches>
-              <resolution>   [128,64,1]           </resolution>
+              <resolution>   [128,64,10]           </resolution>
            </Box>
        </Level>
        
@@ -133,15 +128,16 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>channelFlow_PowerLaw.uda</filebase>
-    <!--  <outputTimestepInterval>1</outputTimestepInterval> -->
-      <outputInterval>0.1</outputInterval>
+      <filebase>UDA</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputInitTimestep/>
+    <!--  <outputInterval>0.1</outputInterval> -->
       <save label="vel_CC"/>
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
-      <checkpoint interval="1" cycle="2"/>
+     <!-- <checkpoint interval="1" cycle="2"/> -->
    </DataArchiver>
 
     
@@ -180,17 +176,9 @@
            </Parameters>
         </ImplicitSolver>
  
- <!--       
-        <customInitialization>             
-          <powerLawProfile>
-            <verticalDirection> 1           </verticalDirection>
-            <exponent>          0.21        </exponent>
-            <maxHeight>         0.05         </maxHeight>
-            <material>          atmosphere  </material>
-            <U_infinity>        [4.32, 0, 0]</U_infinity>
-          </powerLawProfile>
-        </customInitialization>
--->
+        <customInitialization> 
+          <include href="inputs/ICE/channelFlow.xml" section="powerLawProfile"/>
+        </customInitialization> 
       </ICE>        
     </CFD>
 

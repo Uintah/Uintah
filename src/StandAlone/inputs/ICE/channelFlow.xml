@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+     <powerLawProfile>
+       <verticalDir>   1           </verticalDir>
+       <exponent>      0.21        </exponent>
+       <profileHeight> 0.25        </profileHeight>
+       <U_infinity>    [4.32, 0, 0]</U_infinity>
+     </powerLawProfile>
+
+    <powerLawProfile2>
+       <verticalDir>      1      </verticalDir>
+       <principalDir>     0      </principalDir>
+       <Re_tau>           395    </Re_tau>
+       <halfChannelHeight> 0.25  </halfChannelHeight>
+    </powerLawProfile2>
+
+    <inletVelocity type="logWindProfile">
+      <verticalDirection> 1           </verticalDirection>
+      <exponent>          0.21        </exponent>
+      <roughness>         2           </roughness>
+      <material>          atmosphere  </material>
+    </inletVelocity>
+    
+    <inletVelocity type="powerLawProfile">
+      <verticalDirection> 1           </verticalDirection>
+      <exponent>          0.21        </exponent>
+      <maxHeight>         0.5        </maxHeight>
+      <material>          atmosphere  </material>
+    </inletVelocity>
+
+</Uintah_Include>
