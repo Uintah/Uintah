@@ -32,7 +32,7 @@ use Time::HiRes qw/time/;
 use File::Basename;
 use Cwd;
 use lib dirname (__FILE__);  # needed to find local Utilities.pm
-use Utilities qw( cleanStr modify_batchScript read_file write_file );
+use Utilities qw( cleanStr setPath modify_batchScript read_file write_file );
 
 # removes white spaces from variable
 sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
@@ -60,13 +60,13 @@ my $batchCmd    = cleanStr( $doc->findvalue( '/start/batchScheduler/submissionCm
 my $batchScript = cleanStr( $doc->findvalue( '/start/batchScheduler/template' ) );
 
 if( length $batchScript > 0 ){
-  my $cmd = "cp -f $config_files_path"."/"."$batchScript" . " . > /dev/null 2>&1";
-  system( $cmd );
-  print "  Batch script template used to submit jobs ($batchScript)\n";
 
-  my @nodes = $doc->findnodes('/start/batchScheduler/batchReplace');
-  modify_batchScript( $batchScript, @nodes );
-  print "\n";
+  $batchScript = setPath( $batchScript, $config_files_path ) ;
+
+  my $cmd = "cp -f $batchScript" . " . > /dev/null 2>&1";
+  system( $cmd );
+  
+  print "  Batch script template used to submit jobs ($batchScript)\n";
 }
 
 
@@ -163,10 +163,13 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
   my $test_batch = undef;
 
   if( length $batchScript > 0 ){
+  
     my ($basename, $parentdir, $ext) = fileparse($batchScript, qr/\.[^.]*$/);
     $test_batch = "batch_$test_title$ext";
     system(" cp $batchScript $test_batch" );
 
+    my @nodes = $doc->findnodes('/start/batchScheduler/batchReplace');
+    modify_batchScript( $batchScript, @nodes );
     modify_batchScript( $test_batch, $test_dom->findnodes('batchReplace') );
   }
 

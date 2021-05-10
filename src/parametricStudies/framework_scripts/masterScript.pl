@@ -158,7 +158,7 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
    #__________________________________
    # loop over all tests
    #   - make test directories
-   #   - copy tst, batch scripts, other files & input files
+   #   - copy tst, scripts, other files & input files
    my $otherFiles = "";
 
    foreach my $test ( $whatToRun->findnodes('test') ) {
@@ -210,9 +210,9 @@ system("which replace_XML_value") == 0 || die("\nCannot find the command replace
      if (! -e $upsFile ||
          ! -e $tstFile ){
        print "\n \nERROR:setupFrameWork:\n";
-       print "The ups file: \n       \t ($upsFile) \n";
-       print "or the tst file: \n     \t ($tstFile)\n";
-       print "or the other file(s) \n \t ($otherFiles) \n";
+       print "The ups file: \n        ($upsFile) \n";
+       print "or the tst file: \n     ($tstFile)\n";
+       print "or the other file(s) \n ($otherFiles) \n";
        print "do not exist.  Now exiting\n";
        exit
      }
