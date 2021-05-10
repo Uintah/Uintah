@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<Uintah_specification>
+  <Meta>
+    <title>sphere_stack_v600</title>
+  </Meta>
+  <SimulationComponent type="mpm" />
+  <Time>
+    <maxTime>            500.0  </maxTime>
+    <initTime>             0.0  </initTime>
+    <delt_min>           1.e-9  </delt_min>
+    <delt_max>           1.e19  </delt_max>
+    <timestep_multiplier>  0.4  </timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>BiaxialSphere.uda</filebase>
+    <outputInterval>0.5</outputInterval>
+    <save label="p.x" />
+    <save label="p.color" />
+    <save label="p.stress" />
+    <save label="p.mass" />
+    <save label="p.particleID" />
+    <save label="p.scalefactor" />
+    <save label="tri.triangleID" />
+<!--
+    <save label="t.tracerID" />
+    <save label="tri.inContactMatl" />
+    <save label="tri.contactForce" />
+-->
+    <save label="p.externalforce" />
+    <save label="p.displacement" />
+    <save label="p.plasticStrain" />
+    <save label="p.velocity" />
+    <save label="p.volume" />
+    <save label="g.mass" />
+    <save label="g.acceleration" />
+    <save label="g.velocity_star" />
+    <save label="g.internalforce" />
+    <save label="g.lscontactforce" />
+    <save label="g.volume" />
+    <save label="KineticEnergy" />
+    <save label="TotalVolumeDeformed" />
+    <save label="TotalMass" />
+<!--
+-->
+    <save label="BndyForce_xminus"/>
+    <save label="BndyForce_xplus"/>
+    <save label="BndyForce_yminus"/>
+    <save label="BndyForce_yplus"/>
+    <save label="BndyForce_zminus"/>
+    <checkpoint cycle="2" interval="1" />
+  </DataArchiver>
+  <MPM>
+    <time_integrator>         explicit </time_integrator>
+    <interpolator>           fast_cpdi </interpolator>
+    <cpdi_lcrit>                   0.9 </cpdi_lcrit>
+    <withColor>                   true </withColor>
+    <use_tracers>                 false </use_tracers>
+    <use_triangles>               true </use_triangles>
+    <use_load_curves>             true </use_load_curves>
+    <DoExplicitHeatConduction>   false </DoExplicitHeatConduction>
+    <DoPressureStabilization>    false </DoPressureStabilization>
+    <artificial_damping_coeff>     0.1 </artificial_damping_coeff>
+    <XPIC2>                       true </XPIC2>
+    <minimum_subcycles_for_F>        3 </minimum_subcycles_for_F>
+    <KEMaterial>                    1 </KEMaterial>
+    <CanAddParticles>            false </CanAddParticles>
+    <DoAuthigenesis>             false </DoAuthigenesis>
+    <AuthigenesisBaseFilename> GeometryData/cements_ </AuthigenesisBaseFilename>
+<!--
+-->
+    <boundary_traction_faces>  [xminus, xplus, yminus, yplus, zminus] </boundary_traction_faces>
+  </MPM>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+  </PhysicalConstants>
+  <MaterialProperties>
+    <MPM>
+      <material name="Material 1: GeometryData/Modal_33/Group_1/Group_1.xml">
+        <include href="GeometryData/Modal_33/Group_1/Group_1.xml"/>
+        <include href="MaterialData/Modal_Squishy.xml"/>
+      </material>
+      <material name="Material 2: Piston">
+        <include href="MaterialData/Modal_0.xml" />
+        <geom_object>
+          <box label="piston">
+            <min>[-0.0100,-0.0100,0.0400]</min>
+            <max>[ 0.0100, 0.0100,0.0450]</max>
+          </box>
+          <res>[2,2,2]</res>
+          <velocity>[0.0000,0.0000,-0.0001]</velocity>
+          <temperature>300.</temperature>
+          <color>2</color>
+        </geom_object>
+        <PistonMaterial>true</PistonMaterial>
+      </material>
+      <material name="Material 3: NewPiston">
+        <include href="MaterialData/Modal_0.xml" />
+        <geom_object>
+          <box label="new_piston">
+            <min>[-0.0100, 0.010,0.0200]</min>
+            <max>[ 0.0100, 0.015,0.0400]</max>
+          </box>
+          <res>[2,2,2]</res>
+          <velocity>[0.0000,-.0001,0.000]</velocity>
+          <temperature>300.</temperature>
+          <color>2</color>
+        </geom_object>
+        <PistonMaterial>true</PistonMaterial>
+      </material>
+      <contact>
+        <type>penalty</type>
+        <mu>0.3</mu>
+        <materials>[0,1,2]</materials>
+      </contact>
+      <include href="GeometryData/Modal_33/Modal_33_Triangles.xml" />
+      <Triangle>
+        <triangle_filename>GeometryData/Piston</triangle_filename>
+        <associated_material>1</associated_material>
+      </Triangle>
+      <Triangle>
+        <triangle_filename>GeometryData/PistonNew</triangle_filename>
+        <associated_material>2</associated_material>
+      </Triangle>
+    </MPM>
+  </MaterialProperties>
+  <Grid>
+    <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+      <Face side="x+">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+      <Face side="y-">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+      <Face side="y+">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+      <Face side="z-">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+      <Face side="z+">
+        <BCType id="all" var="symmetry" label="Symmetric" />
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.0100,-0.0100, 0.020]</lower>
+        <upper>[ 0.0100, 0.0160, 0.046]</upper>
+        <resolution>[20,26,26]</resolution>
+        <patches>   [2,2,2]       </patches>
+        <extraCells>[1,1,1]       </extraCells>
+      </Box>
+    </Level>
+  </Grid>
+
+  <include href="burial_history_3D.xml"/>
+
+  <PhysicalBC>
+    <MPM>
+      <pressure>
+        <geom_object>
+          <box label="top press">
+            <min>[-0.0100,-0.0100,0.0449]</min>
+            <max>[ 0.0100, 0.0100,0.0451]</max>
+          </box>
+        </geom_object>
+        <load_curve>
+          <id>1</id>
+          <use_burial_history> true </use_burial_history>
+        </load_curve>
+      </pressure>
+      <pressure>
+        <geom_object>
+          <box label="side press">
+            <min>[-0.0100,0.0149,0.02]</min>
+            <max>[ 0.0100,0.0151,0.04]</max>
+          </box>
+        </geom_object>
+        <load_curve>
+          <id>2</id>
+          <use_burial_history> true </use_burial_history>
+        </load_curve>
+      </pressure>
+    </MPM>
+  </PhysicalBC>
+</Uintah_specification>

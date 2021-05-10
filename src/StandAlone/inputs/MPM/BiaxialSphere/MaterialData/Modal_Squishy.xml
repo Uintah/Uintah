@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!-- Definitely not quartz grains -->
+<Uintah_Include>
+<!--
+   <categoryName> Monocrystalline quartz grains </categoryName>
+   <subCategory> Quartz grains </subCategory>
+   <superCategory> Grains </superCategory>
+-->
+   <modalID> 77 </modalID>
+   <include href="Mat_Squishy.xml"/>
+</Uintah_Include>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<Uintah_Include>
+  <geom_object>
+    <tri>
+      <name> GeometryData/Modal_33/Group_0/Mesh_1_Group_0</name>
+    </tri>
+    <res>[1,1,1]</res>
+    <velocity>[0.0000,0.0000,0.0000]</velocity>
+    <temperature>300.0</temperature>
+    <color>0.000010</color>
+  </geom_object>
+</Uintah_Include>

@@ -127,6 +127,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("specific_heat",d_specificHeat);
   // For Cyberstone only
   ps->getWithDefault("modalID", d_modalID, -99);
+  ps->getWithDefault("PistonMaterial", d_isPistonMaterial, false);
   d_needSurfParticles = false;
   
   // Assume the the centered specific heat is C_v
@@ -343,6 +344,11 @@ double MPMMaterial::getInitialDensity() const
 int MPMMaterial::getModalID() const
 {
   return d_modalID;
+}
+
+bool MPMMaterial::getIsPistonMaterial() const
+{
+  return d_isPistonMaterial;
 }
 
 bool MPMMaterial::getNeedSurfaceParticles() const

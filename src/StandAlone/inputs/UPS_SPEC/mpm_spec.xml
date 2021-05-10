@@ -209,6 +209,7 @@
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
         <modalID                         spec="OPTIONAL INTEGER" />
+        <PistonMaterial                  spec="OPTIONAL BOOLEAN" />
 
         <include href="constitutive_models.xml" />
         <!--__________________________________-->

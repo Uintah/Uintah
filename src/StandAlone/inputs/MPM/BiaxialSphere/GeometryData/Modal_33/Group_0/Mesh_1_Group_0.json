@@ -1,0 +1,21 @@
+{
+  "color": "0.000010",
+  "guid": "sphere1",
+  "modal_id": 33,
+  "source_file": "sphere1",
+  "parent_guid": "",
+  "illite_coat_pct": 0.0,
+  "contact_id": 0,
+  "group": 0,
+  "c_matrix_array": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ]
+}
