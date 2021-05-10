@@ -193,7 +193,7 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass, ptemperature,pvolume_new;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<double> pVisPlasStrainOld, pOmegaOld;
-    constParticleVariable<Matrix3> velGrad, pDefGrad_new;
+    constParticleVariable<Matrix3> velGrad, pDefGrad_new, pDefGrad;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -204,6 +204,7 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,       lb->pTemperatureLabel,        pset);
     old_dw->get(pVisPlasStrainOld,      pViscoPlasticStrainLabel, pset);
     old_dw->get(pOmegaOld,              pOmegaLabel,              pset);
+    old_dw->get(pDefGrad,           lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(pvolume_new,        lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(velGrad,            lb->pVelGradLabel_preReloc,   pset);
@@ -238,18 +239,33 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
+      // get the volumetric part of the deformation
+      double J = pDefGrad_new[idx].Determinant();
+
+      // Compute polar decomposition of F^n
+      Matrix3 tensorR, tensorU;
+      pDefGrad[idx].polarDecompositionRMB(tensorU,tensorR);
+
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
       Matrix3 D = 0.5*(velGrad[idx] + velGrad[idx].Transpose());
+
+      // Compute the unrotated symmetric part of the velocity gradient
+      D = (tensorR.Transpose())*(D*tensorR);
       double DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
-      // Compute trial stress
-      double P_old = onethird*pstress[idx].Trace();
-      Matrix3  tensorS = pstress[idx] - P_old*Identity;
+      // Compute trial stress (or just use old stress)
+      Matrix3 stressOld = pstress[idx];
+
+      // Unrotate the old deviatoric stress
+      stressOld = (tensorR.Transpose())*(stressOld*tensorR);
+      double P_old = onethird*stressOld.Trace();
+      Matrix3  tensorS = stressOld - P_old*Identity;
+
       // Compute trial deviatoric stress based, assuming elastic behavior
 //      Matrix3  trialS  = tensorS + DPrime*(2*G*delT);
-      Matrix3  trialS  = tensorS;
+      Matrix3  trialS = tensorS;
 
       Vector  eigVal;
       Matrix3 eigVec;
@@ -305,12 +321,12 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       epsDotVec_vp[2] = (epsDotBar_vp*twothird/vonMisesKach)
                       * (KachDev(2,2) - 0.5*(KachDev(0,0)+KachDev(1,1)));
 
-
       Matrix3 epsDotMat_vp(0.);
       for(int i=0;i<3;i++){
 //      cout << "epsDotVec_vp[" << i << "] = " << epsDotVec_vp[i] << endl;
         epsDotMat_vp += epsDotVec_vp[i]*Matrix3(eigVector[i],eigVector[i]);
       }
+
       // This is Eq. 2.10 modified with some personal communication
       // with Ben Reedlun of SNL
       double sigKachDB =  B2*(KachPress - B1/(1. - w.maxComponent() ));
@@ -323,6 +339,9 @@ void Salt::computeStressTensor(const PatchSubset* patches,
 //        wdot = 0.;
       }
 
+      // Carry out polar decomposition on F^(n+1)
+      pDefGrad_new[idx].polarDecompositionRMB(tensorU,tensorR);
+
       // Integrate damage for this particle
       pOmegaNew[idx] = pOmegaOld[idx] + wdot*delT;
 
@@ -330,11 +349,14 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       Matrix3 epsDotEl = DPrime - epsDotMat_vp;
 
       // Use elastic part of strain rate to update stress
-      pstress_new[idx] = pstress[idx] + 
+      pstress_new[idx] = stressOld + 
                          (epsDotEl*2.*G + Identity*bulk*DTrace)*delT;
 
+      // Compute the rotated stress at the end of the current timestep
+      pstress_new[idx] = (tensorR*pstress_new[idx])*(tensorR.Transpose());
+
       // Compute the strain energy for all the particles
-      Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+//      Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
       // This is wrong for this model for now
 //      double e = (D(0,0)*AvgStress(0,0) +
@@ -345,9 +367,6 @@ void Salt::computeStressTensor(const PatchSubset* patches,
 //                  D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
 //      se += e;
-
-      // get the volumetric part of the deformation
-      double J = pDefGrad_new[idx].Determinant();
 
       // compute wave speed on the particle
       double rho_cur = rho_orig/J;
