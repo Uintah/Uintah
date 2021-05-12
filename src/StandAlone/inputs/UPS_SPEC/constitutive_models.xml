@@ -64,6 +64,10 @@
 	  </mode>
 	</viscoelastic_series>
 	
+    <n1                            spec="OPTIONAL DOUBLE" />
+    <n2                            spec="OPTIONAL DOUBLE" />
+    <omega_c                       spec="OPTIONAL DOUBLE" />
+    <omega_t                       spec="OPTIONAL DOUBLE" />
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
