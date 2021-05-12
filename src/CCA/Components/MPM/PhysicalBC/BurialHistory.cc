@@ -64,6 +64,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double UDT       = 0.0;
      double sigma_h   = 0.0;
      double sigma_H   = 0.0;
+     double sigma_V   = 0.0;
      bool   EOC       = false;
      timePoint->require("time_Ma",                      time);
      timePoint->require("temperature_K",                temp);
@@ -75,6 +76,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      timePoint->getWithDefault("UintahDissolutionTime", UDT,     0.0);
      timePoint->getWithDefault("sigma_h_bar",           sigma_h, 0.0);
      timePoint->getWithDefault("sigma_H_bar",           sigma_H, 0.0);
+     timePoint->getWithDefault("sigma_V_bar",           sigma_V, 0.0);
      timePoint->getWithDefault("EndOnCompletion",       EOC,     false);
 
      d_time_Ma.push_back(time);
@@ -87,6 +89,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      d_uintahDissolutionTime.push_back(UDT);
      d_sigma_h_bar.push_back(sigma_h);
      d_sigma_H_bar.push_back(sigma_H);
+     d_sigma_V_bar.push_back(sigma_V);
      d_endOnCompletion.push_back(EOC);
    }
    burHist->getWithDefault("current_index", d_CI, d_time_Ma.size()-1);
@@ -118,5 +121,7 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
     time_ps->appendElement("EndOnCompletion",      d_endOnCompletion[i]);
     time_ps->appendElement("sigma_h",              d_sigma_h_bar[i]);
     time_ps->appendElement("sigma_H",              d_sigma_H_bar[i]);
+    time_ps->appendElement("sigma_V",              d_sigma_V_bar[i]);
+    time_ps->appendElement("EndOnCompletion",      d_endOnCompletion[i]);
   }
 }

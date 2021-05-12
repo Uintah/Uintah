@@ -62,6 +62,7 @@ DESCRIPTION
         effectiveStress_bar     Effective Stress in bar
         sigma_h_bar             Small horizontal Stress in bar
         sigma_H_bar             Large horizontal Stress in bar
+        sigma_V_bar             Vertical Stress in bar
         water_Saturation_pct    Water Saturation in percent
         UintahDissolutionTime   amount of Uintah time to spend in the
                                 dissolution portion of this level
@@ -132,6 +133,12 @@ WARNING
       inline double getSigma_H(int index) {
        return ((index < (int) d_time_Ma.size()) ? 
                                             d_sigma_H_bar[index] : 0);
+      }
+
+      // Get the vertical stress at a given index
+      inline double getSigma_V(int index) {
+       return ((index < (int) d_time_Ma.size()) ? 
+                                            d_sigma_V_bar[index] : 0);
       }
 
       // Get the water saturation percentage at a given index
@@ -214,6 +221,7 @@ WARNING
       std::vector<double> d_effectiveStress_bar;
       std::vector<double> d_sigma_h_bar;
       std::vector<double> d_sigma_H_bar;
+      std::vector<double> d_sigma_V_bar;
       std::vector<double> d_waterSaturation_pct;
       std::vector<double> d_uintahDissolutionTime;
       std::vector<bool>   d_endOnCompletion;
