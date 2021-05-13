@@ -101,6 +101,7 @@
         <effectiveStress_bar   spec="REQUIRED DOUBLE" />
         <sigma_h_bar           spec="OPTIONAL DOUBLE" />
         <sigma_H_bar           spec="OPTIONAL DOUBLE" />
+        <sigma_V_bar           spec="OPTIONAL DOUBLE" />
         <waterSaturation_pct   spec="REQUIRED DOUBLE" />
         <UintahDissolutionTime spec="OPTIONAL DOUBLE" />
         <EndOnCompletion       spec="OPTIONAL BOOLEAN" />
@@ -132,6 +133,7 @@
           <outward_normal         spec="OPTIONAL BOOLEAN" />
           <load_curve             spec="REQUIRED NO_DATA" >
             <use_burial_history   spec="OPTIONAL BOOLEAN" />
+            <burial_history_entry spec="OPTIONAL STRING" />
             <id                   spec="REQUIRED INTEGER" />
             <material             spec="OPTIONAL INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >

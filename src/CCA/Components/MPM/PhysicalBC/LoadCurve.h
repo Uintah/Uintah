@@ -167,6 +167,7 @@ WARNING
       int d_matl;
       double d_curTime;
       bool d_UBH;
+      std::string d_BHE;
    };
 
    // Construct a load curve from the problem spec
@@ -181,6 +182,7 @@ WARNING
      loadCurve->require("id", d_id);
      loadCurve->getWithDefault("material", d_matl, -99);
      loadCurve->getWithDefault("use_burial_history", d_UBH, false);
+     loadCurve->getWithDefault("burial_history_entry", d_BHE, "effectiveStress_bar");
      if(d_UBH){
       ProblemSpecP root = ps->getRootNode();
       ProblemSpecP TimeBlock = root->findBlock("Time");
@@ -204,14 +206,26 @@ WARNING
             timePoint != nullptr;
             timePoint = timePoint->findNextBlock("time_point") ) {
           double time      = 0.0;
-          double effStress = 0.0;
+          double Stress    = 0.0;
           double UDT       = 0.0;
-          timePoint->require("time_Ma",                      time);
-          timePoint->require("effectiveStress_bar",          effStress);
+          timePoint->require("time_Ma",                 time);
+          if(d_BHE == "effectiveStress_bar"){
+            timePoint->require("effectiveStress_bar",   Stress);
+            std::cout << "d_BHE = " << d_BHE << std::endl;
+          } else if(d_BHE == "sigma_h_bar"){
+            timePoint->require("sigma_h_bar",           Stress);
+            std::cout << "d_bHE = " << d_BHE << std::endl;
+          } else if(d_BHE == "sigma_H_bar"){
+            timePoint->require("sigma_H_bar",           Stress);
+            std::cout << "d_BhE = " << d_BHE << std::endl;
+          } else if(d_BHE == "sigma_V_bar"){
+            timePoint->require("sigma_V_bar",           Stress);
+            std::cout << "d_BHe = " << d_BHE << std::endl;
+          }
           timePoint->getWithDefault("UintahDissolutionTime", UDT, 0);
 
           time_Ma.push_back(time);
-          effectiveStress_bar.push_back(effStress);
+          effectiveStress_bar.push_back(Stress);
           UintahDissolutionTime.push_back(UDT);
         }
         int CI = 0;
@@ -306,6 +320,7 @@ WARNING
        lc_ps->appendElement("id",d_id);
        lc_ps->appendElement("material",d_matl);
        lc_ps->appendElement("use_burial_history", false);
+       lc_ps->appendElement("burial_history_entry", d_BHE);
        for (int i = 0; i<(int)d_time.size();i++) {
          ProblemSpecP time_ps = lc_ps->appendChild("time_point");
          time_ps->appendElement("time",      d_time[i]);
