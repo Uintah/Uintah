@@ -100,13 +100,13 @@ class Relocate {
                                     const std::vector<std::vector<const VarLabel*> > & otherLabels,
                                     const MaterialSet                                * matls);
 
-    const MaterialSet* getMaterialSet() const { return reloc_matls;}
+    const MaterialSet* getMaterialSet() const { return m_reloc_matls;}
 
 
   private:
 
     // varlabels created for the modifies version of relocation
-    std::vector<const Uintah::VarLabel*> destroyMe_;
+    std::vector<const Uintah::VarLabel*> m_destroyMe;
     
     //////////
     // Callback function for particle relocation that doesn't use pre-Relocation variables.
@@ -140,16 +140,16 @@ class Relocate {
    
     void finalizeCommunication();
 
-    const VarLabel                             * reloc_old_posLabel{ nullptr };
-    std::vector<std::vector<const VarLabel*> >   reloc_old_labels;
-    const VarLabel                             * reloc_new_posLabel{ nullptr };
-    std::vector<std::vector<const VarLabel*> >   reloc_new_labels;
-    const VarLabel                             * particleIDLabel_{   nullptr };
-    const MaterialSet                          * reloc_matls{        nullptr };
-    LoadBalancer                               * m_lb{               nullptr };
-    std::vector<char*>                          recvbuffers;
-    std::vector<char*>                          sendbuffers;
-    std::vector<MPI_Request>                    sendrequests;
+    const VarLabel                             * m_reloc_old_posLabel{ nullptr };
+    std::vector<std::vector<const VarLabel*> >   m_reloc_old_labels;
+    const VarLabel                             * m_reloc_new_posLabel{ nullptr };
+    std::vector<std::vector<const VarLabel*> >   m_reloc_new_labels;
+    const VarLabel                             * m_particleIDLabel{   nullptr };
+    const MaterialSet                          * m_reloc_matls{       nullptr };
+    LoadBalancer                               * m_lb{                nullptr };
+    std::vector<char*>                          m_recv_buffers;
+    std::vector<char*>                          m_send_buffers;
+    std::vector<MPI_Request>                    m_send_requests;
 
 };
 
