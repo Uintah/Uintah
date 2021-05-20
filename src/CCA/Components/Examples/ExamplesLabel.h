@@ -34,6 +34,7 @@ namespace Uintah {
   class ExamplesLabel {
   public:
 
+    //__________________________________
     // For SimpleCFD
     const VarLabel* bctype;
     const VarLabel* xvelocity;
@@ -63,6 +64,7 @@ namespace Uintah {
     const VarLabel* vcforce;
     const VarLabel* NN;
 
+    //__________________________________
     // For AMRSimpleCFD
     const VarLabel* pressure2;
     const VarLabel* pressure2_matrix;
@@ -73,7 +75,10 @@ namespace Uintah {
     const VarLabel* density_gradient_mag;
 
 
+    //__________________________________
     // For ParticleTest1
+    const VarLabel* timeStepLabel;
+    const VarLabel* dummyLabel;
     const VarLabel* pXLabel;
     const VarLabel* pXLabel_preReloc;
     const VarLabel* pMassLabel;
