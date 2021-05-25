@@ -169,6 +169,7 @@
         <load_curve>
           <id>1</id>
           <use_burial_history> true </use_burial_history>
+          <burial_history_entry> sigma_V_bar </burial_history_entry> 
         </load_curve>
       </pressure>
       <pressure>
@@ -181,6 +182,7 @@
         <load_curve>
           <id>2</id>
           <use_burial_history> true </use_burial_history>
+          <burial_history_entry> sigma_H_bar </burial_history_entry> 
         </load_curve>
       </pressure>
     </MPM>

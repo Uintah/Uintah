@@ -11,6 +11,9 @@
      <depth_m> 4670.9 </depth_m>
      <fluidOverPressure_bar> 33.8 </fluidOverPressure_bar>
      <effectiveStress_bar> 500.0 </effectiveStress_bar>
+     <sigma_h_bar> 100.0 </sigma_h_bar>
+     <sigma_H_bar> 200.0 </sigma_H_bar>
+     <sigma_V_bar> 500.0 </sigma_V_bar>
      <waterSaturation_pct> 1000 </waterSaturation_pct>
      <fluidPressure_bar> 514.7618 </fluidPressure_bar>
      <UintahDissolutionTime> 0.01 </UintahDissolutionTime>
@@ -21,6 +24,9 @@
      <depth_m> 4670.9 </depth_m>
      <fluidOverPressure_bar> 33.8 </fluidOverPressure_bar>
      <effectiveStress_bar> 500.0 </effectiveStress_bar>
+     <sigma_h_bar> 100.0 </sigma_h_bar>
+     <sigma_H_bar> 200.0 </sigma_H_bar>
+     <sigma_V_bar> 500.0 </sigma_V_bar>
      <waterSaturation_pct> 1000 </waterSaturation_pct>
      <fluidPressure_bar> 514.7618 </fluidPressure_bar>
      <UintahDissolutionTime> 0.01 </UintahDissolutionTime>
@@ -31,6 +37,9 @@
      <depth_m> 4625.57 </depth_m>
      <fluidOverPressure_bar> 21.3 </fluidOverPressure_bar>
      <effectiveStress_bar> 10.0  </effectiveStress_bar>
+     <sigma_h_bar> 1.0 </sigma_h_bar>
+     <sigma_H_bar> 2.0 </sigma_H_bar>
+     <sigma_V_bar> 5.0 </sigma_V_bar>
      <waterSaturation_pct> 1000 </waterSaturation_pct>
      <fluidPressure_bar> 497.5941 </fluidPressure_bar>
      <UintahDissolutionTime> 0.0 </UintahDissolutionTime>
