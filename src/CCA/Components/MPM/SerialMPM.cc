@@ -5013,7 +5013,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
              IntVector node = ni_cpdi[k];
               vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
               sumSk+= gmass[adv_matl][node]*S_cpdi[k];
-              surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+              surf -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S_cpdi[k];
             }
             vel/=sumSk;
             tx_new[idx] = tx[idx] + vel*delT;
