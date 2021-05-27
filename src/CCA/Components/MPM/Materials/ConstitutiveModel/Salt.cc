@@ -60,6 +60,8 @@ Salt::Salt(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("B1",d_initialData.B1);
   ps->require("B2",d_initialData.B2);
   ps->require("D",d_initialData.D);
+  ps->getWithDefault("S1",d_initialData.S1,0.);
+  ps->getWithDefault("TiMB",d_initialData.TiMB,-999.9);
 
   initializeLocalMPMLabels();
 }
@@ -91,6 +93,8 @@ void Salt::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("B1",d_initialData.B1);
   cm_ps->appendElement("B2",d_initialData.B2);
   cm_ps->appendElement("D",d_initialData.D);
+  cm_ps->appendElement("S1",d_initialData.S1);
+  cm_ps->appendElement("TiMB",d_initialData.TiMB);
 }
 
 Salt* Salt::clone()
@@ -172,6 +176,17 @@ void Salt::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* new_dw)
 {
   double rho_orig = matl->getInitialDensity();
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, lb->simulationTimeLabel);
+  double simTime = simTimeVar;
+
+  // Scale has units of years                 // 3.1536e13 us = 1 year
+  //double Scale = (simTime - 284.)*3.1536e9;  
+//  double Scale = (simTime - 284.02477415265162)*1e6;
+  double S1 = d_initialData.S1;
+  double TiMB = d_initialData.TiMB;
+//  double Scale = (simTime - TiMB)*(simTime-TiMB)*S1;
+  double Scale = (simTime-TiMB)*S1;
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
@@ -223,8 +238,10 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
     double A1 = d_initialData.A1; // units 1/seconds
+    A1*=Scale;
     double n1 = d_initialData.n1;  
     double A2 = d_initialData.A2;  // units 1/seconds 
+    A2*=Scale;
     double n2 = d_initialData.n2;
     double wc = d_initialData.wc;
     double wt = d_initialData.wt;
@@ -451,6 +468,7 @@ void Salt::addComputesAndRequires(Task* task,
   Ghost::GhostType gnone = Ghost::None;
   task->requires(Task::OldDW, pViscoPlasticStrainLabel,  matlset,gnone);
   task->requires(Task::OldDW, pOmegaLabel,               matlset,gnone);
+  task->requires(Task::OldDW, lb->simulationTimeLabel);
   task->computes(             pViscoPlasticStrainLabel_preReloc, matlset);
   task->computes(             pOmegaLabel_preReloc,              matlset);
 }

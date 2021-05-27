@@ -59,6 +59,8 @@ namespace Uintah {
       double wc;
       double wt;
       double D;
+      double S1;
+      double TiMB;
     };
 
     const VarLabel* pViscoPlasticStrainLabel;      //ViscoPlastic Strain
