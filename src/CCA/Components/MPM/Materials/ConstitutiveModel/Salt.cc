@@ -60,8 +60,8 @@ Salt::Salt(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("B1",d_initialData.B1);
   ps->require("B2",d_initialData.B2);
   ps->require("D",d_initialData.D);
-  ps->getWithDefault("S1",d_initialData.S1,0.);
-  ps->getWithDefault("TiMB",d_initialData.TiMB,-999.9);
+  ps->getWithDefault("S1",d_initialData.S1,1.);
+  ps->getWithDefault("TiMB",d_initialData.TiMB,0.0);
 
   initializeLocalMPMLabels();
 }
