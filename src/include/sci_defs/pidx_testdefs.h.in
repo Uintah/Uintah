@@ -25,7 +25,7 @@
 #ifndef SCI_PIDX_DEFS_H
 #define SCI_PIDX_DEFS_H
 
-@DEF_PIDX@
+#cmakedefine HAVE_PIDX
 #define MPIPP_H // just for OSX?
 
 #endif

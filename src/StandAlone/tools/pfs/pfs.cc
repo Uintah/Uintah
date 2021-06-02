@@ -24,26 +24,19 @@
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Variables/Array3.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/Grid/GridP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Math/Primes.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
 #include   <iostream>
-#include   <fstream>
-#include   <cstring>
 
 using namespace Uintah;
 using namespace std;

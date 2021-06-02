@@ -25,13 +25,13 @@
 #ifndef SCI_COMPILE_DEFS_H
 #define SCI_COMPILE_DEFS_H
 
-#define MAKE_COMMAND "@MAKE@"
+#define MAKE_COMMAND "@CMAKE_MAKE_PROGRAM@"
 
 // Display flags that were used to compile it.
-#define CFLAGS "@CFLAGS@"
-#define CXXFLAGS "@CXXFLAGS@"
+#define CFLAGS "@CMAKE_C_FLAGS@"
+#define CXXFLAGS "@CMAKE_CXX_FLAGS@"
 
-@STATIC_BUILD_DEF@
+#cmakedefine STATIC_BUILD
 
 #endif
 

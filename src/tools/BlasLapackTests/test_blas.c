@@ -29,15 +29,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define RANGER
 
-#if defined( RANGER )
-#  include <mkl_blas.h>
-#elif defined( DELICATEARCH )
-#  include <acml.h>
-#else
-#  include <cblas.h>
-#endif
+#include <include/sci_defs/blas_defs.h>
+
+//#define RANGER
+//#if defined( RANGER )
+//#  include <mkl_blas.h>
+//#elif defined( DELICATEARCH )
+//#  include <acml.h>
+//#else
+//#  include <cblas.h>
+//#endif
 
 double m[] = {
   3, 1, 3,        

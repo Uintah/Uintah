@@ -27,7 +27,6 @@
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Math/Mat.h>
 
 using namespace Uintah;
    

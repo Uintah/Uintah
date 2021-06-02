@@ -25,8 +25,7 @@
 #ifndef SCI_OSX_DEFS_H
 #define SCI_OSX_DEFS_H
 
-@DEF_OSX@
-
-@DEF_OSX_SNOW_LEOPARD_OR_LATER@
+#cmakedefine01 IS_OSX
+#cmakedefine OSX_SNOW_LEOPARD_OR_LATER
 
 #endif

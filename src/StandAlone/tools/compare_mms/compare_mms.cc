@@ -48,20 +48,15 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Exceptions/InvalidValue.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
-#include <Core/OS/Dir.h>
 
 #include <cfloat>
-#include <climits>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
-#include <iomanip>
 #include <cmath>
 #include <cstdio>
 

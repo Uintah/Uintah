@@ -25,8 +25,7 @@
 #ifndef SCI_BOOST_DEFS_H
 #define SCI_BOOST_DEFS_H
 
-@DEF_BOOST@
-@DEF_BOOST_FILESYSTEM_NAMESPACE_V3@
+#cmakedefine01 HAVE_BOOST
 
 #endif
 

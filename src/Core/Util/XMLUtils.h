@@ -42,8 +42,6 @@
 #ifndef SCI_Core_XMLUtil_h
 #define SCI_Core_XMLUtil_h 1
 
-#include <stdio.h>
-
 #include <string>
 #include <vector>
 

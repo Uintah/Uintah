@@ -24,9 +24,7 @@
 
 
 #include <Core/Exceptions/ConvergenceFailure.h>
-#include <Core/Geometry/IntVector.h>
 #include <sstream>
-#include <iostream>
 
 using namespace Uintah;
 

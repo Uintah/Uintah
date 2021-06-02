@@ -25,7 +25,7 @@
 #ifndef UINTAH_GPERFTOOLS_DEFS_H
 #define UINTAH_GPERFTOOLS_DEFS_H
 
-@DEF_GPERFTOOLS@
+#cmakedefine USE_GPERFTOOLS
 
 #ifdef USE_GPERFTOOLS
 #  include <gperftools/profiler.h>

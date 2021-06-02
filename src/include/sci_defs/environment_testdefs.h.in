@@ -29,8 +29,8 @@
 #  error "Don't #include this file.  #include <Core/Util/Environment.h> instead"
 #endif
 
-#define SCIRUN_SRCDIR "@scirun_src_dir@"
-#define SCIRUN_OBJDIR "@scirun_obj_dir@"
+#define SCIRUN_SRCDIR "@CMAKE_SOURCE_DIR@"
+#define SCIRUN_OBJDIR "@CMAKE_BINARY_DIR@"
 
 #endif
 

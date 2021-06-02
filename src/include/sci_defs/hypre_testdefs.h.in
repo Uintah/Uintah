@@ -25,7 +25,7 @@
 #ifndef SCI_HYPRE_DEFS_H
 #define SCI_HYPRE_DEFS_H
 
-@DEF_HYPRE@
+#cmakedefine HAVE_HYPRE
 
 /* 
    For reference, (if hypre is enabled, then) you are linking verses this Hypre:
@@ -38,11 +38,9 @@
    verses a new Hypre, so please leave it here.)
 */
 
-@DEF_HYPRE_VERSION_MAJOR@
-
-@DEF_HYPRE_VERSION_MINOR@
-
-@DEF_HYPRE_VERSION_PATCH@
+#define HYPRE_VERSION_MAJOR @HYPRE_VERSION_MAJOR@
+#define HYPRE_VERSION_MINOR @HYPRE_VERSION_MINOR@
+#define HYPRE_VERSION_PATCH @HYPRE_VERSION_PATCH@
 
 
 #endif

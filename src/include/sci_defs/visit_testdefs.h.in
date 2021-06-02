@@ -25,8 +25,8 @@
 #ifndef SCI_VISIT_DEFS_H
 #define SCI_VISIT_DEFS_H
 
-@DEF_VISIT@
-@VISIT_PATH@
+#cmakedefine HAVE_VISIT
+@VISIT_PATH@  // jcs fix this.
 
 #endif
 

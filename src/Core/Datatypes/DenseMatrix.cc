@@ -37,8 +37,6 @@
 #  define SCI_ASSERTION_LEVEL 1
 #endif
 
-#include <cstdio>
-
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/blas_defs.h>
 
@@ -49,7 +47,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/Assert.h>
 #include <Core/Exceptions/FileNotFound.h>
 #include <iostream>
 #include <vector>

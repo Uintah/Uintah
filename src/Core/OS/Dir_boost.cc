@@ -45,11 +45,7 @@
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#if defined( UINTAH_BOOST_FILESYSTEM_NAMESPACE_V3)
-  namespace bfs = boost::filesystem3;
-#else
-  namespace bfs = boost::filesystem;
-#endif
+namespace bfs = boost::filesystem;
 namespace bsys = boost::system;
 
 using namespace std;

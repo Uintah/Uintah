@@ -66,7 +66,7 @@ public:
   inline Vector& operator=(const Vector&);
   inline Vector& operator=(const double&);
   inline Vector& operator=(const int&);
-  
+
   static Vector fromString( const std::string & source ); // Creates a Vector from a string that looksl like "[Num, Num, Num]".
 
 #ifdef COMMENT_OUT
@@ -101,10 +101,18 @@ public:
   }
 
   // checks if one vector is exactly the same as another
-  int operator==(const Vector&) const;
-  int operator!=(const Vector&) const;
+  inline int operator==(const Vector& v) const{
+    return v.x_ == x_ && v.y_ == y_ && v.z_ == z_;
+  }
 
-  inline Vector operator*(const double) const;
+  inline int operator!=(const Vector& v) const{
+    return v.x_ != x_ || v.y_ != y_ || v.z_ != z_;
+  }
+
+  inline Vector operator*(const double s) const{
+    return Vector(x_*s, y_*s, z_*s);
+  }
+
   inline Vector operator*(const Vector&) const;
   inline Vector& operator*=(const double);
   inline Vector& operator*=(const Vector&);
@@ -137,16 +145,16 @@ public:
   inline double w() const;
 
   void rotz90(const int);
-    
+
   std::string get_string() const;
 
   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
   friend class Point;
-    
+
   friend inline Vector Interpolate(const Vector&, const Vector&, double);
-    
+
   void find_orthogonal(Vector&, Vector&) const;
   bool check_find_orthogonal(Vector&, Vector&) const;
 
@@ -181,12 +189,12 @@ public:
   }
 
   inline void Set(double x, double y, double z)
-    { 
+    {
       x_ = x;
       y_ = y;
       z_ = z;
     }
-      
+
   friend std::ostream& operator<<(std::ostream& os, const Vector& p);
   friend std::istream& operator>>(std::istream& os, Vector& p);
 
@@ -276,13 +284,8 @@ inline bool operator>=(Vector v1, Vector v2)
 
 
 
-inline Vector Vector::operator*(const double s) const
-{
-    return Vector(x_*s, y_*s, z_*s);
-}
 
-inline Vector& Vector::operator*=(const Vector& v)
-{
+inline Vector& Vector::operator*=(const Vector& v){
   x_ *= v.x_;
   y_ *= v.y_;
   z_ *= v.z_;

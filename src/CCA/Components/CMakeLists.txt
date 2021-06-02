@@ -1,0 +1,86 @@
+add_subdirectory( Application )
+add_subdirectory( DataArchiver )
+add_subdirectory( LoadBalancers )
+add_subdirectory( Parent )
+add_subdirectory( ProblemSpecification )
+add_subdirectory( Regridder )
+add_subdirectory( Schedulers )
+add_subdirectory( SimulationController )
+add_subdirectory( Solvers )
+add_subdirectory( SwitchingCriteria )
+
+set( LIB_COLLECTION
+        CCA_Components_Parent
+        CCA_Components_Application
+        CCA_Components_Solvers
+        CCA_Components_DataArchiver
+        CCA_Components_SimulationController
+        CCA_Components_LoadBalancers
+        CCA_Components_SwitchingCriteria
+    )
+
+
+# Build components as requested in configuration
+set( NO_COMPONENTS True )
+
+if( ENABLE_ARCHES )
+    set( NO_COMPONENTS False )
+    add_subdirectory( Arches )
+    target_link_libraries( Component_Libs INTERFACE CCA_Components_Arches )
+    if( ENABLE_MPM )
+        add_subdirectory( MPMArches )
+        target_link_libraries( Component_Libs INTERFACE CCA_Components_MPMArches )
+    endif( ENABLE_MPM )
+endif( ENABLE_ARCHES )
+
+if( ENABLE_EXAMPLES )
+    set( NO_COMPONENTS False )
+    add_subdirectory( Examples )
+#    target_link_libraries( Component_Libs INTERFACE CCA_Components_Examples )
+    set( LIB_COLLECTION ${LIB_COLLECTION} CCA_Components_Examples )
+endif( ENABLE_EXAMPLES )
+
+if( ENABLE_ICE )
+    set( NO_COMPONENTS False )
+    add_subdirectory( ICE )
+    target_link_libraries( Component_Libs INTERFACE CCA_Components_ICE )
+    if( ENABLE_MPM )
+        add_subdirectory( MPMICE )
+        target_link_libraries( Component_Libs INTERFACE CCA_Components_MPMICE )
+    endif( ENABLE_MPM )
+endif( ENABLE_ICE )
+
+if( ENABLE_MPM )
+    set( NO_COMPONENTS False )
+    add_subdirectory( MPM )
+    target_link_libraries( Component_Libs INTERFACE CCA_Components_MPM )
+endif( ENABLE_MPM )
+
+if( ENABLE_WASATCH )
+    set( NO_COMPONENTS False )
+    add_subdirectory( Wasatch )
+    target_link_libraries( Component_Libs INTERFACE CCA_Components_Wasatch )
+endif( ENABLE_WASATCH )
+
+if( NOT NO_COMPONENTS )
+    add_subdirectory( OnTheFlyAnalysis )
+    add_subdirectory( Models )
+    add_subdirectory( PostProcessUda )
+endif( NOT NO_COMPONENTS )
+
+set( LIB_COLLECTION ${LIB_COLLECTION}
+        CCA_Components_OnTheFlyAnalysis
+        CCA_Components_Models
+        CCA_Components_Schedulers
+        CCA_Components_PostProcessUda
+        CCA_Components_ProblemSpecification
+        CCA_Ports
+    )
+
+# create a library that is just a collection of all of the components we need to link against
+# when components are activated, they can add themselves to this interface
+# Note that ordering here is important, since dependency analysis was never properly done in Uintah library development
+add_library( Component_Libs INTERFACE )
+target_link_libraries( Component_Libs INTERFACE
+        ${LIB_COLLECTION}
+    )

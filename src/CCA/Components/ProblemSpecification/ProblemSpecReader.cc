@@ -23,10 +23,8 @@
  */
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Parallel/ProcessorGroup.h> // process determination
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h> // for SCIRUN_SRCDIR
@@ -2354,7 +2352,7 @@ ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
         // If this is the last element in the xmlPath "apples" then search
         // for the correct attribute(s) "type" & "size" and value(s) "granny" & "small"
 
-        if ( (i == elements.size() -1 ) ){
+        if ( i == elements.size() -1 ){
 
           const int depth = 0;
           bool foundAllAttr = findAttributeValue( node, nodeAttributes, depth );

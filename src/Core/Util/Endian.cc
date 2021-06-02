@@ -63,21 +63,6 @@ void swapbytes( IntVector &i )   { // probably dangerous, but effective
                               int* p = (int *)(&i);
                               SWAP_4(*p); SWAP_4(*++p); SWAP_4(*++p); }
 
-bool isBigEndian()
-{
-  short i = 0x4321;
-  if((*(char *)&i) != 0x21 ){
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool isLittleEndian()
-{
-  return !isBigEndian();
-}
- 
 
 std::string endianness()
 {

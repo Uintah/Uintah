@@ -31,7 +31,7 @@
 
 #define USE_SCI_THROW @THROW_LEVEL@
 
-@EXCEPTIONS_CRASH_DEF@
+#cmakedefine EXCEPTIONS_CRASH_DEF
 
 #endif
 

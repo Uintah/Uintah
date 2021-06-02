@@ -51,8 +51,6 @@
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/MinMax.h>
-#include <Core/OS/Dir.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/StringUtil.h>
@@ -62,7 +60,6 @@
 #include <iterator>
 #include <iostream>
 
-#include <sstream>
 #include <string>
 #include <vector>
 

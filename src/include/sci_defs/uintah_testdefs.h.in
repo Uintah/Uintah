@@ -27,24 +27,23 @@
 
 @DEF_ZOLTAN@
 
-@DEF_TABPROPS@
 @DEF_RADPROPS@
 
-@DEF_ARCHES@
-@DEF_EXAMPLES@
-@DEF_FVM@
-@DEF_ICE@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
-@DEF_PHASEFIELD@
-@DEF_WASATCH@
+#cmakedefine NO_ARCHES
+#cmakedefine NO_EXAMPLES
+#cmakedefine NO_FVM
+#cmakedefine NO_ICE
+#cmakedefine NO_MPM
+#cmakedefine NO_MODELS_RADIATION
+#cmakedefine NO_PHASEFIELD
+#cmakedefine NO_WASATCH
+
+#cmakedefine NO_RAY_SCATTER
+
+#cmakedefine HAVE_CXX11
 
 @DEF_NO_FORTRAN@
 @DEF_FORTRAN_UNDERSCORE@
-
-@DEF_RAY_SCATTER@
-
-@DEF_CXX11@
 
 #if !defined( FIX_NAME )
 #  if defined( FORTRAN_UNDERSCORE_END )

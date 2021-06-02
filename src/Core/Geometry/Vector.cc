@@ -36,9 +36,6 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Math/Expon.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/Assert.h>
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
@@ -142,18 +139,6 @@ istream& operator>>( istream& is, Vector& v)
   v=Vector(x,y,z);
   return is;
 }
-
-int
-Vector::operator== ( const Vector& v ) const
-{
-    return v.x_ == x_ && v.y_ == y_ && v.z_ == z_;
-}
-
-int Vector::operator!=(const Vector& v) const
-{
-    return v.x_ != x_ || v.y_ != y_ || v.z_ != z_;
-}
-
 
 void
 Vector::rotz90(const int c)

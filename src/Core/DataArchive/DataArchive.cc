@@ -45,7 +45,6 @@
 #include <Core/Grid/Variables/StaticInstantiate.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/StringUtil.h>
 #include <Core/Util/XMLUtils.h>
@@ -53,13 +52,10 @@
 #include <libxml/xmlreader.h>
 
 #include <iostream>
-#include <sstream>
 
 #include <iomanip>
-#include <fstream>
 #include <fcntl.h>
 
-#include <sys/param.h>
 #include <unistd.h>
 
 using namespace std;

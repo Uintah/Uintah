@@ -25,7 +25,8 @@
 #ifndef SCI_CUDA_DEFS_H
 #define SCI_CUDA_DEFS_H
 
-@DEF_CUDA@
+#cmakedefine HAVE_CUDA
+
 #define SCI_CUDA_ASSERTION_LEVEL @ASSERTION_LEVEL@
 
 #ifdef HAVE_CUDA

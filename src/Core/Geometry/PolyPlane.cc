@@ -37,8 +37,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <Core/Math/Matrix3.h>
-#include <iostream>
 #include <tuple>
 
 namespace Uintah {

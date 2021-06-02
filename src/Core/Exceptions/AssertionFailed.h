@@ -43,7 +43,7 @@
 
 #include <Core/Exceptions/Exception.h>
 
-#include   <string>
+#include <string>
 
 namespace Uintah {
 class AssertionFailed : public Exception {

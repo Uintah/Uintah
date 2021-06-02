@@ -87,9 +87,21 @@ void swapbytes(IntVector &i);
 void swapbytes(FILE* &i);
 void swapbytes(double* &i);
 
-bool isBigEndian();
+inline bool isBigEndian() {
+#   ifdef BIG_ENDIAN
+    return true;
+#   else
+    return false;
+#   endif
+}
 
-bool isLittleEndian();
+inline bool isLittleEndian() {
+#   ifdef BIG_ENDIAN
+    return false;
+#   else
+    return true;
+#   endif
+}
  
 std::string endianness();
 

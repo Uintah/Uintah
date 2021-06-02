@@ -1,0 +1,2 @@
+add_library( TestConsecutiveRangeSet TestConsecutiveRangeSet.cc )
+target_link_libraries( TestConsecutiveRangeSet Core_Exceptions Core_Containers TestSuite )

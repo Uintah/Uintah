@@ -25,7 +25,7 @@
 #ifndef SCI_LAPACK_DEFS_H
 #define SCI_LAPACK_DEFS_H
 
-@DEF_LAPACK@
+#cmakedefine01 HAVE_LAPACK
 
 #endif
 

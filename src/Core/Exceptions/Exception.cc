@@ -35,15 +35,12 @@
  */
 
 #include <Core/Exceptions/Exception.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Util/Assert.h>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <iomanip>
 #include <sstream>
 
 #include <unistd.h>

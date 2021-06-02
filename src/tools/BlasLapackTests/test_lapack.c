@@ -43,7 +43,9 @@ info 0
 #include <stdlib.h>
 #include <stdio.h>
 
-#define DELICATEARCH
+#include <include/sci_defs/lapack_defs.h>
+
+//#define DELICATEARCH
 
 #if defined( RANGER )
 #  include <mkl_lapack.h>

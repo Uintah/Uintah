@@ -26,7 +26,6 @@
  */
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
-//#include <Core/Containers/HashTable.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/GridP.h>

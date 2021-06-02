@@ -1,0 +1,24 @@
+add_library( CCA_Components_SimulationController
+        SimulationController.cc
+        AMRSimulationController.cc
+    )
+
+target_link_libraries( CCA_Components_SimulationController
+    PUBLIC
+        CCA_Components_DataArchiver
+        CCA_Components_PostProcessUda
+        CCA_Components_Regridder
+        CCA_Components_Schedulers
+        CCA_Ports
+        Core_DataArchive
+        Core_Exceptions
+        Core_Grid
+        Core_OS
+        Core_Parallel
+        Core_Util
+    )
+
+target_include_directories( CCA_Components_SimulationController
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}}
+    )
