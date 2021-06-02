@@ -2271,9 +2271,11 @@ ProblemSpecReader::findAttributeValue(xmlNode * node,
                                       const int depth )
 {
   // erase these items
-  nodeAttributes.erase("href");             // already found by calling method
-  nodeAttributes.erase("section");          // already found by calling method
-  nodeAttributes.erase("need_applies_to");  // Ignore.  Used by ups validation spec
+  nodeAttributes.erase("href");               // already found by calling method
+  nodeAttributes.erase("section");            // already found by calling method
+  nodeAttributes.erase("need_applies_to");    // Ignore.  Used by ups validation spec
+  nodeAttributes.erase("excludeSectionTag");  // Ignore.  user may want to exclude the section tag
+
 
   // if there are no attributes after cleanup.
   if( nodeAttributes.size() < 1 ){
@@ -2315,9 +2317,9 @@ ProblemSpecReader::findAttributeValue(xmlNode * node,
 
 
 //______________________________________________________________________
-//  This method searches the node tree for the last element in the xmlpath 
+//  This method searches the node tree for the last element in the xmlpath
 //  and for all of the requested attributes.  It returns only that node element.
-//  For example given the ups spec below the node "apples" with 
+//  For example given the ups spec below the node "apples" with
 //  attributenns/value "granny" and "small" would be returned.
 //
 //    <include href="inputs/ICE/fruitVegtables.xml" section="fruit/apples" type="granny" size="small"/>
@@ -2348,7 +2350,6 @@ ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
 
       std::string name = getNodeName(node);
 
-
       if( (node->type == XML_ELEMENT_NODE) && (name == targetElement) ){
 
         // If this is the last element in the xmlPath "apples" then search
@@ -2377,6 +2378,7 @@ ProblemSpecReader::recursiveFindElementTag( xmlNode *   nodeTree,
     }
   }
 
+  std::cout << "  foundNode: " << foundNode << std::endl;
   return foundNode;
 }
 
@@ -2430,9 +2432,12 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       xmlNode * incNodes = nullptr;
 
       //__________________________________
-      // If the user has a "section" specified
-      // find that node
+      // If the user has a "section" specified find that node.
+
+
       std::string section = nodeAttributes[ "section" ];
+
+
 
       if( section != "" ) {
 
@@ -2455,6 +2460,13 @@ ProblemSpecReader::resolveIncludes( xmlNode * nodeTree,
       else{
         // all xml nodes in the include file
         incNodes = include->children;
+      }
+
+      //__________________________________
+      // If user only wants the children, not the section tag
+      std::string exclude = nodeAttributes[ "excludeSectionTag" ];
+      if( exclude != "" ){
+        incNodes = incNodes->children;
       }
 
       //__________________________________
