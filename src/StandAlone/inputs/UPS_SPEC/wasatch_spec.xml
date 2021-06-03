@@ -1,5 +1,18 @@
 <Uintah_Include>
 
+   <ParticleBC     spec="OPTIONAL NO_DATA" children1="ONE_OF(CHILD Wall, Inlet)">
+     <!-- spec for particle wall boundary -->
+     <Wall                   spec="OPTIONAL NO_DATA" attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+       <Restitution          spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+     </Wall>
+
+     <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+     <Inlet                  spec="OPTIONAL NO_DATA">
+       <ParticlesPerSecond   spec="OPTIONAL DOUBLE"/>
+     </Inlet>
+   </ParticleBC>
+
+
   <CommonTags>
     <!-- 
         Re-opening the Uintah CommonTags block to add in some tags
@@ -912,7 +925,7 @@
       </SimpleEmission>
       
       <DiscreteOrdinates spec="OPTIONAL NO_DATA" attribute1="order REQUIRED INTEGER"><!-- '2, 4,6 , 8'"-->
-        <include href="solver_spec.xml" section="Parameters" />
+        <include href="solver_spec.xml" section="Solver/Parameters" />
       </DiscreteOrdinates>
       
     </Radiation>
@@ -1131,7 +1144,7 @@
              -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/> 
                
-          <include href="solver_spec.xml" section="Parameters" />
+          <include href="solver_spec.xml" section="Solver/Parameters" />
       </Pressure>
     </MomentumEquations>
 
@@ -1169,7 +1182,7 @@
       
       <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>                
       
-      <include href="solver_spec.xml" section="Parameters" />
+      <include href="solver_spec.xml" section="Solver/Parameters" />
       
     </PoissonEquation>
 

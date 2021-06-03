@@ -134,7 +134,7 @@
         <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
         <outer_iteration_tolerance      spec="REQUIRED DOUBLE  'positive'"/>
         <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
-        <include href="solver_spec.xml" section="Parameters" />
+        <include href="solver_spec.xml" section="Solver/Parameters" />
       </ImplicitSolver>
 
       <max_iteration_equilibration      spec="OPTIONAL INTEGER 'positive'" /> <!-- FIXME: what is default? -->
