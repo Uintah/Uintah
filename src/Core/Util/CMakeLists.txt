@@ -32,12 +32,9 @@ target_link_libraries( Core_Util
         Core_Malloc
     )
 
-# jcs DL_LIBRARY CUDA_LIBRARY
-
 target_include_directories( Core_Util
     PUBLIC
         ${CMAKE_SOURCE_DIR}
         ${MPI_CXX_INCLUDE_DIRS}
-    PRIVATE
         ${CMAKE_BINARY_DIR}
     )

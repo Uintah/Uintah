@@ -26,4 +26,5 @@ add_library( Core_Exceptions
 target_include_directories( Core_Exceptions
     PUBLIC
         ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
     )

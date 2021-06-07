@@ -25,7 +25,7 @@
 #ifndef SCI_BOOST_DEFS_H
 #define SCI_BOOST_DEFS_H
 
-#cmakedefine01 HAVE_BOOST
+#cmakedefine HAVE_BOOST
 
 #endif
 

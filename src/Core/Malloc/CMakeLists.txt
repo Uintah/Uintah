@@ -8,9 +8,9 @@ add_library( Core_Malloc
 target_include_directories( Core_Malloc
         PUBLIC
             ${CMAKE_SOURCE_DIR}
-            ${CMAKE_BINARY_DIR}
+            ${CMAKE_BINARY_DIR}/include
         PRIVATE
-            ${CMAKE_CURRENT_BINARY_DIR}
+            ${CMAKE_BINARY_DIR}
     )
 
 if( ENABLE_MEMORY_INITIALIZATION )

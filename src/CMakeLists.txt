@@ -8,14 +8,16 @@ project( Uintah )
 #     Maybe collect into a list called "CONFIG_INFO" or something?
 message("Uintah build system on platform: ${CMAKE_SYSTEM}")
 
+# warn about building in source
+if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
+    message( WARNING "\nIt appears that you are building directly in the source directory.\n"
+            "This is strongly discouraged.\n"
+            "Suggestion:\n\tmkdir build; cd build\n"
+            "Then run cmake from the 'build' directory" )
+endif( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
+
 include( configure_options.cmake       )  # general, high-level options. Components should add specific options within their own scope
 include( configure_introspection.cmake )  # system introspection
-
-# probably not a great idea, but this will set the root directory on the inclusion path
-include_directories(
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}/include
-    )
 
 #----------------------------------------------------------
 # Set up core Uintah stuff

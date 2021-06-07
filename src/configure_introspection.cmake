@@ -76,13 +76,13 @@ set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
 # Boost: https://cmake.org/cmake/help/latest/module/FindBoost.html
 find_package( Boost
         1.65 # minimum version
-        REQUIRED
         COMPONENTS filesystem system
-        ) # Boost_FOUND, Boost_INCLUDE_DIRS, Boost_LIBRARY_DIRS, Boost_LIBRARIES
-MESSAGE(STATUS "Boost libs: ${Boost_LIBRARIES}")
-MESSAGE(STATUS "Boost lib dir: ${Boost_LIBRARY_DIRS}")
+    ) # Boost_FOUND, Boost_INCLUDE_DIRS, Boost_LIBRARY_DIRS, Boost_LIBRARIES
+MESSAGE( STATUS "Boost libs: ${Boost_LIBRARIES}" )
+MESSAGE( STATUS "Boost lib dir: ${Boost_LIBRARY_DIRS}" )
 if( NOT Boost_FOUND )
-    message( SEND_ERROR "Boost wasn't found. Try defining 'BOOST_ROOT' or 'BOOSTROOT' in your configure line" )
+    message( WARNING "Boost wasn't found. Try defining 'BOOST_ROOT' or 'BOOSTROOT' in your configure line" )
+    unset( HAVE_BOOST )
 else()
     set( HAVE_BOOST true )
 endif()
@@ -165,20 +165,20 @@ endif()
 
 #--------------------------------------------------------------------
 # Git information  https://cmake.org/cmake/help/latest/module/FindGit.html
-find_package( Git REQUIRED ) # jcs could make optional but then we wouldn't have git info in sus...
+find_package( Git )
 execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE GIT_HASH
         OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+    )
 if( NOT ${RESULT} EQUAL 0 )
     set( GIT_HASH "\"HASH NOT FOUND\"" )
 endif()
 execute_process(
         COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_DATE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -187,7 +187,7 @@ if( NOT ${RESULT} EQUAL 0 )
 endif()
 execute_process(
         COMMAND ${GIT_EXECUTABLE} branch --show-current
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_BRANCH
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -197,8 +197,8 @@ endif()
 ##--------------------------------------------------------------------
 
 ##----------------------------- HYPRE --------------------------------
-find_package(HYPRE)
 unset( HAVE_HYPRE )
+find_package(HYPRE)
 if( HYPRE_FOUND )
    set( HAVE_HYPRE )
 endif()
