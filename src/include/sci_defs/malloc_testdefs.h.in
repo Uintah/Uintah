@@ -25,8 +25,8 @@
 #ifndef SCI_MALLOC_DEFS_H
 #define SCI_MALLOC_DEFS_H
 
-#cmakedefine01 DISABLE_SCI_MALLOC
-#cmakedefine01 USE_TAG_LINENUM
+#cmakedefine DISABLE_SCI_MALLOC
+#cmakedefine USE_TAG_LINENUM
 
 #cmakedefine MALLOC_TRACE
 

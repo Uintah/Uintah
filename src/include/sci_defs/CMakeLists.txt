@@ -78,6 +78,10 @@ configure_file( lapack_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/lapack_defs.h )
 
 #--------------- malloc_testdefs.h.in ---------------
 if( ENABLE_SCI_MALLOC )
+    if( APPLE )
+        message( WARNING "SCI_MALLOC probably does not work on OSX" )
+    endif()
+else()
     set( DISABLE_SCI_MALLOC true )
 endif()
 if( ENABLE_SCINEW_LINE_NUMBERS )

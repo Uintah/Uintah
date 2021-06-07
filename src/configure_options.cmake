@@ -10,6 +10,9 @@ option( ENABLE_HYPRE "Activates Hypre linking - may be required by some componen
 
 option( ENABLE_KOKKOS "Enable the KOKKOS library - still in development" OFF )
 option( ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF )
+cmake_dependent_option( ENABLE_SCINEW_LINE_NUMBERS "Have SCI malloc store the file and line that calls 'scinew'" OFF
+        "ENABLE_SCI_MALLOC" ON
+    )
 
 # jcs need to figure a different way to do this one
 # see https://cmake.org/cmake/help/latest/module/CMakeDependentOption.html#module:CMakeDependentOption
@@ -23,8 +26,6 @@ if( STATIC_BUILD )
     add_compile_definitions( STATIC_BUILD )
     set( BUILD_SHARED_LIBS OFF )
 endif()
-
-option( ENABLE_SCINEW_LINE_NUMBERS "Have SCI malloc store the file and line that calls 'scinew'" OFF )
 
 set( ASSERTION_LEVEL 0 CACHE STRING "Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.")
 set( THROW_LEVEL 0 CACHE STRING "Use throw level N (0-3)" )
