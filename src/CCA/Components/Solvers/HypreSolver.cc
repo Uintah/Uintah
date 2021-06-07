@@ -234,6 +234,7 @@ namespace Uintah {
 
       m_tMatVecSetup = hypre_InitializeTiming("Matrix + Vector setup");
       m_tSolveOnly   = hypre_InitializeTiming("Solve time");
+      m_tCopySolution = hypre_InitializeTiming("Copy Solution");
 
 
        //________________________________________________________
@@ -763,6 +764,8 @@ namespace Uintah {
 
         //__________________________________
         // Push the solution into Uintah data structure
+        hypre_BeginTiming( m_tCopySolution );
+
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
           printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
@@ -794,6 +797,8 @@ namespace Uintah {
             }
           }
         }
+
+        hypre_EndTiming( m_tCopySolution );
         //__________________________________
         // clean up
          m_firstPassThrough  = false;
@@ -809,6 +814,7 @@ namespace Uintah {
         hypre_PrintTiming   ("Hypre Timings:", pg->getComm());
         hypre_FinalizeTiming( m_tMatVecSetup );
         hypre_FinalizeTiming( m_tSolveOnly );
+        hypre_FinalizeTiming( m_tCopySolution );
         hypre_FinalizeTiming( m_tHypreAll );
         hypre_ClearTiming();
 
@@ -835,10 +841,10 @@ namespace Uintah {
         }
 
         timer.reset( true );
-        
+
         //__________________________________
         // Test for convergence failure
-        
+
         if( final_res_norm > m_params->tolerance || std::isfinite(final_res_norm) == 0 ){
           if( m_params->getRecomputeTimeStepOnFailure() ){
             proc0cout << "  WARNING:  HypreSolver not converged in " << num_iterations
@@ -1017,9 +1023,10 @@ namespace Uintah {
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these
     // hypre timings, #define HYPRE_TIMING in HypreSolver.h
-    int m_tHypreAll;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
-    int m_tSolveOnly;   // Tracks time taken by hypre to solve the system of equations
-    int m_tMatVecSetup; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    int m_tHypreAll;     // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int m_tSolveOnly;    // Tracks time taken by hypre to solve the system of equations.
+    int m_tMatVecSetup;  // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box values.
+    int m_tCopySolution; // Tracks the time spent pushing solution back to Uintah Array3
 
   }; // class HypreStencil7
 
@@ -1141,7 +1148,7 @@ namespace Uintah {
                                        // no patches on this proc when scheduling
 
     task->computes(hypre_solver_label);
-    
+
     LoadBalancer * lb = sched->getLoadBalancer();
 
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
@@ -1336,7 +1343,7 @@ namespace Uintah {
       task->computes( VarLabel::find(abortTimeStep_name) );
       task->computes( VarLabel::find(recomputeTimeStep_name) );
     }
-    
+
     LoadBalancer * lb = sched->getLoadBalancer();
 
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
