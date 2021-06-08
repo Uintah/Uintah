@@ -30,6 +30,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
+#include <CCA/Components/OnTheFlyAnalysis/turbulentFluxes.h>
 
 #include <sci_defs/uintah_defs.h>
 
@@ -110,6 +111,9 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       }
       else if ( module == "minMax" ) {
         modules.push_back( scinew MinMax(              myworld, materialManager, module_ps ) );
+      }
+      else if ( module == "turbulentFluxes" ) {
+        modules.push_back( scinew turbulentFluxes(     myworld, materialManager, module_ps ) );
       }
 
 #if !defined( NO_ICE )

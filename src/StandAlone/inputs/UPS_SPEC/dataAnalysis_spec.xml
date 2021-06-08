@@ -7,7 +7,7 @@
                                           attribute1="name REQUIRED STRING 'controlVolFluxes  firstLawThermo, flatPlate_heatFlux,
                                                                             lineExtract,      meanTurbFluxes, minMax,         momentumAnalysis,
                                                                             particleExtract,  planeAverage,   planeExtract,
-                                                                            radiometer,       statistics,     vorticity'" >
+                                                                            radiometer,       statistics,     turbulentFluxes, vorticity'" >
 
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
@@ -17,15 +17,16 @@
 
       <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract,
                                                                                       minMax,           particleExtract, planeAverage,
-                                                                                      planeExtract,     statistics"/>
+                                                                                      planeExtract,     statistics,      turbulentFluxes"/>
 
       <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, firstLawThermo,  lineExtract,
                                                                                       minMax,           particleExtract, planeAverage,
-                                                                                      planeExtract,     statistics"/>
+                                                                                      planeExtract,     statistics       turbulentFluxes"/>
 
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
 
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract meanTurbFluxes, minMax particleExtract planeAverage planeExtract statistics">
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract,    meanTurbFluxes,  minMax,     particleExtract 
+                                                                                      planeAverage    planeExtract,    statistics, turbulentFluxes">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"
                                           attribute2="matl  OPTIONAL STRING"
@@ -97,7 +98,7 @@
       <rho_CC                           spec="OPTIONAL NO_DATA"     need_applies_to="name momentumAnalysis" attribute1="label REQUIRED STRING"/>
 
       <!--statistics ____________________________________-->
-      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="name statistics" />
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="name statistics turbulentFluxes" />
 
     </Module>
   </DataAnalysis>

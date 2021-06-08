@@ -46,7 +46,8 @@ SRCS += \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeAverage.cc          \
         $(SRCDIR)/planeExtract.cc          \
-        $(SRCDIR)/statistics.cc
+        $(SRCDIR)/statistics.cc            \
+        $(SRCDIR)/turbulentFluxes.cc
 
 
 PSELIBS := \
