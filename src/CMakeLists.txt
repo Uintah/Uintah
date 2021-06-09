@@ -16,6 +16,8 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
             "Then run cmake from the 'build' directory" )
 endif( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
 
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} )
+
 include( configure_options.cmake       )  # general, high-level options. Components should add specific options within their own scope
 include( configure_introspection.cmake )  # system introspection
 

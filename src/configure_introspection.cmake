@@ -166,45 +166,62 @@ endif()
 #--------------------------------------------------------------------
 # Git information  https://cmake.org/cmake/help/latest/module/FindGit.html
 find_package( Git )
-execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        RESULT_VARIABLE RESULT
-        OUTPUT_VARIABLE GIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-if( NOT ${RESULT} EQUAL 0 )
+if( GIT_FOUND )
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            RESULT_VARIABLE RESULT
+            OUTPUT_VARIABLE GIT_HASH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    if( NOT ${RESULT} EQUAL 0 )
+        set( GIT_HASH "\"HASH NOT FOUND\"" )
+    endif()
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_DATE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    if( NOT ${RESULT} EQUAL 0 )
+        set( GIT_DATE "\"DATE NOT FOUND\"" )
+    endif()
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} branch --show-current
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_BRANCH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    if( NOT ${RESULT} EQUAL 0 )
+        set( GIT_BRANCH "\"BRANCH NOT FOUND\"" )
+    endif()
+else()
     set( GIT_HASH "\"HASH NOT FOUND\"" )
-endif()
-execute_process(
-        COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_DATE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-if( NOT ${RESULT} EQUAL 0 )
     set( GIT_DATE "\"DATE NOT FOUND\"" )
-endif()
-execute_process(
-        COMMAND ${GIT_EXECUTABLE} branch --show-current
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_BRANCH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-if( NOT ${RESULT} EQUAL 0 )
     set( GIT_BRANCH "\"BRANCH NOT FOUND\"" )
 endif()
 ##--------------------------------------------------------------------
 
 ##----------------------------- HYPRE --------------------------------
 unset( HAVE_HYPRE )
-find_package(HYPRE)
+find_package( HYPRE )
 if( HYPRE_FOUND )
    set( HAVE_HYPRE )
 endif()
 ##----------------------------- HYPRE --------------------------------
 
 
+##----------------------------- gperf --------------------------------
+unset( HAVE_GPERFTOOLS )
+if( ENABLE_GPERFTOOLS )
+    find_package( GPERFTOOLS )
+    if( GPERFTOOLS_FOUND )
+        set( HAVE_GPERFTOOLS true )
+    else()
+        message( WARNING "GPERFTOOLS not found. Try setting `GPERFTOOLS_ROOT_DIR` to the path where it is installed" )
+    endif()
+endif()
+##----------------------------- gperf --------------------------------
 
 ##--------------------------------------------------------------------
 # Some tools to find libraries:

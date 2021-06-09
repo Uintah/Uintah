@@ -23,12 +23,16 @@ endif()
 
 option( STATIC_BUILD "Link Uintah libraries statically" OFF )
 if( STATIC_BUILD )
-    add_compile_definitions( STATIC_BUILD )
     set( BUILD_SHARED_LIBS OFF )
 endif()
 
 set( ASSERTION_LEVEL 0 CACHE STRING "Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.")
 set( THROW_LEVEL 0 CACHE STRING "Use throw level N (0-3)" )
+if( CMAKE_BUILD_TYPE EQUAL Release )
+    set( ASSERTION_LEVEL 0 )
+elseif( CMAKE_BUILD_TYPE EQUAL Debug )
+    set( ASSERTION_LEVEL 3 )
+endif()
 
 option( ENABLE_UNIT_TESTS "Turn on the unit tests." ON )  # jcs check this
 option( ENABLE_MINIMAL "Build a minimal set of libraries" OFF ) # jcs keep this?
@@ -50,11 +54,10 @@ cmake_dependent_option( ENABLE_MPM_ICE "Enable MPM-ICE" OFF
 # jcs to figure out:
 # HAVE_VISIT  VISIT_PATH
 # HAVE_PIDX
-# EXCEPTIONS_CRASH_DEF  -- see error_testdefs.h.in
 # Hypre configuration...
 # HAVE_TIFF
 # gperftools
 
-unset( HAVE_GPERFTOOLS )
+option( ENABLE_GPERFTOOLS "Search for google performance tools and link them if found. Consider setting `GPERFTOOLS_ROOT_DIR`" OFF )
 
 # BUILD_MODELS_RADIATION

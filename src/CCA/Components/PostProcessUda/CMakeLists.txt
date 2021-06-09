@@ -7,6 +7,7 @@ add_library( CCA_Components_PostProcessUda
     )
 
 target_link_libraries( CCA_Components_PostProcessUda
+    PUBLIC
         CCA_Components_Application
         CCA_Ports
         Core_DataArchive
