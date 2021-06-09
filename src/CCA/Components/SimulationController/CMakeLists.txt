@@ -16,9 +16,11 @@ target_link_libraries( CCA_Components_SimulationController
         Core_OS
         Core_Parallel
         Core_Util
+        ${GPERFTOOLS_LIBRARIES} # for gperftools if active
     )
 
 target_include_directories( CCA_Components_SimulationController
     PUBLIC
         ${CMAKE_SOURCE_DIR}}
+        ${GPERFTOOLS_INCLUDE_DIRS}  # for gperftools if active
     )
