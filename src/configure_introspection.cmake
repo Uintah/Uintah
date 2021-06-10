@@ -176,7 +176,7 @@ if( GIT_FOUND )
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
     if( NOT ${RESULT} EQUAL 0 )
-        set( GIT_HASH "\"HASH NOT FOUND\"" )
+        set( GIT_HASH "HASH NOT FOUND" )
     endif()
     execute_process(
             COMMAND ${GIT_EXECUTABLE} log -1 "--pretty=format:\"%cd\""
@@ -194,12 +194,12 @@ if( GIT_FOUND )
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
     if( NOT ${RESULT} EQUAL 0 )
-        set( GIT_BRANCH "\"BRANCH NOT FOUND\"" )
+        set( GIT_BRANCH "BRANCH NOT FOUND" )
     endif()
 else()
-    set( GIT_HASH "\"HASH NOT FOUND\"" )
+    set( GIT_HASH "HASH NOT FOUND" )
     set( GIT_DATE "\"DATE NOT FOUND\"" )
-    set( GIT_BRANCH "\"BRANCH NOT FOUND\"" )
+    set( GIT_BRANCH "BRANCH NOT FOUND" )
 endif()
 ##--------------------------------------------------------------------
 
