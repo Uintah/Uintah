@@ -1,8 +1,8 @@
 if( HAVE_CUDA )
     set( GPU_SRC
-        GPUGridVariableGhosts.cc
-        GPUGridVariableInfo.cc
-        GPUMemoryPool.cc
+            GPUGridVariableGhosts.cc
+            GPUGridVariableInfo.cc
+            GPUMemoryPool.cc
         )
 endif( HAVE_CUDA )
 
@@ -40,6 +40,7 @@ target_link_libraries( CCA_Components_Schedulers
         Core_OS
         Core_Parallel
         Core_Util
+        Threads::Threads
     )
 
 target_include_directories( CCA_Components_Schedulers

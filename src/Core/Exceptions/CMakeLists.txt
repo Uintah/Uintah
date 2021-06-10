@@ -18,10 +18,9 @@ add_library( Core_Exceptions
         VariableNotFoundInGrid.cc
     )
 
-# jcs needs "DL_LIBRARY" ?
-#target_link_libraries( Core_Exceptions
-#        Core_Geometry
-#    )
+target_link_libraries( Core_Exceptions
+        ${CMAKE_DL_LIBS}
+    )
 
 target_include_directories( Core_Exceptions
     PUBLIC

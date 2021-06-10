@@ -211,6 +211,7 @@ if( HYPRE_FOUND )
 endif()
 ##----------------------------- HYPRE --------------------------------
 
+find_package( Threads REQUIRED )
 
 ##----------------------------- gperf --------------------------------
 unset( HAVE_GPERFTOOLS )
