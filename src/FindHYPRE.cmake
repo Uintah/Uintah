@@ -21,7 +21,7 @@ find_library(
         ${HYPRE_DIR}/lib
     )
 
-if( NOT HYPRE_LIBRARY-NOTFOUND )
+if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
     ## Version information
     file( READ ${HYPRE_INCLUDE_DIR}/HYPRE_config.h HYPRE_HEADER )
     string( REGEX MATCH
@@ -29,7 +29,7 @@ if( NOT HYPRE_LIBRARY-NOTFOUND )
             HYPRE_VERSION
             ${HYPRE_HEADER}
         )
-    message( WARNING "Not ready for hyper version parsing  ${HYPRE_VERSION}" )
+    message( WARNING "Not yet ready for hyper version parsing  ${HYPRE_VERSION}" )
 
     find_package_handle_standard_args( HYPRE
         FOUND_VAR HYPRE_FOUND
@@ -45,8 +45,6 @@ if( NOT HYPRE_LIBRARY-NOTFOUND )
         set( HYPRE_INCLUDE_DIRS ${HYPRE_INCLUDE_DIR} )
     endif()
 
-    #message( STATUS "HYPRE root: ${HYPRE_DIR}\n\tLIBS: ${HYPRE_LIBRARIES}\n\tINCL: ${HYPRE_INCLUDE_DIRS}\n\tVersion: ${HYPRE_VERSION}" )
-
     if( HYPRE_FOUND )
         if( NOT TARGET HYPRE::HYPRE )
             add_library( HYPRE::HYPRE UNKNOWN IMPORTED )
@@ -60,4 +58,4 @@ if( NOT HYPRE_LIBRARY-NOTFOUND )
         HYPRE_INCLUDE_DIR
         HYPRE_LIBRARY
     )
-endif( NOT HYPRE_LIBRARY-NOTFOUND )
+endif()

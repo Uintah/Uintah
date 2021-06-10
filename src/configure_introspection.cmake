@@ -228,11 +228,6 @@ endif()
 #
 # Doxygen: https://cmake.org/cmake/help/latest/module/FindDoxygen.html
 # OpenMP: https://cmake.org/cmake/help/latest/module/FindOpenMP.html
-# Git: https://cmake.org/cmake/help/latest/module/FindGit.html
 # CUDA: https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html
 
-# Hypre:
-#  https://code.it4i.cz/mec059/elmer/blob/9f3db809e532a80c1bc29ade1ed286cafe29032c/cmake/Modules/FindHypre.cmake
-#  https://github.com/OpenCMISS/cm/blob/master/cmake_modules/FindHYPRE.cmake
-#
 # PIDX...?
