@@ -131,6 +131,8 @@ namespace Uintah {
     double     m_analysisFreq;               // analysis frequency: units 1/sec
     double     d_startTime{0.0};
     double     d_stopTime{DBL_MAX};
+    
+    Ghost::GhostType  m_gn  = Ghost::None;
   };
 }
 

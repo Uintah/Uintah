@@ -36,16 +36,27 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_defs/visit_defs.h>
-
 #include <iostream>
 #include <cstdio>
 #include <iomanip>
 
+#define DEBUG
+
 //______________________________________________________________________
 //    TO DO:
-//   Each variable needs to keep track of the timestep.  The user can add
-//   a variable in a checkpoint.
+//  DOUT streams
+//  update ups_spec
+//  Add bulletproofing.  A velocity label must be added.
+//  destroy varLabels
+//  Run through fsanitize for memory leaks
+//  Polish
+// Testing:
+//   single patch single processor
+//   multiprocessor
+//   Can user add variables after a restart
+//   Correctness
+//   Correctness after starttime != 0
+//
 //______________________________________________________________________
 //
 
@@ -56,62 +67,43 @@ static DebugStream cout_doing("turbulentFluxes_DOING_COUT", false);
 static DebugStream cout_dbg("turbulentFluxes_DBG_COUT", false);
 
 //______________________________________________________________________
-turbulentFluxes::turbulentFluxes( const ProcessorGroup* myworld,
-                        const MaterialManagerP materialManager,
-                        const ProblemSpecP& module_spec )
+//
+turbulentFluxes::turbulentFluxes( const ProcessorGroup  * myworld,
+                                  const MaterialManagerP materialManager,
+                                  const ProblemSpecP    & module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matlSet     = 0;
   d_stopTime    = DBL_MAX;
-  d_monitorCell = IntVector(0,0,0);
-  d_doHigherOrderStats = false;
-
-  // Reynolds Shear Stress related
-  d_RS_matl     = -9;
-  d_computeReynoldsStress = false;
-
-  required = false;
+  m_monitorCell = IntVector(0,0,0);
 }
 
 //__________________________________
 turbulentFluxes::~turbulentFluxes()
 {
   cout_doing << " Doing: destorying turbulentFluxes " << endl;
-  if(d_matlSet && d_matlSet->removeReference()) {
-    delete d_matlSet;
+  if(m_matlSet && m_matlSet->removeReference()) {
+    delete m_matlSet;
   }
 
-  // delete each Qstats label
-  for (unsigned int i =0 ; i < d_Qstats.size(); i++) {
-    Qstats& Q = d_Qstats[i];
-    VarLabel::destroy( Q.Qsum_Label );
-    VarLabel::destroy( Q.Qsum2_Label );
-    VarLabel::destroy( Q.Qmean_Label );
-    VarLabel::destroy( Q.Qmean2_Label );
-    VarLabel::destroy( Q.Qvariance_Label );
+  // delete each Qvar label
+  for (unsigned int i =0 ; i < m_Qvars.size(); i++) {
+    Qvar_ptr Q = m_Qvars[i];
+    VarLabel::destroy( Q->Qsum_Label );
+    VarLabel::destroy( Q->Qmean_Label );
 
-    if( d_doHigherOrderStats ){
-      VarLabel::destroy( Q.Qsum3_Label );
-      VarLabel::destroy( Q.Qmean3_Label );
-      VarLabel::destroy( Q.Qsum4_Label );
-      VarLabel::destroy( Q.Qmean4_Label );
+    if( Q->matlSubset && Q->matlSubset->removeReference()){
+      delete Q->matlSubset;
     }
-  }
-
-  if ( d_computeReynoldsStress ){
-    VarLabel::destroy( d_velPrime_Label );
-    VarLabel::destroy( d_velSum_Label  );
-    VarLabel::destroy( d_velMean_Label  );
   }
 }
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void turbulentFluxes::problemSetup(const ProblemSpecP &,
-                              const ProblemSpecP & restart_prob_spec,
-                              GridP & grid,
-                              std::vector<std::vector<const VarLabel* > > &PState,
-                              std::vector<std::vector<const VarLabel* > > &PState_preReloc)
+                                   const ProblemSpecP & restart_prob_spec,
+                                   GridP & grid,
+                                   std::vector<std::vector<const VarLabel* > > &PState,
+                                   std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
   cout_doing << "Doing problemSetup \t\t\t\tturbulentFluxes" << endl;
 
@@ -121,43 +113,33 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //  Read in timing information
   m_module_spec->require("timeStart",  d_startTime);
   m_module_spec->require("timeStop",   d_stopTime);
-  
+
   // Start time < stop time
-  if(d_startTime > d_stopTime ){
+  if( d_startTime > d_stopTime ){
     throw ProblemSetupException("\n ERROR:turbulentFluxes: startTime > stopTime. \n", __FILE__, __LINE__);
   }
-  
+
   // debugging
-  m_module_spec->get("monitorCell",    d_monitorCell);
+  m_module_spec->get("monitorCell",    m_monitorCell);
 
 
   //__________________________________
-  //  read in when each variable started 
+  //  read in when each variable started
   string comment = "__________________________________\n"
                    "\tIf you want to overide the value of\n \t  startTimeTimestep\n \t  startTimeTimestepReynoldsStress\n"
                    "\tsee checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
 
-  
+
   //__________________________________
-  // find the material to extract data from.  Default is matl 0.
-  // The user can use either
+  // find the material to extract data from.
   //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
 
   Material* matl = nullptr;
 
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } 
-  else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    matl = m_materialManager->getMaterial(indx);
-  } 
-  else {
-    matl = m_materialManager->getMaterial(0);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -166,14 +148,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   m.push_back( defaultMatl );
 
   proc0cout << "__________________________________ Data Analysis module: turbulentFluxes" << endl;
-  m_module_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
-  if (d_doHigherOrderStats){
-
-    proc0cout << "         Computing 2nd, 3rd and 4th order turbulentFluxes for all of the variables listed"<< endl;
-  } 
-  else {
-    proc0cout << "         Computing 2nd order turbulentFluxes for all of the variables listed"<< endl;
-  }
+  proc0cout << "         Computing the turbulentFluxes for all of the variables listed"<< endl;
 
   //__________________________________
   //  Read in variables label names
@@ -205,13 +180,15 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     // What is the label name and does it exist?
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
+
+    if( label == nullptr ){
       throw ProblemSetupException("turbulentFluxes label not found: " + name , __FILE__, __LINE__);
     }
 
     //__________________________________
-    // Only CCVariable Doubles and Vectors for now
-    const Uintah::TypeDescription* td = label->typeDescription();
+    // Only CCVariable doubles and Vectors for now
+    const TypeDescription * td     = label->typeDescription();
+    const TypeDescription * td_V   = CCVariable<Vector>::getTypeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
 
     if( td->getType() != TypeDescription::CCVariable  ||
@@ -223,36 +200,26 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     }
 
     //__________________________________
-    // create the labels for this variable
-    Qstats Q;
-    Q.matl    = matl;
-    Q.Q_Label = label;
-    Q.subtype = subtype;
-    Q.computeRstess = false;
-    Q.initializeTimestep();          // initialize the start timestep = 0;
+    // create the required labels for this variable
+    auto Q     = make_shared< Qvar >(matl);
+    Q->Label   = label;
+    Q->subtype = subtype;
+    Q->initializeTimestep();          // initialize the start timestep = 0;
 
-    Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
-    Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
-    Q.Qmean_Label     = VarLabel::create( "mean_" + name,     td);
-    Q.Qmean2_Label    = VarLabel::create( "mean2_" + name,    td);
-    Q.Qvariance_Label = VarLabel::create( "variance_" + name, td);
+    Q->Qsum_Label          = VarLabel::create( "sum_"    + name,        td );
+    Q->Q2sum_Label         = VarLabel::create( "sum_"    + name + "2",  td );
+    Q->Qmean_Label         = VarLabel::create( "mean_"   + name,        td );
+    Q->Q2mean_Label        = VarLabel::create( "mean_"   + name + "2",  td );
+    Q->Qu_Qv_Qw_sum_Label  = VarLabel::create( "sum_Qu_Qv_Qw_"  + name, td_V );
+    Q->Qu_Qv_Qw_mean_Label = VarLabel::create( "mean_Qu_Qv_Qw_" + name, td_V );
 
-    if( d_doHigherOrderStats ){
-      Q.Qsum3_Label     = VarLabel::create( "sum3_" + name,      td);
-      Q.Qmean3_Label    = VarLabel::create( "mean3_" + name,     td);
-      Q.Qskewness_Label = VarLabel::create( "skewness_" + name,  td);
-
-      Q.Qsum4_Label     = VarLabel::create( "sum4_" + name,      td);
-      Q.Qmean4_Label    = VarLabel::create( "mean4_" + name,     td);
-      Q.Qkurtosis_Label = VarLabel::create( "kurtosis_" + name,  td);
-    }
+    Q->variance_Label      = VarLabel::create( "variance_"   + name,   td);
+    Q->covariance_Label    = VarLabel::create( "covariance_" + name, td_V);
 
     //__________________________________
     //  computeReynoldsStress with this Var?
-    if (attribute["computeReynoldsStress"].empty() == false){
-      d_computeReynoldsStress = true;
-      Q.computeRstess    = true;
-      d_RS_matl = matl;
+    if ( attribute["fluidVelocityLabel"].empty() == false ){
+      m_velVar = make_shared< velocityVar >(matl);
       proc0cout << "         Computing uv_prime, uw_prime, vw_prime using ("<< name << ")" << endl;
     }
 
@@ -260,27 +227,16 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     // keep track of which summation variables
     // have been initialized.  A user can
     // add a variable on a restart.  Default is false.
-    Q.isInitialized[lowOrder]     = false;
-    Q.isInitialized[highOrder]    = false;
-    d_isReynoldsStressInitialized = false;
-
-    d_Qstats.push_back( Q );
+    Q->isInitialized     = false;
+    m_Qvars.push_back( Q );
 
     //__________________________________
     //  bulletproofing
     std::string variance = "variance_"+ name;
-    std::string skew     = "skewness_"+ name;
-    std::string kurtosis = "kurtosis_"+ name;
     ostringstream mesg;
     mesg << "";
     if( !m_output->isLabelSaved( variance ) ){
       mesg << variance;
-    }
-    if( !m_output->isLabelSaved( skew )  && d_doHigherOrderStats){
-      mesg << " " << skew;
-    }
-    if( !m_output->isLabelSaved( kurtosis ) && d_doHigherOrderStats){
-      mesg << " " << kurtosis;
     }
 
     if( mesg.str() != "" ){
@@ -291,134 +247,99 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     }
   }
 
-
-  //__________________________________
-  //  computeReynoldsStress with this Var?
-  if ( d_computeReynoldsStress){
-    const TypeDescription* td = CCVariable<Vector>::getTypeDescription();
-    d_velPrime_Label = VarLabel::create( "uv_vw_wu_prime", td);
-    d_velSum_Label   = VarLabel::create( "sum_uv_vw_wu",   td);
-    d_velMean_Label  = VarLabel::create( "mean_uv_vw_wu",  td);
-  }
-
   //__________________________________
   //  On restart read the starttimestep for each variable from checkpoing/t***/timestep.xml
-  if(restart_prob_spec){ 
+  if(restart_prob_spec){
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
-    
+
     ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "turbulentFluxes");
     ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
-    
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+
+    for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+      Qvar_ptr Q = m_Qvars[i];
       int timestep;
-      st_ps->require( Q.Q_Label->getName().c_str(), timestep  );
-      Q.setStart(timestep);
-      proc0cout <<  "         " << Q.Q_Label->getName() << "\t\t startTimestep: " << timestep << endl;                   
-      
+      st_ps->require( Q->Label->getName().c_str(), timestep  );
+      Q->setStart(timestep);
+      proc0cout <<  "         " << Q->Label->getName() << "\t\t startTimestep: " << timestep << endl;
+
     }
   }
 
   //__________________________________
   //  create the matl set
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
-  d_matlSet = scinew MaterialSet();
-  d_matlSet->addAll(m);
-  d_matlSet->addReference();
-  d_matSubSet = d_matlSet->getUnion();
+  m_matlSet = scinew MaterialSet();
+  m_matlSet->addAll_unique(m);
+  m_matlSet->addReference();
   proc0cout << "__________________________________ Data Analysis module: turbulentFluxes" << endl;
-  
-#ifdef HAVE_VISIT
-  static bool initialized = false;
-
-  if( m_application->getVisIt() && !initialized ) {
-    required = true;
-
-    initialized = true;
-  }
-#endif
 }
 
 //______________________________________________________________________
-void turbulentFluxes::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level)
+//
+void turbulentFluxes::scheduleInitialize( SchedulerP   & sched,
+                                          const LevelP & level)
 {
   printSchedule( level,cout_doing,"turbulentFluxes::scheduleInitialize" );
 
   Task* t = scinew Task("turbulentFluxes::initialize",
                    this,&turbulentFluxes::initialize);
 
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    const Qstats Q = d_Qstats[i];
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    const Qvar_ptr Q = m_Qvars[i];
+    t->computes ( Q->Qsum_Label );
+    t->computes ( Q->Q2sum_Label );
+    t->computes ( Q->Qu_Qv_Qw_sum_Label );
 
-    t->computes ( Q.Qsum_Label );
-    t->computes ( Q.Qsum2_Label );
-
-    if( d_doHigherOrderStats ){
-      t->computes ( Q.Qsum3_Label );
-      t->computes ( Q.Qsum4_Label );
-    }
+    t->computes ( Q->Qmean_Label );
+    t->computes ( Q->Q2mean_Label );
+    t->computes ( Q->Qu_Qv_Qw_mean_Label );
   }
 
-  //__________________________________
-  //  For Reynolds Stress components
-  if( d_computeReynoldsStress ){
-    t->computes ( d_velSum_Label );
-  }
-
-  sched->addTask(t, level->eachPatch(), d_matlSet);
+  sched->addTask(t, level->eachPatch(), m_matlSet);
 }
 
 //______________________________________________________________________
 //
-void turbulentFluxes::initialize(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw)
+void turbulentFluxes::initialize( const ProcessorGroup *,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset *,
+                                  DataWarehouse        *,
+                                  DataWarehouse        * new_dw)
 {
+
   for(int p=0;p<patches->size();p++){
+
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing turbulentFluxes::initialize");
 
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+    for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+      const Qvar_ptr Q = m_Qvars[i];
 
-      switch(Q.subtype->getType()) {
+      switch(Q->subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          allocateAndZeroSums<double>( new_dw, patch, Q);
+          allocateAndZeroSums<double>(  new_dw, patch, Q);
+          allocateAndZeroMeans<double>( new_dw, patch, Q);
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          allocateAndZeroSums<Vector>( new_dw, patch, Q);
+          allocateAndZeroSums<Vector>(  new_dw, patch, Q);
+          allocateAndZeroMeans<Vector>( new_dw, patch, Q);
           break;
         }
         default: {
           throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
         }
       }
-    }  // loop over Qstat
+    }  // loop over Qvars
 
-    //__________________________________
-    //
-    if( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    turbulentFluxes: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
-  }  // pathes
+  }  // patches
 }
 
 //______________________________________________________________________
 // This allows the user to restart from an uda in which this module was
 // turned off.  Only execute task if the labels were NOT in the checkpoint
-void turbulentFluxes::scheduleRestartInitialize(SchedulerP& sched,
-                                           const LevelP& level)
+void turbulentFluxes::scheduleRestartInitialize( SchedulerP    & sched,
+                                                 const LevelP  & level)
 {
 
   printSchedule( level,cout_doing,"turbulentFluxes::scheduleRestartInitialize" );
@@ -437,76 +358,45 @@ void turbulentFluxes::scheduleRestartInitialize(SchedulerP& sched,
 
   bool addTask = false;
 
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    const Qvar_ptr Q = m_Qvars[i];
 
     // Do the summation Variables exist in checkpoint
-    //              low order
-    if (new_dw->exists( Q.Qsum_Label, Q.matl, firstPatch) ){
-      Q.isInitialized[lowOrder] = true;
-      d_Qstats[i].isInitialized[lowOrder] = true;
+    if ( new_dw->exists( Q->Qsum_Label, Q->matl, firstPatch) ){
+      Q->isInitialized = true;
+      m_Qvars[i]->isInitialized = true;
     }
 
-
-    //              high order
-    if( d_doHigherOrderStats ){
-      if ( new_dw->exists( Q.Qsum3_Label, Q.matl, firstPatch) ){
-        Q.isInitialized[highOrder] = true;
-        d_Qstats[i].isInitialized[highOrder] = true;
-      }
-    }
-
-    // if the Q.sum was not in previous checkpoint compute it
-    if( !Q.isInitialized[lowOrder] ){
-      t->computes ( Q.Qsum_Label );
-      t->computes ( Q.Qsum2_Label );
+    // if the Q->sum was not in previous checkpoint compute it
+    if( !Q->isInitialized ){
+      t->computes ( Q->Qsum_Label );
       addTask = true;
-      proc0cout << "    turbulentFluxes: Adding lowOrder computes for " << Q.Q_Label->getName() << endl;
-    }
-
-    if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
-      t->computes ( Q.Qsum3_Label );
-      t->computes ( Q.Qsum4_Label );
-      addTask = true;
-      proc0cout << "    turbulentFluxes: Adding highOrder computes for " << Q.Q_Label->getName() << endl;
-    }
-  }
-
-  //__________________________________
-  //  Reynolds stress
-  // Do the summation Variables exist in checkpoint
-  if(d_computeReynoldsStress ){
-    if (new_dw->exists( d_velSum_Label, d_RS_matl, firstPatch) ){
-      d_isReynoldsStressInitialized = true;
-    } else {
-      t->computes ( d_velSum_Label );
-      addTask = true;
-      proc0cout << "    turbulentFluxes: Adding computes for Reynolds Stress (u'v', u'w', w'u') terms "  << endl;
+      proc0cout << "    turbulentFluxes: Adding lowOrder computes for " << Q->Label->getName() << endl;
     }
   }
 
   // only add task if a variable was not found in old_dw
   if ( addTask ){
-    sched->addTask(t, level->eachPatch(), d_matlSet);
+    sched->addTask(t, level->eachPatch(), m_matlSet);
   }
 }
 
 
 //______________________________________________________________________
 //
-void turbulentFluxes::restartInitialize(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse*,
-                                   DataWarehouse* new_dw)
+void turbulentFluxes::restartInitialize( const ProcessorGroup  *,
+                                         const PatchSubset     * patches,
+                                         const MaterialSubset  *,
+                                         DataWarehouse         *,
+                                         DataWarehouse         * new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing turbulentFluxes::restartInitialize");
 
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats Q = d_Qstats[i];
-      switch(Q.subtype->getType()) {
+    for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+      Qvar_ptr Q = m_Qvars[i];
+      switch(Q->subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
           allocateAndZeroSums<double>( new_dw, patch, Q);
@@ -520,15 +410,7 @@ void turbulentFluxes::restartInitialize(const ProcessorGroup*,
           throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
         }
       }
-    }  // loop over Qstat
-
-    //__________________________________
-    //
-    if ( d_computeReynoldsStress && !d_isReynoldsStressInitialized ){
-      proc0cout << "    turbulentFluxes: initializing summation variables needed for Reynolds Stress calculation" << endl;
-      allocateAndZero<Vector>( new_dw, d_velSum_Label,  d_RS_matl, patch );
-    }
-
+    }  // loop over Qstatx
   }  // pathes
 }
 
@@ -555,139 +437,102 @@ turbulentFluxes::outputProblemSpec( ProblemSpecP& root_ps)
   m_ps->setAttribute( "name","turbulentFluxes" );
   ProblemSpecP st_ps = m_ps->appendChild("StartTimestep");
 
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
-    st_ps->appendElement( Q.Q_Label->getName().c_str(), Q.getStart() );
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    const Qvar_ptr Q = m_Qvars[i];
+    st_ps->appendElement( Q->Label->getName().c_str(), Q->getStart() );
   }
 }
 
 //______________________________________________________________________
-void turbulentFluxes::scheduleDoAnalysis(SchedulerP& sched,
-                                    const LevelP& level)
+//
+void turbulentFluxes::scheduleDoAnalysis( SchedulerP    & sched,
+                                          const LevelP  & level)
 {
-  printSchedule( level,cout_doing,"turbulentFluxes::scheduleDoAnalysis" );
+  sched_Q_mean( sched, level);
 
-  Task* t = scinew Task("turbulentFluxes::doAnalysis",
-                   this,&turbulentFluxes::doAnalysis);
+  sched_turbFluxes( sched, level);
+
+}
+
+
+//______________________________________________________________________
+//
+void turbulentFluxes::sched_Q_mean( SchedulerP   & sched,
+                                    const LevelP & level)
+{
+  Task* t = scinew Task( "turbulentFluxes::task_Q_mean",
+                    this,&turbulentFluxes::task_Q_mean );
+
+  printSchedule(level,cout_doing,"turbulentFluxes::sched_Q_mean");
 
   t->requires(Task::OldDW, m_timeStepLabel);
   t->requires(Task::OldDW, m_simulationTimeLabel);
-  
-  Ghost::GhostType  gn  = Ghost::None;
-  
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
 
-    // define the matl subset for this variable
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( Q.matl );
-    matSubSet->addReference();
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    Qvar_ptr Q = m_Qvars[i];
+
+    const MaterialSubset* matl = Q->matlSubset;
 
     //__________________________________
-    //  Lower order turbulentFluxes
-    t->requires( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
-    t->requires( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
-    t->requires( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
+    //
+    t->requires( Task::NewDW, Q->Label,               matl, m_gn, 0 );
+    t->requires( Task::OldDW, Q->Qsum_Label,          matl, m_gn, 0 );
+    t->requires( Task::OldDW, Q->Q2sum_Label,         matl, m_gn, 0 );
+    t->requires( Task::OldDW, Q->Qu_Qv_Qw_sum_Label,  matl, m_gn, 0 );
 
-#ifdef HAVE_VISIT
-    if( required )
-    {
-      t->requires( Task::OldDW, Q.Qmean_Label,     matSubSet, gn, 0 );
-      t->requires( Task::OldDW, Q.Qmean2_Label,    matSubSet, gn, 0 );
-      t->requires( Task::OldDW, Q.Qvariance_Label, matSubSet, gn, 0 );
-    }
-#endif
-    
-    t->computes ( Q.Qsum_Label,       matSubSet );
-    t->computes ( Q.Qsum2_Label,      matSubSet );
-    t->computes ( Q.Qmean_Label,      matSubSet );
-    t->computes ( Q.Qmean2_Label,     matSubSet );
-    t->computes ( Q.Qvariance_Label,  matSubSet );
+    t->computes( Q->Qsum_Label,          matl );
+    t->computes( Q->Q2sum_Label,         matl );
+    t->computes( Q->Qmean_Label,         matl );
+    t->computes( Q->Q2mean_Label,        matl );
+    t->computes( Q->Qu_Qv_Qw_sum_Label,  matl );
+    t->computes( Q->Qu_Qv_Qw_mean_Label, matl );
+//    Q->print();
+  }
+  sched->addTask( t, level->eachPatch() , m_matlSet );
+}
 
-    //__________________________________
-    // Higher order turbulentFluxes
-    if( d_doHigherOrderStats ){
 
-      t->requires( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
-      t->requires( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
+//______________________________________________________________________
+//
+void turbulentFluxes::task_Q_mean( const ProcessorGroup * ,
+                                   const PatchSubset    * patches,
+                                   const MaterialSubset * ,
+                                   DataWarehouse        * old_dw,
+                                   DataWarehouse        * new_dw )
+{
 
-#ifdef HAVE_VISIT
-      if( required )
-      {
-        t->requires( Task::OldDW, Q.Qmean3_Label,    matSubSet, gn, 0 );
-        t->requires( Task::OldDW, Q.Qmean4_Label,    matSubSet, gn, 0 );
-        t->requires( Task::OldDW, Q.Qskewness_Label, matSubSet, gn, 0 );
-        t->requires( Task::OldDW, Q.Qkurtosis_Label, matSubSet, gn, 0 );
-      }
-#endif
+  //__________________________________
+  //  not yet time
+  simTime_vartype simTimeVar;
+  old_dw->get(simTimeVar, m_simulationTimeLabel);
+  double now = simTimeVar;
 
-      t->computes ( Q.Qsum3_Label,     matSubSet );
-      t->computes ( Q.Qsum4_Label,     matSubSet );
-      t->computes ( Q.Qmean3_Label,    matSubSet );
-      t->computes ( Q.Qmean4_Label,    matSubSet );
-      t->computes ( Q.Qskewness_Label, matSubSet );
-      t->computes ( Q.Qkurtosis_Label, matSubSet );
-    }
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-//    Q.print();
+  if(now < d_startTime || now > d_stopTime){
+    carryForward( old_dw, new_dw, patches );
+    return;
   }
 
   //__________________________________
-  //  Reynolds Stress Terms
-  if ( d_computeReynoldsStress ){
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( d_RS_matl );
-    matSubSet->addReference();
+  //  Time to compute something
+  for( auto p=0;p<patches->size();p++ ){
 
-    t->requires( Task::OldDW, d_velSum_Label,  matSubSet, gn, 0 );
-
-#ifdef HAVE_VISIT
-    if( required )
-    {
-      t->requires( Task::OldDW, d_velPrime_Label, matSubSet, gn, 0 );
-      t->requires( Task::OldDW, d_velMean_Label,  matSubSet, gn, 0 );
-    }
-#endif
-
-    t->computes ( d_velPrime_Label,  matSubSet );
-    t->computes ( d_velSum_Label,    matSubSet );
-    t->computes ( d_velMean_Label,   matSubSet );
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-  }
-
-  sched->addTask(t, level->eachPatch(), d_matlSet);
-}
-
-//______________________________________________________________________
-// Compute the turbulentFluxes for each variable the user requested
-void turbulentFluxes::doAnalysis(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* ,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch, cout_doing, "Doing turbulentFluxes::Q_mean");
 
-    printTask(patches, patch,cout_doing,"Doing turbulentFluxes::doAnalysis");
+    constCCVariable<Vector> vel;
+    new_dw->get ( vel, m_velVar->Label, m_velVar->matl, patch, m_gn, 0 );
 
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+    for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+      Qvar_ptr Q = m_Qvars[i];
 
-      switch(Q.subtype->getType()) {
+      switch(Q->subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          computeStatsWrapper< double >(old_dw, new_dw, patches, patch, Q);
+          Q_mean< double >( old_dw, new_dw, patch, Q, vel );
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
-
-          computeReynoldsStressWrapper( old_dw, new_dw, patches,  patch, Q);
+          Q_mean< Vector >( old_dw, new_dw, patch, Q, vel );
 
           break;
         }
@@ -695,308 +540,281 @@ void turbulentFluxes::doAnalysis(const ProcessorGroup* pg,
           throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
         }
       }
-    }  // qstats loop
-  }  // patches
+    }  //  loop Qvars
+  }  // loop patches
 }
-
-
-
-
-//______________________________________________________________________
-//  computeStatsWrapper:
-template <class T>
-void turbulentFluxes::computeStatsWrapper( DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const PatchSubset* patches,
-                                      const Patch*    patch,
-                                      Qstats& Q)
-{
-  simTime_vartype simTimeVar;
-  old_dw->get(simTimeVar, m_simulationTimeLabel);
-  double now = simTimeVar;
-
-  if(now < d_startTime || now > d_stopTime){
-
-//    proc0cout << " IGNORING------------DataAnalysis: turbulentFluxes" << endl;
-    allocateAndZeroStats<T>( new_dw, patch, Q);
-    carryForwardSums( old_dw, new_dw, patches, Q );
-  }
-  else {
-//    proc0cout << " Computing------------DataAnalysis: turbulentFluxes" << endl;
-
-    computeStats< T >(old_dw, new_dw, patch, Q);
-  }
-}
-
-
 
 //______________________________________________________________________
 //
-template <class T>
-void turbulentFluxes::computeStats( DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               const Patch*    patch,
-                               Qstats& Q)
+template<class T>
+void turbulentFluxes::Q_mean( DataWarehouse * old_dw,
+                              DataWarehouse * new_dw,
+                              const Patch   * patch,
+                              const Qvar_ptr  Q,
+                              constCCVariable<Vector> vel )
+
 {
-  const int matl = Q.matl;
+  const int matl = Q->matl;
 
   constCCVariable<T> Qvar;
   constCCVariable<T> Qsum_old;
-  constCCVariable<T> Qsum2_old;
+  constCCVariable<T> Q2sum_old;
+  constCCVariable<Vector> Qu_Qv_Qw_sum_old;
 
-  Ghost::GhostType  gn  = Ghost::None;
-  new_dw->get ( Qvar,      Q.Q_Label,      matl, patch, gn, 0 );
-  old_dw->get ( Qsum_old,  Q.Qsum_Label,   matl, patch, gn, 0 );
-  old_dw->get ( Qsum2_old, Q.Qsum2_Label,  matl, patch, gn, 0 );
+  new_dw->get ( Qvar,             Q->Label,              matl, patch, m_gn, 0 );
+  old_dw->get ( Qsum_old,         Q->Qsum_Label,         matl, patch, m_gn, 0 );
+  old_dw->get ( Q2sum_old,        Q->Q2sum_Label,        matl, patch, m_gn, 0 );
+  old_dw->get ( Qu_Qv_Qw_sum_old, Q->Qu_Qv_Qw_sum_Label, matl, patch, m_gn, 0 );
 
   CCVariable< T > Qsum;
-  CCVariable< T > Qsum2;
+  CCVariable< T > Q2sum;
   CCVariable< T > Qmean;
-  CCVariable< T > Qmean2;
-  CCVariable< T > Qvariance;
+  CCVariable< T > Q2mean;
+  CCVariable< Vector > Qu_Qv_Qw_sum;
+  CCVariable< Vector > Qu_Qv_Qw_mean;
 
-  new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
-  new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
-  new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
-  new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
-  new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
+  new_dw->allocateAndPut( Qsum,         Q->Qsum_Label,          matl, patch );
+  new_dw->allocateAndPut( Q2sum,        Q->Q2sum_Label,         matl, patch );
+  new_dw->allocateAndPut( Qmean ,       Q->Qmean_Label,         matl, patch );
+  new_dw->allocateAndPut( Q2mean ,      Q->Q2mean_Label,        matl, patch );
+  new_dw->allocateAndPut( Qu_Qv_Qw_sum, Q->Qu_Qv_Qw_sum_Label,  matl, patch );
+  new_dw->allocateAndPut( Qu_Qv_Qw_mean, Q->Qu_Qv_Qw_mean_Label,matl, patch );
 
-  timeStep_vartype timeStep_var;      
+  timeStep_vartype timeStep_var;
   old_dw->get(timeStep_var, m_timeStepLabel);
   int ts = timeStep_var;
 
-  Q.setStart(ts);
-  int Q_ts = Q.getStart();
+  Q->setStart(ts);
+  int Q_ts = Q->getStart();
   int timestep = ts - Q_ts + 1;
 
   T nTimesteps(timestep);
 
   //__________________________________
-  //  Lower order stats  1st and 2nd
+  //
   for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
     IntVector c = *iter;
 
-    T me = Qvar[c];     // for readability
-    Qsum[c]    = me + Qsum_old[c];
-    Qmean[c]   = Qsum[c]/nTimesteps;
+    T var = Qvar[c];     // for readability
+    Qsum[c]   = var + Qsum_old[c];
+    Qmean[c]  = Qsum[c]/nTimesteps;
 
-    Qsum2[c]   = me * me + Qsum2_old[c];
-    Qmean2[c]  = Qsum2[c]/nTimesteps;
+    Q2sum[c]  = multiply_Q_Q(var, var) + Q2sum_old[c];
+    Q2mean[c] = Q2sum[c]/nTimesteps;
 
-    Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
+    Qu_Qv_Qw_sum[c]  = multiply_Q_Vel(var, vel[c]) + Qu_Qv_Qw_sum_old[c];
+    Qu_Qv_Qw_mean[c] = Qu_Qv_Qw_sum[c]/nTimesteps;
 
-#if 0
+
+#ifdef DEBUG
     //__________________________________
     //  debugging
-    if ( c == d_monitorCell ){
-      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.Q_Label->getName() << " nTimestep: " << nTimesteps
+    if ( c == m_monitorCell ){
+      cout << "  turbulentFluxes:  " << m_monitorCell <<  setw(10)<< Q->Label->getName() << " nTimestep: " << nTimesteps
            <<"\t timestep " << ts
-           << " d_startTimeStep: " << d_startTimeTimestep
-           <<"\t Q_var: " << me
+           <<"\t Q_var: " << var
            <<"\t Qsum: "  << Qsum[c]
-           <<"\t Qmean: " << Qmean[c] << endl;
+           <<"\t Qmean: " << Qmean[c]
+           <<"\t Q2sum: " << Q2sum[c]
+           <<"\t Q2mean: " << Q2mean[c]<< endl;
     }
 #endif
 
   }
 
-  //__________________________________
-  //  Higher order stats  3rd and 4th
-  if( d_doHigherOrderStats ){
-
-    constCCVariable<T> Qsum3_old;
-    constCCVariable<T> Qsum4_old;
-
-    old_dw->get ( Qsum3_old, Q.Qsum3_Label, matl, patch, gn, 0 );
-    old_dw->get ( Qsum4_old, Q.Qsum4_Label, matl, patch, gn, 0 );
-
-    CCVariable< T > Qsum3;
-    CCVariable< T > Qsum4;
-    CCVariable< T > Qmean3;
-    CCVariable< T > Qmean4;
-
-    CCVariable< T > Qskewness;
-    CCVariable< T > Qkurtosis;
-    new_dw->allocateAndPut( Qsum3,     Q.Qsum3_Label,     matl, patch );
-    new_dw->allocateAndPut( Qsum4,     Q.Qsum4_Label,     matl, patch );
-    new_dw->allocateAndPut( Qmean3,    Q.Qmean3_Label,    matl, patch );
-    new_dw->allocateAndPut( Qmean4,    Q.Qmean4_Label,    matl, patch );
-    new_dw->allocateAndPut( Qskewness, Q.Qskewness_Label, matl, patch );
-    new_dw->allocateAndPut( Qkurtosis, Q.Qkurtosis_Label, matl, patch );
-
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-
-      T me = Qvar[c];     // for readability
-      T me2 = me * me;
-      T Qbar = Qmean[c];
-      T Qbar2 = Qbar * Qbar;
-      T Qbar3 = Qbar * Qbar2;
-      T Qbar4 = Qbar2 * Qbar2;
-
-      // skewness
-      Qsum3[c]  = me * me2 + Qsum3_old[c];
-      Qmean3[c] = Qsum3[c]/nTimesteps;
-
-      Qskewness[c] = Qmean3[c] - Qbar3 - 3 * Qvariance[c] * Qbar;
-
-      // kurtosis
-      Qsum4[c]  = me2 * me2 + Qsum4_old[c];
-      Qmean4[c] = Qsum4[c]/nTimesteps;
-
-      Qkurtosis[c] = Qmean4[c] - Qbar4
-                   - 6 * Qvariance[c] * Qbar2
-                   - 4 * Qskewness[c] * Qbar;
-    }
-  }
 }
+
+
 //______________________________________________________________________
-//  computeReynoldsStressWrapper:
-void turbulentFluxes::computeReynoldsStressWrapper( DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw,
-                                               const PatchSubset* patches,
-                                               const Patch*    patch,
-                                               Qstats& Q)
+//
+void turbulentFluxes::sched_turbFluxes( SchedulerP   & sched,
+                                        const LevelP & level)
 {
+  Task* t = scinew Task( "turbulentFluxes::task_turbFluxes",
+                    this,&turbulentFluxes::task_turbFluxes );
+
+  printSchedule(level,cout_doing,"turbulentFluxes::sched_turbFluxes");
+
+  t->requires(Task::OldDW, m_timeStepLabel);
+  t->requires(Task::OldDW, m_simulationTimeLabel);
+
+  //__________________________________
+  //
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    Qvar_ptr Q = m_Qvars[i];
+
+    const MaterialSubset* matl = Q->matlSubset;
+
+    t->requires( Task::NewDW, Q->Label,                matl, m_gn, 0 );
+    t->requires( Task::NewDW, Q->Qmean_Label,          matl, m_gn, 0 );
+    t->requires( Task::NewDW, Q->Q2mean_Label,         matl, m_gn, 0 );
+    t->requires( Task::NewDW, Q->Qu_Qv_Qw_mean_Label,  matl, m_gn, 0 );
+
+    t->computes ( Q->variance_Label,   matl );
+    t->computes ( Q->covariance_Label, matl );
+//    Q->print();
+  }
+  sched->addTask( t, level->eachPatch() , m_matlSet );
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+//
+void turbulentFluxes::task_turbFluxes( const ProcessorGroup  * ,
+                                       const PatchSubset     * patches,
+                                       const MaterialSubset  * ,
+                                       DataWarehouse         * old_dw,
+                                       DataWarehouse         * new_dw)
+{
+
+  //__________________________________
+  //
   simTime_vartype simTimeVar;
   old_dw->get(simTimeVar, m_simulationTimeLabel);
   double now = simTimeVar;
 
   if(now < d_startTime || now > d_stopTime){
-
-//    proc0cout << " IGNORING------------turbulentFluxes::computeReynoldsStress" << endl;
-    // define the matl subset for this variable
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( Q.matl );
-    matSubSet->addReference();
-
-    new_dw->transferFrom(    old_dw, d_velSum_Label,   patches, matSubSet );
-    allocateAndZero<Vector>( new_dw, d_velPrime_Label, d_RS_matl, patch );
-    allocateAndZero<Vector>( new_dw, d_velMean_Label,  d_RS_matl, patch );
-
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-  }else {
-//    proc0cout << " Computing------------turbulentFluxes::computeReynoldsStress" << endl;
-    computeReynoldsStress( old_dw, new_dw,patch, Q);
-  }
-}
-
-//______________________________________________________________________
-//  Computes u'v', u'w', v'w'
-void turbulentFluxes::computeReynoldsStress( DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw,
-                                        const Patch* patch,
-                                        Qstats& Q)
-{
-  if ( Q.computeRstess == false ){
     return;
   }
 
-  const int matl = Q.matl;
-  constCCVariable<Vector> vel;
-  constCCVariable<Vector> vel_mean;
-  constCCVariable<Vector> Qsum_old;
+  //__________________________________
+  //
+  for( auto p=0;p<patches->size();p++ ){
+    const Patch* patch = patches->get(p);
 
-  Ghost::GhostType  gn  = Ghost::None;
-  new_dw->get ( vel,       Q.Q_Label,        matl, patch, gn, 0 );
-  new_dw->get ( vel_mean,  Q.Qmean_Label,    matl, patch, gn, 0 );
-  old_dw->get ( Qsum_old,  d_velSum_Label,   matl, patch, gn, 0 );
+    printTask(patches, patch, cout_doing, "Doing turbulentFluxes::variance");
 
-  CCVariable< Vector > Qsum;
-  CCVariable< Vector > Qmean;
-  CCVariable< Vector > uv_vw_wu;
+    constCCVariable<Vector> velMean;
+    new_dw->get ( velMean, m_velVar->Qmean_Label, m_velVar->matl, patch, m_gn, 0 );
 
-  new_dw->allocateAndPut( Qsum,      d_velSum_Label,    matl, patch );
-  new_dw->allocateAndPut( Qmean,     d_velMean_Label,   matl, patch );
-  new_dw->allocateAndPut( uv_vw_wu,  d_velPrime_Label,  matl, patch );
-  
-  timeStep_vartype timeStep_var;      
-  old_dw->get(timeStep_var, m_timeStepLabel);
-  int ts = timeStep_var;
+    for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+      Qvar_ptr Q = m_Qvars[i];
 
-  Q.setStart(ts);
-  int Q_ts = Q.getStart();
-  int timestep = ts - Q_ts + 1;
+        switch(Q->subtype->getType()) {
 
-  Vector nTimesteps(timestep);
+        case TypeDescription::double_type:{         // double
+          turbFluxes< double >( new_dw, patch, Q, velMean );
+          break;
+        }
+        case TypeDescription::Vector: {             // Vector
+          turbFluxes< Vector >( new_dw, patch, Q, velMean );
+
+          break;
+        }
+        default: {
+          throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
+        }
+      }
+
+    }  // loop Qvars
+  }  // patches
+}
+
+
+//______________________________________________________________________
+//
+template<class T>
+void turbulentFluxes::turbFluxes( DataWarehouse * new_dw,
+                                  const Patch   * patch,
+                                  const Qvar_ptr  Q,
+                                  constCCVariable<Vector> velMean )
+{
+  const int matl = Q->matl;
+
+  constCCVariable< T > Qmean;
+  constCCVariable< T > Q2mean;
+  constCCVariable< Vector > Qu_Qv_Qw_mean;
+
+  new_dw->get ( Qmean,         Q->Qmean_Label,          matl, patch, m_gn, 0 );
+  new_dw->get ( Q2mean,        Q->Q2mean_Label,         matl, patch, m_gn, 0 );
+  new_dw->get ( Qu_Qv_Qw_mean, Q->Qu_Qv_Qw_mean_Label,  matl, patch, m_gn, 0 );
+
+  CCVariable< T >     variance;
+  CCVariable< Vector > covariance;
+  new_dw->allocateAndPut( variance,   Q->variance_Label,  matl, patch );
+  new_dw->allocateAndPut( covariance, Q->covariance_Label,matl, patch );
 
   //__________________________________
-  // UV_prime(i) = mean(U .* V) - mean(U) .* mean(V);
-  // UW_prime(i) = mean(U .* W) - mean(U) .* mean(W);
-  // VW_prime(i) = mean(V .* W) - mean(V) .* mean(W)
-
+  //
   for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
     IntVector c = *iter;
 
-    Vector me  = Multiply(vel[c], vel[c] );   /// u = uv, vw, wu
-    Qsum[c]    = me + Qsum_old[c];
-    Qmean[c]   = Qsum[c]/nTimesteps;
+    const T Q_mean = Qmean[c];     // for readability
+    const Vector mean_Qu_Qv_Qw = Qu_Qv_Qw_mean[c];
+    const Vector vel_mean      = velMean[c];
+
+    /* variance of Q <double>  = double  (mean(Q * Q)  - mean(Q)*mean(Q)
+
+       variance of Q <Vector>  = Vector( (mean(Q.x * u)  - mean(Q.x)*mean(u)
+                                         (mean(Q.y * v)  - mean(Q.y)*mean(v)
+                                         (mean(Q.z * w)  - mean(Q.z)*mean(w)
+    */
+    variance[c]   = Q2mean[c] - multiply_Q_Q( Q_mean, Q_mean );
 
 
-    uv_vw_wu[c] = Qmean[c] - Multiply(vel_mean[c],vel_mean[c]);
-#if 0
+    /* covariance of a Q <double>  = Vector( (mean(Q * u)  - mean(Q)*mean(u)
+                                             (mean(Q * v)  - mean(Q)*mean(v)
+                                             (mean(Q * w)  - mean(Q)*mean(w)
+
+     covariance of Q <Vector> =      Vector( (mean(Q.x * v)  - mean(Q.x)*mean(v)
+                                             (mean(Q.y * w)  - mean(Q.y)*mean(w)
+                                             (mean(Q.z * u)  - mean(Q.z)*mean(u)
+    */
+    covariance[c] = mean_Qu_Qv_Qw - multiply_Q_Vel( Q_mean, vel_mean );
+
+
+
+#ifdef DEBUG
     //__________________________________
     //  debugging
-    if ( c == d_monitorCell ){
-      cout << "  ReynoldsStress stats:  \n \t \t"<< d_monitorCell << " nTimestep: " << nTimesteps.x()
-           <<  " timestep " << ts
-           << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
-           <<"\n \t \t"<<Q.Q_Label->getName()<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
-           <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c]
-           <<"\n \t \tuv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
+    if ( c == m_monitorCell ){
+      cout << "  TurbFluctuations:  " << m_monitorCell <<  setw(10)<< Q->Label->getName()
+           <<"\t variance: "  << variance[c]
+           <<"\t covariance: " << covariance[c] << endl;
     }
 #endif
   }
 }
 
 //______________________________________________________________________
-//  allocateAndZero  turbulentFluxes variables
+//                    UTILITIES
+//______________________________________________________________________
+//  allocateAndZero averages variables
 template <class T>
-void turbulentFluxes::allocateAndZeroStats( DataWarehouse* new_dw,
-                                      const Patch* patch,
-                                      const Qstats& Q )
+void turbulentFluxes::allocateAndZeroMeans( DataWarehouse * new_dw,
+                                            const Patch   * patch,
+                                            Qvar_ptr Q )
 {
-  int matl = Q.matl;
-  allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
-  allocateAndZero<T>( new_dw, Q.Qmean_Label,      matl, patch );
-
-  if( d_doHigherOrderStats ){
-    allocateAndZero<T>( new_dw, Q.Qskewness_Label, matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qkurtosis_Label, matl, patch );
-  }
-
+  int matl = Q->matl;
+  allocateAndZero<T>(      new_dw, Q->Qmean_Label,          matl, patch );
+  allocateAndZero<T>(      new_dw, Q->Q2mean_Label,         matl, patch );
+  allocateAndZero<Vector>( new_dw, Q->Qu_Qv_Qw_mean_Label, matl, patch );
 }
 
 //______________________________________________________________________
 //  allocateAndZero  summation variables
 template <class T>
 void turbulentFluxes::allocateAndZeroSums( DataWarehouse* new_dw,
-                                      const Patch* patch,
-                                      Qstats& Q )
+                                           const Patch  * patch,
+                                           Qvar_ptr Q )
 {
-  int matl = Q.matl;
-  if ( !Q.isInitialized[lowOrder] ){
-    allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-//    proc0cout << "    turbulentFluxes: " << Q.Q_Label->getName() << " initializing low order sums on patch: " << patch->getID()<<endl;
-  }
-
-  if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
-    allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
-    allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
-//    proc0cout << "    turbulentFluxes: " << Q.Q_Label->getName() << " initializing high order sums on patch: " << patch->getID() << endl;
+  int matl = Q->matl;
+  if ( !Q->isInitialized ){
+    allocateAndZero<T>(      new_dw, Q->Qsum_Label,           matl, patch );
+    allocateAndZero<T>(      new_dw, Q->Q2sum_Label,          matl, patch );
+    allocateAndZero<Vector>( new_dw, Q->Qu_Qv_Qw_sum_Label,  matl, patch );
+//    proc0cout << "    turbulentFluxes: " << Q->Label->getName() << " initializing low order sums on patch: " << patch->getID()<<endl;
   }
 }
 
 //______________________________________________________________________
 //  allocateAndZero
 template <class T>
-void turbulentFluxes::allocateAndZero( DataWarehouse* new_dw,
-                                  const VarLabel* label,
-                                  const int       matl,
-                                  const Patch*    patch )
+void turbulentFluxes::allocateAndZero( DataWarehouse  * new_dw,
+                                       const VarLabel * label,
+                                       const int        matl,
+                                       const Patch    * patch )
 {
   CCVariable<T> Q;
   new_dw->allocateAndPut( Q, label, matl, patch );
@@ -1006,26 +824,23 @@ void turbulentFluxes::allocateAndZero( DataWarehouse* new_dw,
 
 
 //______________________________________________________________________
-//  carryForward  summation variables
-void turbulentFluxes::carryForwardSums( DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw,
-                                   const PatchSubset* patches,
-                                   const Qstats& Q )
+//  carryForward  variables from old_dw to new_dw
+void turbulentFluxes::carryForward( DataWarehouse     * old_dw,
+                                    DataWarehouse     * new_dw,
+                                    const PatchSubset * patches )
 {
-    // define the matl subset for this variable
-  MaterialSubset* matSubSet = scinew MaterialSubset();
-  matSubSet->add( Q.matl );
-  matSubSet->addReference();
+  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
+    const Qvar_ptr Q = m_Qvars[i];
 
-  new_dw->transferFrom(old_dw, Q.Qsum_Label,  patches, matSubSet  );
-  new_dw->transferFrom(old_dw, Q.Qsum2_Label, patches, matSubSet );
+    new_dw->transferFrom(old_dw, Q->Qsum_Label,           patches, Q->matlSubset );
+    new_dw->transferFrom(old_dw, Q->Q2sum_Label,          patches, Q->matlSubset );
+    new_dw->transferFrom(old_dw, Q->Qu_Qv_Qw_sum_Label,   patches, Q->matlSubset );
 
-  if( d_doHigherOrderStats ){
-    new_dw->transferFrom(old_dw, Q.Qsum3_Label, patches, matSubSet );
-    new_dw->transferFrom(old_dw, Q.Qsum4_Label, patches, matSubSet );
-  }
+    new_dw->transferFrom(old_dw, Q->Qmean_Label,          patches, Q->matlSubset );
+    new_dw->transferFrom(old_dw, Q->Q2mean_Label,         patches, Q->matlSubset );
+    new_dw->transferFrom(old_dw, Q->Qu_Qv_Qw_mean_Label,  patches, Q->matlSubset );
 
-  if(matSubSet && matSubSet->removeReference()){
-    delete matSubSet;
+    new_dw->transferFrom(old_dw, Q->variance_Label,       patches, Q->matlSubset );
+    new_dw->transferFrom(old_dw, Q->covariance_Label,     patches, Q->matlSubset );
   }
 }
