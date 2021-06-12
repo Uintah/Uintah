@@ -1,3 +1,9 @@
+Merge with the latest master
+
+Duplicate as kokkos_dev_aesp for Kokkos::Experimental::OpenMPTarget updates
+
+Experiment with merge of CMake branch
+
 Fix failing inputs and re-enable kokkos_rt tests
 
 Continue to refactor Arches tasks to support Kokkos::CUDA
