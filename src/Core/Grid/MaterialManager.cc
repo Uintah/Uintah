@@ -156,9 +156,12 @@ MaterialManager::parseAndLookupMaterial( ProblemSpecP& params,
       throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
     }
 
+   // remove quotation, a common user input error
+    matlname.erase (std::remove (matlname.begin(), matlname.end(), '\"' ), matlname.end());
+
     result = getMaterialByName(matlname);
     if (!result) {
-      throw ProblemSetupException("Cannot find a material named:" + matlname, __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot find a material named (" + matlname +")", __FILE__, __LINE__);
     }
   }
   return result;
