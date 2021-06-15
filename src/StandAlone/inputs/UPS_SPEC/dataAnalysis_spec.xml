@@ -10,7 +10,7 @@
                                                                             radiometer,       statistics,     turbulentFluxes, vorticity'" >
 
       <!--  Common __________________________________-->
-      <material                         spec="OPTIONAL STRING" />
+      <material                         spec="OPTIONAL STRING"  />
       <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name controlVolFluxes, lineExtract,     planeExtract,
                                                                                       particleExtract,  firstLawThermo,  minMax"/>
@@ -32,7 +32,8 @@
                                           attribute2="matl  OPTIONAL STRING"
                                           attribute3="level OPTIONAL STRING"
                                           attribute4="computeReynoldsStress OPTIONAL STRING"
-                                          attribute5="weighting OPTIONAL STRING 'none, nCells, mass'" />
+                                          attribute5="fluidVelocityLabel    OPTIONAL STRING"
+                                          attribute6="weighting OPTIONAL STRING 'none, nCells, mass'" />
       </Variables>
 
       <!--  controlVolFluxes _____________________________-->
