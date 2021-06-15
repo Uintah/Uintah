@@ -86,7 +86,7 @@ WARNING
     virtual void scheduleRestartInitialize( SchedulerP  & sched,
                                             const LevelP& level);
 
-    virtual void restartInitialize();
+    virtual void restartInitialize(){};
 
     virtual void scheduleDoAnalysis( SchedulerP   & sched,
                                      const LevelP & level);
@@ -115,6 +115,7 @@ WARNING
           delete matlSubset;
         }
       }
+
       int matl;
 
       //__________________________________
@@ -150,38 +151,45 @@ WARNING
       VarLabel * covariance_Label   {nullptr};
 
       MaterialSubset * matlSubset   {nullptr};
-      bool isInitialized;
+
+      bool isInitialized            {false};  // have the summation variables initialized
       const Uintah::TypeDescription* subtype;
 
       //__________________________________
-      // Code for keeping track of which timestep
-      int timestep;
-      bool isSet;
+      // summation timesteps
+      int  firstSumTimestep;          // first timestep
+      int  nTimesteps;                // number of timesteps summation has occured
+      bool is_firstSumTimestep_set;
 
-      void initializeTimestep(){
-        timestep = 0;
-        isSet    = false;
+      void initialize_summation_firstSumTimestep(){
+        firstSumTimestep        = 0;
+        is_firstSumTimestep_set = false;
       }
 
-      int getStart(){
-        return timestep;
+      int get_firstSumTimestep(){
+        return firstSumTimestep;
       }
 
-      // only set the timestep once
-      void setStart( const int me) {
+      // The timestep upon which summation started
+      void set_firstSumTimestep( const int ts) {
+        ASSERT ( ts >= 0 )
 
-        if(isSet == false){
-          timestep = me;
-          isSet   = true;
+        if( is_firstSumTimestep_set == false ){
+          firstSumTimestep = ts;
+          is_firstSumTimestep_set   = true;
         }
         //std::cout << "  setStart: " << isSet << " timestep: " << timestep << " " << name << std::endl;
       }
+
+
 
       //__________________________________
       // utilities
       void print(){
         const std::string name = Label->getName();
-        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
+        std::cout << std::setw(15) <<  name <<  " matl: " << matl
+                  << " subtype: " << subtype->getName()
+                  << " summation_firstSumTimestep: " << firstSumTimestep <<"\n";
       };
 
     };
@@ -234,12 +242,6 @@ WARNING
                     const MaterialSubset  *,
                     DataWarehouse         *,
                     DataWarehouse         * new_dw );
-
-    void restartInitialize(const ProcessorGroup *,
-                           const PatchSubset    * patches,
-                           const MaterialSubset *,
-                           DataWarehouse        *,
-                           DataWarehouse        * new_dw );
 
     void sched_Q_mean(SchedulerP   & sched,
                          const LevelP & level );
@@ -298,8 +300,8 @@ WARNING
 //    int       d_startTimeTimestep;            // timestep when stats are turn on.
     IntVector            m_monitorCell;         // debuggin cell to monitor
     std::vector< Qvar_ptr >  m_Qvars;
-    velocityVar_ptr          m_velVar;
-    MaterialSet          * m_matlSet {nullptr};
+    Qvar_ptr                 m_velVar;
+    MaterialSet            * m_matlSet {nullptr};
   };
 }
 
