@@ -109,13 +109,6 @@ WARNING
         matlSubset->addReference();
       };
 
-      ~Qvar()
-      {
-        if( matlSubset && matlSubset->removeReference()){
-          delete matlSubset;
-        }
-      }
-
       int matl;
 
       //__________________________________
@@ -275,6 +268,11 @@ WARNING
                      const Qvar_ptr  Q,
                      constCCVariable<Vector> velMean );
 
+    //__________________________________
+    //      Utilities
+    VarLabel* createVarLabel( std::string naem,
+                              const TypeDescription * td );
+                 
     template <class T>
     void allocateAndZero( DataWarehouse * new_dw,
                           const VarLabel* label,
@@ -302,6 +300,7 @@ WARNING
     std::vector< Qvar_ptr >  m_Qvars;
     Qvar_ptr                 m_velVar;
     MaterialSet            * m_matlSet {nullptr};
+    std::vector< std::string >  m_VarLabelNames;
   };
 }
 

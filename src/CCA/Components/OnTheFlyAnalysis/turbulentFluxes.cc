@@ -44,12 +44,12 @@
 
 //______________________________________________________________________
 //    TO DO:
-//  Run through fsanitize for memory leaks
-//  Polish
-// Testing:
+
+//   Bulletproofing
 //   Add timestep info to timestep directories
-//   single patch single processor
-//   multiprocessor
+// Testing:
+
+//   multiprocessor/ multipatch
 //   Correctness
 //   Correctness after starttime != 0
 //
@@ -87,13 +87,15 @@ turbulentFluxes::~turbulentFluxes()
   for (unsigned int i =0 ; i < m_Qvars.size(); i++) {
 
     Qvar_ptr Q = m_Qvars[i];
-    VarLabel::destroy( Q->Label );
     VarLabel::destroy( Q->Qsum_Label );
     VarLabel::destroy( Q->Q2sum_Label );
     VarLabel::destroy( Q->Qmean_Label );
     VarLabel::destroy( Q->Q2mean_Label );
     VarLabel::destroy( Q->Qu_Qv_Qw_sum_Label );
     VarLabel::destroy( Q->Qu_Qv_Qw_mean_Label );
+
+    VarLabel::destroy( Q->variance_Label );
+    VarLabel::destroy( Q->covariance_Label );
 
     if( Q->matlSubset && Q->matlSubset->removeReference()){
       delete Q->matlSubset;
@@ -120,7 +122,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
   // Start time < stop time
   if( d_startTime > d_stopTime ){
-    throw ProblemSetupException("\n ERROR:turbulentFluxes: startTime > stopTime. \n", __FILE__, __LINE__);
+    throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: startTime > stopTime. \n", __FILE__, __LINE__);
   }
 
   // debugging
@@ -146,7 +148,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
   }
   else {
-    throw ProblemSetupException("\n ERROR:turbulentFluxes: Missing <material> tag. \n", __FILE__, __LINE__);
+    throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -155,14 +157,14 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   m.push_back( defaultMatl );
 
   proc0cout << "__________________________________ Data Analysis module: turbulentFluxes" << endl;
-  proc0cout << "         Computing the turbulentFluxes and intermediate values for:"<< endl;
+  proc0cout << "         Computing the turbulentFluxes and intermediate values:"<< endl;
 
   //__________________________________
   //  Read in variables label names
 
    ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
-    throw ProblemSetupException("turbulentFluxes: Couldn't find <Variables> tag", __FILE__, __LINE__);
+    throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
   for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
@@ -179,7 +181,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
     // bulletproofing
     if(matl < 0 || matl > numMatls){
-      throw ProblemSetupException("turbulentFluxes: problemSetup: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
+      throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
     m.push_back(matl);
 
@@ -188,7 +190,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     VarLabel* label = VarLabel::find(name);
 
     if( label == nullptr ){
-      throw ProblemSetupException("turbulentFluxes label not found: " + name , __FILE__, __LINE__);
+      throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: The label (" + name + ") could not be found: " , __FILE__, __LINE__);
     }
 
     //__________________________________
@@ -201,7 +203,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
         ( subtype->getType() != TypeDescription::double_type &&
           subtype->getType() != TypeDescription::Vector ) ) {
       ostringstream warn;
-      warn << "ERROR:AnalysisModule:turbulentFluxest: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
+      warn << "ERROR:AnalysisModule:turbulentFluxes: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
@@ -212,15 +214,15 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     Q->subtype = subtype;
     Q->initialize_summation_firstSumTimestep();          // initialize the start timestep = 0;
 
-    Q->Qsum_Label          = VarLabel::create( "sum_"    + name,        td );
-    Q->Q2sum_Label         = VarLabel::create( "sum_"    + name + "2",  td );
-    Q->Qmean_Label         = VarLabel::create( "mean_"   + name,        td );
-    Q->Q2mean_Label        = VarLabel::create( "mean_"   + name + "2",  td );
-    Q->Qu_Qv_Qw_sum_Label  = VarLabel::create( "sum_Qu_Qv_Qw_"  + name, td_V );
-    Q->Qu_Qv_Qw_mean_Label = VarLabel::create( "mean_Qu_Qv_Qw_" + name, td_V );
+    Q->Qsum_Label          = createVarLabel( "sum_"    + name,        td );
+    Q->Q2sum_Label         = createVarLabel( "sum_"    + name + "2",  td );
+    Q->Qmean_Label         = createVarLabel( "mean_"   + name,        td );
+    Q->Q2mean_Label        = createVarLabel( "mean_"   + name + "2",  td );
+    Q->Qu_Qv_Qw_sum_Label  = createVarLabel( "sum_Qu_Qv_Qw_"  + name, td_V );
+    Q->Qu_Qv_Qw_mean_Label = createVarLabel( "mean_Qu_Qv_Qw_" + name, td_V );
 
-    Q->variance_Label      = VarLabel::create( "variance_"   + name,   td);
-    Q->covariance_Label    = VarLabel::create( "covariance_" + name, td_V);
+    Q->variance_Label      = createVarLabel( "variance_"   + name,   td);
+    Q->covariance_Label    = createVarLabel( "covariance_" + name, td_V);
 
     //__________________________________
     //  Is this the fluid velocity label?
@@ -235,23 +237,6 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     Q->isInitialized = false;
     m_Qvars.push_back( Q );
 
-#if 0
-    //__________________________________
-    //  bulletproofing
-    std::string variance = "variance_"+ name;
-    ostringstream mesg;
-    mesg << "";
-    if( !m_output->isLabelSaved( variance ) ){
-      mesg << variance;
-    }
-
-    if( mesg.str() != "" ){
-      ostringstream warn;
-      warn << "WARNING:  You've activated the DataAnalysis:turbulentFluxes module but your not saving the variable(s) ("
-           << mesg.str() << ")";
-      proc0cout << warn.str() << endl;
-    }
-#endif
   }
 
   //__________________________________
@@ -285,6 +270,29 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     }  // loop over children
   }
 
+
+  //__________________________________
+  //  Warnings
+
+  ostringstream warn;
+  warn << "";
+
+  for ( unsigned int i =0 ; i < m_VarLabelNames.size(); i++ ) {
+    std::string name = m_VarLabelNames[i];
+
+    if( !m_output->isLabelSaved( name ) ){
+      warn << "\t" << name << "\n";
+    }
+  }
+
+  if( warn.str() != "" ){
+    warn << "WARNING:  You've activated the DataAnalysis:turbulentFluxes module but your not saving the variable(s) (\n"
+         << warn.str() << ")";
+    proc0cout << warn.str() << endl;
+  }
+
+  //__________________________________
+  //  output
   for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
     Qvar_ptr Q = m_Qvars[i];
     Q->print();
@@ -293,7 +301,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  bulletproofing
   if ( !m_velVar ){
-    throw ProblemSetupException("\n ERROR:turbulentFluxes: A label for the fluid velocity [fluidVelocityLabel] was not found.", __FILE__, __LINE__);
+    throw ProblemSetupException("ERROR:turbulentFluxes: A label for the fluid velocity [fluidVelocityLabel] was not found.", __FILE__, __LINE__);
   }
 
   //__________________________________
@@ -360,7 +368,7 @@ void turbulentFluxes::initialize( const ProcessorGroup *,
           break;
         }
         default: {
-          throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
+          throw InternalError("ERROR:AnalysisModule:turbulentFluxes: invalid data type", __FILE__, __LINE__);
         }
       }
     }  // loop over Qvars
@@ -409,7 +417,6 @@ void turbulentFluxes::scheduleRestartInitialize( SchedulerP    & sched,
       t->computes ( Q->Q2mean_Label,        matl );
       t->computes ( Q->Qu_Qv_Qw_mean_Label, matl );
       addTask = true;
-      proc0cout << "    turbulentFluxes: Adding lowOrder computes for " << Q->Label->getName() << endl;
     }
   }
 
@@ -541,7 +548,7 @@ void turbulentFluxes::task_Q_mean( const ProcessorGroup * ,
           break;
         }
         default: {
-          throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
+          throw InternalError("ERROR:AnalysisModule:turbulentFluxes:: invalid data type", __FILE__, __LINE__);
         }
       }
     }  //  loop Qvars
@@ -705,7 +712,7 @@ void turbulentFluxes::task_turbFluxes( const ProcessorGroup  * ,
           break;
         }
         default: {
-          throw InternalError("turbulentFluxes: invalid data type", __FILE__, __LINE__);
+          throw InternalError("ERROR:AnalysisModule:turbulentFluxes:: invalid data type", __FILE__, __LINE__);
         }
       }
 
@@ -781,6 +788,17 @@ void turbulentFluxes::turbFluxes( DataWarehouse * new_dw,
 
 //______________________________________________________________________
 //                    UTILITIES
+//______________________________________________________________________
+// create the varlabel and populate the global name vector
+VarLabel* turbulentFluxes::createVarLabel( const std::string name,
+                                           const TypeDescription * td )
+{
+  VarLabel * label = VarLabel::create( name, td);
+  m_VarLabelNames.push_back(name);
+
+  return label;
+}
+
 //______________________________________________________________________
 //  allocateAndZero averages variables
 template <class T>
