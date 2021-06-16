@@ -30,9 +30,9 @@
 /* 
    For reference, (if hypre is enabled, then) you are linking verses this Hypre:
 
-   @HYPRE_LIB_DIR_FLAG@
+   @HYPRE_INCLUDE_DIRS@
 
-   @INC_HYPRE_H@
+   @HYPRE_LIBRARIES@
 
    (Note, the above info is used to tell when the user configures
    verses a new Hypre, so please leave it here.)

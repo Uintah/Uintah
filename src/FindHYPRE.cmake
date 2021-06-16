@@ -23,13 +23,18 @@ find_library(
 
 if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
     ## Version information
-    file( READ ${HYPRE_INCLUDE_DIR}/HYPRE_config.h HYPRE_HEADER )
-    string( REGEX MATCH
-            "HYPRE_RELEASE_VERSION \"(([0-9])+(\.){0,1})+\""
-            HYPRE_VERSION
-            ${HYPRE_HEADER}
+    file( STRINGS ${HYPRE_INCLUDE_DIR}/HYPRE_config.h
+            version_string
+            LIMIT_COUNT 1000
+            REGEX ${pattern}
         )
-    message( WARNING "Not yet ready for hyper version parsing  ${HYPRE_VERSION}" )
+    string( REGEX MATCH "([0-9]\.[0-9]+\.[0-9]+)" HYPRE_VERSION  ${version_string} )
+    string( REGEX MATCHALL "([0-9]+)" version_split ${HYPRE_VERSION} )
+    message( STATUS "HYPRE:\n\tVERSION: ${HYPRE_VERSION}\n\tInclude dir: ${HYPRE_INCLUDE_DIR}" )
+    # Parse into separate numbers
+    list( GET version_split 1 HYPRE_VERSION_MINOR )
+    list( GET version_split 2 HYPRE_VERSION_PATCH )
+    list( GET version_split 0 HYPRE_VERSION_MAJOR )
 
     find_package_handle_standard_args( HYPRE
         FOUND_VAR HYPRE_FOUND

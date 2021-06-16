@@ -82,8 +82,7 @@ find_package( Boost
         1.65 # minimum version
         COMPONENTS filesystem system
     ) # Boost_FOUND, Boost_INCLUDE_DIRS, Boost_LIBRARY_DIRS, Boost_LIBRARIES
-MESSAGE( STATUS "Boost libs: ${Boost_LIBRARIES}" )
-MESSAGE( STATUS "Boost lib dir: ${Boost_LIBRARY_DIRS}" )
+message( STATUS "Boost information:\n\tInclude Dir: ${Boost_INCLUDE_DIRS}\n\tlibs: ${Boost_LIBRARIES}\n\tlib dir: ${Boost_LIBRARY_DIRS}" )
 if( NOT Boost_FOUND )
     message( WARNING "Boost wasn't found. Try defining 'BOOST_ROOT' or 'BOOSTROOT' in your configure line" )
     unset( HAVE_BOOST )
