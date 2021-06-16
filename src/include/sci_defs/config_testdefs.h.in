@@ -4,44 +4,44 @@
 /* define if the compiler supports basic C++11 syntax. We currently require this of our compilers */
 #define HAVE_CXX11
 
-/* Define to 1 if you have the <ext/algorithm> header file. */
-#cmakedefine01 HAVE_EXT_ALGORITHM
+/* Defined if you have the <ext/algorithm> header file. */
+#cmakedefine HAVE_EXT_ALGORITHM
 
-/* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine01 HAVE_INTTYPES_H
+/* Defined if you have the <inttypes.h> header file. */
+#cmakedefine HAVE_INTTYPES_H
 
-/* Define to 1 if you have the <limits.h> header file. */
-#cmakedefine01 HAVE_LIMITS_H
+/* Defined if you have the <limits.h> header file. */
+#cmakedefine HAVE_LIMITS_H
 
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine01 HAVE_MEMORY_H
+/* Defined if you have the <memory.h> header file. */
+#cmakedefine HAVE_MEMORY_H
 
-/* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine01 HAVE_STDINT_H
+/* Defined if you have the <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H
 
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine01 HAVE_STDLIB_H
+/* Defined if you have the <stdlib.h> header file. */
+#cmakedefine HAVE_STDLIB_H
 
 /* Define to 1 if you have the <strings.h> header file. */
 #cmakedefine01 HAVE_STRINGS_H
 
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine01 HAVE_STRING_H
+/* Defined if you have the <string.h> header file. */
+#cmakedefine HAVE_STRING_H
 
-/* Define to 1 if you have the <sys/select.h> header file. */
-#cmakedefine01 HAVE_SYS_SELECT_H
+/* Defined if you have the <sys/select.h> header file. */
+#cmakedefine HAVE_SYS_SELECT_H
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine01 HAVE_SYS_STAT_H
+/* Defined if you have the <sys/stat.h> header file. */
+#cmakedefine HAVE_SYS_STAT_H
 
-/* Define to 1 if you have the <sys/time.h> header file. */
-#cmakedefine01 HAVE_SYS_TIME_H
+/* Defined if you have the <sys/time.h> header file. */
+#cmakedefine HAVE_SYS_TIME_H
 
-/* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine01 HAVE_SYS_TYPES_H
+/* Defined if you have the <sys/types.h> header file. */
+#cmakedefine HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine01 HAVE_UNISTD_H
+/* Defined if you have the <unistd.h> header file. */
+#cmakedefine HAVE_UNISTD_H
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -62,12 +62,12 @@
 #undef PACKAGE_VERSION
 
 /* The size of `long long', as computed by sizeof. */
-#undef SIZEOF_LONG_LONG
+#define SIZEOF_LONG_LONG @LONG_LONG@
 
 /* The size of `void*', as computed by sizeof. */
-#undef SIZEOF_VOIDP
+#undef SIZEOF_VOIDP @VOIDP@
 
-/* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
+/* Defined if you have the ANSI C header files. */
+#cmakedefine STDC_HEADERS
 
 #endif
