@@ -71,8 +71,12 @@ set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
 
 
 #----------------------------------------------------------
+#
 # Find some required libraries
+#
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 # Boost: https://cmake.org/cmake/help/latest/module/FindBoost.html
 find_package( Boost
         1.65 # minimum version
@@ -86,57 +90,62 @@ if( NOT Boost_FOUND )
 else()
     set( HAVE_BOOST true )
 endif()
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 # see https://cmake.org/cmake/help/latest/module/FindMPI.html
-find_package( MPI COMPONENTS CXX ) # MPI::MPI_CXX
-if( NOT MPI_FOUND AND NOT MPI_CXX_FOUND )
-    # jcs Hypre requires MPI, so we might just force an MPI version to be found???
-    message( WARNING "MPI was not found. If you want an MPI version built, try setting 'MPIEXEC_EXECUTABLE' to the mpirun executable or 'MPI_HOME' to the installation path" )
-else()
-    set( CMAKE_REQUIRED_INCLUDES ${MPI_CXX_INCLUDE_DIRS} )
-    set( CMAKE_REQUIRED_FLAGS ${MPI_CXX_LINK_FLAGS} )
-    set( CMAKE_REQUIRED_LIBRARIES ${MPI_CXX_LIBRARIES} )
-    check_cxx_source_compiles(
-            "#include <mpi.h>
+find_package( MPI REQUIRED COMPONENTS CXX ) # MPI::MPI_CXX
+set( CMAKE_REQUIRED_INCLUDES ${MPI_CXX_INCLUDE_DIRS} )
+set( CMAKE_REQUIRED_FLAGS ${MPI_CXX_LINK_FLAGS} )
+set( CMAKE_REQUIRED_LIBRARIES ${MPI_CXX_LIBRARIES} )
+check_cxx_source_compiles(
+        "#include <mpi.h>
 inline int Add_error_string( int errorcode , const char *string ){
-  return MPI_Add_error_string( errorcode , string );
+return MPI_Add_error_string( errorcode , string );
 }
 int main(){ return 0; }
 "
-            MPI_CONST_WORKS
-    )
-    if( MPI_CONST_WORKS )
-        set( MPICONST "const" )
-    endif()
+        MPI_CONST_WORKS
+)
+if( MPI_CONST_WORKS )
+    set( MPICONST "const" )
 endif()
-message( STATUS "MPI_CXX_INCLUDE_DIRS: ${MPI_CXX_INCLUDE_DIRS}")
+message( STATUS "MPI INFORMATION:\n\tInclude dir: ${MPI_CXX_INCLUDE_DIRS}\n\tCXX Compiler: ${MPI_CXX_COMPILER}")
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 ## Python3: https://cmake.org/cmake/help/latest/module/FindPython3.html
 #find_package( Python3 COMPONENTS Interpreter )  # ${Python3_FOUND} ${Python3_EXECUTABLE}
 #if( NOT Python3_FOUND )
 #    message( WARNING "Python3 was not found. Regression testing won't work" )
 #endif()
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 # Zlib: https://cmake.org/cmake/help/latest/module/FindZLIB.html
 find_package( ZLIB REQUIRED ) # imports target ZLIB::ZLIB, defines ZLIB_INCLUDE_DIRS, ZLIB_LIBRARIES
 if( NOT ZLIB_FOUND )
     message( SEND_ERROR "ZLib was not found. Consider defining 'ZLIB_ROOT' to the path where zlib is installed" )
 endif()
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 # https://cmake.org/cmake/help/latest/module/FindLibXml2.html
 find_package( LibXml2 REQUIRED )  # LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS  -- can switch to LibXml2::LibXml2 once CMake 3.12 is required
+#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 # BLAS: https://cmake.org/cmake/help/latest/module/FindBLAS.html
-find_package( BLAS REQUIRED )  # BLAS_LIBRARIES
-set( HAVE_BLAS true )
-set( HAVE_CBLAS true )
+find_package( BLAS )  # BLAS_LIBRARIES
 if( APPLE )
     set( BLA_VENDOR Apple )
     set( HAVE_ACCELERATE true )
     set( CBLAS_H "Accelerate/Accelerate.h" )
+    set( HAVE_BLAS true )
+    set( HAVE_CBLAS true )
 else()
     function ( set_blas_header headers )
-        #    set( CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} )
+        set( CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} )
         foreach( header ${headers} )
             find_path( CBLAS_H_PATH ${header} )
             set( CMAKE_REQUIRED_INCLUDES ${CBLAS_H_PATH} )
@@ -145,9 +154,12 @@ else()
             if( ${HAVE_BLAS_H} )
                 set( CBLAS_H ${header} PARENT_SCOPE )
                 message( STATUS "Found BLAS header: ${header}" )
+                set( HAVE_BLAS true )
+                set( HAVE_CBLAS true )
                 break()
             endif()
         endforeach()
+        unset( CMAKE_REQUIRED_LIBRARIES )
         if( NOT HAVE_BLAS_H )
             message( "BLAS header wasn't found in: ${headers}" )
         endif()
@@ -157,7 +169,10 @@ endif()
 
 # LAPACK: https://cmake.org/cmake/help/latest/module/FindLAPACK.html
 find_package( LAPACK ) # LAPACK_LIBRARIES
+#--------------------------------------------------------------------
 
+
+#--------------------------------------------------------------------
 if( ENABLE_CUDA )
     # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html
     find_package( CUDAToolkit REQUIRED )

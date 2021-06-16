@@ -76,8 +76,6 @@ if( NOT NO_COMPONENTS )
         )
 endif( NOT NO_COMPONENTS )
 
-message( STATUS ${LIB_COLLECTION} )
-
 # create a library that is just a collection of all of the components we need to link against
 # when components are activated, they can add themselves to this interface
 # Note that ordering here is important, since dependency analysis was never properly done in Uintah library development

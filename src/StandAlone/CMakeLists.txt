@@ -16,7 +16,6 @@ target_link_libraries( sus
 
 
 # Create symlinks for input dir
-message( STATUS ${CMAKE_CURRENT_BINARY_DIR}/inputs )
 add_custom_target( input_dir_links ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink
             ${CMAKE_CURRENT_SOURCE_DIR}/inputs

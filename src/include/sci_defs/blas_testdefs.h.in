@@ -25,9 +25,9 @@
 #ifndef SCI_BLAS_DEFS_H
 #define SCI_BLAS_DEFS_H
 
-#cmakedefine01 HAVE_BLAS
-#cmakedefine01 HAVE_CBLAS
-#cmakedefine01 HAVE_ACCELERATE
+#cmakedefine HAVE_BLAS
+#cmakedefine HAVE_CBLAS
+#cmakedefine HAVE_ACCELERATE
 
 #if defined(HAVE_CBLAS)
 #  if !defined(__APPLE__) || !defined(HAVE_ACCELERATE)
