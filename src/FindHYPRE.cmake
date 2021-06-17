@@ -26,7 +26,7 @@ if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
     file( STRINGS ${HYPRE_INCLUDE_DIR}/HYPRE_config.h
             version_string
             LIMIT_COUNT 1000
-            REGEX ${pattern}
+            REGEX "(RELEASE_VERSION)"
         )
     string( REGEX MATCH "([0-9]\.[0-9]+\.[0-9]+)" HYPRE_VERSION  ${version_string} )
     string( REGEX MATCHALL "([0-9]+)" version_split ${HYPRE_VERSION} )
