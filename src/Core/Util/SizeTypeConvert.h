@@ -39,7 +39,7 @@
 
 #include <sci_defs/config_defs.h>
 
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
 

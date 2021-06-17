@@ -65,7 +65,7 @@
 #define SIZEOF_LONG_LONG @LONG_LONG@
 
 /* The size of `void*', as computed by sizeof. */
-#undef SIZEOF_VOIDP @VOIDP@
+#define SIZEOF_VOIDP @VOIDP@
 
 /* Defined if you have the ANSI C header files. */
 #cmakedefine STDC_HEADERS

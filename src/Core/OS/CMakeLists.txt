@@ -21,5 +21,5 @@ target_include_directories( Core_OS
         PUBLIC
             ${CMAKE_SOURCE_DIR}
         PRIVATE
-            ${BOOST_INCLUDE_DIRS}
+            ${Boost_INCLUDE_DIRS}
     )
