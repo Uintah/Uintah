@@ -252,6 +252,7 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("melt_temp",           d_tmelt);
   mpm_ps->appendElement("is_rigid",            d_is_rigid);
   mpm_ps->appendElement("modalID",             d_modalID);
+  mpm_ps->appendElement("PistonMaterial",      d_isPistonMaterial);
 
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
