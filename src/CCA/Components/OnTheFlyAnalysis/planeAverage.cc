@@ -395,8 +395,8 @@ void planeAverage::initialize(const ProcessorGroup  *,
 
   //__________________________________
   //  reserve space for each of the VarLabels and weighting vars
-  const LevelP level = getLevelP(patches);
-  int L_indx = level->getIndex();
+  const Level* level = getLevel(patches);
+  const int L_indx   = level->getIndex();
 
   if ( d_progressVar[INITIALIZE][L_indx] == true ){
     return;
@@ -415,40 +415,8 @@ void planeAverage::initialize(const ProcessorGroup  *,
     planarVars.push_back( me->clone() );
   }
 
-  //  Loop over variables */
-  for (unsigned int i =0 ; i < planarVars.size(); i++) {
-
-    const TypeDescription::Type td = planarVars[i]->baseType;
-
-    IntVector EC  = IntVector( 2,2,2 ) * level->getExtraCells();    
-    IntVector L_lo_EC;      // includes extraCells
-    IntVector L_hi_EC;
-
-    level->computeVariableExtents( td, L_lo_EC, L_hi_EC );
-
-    int nPlanes = 0;
-    switch( d_planeOrientation ){
-      case XY:{
-        nPlanes = L_hi_EC.z() - L_lo_EC.z() - EC.z();   // subtract EC for interior cells
-        break;
-      }
-      case XZ:{
-        nPlanes = L_hi_EC.y() - L_lo_EC.y() - EC.y();
-        break;
-      }
-      case YZ:{
-        nPlanes = L_hi_EC.x() - L_lo_EC.x() - EC.x();
-        break;
-      }
-      default:
-        break;
-    }
-
-    planarVars[i]->level = L_indx;
-    planarVars[i]->set_nPlanes(nPlanes);     // number of planes that will be averaged
-    planarVars[i]->reserve();                // reserve space for the planar variables
-  }
-
+  setAllPlanes(level, planarVars);
+  
   d_allLevels_planarVars.at(L_indx) = planarVars;
   d_progressVar[INITIALIZE][L_indx] = true;
 }
@@ -467,11 +435,11 @@ void planeAverage::sched_computePlanarAve(SchedulerP   & sched,
 {
   printSchedule(level,dbg_OTF_PA, d_className + "::sched_computePlanarAve");
 
-  sched_zeroPlanarVars(    sched, level);
+  sched_initializePlanarVars( sched, level);
 
-  sched_computePlanarSums( sched, level);
+  sched_computePlanarSums(    sched, level);
 
-  sched_sumOverAllProcs(   sched, level);
+  sched_sumOverAllProcs(      sched, level);
 
 }
 
@@ -497,15 +465,15 @@ void planeAverage::scheduleDoAnalysis(SchedulerP   & sched,
 //______________________________________________________________________
 //  This task is a set the variables sum = 0 for each variable type
 //
-void planeAverage::sched_zeroPlanarVars(SchedulerP   & sched,
-                                        const LevelP & level)
+void planeAverage::sched_initializePlanarVars(SchedulerP   & sched,
+                                              const LevelP & level)
 {
   //__________________________________
   //  Task to zero the summed variables;
-  printSchedule(level,dbg_OTF_PA, d_className + "::sched_zeroPlanarVars");
+  printSchedule(level,dbg_OTF_PA, d_className + "::sched_initializePlanarVars");
 
-  Task* t = scinew Task( "planeAverage::zeroPlanarVars",
-                     this,&planeAverage::zeroPlanarVars );
+  Task* t = scinew Task( "planeAverage::initializePlanarVars",
+                     this,&planeAverage::initializePlanarVars );
 
   t->setType( Task::OncePerProc );
   const PatchSet* perProcPatches = m_scheduler->getLoadBalancer()->getPerProcessorPatchSet(level);
@@ -517,11 +485,11 @@ void planeAverage::sched_zeroPlanarVars(SchedulerP   & sched,
 
 //______________________________________________________________________
 //
-void planeAverage::zeroPlanarVars(const ProcessorGroup * ,
-                                  const PatchSubset    * patches,
-                                  const MaterialSubset *,
-                                  DataWarehouse        * old_dw,
-                                  DataWarehouse        *)
+void planeAverage::initializePlanarVars(const ProcessorGroup * ,
+                                        const PatchSubset    * patches,
+                                        const MaterialSubset *,
+                                        DataWarehouse        * old_dw,
+                                        DataWarehouse        *)
 {
   // With multiple levels a rank may not own any patches
   if( patches->empty() ){
@@ -538,12 +506,16 @@ void planeAverage::zeroPlanarVars(const ProcessorGroup * ,
     return;
   }
 
-  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::zeroPlanarVars" );
+  printTask( patches, dbg_OTF_PA,"Doing " + d_className + "::initializePlanarVars" );
+  
+  //__________________________________
+  // After a regrid the number of planes could have changed
+  std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
+  
+  setAllPlanes(level, planarVars);
 
   //__________________________________
   // Loop over variables
-  std::vector< std::shared_ptr< planarVarBase > > planarVars = d_allLevels_planarVars[L_indx];
-
   for (unsigned int i =0 ; i < planarVars.size(); i++) {
     std::shared_ptr<planarVarBase> analyzeVar = planarVars[i];
     analyzeVar->zero_all_vars();
@@ -731,8 +703,11 @@ void planeAverage::planarSum_weight( DataWarehouse * new_dw,
   IntVector hi;
   GridIterator iter=patch->getCellIterator();
   planeIterator( iter, lo, hi );
+  
+  const int floorIndex = analyzeVar->get_floorIndex();
 
   for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over all planes for this patch
+    const int i = z - floorIndex;                   // With AMR the plane floor index may not = 0
 
     Ttype sum( 0 );                                 // initial values on this plane/patch
     int nCells = 0;
@@ -749,16 +724,17 @@ void planeAverage::planarSum_weight( DataWarehouse * new_dw,
 
       }
     }
-    local_weight_sum[z] = sum;
-    local_nCells_sum[z] = nCells;
+    local_weight_sum[i] = sum;
+    local_nCells_sum[i] = nCells;
   }
 
   //__________________________________
   //  Add to the existing sums
   //  A proc could have more than 1 patch
   for ( auto z = lo.z(); z<hi.z(); z++ ) {
-    proc_weight_sum[z] += local_weight_sum[z];
-    proc_nCells_sum[z] += local_nCells_sum[z];
+    const int i = z - floorIndex;                   // With AMR the plane floor index may not = 0
+    proc_weight_sum[i] += local_weight_sum[i];
+    proc_nCells_sum[i] += local_nCells_sum[i];
   }
 
   analyzeVar->setPlanarWeight( proc_weight_sum, proc_nCells_sum );
@@ -798,16 +774,18 @@ void planeAverage::planarSum_Q( DataWarehouse * new_dw,
   IntVector L_lo;
   IntVector L_hi;
   level->findInteriorCellIndexRange( L_lo, L_hi );
-  IntVector L_midPt = Uintah::roundNearest( ( L_hi - L_lo ).asVector()/2.0 );
+  IntVector L_midPt = L_lo +  Uintah::roundNearest( ( L_hi - L_lo ).asVector()/2.0 );
 
   IntVector plane_midPt = transformCellIndex( L_midPt.x(), L_midPt.y(), L_midPt.z() );
 
   IntVector lo;
   IntVector hi;
   planeIterator( iter, lo, hi );
+  const int floorIndex = analyzeVar->get_floorIndex();
 
   for ( auto z = lo.z(); z<hi.z(); z++ ) {          // This is the loop over all planes for this patch
-
+    const int i = z - floorIndex;                   // With AMR the plane floor index may not = 0
+    
     Ttype Q_sum( 0 );  // initial value
 
     for ( auto y = lo.y(); y<hi.y(); y++ ) {        // cells in the plane
@@ -822,15 +800,16 @@ void planeAverage::planarSum_Q( DataWarehouse * new_dw,
     // cell-centered position
     IntVector here = transformCellIndex( plane_midPt.x(), plane_midPt.y(), z );
 
-    local_CC_pos[z] = patch->cellPosition( here );
-    local_Q_sum[z]  = Q_sum;
+    local_CC_pos[i] = patch->cellPosition( here );
+    local_Q_sum[i]  = Q_sum;
   }
 
   //__________________________________
   //  Add this patch's contribution of Q_sum to existing Q_sum
   //  A proc could have more than 1 patch
   for ( auto z = lo.z(); z<hi.z(); z++ ) {
-    proc_Q_sum[z] += local_Q_sum[z];
+    const int i = z - floorIndex;                   // With AMR the plane floor index may not = 0
+    proc_Q_sum[i] += local_Q_sum[i];
   }
 
   // CC_positions and planar sum on this rank
@@ -1044,7 +1023,7 @@ void planeAverage::writeToFiles(const ProcessorGroup* pg,
 
         //__________________________________
         //  Write to the file
-        planarVars[i]->printAverage( fp, L_indx, tv.now );
+        planarVars[i]->printAverage( fp, level, tv.now );
 
         fflush(fp);
       }  // planarVars loop
@@ -1266,5 +1245,52 @@ void planeAverage::planeIterator( const GridIterator& patchIter,
     }
     default:
       break;
+  }
+}
+
+//______________________________________________________________________
+//
+void planeAverage::setAllPlanes(const Level * level,
+                                std::vector< std::shared_ptr< planarVarBase > > planarVars )
+                                
+{
+  const int L_indx = level->getIndex();
+  
+  //  Loop over variables */
+  for (unsigned int i =0 ; i < planarVars.size(); i++) {
+
+    const TypeDescription::Type td = planarVars[i]->baseType;
+
+    IntVector EC   = level->getExtraCells(); 
+    IntVector nEC  = IntVector( 2,2,2 ) * EC;    
+    IntVector L_lo_EC;      // includes extraCells
+    IntVector L_hi_EC;
+    int floorIndex = -9;
+    level->computeVariableExtents( td, L_lo_EC, L_hi_EC );
+
+    int nPlanes = 0;
+    switch( d_planeOrientation ){
+      case XY:{
+        nPlanes = L_hi_EC.z() - L_lo_EC.z() - nEC.z();   // subtract EC for interior cells
+        floorIndex = L_lo_EC.z() + EC.z();
+        break;
+      }
+      case XZ:{
+        nPlanes = L_hi_EC.y() - L_lo_EC.y() - nEC.y();
+        floorIndex = L_lo_EC.y() + EC.y();
+        break;
+      }
+      case YZ:{
+        nPlanes = L_hi_EC.x() - L_lo_EC.x() - nEC.x();
+        floorIndex = L_lo_EC.x() + EC.x();
+        break;
+      }
+      default:
+        break;
+    }
+    planarVars[i]->set_floorIndex(floorIndex);  // cell index of bottom plane.  Not every level starts at 0 
+    planarVars[i]->level = L_indx;
+    planarVars[i]->set_nPlanes(nPlanes);        // number of planes that will be averaged
+    planarVars[i]->reserve();                   // reserve space for the planar variables
   }
 }

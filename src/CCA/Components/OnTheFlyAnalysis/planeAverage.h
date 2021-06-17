@@ -125,9 +125,10 @@ ______________________________________________________________________*/
 
       public:
         VarLabel* label;
-        int matl;
-        int level;
-        int nPlanes;                       // number of avg planes
+        int matl           =-9;
+        int level          =-9;
+        int nPlanes        =-9;            // number of avg planes
+        int floorIndex     =-9;            // cell index of bottom plane.  Not every level starts at 0 
         const int rootRank = 0;
         std::vector<Point>  CC_pos;        // cell center position
         std::vector<double> weight;        // weighting to compute ave
@@ -137,6 +138,10 @@ ______________________________________________________________________*/
           
         TypeDescription::Type baseType;
         TypeDescription::Type subType;
+
+        //__________________________________
+        void set_floorIndex(const int in) { floorIndex = in; }
+        int  get_floorIndex() { return floorIndex; }
 
         //__________________________________
         void set_nPlanes(const int in) { nPlanes = in; }
@@ -188,7 +193,8 @@ ______________________________________________________________________*/
                         const unsigned hi)
         {
           for ( auto z = lo; z<hi; z++ ) {
-            CC_pos[z] = pos[z];
+            const int i = z - floorIndex;
+            CC_pos[i] = pos[i];
           }
         }
 
@@ -213,6 +219,33 @@ ______________________________________________________________________*/
         }
 
         //__________________________________
+        //  common file header
+        void printHeader(  FILE* & fp,
+                           const Level* level,
+                           const double simTime )
+        {
+          int L_index = level->getIndex();
+          BBox b;
+          level->getInteriorSpatialRange( b );
+          const Point bmin = b.min();
+          const Point bmax = b.max();
+          
+          fprintf( fp, "# Level: %i nCells per plane: %i\n", L_index, nCells[0] );
+          fprintf( fp, "# Level spatial range:\n" );
+          fprintf( fp, "# %15.14E  %15.14E  %15.14E \n", bmin.x(), bmin.y(), bmin.z() );
+          fprintf( fp, "# %15.14E  %15.14E  %15.14E \n", bmax.x(), bmax.y(), bmax.z() );
+          
+          IntVector lo;
+          IntVector hi;
+          level->findInteriorCellIndexRange( lo, hi );
+          
+          fprintf( fp, "# Level interior CC index range:  " );
+          fprintf( fp, "# [%i %i %i] [%i %i %i] \n", lo.x(), lo.y(), lo.z(), hi.x(), hi.y(), hi.z() );
+          fprintf( fp, "# Simulation time: %16.15E \n", simTime );
+        }        
+        
+        
+        //__________________________________
         //   VIRTUAL FUNCTIONS
 
         virtual void reserve() = 0;
@@ -235,7 +268,7 @@ ______________________________________________________________________*/
         virtual  void ReduceBcastVar(const int rank ) = 0;
 
         virtual  void printAverage( FILE* & fp,
-                                    const int levelIndex,
+                                    const Level* level,
                                     const double simTime ) = 0;
     };
 
@@ -324,11 +357,11 @@ ______________________________________________________________________*/
 
         //__________________________________
         void printAverage( FILE* & fp,
-                           const int levelIndex,
+                           const Level* level,
                            const double simTime )
         {
-          fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );
-          fprintf( fp,"# Simulation time: %16.15E \n", simTime );
+          printHeader(fp, level, simTime);
+          
           fprintf( fp,"# Plane location x,y,z           Average\n" );
           fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
           if( weightType == NCELLS ){
@@ -467,11 +500,11 @@ ______________________________________________________________________*/
 
         //__________________________________
         void printAverage( FILE* & fp,
-                           const int levelIndex,
+                           const Level* level,
                            const double simTime )
         {
-          fprintf( fp,"# Level: %i nCells per plane: %i\n", levelIndex, nCells[0] );;
-          fprintf( fp,"# Simulation time: %16.15E \n", simTime );
+          printHeader(fp, level, simTime);
+          
           fprintf( fp,"# Plane location (x,y,z)           Average\n" );
           fprintf( fp,"# ________CC_loc.x__________CC_loc.y______________CC_loc.z______________%s", fileDesc.c_str() );
 
@@ -543,13 +576,16 @@ ______________________________________________________________________*/
 
 
     IntVector transformCellIndex(const int i,
-                            const int j,
-                            const int k);
+                                 const int j,
+                                 const int k);
                             
     void planeIterator( const GridIterator& patchIter,
                         IntVector & lo,
                         IntVector & hi );
-                        
+
+    void setAllPlanes(const Level * level,
+                      std::vector< std::shared_ptr< planarVarBase > > pv );
+                                                        
     void setAllLevels_planarVars( const int L_indx, 
                                   std::vector< std::shared_ptr< planarVarBase > > pv )
     {
@@ -587,10 +623,10 @@ ______________________________________________________________________*/
                     DataWarehouse        * new_dw);
 
 
-    void sched_zeroPlanarVars( SchedulerP   & sched,
-                               const LevelP & level );
+    void sched_initializePlanarVars( SchedulerP   & sched,
+                                     const LevelP & level );
 
-    void zeroPlanarVars(const ProcessorGroup * pg,
+    void initializePlanarVars(const ProcessorGroup * pg,
                      const PatchSubset    * patches,
                      const MaterialSubset *,
                      DataWarehouse        * old_dw,
