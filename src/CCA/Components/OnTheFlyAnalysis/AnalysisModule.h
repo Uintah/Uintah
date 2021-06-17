@@ -84,6 +84,11 @@ namespace Uintah {
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                              const LevelP& level) = 0;
 
+    int createDirectory( mode_t mode,
+                         const std::string & rootPath,
+                         std::string       & path );
+
+
 
     //__________________________________
     //  time related

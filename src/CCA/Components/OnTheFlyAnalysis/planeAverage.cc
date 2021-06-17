@@ -1137,51 +1137,6 @@ void planeAverage::createFile(string  & filename,
 }
 
 //______________________________________________________________________
-// create a series of sub directories below the rootpath.
-int
-planeAverage::createDirectory( mode_t mode,
-                               const std::string & rootPath,
-                               std::string       & subDirs )
-{
-  struct stat st;
-
-  DOUT( dbg_OTF_PA, d_myworld->myRank() << " planeAverage:Making directory " << subDirs << "\n" );
-
-  for( std::string::iterator iter = subDirs.begin(); iter != subDirs.end(); ){
-
-    string::iterator newIter = std::find( iter, subDirs.end(), '/' );
-    std::string newPath = rootPath + "/" + std::string( subDirs.begin(), newIter);
-
-    // does path exist
-    if( stat( newPath.c_str(), &st) != 0 ){
-
-      int rc = mkdir( newPath.c_str(), mode);
-
-      // bulletproofing
-      if(  rc != 0 && errno != EEXIST ){
-        cout << "cannot create folder [" << newPath << "] : " << strerror(errno) << endl;
-        throw InternalError("\nERROR:dataAnalysisModule:planeAverage:  failed creating dir: "+newPath,__FILE__, __LINE__);
-      }
-    }
-    else {
-      if( !S_ISDIR( st.st_mode ) ){
-        errno = ENOTDIR;
-        cout << "path [" << newPath << "] not a dir " << endl;
-        return -1;
-      } else {
-        //cout << "path [" << newPath << "] already exists " << endl;
-      }
-    }
-
-    iter = newIter;
-    if( newIter != subDirs.end() ){
-      ++ iter;
-    }
-  }
-  return 0;
-}
-
-//______________________________________________________________________
 // transform cell index back to original orientation
 IntVector planeAverage::transformCellIndex(const int i,
                                            const int j,

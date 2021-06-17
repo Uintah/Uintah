@@ -177,3 +177,49 @@ bool AnalysisModule::isItTime( DataWarehouse * old_dw,
   timeVars tv;
   return getTimeVars( old_dw, level, prev_AnlysTimeLabel, tv);
 }
+
+
+//______________________________________________________________________
+// create a series of sub directories below the rootpath.
+int
+AnalysisModule::createDirectory( mode_t mode,
+                                const std::string & rootPath,
+                                std::string       & subDirs )
+{
+  struct stat st;
+
+//  DOUT( dbg_OTF_PA, d_myworld->myRank() << " planeAverage:Making directory " << subDirs << "\n" );
+
+  for( std::string::iterator iter = subDirs.begin(); iter != subDirs.end(); ){
+
+    std::string::iterator newIter = std::find( iter, subDirs.end(), '/' );
+    std::string newPath = rootPath + "/" + std::string( subDirs.begin(), newIter);
+
+    // does path exist
+    if( stat( newPath.c_str(), &st) != 0 ){
+
+      int rc = mkdir( newPath.c_str(), mode);
+
+      // bulletproofing
+      if(  rc != 0 && errno != EEXIST ){
+        std::cout << "cannot create folder [" << newPath << "] : " << strerror(errno) << "\n";
+        throw InternalError("\nERROR:dataAnalysisModule:  failed creating dir: "+newPath,__FILE__, __LINE__);
+      }
+    }
+    else {
+      if( !S_ISDIR( st.st_mode ) ){
+        errno = ENOTDIR;
+        std::cout << "path [" << newPath << "] not a dir \n";
+        return -1;
+      } else {
+        //cout << "path [" << newPath << "] already exists " << endl;
+      }
+    }
+
+    iter = newIter;
+    if( newIter != subDirs.end() ){
+      ++ iter;
+    }
+  }
+  return 0;
+}

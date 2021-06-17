@@ -132,7 +132,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
   //__________________________________
   //  read in when each variable started
   string comment = "__________________________________\n"
-                   "\tIf you want to overide the value of\n \t  startTimeTimestep\n"
+                   "\tIf you want to overide the value of\n \t  firstSumTimestep\n"
                    "\tsee checkpoints/t*****/timestep.xml\n"
                    "\t__________________________________";
   m_module_spec->addComment( comment ) ;
@@ -423,6 +423,9 @@ void turbulentFluxes::scheduleRestartInitialize( SchedulerP    & sched,
   // only add task if a variable was not found in the checkpoint
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), m_matlSet);
+  } 
+  else {
+    delete(t);
   }
 }
 

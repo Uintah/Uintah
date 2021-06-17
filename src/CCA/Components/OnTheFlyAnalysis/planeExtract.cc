@@ -158,14 +158,8 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     m.push_back(matl);
   }
 
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-
   //Construct the matl_set
-  d_matl_set->addAll(m);
+  d_matl_set->addAll_unique(m);
   d_matl_set->addReference();
 
   //__________________________________
@@ -416,6 +410,22 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     return;
   }
 
+   //  find udaPath, timestep and levelIndex for creating directories
+   string udaPath = m_output->getOutputLocation();
+
+   timeStep_vartype timeStep_var;
+   old_dw->get(timeStep_var, m_timeStepLabel);
+   int ts = timeStep_var;
+
+   ostringstream tname;
+   tname << "t" << std::setw(5) << std::setfill('0') << ts;
+   string timestep = tname.str();
+
+   ostringstream li;
+   li<<"L-"<<level->getIndex();
+   string levelIndex = li.str();
+
+
   //__________________________________
   //
   for(int p=0;p<patches->size();p++){
@@ -435,28 +445,9 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       // loop over each plane
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
 
-        // create the directory structure
-        string udaDir = m_output->getOutputLocation();
-        string dirName = d_planes[p]->name;
-        string planePath = udaDir + "/" + dirName;
+        string relativePath = d_planes[p]->name + "/" + timestep + "/" + levelIndex;
 
-        timeStep_vartype timeStep_var;
-        old_dw->get(timeStep_var, m_timeStepLabel);
-        int ts = timeStep_var;
-
-        ostringstream tname;
-        tname << "t" << std::setw(5) << std::setfill('0') << ts;
-        string timestep = tname.str();
-
-        ostringstream li;
-        li<<"L-"<<level->getIndex();
-        string levelIndex = li.str();
-        string path = planePath + "/" + timestep + "/" + levelIndex;
-
-        if( d_isDirCreated.count(path) == 0 ){
-          createDirectory( planePath, timestep, tv.now, levelIndex );
-          d_isDirCreated.insert( path );
-        }
+        createDirectory( 0777, udaPath,  relativePath );
 
         //__________________________________
         // find the physical domain and index range
@@ -465,7 +456,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         Point end_pt   = d_planes[p]->endPt;
 
         Box patchDomain = patch->getExtraBox();
-        if(level->getIndex() > 0){ // ignore extra cells on fine patches
+        if( level->getIndex() > 0 ){ // ignore extra cells on fine patches
           patchDomain = patch->getBox();
         }
 
@@ -487,12 +478,9 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
           }
         }
 
-        bool doWrite = ( containsCellInclusive(l, h, start_idx ) &&
-                         containsCellInclusive(l, h, end_idx ) );
-
         //__________________________________
         //  Loop over all the variables
-        if( doWrite ){
+        if( doesIntersect(l, h, start_idx, end_idx) ){
 
           for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
 
@@ -506,14 +494,15 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                               + labelName , __FILE__, __LINE__);
             }
 
+            //__________________________________
+            //  Open the file pointer and write the header
             ostringstream fname;
-            fname<< path << "/" << patch->getID() << ":"<< labelName <<"_"<< matl<<".dat";
+            fname<< udaPath <<"/"<< relativePath << "/" << patch->getID() << ":"<< labelName <<"_"<< matl<<".dat";
             string filename = fname.str();
 
-            //__________________________________
-            //  Open the file pointer
+
             FILE *fp;
-            createFile(filename, varLabel, matl, fp);
+            createFile(filename, varLabel, matl, tv.now, fp);
 
             //__________________________________
             //
@@ -652,6 +641,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
 void planeExtract::createFile(const string& filename,
                               const VarLabel* varLabel,
                               const int matl,
+                              const double time,
                               FILE*& fp )
 {
   // if the file already exists then exit.
@@ -664,14 +654,14 @@ void planeExtract::createFile(const string& filename,
   fp = fopen(filename.c_str(), "w");
 
   if (!fp){
-    perror("Error opening file:");
-    throw InternalError("\nERROR:dataAnalysisModule:planeExtract:  failed opening file"+filename,__FILE__, __LINE__);
+    throw InternalError("\nERROR:dataAnalysisModule:planeExtract:  failed opening file ("+filename+")",__FILE__, __LINE__);
   }
 
   //__________________________________
   //Write out the header
-  fprintf(fp,"#    X                      Y                     Z ");
- 
+  fprintf( fp, "# Simulation time: %16.15E \n", time );
+  fprintf( fp, "#    X                      Y                     Z ");
+
   const Uintah::TypeDescription* td = varLabel->typeDescription();
   const Uintah::TypeDescription* subtype = td->getSubType();
   string labelName = varLabel->getName();
@@ -701,66 +691,6 @@ void planeExtract::createFile(const string& filename,
   fflush(fp);
 
   cout << Parallel::getMPIRank() << " OnTheFlyAnalysis planeExtract results are located in " << filename << endl;
-}
-//______________________________________________________________________
-// create the directory structure   planeName/LevelIndex
-//
-void
-planeExtract::createDirectory(string& planeName, string& timestep, const double now, string& levelIndex)
-{
-  DIR *check = opendir(planeName.c_str());
-  if ( check == nullptr ) {
-    cout << Parallel::getMPIRank() << " planeExtract:Making directory " << planeName << endl;
-    MKDIR( planeName.c_str(), 0777 );
-  } else {
-    closedir(check);
-  }
-
-  // timestep
-  string path = planeName + "/" + timestep;
-  check = opendir( path.c_str() );
-
-  if ( check == nullptr ) {
-    cout << Parallel::getMPIRank() << " planeExtract:Making directory " << path << endl;
-    MKDIR( path.c_str(), 0777 );
-
-    // write out physical time
-    string filename = planeName + "/" + timestep + "/physicalTime";
-    FILE *fp;
-
-    bool done = false;
-    int tries = 0;
-
-    // On larger machines (stampede) you need to try more than once
-    while ( !done ){
-      tries ++;
-
-      fp = fopen(filename.c_str(), "w");
-
-      if (fp != nullptr ){
-        done = true;
-      }
-      if ( tries > 100){
-        throw InternalError( "planeExtract::createDirectory(): Unable to create file!", __FILE__, __LINE__ );
-      }
-    }
-
-    fprintf( fp, "%16.15E\n",now);
-    fclose(fp);
-
-  } else {
-    closedir(check);
-  }
-
-  // level index
-  path = planeName + "/" + timestep + "/" + levelIndex;
-  check = opendir( path.c_str() );
-
-  if ( check == nullptr ) {
-    MKDIR( path.c_str(), 0777 );
-  } else {
-    closedir(check);
-  }
 }
 
 //______________________________________________________________________
@@ -892,21 +822,3 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
   return CellIterator(start_idx,stop_idx);
 }
 
-
-//______________________________________________________________________
-//
-inline bool planeExtract::containsCellInclusive(const IntVector &low,
-                                                const IntVector &high,
-                                                const IntVector &cell)
-{
-  bool testLo =( low.x() <= cell.x()  &&
-                 low.y() <= cell.y()  &&
-                 low.z() <= cell.z() );
-
-
-  bool testHi = ( high.x() >= cell.x() &&
-                  high.y() >= cell.y() &&
-                  high.z() >= cell.z() );
-
-  return (testLo && testHi );
-}

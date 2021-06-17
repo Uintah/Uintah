@@ -687,11 +687,6 @@ ______________________________________________________________________*/
                     FILE*       & fp,
                     std::string & levelIndex);
 
-    int createDirectory( mode_t mode,
-                         const std::string & rootPath,
-                         std::string       & path );
-
-
 
     //__________________________________
     // global constants always begin with "d_"
