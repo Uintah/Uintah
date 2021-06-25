@@ -88,9 +88,8 @@ namespace Uintah {
                     DataWarehouse*,
                     DataWarehouse* new_dw);
 
-    void createFile(std::string& filename, FILE*& fp);
+    void createFile( const std::string& filename, FILE*& fp);
 
-    void createDirectory(std::string& lineName, std::string& levelIndex);
 
     void printHeader( FILE*& fp,
                       const Uintah::TypeDescription::Type myType);
@@ -108,7 +107,7 @@ namespace Uintah {
       VarLabel* fileVarsStructLabel;
     };
 
-    lineExtractLabel* ps_lb;
+    lineExtractLabel* m_lb;
 
     struct line{
       std::string  name;
@@ -125,10 +124,8 @@ namespace Uintah {
     std::vector<line*>     d_lines;
     int                    d_col_width = 16;    //  column width
 
-    const Material  * d_matl;
-    MaterialSet     * d_matl_set;
-    MaterialSubset  * d_zero_matl;
-    std::set<std::string> d_isDirCreated;
+    const Material  * d_matl         {nullptr};
+    MaterialSet     * d_matl_set     {nullptr};
   };
 }
 

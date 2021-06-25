@@ -240,6 +240,7 @@
     <!--____________________________________________________________________-->
     <DataAnalysis>
 
+
        <Module name="particleExtract">
        
         <material>structure</material>

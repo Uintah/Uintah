@@ -45,7 +45,7 @@
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
-  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>  
+  #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
 #endif
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -76,17 +76,17 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
 
   std::vector<AnalysisModule*> modules;
- 
+
   if (da_ps) {
-  
+
     for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
                       module_ps != nullptr;
                       module_ps = module_ps->findNextBlock( "Module" ) ) {
-                        
+
       if( !module_ps ) {
         throw ProblemSetupException( "\nERROR<DataAnalysis>: Could not find find <Module> tag.\n", __FILE__, __LINE__ );
       }
-      
+
       std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
       module = attributes["name"];
@@ -138,14 +138,14 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
       else if ( module == "firstLawThermo" ) {
         modules.push_back( scinew FirstLawThermo(      myworld, materialManager, module_ps ) );
       }
-#endif    
+#endif
 
       else {
         std::ostringstream msg;
         msg << "\nERROR<DataAnalysis>: Unknown analysis module : " << module << ".\n";
         throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
-    } 
+    }
   }
   return modules;
 }

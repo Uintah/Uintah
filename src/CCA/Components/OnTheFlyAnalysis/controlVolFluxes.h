@@ -169,7 +169,6 @@ DESCRIPTION
         std::map<std::string, VarLabel*> Q_labels;
 
         // labels for each CV
-
         std::vector<VarLabel*>     totalQ_CV;
         std::vector<VarLabel*>     net_Q_faceFluxes;
         std::vector<FaceLabelsMap> Q_faceFluxes;
@@ -182,11 +181,9 @@ DESCRIPTION
 
     //__________________________________
     // global constants
-    const MaterialSubset * m_zeroMatl;
-    MaterialSet          * m_zeroMatlSet;
-    PatchSet             * m_zeroPatch;
-    const MaterialSubset * m_matl;
-    MaterialSet          * m_matlSet;
+    PatchSet             * m_zeroPatch {nullptr};
+    const MaterialSubset * m_matl      {nullptr};
+    MaterialSet          * m_matlSet   {nullptr};
 
     int m_col_width = 18;    //  column width used in output formatting
     int m_precision = 12;    // number of significant digits in output

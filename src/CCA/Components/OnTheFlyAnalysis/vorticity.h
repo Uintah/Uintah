@@ -37,14 +37,14 @@
 #include <vector>
 
 namespace Uintah {
-  
+
   class ICELabel;
 
 /**************************************
 
 CLASS
    vorticity
-   
+
 GENERAL INFORMATION
 
    vorticity.h
@@ -54,72 +54,68 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    vorticity
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
   class vorticity : public AnalysisModule {
   public:
     vorticity(const ProcessorGroup* myworld,
               const MaterialManagerP materialManager,
               const ProblemSpecP& module_spec);
-              
+
     vorticity();
-                    
+
     virtual ~vorticity();
-   
+
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
-   
+
     virtual void outputProblemSpec(ProblemSpecP& ps){};
-                                  
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level){};
 
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level){};
-                                    
+
     virtual void restartInitialize(){};
-                                    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
-   
+
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
-                                      
+
   private:
-                    
+
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
-    
+
+
     // general labels
-    class vorticityLabel {
-    public:
-      VarLabel* vorticityLabel;
-    };
-    
-    vorticityLabel* v_lb;
+    VarLabel* vorticityLabel;
+
     ICELabel* I_lb;
-       
+
     //__________________________________
     // global constants
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
-    const MaterialSubset* d_matl_sub;
+    const Material      * d_matl      {nullptr};
+    MaterialSet         * d_matl_set  {nullptr};
+    const MaterialSubset* d_matl_sub  {nullptr};
 
     bool required;
   };

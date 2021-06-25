@@ -266,6 +266,10 @@ WARNING
         m_lastRegridTimestep = m_timeStep;
     }
     virtual int  getLastRegridTimeStep() { return m_lastRegridTimestep; }
+    
+    virtual bool wasRegridLastTimeStep() const {
+      return ( ( m_timeStep - m_lastRegridTimestep -1) == 0);
+    }
 
     // Some applications can set reduction variables
     virtual unsigned int numReductionVariable() const

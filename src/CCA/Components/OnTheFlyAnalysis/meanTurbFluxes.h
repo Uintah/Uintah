@@ -146,12 +146,12 @@ ______________________________________________________________________*/
                                      const LevelP & level );
 
     void populateVerifyLabels(const ProcessorGroup * ,
-                              const PatchSubset    * patches,         
-                              const MaterialSubset * ,                
-                              DataWarehouse        * ,          
+                              const PatchSubset    * patches,
+                              const MaterialSubset * ,
+                              DataWarehouse        * ,
                               DataWarehouse        * new_dw);
-                              
-    int findFilePositionOffset( const PatchSubset  * patches, 
+
+    int findFilePositionOffset( const PatchSubset  * patches,
                                 const int nPlaneCellPerPatch,
                                 const IntVector      pLo,
                                 const IntVector      pHi);
@@ -187,15 +187,15 @@ ______________________________________________________________________*/
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
     std::shared_ptr< velocityVar >          d_velocityVar;
 
-    MaterialSet*  d_matl_set;
-    
+    MaterialSet*  d_matl_set      {nullptr};
+
     VarLabel* d_lastCompTimeLabel {nullptr};
     VarLabel* d_verifyScalarLabel {nullptr};  // labels for verification
     VarLabel* d_verifyVectorLabel {nullptr};
 
     planeAverage * d_planeAve_1;
     planeAverage * d_planeAve_2;
-    
+
     IntVector d_monitorCell;             // Monitor this cells.  Used for debugging
     bool d_doVerification { false };
   };

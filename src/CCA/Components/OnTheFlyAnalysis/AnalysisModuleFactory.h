@@ -32,14 +32,14 @@
 
 namespace Uintah {
   class AnalysisModule;
-  
+
   class AnalysisModuleFactory {
 
   private:
     AnalysisModuleFactory();
     ~AnalysisModuleFactory();
-    
-  public:      
+
+  public:
     static
     std::vector< AnalysisModule*> create( const ProcessorGroup* myworld,
                                           const MaterialManagerP materialManager,
@@ -47,4 +47,4 @@ namespace Uintah {
   };
 }
 
-#endif 
+#endif

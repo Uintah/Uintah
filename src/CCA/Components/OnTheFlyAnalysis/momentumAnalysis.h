@@ -83,7 +83,7 @@ WARNING
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
 
@@ -126,9 +126,6 @@ WARNING
                          const std::string& side,
                          const Point& start,
                          const Point& end );
-
-    VarLabel* assignLabel( const std::string& desc );
-
 
 
     struct faceQuantities{
@@ -200,18 +197,17 @@ WARNING
     };
 
     std::map< int, cv_face* > d_cv_faces;
-    
+
 
     //__________________________________
     // global constants
-    MaterialSubset * d_zeroMatl;
-    MaterialSubset * d_pressMatl;
-    MaterialSet    * d_zeroMatlSet;
-    PatchSet       * d_zeroPatch;
+    MaterialSet    * d_matl_set     {nullptr};
+    MaterialSubset * d_pressMatl    {nullptr};
+    PatchSet       * d_zeroPatch    {nullptr};
 
     int d_matlIndx;                      // material index.
     int d_pressIndx;                     // pressure matl index
-    MaterialSet* d_matl_set;
+
 
   };
 }

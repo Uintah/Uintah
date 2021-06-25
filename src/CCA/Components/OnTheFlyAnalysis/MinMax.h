@@ -43,19 +43,19 @@
 #include <vector>
 
 namespace Uintah {
-  
 
-/**************************************   
+
+/**************************************
 GENERAL INFORMATION
 
    MinMax.h
-   
-   This computes the minimum and maximum values in the 
+
+   This computes the minimum and maximum values in the
    computational domain.
 
    Todd Harman
    Department of Mechanical Engineering
-   University of Utah  
+   University of Utah
 ****************************************/
   class MinMax : public AnalysisModule {
   public:
@@ -64,60 +64,58 @@ GENERAL INFORMATION
            const MaterialManagerP materialManager,
            const ProblemSpecP& module_spec);
     MinMax();
-                    
+
     virtual ~MinMax();
-   
+
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
-                              
-    virtual void outputProblemSpec(ProblemSpecP& ps){};    
-                                  
+
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
-                                    
+
     virtual void restartInitialize(){};
-                                    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
-   
+
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
 
   private:
-  
-    bool isRightLevel( const int myLevel, 
-                       const int L_indx, 
+
+    bool isRightLevel( const int myLevel,
+                       const int L_indx,
                        const Level * level);
 
-    void initialize(const ProcessorGroup*, 
+    void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void computeMinMax(const ProcessorGroup* pg,
-                       const PatchSubset* patches,    
-                       const MaterialSubset*,         
-                       DataWarehouse* old_dw,         
-                       DataWarehouse* new_dw);        
-                                               
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
+
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
-    void createFile(std::string& filename,
-                    FILE*& fp,
-                    std::string& levelIndex);
-    
-    void createDirectory(std::string& lineName);
+
+    void createFile(const std::string& filename,
+                    const std::string& levelIndex,
+                    FILE*& fp );
 
     template <class Tvar, class Ttype>
     void findMinMax( DataWarehouse*  new_dw,
@@ -125,20 +123,20 @@ GENERAL INFORMATION
                      const int       indx,
                      const Patch*    patch,
                      GridIterator    iter );
-                    
-    
+
+
     // general labels
     class MinMaxLabel {
     public:
       VarLabel* lastCompTimeLabel;
       VarLabel* fileVarsStructLabel;
     };
-    
+
     MinMaxLabel* d_lb;
-       
+
     //__________________________________
     // global constants always begin with "d_"
-    
+
     struct varProperties {
       VarLabel* label;
       VarLabel* reductionMinLabel;
@@ -147,13 +145,12 @@ GENERAL INFORMATION
       int level;
       MaterialSubset * matSubSet;
     };
-     
+
     std::vector<varProperties> d_analyzeVars;
-    
-    const Material *  d_matl;
-    MaterialSet    *  d_matl_set;
-    MaterialSubset *  d_zero_matl;
-    std::set<std::string> d_isDirCreated;
+
+    const Material *   d_matl       {nullptr};
+    MaterialSet    *   d_matl_set   {nullptr};
+    std::vector<bool>  d_firstPassThrough;
   };
 }
 

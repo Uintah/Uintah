@@ -26,7 +26,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DOUT.hpp>
 
@@ -101,10 +100,10 @@ controlVolume::~controlVolume(){};
 //______________________________________________________________________
 //
 void controlVolume::initialize( const Level* level)
-{  
+{
   m_lowIndx = findCell( level, m_box.lower() );
   m_highIndx = findCell( level, m_box.upper() );
-  
+
   proc0cout << " ControlVolume: " << m_CV_name << " " << m_lowIndx << " " << m_highIndx << "\n";
 
   // bulletproofing
@@ -170,7 +169,7 @@ CellIterator controlVolume::getFaceIterator(const controlVolume::FaceType& face,
 
   IntVector pLo = patch->getExtraCellLowIndex();
   IntVector pHi = patch->getExtraCellHighIndex();
-  
+
   IntVector lo = Max(lowPt,  pLo);
   IntVector hi = Min(highPt, pHi);
 
@@ -235,7 +234,7 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
                            m_lowIndx.y()  < p_hi.y() &&
                            m_highIndx.z() > p_lo.z() &&
                            m_lowIndx.z()  < p_hi.z() );
-       
+
   if( m_lowIndx.x()  >= p_lo.x()  && doesIntersect_YZ ) {
     faces.push_back( xminus );
   }
@@ -258,13 +257,13 @@ void controlVolume::getBoundaryFaces( std::vector<FaceType>& faces,
 
 //______________________________________________________________________
 //
-IntVector controlVolume::findCell( const Level * level, 
+IntVector controlVolume::findCell( const Level * level,
                                    const Point & p)
 {
   Vector  dx     = level->dCell();
   Point   anchor = level->getAnchor();
   Vector  v( (p - anchor) / dx);
-  
+
   IntVector cell (roundNearest(v));  // This is slightly different from Level implementation
   return cell;
 }
@@ -361,7 +360,7 @@ double controlVolume::getCellArea( const controlVolume::FaceType face,
 void
 controlVolume::print()
 {
-  DOUT( true, getExtents_string() );
+  DOUTR( true, getExtents_string() );
 }
 
 

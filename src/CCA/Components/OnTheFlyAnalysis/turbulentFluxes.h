@@ -272,7 +272,7 @@ WARNING
     //      Utilities
     VarLabel* createVarLabel( std::string naem,
                               const TypeDescription * td );
-                 
+
     template <class T>
     void allocateAndZero( DataWarehouse * new_dw,
                           const VarLabel* label,
