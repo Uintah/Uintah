@@ -216,7 +216,7 @@ AnalysisModule::createDirectory( mode_t mode,
 
   // This avoids using stat (slow)
   if( m_DirExists.count( subDirs ) != 0 ){
-    std::cout << " directory (" << subDirs << ") not creating it.\n";
+ //   std::cout << " directory (" << subDirs << ") not creating it.\n";
     return 0;
   }
 
