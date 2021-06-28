@@ -71,6 +71,8 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   d_oneOrTwoStep = 2;
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
 
+  ps->getWithDefault("include_rotation", d_includeRotation, false);
+
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
     if (!is ){
@@ -78,7 +80,23 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
                                   __FILE__, __LINE__);
     }
     double t0(-1.e9);
-    while(is) {
+    if(d_includeRotation){
+      while(is) {
+        double t1;
+        double vx, vy, vz, ox, oy, oz, wx, wy, wz;
+        is >> t1 >> vx >> vy >> vz >> ox >> oy >> oz >> wx >> wy >> wz;
+        if(is) {
+         if(t1<=t0){
+           throw ProblemSetupException("ERROR: profile file is not monotomically increasing", __FILE__, __LINE__);
+         }
+         d_vel_profile.push_back(std::pair<double,Vector>(t1,Vector(vx,vy,vz)));
+         d_rot_profile.push_back(std::pair<double,Vector>(t1,Vector(wx,wy,wz)));
+         d_ori_profile.push_back(std::pair<double,Vector>(t1,Vector(ox,oy,oz)));
+        }
+        t0 = t1;
+      }
+    } else {
+      while(is) {
         double t1;
         double vx, vy, vz;
         is >> t1 >> vx >> vy >> vz;
@@ -89,6 +107,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
             d_vel_profile.push_back( std::pair<double,Vector>(t1,Vector(vx,vy,vz)) );
         }
         t0 = t1;
+      }
     }
     if(d_vel_profile.size()<2) {
         throw ProblemSetupException("ERROR: Failed to generate valid velocity profile", __FILE__, __LINE__);
@@ -130,7 +149,45 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   d_matls.outputProblemSpec(contact_ps);
 }
 
+// find velocity from table of values
+Vector
+SpecifiedBodyContact::findValFromProfile(double t, 
+                                         vector<pair<double, Vector> > profile) const
+{
+  int smin = 0;
+  int smax = (int)(profile.size())-1;
+  double tmin = profile[0].first;
+  double tmax = profile[smax].first;
+  if(t<=tmin) {
+      return profile[0].second;
+  }
+  else if(t>=tmax) {
+      return profile[smax].second;
+  }
+  else {
+      // bisection search on table
+      // could probably speed this up by keeping copy of last successful
+      // search, and looking at that point and a couple to the right
+      //
+      while (smax>smin+1) {
+          int smid = (smin+smax)/2;
+          if(d_vel_profile[smid].first<t){
+            smin = smid;
+          }
+          else{
+            smax = smid;
+          }
+      }
+      double l  = (profile[smin+1].first-profile[smin].first);
+      double xi = (t-profile[smin].first)/l;
+      double vx = xi*profile[smin+1].second[0]+(1-xi)*profile[smin].second[0];
+      double vy = xi*profile[smin+1].second[1]+(1-xi)*profile[smin].second[1];
+      double vz = xi*profile[smin+1].second[2]+(1-xi)*profile[smin].second[2];
+      return Vector(vx,vy,vz);
+    }
+}
 
+#if 1
 // find velocity from table of values
 Vector
 SpecifiedBodyContact::findVelFromProfile(double t) const
@@ -167,6 +224,7 @@ SpecifiedBodyContact::findVelFromProfile(double t) const
       return Vector(vx,vy,vz);
     }
 }
+#endif
 
 // apply boundary conditions to interpolated velocity v^k
 void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
@@ -176,8 +234,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* new_dw)
 {
  if(d_oneOrTwoStep==2){
-  // const double simTime = d_materialManager->getElapsedSimTime();
-  
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
@@ -197,39 +253,51 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],           lb->gMassLabel,     dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+      new_dw->get(gmass[m],           lb->gMassLabel, dwi, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,     dwi, patch);
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi, patch);
     }
     
     // three ways to get velocity 
     //   if > stop time, always use stop velocity
     //   if we have a specified profile, use value from the velocity profile
     //   otherwise, apply rigid velocity to all cells that share a rigid body.
-    //
-    
+
     bool  rigid_velocity = true;
-    Vector requested_velocity( 0.0, 0.0, 0.0 );
+    Vector requested_velocity(0.0, 0.0, 0.0);
+    Vector requested_origin(0.0, 0.0, 0.0);
+    Vector requested_omega(0.0, 0.0, 0.0);
     if(simTime>d_stop_time) {
       requested_velocity = d_vel_after_stop;
       rigid_velocity = false;
     } else if(d_vel_profile.size()>0) {
-      requested_velocity = findVelFromProfile(simTime);
+      requested_velocity = findValFromProfile(simTime, d_vel_profile);
+//      requested_velocity = findVelFromProfile(simTime);
+      if(d_includeRotation){
+        requested_origin = findValFromProfile(simTime, d_ori_profile);
+        requested_omega  = findValFromProfile(simTime, d_rot_profile);
+      }
       rigid_velocity  = false;
     }
-    
+
+//    Point origin = Point(0.,0.,0.);
+//    Vector omega = Vector(0.,0.,1.);
+
     // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-      IntVector c = *iter; 
+      IntVector c = *iter;
+
+      Point NodePos = patch->getNodePosition(c);
+      Vector r = NodePos - requested_origin.asPoint();
+      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity[d_material][c];
+      }
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
-        Vector rigid_vel = requested_velocity;
-        if(rigid_velocity) {
-          rigid_vel = gvelocity[d_material][c];
-          if(n==d_material) continue; // compatibility with old mode, where rigid velocity doesnt change material 0
-        }
+//        if(n==d_material) continue; 
 
-       // set each velocity component being modified to a new velocity
+        // set each velocity component being modified to a new velocity
         Vector new_vel( gvelocity[n][c] );
         if(d_direction[0]) new_vel.x( rigid_vel.x() );
         if(d_direction[1]) new_vel.y( rigid_vel.y() );
@@ -239,9 +307,9 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
         if(!compare(gmass[d_material][c],0.)){
           gvelocity[n][c] = new_vel;
         }
-      }
-    }
-  }
+      } // loop over matls
+    }   // loop over nodes
+  }     // loop over patches
  }   // if d_oneOrTwoStep
 }
 
@@ -253,8 +321,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
   // set velocity to appropriate vel
-  // const double simTime = d_materialManager->getElapsedSimTime(); // FIXME: + dt ?
-    
+
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
@@ -267,7 +334,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > gvelocity(numMatls);
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
-  constNCVariable<Vector>                    gsurfnorm;
+  constNCVariable<Vector>               gsurfnorm;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -286,24 +353,35 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     // Compute the normals for the rigid material
-   if(d_NormalOnly){
-     new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
-   } // if(d_NormalOnly)
+    if(d_NormalOnly){
+      new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
+    } // if(d_NormalOnly)
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
     bool  rigid_velocity = true;
     Vector requested_velocity(0.0, 0.0, 0.0);
+    Vector requested_omega(0.0, 0.0, 0.0);
+    Vector requested_origin(0.0, 0.0, 0.0);
     if(simTime>d_stop_time) {
       rigid_velocity = false;
       requested_velocity = d_vel_after_stop;
     } else if(d_vel_profile.size()>0) {
       rigid_velocity = false;
-      requested_velocity = findVelFromProfile(simTime);
+      requested_velocity = findValFromProfile(simTime, d_vel_profile);
+//      requested_velocity = findVelFromProfile(simTime);
+      if(d_includeRotation){
+        requested_origin = findValFromProfile(simTime, d_ori_profile);
+        requested_omega  = findValFromProfile(simTime, d_rot_profile);
+      }
     }
 
     Vector reaction_force(0.0,0.0,0.0);
+    Vector reaction_torque(0.0,0.0,0.0);
+
+//    Point origin = Point(0.,0.,0.);
+//    Vector omega = Vector(0.,0.,1.);
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -314,15 +392,17 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
-      for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
-        Vector rigid_vel = requested_velocity;
-        if(rigid_velocity) {
-          rigid_vel = gvelocity_star[d_material][c];
-          if(n==d_material){
-             continue; // compatibility with rigid motion, doesnt affect matl 0
-          }
-        }
+      Point NodePos = patch->getNodePosition(c);
+      Vector r = NodePos - requested_origin.asPoint();
+      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity[d_material][c];
+      }
 
+      for(int  n = 0; n < numMatls; n++){ 
+//          if(n==d_material){
+//             continue;
+//          }
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){
           Vector normal = gsurfnorm[c];
@@ -331,8 +411,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
             Vector normal_normaldV = normal*normalDeltaVel;
             new_vel = gvelocity_star[n][c] - normal_normaldV;
           }
-        }
-        else{
+        } else{
           new_vel = gvelocity_star[n][c];
           if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
           if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
@@ -341,15 +420,17 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
         if (!compare(gmass[d_material][c], 0.)
         && (totalNodalVol/cell_vol) > d_vol_const){
-          //Vector old_vel = gvelocity_star[n][c];
+          Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
-          reaction_force -= ginternalForce[n][c];
+          reaction_force  -= ginternalForce[n][c];
+          reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
         }  // if
       }    // for matls
     }      // for Node Iterator
-    new_dw->put(sumvec_vartype(reaction_force), lb->RigidReactionForceLabel);
-  }
+    new_dw->put(sumvec_vartype(reaction_force),  lb->RigidReactionForceLabel);
+    new_dw->put(sumvec_vartype(reaction_torque), lb->RigidReactionTorqueLabel);
+  } // loop over patches
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
@@ -395,6 +476,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
   t->computes(lb->RigidReactionForceLabel);
+  t->computes(lb->RigidReactionTorqueLabel);
 
   sched->addTask(t, patches, ms);
 

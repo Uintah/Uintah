@@ -235,6 +235,7 @@ namespace Uintah {
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* TotalMomentumLabel;
       const VarLabel* RigidReactionForceLabel;
+      const VarLabel* RigidReactionTorqueLabel;
       const VarLabel* TotalLocalizedParticleLabel;
 
       const VarLabel* pCellNAPIDLabel;

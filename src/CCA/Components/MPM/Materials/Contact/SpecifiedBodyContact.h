@@ -136,6 +136,8 @@ DESCRIPTION
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
          
     Vector findVelFromProfile(double t) const;
+    Vector findValFromProfile(double t, 
+                        std::vector< std::pair<double, Vector> > profile) const;
     
     MaterialManagerP d_materialManager;
     double    d_stop_time;
@@ -145,9 +147,12 @@ DESCRIPTION
     int       NGP;
     int       NGN;
     bool      d_NormalOnly;
+    bool      d_includeRotation;
     std::string    d_filename;
     IntVector d_direction;
     std::vector< std::pair<double, Vector> > d_vel_profile;
+    std::vector< std::pair<double, Vector> > d_rot_profile;
+    std::vector< std::pair<double, Vector> > d_ori_profile;
     
   public:
     // Constructor
