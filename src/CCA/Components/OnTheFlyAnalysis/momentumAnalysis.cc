@@ -25,18 +25,14 @@
 #include <CCA/Components/OnTheFlyAnalysis/momentumAnalysis.h>
 #include <CCA/Components/OnTheFlyAnalysis/FileInfoVar.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
 
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Parallel/ProcessorGroup.h>
 
-#include <Core/OS/Dir.h> // for MKDIR
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 
@@ -57,26 +53,19 @@ using namespace std;
 //  This assumes that the variables all come from the new_dw
 //  This assumes the entire computational domain is being used as the control volume!!!         <<<<<<<<<<<<,
 
-
-
-static DebugStream cout_doing("momentumAnalysis",   false);
-static DebugStream cout_dbg("momentumAnalysis_dbg", false);
-
+Dout dout_OTF_MA("momentumAnalysis",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+Dout dbg_OTF_MA( "momentumAnalysis_dbg", "OnTheFlyAnalysis", "Displays detailed debugging info.", false);
+//______________________________________________________________________
+//
 momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
                                     const MaterialManagerP materialManager,
                                     const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_zeroMatl     = 0;
-  d_zeroMatlSet  = 0;
   d_zeroPatch    = 0;
   d_matlIndx     = -9;
   d_pressIndx    = 0;              // For ICE/MPMICE it's always 0.
-  
-  d_pressMatl = scinew MaterialSubset();
-  d_pressMatl->add(0);
-  d_pressMatl->addReference();
-  
+  d_pressMatl    = m_zeroMatl;
 
   labels = scinew MA_Labels();
 
@@ -92,21 +81,13 @@ momentumAnalysis::momentumAnalysis( const ProcessorGroup* myworld,
 //
 momentumAnalysis::~momentumAnalysis()
 {
-  cout_doing << " Doing: destorying momentumAnalysis " << endl;
-  if( d_zeroMatlSet  && d_zeroMatlSet->removeReference() ) {
-    delete d_zeroMatlSet;
-  }
-  if( d_zeroMatl && d_zeroMatl->removeReference() ) {
-    delete d_zeroMatl;
-  }
+  DOUTR(dout_OTF_MA, " Doing: Destructor momentumAnalysis " );
+
   if( d_zeroPatch && d_zeroPatch->removeReference() ) {
     delete d_zeroPatch;
   }
   if( d_matl_set && d_matl_set->removeReference() ) {
     delete d_matl_set;
-  }
-  if( d_pressMatl && d_pressMatl->removeReference() ) {
-    delete d_pressMatl;
   }
 
   VarLabel::destroy( labels->lastCompTime );
@@ -128,21 +109,12 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
                                     std::vector<std::vector<const VarLabel* > > &PState,
                                     std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  cout_doing << "Doing problemSetup \t\t\t\tmomentumAnalysis" << endl;
-
+  DOUTR(dout_OTF_MA, "Doing momentumAnalysis::problemSetup");
   //__________________________________
   //  Read in timing information
   m_module_spec->require( "samplingFrequency", m_analysisFreq );
   m_module_spec->require( "timeStart",         d_startTime );
   m_module_spec->require( "timeStop",          d_stopTime );
-
-  d_zeroMatl = scinew MaterialSubset();
-  d_zeroMatl->add(0);
-  d_zeroMatl->addReference();
-
-  d_zeroMatlSet = scinew MaterialSet();
-  d_zeroMatlSet->add(0);
-  d_zeroMatlSet->addReference();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
@@ -152,18 +124,14 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
 
   //__________________________________
   // find the material .  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
-  Material* matl;
-  if( m_module_spec->findBlock("material") ){
-    matl = m_materialManager->parseAndLookupMaterial( m_module_spec, "material" );
-  } else if ( m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    matl = m_materialManager->getMaterial(indx);
-  } else {
-    matl = m_materialManager->getMaterial(0);
+  Material* matl {nullptr};
+
+  // find the material to extract data from.
+  if(m_module_spec->findBlock("material") ){
+    matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
+  }
+  else {
+    throw ProblemSetupException("ERROR:AnalysisModule:momentumAnalysis: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   d_matlIndx = matl->getDWIndex();
@@ -171,32 +139,26 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
   vector<int> m;
   m.push_back(0);            // matl index for FileInfo label
   m.push_back( d_matlIndx );
-  
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
-  
+
   d_matl_set = scinew MaterialSet();
-  d_matl_set->addAll(m);
+  d_matl_set->addAll_unique(m);
   d_matl_set->addReference();
 
   // HARDWIRED FOR ICE/MPMICE
-  labels->vel_CC    = assignLabel( "vel_CC" );
-  labels->rho_CC    = assignLabel( "rho_CC" );
+  labels->vel_CC    = VarLabel::find( "vel_CC", "ERROR momentumAnalysis::problemSetup" );
+  labels->rho_CC    = VarLabel::find( "rho_CC", "ERROR momentumAnalysis::problemSetup" );
 
-  labels->uvel_FC   = assignLabel( "uvel_FCME" );
-  labels->vvel_FC   = assignLabel( "vvel_FCME" );
-  labels->wvel_FC   = assignLabel( "wvel_FCME" );
+  labels->uvel_FC   = VarLabel::find( "uvel_FCME", "ERROR momentumAnalysis::problemSetup" );
+  labels->vvel_FC   = VarLabel::find( "vvel_FCME", "ERROR momentumAnalysis::problemSetup" );
+  labels->wvel_FC   = VarLabel::find( "wvel_FCME", "ERROR momentumAnalysis::problemSetup" );
 
-  labels->pressX_FC = assignLabel( "pressX_FC" );
-  labels->pressY_FC = assignLabel( "pressY_FC" );
-  labels->pressZ_FC = assignLabel( "pressZ_FC" );
+  labels->pressX_FC = VarLabel::find( "pressX_FC", "ERROR momentumAnalysis::problemSetup" );
+  labels->pressY_FC = VarLabel::find( "pressY_FC", "ERROR momentumAnalysis::problemSetup" );
+  labels->pressZ_FC = VarLabel::find( "pressZ_FC", "ERROR momentumAnalysis::problemSetup" );
 
-  labels->tau_X_FC  = assignLabel( "tau_X_FC" );
-  labels->tau_Y_FC  = assignLabel( "tau_Y_FC" );
-  labels->tau_Z_FC  = assignLabel( "tau_Z_FC" );
+  labels->tau_X_FC  = VarLabel::find( "tau_X_FC", "ERROR momentumAnalysis::problemSetup" );
+  labels->tau_Y_FC  = VarLabel::find( "tau_Y_FC", "ERROR momentumAnalysis::problemSetup" );
+  labels->tau_Z_FC  = VarLabel::find( "tau_Z_FC", "ERROR momentumAnalysis::problemSetup" );
 
 
   //__________________________________
@@ -248,14 +210,14 @@ void momentumAnalysis::problemSetup(const ProblemSpecP& ,
 void momentumAnalysis::scheduleInitialize( SchedulerP   & sched,
                                            const LevelP & level )
 {
-  printSchedule(level,cout_doing,"momentumAnalysis::scheduleInitialize");
+  printSchedule(level, dout_OTF_MA, "momentumAnalysis::scheduleInitialize");
 
   Task* t = scinew Task("momentumAnalysis::initialize",
                   this, &momentumAnalysis::initialize);
 
   t->computes( labels->lastCompTime );
-  t->computes( labels->fileVarsStruct, d_zeroMatl );
-  sched->addTask(t, d_zeroPatch, d_zeroMatlSet);
+  t->computes( labels->fileVarsStruct, m_zeroMatl );
+  sched->addTask(t, d_zeroPatch, m_zeroMatlSet);
 }
 
 //______________________________________________________________________
@@ -268,7 +230,7 @@ void momentumAnalysis::initialize( const ProcessorGroup *,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing initialize");
+    printTask(patches, patch, dout_OTF_MA, "Doing momentumAnalysis::initialize");
 
     double tminus = d_startTime - 1.0/m_analysisFreq;
     new_dw->put( max_vartype(tminus), labels->lastCompTime );
@@ -317,7 +279,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
 
   //__________________________________
   //  compute the total momentum and fluxes
-  printSchedule( level,cout_doing,"momentumAnalysis::scheduleDoAnalysis" );
+  printSchedule( level, dout_OTF_MA,"momentumAnalysis::scheduleDoAnalysis" );
 
   Task* t0 = scinew Task( "momentumAnalysis::integrateMomentumField",
                      this,&momentumAnalysis::integrateMomentumField );
@@ -348,7 +310,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
   t0->computes( labels->totalCVMomentum );
   t0->computes( labels->convectMom_fluxes );
   t0->computes( labels->viscousMom_fluxes );
-  t0->computes( labels->pressForces );  
+  t0->computes( labels->pressForces );
 
   sched->addTask( t0, level->eachPatch(), d_matl_set );
 
@@ -358,15 +320,15 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP   & sched,
                     this,&momentumAnalysis::doAnalysis );
 
   sched_TimeVars( t1, level, labels->lastCompTime, true );
-  t1->requires( Task::OldDW, labels->fileVarsStruct, d_zeroMatl, gn, 0 );
+  t1->requires( Task::OldDW, labels->fileVarsStruct, m_zeroMatl, gn, 0 );
 
   t1->requires( Task::NewDW, labels->totalCVMomentum );
   t1->requires( Task::NewDW, labels->convectMom_fluxes );
   t1->requires( Task::NewDW, labels->viscousMom_fluxes );
   t1->requires( Task::NewDW, labels->pressForces );
 
-  t1->computes( labels->fileVarsStruct, d_zeroMatl );
-  sched->addTask( t1, d_zeroPatch, d_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
+  t1->computes( labels->fileVarsStruct, m_zeroMatl );
+  sched->addTask( t1, d_zeroPatch, m_zeroMatlSet);        // you only need to schedule patch 0 since all you're doing is writing out data
 }
 
 //______________________________________________________________________
@@ -393,7 +355,8 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup * pg,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing momentumAnalysis::integrateMomentumField");
+
+    printTask(patches, patch, dout_OTF_MA,"Doing momentumAnalysis::integrateMomentumField");
 
     Vector totalCVMomentum = Vector(0.,0.,0.);
 
@@ -442,8 +405,6 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup * pg,
       new_dw->get(tau_Y_FC,  labels->tau_Y_FC,   d_matlIndx, patch, gn,0);
       new_dw->get(tau_Z_FC,  labels->tau_Z_FC,   d_matlIndx, patch, gn,0);
 
-
-      cout_dbg.precision(15);
       //__________________________________
       // Sum the fluxes passing through control volume surface
       // and the pressure forces
@@ -456,9 +417,9 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup * pg,
         string faceName = patch->getFaceName(face );
         cv_face* cvFace = d_cv_faces[face];
 
-        cout_dbg << "\ncvFace: " <<  faceName << " faceType " << cvFace->face
-                 << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt << endl;
-        cout_dbg << "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir << endl;
+        DOUTR( dbg_OTF_MA, "cvFace: " <<  faceName << " faceType " << cvFace->face
+                           << " startPt: " << cvFace->startPt << " endPt: " << cvFace->endPt );
+        DOUTR( dbg_OTF_MA, "          norm: " << cvFace->normalDir << " p_dir: " << cvFace->p_dir );
 
         // define the iterator on this face  The default is the entire face
         Patch::FaceIteratorType SFC = Patch::SFCVars;
@@ -552,10 +513,10 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup * pg,
 
   // Ignore the task if a recompute time step has been requested upstream
   bool rts = new_dw->recomputeTimeStep();
-  
+
   const Level* level = getLevel(patches);
   timeVars tv;
-    
+
   getTimeVars( old_dw, level, labels->lastCompTime, tv );
   putTimeVars( new_dw, labels->lastCompTime, tv );
 
@@ -567,7 +528,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup * pg,
   //
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing doAnalysis");
+    printTask(patches, patch, dout_OTF_MA,"Doing momentumAnalysis::doAnalysis");
 
     //__________________________________
     // open the struct that contains the file pointer map.  We use FileInfoP types
@@ -619,7 +580,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup * pg,
     Vector visFlux = viscousFlux;
     Vector pForce  = pressForce;
 
-    fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n", 
+    fprintf(fp, "%16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E,   %16.15E\n",
                 tv.now,
                 (double)momentum.x(),
                 (double)momentum.y(),
@@ -705,7 +666,7 @@ void momentumAnalysis::integrateOverFace( const std::string faceName,
 //  Open the file if it doesn't exist and write the file header
 //______________________________________________________________________
 //
-void momentumAnalysis::createFile(string& filename,  
+void momentumAnalysis::createFile(string& filename,
                                   FILE*& fp)
 {
   // if the file already exists then exit.  The file could exist but not be owned by this processor
@@ -716,10 +677,10 @@ void momentumAnalysis::createFile(string& filename,
   }
 
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux                                               net viscous flux                                                             pressure force on control vol.\n");                                                                      
+  fprintf(fp, "#                                                 total momentum in the control volume                                          Net convective momentum flux                                               net viscous flux                                                             pressure force on control vol.\n");
   fprintf(fp, "#Time                    CV_mom.x                 CV_mom.y                  CV_mom.z                  momFlux.x               momFlux.y                momFlux.z                 visFlux.x                 visFlux.y                visFlux.z                 pressForce.x              pressForce.y             pressForce.z\n");
 
-  
+
   proc0cout << Parallel::getMPIRank() << " momentumAnalysis:Created file " << filename << endl;
 }
 
@@ -786,33 +747,13 @@ void momentumAnalysis::bulletProofing(GridP& grid,
 {
    //__________________________________
    // plane must be parallel to the coordinate system
-   bool X = ( start.x() == end.x() );
-   bool Y = ( start.y() == end.y() );  // 1 out of 3 of these must be true
-   bool Z = ( start.z() == end.z() );
+   // plane must be contained in the domain
 
-   bool validPlane = false;
-
-   if( !X && !Y && Z ){
-     validPlane = true;
-   }
-   if( !X && Y && !Z ){
-     validPlane = true;
-   }
-   if( X && !Y && !Z ){
-     validPlane = true;
-   }
-
-   if( validPlane == false ){
-     ostringstream warn;
-     warn << "\n ERROR:momentumAnalysis: the plane on face ("<< side
-          << ") that you've specified " << start << " " << end
-          << " is not parallel to the coordinate system. \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
+   bulletProofing_LinesPlanes( objectType::plane, grid, "1stLawThermo", start,end );
 
    //__________________________________
    //  plane must be on the edge of the domain
-   validPlane = true;
+   bool validPlane = true;
    BBox compDomain;
    grid->getInteriorSpatialRange(compDomain);
    Point min = compDomain.min();
@@ -846,40 +787,7 @@ void momentumAnalysis::bulletProofing(GridP& grid,
      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
    }
 
-   //__________________________________
-   //the plane can't exceed computational domain
-   if( start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-       end.x() > max.x()   || end.y() > max.y()   || end.z() > max.z() ){
-     ostringstream warn;
-     warn << "\n ERROR:1stLawThermo: a portion of plane that you've specified " << start
-          << " " << end << " lies outside of the computational domain. \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
 
-   if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-     ostringstream warn;
-     warn << "\n ERROR:1stLawThermo: the plane that you've specified " << start
-          << " " << end << " the starting point is > than the ending point \n" << endl;
-     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-   }
-}
-
-//______________________________________________________________________
-//  Find the VarLabel
-//______________________________________________________________________
-//
-VarLabel* momentumAnalysis::assignLabel( const std::string& varName )
-{
-  VarLabel* myLabel  = VarLabel::find( varName );
-
-  if( myLabel == nullptr ){
-    ostringstream warn;
-    warn << "ERROR momentumAnalysis One of the VarLabels for the analysis does not exist or could not be found\n"
-         << varName << "  address: " << myLabel << "\n";
-    throw InternalError(warn.str(), __FILE__, __LINE__);
-  }
-
-  return myLabel;
 }
 
 

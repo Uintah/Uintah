@@ -271,6 +271,7 @@ WARNING
     virtual bool isRegridTimeStep() const = 0;
     virtual void setRegridTimeStep( bool val ) = 0;
     virtual int  getLastRegridTimeStep() = 0;
+    virtual bool wasRegridLastTimeStep() const = 0;
     
     // Some applications can set reduction variables
     virtual void addReductionVariable( std::string name,

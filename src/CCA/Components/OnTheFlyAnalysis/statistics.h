@@ -76,7 +76,7 @@ WARNING
                               GridP& grid,
                               std::vector<std::vector<const VarLabel* > > &PState,
                               std::vector<std::vector<const VarLabel* > > &PState_preReloc);
-                              
+
     virtual void outputProblemSpec( ProblemSpecP& ps);
 
     virtual void scheduleInitialize(SchedulerP& sched,
@@ -125,19 +125,19 @@ WARNING
       // Code for keeping track of which timestep
       int timestep;
       bool isSet;
-      
+
       void initializeTimestep(){
         timestep = 0;
         isSet    = false;
       }
-      
+
       int getStart(){
         return timestep;
       }
-      
+
       // only set the timestep once
       void setStart( const int me) {
-        
+
         if(isSet == false){
           timestep = me;
           isSet   = true;
@@ -149,9 +149,9 @@ WARNING
         const std::string name = Q_Label->getName();
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
       };
-      
+
     };
-    
+
     //__________________________________
     // For Reynolds Shear Stress computations
     bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
@@ -236,9 +236,9 @@ WARNING
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
-    const Material       * d_matl;
-    MaterialSet          * d_matlSet;
-    const MaterialSubset * d_matSubSet;
+    const Material       * d_matl       {nullptr};
+    MaterialSet          * d_matlSet    {nullptr};
+    const MaterialSubset * d_matSubSet  {nullptr};
 
     bool required;
   };

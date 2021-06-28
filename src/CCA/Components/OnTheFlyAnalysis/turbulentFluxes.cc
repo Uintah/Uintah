@@ -24,16 +24,10 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/turbulentFluxes.h>
 
-#include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Scheduler.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/MaterialManager.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
@@ -59,7 +53,7 @@
 using namespace Uintah;
 using namespace std;
 
-Dout dbg_OTF_TF("turbulentFluxes", "OnTheFlyAnalysis", "turbulentFluxes debug stream", false);
+Dout dbg_OTF_TF("turbulentFluxes", "OnTheFlyAnalysis", "Task scheduling and execution.", false);
 
 //______________________________________________________________________
 //
@@ -187,11 +181,7 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
     // What is the label name and does it exist?
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-
-    if( label == nullptr ){
-      throw ProblemSetupException("ERROR:AnalysisModule:turbulentFluxes: The label (" + name + ") could not be found: " , __FILE__, __LINE__);
-    }
+    VarLabel* label = VarLabel::find( name, "ERROR turbulentFluxes::problemSetup <analyze>");
 
     //__________________________________
     // Only CCVariable < doubles > and < Vectors > for now
@@ -423,7 +413,7 @@ void turbulentFluxes::scheduleRestartInitialize( SchedulerP    & sched,
   // only add task if a variable was not found in the checkpoint
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), m_matlSet);
-  } 
+  }
   else {
     delete(t);
   }

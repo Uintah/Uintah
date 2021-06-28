@@ -24,19 +24,9 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/MaterialManager.h>
-
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-
-#include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <dirent.h>
@@ -49,15 +39,13 @@ using namespace Uintah;
 using namespace std;
 
 
-Dout dbg_OTF_PE("planeExtract", "OnTheFlyAnalysis", "planeExtract debug stream", false);
+Dout dbg_OTF_PE("planeExtract", "OnTheFlyAnalysis", "Task scheduling and execution.", false);
 //______________________________________________________________________
 planeExtract::planeExtract(const ProcessorGroup* myworld,
                            const MaterialManagerP materialManager,
                            const ProblemSpecP& module_spec )
   : AnalysisModule(myworld, materialManager, module_spec)
 {
-  d_matl_set = 0;
-  d_zero_matl = 0;
   d_lb = scinew planeExtractLabel();
   d_lb->lastWriteTimeLabel = VarLabel::create( "lastWriteTime_planeExtrct", max_vartype::getTypeDescription() );
 }
@@ -69,9 +57,6 @@ planeExtract::~planeExtract()
 
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
-  }
-   if(d_zero_matl && d_zero_matl->removeReference()) {
-    delete d_zero_matl;
   }
 
   VarLabel::destroy(d_lb->lastWriteTimeLabel);
@@ -93,7 +78,7 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
                                 std::vector<std::vector<const VarLabel* > > &PState,
                                 std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  DOUT(dbg_OTF_PE , "Doing problemSetup \t\t\t\tplaneExtract" );
+  DOUTR(dbg_OTF_PE , "Doing problemSetup \t\t\t\tplaneExtract" );
 
   int numMatls  = m_materialManager->getNumMatls();
 
@@ -111,22 +96,16 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     throw ProblemSetupException("planeExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
-
-  // find the material to extract data from.  Default is matl 0.
-  // The user can use either
-  //  <material>   atmosphere </material>
-  //  <materialIndex> 1 </materialIndex>
+  //__________________________________
+  // find the material to extract data from.
 
   const Material* matl = nullptr;
 
   if(m_module_spec->findBlock("material") ){
     matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
-  } else if (m_module_spec->findBlock("materialIndex") ){
-    int indx;
-    m_module_spec->get("materialIndex", indx);
-    matl = m_materialManager->getMaterial(indx);
-  } else {
-    matl = m_materialManager->getMaterial(0);
+  }
+  else {
+    throw ProblemSetupException("ERROR:AnalysisModule:planeExtract: Missing <material> tag. \n", __FILE__, __LINE__);
   }
 
   int defaultMatl = matl->getDWIndex();
@@ -168,11 +147,7 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
     var_spec->getAttributes(attribute);
 
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("planeExtract: analyze label not found: "
-                           + name , __FILE__, __LINE__);
-    }
+    VarLabel* label =VarLabel::find( name, "ERROR  planeExtract::problemSetup:analyze" );
 
     //__________________________________
     //  Bulletproofing
@@ -244,56 +219,24 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
       throw ProblemSetupException("\n ERROR:planeExtract: You must name each plane <plane name= something>\n",
                                   __FILE__, __LINE__);
     }
-
-    // plane must be parallel to the coordinate system
     bool X = (start.x() == end.x());
     bool Y = (start.y() == end.y());  // 1 out of 3 of these must be true
     bool Z = (start.z() == end.z());
 
-    bool validPlane = false;
     PlaneType planeType = NONE;
 
     if( !X && !Y && Z){               /* XY plane */
-      validPlane = true;
       planeType  = XY;
     }
     if( !X && Y && !Z){               /* XZ plane */
-      validPlane = true;
       planeType  = XZ;
     }
     if( X && !Y && !Z){               /* YZ plane */
-      validPlane = true;
       planeType  = YZ;
     }
-    if(validPlane == false){
-      ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
-           << " " << end << " is not parallel to the coordinate system. \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
 
-    //plane can't exceed computational domain
-    BBox compDomain;
-    grid->getSpatialRange(compDomain);
 
-    Point min = compDomain.min();
-    Point max = compDomain.max();
-
-    if(start.x() < min.x() || start.y() < min.y() ||start.z() < min.z() ||
-         end.x() > max.x() ||   end.y() > max.y() ||  end.z() > max.z() ){
-      ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
-           << " " << end << " begins or ends outside of the computational domain. \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
-    if( start.x() > end.x() || start.y() > end.y() || start.z() > end.z() ) {
-      ostringstream warn;
-      warn << "\n ERROR:planeExtract: the plane that you've specified " << start
-           << " " << end << " the starting point is > than the ending point \n" << endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
+    bulletProofing_LinesPlanes( objectType::plane, grid, "planeExtract", start,end );
 
     // Start time < stop time
     if(d_startTime > d_stopTime ){
@@ -375,8 +318,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     // bulletproofing
     if(d_varLabels[i] == nullptr){
       string name = d_varLabels[i]->getName();
-      throw InternalError("planeExtract: scheduleDoAnalysis label not found: "
-                          + name , __FILE__, __LINE__);
+      throw InternalError("planeExtract: scheduleDoAnalysis label ("+name+ ") not found.", __FILE__, __LINE__);
     }
 
     MaterialSubset* matSubSet = scinew MaterialSubset();
@@ -411,20 +353,12 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
   }
 
    //  find udaPath, timestep and levelIndex for creating directories
-   string udaPath = m_output->getOutputLocation();
-
-   timeStep_vartype timeStep_var;
-   old_dw->get(timeStep_var, m_timeStepLabel);
-   int ts = timeStep_var;
+   const string udaPath    = m_output->getOutputLocation();
+   const string levelIndex = to_string( level->getIndex() );
 
    ostringstream tname;
-   tname << "t" << std::setw(5) << std::setfill('0') << ts;
+   tname << "t" << std::setw(5) << std::setfill('0') << tv.timeStep;
    string timestep = tname.str();
-
-   ostringstream li;
-   li<<"L-"<<level->getIndex();
-   string levelIndex = li.str();
-
 
   //__________________________________
   //
@@ -490,8 +424,8 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
 
             // bulletproofing
             if(varLabel == nullptr){
-              throw InternalError("planeExtract: analyze label not found: "
-                              + labelName , __FILE__, __LINE__);
+              throw InternalError("planeExtract: analyze label ("+labelName+") not found"
+                                  , __FILE__, __LINE__);
             }
 
             //__________________________________

@@ -161,6 +161,7 @@
     <DataAnalysis>
 
       <Module name = "minMax">
+        <material> air </material>
         <samplingFrequency> 1e10 </samplingFrequency>
         <timeStart>          0   </timeStart>
         <timeStop>          100  </timeStop>

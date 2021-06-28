@@ -185,11 +185,8 @@ WARNING
 
     std::vector<VarLabel*> d_varLabels;
     std::vector<int>       d_varMatl;
-
-    std::vector<plane*>   d_planes;
-
-    MaterialSet     * d_matl_set;
-    MaterialSubset  * d_zero_matl;
+    std::vector<plane*>    d_planes;
+    MaterialSet     * d_matl_set      {nullptr};
   };
 }
 
