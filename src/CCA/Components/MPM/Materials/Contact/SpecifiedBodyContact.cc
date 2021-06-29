@@ -320,8 +320,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
-  // set velocity to appropriate vel
-
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
@@ -380,9 +378,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     Vector reaction_force(0.0,0.0,0.0);
     Vector reaction_torque(0.0,0.0,0.0);
 
-//    Point origin = Point(0.,0.,0.);
-//    Vector omega = Vector(0.,0.,1.);
-
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
       
@@ -396,10 +391,10 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       Vector r = NodePos - requested_origin.asPoint();
       Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
       if(rigid_velocity) {
-        rigid_vel = gvelocity[d_material][c];
+        rigid_vel = gvelocity_star[d_material][c];
       }
 
-      for(int  n = 0; n < numMatls; n++){ 
+      for(int  n = 0; n < numMatls; n++){
 //          if(n==d_material){
 //             continue;
 //          }
