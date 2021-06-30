@@ -231,9 +231,9 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
 
   //__________________________________
   //  On restart read the firstSumTimestep for each variable from checkpoing/t***/timestep.xml
-  if(restart_prob_spec){
-    ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
+  ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
 
+  if( restart_prob_spec && da_rs_ps ){
     ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "turbulentFluxes");
     ProblemSpecP vars_ps = stat_ps->findBlock("variables");
 
@@ -521,8 +521,6 @@ void turbulentFluxes::task_Q_mean( const ProcessorGroup * ,
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg_OTF_TF, "Doing turbulentFluxes::task_Q_mean");
 
-
-    m_velVar->print();
     constCCVariable<Vector> vel;
     new_dw->get ( vel, m_velVar->Label, m_velVar->matl, patch, m_gn, 0 );
 
@@ -615,8 +613,11 @@ void turbulentFluxes::Q_mean( DataWarehouse * old_dw,
     //__________________________________
     //  debugging
     if ( c == m_monitorCell ){
-      cout << "  turbulentFluxes:  " << m_monitorCell <<  setw(10)<< Q->Label->getName() << " nTimestep: " << nTimesteps
-           <<"\t timestep " << ts
+      cout << "  turbulentFluxes:  " << m_monitorCell <<  setw(10)<< Q->Label->getName() << " nTimestep: " << timesteps
+           <<"\t timestep " << ts;
+
+      cout.setf(ios::scientific,ios::floatfield);
+      cout << setprecision( 10 )
            <<"\t Q_var: " << var
            <<"\t Qsum: "  << Qsum[c]
            <<"\t Qmean: " << Qmean[c]
@@ -626,7 +627,6 @@ void turbulentFluxes::Q_mean( DataWarehouse * old_dw,
 #endif
 
   }
-
 }
 
 
