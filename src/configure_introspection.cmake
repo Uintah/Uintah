@@ -78,6 +78,10 @@ set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
 
 #--------------------------------------------------------------------
 # Boost: https://cmake.org/cmake/help/latest/module/FindBoost.html
+if( $ENV{BOOST_DIR} )
+    message( STATUS "searching for boost in environment path: $ENV{BOOST_DIR}" )
+    set( BOOST_ROOT $ENV{BOOST_DIR} )
+endif()
 find_package( Boost
         1.65 # minimum version
         COMPONENTS filesystem system

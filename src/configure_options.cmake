@@ -24,6 +24,8 @@ endif()
 option( STATIC_BUILD "Link Uintah libraries statically" OFF )
 if( STATIC_BUILD )
     set( BUILD_SHARED_LIBS OFF )
+else()
+    set( BUILD_SHARED_LIBS ON )
 endif()
 
 set( ASSERTION_LEVEL 0 CACHE STRING "Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.")
@@ -33,7 +35,6 @@ if( CMAKE_BUILD_TYPE EQUAL Release )
 elseif( CMAKE_BUILD_TYPE EQUAL Debug )
     set( ASSERTION_LEVEL 3 )
 endif()
-
 option( ENABLE_UNIT_TESTS "Turn on the unit tests." ON )  # jcs check this
 option( ENABLE_MINIMAL "Build a minimal set of libraries" OFF ) # jcs keep this?
 
@@ -47,8 +48,8 @@ option( ENABLE_WASATCH "Enable the Wasatch component" OFF )
 
 option( ENABLE_RAY_SCATTER "Enable the ray scattering tools" OFF )
 
-cmake_dependent_option( ENABLE_MPM_ICE "Enable MPM-ICE" OFF
-        "ENABLE_MPM;ENABLE_ICE" ON
+cmake_dependent_option( ENABLE_MPM_ICE "Enable MPM-ICE" ON
+        "ENABLE_MPM; ENABLE_ICE" OFF
     )
 
 # jcs to figure out:
