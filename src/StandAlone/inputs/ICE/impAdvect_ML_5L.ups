@@ -216,7 +216,6 @@
     <save label="covariance_temp_CC"/>
     <save label="covariance_press_CC"/>
     
-    
     <checkpoint timestepInterval="5" cycle="1"/>
   </DataArchiver>
 
@@ -301,14 +300,14 @@
     </ICE>
   </MaterialProperties>
   
-  <!--____________________________________________________________________
+  <!--____________________________________________________________________-->
     <DataAnalysis>
 
       <Module name = "turbulentFluxes">
-        <monitorCell>  [4, 5, 4]      </monitorCell>
-        <material>       Atmosphere    </material>
-        <timeStart>      0.0001    </timeStart>
-        <timeStop>       100    </timeStop>
+        <monitorCell>  [4, 5, 4]    </monitorCell>
+        <material>       Atmosphere </material>
+        <timeStart>      0.0001     </timeStart>
+        <timeStop>       100        </timeStop>
         <Variables>
           <analyze label="press_CC"  matl="0"/>
           <analyze label="temp_CC"/>
@@ -316,5 +315,5 @@
         </Variables>
       </Module>
     </DataAnalysis>  
--->
+
 </Uintah_specification>
