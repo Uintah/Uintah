@@ -155,7 +155,7 @@ WARNING
       bool is_firstSumTimestep_set;
 
       void initialize_summation_firstSumTimestep(){
-        firstSumTimestep        = 0;
+        firstSumTimestep        = -9;
         is_firstSumTimestep_set = false;
       }
 
@@ -180,9 +180,9 @@ WARNING
       // utilities
       void print(){
         const std::string name = Label->getName();
-        std::cout << std::setw(15) <<  name <<  " matl: " << matl
+        proc0cout << std::setw(15) <<  name <<  " matl: " << matl
                   << " subtype: " << subtype->getName()
-                  << " summation_firstSumTimestep: " << firstSumTimestep <<"\n";
+                  << " summation started on timestep: " << firstSumTimestep <<"\n";
       };
 
     };
@@ -250,7 +250,8 @@ WARNING
                  DataWarehouse * new_dw,
                  const Patch   * patch,
                  const Qvar_ptr  Q,
-                 constCCVariable<Vector> vel );
+                 constCCVariable<Vector> vel,
+                 const int curr_timestep );
 
 
     void sched_turbFluxes( SchedulerP   & sched,
@@ -279,24 +280,25 @@ WARNING
                           const int       matl,
                           const Patch   * patch );
     template <class T>
-    void allocateAndZeroSums( DataWarehouse * new_dw,
-                              const Patch   * patch,
-                              Qvar_ptr        Q);
+    void allocateAndZeroAll( DataWarehouse * new_dw,
+                             const Patch   * patch,
+                             Qvar_ptr        Q);
 
-    template <class T>
-    void allocateAndZeroMeans( DataWarehouse * new_dw,
-                               const Patch   * patch,
-                               const Qvar_ptr  Q);
+    void carryForward_means( DataWarehouse    * old_dw,
+                             DataWarehouse    * new_dw,
+                             const PatchSubset* patches );
 
-    void carryForward( DataWarehouse    * old_dw,
-                       DataWarehouse    * new_dw,
-                       const PatchSubset* patches );
+    void carryForward_variances( DataWarehouse    * old_dw,
+                                 DataWarehouse    * new_dw,
+                                 const PatchSubset* patches );
 
+    void setup_firstSumTimestep( DataWarehouse * old_dw,
+                                 const int curr_timestep );
 
     //__________________________________
     // global constants
-//    int       d_startTimeTimestep;            // timestep when stats are turn on.
-    IntVector            m_monitorCell;         // debuggin cell to monitor
+    bool                 m_statEnabled  {false};        // timestep when stats are turn on.
+    IntVector            m_monitorCell;                 // debugging cell to monitor
     std::vector< Qvar_ptr >  m_Qvars;
     Qvar_ptr                 m_velVar;
     MaterialSet            * m_matlSet {nullptr};

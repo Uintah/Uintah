@@ -343,17 +343,6 @@
 
       </Module>
 
-      <Module name = "turbulentFluxes">
-        <material>       Atmosphere    </material>
-        <timeStart>      0      </timeStart>
-        <timeStop>       100    </timeStop>
-        <Variables>
-          <analyze label="press_CC"  matl="0"/>
-          <analyze label="temp_CC"/>
-          <analyze label="vel_CC"    fluidVelocityLabel="true" />
-        </Variables>
-      </Module>
-
     </DataAnalysis>  
       
 </Uintah_specification>
