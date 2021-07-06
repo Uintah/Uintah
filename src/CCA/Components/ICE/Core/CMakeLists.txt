@@ -1,0 +1,6 @@
+set( ICE_SRC ${ICE_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/Diffusion.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/ICELabel.cc
+        PARENT_SCOPE
+    )
+set( ICE_INC ${ICE_INC} ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
