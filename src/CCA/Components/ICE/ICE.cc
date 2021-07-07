@@ -39,8 +39,10 @@
 #include <CCA/Components/Models/HEChem/HEChemModel.h>
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
+#ifndef NO_MPM
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPMICE/Core/MPMICELabel.h>
+#endif
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
@@ -1259,10 +1261,11 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
       HEChemModel* hec_model = dynamic_cast<HEChemModel*>( *m_iter );
       if( hec_model )
         hec_model->scheduleComputeModelSources(sched, level);
-      
+#ifndef NO_MPM
       SolidReactionModel* sr_model = dynamic_cast<SolidReactionModel*>( *m_iter );
       if( sr_model )
         sr_model->scheduleComputeModelSources(sched, level);
+#endif
     }
   }
 }
@@ -3126,7 +3129,9 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       Material* matl = m_materialManager->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
+#ifndef NO_MPM
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+#endif
       constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
@@ -3169,10 +3174,11 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       CellIterator ZFC_iterator = patch->getSFCZIterator();
 
       bool include_acc = true;
+#ifndef NO_MPM
       if(mpm_matl && d_with_rigid_mpm){
         include_acc = false;
       }
-
+#endif
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
@@ -4399,19 +4405,21 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     for(unsigned int m = 0; m < numALLMatls; m++) {
       Material* matl = m_materialManager->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       int indx = matl->getDWIndex();
-      
+
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);
       new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gac, 1);
       new_dw->allocateTemporary(alpha[m],patch);
       if (ice_matl) {
         old_dw->get(Temp_CC[m], lb->temp_CCLabel,  indx,patch, gn,0);
       }
+#ifndef NO_MPM
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if (mpm_matl) {
         new_dw->get(Temp_CC[m],lb->temp_CCLabel,   indx,patch, gn,0);
       }
+#endif
     }
 
     //__________________________________

@@ -67,6 +67,7 @@ set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
 #else()
 #    message(STATUS "No Fortran compiler found")
 #endif()
+set( NO_FORTRAN True )
 #----------------------------------------------------------
 
 

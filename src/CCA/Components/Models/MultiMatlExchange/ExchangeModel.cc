@@ -23,7 +23,9 @@
  */
 
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeModel.h>
+#ifndef NO_MPM
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#endif
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -59,12 +61,15 @@ ExchangeModel::ExchangeModel(const ProblemSpecP     & prob_spec,
   
   d_with_mpm = with_mpm;
   Ilb = scinew ICELabel();
-  
+
   if(with_mpm){
+#ifndef NO_MPM
     Mlb = scinew MPMLabel();
+#else
+    throw ProblemSetupException( "with_mpm is true, but MPM is not built",__FILE__,__LINE__);
+#endif
   }
-  
-  
+
   d_surfaceNormLabel   = VarLabel::create("surfaceNorm",   CCVariable<Vector>::getTypeDescription());
   d_isSurfaceCellLabel = VarLabel::create("isSurfaceCell", CCVariable<int>::getTypeDescription());
 }
@@ -81,16 +86,18 @@ ExchangeModel::~ExchangeModel()
   }
   
   delete Ilb;
-  
-  if( d_with_mpm ){
+
+#ifndef NO_MPM
+if( d_with_mpm ){
     delete Mlb;
   }
-  
+#endif
 }
 
 
 //______________________________________________________________________
 //
+#ifndef NO_MPM
 void ExchangeModel::schedComputeSurfaceNormal( SchedulerP           & sched,        
                                                const PatchSet       * patches,
                                                const MaterialSubset * mpm_matls )      
@@ -217,3 +224,4 @@ void ExchangeModel::ComputeSurfaceNormal( const ProcessorGroup*,
     }  // for MPM matls
   } // patches
 }
+#endif

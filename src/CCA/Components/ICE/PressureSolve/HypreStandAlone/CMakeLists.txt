@@ -16,7 +16,7 @@ add_executable(
         TestLinear.cc
         util.cc
     )
-target_link_libraries( mydriver ${HYPRE_LIB} MPI::MPI_CXX )
+target_link_libraries( mydriver ${HYPRE_LIB} UintahCore MPI::MPI_CXX )
 target_include_directories( mydriver PRIVATE ${HYPRE_INC} ${CMAKE_CURRENT_SOURCE_DIR} )
 
 add_executable( mpitest mpitest.cc )

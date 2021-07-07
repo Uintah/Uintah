@@ -28,7 +28,9 @@
 
 
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#ifndef NO_MPM
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#endif
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/DbgOutput.h>
@@ -95,7 +97,7 @@ namespace Uintah {
                                       DataWarehouse        * old_dw,
                                       DataWarehouse        * new_dw,
                                       customBC_globalVars  * BC_globalVars) = 0;
-
+#ifndef NO_MPM
     void schedComputeSurfaceNormal( SchedulerP           & sched,
                                     const PatchSet       * patches,
                                     const MaterialSubset * mpmMatls );
@@ -105,7 +107,7 @@ namespace Uintah {
                                const MaterialSubset *,
                                DataWarehouse        * old_dw,
                                DataWarehouse        * new_dw );
-    
+#endif
     protected:
     //__________________________________
     // variables & objects needed by
@@ -117,8 +119,10 @@ namespace Uintah {
     int    d_numMatls  = -9;
     MaterialManagerP  d_matlManager;
     MaterialSubset * d_zero_matl;
-    
+
+#ifndef NO_MPM
     MPMLabel* Mlb;
+#endif
     ICELabel* Ilb;
     bool d_with_mpm;
     

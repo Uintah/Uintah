@@ -42,7 +42,7 @@
 
 #cmakedefine HAVE_CXX11
 
-@DEF_NO_FORTRAN@
+#cmakedefine NO_FORTRAN
 @DEF_FORTRAN_UNDERSCORE@
 
 #if !defined( FIX_NAME )

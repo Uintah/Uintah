@@ -27,13 +27,16 @@
 
 #include <CCA/Components/ICE/CustomBCs/BoundaryCond.h>
 #include <CCA/Components/ICE/Materials/ICEMaterial.h>
+#ifndef NO_MPM
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#endif
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/MaterialManagerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -94,7 +97,11 @@ void ScalarExch::sched_PreExchangeTasks(SchedulerP           & sched,
   //__________________________________
   // compute surface normal and isSurfaceCell
   if(d_exchCoeff->convective() && mpm_matls){
+#ifndef NO_MPM
     schedComputeSurfaceNormal( sched, patches, mpm_matls );
+#else
+    throw ProblemSetupException("MPM is not compiled, mpm_matls is not NULL\n", __FILE__, __LINE__);
+#endif
   }
 }
 //______________________________________________________________________
@@ -557,10 +564,12 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_matlManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+#ifndef NO_MPM
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+#endif
       int indx = matl->getDWIndex();
       new_dw->allocateTemporary(cv[m], patch);
-
+#ifndef NO_MPM
       if(mpm_matl){                 // M P M
         CCVariable<double> oldTemp;
         new_dw->getCopy(oldTemp,          Ilb->temp_CCLabel,indx,patch,gn,0);
@@ -569,6 +578,7 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
         old_temp[m] = oldTemp;
         cv[m].initialize(mpm_matl->getSpecificHeat());
       }
+#endif
       if(ice_matl){                 // I C E
         constCCVariable<double> cv_ice;
         old_dw->get(old_temp[m],   Ilb->temp_CCLabel,      indx, patch,gn,0);
@@ -705,7 +715,11 @@ void ScalarExch::addExch_Vel_Temp_CC( const ProcessorGroup * pg,
       for (int m = 0; m < numALLMatls; m++)  {
         
         Material* matl = d_matlManager->getMaterial( m );
+#ifndef NO_MPM
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+#else
+        void* mpm_matl = NULL;
+#endif
         int dwindex = matl->getDWIndex();
         
         if(mpm_matl && dwindex==sm){

@@ -119,10 +119,11 @@ void SlipExch::sched_PreExchangeTasks(SchedulerP           & sched,
                                       const MaterialSubset * mpm_matls,
                                       const MaterialSet    * allMatls)
 {
+#ifndef NO_MPM \
   //__________________________________
   // compute surface normal and isSurfaceCell
   schedComputeSurfaceNormal( sched, patches, mpm_matls );
-
+#endif
   //__________________________________
   //  compute Mean Free Path
   schedComputeMeanFreePath( sched, patches );
@@ -420,8 +421,9 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       Material* matl = d_matlManager->getMaterial( m );
 
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+#ifndef NO_MPM
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
+#endif
       int indx = matl->getDWIndex();
 
       // retreive from dw
@@ -431,12 +433,12 @@ void SlipExch::addExch_VelFC(const ProcessorGroup  * pg,
       new_dw->get( uvel_FC[m],     Ilb->uvel_FCLabel,    indx, patch,gaf_X, 1);
       new_dw->get( vvel_FC[m],     Ilb->vvel_FCLabel,    indx, patch,gaf_Y, 1);
       new_dw->get( wvel_FC[m],     Ilb->wvel_FCLabel,    indx, patch,gaf_Z, 1);
-
+#ifndef NO_MPM
       if(mpm_matl) {
         pNewDW->get( vel_CC[m],         Ilb->vel_CCLabel, indx, patch,gac, 1);
         pNewDW->get( surfaceNorm[m], d_surfaceNormLabel,  indx, patch,gac, 1);
       }
-
+#endif
       if(ice_matl) {
         pOldDW->get( vel_CC[m],          Ilb->vel_CCLabel, indx, patch,gac, 1);
         pNewDW->get( meanFreePath[m], d_meanFreePathLabel, indx, patch,gac, 1);
@@ -779,11 +781,13 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
     for (int m = 0; m < d_numMatls; m++) {
       Material* matl = d_matlManager->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+
 
       int indx = matl->getDWIndex();
       new_dw->allocateTemporary(cv[m], patch);
 
+#ifndef NO_MPM
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(mpm_matl){                 // M P M
         new_dw->get( surfaceNorm[m],     d_surfaceNormLabel, indx, patch, gn, 0);
 
@@ -795,7 +799,7 @@ void SlipExch::addExch_Vel_Temp_CC(const ProcessorGroup * pg,
         old_temp[m] = oldTempMPM;
         cv[m].initialize(mpm_matl->getSpecificHeat());
       }
-
+#endif
       if(ice_matl){                 // I C E
         constCCVariable<double> cv_ice;
         old_dw->get( old_temp[m],     Ilb->temp_CCLabel,      indx, patch, gn, 0 );
