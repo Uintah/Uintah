@@ -11,6 +11,7 @@ add_library( Core_Exceptions
         InvalidGrid.cc
         InvalidState.cc
         InvalidValue.cc
+        NotYetImplemented.cc
         ParameterNotFound.cc
         ProblemSetupException.cc
         TypeMismatchException.cc

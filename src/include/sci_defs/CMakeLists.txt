@@ -107,6 +107,8 @@ endif()
 configure_file( osx_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/osx_defs.h )
 
 # jcs petsc...
+unset( HAVE_PETSC )
+configure_file( petsc_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/petsc_defs.h )
 
 configure_file( pidx_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/pidx_defs.h )
 
