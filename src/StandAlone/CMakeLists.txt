@@ -12,6 +12,7 @@ target_link_libraries( sus
         CCA_Ports
         Component_Libs
     )
+add_dependencies( sus input_dir_links )  # ensure symlinks are generated when sus is built
 #------------------------------ BUILD SUS -------------------------------
 
 
