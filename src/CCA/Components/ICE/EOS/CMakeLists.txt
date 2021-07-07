@@ -1,19 +1,30 @@
-set( ICE_SRC ${ICE_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/BirchMurnaghan.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/EquationOfState.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/EquationOfStateFactory.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Gruneisen.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/HardSphereGas.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/IdealGas.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/JWL.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/JWLC.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/KnaussSeaWater.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/KumariDass.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Murnaghan.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Thomsen_Hartka_water.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Tillotson.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/TST.cc
-        PARENT_SCOPE
+add_library( CCA_Components_ICE_EOS
+        BirchMurnaghan.cc
+        EquationOfState.cc
+        EquationOfStateFactory.cc
+        Gruneisen.cc
+        HardSphereGas.cc
+        IdealGas.cc
+        JWL.cc
+        JWLC.cc
+        KnaussSeaWater.cc
+        KumariDass.cc
+        Murnaghan.cc
+        Thomsen_Hartka_water.cc
+        Tillotson.cc
+        TST.cc
     )
 
-set( ICE_INC ${ICE_INC} ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
+target_link_libraries( CCA_Components_ICE_EOS
+        Core_Exceptions
+        Core_Geometry
+        Core_GeometryPiece
+        Core_ProblemSpec
+        Core_Util
+    )
+
+target_include_directories( CCA_Components_ICE_EOS
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
+    )

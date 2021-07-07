@@ -1,15 +1,25 @@
-set( ICE_SRC ${ICE_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryCond.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/C_BC_driver.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/inletVelocity.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/LODI.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/LODI2.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/microSlipBCs.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/MMS_BCs.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/sine.cc
-        PARENT_SCOPE
+add_library( CCA_Components_ICE_CustomBCs
+        BoundaryCond.cc
+        C_BC_driver.cc
+        inletVelocity.cc
+        LODI2.cc
+        microSlipBCs.cc
+        MMS_BCs.cc
+        sine.cc
     )
-set( ICE_INC ${ICE_INC}
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        PARENT_SCOPE
+
+target_link_libraries( CCA_Components_ICE_CustomBCs
+        CCA_Components_ICE_Core
+        CCA_Components_ICE_EOS
+        CCA_Components_ICE_Materials
+        Core_Exceptions
+        Core_Geometry
+        Core_GeometryPiece
+        Core_ProblemSpec
+    )
+
+target_include_directories( CCA_Components_ICE_CustomBCs
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
     )

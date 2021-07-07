@@ -70,7 +70,7 @@ vorticity::vorticity(const ProcessorGroup* myworld,
 //__________________________________
 vorticity::~vorticity()
 {
-  cout_doing << " Doing: destorying vorticity " << endl;
+  cout_doing << " Doing: destroying vorticity " << endl;
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }

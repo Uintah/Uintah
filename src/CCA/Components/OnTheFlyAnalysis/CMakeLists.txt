@@ -13,8 +13,20 @@ set ( OTF_SRC
         statistics.cc
     )
 
+# Collect list of library dependencies
+set( LIB_DEPS
+        CCA_Ports
+        Core_Grid
+        Core_Exceptions
+        Core_Math
+        Core_OS
+        Core_Parallel
+        Core_Util
+    )
+
 if( ENABLE_ICE )
     list( APPEND OTF_SRC vorticity.cc )
+    list( APPEND LIB_DEPS CCA_Components_ICE_Core )
 endif()
 if( ENABLE_MPM )
     list( APPEND OTF_SRC flatPlate_heatFlux.cc particleExtract.cc )
@@ -25,13 +37,10 @@ endif()
 
 add_library( CCA_Components_OnTheFlyAnalysis ${OTF_SRC} )
 
-target_link_libraries( CCA_Components_OnTheFlyAnalysis
+target_link_libraries( CCA_Components_OnTheFlyAnalysis PUBLIC ${LIB_DEPS} )
+
+target_include_directories( CCA_Components_OnTheFlyAnalysis
     PUBLIC
-        CCA_Ports
-        Core_Grid
-        Core_Exceptions
-        Core_Math
-        Core_OS
-        Core_Parallel
-        Core_Util
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
     )

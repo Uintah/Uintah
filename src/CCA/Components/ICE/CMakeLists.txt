@@ -1,4 +1,4 @@
-# each of these subdirectories should append to this list of source files:
+# each of these subdirectories should append to this list of source files (unless they build their own libs):
 set( ICE_SRC
         AMRICE.cc
         ICE.cc
@@ -6,7 +6,6 @@ set( ICE_SRC
         impICE.cc
         customInitialize.cc
     )
-set( ICE_INC ${CMAKE_CURRENT_SOURCE_DIR} )
 
 add_subdirectory( Advection )
 add_subdirectory( Core )
@@ -19,10 +18,25 @@ add_subdirectory( SpecificHeatModel )
 add_subdirectory( TurbulenceModel )
 add_subdirectory( WallShearStressModel )
 
-message( STATUS "ICE include dirs: ${ICE_INC}" )
-
 add_library( CCA_Components_ICE ${ICE_SRC} )
+target_link_libraries( CCA_Components_ICE
+    PUBLIC
+        Core_GeometryPiece
+        Core_Grid
+        Core_Math
+        Core_OS
+        Core_ProblemSpec
+        Core_Util
+        CCA_Components_Application
+        CCA_Components_Models
+        CCA_Components_OnTheFlyAnalysis
+        CCA_Components_Solvers
+        ${HYPRE_LIBRARY}
+        MPI::MPI_CXX
+    )
 target_include_directories( CCA_Components_ICE
     PRIVATE
-        ${ICE_INC}
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
+        ${HYPRE_INCLUDE}
     )

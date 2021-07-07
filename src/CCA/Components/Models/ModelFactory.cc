@@ -32,12 +32,12 @@
 #  include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #  include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
 #  include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
-#  include <CCA/Components/Models/FluidsBased/TestModel.h>
 #  include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
 #endif
-
 #if !defined( NO_ICE ) && !defined( NO_MPM )
+#  include <CCA/Components/Models/FluidsBased/TestModel.h>
+
 #  include <CCA/Components/Models/HEChem/Simple_Burn.h>
 #  include <CCA/Components/Models/HEChem/Steady_Burn.h>
 #  include <CCA/Components/Models/HEChem/Unsteady_Burn.h>

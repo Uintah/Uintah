@@ -13,7 +13,6 @@ target_include_directories( compare_mms
 target_link_libraries( compare_mms
         Core_DataArchive
         Core_Grid
-#        Core_Grid_Variables
         Core_Geometry
 
         CCA_Components_ProblemSpecification

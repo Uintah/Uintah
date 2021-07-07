@@ -73,7 +73,7 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
     switch_criteria = scinew SteadyState(switch_ps);
   }
   
-#if !defined( NO_ICE ) && !defined( NO_ICE )
+#if !defined( NO_ICE ) && !defined( NO_MPM )
   else if (criteria == "SimpleBurn" || criteria == "Simple_Burn" || 
            criteria == "simpleBurn" || criteria == "simple_Burn")  {
     switch_criteria = scinew SimpleBurnCriteria(switch_ps);

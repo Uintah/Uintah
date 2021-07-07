@@ -1,6 +1,16 @@
-set( ICE_SRC ${ICE_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/Diffusion.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/ICELabel.cc
-        PARENT_SCOPE
+add_library( CCA_Components_ICE_Core
+        Diffusion.cc
+        ICELabel.cc
     )
-set( ICE_INC ${ICE_INC} ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
+
+target_link_libraries( CCA_Components_ICE_Core
+    PUBLIC
+        Core_Exceptions
+        Core_Grid
+        Core_Grid_Variables
+    )
+
+target_include_directories( CCA_Components_ICE_Core
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}
+    )

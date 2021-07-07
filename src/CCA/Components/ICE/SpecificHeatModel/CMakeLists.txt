@@ -1,10 +1,21 @@
-set( ICE_SRC ${ICE_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/Component.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Debye.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/NASAPolynomial.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/Polynomial.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/SpecificHeat.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/SpecificHeatFactory.cc
-        PARENT_SCOPE
+add_library( CCA_Components_ICE_SpecificHeatModel
+        Component.cc
+        Debye.cc
+        NASAPolynomial.cc
+        Polynomial.cc
+        SpecificHeat.cc
+        SpecificHeatFactory.cc
     )
-set( ICE_INC ${ICE_INC} ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE )
+
+target_link_libraries( CCA_Components_ICE_SpecificHeatModel
+        Core_Exceptions
+        Core_Geometry
+        Core_ProblemSpec
+        Core_Util
+    )
+
+target_include_directories( CCA_Components_ICE_SpecificHeatModel
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/include
+    )

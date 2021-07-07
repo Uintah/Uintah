@@ -2,7 +2,6 @@ add_executable( benchmark benchmark.cc )
 target_link_libraries( benchmark
         Core_Geometry
         Core_Grid
-#        Core_Grid_Variables
         Core_Util
         UintahCore
     )

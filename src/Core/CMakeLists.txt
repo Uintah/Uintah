@@ -27,9 +27,9 @@ target_link_libraries( UintahCore INTERFACE
         Core_Geometry
         Core_GeometryPiece
         Core_Grid
-#        Core_Grid_BoundaryConditions
-#        Core_Grid_PatchBVH
-#        Core_Grid_Variables
+        Core_Grid_BoundaryConditions
+        Core_Grid_PatchBVH
+        Core_Grid_Variables
         Core_IO
         Core_Malloc
         Core_Math

@@ -31,6 +31,7 @@ add_library( Core_Grid_Variables
 
 target_link_libraries( Core_Grid_Variables
         Core_Geometry
+        Core_Grid
         Core_Exceptions
         Core_Util
         Core_Containers
