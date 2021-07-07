@@ -7,7 +7,6 @@ target_link_libraries( CCA_Components_ICE_Core
     PUBLIC
         Core_Exceptions
         Core_Grid
-        Core_Grid_Variables
     )
 
 target_include_directories( CCA_Components_ICE_Core

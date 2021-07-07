@@ -14,7 +14,7 @@ set( LIB_DEPS
         Core_Exceptions
         Core_Geometry
         Core_GeometryPiece
-        Core_Grid_Variables
+        Core_Grid
         Core_IO
         Core_Math
         Core_Parallel

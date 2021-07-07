@@ -1,4 +1,3 @@
-add_subdirectory( Variables )
 add_subdirectory( PatchBVH )
 
 add_library( Core_Grid
