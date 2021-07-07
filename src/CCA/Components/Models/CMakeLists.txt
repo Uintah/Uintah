@@ -1,13 +1,5 @@
 set( MDL_SRC ModelFactory.cc )
 
-add_subdirectory( FluidsBased )
-add_subdirectory( HEChem )
-add_subdirectory( MultiMatlExchange )
-add_subdirectory( Radiation )
-add_subdirectory( SolidReactionModel )
-
-add_library( CCA_Components_Models ${MDL_SRC} )
-
 set( LIB_DEPS
         CCA_Ports
         Core_Disclosure
@@ -21,11 +13,26 @@ set( LIB_DEPS
         Core_ProblemSpec
         Core_Util
     )
+
+add_subdirectory( FluidsBased )
+add_subdirectory( HEChem )
+add_subdirectory( MultiMatlExchange )
+add_subdirectory( Radiation )
+add_subdirectory( SolidReactionModel )
+
+add_library( CCA_Components_Models ${MDL_SRC} )
+
 if( ENABLE_ICE )
     list( APPEND LIB_DEPS
             CCA_Components_ICE_Core
             CCA_Components_ICE_CustomBCs
             CCA_Components_ICE_Materials
+        )
+endif()
+if( ENABLE_MPM_ICE )
+    list( APPEND LIB_DEPS
+            CCA_Components_MPMICE_Core
+            CCA_Components_SwitchingCriteria
         )
 endif()
 

@@ -1,5 +1,3 @@
-# jcs add additional components here...
-
 set( src
         None.cc
         SwitchingCriteriaFactory.cc
@@ -16,10 +14,14 @@ set( LIB_DEPS
 if( ENABLE_MPM_ICE )
     list( APPEND src
             SimpleBurn.cc
-            SteadyState.cc
+            SteadyBurn.cc
             DDT1.cc
         )
-    list( APPEND LIB_DEPS CCA_Components_MPM_Core )
+    list( APPEND LIB_DEPS
+            CCA_Components_ICE_Core
+            CCA_Components_MPM_Core
+            CCA_Components_MPMICE_Core
+        )
 endif()
 
 add_library( CCA_Components_SwitchingCriteria ${src} )

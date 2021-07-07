@@ -20,6 +20,7 @@ if( ENABLE_ICE )
         list( APPEND SRC
                 ${CMAKE_CURRENT_SOURCE_DIR}/TestModel.cc
             )
+        set( LIB_DEPS ${LIB_DEPS} CCA_Components_MPM_Materials PARENT_SCOPE )
     endif()
 endif()
 
