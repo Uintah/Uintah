@@ -54,10 +54,9 @@ using namespace Uintah;
 // Default constructor for SmagorinskyModel
 //****************************************************************************
 ScaleSimilarityModel::ScaleSimilarityModel(const ArchesLabel* label, 
-                                           const MPMArchesLabel* MAlb,
                                            PhysicalConstants* phyConsts,
                                            BoundaryCondition* bndry_cond):
-                                           TurbulenceModel(label, MAlb),
+                                           TurbulenceModel(label),
                                            d_physicalConsts(phyConsts),
                                            d_boundaryCondition(bndry_cond)
 {
@@ -117,19 +116,13 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
   
-  Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,       gac, 1);
-
-  // for multimaterial
-  if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
-  }
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,   gac, 1);
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
@@ -162,16 +155,11 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     constCCVariable<double> filterVolume; 
-    
-    Ghost::GhostType  gn = Ghost::None;
+
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(Vel,    d_lab->d_CCVelocityLabel, indx, patch, gac, 1);
-    new_dw->get(den,    d_lab->d_densityCPLabel,      indx, patch, gac, 1);
-    
-    if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
-    }
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,gac, 1);
+    new_dw->get(Vel,          d_lab->d_CCVelocityLabel,   indx, patch, gac, 1);
+    new_dw->get(den,          d_lab->d_densityCPLabel,    indx, patch, gac, 1);
+    new_dw->get(cellType,     d_lab->d_cellTypeLabel,     indx, patch,gac, 1);
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch,gac, 1);
 
     // Get the patch and variable details

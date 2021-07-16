@@ -430,7 +430,6 @@
                                                 heat,
                                                 ice, ICE,
                                                 impm, IMPM,
-                                                mpmarches, MPMARCHES,
                                                 mpmice, MPMICE,
                                                 mpm, MPM,
                                                 mpnp,
@@ -462,7 +461,7 @@
                                     attribute3="level OPTIONAL STRING 'finest'" />
 
         <subcomponent             spec="MULTIPLE NO_DATA"
-                                    attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
+                                    attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmf, mpmice,
                                                                      poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ApplicationFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
@@ -979,23 +978,6 @@
     <patchCost             spec="OPTIONAL DOUBLE 'positive'" />     <!-- The weight per patch -->
     <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" />     <!--The weight extra cell -->
   </LoadBalancer>
-
-  <!--__________________________________-->
-  <!--          MPMARCHES               -->
-  <Multimaterial                       spec="OPTIONAL NO_DATA" >
-    <fluidThermalConductivity          spec="REQUIRED DOUBLE" />
-    <heatExchange                      spec="REQUIRED BOOLEAN" />
-    <turbulentPrandtNo                 spec="REQUIRED DOUBLE" />
-    <fluidHeatCapacity                 spec="REQUIRED DOUBLE" />
-    <IfCutCell                         spec="REQUIRED BOOLEAN" />
-    <StationarySolid                   spec="REQUIRED BOOLEAN" />
-    <inviscid                          spec="REQUIRED BOOLEAN" />
-    <restart                           spec="REQUIRED BOOLEAN" />
-    <fixedCellType                     spec="REQUIRED BOOLEAN" />
-    <fixedTemp                         spec="REQUIRED BOOLEAN" />
-    <TestCutCells                      spec="REQUIRED BOOLEAN" />
-    <stairstep                         spec="REQUIRED BOOLEAN" />
-  </Multimaterial>
 
   <include href="mpm_spec.xml" section="Uintah_specification/MPM"   />
   <include href="fvm_spec.xml" section="Uintah_specification/FVM"   />

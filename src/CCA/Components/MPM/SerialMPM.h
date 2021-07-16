@@ -145,11 +145,6 @@ public:
         flags->d_with_ice = true;
   };
 
-  void setWithARCHES()
-  {
-        flags->d_with_arches = true;
-  };
-
   enum IntegratorType {
     Explicit,
     Implicit,
@@ -161,7 +156,6 @@ protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
-  friend class MPMArches;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 

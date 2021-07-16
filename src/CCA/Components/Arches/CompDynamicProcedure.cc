@@ -64,10 +64,9 @@ using namespace Uintah;
 // Default constructor for CompDynamicProcedure
 //****************************************************************************
 CompDynamicProcedure::CompDynamicProcedure(const ArchesLabel* label,
-    const MPMArchesLabel* MAlb,
     PhysicalConstants* phyConsts,
     BoundaryCondition* bndry_cond):
-  TurbulenceModel(label, MAlb),
+  TurbulenceModel(label),
   d_physicalConsts(phyConsts),
   d_boundaryCondition(bndry_cond)
 {

@@ -68,7 +68,6 @@ WARNING
 
 namespace Uintah {
 class ArchesLabel;
-class MPMArchesLabel;
 class PhysicalConstants;
 class BoundaryCondition;
 
@@ -81,7 +80,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Blank constructor for SmagorinskyModel.
   SmagorinskyModel(const ArchesLabel* label, 
-                   const MPMArchesLabel* MAlb,
                    PhysicalConstants* phyConsts,
                    BoundaryCondition* bndryCondition);
 

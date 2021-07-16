@@ -29,7 +29,6 @@
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
@@ -81,7 +80,6 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 // Default constructor for DORadiationModel
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
-                                   const MPMArchesLabel* MAlab,
                                    const ProcessorGroup* myworld,
                                    bool sweepMethod ):
                                    d_myworld(myworld),

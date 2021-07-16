@@ -27,7 +27,6 @@
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
@@ -76,19 +75,20 @@
 using namespace std;
 using namespace Uintah;
 
+#if 1
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
+#endif
 
 //****************************************************************************
 // Constructor for BoundaryCondition
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
-                                     const MPMArchesLabel* MAlb,
                                      PhysicalConstants* phys_const,
                                      Properties* props,
                                      TableLookup* table_lookup ) :
-  d_lab(label), d_MAlab(MAlb),
+  d_lab(label),
   d_physicalConsts(phys_const),
   d_props(props),
   d_table_lookup(table_lookup)
@@ -174,7 +174,7 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
     if ( db->findBlock("intrusions") ) {
 
       for ( int i = 0; i < grid->numLevels(); i++ ){
-        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_MAlab, d_props,
+        _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_props,
                                                                   d_table_lookup,
                                                                   BoundaryCondition::INTRUSION )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
@@ -1936,9 +1936,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       int flowType = -1;
 
       vector<int> wall_type;
-
-      if (d_MAlab)
-        wall_type.push_back( d_mmWallID );
 
       wall_type.push_back( WALL );
       wall_type.push_back( MMWALL );

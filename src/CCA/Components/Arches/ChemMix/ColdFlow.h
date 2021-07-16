@@ -70,7 +70,6 @@ namespace Uintah {
 
 
 class ArchesLabel;
-class MPMArchesLabel;
 class TimeIntegratorLabel;
 class ColdFlow : public MixingRxnModel {
 

@@ -40,9 +40,8 @@
 
 using namespace Uintah;
 
-TurbulenceModel::TurbulenceModel(const ArchesLabel* label,
-                                 const MPMArchesLabel* MAlb):
-                                 d_lab(label), d_MAlab(MAlb)
+TurbulenceModel::TurbulenceModel(const ArchesLabel* label):
+                                 d_lab(label)
 {
   d_filter = 0;
   d_dissipationRateLabel = VarLabel::create(

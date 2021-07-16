@@ -30,7 +30,6 @@
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/Arches/HandoffHelper.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -58,10 +57,9 @@ namespace {
 }
 
 //_________________________________________
-IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
+IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props,
                           TableLookup* table_lookup, int WALL )
   : _lab(lab)
-  , _mpmlab(mpmlab)
   , _props(props)
   , _table_lookup(table_lookup)
   , _WALL(WALL)
@@ -109,8 +107,6 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, 
 
   _intrusion_on        = false;
   _do_energy_exchange  = false;
-  _mpm_energy_exchange = false;
-
   m_alpha_geom_label = VarLabel::create("alpha_geom", CCVariable<double>::getTypeDescription());
 
 }
@@ -367,16 +363,9 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
                                                         sum_vartype::getTypeDescription() );
 
       //temperature of the intrusion
-      // Either choose constant T or an integrated T from MPM
       intrusion.temperature = 298.0;
       if ( db_intrusion->findBlock( "constant_temperature" ) ){
         db_intrusion->findBlock("constant_temperature")->getAttribute("T", intrusion.temperature);
-        _do_energy_exchange = true;
-      }
-      if ( db_intrusion->findBlock( "mpm_temperature" ) ){
-        if ( _do_energy_exchange ){
-          throw ProblemSetupException("Error: Cannot specify both <constant_temperature> and <mpm_temperature>.", __FILE__, __LINE__);
-        }
         _do_energy_exchange = true;
       }
 
@@ -1861,10 +1850,6 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
     tsk->modifies( _T_label );
     tsk->modifies( _lab->d_densityCPLabel );
 
-    if ( _mpmlab && _mpm_energy_exchange ){
-      tsk->requires( Task::NewDW, _mpmlab->integTemp_CCLabel, Ghost::None, 0 );
-    }
-
     sched->addTask( tsk, level->eachPatch(), matls );
   }
 }
@@ -1887,10 +1872,6 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
     CCVariable<double> temperature;
     new_dw->getModifiable( temperature, _T_label, index, patch );
 
-    constCCVariable<double> mpm_temperature;
-    if ( _mpmlab && _mpm_energy_exchange ){
-      new_dw->get( mpm_temperature, _mpmlab->integTemp_CCLabel, index, patch, Ghost::None, 0 );
-    }
 
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
@@ -1902,33 +1883,17 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
 
         if ( !(intersect_box.degenerate()) ) {
 
-          if ( _mpm_energy_exchange ){
-            for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) {
+          for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) {
 
-              IntVector c = *icell;
+            IntVector c = *icell;
 
-              // check current cell
-              bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted );
+            // check current cell
+            bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted );
 
-              if ( curr_cell ) {
+            if ( curr_cell ) {
 
-                temperature[c] = mpm_temperature[c];
+              temperature[c] = iter->second.temperature;
 
-              }
-            }
-          } else {
-            for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) {
-
-              IntVector c = *icell;
-
-              // check current cell
-              bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted );
-
-              if ( curr_cell ) {
-
-                temperature[c] = iter->second.temperature;
-
-              }
             }
           }
         }

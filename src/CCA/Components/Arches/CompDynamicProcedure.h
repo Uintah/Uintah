@@ -71,7 +71,6 @@ class CompDynamicProcedure : public TurbulenceModel {
 public:
 
   CompDynamicProcedure(const ArchesLabel* label,
-                       const MPMArchesLabel* MAlb,
                        PhysicalConstants* phyConsts,
                        BoundaryCondition* bndryCondition);
 

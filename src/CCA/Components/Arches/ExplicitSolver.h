@@ -95,14 +95,12 @@ public:
   public:
 
     Builder( MaterialManagerP& materialManager,
-             const MPMArchesLabel* MAlb,
              PhysicalConstants* physConst,
              const ProcessorGroup* myworld,
              ArchesParticlesHelper* particle_helper,
              SolverInterface* hypreSolver,
              ApplicationCommon* arches ) :
              _materialManager(materialManager),
-             _MAlb(MAlb),
              _physConst(physConst),
              _myworld(myworld),
              _particle_helper(particle_helper),
@@ -114,7 +112,6 @@ public:
 
     ExplicitSolver* build(){
       return scinew ExplicitSolver( _materialManager,
-                                    _MAlb,
                                     _physConst,
                                     _myworld,
                                     _particle_helper,
@@ -125,7 +122,6 @@ public:
   private:
 
     MaterialManagerP& _materialManager;
-    const MPMArchesLabel* _MAlb;
     PhysicalConstants* _physConst;
     const ProcessorGroup* _myworld;
     ArchesParticlesHelper* _particle_helper;
@@ -134,7 +130,6 @@ public:
   };
 
   ExplicitSolver( MaterialManagerP& materialManager,
-                  const MPMArchesLabel* MAlb,
                   PhysicalConstants* physConst,
                   const ProcessorGroup* myworld,
                   ArchesParticlesHelper* particle_helper,
@@ -448,7 +443,6 @@ public:
   MomentumSolver* d_momSolver;             ///< Momentum solver
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
   MaterialManagerP& d_materialManager;
-  const MPMArchesLabel* d_MAlab;
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
 
   //NEW TASK INTERFACE STUFF:

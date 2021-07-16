@@ -20,13 +20,11 @@ using namespace Uintah;
 
 DORadiation::DORadiation( std::string src_name,
                           ArchesLabel* labels,
-                          MPMArchesLabel* MAlab,
                           vector<std::string> req_label_names,
                           const ProcessorGroup* my_world,
                           std::string type )
 : SourceTermBase( src_name, labels->d_materialManager, req_label_names, type ),
   _labels( labels ),
-  _MAlab(MAlab),
   _my_world(my_world){
 
   // NOTE: This boundary condition here is bogus.  Passing it for
@@ -137,7 +135,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     _sweepMethod = enum_linearSolve;
   }
 
-  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world, _sweepMethod);
+  _DO_model = scinew DORadiationModel( _labels, _my_world, _sweepMethod);
   _DO_model->problemSetup( db );
 
   d_nbands=_DO_model->spectralBands();

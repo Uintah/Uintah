@@ -65,7 +65,6 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
 class ArchesLabel;
-class MPMArchesLabel;
 class MixingModel;
 class MixingRxnTable;
 class TabPropsInterface;
@@ -81,8 +80,7 @@ public:
   // Constructor taking
   //   [in]
 
-  Properties(ArchesLabel* label, \
-             const MPMArchesLabel* MAlb,
+  Properties(ArchesLabel* label,
              PhysicalConstants* phys_const,
              const ProcessorGroup* myworld);
 
@@ -204,7 +202,6 @@ private:
 
   // Variable labels used by simulation controller
   ArchesLabel* d_lab;
-  const MPMArchesLabel* d_MAlab;
   const VarLabel* d_mf_label;
 
   bool d_reactingFlow;

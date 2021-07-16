@@ -87,7 +87,6 @@ class PhysicalConstants;
 class Properties;
 class TableLookup;
 class ArchesLabel;
-class MPMArchesLabel;
 class ProcessorGroup;
 class DataWarehouse;
 class TimeIntegratorLabel;
@@ -418,7 +417,6 @@ addIntrusionMassRHS( const Patch* patch,
                      CCVariable<double>& mass_src );
 
 BoundaryCondition(const ArchesLabel* label,
-                  const MPMArchesLabel* MAlb,
                   PhysicalConstants* phys_const,
                   Properties* props,
                   TableLookup* table_lookup);
@@ -454,6 +452,7 @@ inline int outletCellType() const {
   return OUTLET;
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////
 // sets boolean for energy exchange between solid and fluid
 void setIfCalcEnergyExchange(bool calcEnergyExchange){
@@ -478,6 +477,7 @@ inline bool getIfFixTemp() const {
   return d_fixTemp;
 }
 
+#endif
 ////////////////////////////////////////////////////////////////////////
 // sets boolean for cut cells
 void setCutCells(bool cutCells){
@@ -895,14 +895,17 @@ std::vector<std::string> d_all_v_inlet_names;
 
 // const VarLabel* inputs
 const ArchesLabel* d_lab;
+
+#if 1
 // for multimaterial
-const MPMArchesLabel* d_MAlab;
 int d_mmWallID;
 // cutoff for void fraction rqd to determine multimaterial wall
 double MM_CUTOFF_VOID_FRAC;
 bool d_calcEnergyExchange;
 bool d_fixTemp;
+#endif
 bool d_cutCells;
+
 
 bool d_check_inlet_obstructions;
 

@@ -271,18 +271,4 @@
       </BoundaryConditions>
     </ARCHES>
   </CFD>
-  <Multimaterial>
-    <fluidThermalConductivity> 0.03 </fluidThermalConductivity>
-    <heatExchange> false </heatExchange>
-    <turbulentPrandtNo> 0.7 </turbulentPrandtNo>
-    <fluidHeatCapacity> 1007. </fluidHeatCapacity>
-    <IfCutCell> false </IfCutCell>
-    <StationarySolid> true </StationarySolid>
-    <inviscid> false </inviscid>
-    <restart> true </restart>
-    <fixedCellType> true </fixedCellType>
-    <fixedTemp> true </fixedTemp>
-    <TestCutCells> true </TestCutCells>
-    <stairstep> true </stairstep>
-  </Multimaterial>
 </Uintah_specification>

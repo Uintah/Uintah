@@ -52,7 +52,6 @@ namespace Uintah {
   class PhysicalConstants;
   class Properties;
   class ArchesLabel;
-  class MPMArchesLabel;
   class ProcessorGroup;
   class DataWarehouse;
   class TimeIntegratorLabel;

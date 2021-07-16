@@ -59,7 +59,6 @@ namespace Uintah {
   class ApplicationInterface;
 
   class ArchesLabel;
-  class MPMArchesLabel;
 
 class DORadiationModel{
 
@@ -68,7 +67,6 @@ public:
       RadiationSolver* d_linearSolver;
 
       DORadiationModel(const ArchesLabel* label,
-                       const MPMArchesLabel* MAlab,
                        const ProcessorGroup* myworld,
                        bool sweepMethod);
 
