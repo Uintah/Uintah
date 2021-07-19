@@ -1071,10 +1071,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-     // sets coefs in the direction of the wall to zero
-    //  d_boundaryCondition->wallVelocityBC(patch, cellinfo,
-    //                                    &velocityVars, &constVelocityVars);
-
     //  d_source->modifyVelMassSource(patch, volFraction,
     //                                &velocityVars, &constVelocityVars);
 

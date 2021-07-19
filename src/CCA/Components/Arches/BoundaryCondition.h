@@ -452,32 +452,7 @@ inline int outletCellType() const {
   return OUTLET;
 }
 
-#if 0
-////////////////////////////////////////////////////////////////////////
-// sets boolean for energy exchange between solid and fluid
-void setIfCalcEnergyExchange(bool calcEnergyExchange){
-  d_calcEnergyExchange = calcEnergyExchange;
-}
 
-////////////////////////////////////////////////////////////////////////
-// Access function for calcEnergyExchange (multimaterial)
-inline bool getIfCalcEnergyExchange() const {
-  return d_calcEnergyExchange;
-}
-
-////////////////////////////////////////////////////////////////////////
-// sets boolean for fixing gas temperature in multimaterial cells
-void setIfFixTemp(bool fixTemp){
-  d_fixTemp = fixTemp;
-}
-
-////////////////////////////////////////////////////////////////////////
-// Access function for d_fixTemp (multimaterial)
-inline bool getIfFixTemp() const {
-  return d_fixTemp;
-}
-
-#endif
 ////////////////////////////////////////////////////////////////////////
 // sets boolean for cut cells
 void setCutCells(bool cutCells){
@@ -525,12 +500,6 @@ void intrusionTemperatureBC(const Patch* patch,
                             constCCVariable<int>& cellType,
                             CCVariable<double>& temperature);
 
-void mmWallTemperatureBC(const Patch* patch,
-                         constCCVariable<int>& cellType,
-                         constCCVariable<double> solidTemp,
-                         CCVariable<double>& temperature,
-                         bool d_energyEx);
-
 void calculateIntrusionVel(const Patch* patch,
                            int index,
                            CellInformation* cellinfo,
@@ -559,12 +528,6 @@ void intrusionEnthalpyBC(const Patch* patch,
                          ArchesVariables* vars,
                          ArchesConstVariables* constvars);
 
-// compute multimaterial wall bc
-void wallVelocityBC(const Patch* patch,
-                    CellInformation* cellinfo,
-                    ArchesVariables* vars,
-                    ArchesConstVariables* constvars);
-
 void mmpressureBC(DataWarehouse* new_dw,
                   const Patch* patch,
                   ArchesVariables* vars,
@@ -572,17 +535,6 @@ void mmpressureBC(DataWarehouse* new_dw,
 
 ////////////////////////////////////////////////////////////////////////
 // Calculate uhat for multimaterial case (only for nonintrusion cells)
-void calculateVelRhoHat_mm(const Patch* patch,
-                           double delta_t,
-                           CellInformation* cellinfo,
-                           ArchesVariables* vars,
-                           ArchesConstVariables* constvars);
-
-void calculateVelocityPred_mm(const Patch* patch,
-                              double delta_t,
-                              CellInformation* cellinfo,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars);
 
 void velRhoHatInletBC(const Patch* patch,
                       ArchesVariables* vars,
@@ -896,16 +848,8 @@ std::vector<std::string> d_all_v_inlet_names;
 // const VarLabel* inputs
 const ArchesLabel* d_lab;
 
-#if 1
-// for multimaterial
 int d_mmWallID;
-// cutoff for void fraction rqd to determine multimaterial wall
-double MM_CUTOFF_VOID_FRAC;
-bool d_calcEnergyExchange;
-bool d_fixTemp;
-#endif
 bool d_cutCells;
-
 
 bool d_check_inlet_obstructions;
 
