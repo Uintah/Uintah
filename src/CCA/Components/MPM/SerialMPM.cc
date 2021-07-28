@@ -1541,6 +1541,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
   if(flags->d_reductionVars->mass){
     t->computes(lb->TotalMassLabel);
+    t->computes(lb->DissolvedMassLabel);
     t->computes(lb->PistonMassLabel);
   }
   if(flags->d_reductionVars->volDeformed){
@@ -1778,6 +1779,10 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(lb->triAreaLabel_preReloc,                triangle_matls);
   t->computes(lb->triAreaAtNodesLabel_preReloc,         triangle_matls);
   t->computes(lb->triClayLabel_preReloc,                triangle_matls);
+
+  // Reduction Variable
+  t->computes(lb->TotalSurfaceAreaLabel);
+
 //t->computes(lb->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
 //t->computes(lb->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
 //t->computes(lb->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
@@ -4202,6 +4207,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     double totalmass  = 0;
+    double dissolvedmass = 0;
     double pistonmass = 0;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
@@ -4447,6 +4453,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
+          dissolvedmass  += (pmass[idx] - pmassNew[idx]);
           pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
@@ -4558,6 +4565,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
+          dissolvedmass  += (pmass[idx] - pmassNew[idx]);
           pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
@@ -4590,6 +4598,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     //  reduction variables
     if(flags->d_reductionVars->mass){
       new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+      new_dw->put(sum_vartype(dissolvedmass),  lb->DissolvedMassLabel);
       new_dw->put(sum_vartype(pistonmass),     lb->PistonMassLabel);
     }
     if(flags->d_reductionVars->momentum){
@@ -5734,14 +5743,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-//    BBox domain;
-//    const Level* level = getLevel(patches);
-//    level->getInteriorSpatialRange(domain);
-//    Vector dx = patch->dCell();
-//    Point dom_min = domain.min();
-//    Point dom_max = domain.max();
-//    IntVector periodic = level->getPeriodicBoundaries();
-
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -5751,6 +5752,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<constNCVariable<double> > dLdt(numMPMMatls);
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
+    std::vector<bool> PistonMaterial(numMPMMatls);
 
     constNCVariable<Vector>  gvelocityglobal;
     constNCVariable<double>  gmassglobal;
@@ -5765,6 +5767,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
       new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
       new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
+      PistonMaterial[m] = mpm_matl->getIsPistonMaterial();
+
       if (flags->d_doingDissolution){
         new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
       } else{
@@ -5858,6 +5862,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 //    triNode1TriIDs_new.copyData(triNode1TriIDs);
 //    triNode2TriIDs_new.copyData(triNode2TriIDs);
 
+      double totalsurfarea = 0.;
+
       // Loop over triangles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -5873,6 +5879,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         int deleteThisTriangle = 0;
         Vector vertexVel[3];
         double populatedVertex[3]={0.,0.,0.};
+        double DisPrecip = 0.;  // Dissolving if > 0, precipitating if < 0.
+
         for(int itv = 0; itv < 3; itv++){
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
@@ -5884,8 +5892,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             IntVector node = ni[k];
             vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
             sumSk += gmass[adv_matl][node]*S[k];
-            surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            surf  -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            DisPrecip += dLdt[adv_matl][node]*S[k];
           }
+
           if(sumSk > 1.e-90){
             // This is the normal condition, when at least one of the nodes
             // influencing a vertex has mass on it.
@@ -5901,6 +5911,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             deleteThisTriangle++;
           }
         } // loop over vertices
+
+        if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
+          totalsurfarea+=triArea[idx];
+        }
 
         // Handle the triangles that have vertices that are not near nodes with mass
         if(deleteThisTriangle==3){
@@ -5941,6 +5955,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
       } // Loop over triangles
       new_dw->deleteParticles(delset);
+
+      new_dw->put(sum_vartype(totalsurfarea),      lb->TotalSurfaceAreaLabel);
 
 #if 0
       // This is for computing updated triAreaAtNodes. Need to create a
