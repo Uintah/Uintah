@@ -1843,6 +1843,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
   t->computes(lb->gLSContactForceLabel,             mpm_matls);
+  t->computes(lb->gInContactMatlLabel,              mpm_matls);
   if (flags->d_doingDissolution) {
     t->computes(lb->gSurfaceAreaLabel,              mpm_matls);
     t->computes(lb->gSurfaceClayLabel,              mpm_matls);
@@ -6034,6 +6035,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<NCVariable<double> > SurfClay(numMPMMatls);
+    std::vector<NCVariable<int> > InContactMatl(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
     std::vector<bool> PistonMaterial(numMPMMatls);
 //    std::vector<Vector> sumTriForce(numMPMMatls);
@@ -6048,6 +6050,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       LSContForce[m].initialize(Vector(0.0));
+      new_dw->allocateAndPut(InContactMatl[m],lb->gInContactMatlLabel,dwi,patch);
+      InContactMatl[m].initialize(-99);
 
       if (flags->d_doingDissolution) {
         new_dw->allocateAndPut(SurfArea[m], lb->gSurfaceAreaLabel,   dwi,patch);
@@ -6346,6 +6350,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                            * gmass[adv_matl0][node]/totMass0;
                  LSContForce[adv_matl1][node] -= tForceA*S[k]
                                            * gmass[adv_matl1][node]/totMass1;
+                 InContactMatl[adv_matl0][node] = adv_matl1;
+                 InContactMatl[adv_matl1][node] = adv_matl0;
 //               }
                }
               }
@@ -6376,6 +6382,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                            * gmass[adv_matl0][node]/totMass0;
                  LSContForce[adv_matl1][node] -= tForceB*S[k]
                                            * gmass[adv_matl1][node]/totMass1;
+                 InContactMatl[adv_matl0][node] = adv_matl1;
+                 InContactMatl[adv_matl1][node] = adv_matl0;
 //               }
                }
               }
@@ -6406,6 +6414,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                            * gmass[adv_matl0][node]/totMass0;
                  LSContForce[adv_matl1][node] -= tForceC*S[k]
                                            * gmass[adv_matl1][node]/totMass1;
+                 InContactMatl[adv_matl0][node] = adv_matl1;
+                 InContactMatl[adv_matl1][node] = adv_matl0;
 //               }
                }
               }
@@ -6487,6 +6497,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceA*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                 }
@@ -6517,6 +6529,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceB*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                 }
@@ -6547,6 +6561,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] -= tForceC*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                 }

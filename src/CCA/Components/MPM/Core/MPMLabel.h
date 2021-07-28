@@ -170,6 +170,7 @@ namespace Uintah {
       const VarLabel* gPositionF1Label;
       const VarLabel* gExternalForceLabel;
       const VarLabel* gLSContactForceLabel;
+      const VarLabel* gInContactMatlLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gContactLabel;

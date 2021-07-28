@@ -135,7 +135,7 @@
             <use_burial_history   spec="OPTIONAL BOOLEAN" />
             <burial_history_entry spec="OPTIONAL STRING" />
             <id                   spec="REQUIRED INTEGER" />
-            <material             spec="OPTIONAL INTEGER" />
+            <loadCurveMatl        spec="OPTIONAL INTEGER" />
             <time_point           spec="MULTIPLE NO_DATA" >
               <time               spec="REQUIRED INTEGER" />
               <load               spec="REQUIRED INTEGER" />

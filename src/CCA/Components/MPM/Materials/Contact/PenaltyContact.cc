@@ -107,7 +107,9 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<double> > gmass(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<Vector> > gtrcontactforce(numMatls);
+  std::vector<constNCVariable<int> >    gInContactMatl(numMatls);
   std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
+  std::vector<bool> PistonMaterial(numMatls);
 
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -123,10 +125,15 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) d_materialManager->getMaterial( "MPM",  m );
+      PistonMaterial[m] = mpm_matl->getIsPistonMaterial();
       int dwi = matls->get(m);
       new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],        lb->gVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(gtrcontactforce[m],lb->gLSContactForceLabel,
+                                                         dwi, patch, gnone, 0);
+      new_dw->get(gInContactMatl[m], lb->gInContactMatlLabel,
                                                          dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
                                                          dwi, patch);
@@ -223,6 +230,10 @@ void PenaltyContact::exMomIntegrated(const ProcessorGroup*,
           double frictionCoefficient=
                     Min(d_mu,tangentDeltaVelocity/(normalDv + 1.e-100));
 
+          if(PistonMaterial[n] || PistonMaterial[gInContactMatl[n][c]]){
+           frictionCoefficient=0.0;
+          }
+
           // Change in velocity in the tangential direction
           Dv -= surfaceTangent*frictionCoefficient*normalDv;
 
@@ -263,6 +274,7 @@ void PenaltyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gMassLabel,                  Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gInContactMatlLabel,         Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel,  mss);
 
