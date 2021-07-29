@@ -121,7 +121,6 @@
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/WallHTModels/WallModelDriver.h>
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -153,7 +152,6 @@ static DebugStream dbg("ARCHES", false);
 // ****************************************************************************
 ExplicitSolver::
 ExplicitSolver(MaterialManagerP& materialManager,
-               const MPMArchesLabel* MAlb,
                PhysicalConstants* physConst,
                const ProcessorGroup* myworld,
                ArchesParticlesHelper* particle_helper,
@@ -161,7 +159,6 @@ ExplicitSolver(MaterialManagerP& materialManager,
                ApplicationCommon* arches ):
                NonlinearSolver(myworld, arches),
                d_materialManager(materialManager),
-               d_MAlab(MAlb),
                d_physicalConsts(physConst),
                _particlesHelper( particle_helper ),
                d_hypreSolver(hypreSolver)
@@ -469,8 +466,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   // read properties
-  // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+  d_props = scinew Properties(d_lab, d_physicalConsts, d_myworld);
   d_tabulated_properties = scinew TableLookup( d_lab->d_materialManager );
   d_tabulated_properties->problemSetup( db );
 
@@ -511,7 +507,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   // read boundary condition information
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_physicalConsts,
                                                  d_props, d_tabulated_properties );
 
   // send params, boundary type defined at the level of Grid
@@ -523,14 +519,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   if ( whichTurbModel == "smagorinsky") {
-    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = scinew SmagorinskyModel(d_lab, d_physicalConsts,
                                           d_boundaryCondition);
   }else if ( whichTurbModel == "compdynamicprocedure") {
-    d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = scinew CompDynamicProcedure(d_lab, d_physicalConsts,
                                               d_boundaryCondition);
   } else if ( whichTurbModel == "none" ) {
     proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
-    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_physicalConsts,
                                                     d_boundaryCondition);
   } else {
     proc0cout << "\n Notice: No (old interface) Turbulence model was found. \n" << endl;
@@ -540,7 +536,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
-    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_physicalConsts,
                                                        d_boundaryCondition);
     d_scaleSimilarityModel->problemSetup(db);
 
@@ -794,13 +790,13 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
 
-  d_pressSolver = scinew PressureSolver( d_lab, d_MAlab,
+  d_pressSolver = scinew PressureSolver( d_lab,
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
   d_pressSolver->problemSetup( db_es, materialManager );
 
-  d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+  d_momSolver = scinew MomentumSolver(d_lab,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts,
                                       &_task_factory_map );
@@ -1090,7 +1086,6 @@ ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
             IntVector currCell(colX, colY, colZ);
             double tmp_time;
 
-//            if (d_MAlab) {
             int flag = true;
             int colXm = colX - 1;
             int colXp = colX + 1;
@@ -1499,10 +1494,6 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   tsk->computes(d_lab->d_conv_scheme_y_Label);
   tsk->computes(d_lab->d_conv_scheme_z_Label);
 
-  if (d_MAlab) {
-    tsk->computes(d_lab->d_pressPlusHydroLabel);
-    tsk->computes(d_lab->d_mmgasVolFracLabel);
-  }
   if ( VarLabel::find("true_wall_temperature"))
     tsk->computes(VarLabel::find("true_wall_temperature"));
 
@@ -1708,11 +1699,6 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
       allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_s"), new_dw, indx, patch, 1.0 );
     if ( VarLabel::find("thermal_cond_sb_l"))
       allocateAndInitializeToC( VarLabel::find("thermal_cond_sb_l"), new_dw, indx, patch, 1.0 );
-
-    if ( d_MAlab ){
-      allocateAndInitializeToC( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch, 0.0 );
-      allocateAndInitializeToC( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch, 0.0 );
-    }
 
     CCVariable<double> viscosity;
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
@@ -2485,11 +2471,7 @@ ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
   tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
-  if (!(d_MAlab))
-    tsk->computes(d_lab->d_cellInfoLabel);
-  else
-    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0);
-
+  tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -2506,13 +2488,6 @@ ExplicitSolver::sched_setInitialGuess(       SchedulerP  & sched,
   tsk->computes(d_lab->d_conv_scheme_x_Label);
   tsk->computes(d_lab->d_conv_scheme_y_Label);
   tsk->computes(d_lab->d_conv_scheme_z_Label);
-
-  //__________________________________
-  if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,   gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, gn, 0);
-    tsk->computes(d_lab->d_densityMicroINLabel);
-  }
 
   //__________________________________
   tsk->computes(d_lab->d_densityTempLabel);
@@ -3018,20 +2993,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> denMicro_new;
 
     Ghost::GhostType  gn = Ghost::None;
-    if (d_MAlab) {
-      old_dw->get(denMicro, d_lab->d_densityMicroLabel,  indx, patch, gn, 0);
-      new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroINLabel, indx, patch);
-      denMicro_new.copyData(denMicro);
-    }
 
     constCCVariable<int> cellType;
-    if (d_MAlab){
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, indx, patch,gn, 0);
-    }else{
-      old_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
-    }
-
-
+    old_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     constCCVariable<double> old_density_guess;
     old_dw->get( old_density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
 
@@ -3059,15 +3023,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     cellType_new.copyData(cellType);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (!(d_MAlab))
-    {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }
-    else
-    {
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    }
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, indx, patch);

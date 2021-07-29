@@ -48,7 +48,6 @@
 namespace Uintah {
 
 class ArchesLabel;
-class MPMArchesLabel;
 class TimeIntegratorLabel;
 class PCProperties : public MixingRxnModel {
 

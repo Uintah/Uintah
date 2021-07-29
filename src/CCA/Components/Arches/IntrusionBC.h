@@ -42,7 +42,6 @@ namespace Uintah{
 
   class VarLabel;
   class ArchesLabel;
-  class MPMArchesLabel;
   class ArchesVariables;
   class ArchesConstVariables;
   class Properties;
@@ -55,7 +54,7 @@ namespace Uintah{
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
       enum INLET_TYPE { FLAT, HANDOFF, MASSFLOW, TABULATED };
 
-      IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props,
+      IntrusionBC( const ArchesLabel* lab, Properties* props,
                    TableLookup* table_lookup, int WALL );
       ~IntrusionBC();
 
@@ -1017,14 +1016,12 @@ namespace Uintah{
       IntrusionMap _intrusion_map;
       Uintah::PatchSet* localPatches_{nullptr};
       const ArchesLabel* _lab;
-      const MPMArchesLabel* _mpmlab;
       const VarLabel* m_alpha_geom_label;                  ///< Geometry modification factor
       Properties* _props;
       TableLookup* _table_lookup;
       int _WALL;
       bool _intrusion_on;
       bool _do_energy_exchange;
-      bool _mpm_energy_exchange;
 
       Uintah::MasterLock _bc_face_iterator_lock{};
       Uintah::MasterLock _interior_cell_iterator_lock{};

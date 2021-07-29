@@ -46,7 +46,6 @@ Dout dbg("RMCRT", "Arches", "RMCRT debug info", false);
 
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                                   ArchesLabel* labels,
-                                  MPMArchesLabel* MAlab,
                                   std::vector<std::string> req_label_names,
                                   const ProcessorGroup* my_world,
                                   std::string type )
@@ -54,7 +53,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                   labels->d_materialManager,
                   req_label_names, type ),
   m_labels( labels ),
-  m_MAlab(MAlab),
   m_my_world(my_world)
 {
 

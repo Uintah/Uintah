@@ -60,7 +60,6 @@ WARNING
 
 namespace Uintah {
 class ArchesLabel;
-class MPMArchesLabel;
 class PhysicalConstants;
 class BoundaryCondition;
 
@@ -71,8 +70,8 @@ public:
    // GROUP: Constructors:
    ////////////////////////////////////////////////////////////////////////
    // Blank constructor for ScaleSimilarityModel.
+   
    ScaleSimilarityModel(const ArchesLabel* label, 
-                        const MPMArchesLabel* MAlb,
                         PhysicalConstants* phyConsts,
                         BoundaryCondition* bndryCondition);
 

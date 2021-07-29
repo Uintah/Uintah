@@ -290,7 +290,7 @@ void SingleFieldMPM::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  create analysis modules
   // call problemSetup
-  if(!flags->d_with_ice && !flags->d_with_arches){ // mpmice or mpmarches handles this
+  if(!flags->d_with_ice){ // mpmice handles this
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
 						      m_materialManager,
 						      prob_spec);
@@ -352,8 +352,8 @@ void SingleFieldMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
 
   //__________________________________
-  //  output data analysis modules. Mpmice or mpmarches handles this
-  if(!flags->d_with_ice && !flags->d_with_arches && d_analysisModules.size() != 0){
+  //  output data analysis modules. Mpmice handles this
+  if(!flags->d_with_ice && d_analysisModules.size() != 0){
 
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
@@ -1828,7 +1828,7 @@ void SingleFieldMPM::printParticleCount(const ProcessorGroup* pg,
 
   //__________________________________
   //  bulletproofing
-  if(pcount == 0 && flags->d_with_arches == false){
+  if( pcount == 0 ){
     ostringstream msg;
     msg << "\n ERROR: zero particles were created. \n"
         << "  Possible causes: \n"
@@ -2098,11 +2098,11 @@ void SingleFieldMPM::actuallyInitialize(const ProcessorGroup*,
   IntVector num_extra_cells=level->getExtraCells();
   IntVector periodic=level->getPeriodicBoundaries();
   if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
-    if(!flags->d_with_ice && !flags->d_with_arches){
+    if( !flags->d_with_ice ){
       ostringstream msg;
       msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
           << " you should also use <extraCells>[0,0,0]</extraCells> \n"
-          << " unless you are running an MPMICE or MPMARCHES case.\n";
+          << " unless you are running a MPMICE case.\n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
   }

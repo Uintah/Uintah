@@ -54,7 +54,6 @@ PSELIBS := \
         $(HEAT)                            \
         $(ICE)                             \
         $(MPM)                             \
-        $(MPMARCHES)                       \
         $(MPMFVM)                          \
         $(MPMICE)                          \
         $(PHASEFIELD)                      \

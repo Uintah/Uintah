@@ -53,14 +53,13 @@ planeExtract::planeExtract(const ProcessorGroup* myworld,
 //__________________________________
 planeExtract::~planeExtract()
 {
-  DOUT(dbg_OTF_PE, " Doing: destructor planeExtract " );
+  DOUTR(dbg_OTF_PE, " Doing: destructor planeExtract " );
 
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
 
-  VarLabel::destroy(d_lb->lastWriteTimeLabel);
-  VarLabel::destroy(d_lb->fileVarsStructLabel);
+  VarLabel::destroy( d_lb->lastWriteTimeLabel );
   delete d_lb;
 
   // delete each plane
@@ -81,9 +80,6 @@ void planeExtract::problemSetup(const ProblemSpecP& ,
   DOUTR(dbg_OTF_PE , "Doing problemSetup \t\t\t\tplaneExtract" );
 
   int numMatls  = m_materialManager->getNumMatls();
-
-  d_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
-                                            max_vartype::getTypeDescription());
 
   //__________________________________
   //  Read in timing information

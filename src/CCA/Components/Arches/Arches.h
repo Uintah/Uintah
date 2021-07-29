@@ -54,18 +54,11 @@
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
 
-// Exact Initialization for first time step in
-// MPMArches problem, to eliminate problem of
-// sudden appearance of mass in second step
-//
-// #define ExactMPMArchesInitialize
-
 namespace Uintah {
 
   class VarLabel;
   class PhysicalConstants;
   class NonlinearSolver;
-  class MPMArchesLabel;
   class ArchesParticlesHelper;
 
 class Arches : public ApplicationCommon {
@@ -109,16 +102,8 @@ public:
                                    const MaterialSubset * matls,
                                          DataWarehouse  * old_dw,
                                          DataWarehouse  * new_dw );
-    
-  void setMPMArchesLabel(const MPMArchesLabel* MAlb){
-    m_MAlab = MAlb;
-  }
 
   virtual double recomputeDelT(const double delT);
-
-  void setWithMPMARCHES() {
-    m_with_mpmarches = true;
-  };
   
   //________________________________________________________________________________________________
   //  Multi-level/AMR
@@ -160,13 +145,10 @@ private:
 
   PhysicalConstants* m_physicalConsts;
   NonlinearSolver* m_nlSolver;
-  const MPMArchesLabel* m_MAlab;
   Uintah::ProblemSpecP m_arches_spec;
   ArchesParticlesHelper* m_particlesHelper;
 
   std::vector<AnalysisModule*> m_analysis_modules;
-
-  bool m_with_mpmarches;
 
   bool m_do_lagrangian_particles;
 

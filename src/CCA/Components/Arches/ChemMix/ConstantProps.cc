@@ -195,8 +195,6 @@ ConstantProps::getState( const ProcessorGroup* pc,
     new_dw->get( eps_vol, m_volFractionLabel, m_matl_index, patch, gn, 0 );
 
     // dependent variables
-    CCVariable<double> mpmarches_denmicro;
-
     DepVarMap depend_storage;
     if ( initialize_me ) {
 

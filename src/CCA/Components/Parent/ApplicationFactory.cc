@@ -81,10 +81,6 @@
 #include <CCA/Components/MPM/SingleFieldMPM.h>
 #endif
 
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-#  include <CCA/Components/MPMArches/MPMArches.h>
-#endif
-
 #if !defined(NO_MPM) && !defined(NO_FVM)
 #include <CCA/Components/MPMFVM/ESMPM.h>
 #include <CCA/Components/MPMFVM/ESMPM2.h>
@@ -254,17 +250,6 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
   }
   else {
     turned_on_options += "impm ";
-  }
-#endif
-
-  //----------------------------
-
-#if !defined(NO_MPM) && !defined(NO_ARCHES)
-  if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "mpmarches ";
   }
 #endif
 

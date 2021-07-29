@@ -130,11 +130,6 @@ ifeq ($(BUILD_MPM),yes)
 #       $(MPM_DIR)/Crack
 endif
 
-# MPM-Arches
-ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
-  MPMARCHES_LIB = $(COMPONENTS)/MPMArches
-endif
-
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
   MPMFVM_LIB = $(COMPONENTS)/MPMFVM
@@ -208,7 +203,6 @@ ALL_PSE_LIBS =                              \
         $(ICE_SUB_LIBS)                     \
         $(MPM_LIB)                          \
         $(MPM_SUB_LIBS)                     \
-        $(MPMARCHES_LIB)                    \
         $(MPMFVM_LIB)                       \
         $(MPMICE_LIB)                       \
         $(MPMICE_SUB_LIBS)                  \
@@ -232,7 +226,6 @@ ALL_STATIC_PSE_LIBS =                   \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
-    $(MPMARCHES_LIB)                    \
     $(FVM_LIB)                          \
     $(MPM_LIB)                          \
     $(MPM_SUB_LIBS)                     \

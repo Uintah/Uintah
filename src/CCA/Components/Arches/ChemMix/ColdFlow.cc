@@ -324,8 +324,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables
-    CCVariable<double> mpmarches_denmicro;
-
     DepVarMap depend_storage;
     if ( initialize_me ) {
 

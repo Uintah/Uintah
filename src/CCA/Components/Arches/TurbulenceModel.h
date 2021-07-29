@@ -65,7 +65,6 @@ WARNING
 namespace Uintah {
 class VarLabel;
 class ArchesLabel;
-class MPMArchesLabel;
 class TimeIntegratorLabel;
 class TurbulenceModel
 {
@@ -74,8 +73,7 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for TurbulenceModel.
-      TurbulenceModel(const ArchesLabel* label,
-                      const MPMArchesLabel* MAlb);
+      TurbulenceModel(const ArchesLabel* label);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -135,7 +133,6 @@ public:
  protected:
 
       const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
       const VarLabel* d_dissipationRateLabel;
 
 

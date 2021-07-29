@@ -393,8 +393,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
-    CCVariable<double> mpmarches_denmicro;
-
 
     std::vector<CCVariable<double> >CCVar_vec_lookup (d_dvVarMap.size()); // needs to be expanded newTable
     std::vector<int> depVarIndexes(d_nDepVars);

@@ -50,7 +50,6 @@ GENERAL INFORMATION
 
    
 KEYWORDS
-   MPM_Material
 
 DESCRIPTION
    Long description...

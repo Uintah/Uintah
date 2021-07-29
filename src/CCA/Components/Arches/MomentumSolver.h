@@ -76,7 +76,6 @@ WARNING
 namespace Uintah {
 
 class ArchesLabel;
-class MPMArchesLabel;
 class ProcessorGroup;
 class TurbulenceModel;
 class PhysicalConstants;
@@ -97,7 +96,6 @@ public:
   // POSTCONDITIONS
   //   A linear level solver is partially constructed.
   MomentumSolver(const ArchesLabel* label,
-                 const MPMArchesLabel* MAlb,
                  TurbulenceModel* turb_model,
                  BoundaryCondition* bndry_cond,
                  PhysicalConstants* physConst,
@@ -171,9 +169,6 @@ public:
   inline void setDiscretizationFilter(Filter* filter) {
     d_discretize->setFilter(filter);
   }
-  inline void setMomentumCoupling(bool doMC) {
-    d_momentum_coupling = doMC;
-  }
 
 private:
 
@@ -227,8 +222,6 @@ private:
 
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
-  const MPMArchesLabel* d_MAlab;
-  bool d_momentum_coupling;
   bool d_central;
 
   const VarLabel* d_denRefArrayLabel;

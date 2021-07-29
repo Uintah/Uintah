@@ -36,7 +36,6 @@
 
 namespace Uintah {
   class ArchesLabel;
-  class MPMArchesLabel;
   class PhysicalConstants;
   class BoundaryCondition;
 
@@ -54,7 +53,6 @@ namespace Uintah {
   public:
 
     TurbulenceModelPlaceholder(const ArchesLabel* label,
-                     const MPMArchesLabel* MAlb,
                      PhysicalConstants* phyConsts,
                      BoundaryCondition* bndryCondition);
 

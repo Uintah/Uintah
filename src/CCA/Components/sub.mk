@@ -66,10 +66,6 @@ ifeq ($(BUILD_MPM),yes)
   MPM := $(SRCDIR)/MPM
 endif
 
-# MPM-Arches
-ifeq ($(BUILD_MPM)$(BUILD_ARCHES),yesyes)
-  MPMARCHES := $(SRCDIR)/MPMArches
-endif
 
 # MPM-FVM
 ifeq ($(BUILD_MPM)$(BUILD_FVM),yesyes)
@@ -97,7 +93,6 @@ SUBDIRS := \
         $(FVM)                         \
         $(ICE)                         \
         $(MPM)                         \
-        $(MPMARCHES)                   \
         $(MPMFVM)                      \
         $(MPMICE)                      \
         $(PARENT)                      \

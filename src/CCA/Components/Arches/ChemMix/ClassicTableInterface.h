@@ -54,7 +54,6 @@ namespace Uintah {
 
 
 class ArchesLabel;
-class MPMArchesLabel;
 class TimeIntegratorLabel;
 class BoundaryCondition_new;
 class MixingRxnModel;

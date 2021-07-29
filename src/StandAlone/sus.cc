@@ -428,7 +428,7 @@ int main( int argc, char *argv[], char *env[] )
     else if (arg == "-postProcessUda" || arg == "-PostProcessUda") {
       postProcessUda = true;
     }
-    else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
+    else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
         || arg == "-mpmf" || arg == "-rmpm" || arg == "-smpm" || arg == "-amrmpm" || arg == "-smpmice" || arg == "-rmpmice") {
       usage(std::string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
