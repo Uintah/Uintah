@@ -137,4 +137,7 @@ configure_file( visit_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/visit_defs.h )
 
 # jcs visus
 
-# jcs wasatch stuff - not sure if we really need this stuff?
+if( WASATCH_ENABLE_POKITT )
+    set( HAVE_POKITT TRUE )
+endif()
+configure_file( wasatch_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/wasatch_defs.h )

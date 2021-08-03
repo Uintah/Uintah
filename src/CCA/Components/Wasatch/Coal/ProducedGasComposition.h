@@ -7,7 +7,7 @@
 #include <CCA/Components/Wasatch/Coal/Devolatilization/CPD/CPDData.h>
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 
-#include <cantera/IdealGasMix.h>
+#include <cantera/thermo/ThermoPhase.h>
 #include <pokitt/CanteraObjects.h> // include cantera wrapper
 
 
@@ -79,7 +79,7 @@ class ProducedGasComposition
 
   const std::vector<GasSpeciesName> specEnums_;
 
-  Cantera::IdealGasMix* const gas_;
+  std::shared_ptr<Cantera::ThermoPhase> gas_;
 
   const double mwChar_, mwH2O_, mwCO2_, mwCO_, mwH2_;
 
@@ -164,7 +164,7 @@ public:
       devModel_  ( devModel                                           ),
       specTagMap_( specTagMap                                         ),
       specEnums_ ( get_produced_species( devModel )                   ),
-      gas_       ( CanteraObjects::get_gasmix()                       ),
+      gas_       ( CanteraObjects::get_thermo()                       ),
       mwChar_    ( gas_->atomicWeight   ( gas_->elementIndex("C"  ) ) ),
       mwH2O_     ( gas_->molecularWeight( gas_->speciesIndex("H2O") ) ),
       mwCO2_     ( gas_->molecularWeight( gas_->speciesIndex("CO2") ) ),
@@ -213,7 +213,7 @@ public:
   ProducedGasComposition<FieldT>::
   ~ProducedGasComposition()
   {
-    CanteraObjects::restore_gasmix(gas_);
+    CanteraObjects::restore_thermo(gas_);
   }
 
 //--------------------------------------------------------------------

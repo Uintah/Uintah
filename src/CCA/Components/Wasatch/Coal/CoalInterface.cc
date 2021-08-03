@@ -7,6 +7,8 @@
 
 #include <pokitt/thermo/Enthalpy.h>
 
+#include <cantera/thermo/ThermoPhase.h>
+
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 
@@ -153,7 +155,7 @@ namespace Coal{
       mvTag_      ( dev_ ->volatiles_tag()              ),
       charTag_    ( char_->char_mass_tag()              ),
       moistureTag_( evap_->retrieve_moisture_mass_tag() ),
-      gas_        (CanteraObjects::get_gasmix()         )
+      gas_        ( CanteraObjects::get_thermo()        )
   {
     // assemble the collection of tags corresponding to gas phase
     // source terms from the CPD and Char oxidation models,
@@ -198,7 +200,7 @@ namespace Coal{
     delete char_;
     delete evap_;
 
-    CanteraObjects::restore_gasmix(gas_);
+    CanteraObjects::restore_thermo( gas_ );
   }
 
   //------------------------------------------------------------------

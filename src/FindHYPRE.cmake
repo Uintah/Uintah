@@ -30,7 +30,7 @@ if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
         )
     string( REGEX MATCH "([0-9]\.[0-9]+\.[0-9]+)" HYPRE_VERSION  ${version_string} )
     string( REGEX MATCHALL "([0-9]+)" version_split ${HYPRE_VERSION} )
-    message( STATUS "HYPRE:\n\tVERSION: ${HYPRE_VERSION}\n\tInclude dir: ${HYPRE_INCLUDE_DIR}" )
+
     # Parse into separate numbers
     list( GET version_split 1 HYPRE_VERSION_MINOR )
     list( GET version_split 2 HYPRE_VERSION_PATCH )

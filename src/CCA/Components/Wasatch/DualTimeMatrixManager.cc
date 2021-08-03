@@ -25,6 +25,7 @@
 #include "DualTimeMatrixManager.h"
 
 #include <Core/Util/DebugStream.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <expression/dualtime/BlockImplicitBDFDualTimeIntegrator.h>
 #include <expression/matrix-assembly/MatrixExpression.h> /* for debugging purposes */

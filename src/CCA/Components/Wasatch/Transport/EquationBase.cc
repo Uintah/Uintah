@@ -29,7 +29,6 @@
  */
 
 
-
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 

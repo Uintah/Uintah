@@ -132,7 +132,7 @@ namespace WasatchCore{
   using StateTransformT  = Expr::matrix::StateTransformAssembler<FieldT>;
   using PreconditionerT  = Expr::matrix::AcousticPreconditionerAssembler<FieldT>;
   using DenseSubMatrixT  = Expr::matrix::DenseSubMatrix<FieldT>;
-  using BlockImplicitBDF = Expr::DualTime::BlockImplicitBDFDualTimeIntegrator<SVolField, SVolField>;
+  using BlockImplicitBDF = Expr::DualTime::BlockImplicitBDFDualTimeIntegrator<FieldT,FieldT>;
 
   class DualTimeMatrixManager
   {

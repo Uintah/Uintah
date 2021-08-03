@@ -35,7 +35,7 @@ OscillatingCylinder( const std::string& axis,
                      const double radius,
                      const double frequency,
                      const double amplitude )
-: Expr::Expression<SVolField>(),
+: Expr::Expression<SpatialOps::SVolField>(),
   origin_(origin),
   oscillatingdir_(oscillatingdir),
   insidevalue_(insideValue),
@@ -59,8 +59,8 @@ OscillatingCylinder( const std::string& axis,
 
   this->set_gpu_runnable( false );
   
-   field1_ = create_field_request<SVolField>(tag1);
-   field2_ = create_field_request<SVolField>(tag2);
+   field1_ = create_field_request<SpatialOps::SVolField>(tag1);
+   field2_ = create_field_request<SpatialOps::SVolField>(tag2);
    t_ = create_field_request<TimeField>(tagNames.time);
 }
 

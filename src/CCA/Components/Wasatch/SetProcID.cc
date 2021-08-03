@@ -48,7 +48,7 @@ namespace WasatchCore{
 
     Uintah::Task* task = scinew Uintah::Task( "set_rank", this, &SetProcID::set_rank );
     task->computes( pid_,
-                    patches->getUnion(), Uintah::Task::NormalDomain,
+                    patches->getUnion(), Uintah::Task::ThisLevel,
                     materials->getUnion(), Uintah::Task::NormalDomain );
     sched->addTask( task, patches, materials );
   }

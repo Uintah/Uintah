@@ -75,7 +75,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 template<>
 void
-VelocityMagnitude<SVolField,SVolField,SVolField,SVolField>::
+VelocityMagnitude<SpatialOps::SVolField,SpatialOps::SVolField,SpatialOps::SVolField,SpatialOps::SVolField>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {}
 
@@ -114,7 +114,7 @@ evaluate()
 
 template<>
 void
-VelocityMagnitude<SVolField,SVolField,SVolField,SVolField>::
+VelocityMagnitude<SpatialOps::SVolField,SpatialOps::SVolField,SpatialOps::SVolField,SpatialOps::SVolField>::
 evaluate()
 {
   using namespace SpatialOps;

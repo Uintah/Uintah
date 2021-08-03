@@ -95,7 +95,7 @@ template< typename DestT >
 class InterpolateParticleExpression
 : public Expr::Expression<DestT>
 {
-  DECLARE_FIELDS(ParticleField, src_, psize_, px_, py_, pz_)
+  DECLARE_FIELDS(SpatialOps::Particle::ParticleField, src_, psize_, px_, py_, pz_)
   
   typedef typename SpatialOps::Particle::ParticleToCell<DestT> P2CellOpT;
   P2CellOpT* p2CellOp_; // particle to cell operator
@@ -116,9 +116,9 @@ public:
      *  \param desttag Tag of the destination field
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& srctag,
-            const Expr::Tag& particleSizeTag,
-            const Expr::TagList& particlePositionTags);
+             const Expr::Tag& srctag,
+             const Expr::Tag& particleSizeTag,
+             const Expr::TagList& particlePositionTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     

@@ -34,7 +34,7 @@
  *  \brief Implements an oscillating cylinder that can be used as volume
  fraction expression to illustrate the use of a moving geometry in a flowfield.
  */
-class OscillatingCylinder : public Expr::Expression<SVolField>
+class OscillatingCylinder : public Expr::Expression<SpatialOps::SVolField>
 {
 public:
   
@@ -78,7 +78,7 @@ private:
   const double insidevalue_, outsidevalue_, radius_;
   const double frequency_, amplitude_;
 
-  DECLARE_FIELDS(SVolField, field1_, field2_)
+  DECLARE_FIELDS(SpatialOps::SVolField, field1_, field2_)
   DECLARE_FIELD(TimeField, t_)
 };
 #endif

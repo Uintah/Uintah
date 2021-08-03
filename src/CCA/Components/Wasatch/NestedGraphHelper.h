@@ -32,13 +32,13 @@
 #define SRC_CCA_COMPONENTS_WASATCH_EXPRESSIONS_NESTEDGRAPHHELPER_H_
 
 #include <expression/ExprLib.h>
-
-// forward declarations -----
-struct AllocInfo;
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 namespace Uintah{ class Patch; }
 
 namespace WasatchCore{
+
+  struct AllocInfo;
 
   class NestedGraphHelper
   {
@@ -46,7 +46,7 @@ namespace WasatchCore{
 
     private:
       TreeSet    treeList_;
-      AllocInfo* allocInfo_;
+      WasatchCore::AllocInfo* allocInfo_;
 
     public:
       Expr::ExpressionFactory* const factory_;

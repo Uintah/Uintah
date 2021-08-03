@@ -30,5 +30,9 @@ if( ENABLE_UNIT_TESTS )
     add_subdirectory( testprograms )
 endif()
 add_subdirectory( tools )
+
+# auto-generate header files for compilation.
+# Should be done after all system introspection and configuration is complete.
 add_subdirectory( include )
 #----------------------------------------------------------
+

@@ -1,0 +1,5 @@
+set( WASATCH_SRC ${WASATCH_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/CPDData.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/CPDInterface.cc
+        PARENT_SCOPE
+    )

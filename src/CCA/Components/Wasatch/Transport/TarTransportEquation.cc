@@ -37,7 +37,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 // PoKiTT expressions that we require here
-#include <cantera/IdealGasMix.h>
+#include <cantera/thermo/ThermoPhase.h>
 #include <pokitt/CanteraObjects.h>
 
 namespace WasatchCore{
@@ -209,7 +209,7 @@ setup_source_terms( FieldTagInfo& info, Expr::TagList& srcTags )
   const double y = tsInfo.tarHydrogen;
 
   // get molecular weights of CO, O2, and H2O
-  Cantera::IdealGasMix* gas = CanteraObjects::get_gasmix();
+  std::shared_ptr<Cantera::ThermoPhase> gas = CanteraObjects::get_thermo();
   const std::vector<double>& mwVec = gas->molecularWeights();
 
   const double mwO2  = mwVec[gas->speciesIndex("O2" )];
@@ -248,7 +248,7 @@ setup_source_terms( FieldTagInfo& info, Expr::TagList& srcTags )
                                            energyRHSTag,
                                            Expr::SUBTRACT_SOURCE_EXPRESSION );
 
-  CanteraObjects::restore_gasmix(gas);
+  CanteraObjects::restore_thermo( gas );
 }
 
 //---------------------------------------------------------------------------

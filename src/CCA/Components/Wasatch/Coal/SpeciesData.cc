@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <sstream>
 
-#include <cantera/IdealGasMix.h>
-#include <pokitt/CanteraObjects.h> // include cantera wrapper
+#include <cantera/thermo/ThermoPhase.h>
+#include <pokitt/CanteraObjects.h>
 
 using std::string;
 using std::ostringstream;
@@ -33,7 +33,7 @@ namespace GasSpec{
   //------------------------------------------------------------------
   SpeciesData::
   SpeciesData()
-   : gas_( CanteraObjects::get_gasmix() )
+   : gas_( CanteraObjects::get_thermo() )
   {
     numSpecies_= (int)INVALID_SPECIES;
 
@@ -60,6 +60,13 @@ namespace GasSpec{
           << std::endl;
       throw std::runtime_error( msg.str() );
     }
+  }
+
+  //------------------------------------------------------------------
+  SpeciesData::
+  ~SpeciesData()
+  {
+    CanteraObjects::restore_thermo( gas_ );
   }
 
   //------------------------------------------------------------------

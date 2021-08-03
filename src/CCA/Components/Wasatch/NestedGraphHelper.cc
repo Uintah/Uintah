@@ -68,13 +68,13 @@ namespace WasatchCore
                  const bool isGPU )
   {
     // this may need to change for GPU builds
-    allocInfo_ = new AllocInfo( nullptr,
-                                nullptr,
-                                0,
-                                patch,
-                                nullptr,
-                                nullptr,
-                                isGPU );
+    allocInfo_ = new WasatchCore::AllocInfo( nullptr,
+                                             nullptr,
+                                             0,
+                                             patch,
+                                             nullptr,
+                                             nullptr,
+                                             isGPU );
   }
 
 //--------------------------------------------------------------------
@@ -82,7 +82,7 @@ namespace WasatchCore
   template<>
   Expr::ExpressionTree*
   NestedGraphHelper::
-  new_tree(const std::string treeName, const Expr::ExpressionID& rootID)
+  new_tree( const std::string treeName, const Expr::ExpressionID& rootID )
   {
     assert(allocInfo_!=nullptr);
 
@@ -101,7 +101,7 @@ namespace WasatchCore
   template<>
   Expr::ExpressionTree*
   NestedGraphHelper::
-  new_tree(const std::string treeName, const Expr::IDSet& rootIDs)
+  new_tree( const std::string treeName, const Expr::IDSet& rootIDs )
   {
     assert(allocInfo_!=nullptr);
 
@@ -113,7 +113,7 @@ namespace WasatchCore
     treeList_.insert(newTree);
 
     return newTree;
-}
+  }
 
 //--------------------------------------------------------------------
 

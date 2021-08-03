@@ -7,7 +7,7 @@
 #include <expression/Tag.h>
 #include <spatialops/Nebo.h>
 
-namespace Cantera{ class IdealGasMix; }
+namespace Cantera{ class ThermoPhase; }
 
 namespace GasSpec{
   /*
@@ -41,6 +41,7 @@ namespace GasSpec{
     SpeciesData();
     SpeciesData& operator=( const SpeciesData& );  // no assignment
     SpeciesData( const SpeciesData& );  // no copying
+    ~SpeciesData();
 
   public:
     static const SpeciesData& self();
@@ -74,7 +75,7 @@ namespace GasSpec{
     std::vector<std::string> specNames_;
 
   private:
-    Cantera::IdealGasMix* const gas_;
+    std::shared_ptr<Cantera::ThermoPhase> gas_;
   };
 }// namespace GasSpec
 

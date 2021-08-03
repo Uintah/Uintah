@@ -87,12 +87,16 @@ find_package( Boost
         1.65 # minimum version
         COMPONENTS filesystem system
     ) # Boost_FOUND, Boost_INCLUDE_DIRS, Boost_LIBRARY_DIRS, Boost_LIBRARIES
-message( STATUS "Boost information:\n\tInclude Dir: ${Boost_INCLUDE_DIRS}\n\tlibs: ${Boost_LIBRARIES}\n\tlib dir: ${Boost_LIBRARY_DIRS}" )
 if( NOT Boost_FOUND )
     message( WARNING "Boost wasn't found. Try defining 'BOOST_ROOT' or 'BOOSTROOT' in your configure line" )
     unset( HAVE_BOOST )
 else()
     set( HAVE_BOOST true )
+    message( STATUS "Boost installation information:"
+        "\n\theader : ${Boost_INCLUDE_DIR}"
+        "\n\tlibrary: ${Boost_LIBRARY_DIRS}"
+        "\n\tversion: ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}"
+        "\n\tlibs   : ${Boost_LIBRARIES}" )
 endif()
 #--------------------------------------------------------------------
 
@@ -114,7 +118,10 @@ int main(){ return 0; }
 if( MPI_CONST_WORKS )
     set( MPICONST "const" )
 endif()
-message( STATUS "MPI INFORMATION:\n\tInclude dir: ${MPI_CXX_INCLUDE_DIRS}\n\tCXX Compiler: ${MPI_CXX_COMPILER}")
+message( STATUS "MPI INFORMATION:"
+    "\n\tInclude dir: ${MPI_CXX_INCLUDE_DIRS}"
+    "\n\tCXX Compiler: ${MPI_CXX_COMPILER}"
+    )
 #--------------------------------------------------------------------
 
 #--------------------------------------------------------------------
@@ -226,7 +233,11 @@ endif()
 unset( HAVE_HYPRE )
 find_package( HYPRE )
 if( HYPRE_FOUND )
-   set( HAVE_HYPRE )
+    message( STATUS "HYPRE:"
+        "\n\tVERSION: ${HYPRE_VERSION}"
+        "\n\tInclude dir: ${HYPRE_INCLUDE_DIR}"
+        )
+    set( HAVE_HYPRE )
 endif()
 ##----------------------------- HYPRE --------------------------------
 

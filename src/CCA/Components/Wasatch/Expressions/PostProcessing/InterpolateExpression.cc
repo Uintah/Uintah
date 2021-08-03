@@ -27,6 +27,8 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
+using SpatialOps::Particle::ParticleField;
+
 // ###################################################################
 //
 //               Implementation
@@ -122,8 +124,8 @@ template class InterpolateExpression< SpatialOps::SVolField, SpatialOps::ZVolFie
 template< typename DestT >
 InterpolateParticleExpression<DestT>::
 InterpolateParticleExpression( const Expr::Tag& srctag,
-                              const Expr::Tag& particleSizeTag,
-                              const Expr::TagList& particlePositionTags)
+                               const Expr::Tag& particleSizeTag,
+                               const Expr::TagList& particlePositionTags)
 : Expr::Expression<DestT>()
 {
   this->set_gpu_runnable(false);  // waiting for GPU-enabled particle interpolants
