@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <sstream>
 
-#include <cantera/thermo/ThermoPhase.h>
 #include <pokitt/CanteraObjects.h>
 
 using std::string;
@@ -33,7 +32,6 @@ namespace GasSpec{
   //------------------------------------------------------------------
   SpeciesData::
   SpeciesData()
-   : gas_( CanteraObjects::get_thermo() )
   {
     numSpecies_= (int)INVALID_SPECIES;
 
@@ -65,9 +63,7 @@ namespace GasSpec{
   //------------------------------------------------------------------
   SpeciesData::
   ~SpeciesData()
-  {
-    CanteraObjects::restore_thermo( gas_ );
-  }
+  {}
 
   //------------------------------------------------------------------
   const SpeciesData&
@@ -123,15 +119,15 @@ namespace GasSpec{
 
     size_t specIndex;
     switch(spec){
-      case GasSpecies::CO2:  specIndex = gas_->speciesIndex("CO2");  break;
-      case GasSpecies::H2O:  specIndex = gas_->speciesIndex("H2O");  break;
-      case GasSpecies::O2 :  specIndex = gas_->speciesIndex("O2" );  break;
-      case GasSpecies::H2 :  specIndex = gas_->speciesIndex("H2" );  break;
-      case GasSpecies::CO :  specIndex = gas_->speciesIndex("CO" );  break;
-      case GasSpecies::CH4:  specIndex = gas_->speciesIndex("CH4");  break;
-      case GasSpecies::HCN:  specIndex = gas_->speciesIndex("HCN");  break;
-      case GasSpecies::NH3:  specIndex = gas_->speciesIndex("NH3");  break;
-      case GasSpecies::NO2:  specIndex = gas_->speciesIndex("NO2");  break;
+      case GasSpecies::CO2:  specIndex = CanteraObjects::species_index("CO2");  break;
+      case GasSpecies::H2O:  specIndex = CanteraObjects::species_index("H2O");  break;
+      case GasSpecies::O2 :  specIndex = CanteraObjects::species_index("O2" );  break;
+      case GasSpecies::H2 :  specIndex = CanteraObjects::species_index("H2" );  break;
+      case GasSpecies::CO :  specIndex = CanteraObjects::species_index("CO" );  break;
+      case GasSpecies::CH4:  specIndex = CanteraObjects::species_index("CH4");  break;
+      case GasSpecies::HCN:  specIndex = CanteraObjects::species_index("HCN");  break;
+      case GasSpecies::NH3:  specIndex = CanteraObjects::species_index("NH3");  break;
+      case GasSpecies::NO2:  specIndex = CanteraObjects::species_index("NO2");  break;
 
       default:
         std::ostringstream msg;
@@ -140,7 +136,7 @@ namespace GasSpec{
             << std::endl;
         throw std::runtime_error( msg.str() );
     }
-    return gas_->molecularWeights()[specIndex];
+    return CanteraObjects::molecular_weights()[specIndex];
 
   }
 

@@ -36,7 +36,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 // PoKiTT expressions that we require here
-#include <cantera/thermo/ThermoPhase.h>
 #include <pokitt/CanteraObjects.h>
 
 namespace WasatchCore{
@@ -198,14 +197,11 @@ setup_source_terms( FieldTagInfo& info, Expr::TagList& srcTags )
   // - oxidation reaction: C + O2 --> CO
 
   // get molecular weights of CO and O2
-  std::shared_ptr<Cantera::ThermoPhase> gas = CanteraObjects::get_thermo();
-  const std::vector<double>& mwVec = gas->molecularWeights();
+  const std::vector<double>& mwVec = CanteraObjects::molecular_weights();
 
-  const double mwO2     = mwVec[gas->speciesIndex("O2")];
-  const double mwCo     = mwVec[gas->speciesIndex("CO")];
+  const double mwO2     = mwVec[CanteraObjects::species_index("O2")];
+  const double mwCo     = mwVec[CanteraObjects::species_index("CO")];
   const double mwCarbon = 12.01;
-
-  CanteraObjects::restore_thermo( gas );  // gas ptr is now invalid
 
   // calculate the mass of species produced per mass of soot reacted
   const double rO2  = -0.5*mwO2/mwCarbon; // O2 is consumed, so rO2 is negative

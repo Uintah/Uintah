@@ -154,8 +154,7 @@ namespace Coal{
 
       mvTag_      ( dev_ ->volatiles_tag()              ),
       charTag_    ( char_->char_mass_tag()              ),
-      moistureTag_( evap_->retrieve_moisture_mass_tag() ),
-      gas_        ( CanteraObjects::get_thermo()        )
+      moistureTag_( evap_->retrieve_moisture_mass_tag() )
   {
     // assemble the collection of tags corresponding to gas phase
     // source terms from the CPD and Char oxidation models,
@@ -199,8 +198,6 @@ namespace Coal{
     delete dev_;
     delete char_;
     delete evap_;
-
-    CanteraObjects::restore_thermo( gas_ );
   }
 
   //------------------------------------------------------------------
@@ -257,7 +254,7 @@ namespace Coal{
      * present in consumedYiTags, a tag to a zero-valued field will be added in its place.
      */
     Expr::TagList allYiTagsConsumed;
-    for(const std::string& specName : gas_->speciesNames()){
+    for(const std::string& specName : CanteraObjects::species_names() ){
       const GasSpeciesName                specEnum = gas_name_to_enum   ( specName );
       const SpeciesTagMap::const_iterator iter     = consumedYiTags.find( specEnum );
 
@@ -297,7 +294,7 @@ namespace Coal{
      * present in producedYiTags, a tag to a zero-valued field will be added in its place.
      */
     Expr::TagList allYiTagsProduced;
-    for(const std::string& specName : gas_->speciesNames()){
+    for(const std::string& specName : CanteraObjects::species_names() ){
       const GasSpeciesName                specEnum = gas_name_to_enum   ( specName );
       const SpeciesTagMap::const_iterator iter     = producedYiTags.find( specEnum );
 

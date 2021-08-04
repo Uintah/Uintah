@@ -7,8 +7,6 @@
 #include <expression/Tag.h>
 #include <spatialops/Nebo.h>
 
-namespace Cantera{ class ThermoPhase; }
-
 namespace GasSpec{
   /*
    * \ enum GasSpecies
@@ -73,9 +71,6 @@ namespace GasSpec{
   protected:
     unsigned int numSpecies_;
     std::vector<std::string> specNames_;
-
-  private:
-    std::shared_ptr<Cantera::ThermoPhase> gas_;
   };
 }// namespace GasSpec
 

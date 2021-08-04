@@ -11,7 +11,6 @@
 #include <CCA/Components/Wasatch/Coal/CharOxidation/CharInterface.h>
 #include <CCA/Components/Wasatch/Coal/CoalData.h>
 
-namespace Cantera{ class ThermoPhase; }
 namespace EVAP{ template<typename T> class EvapInterface; }
 
 /**
@@ -49,8 +48,6 @@ using WasatchCore::GraphCategories;
     const Expr::Tag mvTag_, charTag_, moistureTag_;
 
     Expr::TagList gasSpeciesSourceTags_, productionRateTags_;
-
-    std::shared_ptr<Cantera::ThermoPhase> gas_;
 
     /**
      *  \brief Obtain the Expr::Tag for the given species.

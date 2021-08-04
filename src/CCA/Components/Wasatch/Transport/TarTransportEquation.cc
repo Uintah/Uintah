@@ -209,12 +209,11 @@ setup_source_terms( FieldTagInfo& info, Expr::TagList& srcTags )
   const double y = tsInfo.tarHydrogen;
 
   // get molecular weights of CO, O2, and H2O
-  std::shared_ptr<Cantera::ThermoPhase> gas = CanteraObjects::get_thermo();
-  const std::vector<double>& mwVec = gas->molecularWeights();
+  const std::vector<double>& mwVec = CanteraObjects::molecular_weights();
 
-  const double mwO2  = mwVec[gas->speciesIndex("O2" )];
-  const double mwCo  = mwVec[gas->speciesIndex("CO" )];
-  const double mwH2o = mwVec[gas->speciesIndex("H2O")];
+  const double mwO2  = mwVec[CanteraObjects::species_index("O2" )];
+  const double mwCo  = mwVec[CanteraObjects::species_index("CO" )];
+  const double mwH2o = mwVec[CanteraObjects::species_index("H2O")];
   const double mwTar = tsInfo.tarMW;
 
   // calculate the mass of species produced per mass of tar reacted
@@ -247,8 +246,6 @@ setup_source_terms( FieldTagInfo& info, Expr::TagList& srcTags )
   factory.attach_dependency_to_expression( energySrcTag,
                                            energyRHSTag,
                                            Expr::SUBTRACT_SOURCE_EXPRESSION );
-
-  CanteraObjects::restore_thermo( gas );
 }
 
 //---------------------------------------------------------------------------
