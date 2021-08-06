@@ -145,6 +145,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
   contact_ps->appendElement("volume_constraint",d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",     d_oneOrTwoStep);
+  contact_ps->appendElement("include_rotation", d_includeRotation);
 
   d_matls.outputProblemSpec(contact_ps);
 }
