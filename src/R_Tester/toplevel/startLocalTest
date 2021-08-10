@@ -81,7 +81,7 @@ if [ ! -d inputs ]; then
 fi
 
 # The gold standard path must be updated every time local_rt is run
-# The user can set the environmenal variable and over ride the default path.
+# The user can set the environmental variable and over ride the default path.
 /bin/rm -f goldStandard
 ln -sf "${TEST_DATA_DIR}" goldStandard
 

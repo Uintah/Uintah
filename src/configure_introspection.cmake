@@ -8,6 +8,9 @@ include( CheckLibraryExists )
 include( CheckIncludeFileCXX )
 include( CheckCXXSourceCompiles )
 include( CheckTypeSize )  # CMake module for type introspection - https://cmake.org/cmake/help/latest/module/CheckTypeSize.html
+include(ProcessorCount)
+
+ProcessorCount( NUMBER_OF_PROCESSORS )
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR} )
 
@@ -126,10 +129,10 @@ message( STATUS "MPI INFORMATION:"
 
 #--------------------------------------------------------------------
 ## Python3: https://cmake.org/cmake/help/latest/module/FindPython3.html
-#find_package( Python3 COMPONENTS Interpreter )  # ${Python3_FOUND} ${Python3_EXECUTABLE}
-#if( NOT Python3_FOUND )
-#    message( WARNING "Python3 was not found. Regression testing won't work" )
-#endif()
+find_package( Python3 COMPONENTS Interpreter )  # ${Python3_FOUND} ${Python3_EXECUTABLE}
+if( NOT Python3_FOUND )
+    message( WARNING "Python3 was not found. Regression testing won't work" )
+endif()
 #--------------------------------------------------------------------
 
 #--------------------------------------------------------------------

@@ -4,10 +4,11 @@
 ####################################################################################
 # GIT Hash Tags for the various libraries - used if W3P is automatically built here.
 set( SPATIAL_OPS_TAG    684304a90639eebee20d6ee0170d7a88bd49434d )
-set( TAB_PROPS_TAG      4fc53f5651e61d3d5cb848bff2eb76ae6002f117 )
-set( RAD_PROPS_TAG      44dbe1ae4fd5749800ad520fba0af8da5a4aab2d )
+set( TAB_PROPS_TAG      2c9974b91e2b9956642ca1a46fb610760bd51007 )
+set( RAD_PROPS_TAG      bd95421430fc266ee88d0480069f7d20be1414f6 )
 set( EXPR_LIB_TAG       35e543149d68156dc8d27093a36a1874db69541b )
 set( NSCBC_TAG          2e355b392f750f99c29b52baa7d64245bcdd0df1 )
+set( POKITT_TAG         6836d66a9a36951d612388f021f12182286f0fc8 )
 ####################################################################################
 
 

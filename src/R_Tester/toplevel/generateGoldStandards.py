@@ -226,11 +226,11 @@ def generateGS() :
 
 
     # Exit if the component hasn't been compiled.  Note, not all components
-    # are listed in the configVars.mk file
-    configVars = options.build_directory + "/configVars.mk"
+    # are listed in the CMakeCache.txt file
+    configVars = options.build_directory + "/CMakeCache.txt"
     for component in components :
 
-      searchString = "BUILD_%s=no" % component.upper()  # search for BUILD_<COMPONENT>=no
+      searchString = "ENABLE_%s=OFF" % component.upper()  # search for BUILD_<COMPONENT>=no
       for line in open(configVars):
         if searchString in line:
           print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )

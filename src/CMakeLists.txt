@@ -22,7 +22,8 @@ include( configure_options.cmake       )  # general, high-level options. Compone
 include( configure_introspection.cmake )  # system introspection
 
 #----------------------------------------------------------
-# Set up core Uintah stuff
+#               Set up core Uintah stuff
+#----------------------------------------------------------
 add_subdirectory( Core )
 add_subdirectory( CCA )
 add_subdirectory( StandAlone )  # contains sus
@@ -36,3 +37,48 @@ add_subdirectory( tools )
 add_subdirectory( include )
 #----------------------------------------------------------
 
+
+#----------------------------------------------------------
+#                  Regression Testing
+#----------------------------------------------------------
+set( GS_PYTHON_FILE ${CMAKE_SOURCE_DIR}/R_Tester/toplevel/generateGoldStandards.py )
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    set( IS_DEBUG "yes" )
+else()
+    set( IS_DEBUG "no" )
+endif()
+
+if( ENABLE_SCI_MALLOC )
+    set( SCI_MALLOC_ON "yes" )
+else()
+    set( SCI_MALLOC_ON "no" )
+endif()
+
+set( TEST_DATA_DIR ${CMAKE_BINARY_DIR}/TestData )
+
+file( MAKE_DIRECTORY ${TEST_DATA_DIR} )
+
+add_custom_target( gold_standards
+    DEPENDS sus
+    COMMAND ${CMAKE_COMMAND} -E
+        env PYTHONPATH="${CMAKE_SOURCE_DIR}/R_Tester/toplevel:${CMAKE_SOURCE_DIR}/R_Tester"
+        ${Python3_EXECUTABLE}
+        ${GS_PYTHON_FILE} -d ${IS_DEBUG} -b ${CMAKE_BINARY_DIR} -s ${CMAKE_SOURCE_DIR}
+        `${CMAKE_SOURCE_DIR}/R_Tester/helpers/selectComponents.sh ${CMAKE_SOURCE_DIR}/R_Tester`
+        -m ${SCI_MALLOC_ON} -j ${NUMBER_OF_PROCESSORS} -v
+    WORKING_DIRECTORY ${TEST_DATA_DIR}
+    COMMENT "Generating Gold Standards"
+    USES_TERMINAL
+    )
+
+add_custom_target( runLocalRT
+    DEPENDS sus compare_uda
+    COMMAND
+        ${CMAKE_SOURCE_DIR}/R_Tester/toplevel/startLocalTest
+        ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} ${IS_DEBUG} ${SCI_MALLOC_ON}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Running Regression Tests"
+    USES_TERMINAL
+    )
+#----------------------------------------------------------

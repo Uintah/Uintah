@@ -10,7 +10,7 @@ print( " --------------------" )
 wasatchDefs = path.normpath(path.join(build_root(), "include/sci_defs/wasatch_defs.h"))
 print( "WasatchDefs: %s " % wasatchDefs )
 wasatchDefsExists=path.isfile(wasatchDefs)
-pattern = "HAVE_POKITT"
+pattern = '"define HAVE_POKITT"'
 if (wasatchDefsExists):
   cmd = "grep -c %s %s" % (pattern, wasatchDefs)
   HAVE_POKITT = getoutput(cmd)
