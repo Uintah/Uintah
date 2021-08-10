@@ -60,7 +60,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
     solver = scinew CGSolver(world);
   }
   else if (solverName == "HypreSolver" || solverName == "hypre") {
-#if HAVE_HYPRE
+#ifdef HAVE_HYPRE
     solver = scinew HypreSolver2(world);
 #else
     std::ostringstream msg;
@@ -69,7 +69,7 @@ SolverInterface* SolverFactory::create(       ProblemSpecP   & ps,
 #endif
   }
   else if (solverName == "AMRSolver" || solverName == "hypreamr") {
-#if HAVE_HYPRE
+#ifdef HAVE_HYPRE
     solver = scinew AMRSolver(world);
 #else
     std::ostringstream msg;

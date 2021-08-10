@@ -29,11 +29,6 @@ configure_file( error_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/error_defs.h )
 #--------------- error_testdefs.h.in ---------------
 
 #--------------- hypre_testdefs.h.in ---------------
-if( HYPRE_FOUND )
-    set( HAVE_HYPRE )
-else()
-    unset( HAVE_HYPRE )
-endif()
 configure_file( hypre_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/hypre_defs.h )
 #--------------- hypre_testdefs.h.in ---------------
 

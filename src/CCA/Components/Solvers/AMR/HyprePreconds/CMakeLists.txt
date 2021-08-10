@@ -1,13 +1,9 @@
-add_library( CCA_Components_Solvers_AMR_HyperPreconds
-        HyprePrecondBase.cc
-        HyprePrecondSMG.cc
-        HyprePrecondPFMG.cc
-        HyprePrecondSparseMSG.cc
-        HyprePrecondJacobi.cc
-        HyprePrecondDiagonal.cc
-    )
-
-target_link_libraries( CCA_Components_Solvers_AMR_HyperPreconds
-    PUBLIC
-        HYPRE::HYPRE
+set( HYPRE_SRC ${HYPRE_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondBase.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondSMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondPFMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondSparseMSG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondJacobi.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HyprePrecondDiagonal.cc
+    PARENT_SCOPE
     )

@@ -1,16 +1,12 @@
-add_library( CCA_Components_Solvers_AMR_HypreSolvers
-        HypreSolverBase.cc
-        HypreSolverPFMG.cc
-        HypreSolverSMG.cc
-        HypreSolverSparseMSG.cc
-        HypreSolverCG.cc
-        HypreSolverHybrid.cc
-        HypreSolverGMRES.cc
-        HypreSolverAMG.cc
-        HypreSolverFAC.cc
-    )
-
-target_link_libraries( CCA_Components_Solvers_AMR_HypreSolvers
-    PUBLIC
-        HYPRE::HYPRE
+set( HYPRE_SRC ${HYPRE_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverBase.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverPFMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverSMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverSparseMSG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverCG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverHybrid.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverGMRES.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverAMG.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/HypreSolverFAC.cc
+    PARENT_SCOPE
     )

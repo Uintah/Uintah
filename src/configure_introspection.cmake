@@ -237,7 +237,7 @@ if( HYPRE_FOUND )
         "\n\tVERSION: ${HYPRE_VERSION}"
         "\n\tInclude dir: ${HYPRE_INCLUDE_DIR}"
         )
-    set( HAVE_HYPRE )
+    set( HAVE_HYPRE true )
 endif()
 ##----------------------------- HYPRE --------------------------------
 

@@ -13,7 +13,7 @@ find_path( HYPRE_INCLUDE_DIR
     )
 
 find_library(
-        HYPRE_LIBRARY
+    HYPRE_LIBRARY
     NAMES libHYPRE.a
     PATHS
         ENV HYPRE_DIR
@@ -56,6 +56,7 @@ if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
         endif()
         set_target_properties( HYPRE::HYPRE PROPERTIES
                 INTERFACE_INCLUDE_DIRECTORIES "${HYPRE_INCLUDE_DIR}"
+                IMPORTED_LOCATION ${HYPRE_LIBRARY}
             )
     endif()
 

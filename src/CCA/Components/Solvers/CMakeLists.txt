@@ -1,7 +1,7 @@
 unset( OTHER_SRC )
 if( HAVE_HYPRE )
     set( OTHER_SRC HypreSolver.cc )
-    set( OTHER_LIBS HYPRE:HYPRE )
+    set( OTHER_LIBS CCA_Components_Solvers_AMR )
     add_subdirectory( AMR )
 endif()
 
