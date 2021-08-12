@@ -106,6 +106,15 @@ endif()
 #--------------------------------------------------------------------
 # see https://cmake.org/cmake/help/latest/module/FindMPI.html
 find_package( MPI REQUIRED COMPONENTS CXX ) # MPI::MPI_CXX
+if( NOT MPI_FOUND )
+    message( SEND_ERROR "MPI was not found. Try setting some of the following:"
+        "\n\tMPIEXEC_EXECUTABLE - location of mpirun/mpiexec"
+        "\n\tMPI_HOME - base directory of the MPI installation"
+        "\n\tMPI_C_COMPILER - location of the MPI C compiler"
+        "\n\tMPI_CXX_COMPILER - location of the MPI CXX compiler"
+        "\nAlso see https://cmake.org/cmake/help/latest/module/FindMPI.html for more information"
+        )
+endif()
 set( CMAKE_REQUIRED_INCLUDES ${MPI_CXX_INCLUDE_DIRS} )
 set( CMAKE_REQUIRED_FLAGS ${MPI_CXX_LINK_FLAGS} )
 set( CMAKE_REQUIRED_LIBRARIES ${MPI_CXX_LIBRARIES} )

@@ -52,6 +52,11 @@ cmake_dependent_option( ENABLE_MPM_ICE "Enable MPM-ICE" ON
         "ENABLE_MPM; ENABLE_ICE" OFF
     )
 
+if( ENABLE_ARCHES )
+    set( ENABLE_FORTRAN ON )
+    enable_language( Fortran )
+endif()
+
 # jcs to figure out:
 # HAVE_VISIT  VISIT_PATH
 # HAVE_PIDX

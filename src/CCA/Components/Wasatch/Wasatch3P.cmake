@@ -3,10 +3,10 @@
 
 ####################################################################################
 # GIT Hash Tags for the various libraries - used if W3P is automatically built here.
-set( SPATIAL_OPS_TAG    684304a90639eebee20d6ee0170d7a88bd49434d )
-set( TAB_PROPS_TAG      2c9974b91e2b9956642ca1a46fb610760bd51007 )
+set( SPATIAL_OPS_TAG    431472f7429d46a50330875d8cc636e10d67459d )
+set( TAB_PROPS_TAG      eca0dc5f26b20d4f6b1cebe51b1ae97e11871e83 )
 set( RAD_PROPS_TAG      bd95421430fc266ee88d0480069f7d20be1414f6 )
-set( EXPR_LIB_TAG       35e543149d68156dc8d27093a36a1874db69541b )
+set( EXPR_LIB_TAG       d2950c77edb22e5f3669ddaaf2d2ed29ceb24d2c )
 set( NSCBC_TAG          2e355b392f750f99c29b52baa7d64245bcdd0df1 )
 set( POKITT_TAG         6836d66a9a36951d612388f021f12182286f0fc8 )
 ####################################################################################
@@ -16,6 +16,8 @@ set( POKITT_TAG         6836d66a9a36951d612388f021f12182286f0fc8 )
 # find RadProps, TabProps, NSCBC, PoKiTT, ExprLib, and SpatialOps - or build them if requested.
 
 if( WASATCH_BUILD_W3P_LIBS )
+
+    set( TPL_DIR ${CMAKE_BINARY_DIR}/w3p )
 
     if( NOT GIT_FOUND )
         message( SEND_ERROR "git was not found so upstream libraries cannot be automatically built" )
@@ -190,7 +192,6 @@ if( WASATCH_BUILD_W3P_LIBS )
         execute_process( COMMAND ${CMAKE_COMMAND} ${nscbc_builder_SOURCE_DIR}
                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DCMAKE_INSTALL_PREFIX=${W3P_DIR}
-                -DDExprLib_DIR=${W3P_DIR}/share
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 WORKING_DIRECTORY   ${nscbc_builder_BINARY_DIR}

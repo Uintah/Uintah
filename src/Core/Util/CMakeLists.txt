@@ -1,5 +1,6 @@
 configure_file( testEndian.h.in ${CMAKE_CURRENT_BINARY_DIR}/Endian.h )
 
+include( CheckCXXSourceCompiles )
 check_cxx_source_compiles(
         "int main(){ int x; __sync_add_and_fetch(&x,1); return 0; }"
         HAVE_GCCSYNC
