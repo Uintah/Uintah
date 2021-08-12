@@ -32,8 +32,8 @@ class BadHawkDevolBuilder: public ModelBuilder
 {
 public: 
   BadHawkDevolBuilder( const std::string          & modelName,
-                           const vector<std::string>  & reqICLabelNames,
-                           const vector<std::string>  & reqScalarLabelNames,
+                           const std::vector<std::string>  & reqICLabelNames,
+                           const std::vector<std::string>  & reqScalarLabelNames,
                            ArchesLabel          * fieldLabels,
                            MaterialManagerP           & materialManager,
                            int qn );
