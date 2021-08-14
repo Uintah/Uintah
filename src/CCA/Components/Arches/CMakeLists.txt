@@ -1,5 +1,4 @@
-# Arches requires fortran, so enable it as a language
-enable_language( Fortran )
+# Arches requires Fortran-C interface, so ensure it works.
 include( FortranCInterface )
 FortranCInterface_VERIFY( CXX )
 

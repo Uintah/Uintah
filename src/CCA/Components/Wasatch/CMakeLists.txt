@@ -18,6 +18,13 @@ cmake_dependent_option( WASATCH_ENABLE_POKITT
 include( Wasatch3P.cmake )
 message( STATUS "DONE WITH W3P Builds\n")
 
+if( NOT HYPRE_FOUND )
+    message( SEND_ERROR "HYPRE was not found.  Try setting one or more of the following:"
+        "\n\tHYPRE_DIR - path to hyper installation"
+        "\n\tHYPRE_INC - path to hypre header files"
+        "\n\tHYPRE_LIB - path to hypre library files" )
+endif()
+
 #-------------------------------------------
 # Collect all source files for the Wasatch component over this directory and subdirectories
 set( WASATCH_SRC

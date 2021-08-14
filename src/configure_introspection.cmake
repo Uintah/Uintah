@@ -8,7 +8,7 @@ include( CheckLibraryExists )
 include( CheckIncludeFileCXX )
 include( CheckCXXSourceCompiles )
 include( CheckTypeSize )  # CMake module for type introspection - https://cmake.org/cmake/help/latest/module/CheckTypeSize.html
-include(ProcessorCount)
+include( ProcessorCount )
 
 ProcessorCount( NUMBER_OF_PROCESSORS )
 

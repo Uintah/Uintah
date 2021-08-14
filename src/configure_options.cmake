@@ -52,9 +52,20 @@ cmake_dependent_option( ENABLE_MPM_ICE "Enable MPM-ICE" ON
         "ENABLE_MPM; ENABLE_ICE" OFF
     )
 
-if( ENABLE_ARCHES )
+# Fortran stuff
+if( ENABLE_ARCHES ) # Arches requires fortran
     set( ENABLE_FORTRAN ON )
+endif()
+include( CheckLanguage )
+check_language( Fortran )
+if( CMAKE_Fortran_COMPILER )
+    set( ENABLE_FORTRAN ON )
+else()
+    message( STATUS "No Fortran compiler was found" )
+endif()
+if( ENABLE_FORTRAN )
     enable_language( Fortran )
+    set( CMAKE_Fortran_FORMAT FIXED )
 endif()
 
 # jcs to figure out:

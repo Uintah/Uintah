@@ -1,4 +1,4 @@
-include(FindPackageHandleStandardArgs)
+include( FindPackageHandleStandardArgs )
 
 set( HYPRE_FOUND false )
 
@@ -6,7 +6,7 @@ find_path( HYPRE_INCLUDE_DIR
     NAMES HYPRE.h
     PATHS
         ENV HYPRE_DIR
-        $ENV{HOME}/hypre
+        ENV HYPRE_INC
         ${HYPRE_DIR}/include
     DOC
         "Hypre root Directory"
@@ -14,11 +14,12 @@ find_path( HYPRE_INCLUDE_DIR
 
 find_library(
     HYPRE_LIBRARY
-    NAMES libHYPRE.a
+    NAMES libHYPRE.a libHYPRE.so
     PATHS
         ENV HYPRE_DIR
-        $ENV{HOME}/hypre
+        ENV HYPRE_LIB
         ${HYPRE_DIR}/lib
+        ${HYPRE_DIR}
     )
 
 if( NOT (${HYPRE_LIBRARY} STREQUAL "HYPRE_LIBRARY-NOTFOUND") )
