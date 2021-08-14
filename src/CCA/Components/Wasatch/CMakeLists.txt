@@ -74,6 +74,7 @@ target_link_libraries( CCA_Components_Wasatch
         Core_ProblemSpec
         Core_Util
         ${W3P_LIBS}
+        HYPRE::HYPRE
     )
 
 target_include_directories( CCA_Components_Wasatch

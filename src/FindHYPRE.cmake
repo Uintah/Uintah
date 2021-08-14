@@ -7,6 +7,7 @@ find_path( HYPRE_INCLUDE_DIR
     PATHS
         ENV HYPRE_DIR
         ENV HYPRE_INC
+        ${HYPRE_INC}
         ${HYPRE_DIR}/include
     DOC
         "Hypre root Directory"
@@ -18,6 +19,7 @@ find_library(
     PATHS
         ENV HYPRE_DIR
         ENV HYPRE_LIB
+        ${HYPRE_LIB}
         ${HYPRE_DIR}/lib
         ${HYPRE_DIR}
     )

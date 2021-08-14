@@ -2,6 +2,15 @@
 include( FortranCInterface )
 FortranCInterface_VERIFY( CXX )
 
+# require HYPRE
+if( NOT HYPRE_FOUND )
+  message( SEND_ERROR "HYPRE was not found.  Try setting one or more of the following:"
+      "\n\tHYPRE_DIR - path to hyper installation"
+      "\n\tHYPRE_INC - path to hypre header files"
+      "\n\tHYPRE_LIB - path to hypre library files" )
+endif()
+
+
 #-------------------------------------------
 # Collect all source files for the Arches component over this directory and subdirectories
 set( ARCHES_SRC
@@ -83,6 +92,7 @@ target_link_libraries( CCA_Components_Arches
     Core_Parallel
     Core_ProblemSpec
     Core_Util
+    HYPRE::HYPRE
     )
 
 target_include_directories( CCA_Components_Arches
