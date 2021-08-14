@@ -298,7 +298,7 @@ namespace CCK{
 
   // -----------------------------------------------------------------------------
 
-  const double calc_gamma( const double& pTemp){
+  double calc_gamma( const double& pTemp){
 
     // calculates gamma from eq. 43 in [4]
     double T;
