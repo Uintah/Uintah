@@ -5,7 +5,7 @@
 
 namespace CCK{
 
-  const double calc_gamma( const double& pTemp);
+  double calc_gamma( const double& pTemp);
 
   /**
    *  \class    CCKData

@@ -86,8 +86,8 @@ namespace WasatchCore {
     const Expr::Tag& var_name()     const{ return name_;    }
     const Expr::Tag& old_var_name() const{ return oldName_; }
 
-    Uintah::VarLabel* const  get_var_label    () const{ return varLabel_;    }
-    Uintah::VarLabel* const  get_old_var_label() const{ return oldVarLabel_; }
+    Uintah::VarLabel* get_var_label    () const{ return varLabel_;    }
+    Uintah::VarLabel* get_old_var_label() const{ return oldVarLabel_; }
     Uintah::Ghost::GhostType get_ghost_type() { return ghostType_; }
 
     virtual void populate_old_variable( const AllocInfo& ainfo, const int rkStage ) = 0;
