@@ -17,8 +17,6 @@ set( POKITT_TAG         6836d66a9a36951d612388f021f12182286f0fc8 )
 
 if( WASATCH_BUILD_W3P_LIBS )
 
-    set( TPL_DIR ${CMAKE_BINARY_DIR}/w3p )
-
     if( NOT GIT_FOUND )
         message( SEND_ERROR "git was not found so upstream libraries cannot be automatically built" )
     endif()
@@ -38,8 +36,8 @@ if( WASATCH_BUILD_W3P_LIBS )
         )
     FetchContent_GetProperties( spatialops_builder )
     if( NOT spatialops_builder_POPULATED )
-        message( STATUS "Building SpatialOps (patience...)" )
         FetchContent_Populate( spatialops_builder )
+        message( STATUS "Building SpatialOps in ${spatialops_builder_BINARY_DIR}  (patience...)" )
         execute_process( COMMAND ${CMAKE_COMMAND} ${spatialops_builder_SOURCE_DIR}
                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DCMAKE_INSTALL_PREFIX=${W3P_DIR}
@@ -51,6 +49,7 @@ if( WASATCH_BUILD_W3P_LIBS )
                 -DBOOST_LIBRARYDIR=${Boost_LIBRARY_DIRS}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                 WORKING_DIRECTORY   ${spatialops_builder_BINARY_DIR}
                 OUTPUT_FILE         ${spatialops_builder_BINARY_DIR}/build_output.log
                 ERROR_FILE          ${spatialops_builder_BINARY_DIR}/build_errors.log
@@ -92,6 +91,7 @@ if( WASATCH_BUILD_W3P_LIBS )
                 -DBUILD_GUI=OFF
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                 OUTPUT_FILE         ${exprlib_builder_BINARY_DIR}/build_output.log
                 RESULT_VARIABLE     result
                 WORKING_DIRECTORY ${exprlib_builder_BINARY_DIR}
@@ -128,6 +128,7 @@ if( WASATCH_BUILD_W3P_LIBS )
                 -DBOOST_LIBRARYDIR=${Boost_LIBRARY_DIRS}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                 WORKING_DIRECTORY   ${tabprops_builder_BINARY_DIR}
                 OUTPUT_FILE         ${tabprops_builder_BINARY_DIR}/build_output.log
                 RESULT_VARIABLE     result
@@ -163,6 +164,7 @@ if( WASATCH_BUILD_W3P_LIBS )
                 -DTabProps_DIR=${W3P_DIR}/share
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
                 WORKING_DIRECTORY   ${radprops_builder_BINARY_DIR}
                 OUTPUT_FILE         ${radprops_builder_BINARY_DIR}/build_output.log
                 RESULT_VARIABLE     result
@@ -210,47 +212,57 @@ if( WASATCH_BUILD_W3P_LIBS )
     endif()
 
 
-    if( ENABLE_POKITT )
+    if( WASATCH_ENABLE_POKITT )
 
         set( Cantera_DIR "" CACHE PATH "Path to Cantera installation" )
 
         # --- PoKiTT
-        execute_process( COMMAND ${GIT_EXECUTABLE} clone https://gitlab.multiscale.utah.edu/common/PoKiTT.git PoKiTT
-                WORKING_DIRECTORY ${TPL_DIR}
-            )
-        execute_process( COMMAND ${GIT_EXECUTABLE} reset --hard ${POKITT_TAG}
-                WORKING_DIRECTORY ${TPL_DIR}/PoKiTT
-            )
-        execute_process( COMMAND ${CMAKE_COMMAND}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                -DCMAKE_INSTALL_PREFIX=${TPL_DIR}
-                -DBUILD_UPSTREAM_LIBS=OFF
-                -DExprLib_DIR=${TPL_DIR}/share
-                -DENABLE_TESTS=OFF
-                -DENABLE_EXAMPLES=OFF
-                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCantera_DIR=${Cantera_DIR}
-                ${TPL_DIR}/PoKiTT
-                WORKING_DIRECTORY ${TPL_DIR}/build/pokitt
-            )
+        FetchContent_Declare(
+            pokitt_builder
+            GIT_REPOSITORY https://gitlab.multiscale.utah.edu/common/PoKiTT.git
+            GIT_TAG ${POKITT_TAG}
+            TIMEOUT 60
+        )
+        FetchContent_GetProperties( pokitt_builder )
+        if( NOT pokitt_builder_POPULATED )
+            FetchContent_Populate( pokitt_builder )
+            message( STATUS "Building PoKiTT in ${pokitt_builder_BINARY_DIR} (patience...)" )
 
-        execute_process( COMMAND make -j8 install
-                WORKING_DIRECTORY ${TPL_DIR}/build/pokitt
-            )
+            execute_process( COMMAND ${CMAKE_COMMAND} ${pokitt_builder_SOURCE_DIR}
+                    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                    -DCMAKE_INSTALL_PREFIX=${W3P_DIR}
+                    -DBUILD_UPSTREAM_LIBS=OFF
+                    -DExprLib_DIR=${W3P_DIR}/share
+                    -DENABLE_TESTS=OFF
+                    -DENABLE_EXAMPLES=OFF
+                    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                    -DCantera_DIR=${Cantera_DIR}
+                    WORKING_DIRECTORY   ${pokitt_builder_BINARY_DIR}
+                    OUTPUT_FILE         ${pokitt_builder_BINARY_DIR}/build_output.log
+                    RESULT_VARIABLE     result
+                )
+            execute_process( COMMAND ${CMAKE_COMMAND} --build ${pokitt_builder_BINARY_DIR} --target install -j8
+                    WORKING_DIRECTORY   ${pokitt_builder_BINARY_DIR}
+                    OUTPUT_FILE         ${pokitt_builder_BINARY_DIR}/build_output.log
+                    RESULT_VARIABLE     result
+                )
+            message( STATUS "NSCBC build complete" )
 
-        find_package( PoKiTT REQUIRED PATHS ${TPL_DIR} PATH_SUFFIXES share )
-        set( W3P_LIBS pokitt )
+            find_package( PoKiTT REQUIRED PATHS ${W3P_DIR} PATH_SUFFIXES share )
+            set( W3P_LIBS pokitt )
+        endif()
 
     else()
-        find_package( ExprLib REQUIRED PATHS ${TPL_DIR} PATH_SUFFIXES share )
+        find_package( ExprLib REQUIRED PATHS ${W3P_DIR} PATH_SUFFIXES share )
         set( W3P_LIBS exprlib )
     endif()
 
     find_package( RadProps REQUIRED PATHS ${W3P_DIR} PATH_SUFFIXES share )
     find_package( NSCBC    REQUIRED PATHS ${W3P_DIR} PATH_SUFFIXES share )
     find_package( ExprLib  REQUIRED PATHS ${W3P_DIR} PATH_SUFFIXES share )
-    list( APPEND W3P_LIBS exprlib RadProps::radprops )
+    list( APPEND W3P_LIBS exprlib RadProps::radprops TabProps::tabprops nscbc )
 
 else( WASATCH_BUILD_W3P_LIBS )
     set( W3P_LIBS )
