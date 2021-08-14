@@ -123,7 +123,7 @@ namespace CCK{
     charEqn_ = new Coal::CoalEquation( sNames_.char_mass, pMassTag_, char0, gc_ );
 
     // setup ODEs for frequency distribution used for thermal annealing model
-    const CHAR::Vec eD    = cckData_.get_eD_vec();
+    const CHAR::Vec& eD    = cckData_.get_eD_vec();
     const double s  = cckData_.get_neD_std_dev();
     const double mu = cckData_.get_neD_mean();
 

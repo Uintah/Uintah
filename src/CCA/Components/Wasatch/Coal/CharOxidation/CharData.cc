@@ -197,7 +197,7 @@ insufficient_data()
 
 //--------------------------------------------------------------------
 
-  const GasSpec::GasSpecies
+  GasSpec::GasSpecies
   CharOxidationData::char_to_gas_species( CHAR::CharGasSpecies spec ) const
   {
     GasSpec::GasSpecies g2cSpec;
@@ -221,7 +221,7 @@ insufficient_data()
 
 //--------------------------------------------------------------------
 
-  const double
+  double
   CharOxidationData::get_mw( CHAR::CharGasSpecies spec ) const
   {
     return speciesData_.get_mw( char_to_gas_species(spec) );

@@ -110,15 +110,15 @@ namespace Coal{
   class CoalComposition {
   public:
     CoalComposition( const Coal::CoalType sel );
-    const double get_C()          const{ return C_; }
-    const double get_H()          const{ return H_; }
-    const double get_N()          const{ return N_; }
-    const double get_O()          const{ return O_; }
-    const double get_moisture()   const{ return moisture_; } ///< moisture fraction of parent coal
-    const double get_ash()        const{ return ash_;      } ///< ash fraction of the parent coal
-    const double get_vm()         const{ return vm_;       } ///< volatile matter fraction of the parent coal
-    const double get_fixed_c()    const{ return fixedc_;   } ///< fixed carbon fraction of the parent coal
-    bool test_data();
+    double get_C()          const{ return C_; }
+    double get_H()          const{ return H_; }
+    double get_N()          const{ return N_; }
+    double get_O()          const{ return O_; }
+    double get_moisture()   const{ return moisture_; } ///< moisture fraction of parent coal
+    double get_ash()        const{ return ash_;      } ///< ash fraction of the parent coal
+    double get_vm()         const{ return vm_;       } ///< volatile matter fraction of the parent coal
+    double get_fixed_c()    const{ return fixedc_;   } ///< fixed carbon fraction of the parent coal
+    bool test_data() const;
     double get_c0() const;
     double get_tarMonoMW() const{ return tarMonoMW_; }
   protected:

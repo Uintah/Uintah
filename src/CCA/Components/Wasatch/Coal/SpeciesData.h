@@ -48,25 +48,25 @@ namespace GasSpec{
      *  \fn string nSpecies()
      *  \brief obtain number of gas-phase species considered
      */
-    const size_t nSpecies() const{ return numSpecies_; };
+    size_t nSpecies() const{ return numSpecies_; };
 
     /**
      *  \fn string species_name_to_enum( const std::string  )
      *  \brief obtain the enum for a species given its name
      */
-    const GasSpecies species_name_to_enum( const std::string ) const;
+    GasSpecies species_name_to_enum( const std::string ) const;
 
     /**
      *  \fn string species_index( const GasSpeciesNames )
      *  \brief obtain the index of a species given its name
      */
-    const unsigned int species_index( const std::string ) const;
+    unsigned int species_index( const std::string ) const;
 
     /**
      *  \fn string get_mw( const std::string )
      *  \brief obtain the molecular weight (g/mol) of a species given its name
      */
-    const double get_mw( const GasSpecies spec ) const;
+    double get_mw( const GasSpecies spec ) const;
 
   protected:
     unsigned int numSpecies_;

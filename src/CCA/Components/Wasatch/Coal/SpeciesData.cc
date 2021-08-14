@@ -82,7 +82,7 @@ namespace GasSpec{
    *  Note: if the requested name is not found, the INVALID_SPECIES
    *  enum value will be returned.
    */
-  const GasSpecies
+  GasSpecies
   SpeciesData::species_name_to_enum( const string name ) const
   {
     if     ( name == "H2"  ) return H2 ;
@@ -107,16 +107,17 @@ namespace GasSpec{
   }
 
   //------------------------------------------------------------------
-  const unsigned int
-  SpeciesData::species_index( const string name ) const{
+  unsigned int
+  SpeciesData::species_index( const string name ) const
+  {
     const GasSpecies gSpec = species_name_to_enum( name );
     return (int) gSpec;
   }
 
   //------------------------------------------------------------------
-  const double
-  SpeciesData::get_mw( const GasSpecies spec ) const{
-
+  double
+  SpeciesData::get_mw( const GasSpecies spec ) const
+  {
     size_t specIndex;
     switch(spec){
       case GasSpecies::CO2:  specIndex = CanteraObjects::species_index("CO2");  break;
@@ -137,7 +138,6 @@ namespace GasSpec{
         throw std::runtime_error( msg.str() );
     }
     return CanteraObjects::molecular_weights()[specIndex];
-
   }
 
 }// namespace GasSpec

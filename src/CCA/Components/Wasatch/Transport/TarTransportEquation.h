@@ -67,13 +67,13 @@ public:
   // Tar is assumed to have the chemical formula $C_{10}H_{8}$
 
   // get molecular weight of tar
-  const double get_tar_molecular_weight() const { return 128.17; };
+  double get_tar_molecular_weight() const { return 128.17; };
 
   // return the stoichiometric coefficient of carbon in the tar
-  const double get_tar_carbon() const { return 10; };
+  double get_tar_carbon() const { return 10; };
 
   // return the stoichiometric coefficient of hydrogen in the tar
-  const double get_tar_hydrogen() const { return 8; };
+  double get_tar_hydrogen() const { return 8; };
 
   ~TarTransportEquation();
 

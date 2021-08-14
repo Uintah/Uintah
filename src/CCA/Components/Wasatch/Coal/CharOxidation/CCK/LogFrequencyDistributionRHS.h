@@ -118,7 +118,7 @@ evaluate()
   const FieldT& pMass0 = initPrtMass_->field_ref();
   const FieldT& vMass  = vMass_      ->field_ref();
 
-  const CHAR::Vec eDVec = cckData_.get_eD_vec();
+  const CHAR::Vec& eDVec = cckData_.get_eD_vec();
   const double aD = cckData_.get_aD();
   const double xV = cckData_.get_vm();
 

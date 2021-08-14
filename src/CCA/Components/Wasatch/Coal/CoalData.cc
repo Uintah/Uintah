@@ -437,7 +437,7 @@ namespace Coal{
   }
 
   bool
-  CoalComposition::test_data(){
+  CoalComposition::test_data() const{
     bool check_;
     check_ = true;
     if ((C_+H_+N_+S_+O_ != 1.0) or (fixedc_+vm_+ash_+moisture_ != 1.0)) {

@@ -76,7 +76,7 @@ namespace CCK{
     /**
      *  \brief returns molecular weight of a given species
      */
-    const double get_mw( CHAR::CharGasSpecies spec ) const { return charData_.get_mw( spec ); };
+    double get_mw( CHAR::CharGasSpecies spec ) const { return charData_.get_mw( spec ); };
 
     /**
      * \brief Returns ash mass fraction of coal
@@ -111,7 +111,7 @@ namespace CCK{
      *        calculation of annealing factor in for thermal
      *        annealing model
      */
-    CHAR::Vec get_eD_vec() const{ return eDVec_; }
+    const CHAR::Vec& get_eD_vec() const{ return eDVec_; }
 
     /**
      * \brief Returns CO2-CO ratio

@@ -25,10 +25,10 @@ namespace SAROFIM {
   class KobSarofimInformation{
   public:
     KobSarofimInformation( const Coal::CoalComposition& coalType );
-    const double get_hydrogen_coefficient() const{return h_; };
-    const double get_oxygen_coefficient()   const{return o_; };
-    const double get_molecularweight()      const{return mw_;};
-    const double get_tarMonoMW()            const{return coalcomp_.get_tarMonoMW(); };
+    double get_hydrogen_coefficient() const{return h_; };
+    double get_oxygen_coefficient()   const{return o_; };
+    double get_molecularweight()      const{return mw_;};
+    double get_tarMonoMW()            const{return coalcomp_.get_tarMonoMW(); };
   protected:
     double h_, o_, mw_;
     const Coal::CoalComposition& coalcomp_;

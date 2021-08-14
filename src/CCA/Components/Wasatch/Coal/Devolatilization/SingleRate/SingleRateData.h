@@ -26,7 +26,7 @@ namespace SNGRATE {
     double get_hydrogen_coefficient() const{ return h_;  }
     double get_oxygen_coefficient()   const{ return o_;  }
     double get_molecularweight()      const{ return mw_; }
-    const double get_tarMonoMW()      const{return coalComp_.get_tarMonoMW(); };
+    double get_tarMonoMW()            const{return coalComp_.get_tarMonoMW(); };
   protected:
     double h_, o_, mw_;
     const Coal::CoalComposition& coalComp_;

@@ -18,7 +18,7 @@ namespace CHAR{
    * unknown
    */
   Array2D binary_diff_coeffs( const double& press,
-                             const double& temp );
+                              const double& temp );
   /* Calculates a vector of effiective diffusivities. Porosity (epsilon) and/or the
    * ratio of tortuosity to fraction of total porosity in the macrorpores (tau_f)
    * may be passed to calculate intraparticle effective diffusivites.
@@ -53,10 +53,10 @@ namespace CHAR{
      *         consider for the char oxidation model.
      */
     CharOxidationData( const Coal::CoalType coalType=Coal::Pittsburgh_Bituminous );
-    
-    
+
+
     const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
-   
+
     /**
      *  \brief returns \f$\varepsilon_{0}\f$ - initial porosity of coal particle
      */
@@ -72,40 +72,40 @@ namespace CHAR{
      */
     double get_S_0() const {return s0_;};
 
-   /**
-     *  \brief returns Oxygen mass fraction of coal
-     */
+    /**
+      *  \brief returns Oxygen mass fraction of coal
+      */
     double get_O() const{ return o_;};
 
     /**
       *  \brief returns Carbon mass fraction of coal
       */
-     double get_C() const{ return c_;};
+    double get_C() const{ return c_;};
 
-     /**
-      * \brief Returns fixed carbon mass fraction of coal
+    /**
+     * \brief Returns fixed carbon mass fraction of coal
+     */
+    double get_fixed_C() const{ return fixedCarbon_;}
+
+    /**
+     * \brief Returns volatile mass fraction of coal
+     */
+    double get_vm() const{ return volatiles_;}
+
+    /**
+      *  \brief returns selected coal type
       */
-     double get_fixed_C() const{ return fixedCarbon_;}
+    Coal::CoalType get_coal_type() const{ return sel_;};
 
-     /**
-      * \brief Returns volatile mass fraction of coal
+    /**
+      *  \brief returns a GasSpec::GasSpecies given a CHAR::CharGasSpecies
       */
-     double get_vm() const{ return volatiles_;}
+    GasSpec::GasSpecies char_to_gas_species( CHAR::CharGasSpecies spec ) const;
 
-     /**
-       *  \brief returns selected coal type
-       */
-     Coal::CoalType get_coal_type() const{ return sel_;};
-
-     /**
-       *  \brief returns a GasSpec::GasSpecies given a CHAR::CharGasSpecies
-       */
-     const GasSpec::GasSpecies char_to_gas_species( CHAR::CharGasSpecies spec ) const;
-
-     /**
-       *  \brief returns molecular weight of a given species
-       */
-     const double get_mw( CHAR::CharGasSpecies spec ) const;
+    /**
+      *  \brief returns molecular weight of a given species
+      */
+    double get_mw( CHAR::CharGasSpecies spec ) const;
 
     /**
      * Returns number of species involved in the char oxidation mechanism
@@ -113,7 +113,7 @@ namespace CHAR{
      * remember we might change the number of species in the future....
      */
     int get_ncomp() const {return 3 ;};
-   
+
   protected:
     double e0_, rPore_, s0_, o_, c_, fixedCarbon_, volatiles_;
     Coal::CoalType sel_;

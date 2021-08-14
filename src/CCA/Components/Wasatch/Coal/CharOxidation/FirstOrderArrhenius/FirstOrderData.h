@@ -17,9 +17,9 @@ public:
 
   FirstOrderData( const Coal::CoalType coalType );
 
-  inline const double get_a_h2o()  const{ return aH2o_; }
-  inline const double get_a_co2()  const{ return aCo2_; }
-  inline const double get_ea()     const{ return ea_;   }
+  inline double get_a_h2o()  const{ return aH2o_; }
+  inline double get_a_co2()  const{ return aCo2_; }
+  inline double get_ea()     const{ return ea_;   }
 
 protected:
   double aH2o_, aCo2_, ea_;

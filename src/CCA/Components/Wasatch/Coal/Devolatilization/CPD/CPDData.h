@@ -62,7 +62,7 @@ enum CPDSpecies {
     
     double get_tarMonoMW() const { return coalComp_.get_tarMonoMW(); }; ///< tar monomer molecular weight
     
-    const double get_tarMassFrac() const{ return tarMassFrac0_; } ///< Functional Group vector (mole basis)
+    double get_tarMassFrac() const{ return tarMassFrac0_; } ///< Functional Group vector (mole basis)
 
     double get_coordNo() const { return coordNo_; }; ///< coordination number of coal lattice
    

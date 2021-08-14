@@ -107,7 +107,7 @@ evaluate()
 {
   FieldT& result = this->value();
 
-  const CHAR::Vec edVec = cckData_.get_eD_vec();
+  const CHAR::Vec& edVec = cckData_.get_eD_vec();
 
   if( logDist_.size() != edVec.size() ){
     std::ostringstream msg;
