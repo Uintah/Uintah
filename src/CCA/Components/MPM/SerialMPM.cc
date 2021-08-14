@@ -464,6 +464,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
+  t->computes(lb->DissolvedMassLabel);
+  t->computes(lb->TotalMassLabel);
+  t->computes(lb->InitialMassSVLabel);
+  t->computes(lb->TotalSurfaceAreaLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -554,7 +558,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
    schedulePrintTriangleCount(level, sched);
   }
-
 
   if (flags->d_deleteGeometryObjects) {
     scheduleDeleteGeometryObjects(level, sched);
@@ -1540,7 +1543,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->CenterOfMassPositionLabel);
   }
   if(flags->d_reductionVars->mass){
+    t->requires(Task::OldDW, lb->TotalMassLabel,    Ghost::None);
+    t->requires(Task::OldDW, lb->InitialMassSVLabel,Ghost::None);
     t->computes(lb->TotalMassLabel);
+    t->computes(lb->InitialMassSVLabel);
     t->computes(lb->DissolvedMassLabel);
     t->computes(lb->PistonMassLabel);
   }
@@ -2574,6 +2580,11 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
   }
   new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
+  new_dw->put(sum_vartype(0.0), lb->DissolvedMassLabel);
+  new_dw->put(sum_vartype(0.0), lb->TotalMassLabel);
+  new_dw->put(sum_vartype(0.0), lb->TotalSurfaceAreaLabel);
+  SoleVariable<double> IMSV = 0.0;
+  new_dw->put(IMSV, lb->InitialMassSVLabel);
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 
@@ -4207,6 +4218,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     double totalmass  = 0;
+    sum_vartype OTM;
+    old_dw->get(OTM, lb->TotalMassLabel);
+    double oldTotalMass   = OTM;
+    SoleVariable< double > OIMSV;
+
+    old_dw->get( OIMSV, lb->InitialMassSVLabel);
+
+    if(timestep<=2){
+     cout << "timestep = " << timestep 
+          << ", oldTotalMass = " << oldTotalMass << endl;
+     OIMSV = oldTotalMass;
+    }
+
     double dissolvedmass = 0;
     double pistonmass = 0;
     Vector CMX(0.0,0.0,0.0);
@@ -4387,7 +4411,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
           pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
           if (flags->d_doingDissolution){
-            if(pSurf[idx]>=0.99 && burnFraction > 0.0){
+            if(pSurf[idx]>=0.99 && burnFraction != 0.0){
               // Normalize particle surface normal
               double pSNL=pSN.length();
               if(pSNL > 0.0){
@@ -4452,8 +4476,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
-          dissolvedmass  += (pmass[idx] - pmassNew[idx]);
+          if(!mpm_matl->getIsPistonMaterial()){
+            totalmass  += pmass[idx];
+          }
+          dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
           pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
@@ -4564,8 +4590,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
 //          if(m==0){
           totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
-          dissolvedmass  += (pmass[idx] - pmassNew[idx]);
+          if(!mpm_matl->getIsPistonMaterial()){
+            totalmass  += pmass[idx];
+          }
+          dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
           pistonmass += pmass[idx]*useInKECalc[m];
 //          }
         }
@@ -4600,6 +4628,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
       new_dw->put(sum_vartype(dissolvedmass),  lb->DissolvedMassLabel);
       new_dw->put(sum_vartype(pistonmass),     lb->PistonMassLabel);
+      new_dw->put(OIMSV,                       lb->InitialMassSVLabel);
     }
     if(flags->d_reductionVars->momentum){
       new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);

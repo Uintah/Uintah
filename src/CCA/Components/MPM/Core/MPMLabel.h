@@ -237,6 +237,7 @@ namespace Uintah {
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
+      const VarLabel* InitialMassSVLabel;
       const VarLabel* DissolvedMassLabel;
       const VarLabel* PistonMassLabel;
       const VarLabel* TotalSurfaceAreaLabel;
