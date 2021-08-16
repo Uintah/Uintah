@@ -202,7 +202,7 @@
         <StressThreshold                 spec="REQUIRED DOUBLE 'positive'" />
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
-        <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent'" />
+        <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, saltPrecipitationModel'" />
         <masterModalID                   spec="REQUIRED INTEGER" />
         <InContactWithModalID            spec="REQUIRED INTEGER" />
       </dissolution>
