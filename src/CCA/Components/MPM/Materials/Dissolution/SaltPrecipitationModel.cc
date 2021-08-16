@@ -66,16 +66,6 @@ SaltPrecipitationModel::SaltPrecipitationModel(const ProcessorGroup* myworld,
   lb = Mlb;
   ps->require("masterModalID",        d_masterModalID);
 //  ps->require("InContactWithModalID", d_inContactWithModalID);
-/*
-  ps->require("Ao_mol_cm2-us",        d_Ao);
-  ps->require("Ea_ug-cm2_us2-mol",    d_Ea);
-  ps->require("R_ug-cm2_us2-mol-K",   d_R);
-  ps->require("Vm_cm3_mol",           d_Vm);
-  ps->require("StressThreshold",      d_StressThresh);
-  ps->getWithDefault("Temperature",   d_temperature, 300.0);
-  ps->getWithDefault("Ao_clay_mol_cm2-us",        d_Ao_clay, d_Ao);
-  ps->getWithDefault("Ea_clay_ug-cm2_us2-mol",    d_Ea_clay, d_Ea);
-*/
 }
 
 SaltPrecipitationModel::~SaltPrecipitationModel()
@@ -87,15 +77,6 @@ void SaltPrecipitationModel::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
   dissolution_ps->appendElement("type",         "saltPrecipitationModel");
   dissolution_ps->appendElement("masterModalID",        d_masterModalID);
-//  dissolution_ps->appendElement("InContactWithModalID", d_inContactWithModalID);
-//  dissolution_ps->appendElement("Ao_mol_cm2-us",        d_Ao);
-//  dissolution_ps->appendElement("Ea_ug-cm2_us2-mol",    d_Ea);
-//  dissolution_ps->appendElement("R_ug-cm2_us2-mol-K",   d_R);
-//  dissolution_ps->appendElement("Vm_cm3_mol",           d_Vm);
-//  dissolution_ps->appendElement("StressThreshold",      d_StressThresh);
-//  dissolution_ps->appendElement("Temperature",          d_temperature);
-//  dissolution_ps->appendElement("Ao_clay_mol_cm2-us",     d_Ao_clay);
-//  dissolution_ps->appendElement("Ea_clay_ug-cm2_us2-mol", d_Ea_clay);
 }
 
 void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
@@ -119,7 +100,6 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
 //  if(time>delT){
    // Get the dissolved mass and free surface area from previous timestep
    sum_vartype DM, TSA, CTM;
-//   max_vartype OIM;
    SoleVariable <double> OIMSV;
    old_dw->get(DM,   lb->DissolvedMassLabel);
    old_dw->get(CTM,  lb->TotalMassLabel);
@@ -142,7 +122,6 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
 //   cout << "TotalSurfArea = " << TotalSurfArea << endl;
 //   cout << "MassPerArea = " << MassPerArea << endl;
 
-#if 1
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -156,7 +135,6 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
     std::vector<NCVariable<double> >  dLdt(numMatls);
     constNCVariable<double> NC_CCweight;
     std::vector<bool> masterMatls(numMatls);
-    std::vector<bool> pistonMatl(numMatls);
     std::vector<double> rho(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel, 0, patch, gnone, 0);
 
@@ -176,7 +154,6 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
 
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       rho[m] = mat->getInitialDensity();
-      pistonMatl[m] = mat->getIsPistonMaterial();
       if(mat->getModalID()==d_masterModalID){
         mat->setNeedSurfaceParticles(true);
         masterMatls[m]=true;
@@ -201,25 +178,20 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
         IntVector c = *iter;
 
         double sumMass=0.0;
-        int inContactMatl=-999;
         for(int n = 0; n < numMatls; n++){
-          if(!pistonMatl[n]){
             sumMass+=gmass[n][c]; 
-          }
         }
 
-        if(gmass[md][c] > 2.e-100 && gmass[md][c] == sumMass) {
-//          if(gSurfaceArea[md][c] > 1.e-3*area){
+        if(gmass[md][c] > 2.e-100 && gmass[md][c] == sumMass 
+                                  && NC_CCweight[c] < 0.2) {
 
-            massBurnRate[md][c] += /*NC_CCweight[c]* */
-                                  0.5*rho[m]*dL_dt*gSurfaceArea[md][c];
+            massBurnRate[md][c] += 0.5*rho[m]*dL_dt*gSurfaceArea[md][c];
             dLdt[md][c] += /*NC_CCweight[c]* */dL_dt;
         } // mass is present
       } // nodes
      } // endif a masterMaterial
     } // materials
   } // patches
-#endif
  } // if dissolution
 }
 
