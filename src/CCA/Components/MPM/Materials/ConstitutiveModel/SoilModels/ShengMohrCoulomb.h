@@ -1,6 +1,6 @@
 #pragma once
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/BBMMatrix.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/BBMPoint.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/BBMMatrix.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/BBMPoint.h>
 
 
 /* this Mohr-Coulomb like model
@@ -10,7 +10,7 @@ Computations Mechanics 26:185-196 (2000)
 Springer
 */
 
-class ClassicMohrCoulomb
+class ShengMohrCoulomb
 {
 
 private:
@@ -20,7 +20,6 @@ private:
 	double K;		//bulk modulus
 	double E;		//Young modulus
 	double Poisson;	//Poisson ratio
-	double Pi;
 
 	//Mohr - Coulomb parameters
 
@@ -46,19 +45,15 @@ private:
 
 public:
 
-	ClassicMohrCoulomb(void);
-	~ClassicMohrCoulomb(void);
+	ShengMohrCoulomb(void);
+	~ShengMohrCoulomb(void);
 	void SetDefaultIntegrationParameters ();
-	void SetModelParameters (double ShearModulusG, double BulkModulusK, double CohesionC, double FrictionAnglePhi, double DilationAnglePsi);
+	void SetModelParameters (double ShearModulusG, double BulkModulusK, double CohesionC, double FrictionAnglePhi);
 	void SetIntegrationParameters (double IntegrationTolerance,int SolutionAlgorithm, int ToleranceMethod,
 							int DriftCorrection, double BetaFactor, double YieldLocTolerance, int MaxIterPegasus);
 	void Integrate (double* StrainIncrement,BBMPoint* InitialPoint);
 	void Integrate (double* StrainIncrement, double SuctionIncrement, BBMPoint* InitialPoint, double * StressIncrement,
 		double P0StarIncrement, double* PlasticStrainIncrement);
-	//void IntegrateMC (double* StrainIncrement,BBMPoint* InitialPoint);
-	//void IntegrateMCI (double* StrainIncrement,BBMPoint* InitialPoint);
-	//int IntegrateMCIA (double* StrainIncrement,BBMPoint* InitialPoint);
-	void IntegrateMCIClassic (double* StrainIncrement,BBMPoint* InitialPoint, int *Region);
 	void IntegrateConst (double* StrainIncrement,BBMPoint* InitialPoint, int StepNo, int Method);
 	double CalcStressElast (double nu0, double* s0  , double* eps0, double* deps,  double* ds);
 	double CalcElastic (double * Strain, BBMPoint * InitialPoint, BBMPoint * FinalPoint);
@@ -86,8 +81,6 @@ public:
 	void FindIntersectionUnloading (double * StrainIncrement, BBMPoint * InitialPoint, double * PurelyElastic, double * PurelyPlastic);
 	void FindIntersection (double * StrainIncrement, BBMPoint * InitialPoint, double * PurelyElasticStrain, double * PurelyPlasticStrain);
 	void PaintLocus (double *state, double suction, int Max);
-	bool FindIntersectionPlastic (double *PurelyPlasticStrain,BBMPoint *FinalPoint,double *IntersectionStrain);
-	bool CheckStayInCorner (BBMPoint *FinalPoint,double *IntersectionStrain);
 	void ComputeG1 (BBMPoint * InitialPoint,int RetentionModel, double * RetentionParameters, double * G1);
 	void ComputeG2 (BBMPoint * InitialPoint,int RetentionModel, double * RetentionParameters, double * G2);
 
@@ -120,8 +113,6 @@ public:
 									  int*NumberIter, double MethodOrder, int MethodSteps, bool ErrorEstimate);
 //Runge Kutta schemes
 	double CalculatePlastic (double * PurelyPlasticStrain, BBMPoint* Point);
-	double CalculatePlasticMC (double * PurelyPlasticStrain, BBMPoint* Point);
-	int CalculatePlasticMC_NEW (double * PurelyPlasticStrain, BBMPoint* Point);
 	double CalculatePlasticConst (double * PurelyPlasticStrain, BBMPoint* Point, int StepNo);
 	double PlasticRKErr8544 (BBMPoint* Point, double* EPStrain, double* AbsStress, int* NumberIter); //Bogacki - Shimpine
 	double PlasticRKDP754 (BBMPoint* Point, double* EPStrain, double* AbsStress, int* NumberIter);  //Dormand Prince
@@ -141,18 +132,7 @@ public:
 	double CheckNorm (double* DSigma, double DPZeroStar,BBMPoint* InitialPoint, double* DError);	//returns RError
 	double CheckNormSloan (double* DSigma, double DPZeroStar,BBMPoint* InitialPoint, double* DError);	//returns RError
 	void CorrectDrift (BBMPoint* Point);
-	void CorrectDriftOnce (BBMPoint* Point);
-	void CorrectDriftMC (BBMPoint* Point);
 	void CorrectDriftBeg (BBMPoint* EndPoint, BBMPoint *PointOld);
-	void ReturnImplicit (BBMPoint* Point, int* Region);
-
-	double ComputeYieldFunctionEigen(double Eigen[3]);
-	double ComputeYieldFunctionEigenNorm (double Eigen[3]);
-	double FindPercentage (double * Strain, BBMPoint* InitialPoint);
-	double FindPercentageBis (double * Strain, BBMPoint* InitialPoint);
-	void CorrectDriftEdge (BBMPoint* InitialPoint, int Region);
-	void CorrectDriftEdgeJC (BBMPoint* InitialPoint, int Region);
-	void CorrectDriftTip (BBMPoint* InitialPoint);
 
 //Used Procedures before, not updated anymore, though, mostly, working.
 	//void DriftCorrect (BBMPoint Point, double* EPStrain, BBMMatrix* DSIGMA, double* Lambda, double* DPZeroStar, double* FValue);

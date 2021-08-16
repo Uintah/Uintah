@@ -80,8 +80,8 @@ SUBDIRS := \
         $(SRCDIR)/PortableTongeRamesh \
         $(SRCDIR)/ArenaSoilBanerjeeBrannon \
         $(SRCDIR)/ViscoElastic \
-	$(SRCDIR)/QuocAnh \
-#        $(SRCDIR)/Biswajit \
+	    $(SRCDIR)/SoilModels \
+#       $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
   SUBDIRS += $(SRCDIR)/fortran

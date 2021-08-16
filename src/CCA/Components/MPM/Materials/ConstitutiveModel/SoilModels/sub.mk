@@ -28,7 +28,7 @@
 # Makefile fragment for this subdirectory 
 
 
-SRCDIR := CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh
+SRCDIR := CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels
 
 SRCS   += \
         $(SRCDIR)/HypoplasticB.cc               \

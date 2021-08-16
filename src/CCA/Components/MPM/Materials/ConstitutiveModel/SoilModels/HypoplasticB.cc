@@ -24,7 +24,7 @@
  //#include <CCA/Components/MPM/ConstitutiveModel/HypoplasticB.h> // Uintah 1.6
  //#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h> // Uintah 1.6
 
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/HypoplasticB.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 
 #include <CCA/Ports/DataWarehouse.h>
