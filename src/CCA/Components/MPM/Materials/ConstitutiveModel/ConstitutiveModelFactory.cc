@@ -65,7 +65,7 @@
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArenaSoilBanerjeeBrannon/ArenaPartiallySaturated.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/Biswajit/CamClay.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
@@ -280,9 +280,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
   }
-  else if (cm_type ==  "camclay"){
-    return(scinew CamClay(child,flags));
- }
+  //else if (cm_type ==  "camclay"){
+  //  return(scinew CamClay(child,flags));
+ //}
   else if (cm_type ==  "rf_elastic_plastic"){
     computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));
