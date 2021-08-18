@@ -22,7 +22,7 @@ git push                      // push committed local changes to a remote reposi
 
 git reset --hard              // discard uncommitted local changes in tracked files
 
-git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s) 
+git checkout -- <path or file> // discard local changes (not committed) to a directory or file(s)
 
 git revert <commit>           // reverse prior commits
 
@@ -51,7 +51,11 @@ git stash show -p stash@{stash_id}
 // Branch Workflow Example
 
 git clone https://github.com/Uintah/Uintah.git  // download Uintah
+  or
+git clone git@github.com:Uintah/Uintah.git      // if you're using an ssh key for authentication
+
 cd Uintah                                       // move to the newly downloaded repository
+
 git checkout Cyberstone2                        // switch to the target branch
 
 * modify Cyberstone2 code *
@@ -59,6 +63,24 @@ git checkout Cyberstone2                        // switch to the target branch
 git add <files>                                 // add modified files to the list that will be committed
 git commit -m "<msg>"                           // commit changes to the local repository
 git push                                        // push committed local changes to the remote repository
+
+
+//__________________________________
+// To setup ssh keys for authentication
+
+ssh-keygen -t ed25519 -C "<git email address>"   // generate the ssh key
+more ~/.ssh/id_ed25519.pub                       // copy the key into the clipboard
+
+Login to https://github.com
+  Profile->settings->ssh and gpg keys            // paste the key and label it by the machine name
+
+ssh -T git@github.com                            // To test the sshkey
+
+Repeat for each machine you want to commit from.
+
+If the repository uses URL address (https://github.com) convert it to one that accepts ssh-keys
+
+git remote set-url origin git@github.com:/Uintah/Uintah
 
 
 
