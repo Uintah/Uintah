@@ -23,7 +23,7 @@
  */
 
 
-
+#include <CCA/Components/Solvers/custom_threads.h>
 #include <CCA/Components/Solvers/HypreSolver.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
 #include <Core/Grid/DbgOutput.h>
@@ -137,10 +137,37 @@ namespace Uintah {
       , m_params(params_in)
       , m_isFirstSolve(isFirstSolve_in)
     {
+
+
+	  const char* hypre_num_of_threads_str = std::getenv("HYPRE_THREADS"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
+	  if(hypre_num_of_threads_str)
+	  {
+		char temp_str[16];
+		strcpy(temp_str, hypre_num_of_threads_str);
+		const char s[2] = ",";
+		char *token;
+		token = strtok(temp_str, s);	/* get the first token */
+		m_hypre_num_of_threads = atoi(token);
+		token = strtok(NULL, s);
+		m_partition_size =  atoi(token);
+	  }
+	  m_hypre_num_of_threads = std::max(m_hypre_num_of_threads, 1);
+	  m_partition_size = std::max(m_partition_size, 1);
+	  m_hypre_solver_label.resize(m_hypre_num_of_threads);
+	  m_hypre_solverP.resize(m_hypre_num_of_threads);
+	  m_buff.resize(m_hypre_num_of_threads);
+	  m_buff_size.resize(m_hypre_num_of_threads);
+
       // Time Step
       m_timeStepLabel    = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
-      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
+      for(int i=0; i<m_hypre_num_of_threads ; i++){
+    	  std::string label_name = "hypre_solver_label" + std::to_string(i);
+    	  m_hypre_solver_label[i] = VarLabel::create(label_name, SoleVariable<hypre_solver_structP>::getTypeDescription());
+    	  m_buff[i] = nullptr;
+    	  m_buff_size[i] = 0;
+      }
+//      m_hypre_solver_label = VarLabel::create("hypre_solver_label",
+//                                            SoleVariable<hypre_solver_structP>::getTypeDescription());
       m_firstPassThrough = true;
       m_movingAverage    = 0.0;
 
@@ -155,16 +182,18 @@ namespace Uintah {
 
     virtual ~HypreStencil7() {
       VarLabel::destroy(m_timeStepLabel);
-      VarLabel::destroy(m_hypre_solver_label);
+      for(int i=0; i<m_hypre_num_of_threads ; i++)
+        VarLabel::destroy(m_hypre_solver_label[i]);
 
+      int t = get_custom_team_id();
       //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-      if(m_buff){
-        cudaErrorCheck(cudaFree(m_buff));
+      if(m_buff[t]){
+        cudaErrorCheck(cudaFree(m_buff[t]));
       }
 #else
-      if(m_buff){
-        free(m_buff);
+      if(m_buff[t]){
+        free(m_buff[t]);
       }
 #endif
       //-----------------  end of hypre-cuda  -----------------
@@ -192,29 +221,50 @@ namespace Uintah {
     //---------------------------------------------------------------------------------------------
     double * getBuffer( size_t buff_size )
     {
-      if (m_buff_size < buff_size) {
-        m_buff_size = buff_size;
+      int t = get_custom_team_id();
+      if (m_buff_size[t] < buff_size) {
+        m_buff_size[t] = buff_size;
 
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-        if (m_buff) {
-          cudaErrorCheck(cudaFree((void*)m_buff));
+        if (m_buff[t]) {
+          cudaErrorCheck(cudaFree((void*)m_buff[t]));
         }
 
-        cudaErrorCheck(cudaMalloc((void**)&m_buff, buff_size));
+        cudaErrorCheck(cudaMalloc((void**)&m_buff[t], buff_size[t]));
 #else
-        if (m_buff) {
-          free(m_buff);
+        if (m_buff[t]) {
+          free(m_buff[t]);
         }
 
-        m_buff = (double *)malloc(buff_size);
+        m_buff[t] = (double *)malloc(buff_size);
 #endif
       }
 
-      return m_buff; // although m_buff is a member of the class and can be accessed inside task, it can not be directly
+      return m_buff[t]; // although m_buff is a member of the class and can be accessed inside task, it can not be directly
                      // accessed inside parallel_for on device (even though its a device pointer, value is not passed by reference)
                      // So return explicitly to a local variable. The local variable gets passed by copy.
     }
 
+    //---------------------------------------------------------------------------------------------
+
+    //Damodar 08192021: quick and dirty way. Created a wrapper for parallel for. Call hypre's custom paralle_for if hypre-ep is used otherwise call normal uintah's parallel_for
+    template <typename ExecSpace, typename MemSpace, typename Functor>
+    void hypre_task_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & f ){
+#ifdef HYPRE_USING_MPI_EP
+    	const int ib = r.begin(0); const int ie = r.end(0);
+    	const int jb = r.begin(1); const int je = r.end(1);
+    	const int kb = r.begin(2); const int ke = r.end(2);
+
+    	//quick and dirty not linearizing 3d loop
+    	custom_parallel_for(kb, ke, [&](int k){
+    	  for (int j=jb; j<je; ++j)
+			for (int i=ib; i<ie; ++i)
+    				f(i,j,k);
+    	 }, m_partition_size);
+#else
+    	Uintah::parallel_for(execObj, r, f);
+#endif
+    }
 
     //---------------------------------------------------------------------------------------------
     //   Create and populate a Hypre struct vector,
@@ -222,7 +272,7 @@ namespace Uintah {
     HYPRE_StructVector
     createPopulateHypreVector(   const timeStep_vartype   timeStep
                                , const bool               recompute
-                               , const bool               do_setup
+                               , const bool               setup_phase
                                , const ProcessorGroup   * pg
                                , const HYPRE_StructGrid & grid
                                , const PatchSubset      * patches
@@ -234,11 +284,11 @@ namespace Uintah {
     {
       //__________________________________
       // Create the vector
-      if( do_setup ){
+      if( setup_phase ){
         HYPRE_StructVectorDestroy( *HQ );
       }
 
-      if (timeStep == 1 || recompute || do_setup ) {
+      if (timeStep == 1 || recompute || setup_phase ) {
         HYPRE_StructVectorCreate( pg->getComm(), grid, HQ );
         HYPRE_StructVectorInitialize( *HQ );
       }
@@ -272,7 +322,7 @@ namespace Uintah {
           size_t buff_size = Nx*Ny*Nz*sizeof(double);
           double * d_buff = getBuffer( buff_size );	//allocate / reallocate d_buff;
 
-          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+          hypre_task_parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
             int id = (i + j*Nx + k*Nx*Ny - start_offset);
             d_buff[id] = Q(i, j, k);
           });
@@ -283,7 +333,7 @@ namespace Uintah {
         }  // label exist?
       }  // patch loop
 
-      if (timeStep == 1 || recompute || do_setup){
+      if (timeStep == 1 || recompute || setup_phase){
         HYPRE_StructVectorAssemble( *HQ );
       }
 
@@ -292,87 +342,158 @@ namespace Uintah {
 
     //---------------------------------------------------------------------------------------------
     template <typename ExecSpace, typename MemSpace>
-    void solve( const PatchSubset                          * patches
+    void checkExecutionSpace(int rank){
+
+        if(rank==0){
+  #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+          bool hypre_cuda = true;
+  #else
+          bool hypre_cuda = false;
+  #endif
+          if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
+            if(hypre_cuda == false){
+              printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
+              exit(1);
+            }
+          }
+          else{
+            if(hypre_cuda == true){
+              printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
+              exit(1);
+            }
+          }
+        }
+    }
+
+    PatchSubset ** distributePatches(const PatchSubset* ps){
+      //create patch subsets equal to number of partitions. in case of scheduler other than kokkos omp, all patches will be in a same patch subset - same as before
+      PatchSubset ** new_patches = new PatchSubset *[m_hypre_num_of_threads];
+      for(int part_id = 0; part_id < m_hypre_num_of_threads; part_id++)
+    	  new_patches[part_id] = new PatchSubset();
+
+      int patch_per_part = ps->size() / m_hypre_num_of_threads, remainder = ps->size() % m_hypre_num_of_threads;
+      //patch_per_part = (ps->size() % m_hypre_num_of_threads > 0) ? patch_per_part + 1 : patch_per_part;
+      int thread_id = 0, count=0;
+
+      for(int p=0;p<ps->size();p++){	//splitting patches among patch subsets
+    	  //printf("%d patch: %d to thread %d\n",pg->myrank(), p, thread_id);
+    	  new_patches[thread_id]->add(ps->get(p));
+    	  count++;
+
+    	  if(count >= patch_per_part){
+    		  if(thread_id < remainder){	//if number of patches are not perfectly divisible by threads, add 1 extra patch to every thread till remainder patches are not over
+    			  p++;	//dont forget p++
+    			  //printf("%d patch: %d to thread %d\n",pg->myrank(), p, thread_id);
+    			  new_patches[thread_id]->add(ps->get(p));
+    			  count++;
+    		  }
+    		  count = 0;
+    		  thread_id++;
+    	  }
+      }
+      return new_patches;
+    }
+
+    //---------------------------------------------------------------------------------------------
+    template <typename ExecSpace, typename MemSpace>
+	void solve( const PatchSubset                          * patches
+			  , const MaterialSubset                       * matls
+			  ,       OnDemandDataWarehouse                * old_dw
+			  ,       OnDemandDataWarehouse                * new_dw
+			  ,       UintahParams                         & uintahParams
+			  ,       ExecutionObject<ExecSpace, MemSpace> & execObj
+			  ,       Handle<HypreStencil7<GridVarType>>
+			  )
+	{
+    	const ProcessorGroup * pg = uintahParams.getProcessorGroup();
+    	checkExecutionSpace<ExecSpace, MemSpace>(pg->myRank());
+    	PatchSubset **new_patches = distributePatches(patches);
+
+
+        //__________________________________
+        //   timers
+        m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
+        hypre_BeginTiming(m_tHypreAll);
+
+        m_tMatVecSetup = hypre_InitializeTiming("Matrix + Vector setup");
+        m_tSolveOnly   = hypre_InitializeTiming("Solve time");
+
+        //__________________________________
+        // timestep can come from the old_dw or parentOldDW
+        timeStep_vartype timeStep(0);
+
+        Task::WhichDW myOldDW = m_params->getWhichOldDW();
+        DataWarehouse* pOldDW = new_dw->getOtherDataWarehouse(myOldDW);
+
+        pOldDW->get(timeStep, m_timeStepLabel);
+
+        //________________________________________________________
+        // Solve frequency
+        //
+        const int solvFreq = m_params->solveFrequency;
+        // note - the first timeStep in hypre is timeStep 1
+        if (solvFreq == 0 || timeStep % solvFreq ) {
+          new_dw->transferFrom(old_dw, m_X_label, patches, matls, true);
+          return;
+        }
+
+        OnDemandDataWarehouse* A_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_A_dw )); //damodar: took these out of loop, they caused crash
+        OnDemandDataWarehouse* b_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_b_dw ));
+        OnDemandDataWarehouse* guess_dw = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_guess_dw ));
+
+        int num_threads = std::min(m_hypre_num_of_threads, patches->size());
+        hypre_set_num_threads(m_hypre_num_of_threads, m_partition_size, get_custom_team_id);
+
+        custom_partition_master(m_hypre_num_of_threads, m_partition_size, [&](int t){
+          int part_id = hypre_init_thread();
+          hypreSolve(new_patches[part_id], matls, old_dw, new_dw, uintahParams, execObj, part_id, timeStep, A_dw, b_dw, guess_dw, pg);
+        });
+
+        hypre_destroy_thread();
+	}
+
+    //---------------------------------------------------------------------------------------------
+    template <typename ExecSpace, typename MemSpace>
+    void hypreSolve( const PatchSubset                          * patches
               , const MaterialSubset                       * matls
               ,       OnDemandDataWarehouse                * old_dw
               ,       OnDemandDataWarehouse                * new_dw
               ,       UintahParams                         & uintahParams
               ,       ExecutionObject<ExecSpace, MemSpace> & execObj
-              ,       Handle<HypreStencil7<GridVarType>>
+			  ,       int part_id
+			  ,       int timeStep
+			  ,       OnDemandDataWarehouse* A_dw
+			  ,       OnDemandDataWarehouse* b_dw
+			  ,       OnDemandDataWarehouse* guess_dw
+			  ,       const ProcessorGroup * pg
               )
     {
-      const ProcessorGroup * pg = uintahParams.getProcessorGroup();
 
-      if(pg->myRank()==0){
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-        bool hypre_cuda = true;
-#else
-        bool hypre_cuda = false;
-#endif
-        if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
-          if(hypre_cuda == false){
-            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
-            exit(1);
-          }
-        }
-        else{
-          if(hypre_cuda == true){
-            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is CPU, but hypre is configured with cuda. ######\n", __FILE__, __LINE__);
-            exit(1);
-          }
-        }
-      }
-
-      //__________________________________
-      //   timers
-      m_tHypreAll = hypre_InitializeTiming("Total Hypre time");
-      hypre_BeginTiming(m_tHypreAll);
-
-      m_tMatVecSetup = hypre_InitializeTiming("Matrix + Vector setup");
-      m_tSolveOnly   = hypre_InitializeTiming("Solve time");
 
 
        //________________________________________________________
       // get struct from data warehouse
       struct hypre_solver_struct* hypre_solver_s = 0;
 
-      if ( new_dw->exists( m_hypre_solver_label ) ) {
-        new_dw->get( m_hypre_solverP, m_hypre_solver_label );
+      if ( new_dw->exists( m_hypre_solver_label[part_id] ) ) {
+        new_dw->get( m_hypre_solverP[part_id], m_hypre_solver_label[part_id] );
       }
       else {
-        old_dw->get( m_hypre_solverP, m_hypre_solver_label );
-        new_dw->put( m_hypre_solverP, m_hypre_solver_label );
+        old_dw->get( m_hypre_solverP[part_id], m_hypre_solver_label[part_id] );
+        new_dw->put( m_hypre_solverP[part_id], m_hypre_solver_label[part_id] );
       }
 
-      hypre_solver_s = m_hypre_solverP.get().get_rep();
+      hypre_solver_s = m_hypre_solverP[part_id].get().get_rep();
       bool recompute = hypre_solver_s->isRecomputeTimeStep;
 
-      //__________________________________
-      // timestep can come from the old_dw or parentOldDW
-      timeStep_vartype timeStep(0);
-
-      Task::WhichDW myOldDW = m_params->getWhichOldDW();
-      DataWarehouse* pOldDW = new_dw->getOtherDataWarehouse(myOldDW);
-
-      pOldDW->get(timeStep, m_timeStepLabel);
-
-      //________________________________________________________
-      // Solve frequency
-      //
-      const int solvFreq = m_params->solveFrequency;
-      // note - the first timeStep in hypre is timeStep 1
-      if (solvFreq == 0 || timeStep % solvFreq ) {
-        new_dw->transferFrom(old_dw, m_X_label, patches, matls, true);
-        return;
-      }
 
       //________________________________________________________
       // Matrix setup frequency - this will destroy and recreate a new Hypre matrix at the specified setupFrequency
       //
       int suFreq = m_params->getSetupFrequency();
-      bool do_setup = false;
+      bool setup_phase = false;
       if (suFreq != 0){
-        do_setup = (timeStep % suFreq == 0);
+        setup_phase = (timeStep % suFreq == 0);
       }
 
       //________________________________________________________
@@ -387,14 +508,12 @@ namespace Uintah {
       // if it the first pass through ignore the flags
       if(timeStep == 1 || recompute){
         updateCoefs = false;
-        do_setup    = false;
+        setup_phase    = false;
       }
 
-      //std::cout << "      HypreSolve  timestep: " << timeStep << " recompute: " << recompute << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" do_setup: " << do_setup << " updateCoefs: " << updateCoefs << std::endl;
+      do_setup = (timeStep == 1 || setup_phase || recompute) ? 1 : 0;
 
-      OnDemandDataWarehouse* A_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_A_dw ));
-      OnDemandDataWarehouse* b_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_b_dw ));
-      OnDemandDataWarehouse* guess_dw = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_guess_dw ));
+      //std::cout << "      HypreSolve  timestep: " << timeStep << " recompute: " << recompute << " m_firstPassThrough: " << m_firstPassThrough <<  " m_isFirstSolve: " << m_isFirstSolve <<" setup_phase: " << setup_phase << " updateCoefs: " << updateCoefs << std::endl;
 
       ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
 
@@ -408,7 +527,7 @@ namespace Uintah {
         //__________________________________
         // Setup grid
         HYPRE_StructGrid grid;
-        if (timeStep == 1 || do_setup || recompute) {
+        if (timeStep == 1 || setup_phase || recompute) {
           HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
 
           if(m_superpatch){ //if m_superpatch is set then pass patch(0).lo and patch(n-1).hi to HYPRE_StructGridSetExtents. Then hypre will treat the rank's subdomain as one giant superpatch
@@ -485,7 +604,7 @@ namespace Uintah {
         //__________________________________
         // Create the stencil
         HYPRE_StructStencil stencil;
-        if ( timeStep == 1 || do_setup || recompute) {
+        if ( timeStep == 1 || setup_phase || recompute) {
           if( m_params->getSymmetric()){
 
             HYPRE_StructStencilCreate(3, 4, &stencil);
@@ -515,11 +634,11 @@ namespace Uintah {
         // Create the matrix
         HYPRE_StructMatrix* HA = hypre_solver_s->HA_p;
 
-        if( do_setup ){
+        if( setup_phase ){
           HYPRE_StructMatrixDestroy( *HA );
         }
 
-        if (timeStep == 1 || recompute || do_setup) {
+        if (timeStep == 1 || recompute || setup_phase) {
           HYPRE_StructMatrixCreate( pg->getComm(), grid, stencil, HA );
           HYPRE_StructMatrixSetSymmetric( *HA, m_params->getSymmetric() );
           int ghost[] = {1,1,1,1,1,1};
@@ -530,7 +649,7 @@ namespace Uintah {
         // setup the coefficient matrix ONLY on the first timeStep, if
         // we are doing a recompute, or if we set setupFrequency != 0,
         // or if UpdateCoefFrequency != 0
-        if (timeStep == 1 || recompute || do_setup || updateCoefs) {
+        if (timeStep == 1 || recompute || setup_phase || updateCoefs) {
           for(int p=0;p<patches->size();p++) {
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
@@ -568,7 +687,7 @@ namespace Uintah {
 
                 auto AStencil4 = (A_dw->getConstGridVariable<typename GridVarType::symmetric_matrix_type, Stencil4, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+                hypre_task_parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                   int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
                   d_buff[id + 0] = AStencil4(i, j, k).p;
                   d_buff[id + 1] = AStencil4(i, j, k).w;
@@ -580,7 +699,7 @@ namespace Uintah {
 
                 auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-                Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+                hypre_task_parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                   int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
                   d_buff[id + 0] = A(i, j, k).p;
                   d_buff[id + 1] = A(i, j, k).w;
@@ -593,7 +712,7 @@ namespace Uintah {
 
               auto A = (A_dw->getConstGridVariable<typename GridVarType::matrix_type, Stencil7, MemSpace> (m_A_label, matl, patch, Ghost::None, 0));
 
-              Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+              hypre_task_parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
                 int id = (i + j*Nx + k*Nx*Ny - start_offset)*stencil_point;
                 d_buff[id + 0] = A(i, j, k).p;
                 d_buff[id + 1] = A(i, j, k).e;
@@ -610,7 +729,7 @@ namespace Uintah {
                                            stencil_point, stencil_indices,
                                            d_buff);
           }
-          if (timeStep == 1 || recompute || do_setup){
+          if (timeStep == 1 || recompute || setup_phase){
             HYPRE_StructMatrixAssemble(*HA);
           }
         }
@@ -618,12 +737,12 @@ namespace Uintah {
         //__________________________________
         // Create the RHS
         HYPRE_StructVector HB;
-        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p, execObj);
+        HB = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, setup_phase, pg, grid, patches, matl, m_b_label, b_dw, hypre_solver_s->HB_p, execObj);
 
         //__________________________________
         // Create the solution vector
         HYPRE_StructVector HX;
-        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, do_setup, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p, execObj);
+        HX = createPopulateHypreVector<ExecSpace, MemSpace>(  timeStep, recompute, setup_phase, pg, grid, patches, matl, m_guess_label, guess_dw, hypre_solver_s->HX_p, execObj);
 
         hypre_EndTiming( m_tMatVecSetup );
 
@@ -644,11 +763,11 @@ namespace Uintah {
         case smg: {
           HYPRE_StructSolver * solver  = hypre_solver_s->solver_p;
 
-          if ( do_setup ){
+          if ( setup_phase ){
             HYPRE_StructSMGDestroy( *solver );
           }
 
-          if (timeStep == 1 || recompute || do_setup) {
+          if (timeStep == 1 || recompute || setup_phase) {
 
             HYPRE_StructSMGCreate         (pg->getComm(), solver);
             HYPRE_StructSMGSetMemoryUse   (*solver,  0);
@@ -660,6 +779,7 @@ namespace Uintah {
             HYPRE_StructSMGSetLogging     (*solver,  m_params->logging);
 
             HYPRE_StructSMGSetup (*solver,  *HA, HB, HX);
+            do_setup = 0;
           }
 
           HYPRE_StructSMGSolve(*solver, *HA, HB, HX);
@@ -674,11 +794,11 @@ namespace Uintah {
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver_p;
 
-          if ( do_setup ){
+          if ( setup_phase ){
             HYPRE_StructPFMGDestroy( *solver );
           }
 
-          if ( timeStep == 1 || recompute || do_setup ) {
+          if ( timeStep == 1 || recompute || setup_phase ) {
 
             HYPRE_StructPFMGCreate        ( pg->getComm(), solver );
             HYPRE_StructPFMGSetMaxIter    (*solver,   m_params->maxiterations);
@@ -693,6 +813,7 @@ namespace Uintah {
             HYPRE_StructPFMGSetLogging     (*solver,  m_params->logging);
 
             HYPRE_StructPFMGSetup          (*solver,  *HA, HB,  HX);
+            do_setup = 0;
           }
 
           HYPRE_StructPFMGSolve(*solver, *HA, HB, HX);
@@ -707,11 +828,11 @@ namespace Uintah {
         case sparsemsg:{
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver_p;
-          if ( do_setup ){
+          if ( setup_phase ){
             HYPRE_StructSparseMSGDestroy(*solver);
           }
 
-          if ( timeStep == 1 || recompute || do_setup ) {
+          if ( timeStep == 1 || recompute || setup_phase ) {
 
             HYPRE_StructSparseMSGCreate      (pg->getComm(), solver);
             HYPRE_StructSparseMSGSetMaxIter  (*solver, m_params->maxiterations);
@@ -726,6 +847,7 @@ namespace Uintah {
             HYPRE_StructSparseMSGSetLogging     (*solver,  m_params->logging);
 
             HYPRE_StructSparseMSGSetup(*solver, *HA, HB,  HX);
+            do_setup = 0;
           }
 
           HYPRE_StructSparseMSGSolve(*solver, *HA, HB, HX);
@@ -742,12 +864,12 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if( do_setup ){
+          if( setup_phase ){
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructPCGDestroy(*solver);
           }
 
-          if (timeStep == 1 || recompute || do_setup) {
+          if (timeStep == 1 || recompute || setup_phase) {
             HYPRE_StructPCGCreate(pg->getComm(),solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -763,6 +885,7 @@ namespace Uintah {
             HYPRE_StructPCGSetLogging   (*solver,  m_params->logging);
 
             HYPRE_StructPCGSetup        (*solver, *HA,HB, HX);
+            do_setup = 0;
           }
 
           HYPRE_StructPCGSolve(*solver, *HA, HB, HX);
@@ -779,12 +902,12 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if ( do_setup ){
+          if ( setup_phase ){
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructHybridDestroy( *solver );
           }
 
-          if ( timeStep == 1 || recompute || do_setup ) {
+          if ( timeStep == 1 || recompute || setup_phase ) {
             HYPRE_StructHybridCreate(pg->getComm(), solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -802,6 +925,7 @@ namespace Uintah {
             HYPRE_StructHybridSetLogging        (*solver, m_params->logging);
 
             HYPRE_StructHybridSetup             (*solver, *HA, HB, HX);
+            do_setup = 0;
           }
 
           HYPRE_StructHybridSolve(*solver, *HA, HB, HX);
@@ -817,11 +941,11 @@ namespace Uintah {
           HYPRE_StructSolver * solver         = hypre_solver_s->solver_p;
           HYPRE_StructSolver * precond_solver = hypre_solver_s->precond_solver_p;
 
-          if ( do_setup ){
+          if ( setup_phase ){
             destroyPrecond( hypre_solver_s, *precond_solver );
             HYPRE_StructGMRESDestroy(*solver);
           }
-          if (timeStep == 1 || recompute || do_setup ) {
+          if (timeStep == 1 || recompute || setup_phase ) {
             HYPRE_StructGMRESCreate(pg->getComm(),solver);
 
             HYPRE_PtrToStructSolverFcn precond;
@@ -836,6 +960,7 @@ namespace Uintah {
             HYPRE_StructGMRESSetLogging  (*solver, m_params->logging);
 
             HYPRE_StructGMRESSetup       (*solver,*HA,HB,HX);
+            do_setup = 0;
           }
 
           HYPRE_StructGMRESSolve(*solver,*HA,HB,HX);
@@ -896,7 +1021,7 @@ namespace Uintah {
               l.get_pointer(), hh.get_pointer(),
               d_buff);
 
-          Uintah::parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
+          hypre_task_parallel_for(execObj, range, KOKKOS_LAMBDA(int i, int j, int k){
             int id = (i + j*Nx + k*Nx*Ny - start_offset);
             Xnew(i, j, k) = d_buff[id];
           });
@@ -906,7 +1031,7 @@ namespace Uintah {
          m_firstPassThrough  = false;
          hypre_solver_s->isRecomputeTimeStep  = false;
 
-        if ( timeStep == 1 || do_setup || recompute ) {
+        if ( timeStep == 1 || setup_phase || recompute ) {
           HYPRE_StructStencilDestroy(stencil);
           HYPRE_StructGridDestroy(grid);
         }
@@ -921,7 +1046,7 @@ namespace Uintah {
 
         timer.stop();
 
-        if(pg->myRank() == 0) {
+        if(pg->myRank() == 0 && part_id==0) {
 
           cout << "Solve of " << m_X_label->getName()
                << " on level " << m_level->getIndex()
@@ -1120,14 +1245,22 @@ namespace Uintah {
     Task::WhichDW      m_which_guess_dw;
     const HypreParams* m_params;
     bool               m_isFirstSolve;
-    mutable double *   m_buff{nullptr};
-    mutable size_t	   m_buff_size{0};
+    //mutable double *   m_buff{nullptr};
+    //mutable size_t	   m_buff_size{0};
+    vector<double *>   m_buff;
+    vector<size_t>     m_buff_size;
 
     const VarLabel*    m_timeStepLabel;
-    const VarLabel*    m_hypre_solver_label;
-    SoleVariable<hypre_solver_structP> m_hypre_solverP;
+
+    std::vector<const VarLabel*> m_hypre_solver_label; ////Damodar Hypre-EP: converted to vector. size will be 1 for non-ep runs
+    std::vector<SoleVariable<hypre_solver_structP>> m_hypre_solverP;
+
     bool   m_firstPassThrough;
     double m_movingAverage;
+
+
+    int 			   m_hypre_num_of_threads{1}, m_partition_size{1};  //Damodar Hypre-EP: added
+
 
     //set by the environment variable HYPRE_SUPERPATCH. Hypre will combine all patches into a superpatch if set to HYPRE_SUPERPATCH 1
     //superpatch works only if patch to rank assignment is aligned with the domain number of patches in x, y, and z dimensions.
@@ -1138,9 +1271,9 @@ namespace Uintah {
     // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
     // a different timer index that is managed by Hypre. To enable the use and reporting of these
     // hypre timings, #define HYPRE_TIMING in HypreSolver.h
-    int m_tHypreAll;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
-    int m_tSolveOnly;   // Tracks time taken by hypre to solve the system of equations
-    int m_tMatVecSetup; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    int m_tHypreAll{0};    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int m_tSolveOnly{0};   // Tracks time taken by hypre to solve the system of equations
+    int m_tMatVecSetup{0}; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
 
   }; // class HypreStencil7
 
@@ -1161,11 +1294,31 @@ namespace Uintah {
 #endif
     //-----------------  end of hypre-cuda  -----------------
 
+  	const char* hypre_num_of_threads_str = std::getenv("HYPRE_THREADS"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
+	if(hypre_num_of_threads_str)
+	{
+	  	char temp_str[16];
+		strcpy(temp_str, hypre_num_of_threads_str);
+		const char s[2] = ",";
+		char *token;
+		token = strtok(temp_str, s);	/* get the first token */
+		m_hypre_num_of_threads = atoi(token);
+		token = strtok(NULL, s);
+		m_partition_size =  atoi(token);
+	}
+
+	m_hypre_num_of_threads = std::max(1, m_hypre_num_of_threads);
+	m_partition_size = std::max(1, m_partition_size);
+
     // Time Step
     m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription() );
 
-    hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                          SoleVariable<hypre_solver_structP>::getTypeDescription());
+    hypre_solver_label.resize(m_hypre_num_of_threads);
+
+    for(int i=0; i<m_hypre_num_of_threads ; i++){
+    	std::string label_name = "hypre_solver_label" + std::to_string(i);
+    	hypre_solver_label[i] = VarLabel::create(label_name, SoleVariable<hypre_solver_structP>::getTypeDescription());
+    }
 
     m_params = scinew HypreParams();
 
@@ -1182,7 +1335,8 @@ namespace Uintah {
     //-----------------  end of hypre-cuda  -----------------
 
     VarLabel::destroy(m_timeStepLabel);
-    VarLabel::destroy(hypre_solver_label);
+    for(int i=0; i<m_hypre_num_of_threads ; i++)
+      VarLabel::destroy(hypre_solver_label[i]);
     delete m_params;
   }
 
@@ -1275,7 +1429,8 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches on this proc when scheduling
 
-    task->computes(hypre_solver_label);
+    for(int i=0; i<m_hypre_num_of_threads ; i++)
+      task->computes(hypre_solver_label[i]);
     
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1295,7 +1450,8 @@ namespace Uintah {
     task->setType(Task::OncePerProc);  // must run this task on every proc.  It's possible to have
                                        // no patches  on this proc when scheduling restarts with regridding
 
-    task->computes(hypre_solver_label);
+    for(int i=0; i<m_hypre_num_of_threads ; i++)
+      task->computes(hypre_solver_label[i]);
 
     LoadBalancer * lb = sched->getLoadBalancer();
 
@@ -1307,21 +1463,23 @@ namespace Uintah {
   void HypreSolver2::allocateHypreMatrices( DataWarehouse * new_dw,
                                             const bool isRecomputeTimeStep_in )
   {
-    SoleVariable<hypre_solver_structP> hypre_solverP;
-    hypre_solver_struct* hypre_struct = scinew hypre_solver_struct;
+	  for(int i=0; i<m_hypre_num_of_threads ; i++){
+		  SoleVariable<hypre_solver_structP> hypre_solverP;
+		  hypre_solver_struct* hypre_struct = scinew hypre_solver_struct;
 
-    hypre_struct->solver_p         = scinew HYPRE_StructSolver( nullptr );
-    hypre_struct->precond_solver_p = scinew HYPRE_StructSolver( nullptr );
-    hypre_struct->HA_p             = scinew HYPRE_StructMatrix( nullptr );
-    hypre_struct->HX_p             = scinew HYPRE_StructVector( nullptr );
-    hypre_struct->HB_p             = scinew HYPRE_StructVector( nullptr );
-    hypre_struct->solver_type         = stringToSolverType( m_params->solvertype );
-    hypre_struct->precond_solver_type = stringToSolverType( m_params->precondtype );
+		  hypre_struct->solver_p         = scinew HYPRE_StructSolver( nullptr );
+		  hypre_struct->precond_solver_p = scinew HYPRE_StructSolver( nullptr );
+		  hypre_struct->HA_p             = scinew HYPRE_StructMatrix( nullptr );
+		  hypre_struct->HX_p             = scinew HYPRE_StructVector( nullptr );
+		  hypre_struct->HB_p             = scinew HYPRE_StructVector( nullptr );
+		  hypre_struct->solver_type         = stringToSolverType( m_params->solvertype );
+		  hypre_struct->precond_solver_type = stringToSolverType( m_params->precondtype );
 
-    hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
+		  hypre_struct->isRecomputeTimeStep = isRecomputeTimeStep_in;
 
-    hypre_solverP.setData( hypre_struct );
-    new_dw->put( hypre_solverP, hypre_solver_label );
+		  hypre_solverP.setData( hypre_struct );
+		  new_dw->put( hypre_solverP, hypre_solver_label[i] );
+	  }
   }
 
   //---------------------------------------------------------------------------------------------
@@ -1412,13 +1570,17 @@ namespace Uintah {
 
       // solve struct
       if (isFirstSolve) {
-        task->requires( Task::OldDW, hypre_solver_label);
-        task->computes( hypre_solver_label);
+        for(int i=0; i<m_hypre_num_of_threads ; i++){
+          task->requires( Task::OldDW, hypre_solver_label[i] );
+          task->computes( hypre_solver_label[i] );
+        }
       }  else {
-        task->requires( Task::NewDW, hypre_solver_label);
+        for(int i=0; i<m_hypre_num_of_threads ; i++)
+          task->requires( Task::NewDW, hypre_solver_label[i] );
       }
 
-      sched->overrideVariableBehavior(hypre_solver_label->getName(),false,true,false,false,true);
+      for(int i=0; i<m_hypre_num_of_threads ; i++)
+        sched->overrideVariableBehavior(hypre_solver_label[i]->getName(),false,true,false,false,true);
 
       task->setType(Task::Hypre);
 
