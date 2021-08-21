@@ -90,7 +90,7 @@ class KokkosOpenMPScheduler : public MPIScheduler  {
 
     virtual bool useInternalDeps() { return !m_is_copy_data_timestep; }
 
-    void runTasks();
+    void runTasks(int partition_id);
 
     static std::string myRankThread();
 
