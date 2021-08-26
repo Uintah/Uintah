@@ -50,6 +50,10 @@ else()
 endif()
 #----------------------------------------------------------
 
+# On Intel compilers, ICE needs a flag set:
+if( CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+    list( APPEND CMAKE_CXX_FLAGS "-fp-model precise" )
+endif()
 
 #----------------------------------------------------------
 # Check for ENDIAN-ness of the platform -- https://cmake.org/cmake/help/latest/module/TestBigEndian.html
