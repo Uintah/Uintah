@@ -1564,6 +1564,8 @@ namespace Uintah {
     //  Computes and requires
     auto TaskDependencies = [&](Task* task) {
 
+      task->usesMPI(true);
+
       // Matrix A
       task->requires(which_A_dw, A_label, Ghost::None, 0);
 
