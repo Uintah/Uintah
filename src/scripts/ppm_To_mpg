@@ -5,6 +5,10 @@
 #  
 #   This script 'glues' together a series of image files into a movie.
 #   The user can resize the movie and/or add labels to the header/footer.
+#   The image files must be named:
+#    <basename>.XXXX.<ext>
+#   where ext can be any image extension and XXXX is the image number
+#   padded with 0.
 #
 #__________________________________
 
@@ -254,13 +258,12 @@ endif
 # make the movies
 echo "___________________________________"
 echo "Now making the movie"
-echo "$FFMPEG  -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat"
+#echo "$FFMPEG  -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat"
 
 rm movie.mpeg
-$FFMPEG -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat
-
-#$FFMPEG -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
-
+set CMD = "$FFMPEG -r $playBackSpeed -i %d.$EXT -r 30 -q 1 $imageName.$movieFormat"
+$CMD
+echo $CMD
 
 #__________________________________
 #  Backup modifed images
@@ -271,7 +274,7 @@ set ans = $<
 foreach T ( [0-9]*.$EXT )
   if( $ans != "y" ) then
     set num = `basename $T .$EXT`
-    rm $num.$EXT 
+    /bin/rm $num.$EXT 
   endif 
 end
 

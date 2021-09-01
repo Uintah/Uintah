@@ -1,0 +1,96 @@
+#!/bin/csh -f
+
+#______________________________________________________________________
+#  This script searches for udas with timesteps that have tarred up
+#  and extracts them in parallel.
+#______________________________________________________________________
+
+if(  $#argv != 2 ) then
+  echo " allUdas_pUntarUda < number of processors>  <remove tarball files [y/n]>"
+  echo " Now exitiing..."
+  exit
+endif
+
+set nProcs = $argv[1]
+
+set deleteTarFile = ` echo $argv[2] | tr '[:lower:]' '[:upper:]'`
+
+set ptar   = `dirname $0`"/pTarUda"
+
+set here = `pwd`
+
+#__________________________________
+# Split the udas found into individual files
+# You have to do this if you have a large number of udas (hundreds).
+
+mkdir .scratch >& /dev/null
+find . -maxdepth 4 -type d -name "*.uda.*" | sort >& .scratch/allUdas
+
+cd .scratch
+split --lines=20 --numeric-suffixes allUdas udas
+cd $here
+
+ls .scratch
+
+#__________________________________
+#  Loop over each file chunk
+foreach X ( .scratch/udas* )
+
+  set these = (`cat $X` )
+  echo "______________________________________________________________________"
+  echo "  $X"
+  
+  #__________________________________
+  # loop over udas
+  foreach Y ( $these[*]:q )
+    
+    # does this uda have directories that have been tarred?
+    cd $Y
+    echo -n "  Checking Uda $Y "
+    set dirs1 = ( `find . -type f  -name "*.tar.gz"` )
+
+    echo " number of tarred directores dir1: $#dirs1  "
+
+    if ( $#dirs1 == 0 ) then
+      printf '  \t %s\n' "uda does not contain tarred directories."
+      cd $here
+      continue
+    endif
+
+    cd $here
+
+    echo "__________________________________"
+    echo "$ptar $nProcs y $Y"
+    
+    $ptar --np $nProcs --extract -uda $Y
+
+    cd $Y
+
+    #__________________________________
+    # bulletproofing
+    grep Working pUntar_record            | awk '{print $3}'|sort -n > & started
+    grep "Finished extract" pUntar_record | awk '{print $3}'|sort -n > & finished
+    diff started finished
+
+    if ($status != 0 ) then
+      echo "WARNING:  something went wrong untarring timesteps in uda $Y"
+      echo "  Look at $Y/started and $Y/finished"
+    endif
+
+    #__________________________________
+    # remove timestep dirs
+    if( $deleteTarFile == "Y" ) then
+      find . -type f -name "*.tar.gz" -delete
+    endif
+    
+    /bin/rm started finished
+
+    cd $here
+  end
+  echo "______________________________________________________________________"
+  echo " successfully untarred $these"
+  
+end
+
+/bin/rm -rf .scratch
+exit

@@ -7,16 +7,15 @@ source $(dirname $0)/../bashFunctions
 #  directory.
 #
 #  Usage:
-#   pTarUda 
-#          -np:              [int]        10       Number of processores used.
-#          -allTimesteps:    [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
-#          -create           blank         X       create new archives
-#          -extract          blank                 extract timestep archieves
-#          -continueTarring  blank                 continue tarring if previous attempts failed
-#          -uda              [dir name]            uda name
-#          -help:                                  Display this option summary
-#
-#  It does not delete the original timestep directories. 
+#   pTarUda                             Defaults
+#          -np:                 [int]        10       Number of processors used.
+#          -allTimesteps:       [y/n]         Y       operate on all directories in uda?  If "n" then a vi window will open allowing you to edit the timesteps
+#          -create              blank         X       create new archives
+#          -deleteOrgTimesteps  blank                 delete  original timesteps directories after they have been tarred. 
+#          -extract             blank                 extract timestep archieves
+#          -continueTarring     blank                 continue tarring if previous attempts failed
+#          -uda                 [dir name]            uda name
+#          -help:                                     Display this option summary
 #
 #______________________________________________________________________
 
@@ -180,6 +179,7 @@ main()
   validateTarredFilesDir ${continueTarring}
 
   if [[ ! -d "${STAMP_DIR}" ]]; then
+  
     # Didn't have permissions to make the directory... so place it in tmp
     printf "\n \t %s \n"  "WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
 
@@ -210,16 +210,16 @@ main()
 
   #______________________________________________________________________
   # Now do the work
-  #______________________________________________________________________
   # record some info for posterity
+  #______________________________________________________________________
 
   PTAR_RECORD=$uda/$recordName
 
   /bin/rm "${PTAR_RECORD}" >& /dev/null
   touch "${PTAR_RECORD}"
 
+  # Can't write to that directory... just place it in tmp for now.
   if [[ ! -f "${PTAR_RECORD}" ]]; then
-    # Can't write to that directory... just place it in tmp for now.
     PTAR_RECORD=/tmp/${recordName}_${user}
   fi
 
@@ -305,7 +305,7 @@ cat <<EOF
           -continueTarring     blank                 continue tarring if previous attempts failed
           -uda                 [dir name]            uda name
           -help:                                     Display this option summary
-       This script does not delete the original timestep directories. 
+       By default the original timestep directories are not deleted. 
 EOF
   exit 0
 }

@@ -1,5 +1,5 @@
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/stdafx.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/BBMMatrix.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/stdafx.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/BBMMatrix.h>
 
 
 using namespace std;
