@@ -42,6 +42,7 @@
 namespace Uintah {
 
   class VarLabel;
+  class Output;
 
   /**************************************
 
@@ -153,6 +154,9 @@ DESCRIPTION
     std::vector< std::pair<double, Vector> > d_vel_profile;
     std::vector< std::pair<double, Vector> > d_rot_profile;
     std::vector< std::pair<double, Vector> > d_ori_profile;
+
+  protected:
+    Output*                m_output      {nullptr};
     
   public:
     // Constructor
