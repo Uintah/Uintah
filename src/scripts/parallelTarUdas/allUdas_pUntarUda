@@ -5,8 +5,6 @@
 #  and extracts them in parallel.
 #______________________________________________________________________
 
-
-
 if(  $#argv != 2 ) then
   echo " allUdas_pUntarUda < number of processors>  <remove tarball files [y/n]>"
   echo " Now exitiing..."
@@ -17,14 +15,13 @@ set nProcs = $argv[1]
 
 set deleteTarFile = ` echo $argv[2] | tr '[:lower:]' '[:upper:]'`
 
-
-set ptar   = "/home/builds/Fresh/trunk/src/scripts/udaTransferScripts/pTarUda"
+set ptar   = `dirname $0`"/pTarUda"
 
 set here = `pwd`
 
 #__________________________________
 # Split the udas found into individual files
-# You have to do this if you have a large number of udas (hundrededs).
+# You have to do this if you have a large number of udas (hundreds).
 
 mkdir .scratch >& /dev/null
 find . -maxdepth 4 -type d -name "*.uda.*" | sort >& .scratch/allUdas
@@ -71,7 +68,7 @@ foreach X ( .scratch/udas* )
 
     #__________________________________
     # bulletproofing
-    grep Working pUntar_record              | awk '{print $3}'|sort -n > & started
+    grep Working pUntar_record            | awk '{print $3}'|sort -n > & started
     grep "Finished extract" pUntar_record | awk '{print $3}'|sort -n > & finished
     diff started finished
 

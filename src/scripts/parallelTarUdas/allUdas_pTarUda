@@ -12,7 +12,7 @@ if( $#nProcs == 0 || $#argv != 1 ) then
   exit
 endif
 
-set ptar   = "/home/builds/Fresh/trunk/src/scripts/udaTransferScripts/pTarUda"
+set ptar   = `dirname $0`"/pTarUda"
 
 
 if ( ! -e $ptar ) then
