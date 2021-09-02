@@ -153,7 +153,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   d_matls.outputProblemSpec(contact_ps);
 
   if(d_filename!="") {
-    string udaDir = flag->DA->getOutputLocation();
+    string udaDir = flag->d_DA->getOutputLocation();
 
     //  Bulletproofing
     DIR *check = opendir(udaDir.c_str());
