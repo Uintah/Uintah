@@ -63,22 +63,6 @@ test_big_endian( ENDIAN )
 set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
 #----------------------------------------------------------
 
-
-#----------------------------------------------------------
-# Check FORTRAN stuff -- https://cmake.org/cmake/help/latest/module/FortranCInterface.html
-#include(CheckLanguage)
-#check_language(Fortran)  # do we have a fortran compiler?
-#if( CMAKE_Fortran_COMPILER )
-#    enable_language(Fortran)
-#    include( FortranCInterface )
-#    # jcs need to sort through fortran stuff...  underscore mangling, etc.
-#else()
-#    message(STATUS "No Fortran compiler found")
-#endif()
-set( NO_FORTRAN True )
-#----------------------------------------------------------
-
-
 #----------------------------------------------------------
 #
 # Find some required libraries

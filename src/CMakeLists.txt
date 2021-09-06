@@ -8,6 +8,11 @@ project( Uintah )
 #     Maybe collect into a list called "CONFIG_INFO" or something?
 message("Uintah build system on platform: ${CMAKE_SYSTEM}")
 
+# default to release builds
+if( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE "Release" )
+endif( NOT CMAKE_BUILD_TYPE )
+
 # warn about building in source
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR )
     message( WARNING "\nIt appears that you are building directly in the source directory.\n"
