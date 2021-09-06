@@ -123,11 +123,11 @@ set_active_flags( MODELS_RADIATION )
 set_active_flags( PHASEFIELD )
 set_active_flags( WASATCH )
 set_active_flags( RAY_SCATTER )
+set_active_flags( FORTRAN )
+
 set( HAVE_CXX11 true )  # we are requiring this as the minimum c++ standard
 
 # jcs what about zoltan, radprops?
-
-# jcs fortran stuff?
 configure_file( uintah_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/uintah_defs.h )
 
 configure_file( visit_testdefs.h.in ${CMAKE_CURRENT_BINARY_DIR}/visit_defs.h )

@@ -51,8 +51,9 @@ endif()
 #----------------------------------------------------------
 
 # On Intel compilers, ICE needs a flag set:
-if( CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    list( APPEND CMAKE_CXX_FLAGS "-fp-model precise" )
+if( CMAKE_CXX_COMPILER_ID STREQUAL "Intel" )
+    add_compile_options( "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-fp-model precise>" )
+    add_compile_options( "$<$<COMPILE_LANGUAGE:Fortran>:SHELL:-fp-model precise>" )
 endif()
 
 #----------------------------------------------------------
