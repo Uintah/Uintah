@@ -47,6 +47,6 @@ add_custom_target( extract_link ALL
     DEPENDS lineextract timeextract partextract
     )
 add_custom_target( puda_link ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/tools/puda puda
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/tools/puda/puda puda
     DEPENDS puda
     )
