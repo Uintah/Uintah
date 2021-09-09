@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Output.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -43,6 +44,7 @@
 #include <vector>
 #include <fstream>
 #include <limits>
+#include <dirent.h>
 using std::cerr;
 
 using namespace std;
@@ -79,6 +81,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
       throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+d_filename+"'\nFailed to find profile file",
                                   __FILE__, __LINE__);
     }
+
     double t0(-1.e9);
     if(d_includeRotation){
       while(is) {
@@ -148,6 +151,49 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("include_rotation", d_includeRotation);
 
   d_matls.outputProblemSpec(contact_ps);
+
+  if(d_filename!="") {
+    string udaDir = flag->d_DA->getOutputLocation();
+
+    //  Bulletproofing
+    DIR *check = opendir(udaDir.c_str());
+    if ( check == nullptr){
+      ostringstream warn;
+      warn << "ERROR:SpecifiedBodyContact The main uda directory does not exist.";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    closedir(check);
+
+    ostringstream fname;
+    fname << udaDir << "/"<<  d_filename;
+    string filename = fname.str();
+
+    std::ofstream fp(filename.c_str());
+
+    int smax = (int)(d_vel_profile.size());
+
+    if(d_includeRotation){
+      for(int i=0;i<smax;i++){
+        fp << d_vel_profile[i].first << " " 
+           << d_vel_profile[i].second.x() << " " 
+           << d_vel_profile[i].second.y() << " " 
+           << d_vel_profile[i].second.z() << " " 
+           << d_ori_profile[i].second.x() << " " 
+           << d_ori_profile[i].second.y() << " " 
+           << d_ori_profile[i].second.z() << " " 
+           << d_rot_profile[i].second.x() << " " 
+           << d_rot_profile[i].second.y() << " " 
+           << d_rot_profile[i].second.z() << endl;
+      }
+    } else {
+      for(int i=0;i<smax;i++){
+        fp << d_vel_profile[i].first << " " 
+           << d_vel_profile[i].second.x() << " " 
+           << d_vel_profile[i].second.y() << " " 
+           << d_vel_profile[i].second.z() <<  endl;
+      }
+    }
+  }
 }
 
 // find velocity from table of values

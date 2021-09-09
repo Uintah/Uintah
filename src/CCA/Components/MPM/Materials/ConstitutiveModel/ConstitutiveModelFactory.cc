@@ -75,9 +75,9 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/MaxwellWeichert.h>
 
 // Geomaterials
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/HypoplasticB.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/HypoplasticB.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/MohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/QADamage.h>
 
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 
@@ -280,9 +280,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
   }
-//  else if (cm_type ==  "camclay"){
-//    return(scinew CamClay(child,flags));
-//  }
+  //else if (cm_type ==  "camclay"){
+  //  return(scinew CamClay(child,flags));
+ //}
   else if (cm_type ==  "rf_elastic_plastic"){
     computes_pLocalizedMPM = true;
     return(scinew RFElasticPlastic(child,flags));

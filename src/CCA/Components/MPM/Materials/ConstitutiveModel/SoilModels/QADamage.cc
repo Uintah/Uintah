@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/QADamage.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/QADamage.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
 

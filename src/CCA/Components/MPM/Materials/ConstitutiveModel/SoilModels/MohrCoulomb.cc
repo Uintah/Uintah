@@ -25,9 +25,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/MohrCoulomb.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/ShengMohrCoulomb.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/QuocAnh/ClassicMohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/MohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/ShengMohrCoulomb.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/SoilModels/ClassicMohrCoulomb.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 

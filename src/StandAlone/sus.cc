@@ -71,6 +71,7 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/hypre_defs.h>
@@ -135,7 +136,7 @@ static void quit(const std::string& msg = "")
   if (msg != "") {
     std::cerr << msg << "\n";
   }
-  
+
   Uintah::Parallel::finalizeManager();
   Parallel::exitAll(2);
 }
@@ -146,7 +147,7 @@ static void usage( const std::string& message,
                    const std::string& progname )
 {
   start();
-  
+
   if (Uintah::Parallel::getMPIRank() == 0) {
     std::cerr << "\n";
     if (badarg != "") {
@@ -158,28 +159,31 @@ static void usage( const std::string& message,
     std::cerr << "\n";
     std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     std::cerr << "Valid options are:\n";
-    std::cerr << "-h[elp]              : This usage information\n";
+    std::cerr << "-copy                : Copy from old uda when restarting\n";
     std::cerr << "-d[ebug]             : List the debug streams\n";
+    std::cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+    std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
+    std::cerr << "-gitDiff             : runs git diff <src/...../Packages/Uintah \n";
+    std::cerr << "-gitStatus           : runs git status & git log -1 <src/...../Packages/Uintah \n";
 #ifdef HAVE_CUDA
     std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
     std::cerr << "-gpucheck            : returns 1 if sus was compiled with CUDA and there is a GPU available. \n";
     std::cerr << "                     : returns 2 if sus was not compiled with CUDA or there are no GPUs available. \n";
-    std::cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-h[elp]              : This usage information\n";
     std::cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
-    std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
-    std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-    std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
-    std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
-    std::cerr << "-t <index>           : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
-    std::cerr << "-gitDiff             : runs git diff <src/...../Packages/Uintah \n";
-    std::cerr << "-gitStatus           : runs git status & git log -1 <src/...../Packages/Uintah \n";
-    std::cerr << "-copy                : Copy from old uda when restarting\n";
     std::cerr << "-move                : Move from old uda when restarting\n";
     std::cerr << "-nocopy              : Default: Don't copy or move old uda timestep when restarting\n";
+    std::cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
+    std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
+    std::cerr << "-t <index>           : Index of the checkpoint file (default is the last checkpoint, 0 for the first checkpoint file)\n";
+    std::cerr << "-configCmd           : Display the configure command used to compile Uintah.\n";
+    std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
+    std::cerr << "-version             : Display git and configure information.\n";
     std::cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
-    std::cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+
 #ifdef HAVE_VISIT
     std::cerr << "\n";
     std::cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
@@ -196,7 +200,56 @@ static void usage( const std::string& message,
   quit();
 }
 
+//______________________________________________________________________
+//
+void display_git_info( const bool show_gitDiff,
+                       const bool show_gitStatus )
+{
+  // Run git commands Uintah
+  std::cout << "git branch:"  << GIT_BRANCH << "\n";
+  std::cout << "git date:   " << GIT_DATE << "\n";
+  std::cout << "git hash:   " << GIT_HASH << "\n";
 
+  if ( show_gitDiff || show_gitStatus ) {
+    std::cout << "____GIT_____________________________________________________________\n";
+    std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
+
+    if (show_gitDiff) {
+      std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
+      std::cout << "\n__________________________________git diff\n";
+      std::system(cmd.c_str());
+    }
+
+    if (show_gitStatus) {
+      std::string cmd = "cd " + sdir + "; git status  --branch --short";
+      std::cout << "\n__________________________________git status --branch --short\n";
+      std::system(cmd.c_str());
+
+      cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\" | cat";
+      std::cout << "\n__________________________________git log -1\n";
+      std::system(cmd.c_str());
+    }
+    std::cout << "____GIT_______________________________________________________________\n";
+  }
+}
+
+//______________________________________________________________________
+//  Display the configure command
+
+void display_config_info(const bool show_configCmd)
+{
+  if ( show_configCmd ){
+
+    std::string odir = std::string(sci_getenv("SCIRUN_OBJDIR"));
+    std::string cmd = "cd " + odir + "; sed -n '7'p config.log ";
+    std::cout << "\n__________________________________Configure Command\n";
+    std::system(cmd.c_str());
+    std::cout << "\n__________________________________\n";
+
+  }
+}
+//______________________________________________________________________
+//
 void sanityChecks()
 {
 #if defined( DISABLE_SCI_MALLOC )
@@ -242,22 +295,26 @@ int main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
+
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
-  bool   restart             = false;
+  bool   onlyValidateUps     = false;
   bool   postProcessUda      = false;
-  bool   do_gitDiff          = false;
-  bool   do_gitStatus        = false;
+  bool   restart             = false;
   bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
+  bool   show_configCmd      = false;
+  bool   show_gitDiff        = false;
+  bool   show_gitStatus      = false;
+  bool   show_version        = false;
   bool   validateUps         = true;
-  bool   onlyValidateUps     = false;
 
-  int    restartCheckpointIndex     = -1;
-  int    udaSuffix           = -1;
-  int    numThreads          =  0;
   int    numPartitions       =  0;
+  int    numThreads          =  0;
+  int    restartCheckpointIndex     = -1;
   int    threadsPerPartition =  0;
+  int    udaSuffix           = -1;
+
 
   std::string udaDir;       // for restart
   std::string filename;     // name of the UDA directory
@@ -276,6 +333,8 @@ int main( int argc, char *argv[], char *env[] )
    */
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
+    std::string ARG = string_toupper(arg);
+
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
     }
@@ -384,7 +443,8 @@ int main( int argc, char *argv[], char *env[] )
       int retVal = UnifiedScheduler::verifyAnyGpuActive();
       if (retVal == 1) {
         std::cout << "At least one GPU detected!" << std::endl;
-      } else {
+      }
+      else {
         std::cout << "No GPU detected!" << std::endl;
       }
       Parallel::exitAll(retVal);
@@ -413,11 +473,14 @@ int main( int argc, char *argv[], char *env[] )
       }
       layout = IntVector(ii, jj, kk);
     }
+    else if (arg == "-configCmd") {
+      show_configCmd = true;
+    }
     else if (arg == "-gitDiff") {
-      do_gitDiff = true;
+      show_gitDiff = true;
     }
     else if (arg == "-gitStatus") {
-      do_gitStatus = true;
+      show_gitStatus = true;
     }
     else if (arg == "-validate") {
       onlyValidateUps = true;
@@ -427,6 +490,12 @@ int main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-postProcessUda" || arg == "-PostProcessUda") {
       postProcessUda = true;
+    }
+    else if (ARG == "-VERSION" || ARG == "-V") {
+      show_configCmd   = true;
+      show_gitStatus   = true;
+      show_gitDiff     = true;
+      show_version     = true;
     }
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
@@ -440,8 +509,9 @@ int main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide file name for -visit", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_connect" ) {
       do_VisIt = VISIT_SIMMODE_STOPPED;
@@ -453,36 +523,41 @@ int main( int argc, char *argv[], char *env[] )
       if (++i == argc) {
         usage("You must provide a string for -visit_comment", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_options" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_options", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
     else if (arg == "-visit_ui" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_ui", arg, argv[0]);
       }
-      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN )
+      else if( do_VisIt == VISIT_SIMMODE_UNKNOWN ){
         do_VisIt = VISIT_SIMMODE_RUNNING;
+      }
     }
 #endif
     else {
@@ -500,11 +575,11 @@ int main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
+
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, nullptr, true );
 
-  if( filename == "" ) {
+  if( filename == "" && show_version == false) {
     usage("No input file specified", "", argv[0]);
   }
 
@@ -563,6 +638,8 @@ int main( int argc, char *argv[], char *env[] )
     //mallocTraceInfo.setTracingState( false );
 #endif
 
+    //__________________________________
+    //  output header
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
       time_t t = time(nullptr);
@@ -572,35 +649,18 @@ int main( int argc, char *argv[], char *env[] )
 
       std::cout << "Date:       " << time_string;  // has its own newline
       std::cout << "Machine:    " << name << "\n";
-      std::cout << "git branch:"  << GIT_BRANCH << "\n";
-      std::cout << "git date:   " << GIT_DATE << "\n";
-      std::cout << "git hash:   " << GIT_HASH << "\n";
       std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       std::cout << "CFLAGS:          " << CFLAGS << "\n";
       std::cout << "CXXFLAGS:        " << CXXFLAGS << "\n";
-      std::cout << "______________________________________________________________________\n";
-      // Run git commands Uintah 
-      if ( do_gitDiff || do_gitStatus ) {
-        std::cout << "____GIT_____________________________________________________________\n";
-        std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
 
-        if (do_gitDiff) {
-          std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
-          std::cout << "\n__________________________________git diff\n";
-          std::system(cmd.c_str());
-        }
+      display_git_info( show_gitDiff, show_gitStatus);
 
-        if (do_gitStatus) {
-          std::string cmd = "cd " + sdir + "; git status  --branch --short";
-          std::cout << "\n__________________________________git status --branch --short\n";
-          std::system(cmd.c_str());
+      display_config_info( show_configCmd );
 
-          cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\" | cat";
-          std::cout << "\n__________________________________git log -1\n";
-          std::system(cmd.c_str());
-        }
-        std::cout << "____GIT_______________________________________________________________\n";
+      if( show_version ){
+        quit();
       }
+
     }
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );
@@ -639,6 +699,7 @@ int main( int argc, char *argv[], char *env[] )
       // instead of a UPS file.
       proc0cout   << "\n";
       proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+
       if( validDir( filename ) ) {
         proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
       }
@@ -684,7 +745,7 @@ int main( int argc, char *argv[], char *env[] )
 
         if( title.size() )
         {
-          // Have the title so pass that into the libsim 
+          // Have the title so pass that into the libsim
           char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
 
           if (new_argv != nullptr)
@@ -706,7 +767,7 @@ int main( int argc, char *argv[], char *env[] )
         }
       }
 
-      visit_LibSimArguments( argc, argv );      
+      visit_LibSimArguments( argc, argv );
     }
 #endif
 
@@ -723,7 +784,7 @@ int main( int argc, char *argv[], char *env[] )
     if ( postProcessUda ) {
       simController->setPostProcessFlags();
     }
-    
+
 #ifdef HAVE_VISIT
     simController->setVisIt( do_VisIt );
 #endif
@@ -731,12 +792,12 @@ int main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Component and application interface
     UintahParallelComponent* appComp = ApplicationFactory::create( ups, world, nullptr, udaDir );
-    
+
     ApplicationInterface* application = dynamic_cast<ApplicationInterface*>(appComp);
 
     // Read the UPS file to get the general application details.
     application->problemSetup( ups );
-    
+
 #ifdef HAVE_VISIT
     application->setVisIt( do_VisIt );
 #endif
@@ -753,7 +814,7 @@ int main( int argc, char *argv[], char *env[] )
     SolverInterface * solver = SolverFactory::create( ups, world, solverName );
 
     UintahParallelComponent* solverComp = dynamic_cast<UintahParallelComponent*>(solver);
-    
+
     appComp->attachPort( "solver", solver );
     solverComp->attachPort( "application", application );
 
@@ -772,14 +833,14 @@ int main( int argc, char *argv[], char *env[] )
 
     scheduler->attachPort( "load balancer", loadBalancer );
     scheduler->attachPort( "application", application );
-    
+
     appComp->attachPort( "scheduler", scheduler );
     simController->attachPort( "scheduler", scheduler );
     loadBalancer->attachPort( "scheduler", scheduler );
 
     scheduler->setStartAddr( start_addr );
     scheduler->addReference();
-    
+
     if ( emit_graphs ) {
       scheduler->doEmitTaskGraphDocs();
     }
@@ -790,7 +851,7 @@ int main( int argc, char *argv[], char *env[] )
 
     dataArchiver->attachPort( "application", application );
     dataArchiver->attachPort( "load balancer", loadBalancer );
-    
+
     dataArchiver->setUseLocalFileSystems( local_filesystem );
 
     simController->attachPort( "output", dataArchiver );
@@ -828,14 +889,14 @@ int main( int argc, char *argv[], char *env[] )
 
     appComp->getComponents();
     simController->getComponents();
-    
+
     //__________________________________
     // Start the simulation controller
     if ( restart ) {
       simController->doRestart( udaDir, restartCheckpointIndex,
                                 restartFromScratch, restartRemoveOldDir );
     }
-    
+
     // This gives memory held by the 'ups' back before the simulation
     // starts... Assuming no one else is holding on to it...
     ups = nullptr;
@@ -863,11 +924,11 @@ int main( int argc, char *argv[], char *env[] )
     delete dataArchiver;
     delete scheduler;
     delete loadBalancer;
-    delete solver;   
+    delete solver;
     delete application;
     delete simController;
   }
-  
+
   catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     std::lock_guard<Uintah::MasterLock> cerr_guard(cerr_mutex);
@@ -912,7 +973,7 @@ int main( int argc, char *argv[], char *env[] )
     std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     thrownException = true;
   }
-  
+
   Uintah::TypeDescription::deleteAll();
 
   /*
