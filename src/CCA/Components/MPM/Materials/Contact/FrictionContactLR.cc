@@ -173,7 +173,7 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
               // If that separation is negative, the matls have overlapped
-              if(separation <= 0.0 && fabs(separation) < 50.){
+              if(separation <= 0.0){
 //              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
@@ -190,6 +190,7 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
                  // Calculate velocity change needed to enforce contact
                  Dv = -normal_normaldV
                    -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+
 #if 0
                 // Define contact algorithm imposed strain, find maximum
                 Vector epsilon=(Dv/dx)*delT;
@@ -204,21 +205,9 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
                    Dv=Dv*ff;
                 }
 #endif 
-                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
 //                Dv=Dv*ff;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
-#if 0
-                 if(Dv.length() > 0.0){
-                   cout << "Dv = " << Dv << endl;
-                   cout << "DvAlpha = " << DvAlpha << endl;
-                   cout << "separation = " << separation << endl;
-                   cout << "node = " << c << endl;
-                   cout << "beta = " << n << endl;
-                   cout << "normAlphaToBeta[c] = " << normAlphaToBeta[c] << endl << endl;
-                   cout << "gmassN = " << gmass[n][c] << endl << endl;
-                   cout << "gmassAlpha = " << gmass[alpha][c] << endl << endl;
-                 }
-#endif
                 gvelocity[n][c]    +=Dv;
                 gvelocity[alpha][c]+=DvAlpha;
               } // if (relative velocity) * normal < 0
@@ -311,8 +300,7 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
             if(mass>1.e-16){
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
-//              if(separation <= 0.0){
-              if(separation <= 0.0 && fabs(separation) < 50.){
+              if(separation <= 0.0){
 //              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
@@ -344,7 +332,7 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
                   Dv=Dv*ff;
                 }
 #endif 
-                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
 //                Dv=Dv*ff;
                 gvelocity_star[n][c]    +=Dv;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
