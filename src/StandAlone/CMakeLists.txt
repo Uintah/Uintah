@@ -40,10 +40,13 @@ add_custom_target( scripts_link ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_SOURCE_DIR}/scripts ${CMAKE_CURRENT_BINARY_DIR}/scripts
     )
 add_custom_target( extract_link ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink lineextract ${CMAKE_BINARY_DIR}/StandAlone/lineextract
-    COMMAND ${CMAKE_COMMAND} -E create_symlink timeextract ${CMAKE_BINARY_DIR}/StandAlone/timeextract
-    COMMAND ${CMAKE_COMMAND} -E create_symlink partextract ${CMAKE_BINARY_DIR}/StandAlone/partextract
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/StandAlone//tools/lineextract lineextract
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/StandAlone//tools/timeextract timeextract
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/StandAlone//tools/partextract partextract
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS lineextract timeextract partextract
     )
 add_custom_target( puda_link ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink puda ${CMAKE_CURRENT_BINARY_DIR}/puda)
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/tools/puda puda
+    DEPENDS puda
+    )
