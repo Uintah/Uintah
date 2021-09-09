@@ -60,7 +60,11 @@ endif()
 # Check for ENDIAN-ness of the platform -- https://cmake.org/cmake/help/latest/module/TestBigEndian.html
 include( TestBigEndian )
 test_big_endian( ENDIAN )
-set( BIG_ENDIAN ${ENDIAN} CACHE INTERNAL "Is this platform big endian?" )
+if( ${ENDIAN} )
+    set( PLATFORM_IS_BIG_ENDIAN TRUE )
+else()
+    set( PLATFORM_IS_LITTLE_ENDIAN TRUE )
+endif()
 #----------------------------------------------------------
 
 #----------------------------------------------------------

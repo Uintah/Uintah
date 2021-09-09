@@ -88,7 +88,7 @@ void swapbytes(FILE* &i);
 void swapbytes(double* &i);
 
 inline bool isBigEndian() {
-#   ifdef BIG_ENDIAN
+#   ifdef PLATFORM_IS_BIG_ENDIAN
     return true;
 #   else
     return false;
@@ -96,7 +96,7 @@ inline bool isBigEndian() {
 }
 
 inline bool isLittleEndian() {
-#   ifdef BIG_ENDIAN
+#   ifdef PLATFORM_IS_BIG_ENDIAN
     return false;
 #   else
     return true;

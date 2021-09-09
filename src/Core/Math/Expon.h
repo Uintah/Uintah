@@ -36,6 +36,7 @@
 
 #ifndef SCI_Math_Expon_h
 #define SCI_Math_Expon_h 1
+#include <sci_defs/config_defs.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 #include <map>
@@ -252,7 +253,7 @@ namespace Uintah {
         ASSERTRANGE( y, -700, 700);
         union{
           double d;
-      #ifdef LITTLE_ENDIAN
+      #ifdef PLATFORM_IS_LITTLE_ENDIAN
           struct{
             int j;
             int i;

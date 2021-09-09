@@ -4,6 +4,10 @@
 /* define if the compiler supports basic C++11 syntax. We currently require this of our compilers */
 #define HAVE_CXX11
 
+/* set the endian-ness of this platform */
+#cmakedefine PLATFORM_IS_BIG_ENDIAN
+#cmakedefine PLATFORM_IS_LITTLE_ENDIAN
+
 /* Defined if you have the <ext/algorithm> header file. */
 #cmakedefine HAVE_EXT_ALGORITHM
 
