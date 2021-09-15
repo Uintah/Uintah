@@ -44,9 +44,9 @@ namespace Uintah {
     ComputeSet
 
     Provides similar functionality to std::set.  An exception is that
-    a ComputeSet stores data in groups of ComputeSubsets.   
+    a ComputeSet stores data in groups of ComputeSubsets.
 
-    A ComputeSubset is much more similar to a std::set and provides 
+    A ComputeSubset is much more similar to a std::set and provides
     functionality necessary for ComputeSet.
 
     GENERAL INFORMATION
@@ -79,6 +79,8 @@ typedef ComputeSet<int>             MaterialSet;
 typedef ComputeSubset<const Patch*> PatchSubset;
 typedef ComputeSubset<int>          MaterialSubset;
 
+//______________________________________________________________________
+//    ComputeSubSet Prototypes
 template<class T>
 class ComputeSubset : public RefCounted {
 public:
@@ -90,27 +92,34 @@ public:
 
   int size() const { return (int)items.size(); }
 
-        T& operator[](int i)       { return items[i]; }
+  T& operator[](int i) { return items[i]; }
+
   const T& operator[](int i) const { return items[i]; }
 
-  const T&   get( int i ) const { return items[i]; }
-        void add( const T& i ) { items.push_back(i); }
-        bool empty() const { return items.size() == 0; }
-        bool contains( T elem ) const {
-          for( int i = 0; i < (int)items.size(); i++ ) {
-            if( items[i] == elem ) {
-              return true;
-            }
-          }
-          return false;
-        }
+  const T& get( int i ) const { return items[i]; }
+
+  void add( const T& i ) { items.push_back(i); }
+
+  bool empty() const { return items.size() == 0; }
+
+  bool contains( T elem ) const
+  {
+    for( int i = 0; i < (int)items.size(); i++ ) {
+      if( items[i] == elem ) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   void sort();
+
   bool is_sorted() const;
 
   const std::vector<T>& getVector() const { return items; }
 
-  bool equals(const ComputeSubset<T>* s2) const {
+  bool equals(const ComputeSubset<T>* s2) const
+  {
     // Check that the sets are equivalent
     if(items.size() != s2->items.size()) {
       return false;
@@ -132,7 +141,7 @@ public:
   intersection( const constHandle< ComputeSubset<T> >& s1,
                 const constHandle< ComputeSubset<T> >& s2);
 
-  // May pass back Handles to same sets that came in.    
+  // May pass back Handles to same sets that came in.
   static void
   intersectionAndDifferences( const constHandle< ComputeSubset<T> >& A,
                               const constHandle< ComputeSubset<T> >& B,
@@ -142,20 +151,21 @@ public:
   {
     intersection = intersectionAndMaybeDifferences<true>( A, B, AminusB, BminusA );
   }
-        
-  static void 
+
+  static void
   difference( const constHandle< ComputeSubset<T> >& A,
               const constHandle< ComputeSubset<T> >& B,
               constHandle< ComputeSubset<T> >& diff) { diff = difference(A,B); }
 
-        
   static bool overlaps( const ComputeSubset<T>* s1,
                         const ComputeSubset<T>* s2 );
 
   static bool compareElems( const T e1, const T e2 );
 
+//__________________________________
+//
 private:
-        
+
   // May pass back Handles to same sets that came in.
   template <bool passBackDifferences>
   static constHandle< ComputeSubset<T> >
@@ -163,16 +173,19 @@ private:
                                    const constHandle< ComputeSubset<T> >& s2,
                                    constHandle< ComputeSubset<T> >& setDifference1,
                                    constHandle< ComputeSubset<T> >& setDifference2 );
-        
+
   static constHandle< ComputeSubset<T> >
   difference( const constHandle< ComputeSubset<T> >& A,
               const constHandle< ComputeSubset<T> >& B );
-        
+
   std::vector<T> items;
 
   ComputeSubset( const ComputeSubset& );
   ComputeSubset& operator=( const ComputeSubset& );
 };  // end class ComputeSubset
+
+//______________________________________________________________________
+//    ComputeSet Prototypes
 
 template<class T>
 class ComputeSet : public RefCounted {
@@ -182,7 +195,7 @@ public:
 
   // Adds all unique elements of vector in one subset
   void addAll_unique(const std::vector<T>&);
-        
+
   // Adds all elements of vector in one subset
   void addAll(const std::vector<T>&);
 
@@ -195,13 +208,14 @@ public:
   void sortSubsets();
 
   int size() const { return (int)d_set.size(); }
-            
+
   ComputeSubset<T>* getSubset(int idx) { return d_set[idx]; }
-      
+
   /// Returns the vector of subsets managed by this set
   const std::vector<ComputeSubset<T>*>& getVector() const { return d_set; }
-      
+
   const ComputeSubset<T>* getSubset(int idx) const { return d_set[idx]; }
+
   const ComputeSubset<T>* getUnion() const;
 
   void createEmptySubsets(int size);
@@ -221,16 +235,26 @@ private:
 
 };  // end class ComputeSet
 
+//______________________________________________________________________
+//
 std::ostream& operator<<(std::ostream& out, const PatchSet&);
 std::ostream& operator<<(std::ostream& out, const MaterialSet&);
 std::ostream& operator<<(std::ostream& out, const PatchSubset&);
 std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
+
+//______________________________________________________________________
+//    ComputeSet methods
+//______________________________________________________________________
+//
 template<class T>
 ComputeSet<T>::ComputeSet() { d_un = nullptr; }
 
+//______________________________________________________________________
+//
 template<class T>
-ComputeSet<T>::~ComputeSet() {
+ComputeSet<T>::~ComputeSet()
+{
   for (int i = 0; i < (int)d_set.size(); i++) {
     if (d_set[i] && d_set[i]->removeReference()) {
       delete d_set[i];
@@ -238,12 +262,15 @@ ComputeSet<T>::~ComputeSet() {
   }
   if (d_un && d_un->removeReference()) {
     delete d_un;
-  }    
+  }
 }
 
+//______________________________________________________________________
+// Adds all elements of vector in one subset
 template<class T>
 void
-ComputeSet<T>::addAll( const std::vector<T>& sub ) {
+ComputeSet<T>::addAll( const std::vector<T>& sub )
+{
   ASSERT(!d_un);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
   subset->sort();
@@ -251,9 +278,12 @@ ComputeSet<T>::addAll( const std::vector<T>& sub ) {
   d_set.push_back( subset );
 }
 
+//______________________________________________________________________
+// Adds all unique elements of vector in one subset
 template<class T>
 void
-ComputeSet<T>::addAll_unique( const std::vector<T>& sub ) {
+ComputeSet<T>::addAll_unique( const std::vector<T>& sub )
+{
   // Only insert unique entries into the set
   std::vector<T> sub_unique;
   sub_unique.push_back( sub[0] );
@@ -263,7 +293,7 @@ ComputeSet<T>::addAll_unique( const std::vector<T>& sub ) {
       sub_unique.push_back( sub[i] );
     }
   }
-      
+
   ASSERT(!d_un);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub_unique);
   subset->sort();
@@ -271,9 +301,12 @@ ComputeSet<T>::addAll_unique( const std::vector<T>& sub ) {
   d_set.push_back(subset);
 }
 
+//______________________________________________________________________
+//
 template<class T>
 void
-ComputeSet<T>::addEach( const std::vector<T>& sub ) {
+ComputeSet<T>::addEach( const std::vector<T>& sub )
+{
   ASSERT(!d_un);
   for(int i=0;i<(int)sub.size();i++){
     ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
@@ -282,10 +315,12 @@ ComputeSet<T>::addEach( const std::vector<T>& sub ) {
     d_set.push_back(subset);
   }
 }
-
+//______________________________________________________________________
+//
 template<class T>
 void
-ComputeSet<T>::add( const T& item ) {
+ComputeSet<T>::add( const T& item )
+{
   ASSERT(!d_un);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
   subset->addReference();
@@ -293,18 +328,24 @@ ComputeSet<T>::add( const T& item ) {
   d_set.push_back(subset);
 }
 
+//______________________________________________________________________
+//
 template<class T>
 void
-ComputeSet<T>::sortSubsets() {
+ComputeSet<T>::sortSubsets()
+{
   for(int i=0;i<(int)d_set.size();i++){
     ComputeSubset<T>* ss = d_set[i];
     ss->sort();
   }
 }
 
+//______________________________________________________________________
+//
 template<class T>
 void
-ComputeSet<T>::createEmptySubsets( int n ) {
+ComputeSet<T>::createEmptySubsets( int n )
+{
   ASSERT(!d_un);
   for( int i=0; i < n; i++ ) {
     ComputeSubset<T>* subset = scinew ComputeSubset<T>(0);
@@ -313,9 +354,12 @@ ComputeSet<T>::createEmptySubsets( int n ) {
   }
 }
 
+//______________________________________________________________________
+//
 template<class T>
 const ComputeSubset<T>*
-ComputeSet<T>::getUnion() const {
+ComputeSet<T>::getUnion() const
+{
   if( !d_un ){
     d_un = scinew ComputeSubset<T>;
     d_un->addReference();
@@ -330,9 +374,12 @@ ComputeSet<T>::getUnion() const {
   return d_un;
 }
 
+//______________________________________________________________________
+//
 template<class T>
 int
-ComputeSet<T>::totalsize() const {
+ComputeSet<T>::totalsize() const
+{
   if(d_un) {
     return d_un->size();
   }
@@ -343,6 +390,10 @@ ComputeSet<T>::totalsize() const {
   return total;
 }
 
+//______________________________________________________________________
+//    ComputeSubSet methods
+//______________________________________________________________________
+//
 // Note: sort is specialized in ComputeSet_special for const Patch*'s
 // to use Patch::Compare.
 template<>
@@ -354,7 +405,7 @@ void
 ComputeSubset<T>::sort() { std::sort(items.begin(), items.end()); }
 
 // specialized for patch in ComputeSet_special.cc
-template<>  
+template<>
 bool
 ComputeSubset<const Patch*>::compareElems( const Patch* e1, const Patch* e2 );
 
@@ -362,12 +413,16 @@ template<class T>
 bool
 ComputeSubset<T>::compareElems( const T e1, const T e2 ) { return e1 < e2; }
 
+
+//______________________________________________________________________
 // Compute the intersection between s1 and s2
 template<class T>
 constHandle< ComputeSubset<T> >
-ComputeSubset<T>::intersection( const constHandle< ComputeSubset<T> >& s1, const constHandle< ComputeSubset<T> >& s2 ) {
+ComputeSubset<T>::intersection( const constHandle< ComputeSubset<T> >& s1,
+                                const constHandle< ComputeSubset<T> >& s2 )
+{
   if (s1 == s2) {
-    // for efficiency -- expedite when s1 and s2 point to the same thing 
+    // for efficiency -- expedite when s1 and s2 point to the same thing
     return s1;
   }
 
@@ -401,7 +456,7 @@ ComputeSubset<T>::intersection( const constHandle< ComputeSubset<T> >& s1, const
     if(!compareElems(el2, el)) {
       std::ostringstream msgstr;
       msgstr << "Set not sorted: " << el2 << ", " << el;
-      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
+      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
     }
     el2=el;
   }
@@ -425,20 +480,23 @@ ComputeSubset<T>::intersection( const constHandle< ComputeSubset<T> >& s1, const
   return intersection;
 }
 
+//______________________________________________________________________
+//
 template<class T>
 template<bool passBackDifferences>
 constHandle< ComputeSubset<T> >
 ComputeSubset<T>::intersectionAndMaybeDifferences( const constHandle< ComputeSubset<T> >& s1,
                                                    const constHandle< ComputeSubset<T> >& s2,
                                                    constHandle< ComputeSubset<T> >& setDifference1,
-                                                   constHandle< ComputeSubset<T> >& setDifference2 ) {
+                                                   constHandle< ComputeSubset<T> >& setDifference2 )
+{
   if (s1 == s2) {
-    // for efficiency -- expedite when s1 and s2 point to the same thing 
+    // for efficiency -- expedite when s1 and s2 point to the same thing
     setDifference1 = setDifference2 = scinew ComputeSubset<T>(0);
     return s1;
   }
 
-  if (passBackDifferences) {      
+  if (passBackDifferences) {
     setDifference1 = s1;
     setDifference2 = s2;
   }
@@ -460,9 +518,9 @@ ComputeSubset<T>::intersectionAndMaybeDifferences( const constHandle< ComputeSub
   }
 
   Handle< ComputeSubset<T> > intersection = scinew ComputeSubset<T>;
-  Handle< ComputeSubset<T> > s1_minus_s2, s2_minus_s1;        
+  Handle< ComputeSubset<T> > s1_minus_s2, s2_minus_s1;
 
-  if (passBackDifferences) {      
+  if (passBackDifferences) {
     setDifference1 = s1_minus_s2 = scinew ComputeSubset<T>;
     setDifference2 = s2_minus_s1 = scinew ComputeSubset<T>;
   }
@@ -481,7 +539,7 @@ ComputeSubset<T>::intersectionAndMaybeDifferences( const constHandle< ComputeSub
     if(!compareElems(el2, el)) {
       std::ostringstream msgstr;
       msgstr << "Set not sorted: " << el2 << ", " << el;
-      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
+      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
     }
     el2=el;
   }
@@ -502,7 +560,7 @@ ComputeSubset<T>::intersectionAndMaybeDifferences( const constHandle< ComputeSub
     else {
       if (passBackDifferences) {
         s2_minus_s1->add(s2->get(i2)); // alters setDifference2
-      }  
+      }
       i2++;
     }
     if(i1 == s1->size() || i2 == s2->size()) {
@@ -538,11 +596,14 @@ ComputeSubset<T>::intersectionAndMaybeDifferences( const constHandle< ComputeSub
     return intersection;
   }
 }
-  
+
+//______________________________________________________________________
+//
 template<class T>
 constHandle< ComputeSubset<T> >
 ComputeSubset<T>::difference( const constHandle< ComputeSubset<T> >& s1,
-                              const constHandle< ComputeSubset<T> >& s2) {
+                              const constHandle< ComputeSubset<T> >& s2)
+{
   if (s1 == s2 || !s1 || !s2) {
     // for efficiency -- expedite when s1 and s2 point to the same thing or are null
     return Handle< ComputeSubset<T> >(scinew ComputeSubset<T>);
@@ -566,12 +627,12 @@ ComputeSubset<T>::difference( const constHandle< ComputeSubset<T> >& s1,
     if(!compareElems(el2, el)) {
       std::ostringstream msgstr;
       msgstr << "Set not sorted: " << el2 << ", " << el;
-      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
+      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
     }
     el2=el;
   }
 #endif
-      
+
   Handle< ComputeSubset<T> > diff = scinew ComputeSubset<T>;
 
   int i1=0;
@@ -603,10 +664,13 @@ ComputeSubset<T>::difference( const constHandle< ComputeSubset<T> >& s1,
   return diff;
 }
 
+//______________________________________________________________________
+//
 template<class T>
 bool
 ComputeSubset<T>::overlaps( const ComputeSubset<T>* s1,
-                            const ComputeSubset<T>* s2) {
+                            const ComputeSubset<T>* s2)
+{
   if (s1 == s2) {
     return true;
   }
@@ -637,9 +701,12 @@ ComputeSubset<T>::overlaps( const ComputeSubset<T>* s1,
   return false;
 }
 
+//______________________________________________________________________
+//
 template<class T>
 bool
-ComputeSubset<T>::is_sorted() const {
+ComputeSubset<T>::is_sorted() const
+{
   for(int i=1;i<size();++i){
     if(!compareElems(get(i-1),get(i))) {
       return false;
