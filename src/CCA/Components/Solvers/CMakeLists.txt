@@ -1,15 +1,15 @@
 unset( OTHER_SRC )
 if( HAVE_HYPRE )
-    set( OTHER_SRC HypreSolver.cc )
-    set( OTHER_LIBS CCA_Components_Solvers_AMR )
-    add_subdirectory( AMR )
+    set( HYPRE_SRC HypreSolver.cc )
+    set( HYPRE_LIBS HYPRE::HYPRE )
+    add_subdirectory( AMR )  # collect more files into the HYPRE_SRC list for inclusion here
 endif()
 
 add_library( CCA_Components_Solvers
         CGSolver.cc
         SolverCommon.cc
         SolverFactory.cc
-        ${OTHER_SRC}
+        ${HYPRE_SRC}
     )
 
 target_link_libraries( CCA_Components_Solvers
@@ -20,7 +20,7 @@ target_link_libraries( CCA_Components_Solvers
         Core_Math
         Core_Parallel
         Core_Util
-        ${OTHER_LIBS}
+        ${HYPRE_LIBS}
         ${LAPACK_LIBRARIES}
         ${BLAS_LIBRARIES}
     )

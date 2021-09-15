@@ -21,6 +21,7 @@ set( SRCS
 
 if( HAVE_HYPRE )
     set( SRCS ${SRCS} SolverTest2.cc )
+    set( HYPRE_DEPS HYPRE::HYPRE )
 endif()
 
 if( BUILD_MODELS_RADIATION )
@@ -40,4 +41,5 @@ target_link_libraries( CCA_Components_Examples
         CCA_Components_Models
         CCA_Components_Application
         Core_GeometryPiece
+        ${HYPRE_DEPS}
     )

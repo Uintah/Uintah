@@ -6,9 +6,9 @@ import os,sys
 
 def compileUintah(num):
     
-    print "Executing: make cleanreally twice"
-    os.system('make cleanreally')
-    os.system('make cleanreally')
+    print "Executing: make clean twice"
+    os.system('make clean')
+    os.system('make clean')
 
     print "Executing: make -j %s" % str(num)
     make_command='make -j' + str(num)

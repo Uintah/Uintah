@@ -372,7 +372,7 @@ def generateGS() :
                     print( "" )
                     print( "WARNING!!! The build was not built with SCI Malloc on...  Memory tests will not be run." )
                     print( "WARNING!!! If you wish to perform memory checks, you must re-configure your debug build" )
-                    print( "WARNING!!! with '--enable-sci-malloc', run 'make cleanreally', and re-compile everything." )
+                    print( "WARNING!!! with '--enable-sci-malloc', run 'make clean', and re-compile everything." )
                     print( "" )
                 else :
                     os.environ['MALLOC_STRICT'] = "set"
