@@ -7,10 +7,15 @@ target_link_libraries( compare_uda UintahCore )
 #------------------------------ BUILD SUS -------------------------------
 add_executable( sus sus.cc )
 
+if( HAVE_VISIT )
+  set( VISIT_INTERFACE VisIt_libsim )
+endif()
+
 target_link_libraries( sus
         UintahCore
         CCA_Ports
         Component_Libs
+        ${VISIT_INTERFACE}
     )
 
 # ensure symlinks are generated when sus is built

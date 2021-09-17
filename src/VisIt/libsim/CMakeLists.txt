@@ -16,7 +16,7 @@ target_link_libraries( VisIt_libsim
       VISIT::VISIT
     )
 
-target_include_directories( Core_Containers
+target_include_directories( VisIt_libsim
     PUBLIC
       ${CMAKE_BINARY_DIR}/include
       ${CMAKE_CURRENT_SOURCE_DIR}
