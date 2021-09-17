@@ -13,6 +13,7 @@ target_link_libraries( VisIt_libsim
       Core_Grid
       Core_Parallel
       Core_Util
+      VisIt_interfaces
       VISIT::VISIT
     )
 
