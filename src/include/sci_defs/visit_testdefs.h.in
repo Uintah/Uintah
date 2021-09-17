@@ -26,7 +26,7 @@
 #define SCI_VISIT_DEFS_H
 
 #cmakedefine HAVE_VISIT
-@VISIT_PATH@  // jcs fix this.
+#define VISIT_PATH ((char*)"@VISIT_INCLUDE_DIRS@/../")
 
 #endif
 

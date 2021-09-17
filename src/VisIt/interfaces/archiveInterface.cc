@@ -61,7 +61,7 @@ namespace {
 
 /////////////////////////////////////////////////////////////////////
 // Open a data archive.
-extern "C"
+//extern "C"
 DataArchive* openDataArchive(const std::string& input_uda_name)
 {
   // DOUT(dbgOut, "openDataArchive" );
@@ -75,7 +75,7 @@ DataArchive* openDataArchive(const std::string& input_uda_name)
 /////////////////////////////////////////////////////////////////////
 // Close a data archive - the visit plugin itself doesn't know about
 // DataArchive::~DataArchive().
-extern "C"
+//extern "C"
 void closeDataArchive(DataArchive *archive)
 {
   // DOUT(dbgOut, "closeDataArchive" );
@@ -89,7 +89,7 @@ void closeDataArchive(DataArchive *archive)
 // it over and over.  We return a pointer to the GridP since the 
 // visit plugin doesn't actually know about Grid's (or GridP's), and
 // so the handle doesn't get destructed.
-extern "C"
+//extern "C"
 GridP* getGrid(DataArchive *archive, int timeStepNo)
 {
   std::ostringstream msg;
@@ -103,7 +103,7 @@ GridP* getGrid(DataArchive *archive, int timeStepNo)
 
 /////////////////////////////////////////////////////////////////////
 // Destruct the GridP, which will decrement the reference count.
-extern "C"
+//extern "C"
 void releaseGrid(GridP *grid)
 {
   // DOUT(dbgOut, "releaseGrid" );
@@ -114,7 +114,7 @@ void releaseGrid(GridP *grid)
 
 /////////////////////////////////////////////////////////////////////
 // Get the time for each cycle.
-extern "C"
+//extern "C"
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
   // DOUT(dbgOut, "getCycleTimes" );
@@ -132,7 +132,7 @@ std::vector<double> getCycleTimes(DataArchive *archive)
 
 /////////////////////////////////////////////////////////////////////
 // Get the time for each cycle.
-extern "C"
+//extern "C"
 unsigned int queryProcessors(DataArchive *archive)
 {
   // DOUT(dbgOut, "queryProcessors" );
@@ -150,7 +150,7 @@ unsigned int queryProcessors(DataArchive *archive)
 // Get all the information that may be needed for the current timestep,
 // including variable/material info, and level/patch info
 // This function uses the archive for file reading.
-extern "C"
+//extern "C"
 TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                               GridP *grid,
                               int timestep,
@@ -1015,7 +1015,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
 /////////////////////////////////////////////////////////////////////
 // Read the particle position name
 // This function uses the archive for file reading.
-extern "C"
+//extern "C"
 std::string getParticlePositionName(DataArchive *archive)
 {
   return archive->getParticlePositionName();

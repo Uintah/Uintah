@@ -36,6 +36,9 @@ if( ENABLE_UNIT_TESTS )
     add_subdirectory( testprograms )
 endif()
 add_subdirectory( tools )
+if( HAVE_VISIT )
+    add_subdirectory( VisIt )
+endif()
 
 # auto-generate header files for compilation.
 # Should be done after all system introspection and configuration is complete.

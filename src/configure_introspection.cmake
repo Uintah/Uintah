@@ -246,6 +246,23 @@ if( HYPRE_FOUND )
 endif()
 ##----------------------------- HYPRE --------------------------------
 
+##----------------------------- VISIT --------------------------------
+find_package( VISIT )
+if( VISIT_FOUND )
+    message( STATUS "VisIt:"
+        "\n\tInclude dir: ${VISIT_INCLUDE_DIRS}"
+        "\n\tLibrary: ${VISIT_LIBRARIES}"
+        )
+    set( HAVE_VISIT TRUE )
+else()
+    message( STATUS "VisIt was not found. "
+        "If you want to build VisIt extensions, specify"
+        "\n\t\tVISIT_DIR=[path to visit installation]"
+        "\n\twith the location of the VisIt installation"
+        )
+endif()
+##----------------------------- VISIT --------------------------------
+
 find_package( Threads REQUIRED )
 
 ##----------------------------- gperf --------------------------------
