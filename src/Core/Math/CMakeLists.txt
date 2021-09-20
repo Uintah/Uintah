@@ -34,10 +34,6 @@ target_link_libraries( Core_Math
         m
     )
 
-# jcs what is the yacc/lex stuff in here?
-
-# jcs  DL_LIBRARY F_LIBRARY
-
 target_include_directories( Core_Math
         PUBLIC
             ${CMAKE_SOURCE_DIR}

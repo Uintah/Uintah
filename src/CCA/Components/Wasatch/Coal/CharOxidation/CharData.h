@@ -55,52 +55,52 @@ namespace CHAR{
     CharOxidationData( const Coal::CoalType coalType=Coal::Pittsburgh_Bituminous );
 
 
-    const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
+    inline const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
 
     /**
      *  \brief returns \f$\varepsilon_{0}\f$ - initial porosity of coal particle
      */
-    double get_e0() const {return e0_;};
+    inline double get_e0() const {return e0_;};
 
     /**
      *  \brief returns \f$r_{pore}\f$ - mean pore radius (m)
      */
-    double get_r_pore() const {return rPore_;};
+    inline double get_r_pore() const {return rPore_;};
 
     /**
      *  \brief returns \f$S_{0}\f$ - internal surface area of initial char (m2/kg)
      */
-    double get_S_0() const {return s0_;};
+    inline double get_S_0() const {return s0_;};
 
     /**
       *  \brief returns Oxygen mass fraction of coal
       */
-    double get_O() const{ return o_;};
+    inline double get_O() const{ return o_;};
 
     /**
       *  \brief returns Carbon mass fraction of coal
       */
-    double get_C() const{ return c_;};
+    inline double get_C() const{ return c_;};
 
     /**
      * \brief Returns fixed carbon mass fraction of coal
      */
-    double get_fixed_C() const{ return fixedCarbon_;}
+    inline double get_fixed_C() const{ return fixedCarbon_;}
 
     /**
      * \brief Returns volatile mass fraction of coal
      */
-    double get_vm() const{ return volatiles_;}
+    inline double get_vm() const{ return volatiles_;}
 
     /**
       *  \brief returns selected coal type
       */
-    Coal::CoalType get_coal_type() const{ return sel_;};
+    inline Coal::CoalType get_coal_type() const{ return sel_;};
 
     /**
       *  \brief returns a GasSpec::GasSpecies given a CHAR::CharGasSpecies
       */
-    GasSpec::GasSpecies char_to_gas_species( CHAR::CharGasSpecies spec ) const;
+    inline GasSpec::GasSpecies char_to_gas_species( CHAR::CharGasSpecies spec ) const;
 
     /**
       *  \brief returns molecular weight of a given species
@@ -112,7 +112,7 @@ namespace CHAR{
      * Right now the value is hard coded...similar to CPD data gas phase species data
      * remember we might change the number of species in the future....
      */
-    int get_ncomp() const {return 3 ;};
+    inline int get_ncomp() const {return 3 ;};
 
   protected:
     double e0_, rPore_, s0_, o_, c_, fixedCarbon_, volatiles_;

@@ -46,37 +46,37 @@ enum CPDSpecies {
      */
     CPDInformation( const Coal::CoalType coalType );
 
-    int get_nspec() const{ return nspec_; } ///< Return number of gas-phase species for the CPD model
+    inline int get_nspec() const{ return nspec_; } ///< Return number of gas-phase species for the CPD model
 
-    const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
+    inline const Coal::CoalComposition& get_coal_composition() const{ return coalComp_; } ///< return the CoalComposition
 
-    const std::vector<double>& get_fgi() const{ return fg_; } ///< Functional Group vector (mole basis)
+    inline const std::vector<double>& get_fgi() const{ return fg_; } ///< Functional Group vector (mole basis)
 
-    const std::vector<double>& get_mwVec() const{ return mwVec_;};
+    inline const std::vector<double>& get_mwVec() const{ return mwVec_;};
 
-    double get_sumfg() const{ return sumfg_; };  ///< Sum of Functional Groups (mole basis)
+    inline double get_sumfg() const{ return sumfg_; };  ///< Sum of Functional Groups (mole basis)
 
-    double get_l0_mass() const { return l0_; };  ///< Initial mass fraction of labile bridge
+    inline double get_l0_mass() const { return l0_; };  ///< Initial mass fraction of labile bridge
 
-    double get_l0_mole() const; ///< initial mole fraction of labile bridge in coal
-    
-    double get_tarMonoMW() const { return coalComp_.get_tarMonoMW(); }; ///< tar monomer molecular weight
-    
-    double get_tarMassFrac() const{ return tarMassFrac0_; } ///< Functional Group vector (mole basis)
+    inline double get_l0_mole() const; ///< initial mole fraction of labile bridge in coal
 
-    double get_coordNo() const { return coordNo_; }; ///< coordination number of coal lattice
-   
-    double get_lbPop0() const { return lbPop0_; }; ///< initial normalized bridge population
+    inline double get_tarMonoMW() const { return coalComp_.get_tarMonoMW(); }; ///< tar monomer molecular weight
 
-    const std::vector<double>& get_A0() const { return A0_; }; ///< Pre exponential factor of devolatilization reaction
+    inline double get_tarMassFrac() const{ return tarMassFrac0_; } ///< Functional Group vector (mole basis)
 
-    const std::vector<double>& get_E0() const { return E0_; }; ///< Activation energy of reaction of devolatilization 
+    inline double get_coordNo() const { return coordNo_; }; ///< coordination number of coal lattice
 
-    const std::vector<double>& get_sigma() const {return sigma_;} ///< deviation of activation energy 
+    inline double get_lbPop0() const { return lbPop0_; }; ///< initial normalized bridge population
 
-    double get_hypothetical_volatile_mw() const{ return Mw_; }
+    inline const std::vector<double>& get_A0() const { return A0_; }; ///< Pre exponential factor of devolatilization reaction
 
-    double l0_molecular_weight() const{ return Ml0_; }
+    inline const std::vector<double>& get_E0() const { return E0_; }; ///< Activation energy of reaction of devolatilization
+
+    inline const std::vector<double>& get_sigma() const {return sigma_;} ///< deviation of activation energy
+
+    inline double get_hypothetical_volatile_mw() const{ return Mw_; }
+
+    inline double l0_molecular_weight() const{ return Ml0_; }
     
 
   protected:
