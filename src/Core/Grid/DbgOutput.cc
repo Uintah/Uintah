@@ -204,7 +204,7 @@ printTask( const Patch       * patch
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank()  << " ";
+    msg << "Rank-"  << Uintah::Parallel::getMPIRank()  << " ";
     msg << std::left;
     msg.width(50);
     msg << where << " \tL-"
@@ -225,7 +225,7 @@ printTask( const PatchSubset * patches
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where;
@@ -253,7 +253,7 @@ printTask( const PatchSubset * patches
 {
   if (out){
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
     msg << where;
@@ -343,10 +343,13 @@ printSchedule( const PatchSet    * patches
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-" << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << " L-" << getLevel(patches)->getIndex();
+    msg << where;
+    if ( patches ){
+       msg << " L-" << getLevel(patches)->getIndex();
+    }
     DOUT(out, msg.str());
   }
 }
@@ -361,10 +364,13 @@ printSchedule( const LevelP      & level
 {
   if (out) {
     std::ostringstream msg;
-    msg << Uintah::Parallel::getMPIRank() << " ";
+    msg << "Rank-"  << Uintah::Parallel::getMPIRank() << " ";
     msg << std::left;
     msg.width(50);
-    msg << where << " L-" << level->getIndex();
+    msg << where;
+    if ( level ){
+      msg << " L-" << level->getIndex();
+    }
     DOUT(out, msg.str());
   }
 }

@@ -37,6 +37,7 @@
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
@@ -90,7 +91,8 @@ using namespace Uintah;
 using namespace std;
 
 namespace {
-  DebugStream dbg("DataArchiver", "DataArchiver", "Data archiver debug stream", false);
+  Dout g_DA_dbg( "DataArchiver_DBG", "DataArchiver", "general debug information"  , false );
+
 #ifdef HAVE_PIDX
   DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
@@ -131,9 +133,11 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   m_tmpMatSubset->add(-1);
   m_tmpMatSubset->addReference();
 }
-
+//______________________________________________________________________
+//
 DataArchiver::~DataArchiver()
 {
+  DOUTR( g_DA_dbg,"DataArchiver::~DataArchiver()" );
   VarLabel::destroy( m_sync_io_label );
 
   if(m_tmpMatSubset && m_tmpMatSubset->removeReference()) {
@@ -180,9 +184,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
                             const ProblemSpecP    & restart_prob_spec,
                             const MaterialManagerP& materialManager )
 {
-  if (dbg.active()) {
-    dbg << "Doing ProblemSetup \t\t\t\tDataArchiver\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::problemSetup" );
 
   m_materialManager = materialManager;
   m_upsFile = params;
@@ -232,6 +234,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     // Debug:
     m_PIDX_flags.print();
   }
+  //__________________________________
+  //
 
   m_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != nullptr;
 
@@ -505,9 +509,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 void
 DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 {
-  if (dbg.active()) {
-    dbg << "Doing outputProblemSpec \t\t\t\tDataArchiver\n";
-  }
+  DOUTR( g_DA_dbg, "Doing: DataArchiver::outputProblemSpec");
 
   // When running in situ the user can modify start variables. These
   // varibales and values are recorded in the index.xml BUT are NOT
@@ -530,7 +532,8 @@ DataArchiver::outputProblemSpec( ProblemSpecP & root_ps )
 //______________________________________________________________________
 //
 void
-DataArchiver::initializeOutput( const ProblemSpecP & params, const GridP& grid )
+DataArchiver::initializeOutput( const ProblemSpecP & params,
+                                const GridP& grid )
 {
   if( m_outputInterval             == 0.0 &&
       m_outputTimeStepInterval     == 0   &&
@@ -685,6 +688,8 @@ DataArchiver::restartSetup( const Dir    & restartFromDir,
 void
 DataArchiver::postProcessUdaSetup( Dir & fromDir )
 {
+
+  DOUTR( g_DA_dbg, " Doing: DataArchiver::postProcessUdaSetup");
   //__________________________________
   // copy files
   // copy dat files and
@@ -1059,12 +1064,10 @@ DataArchiver::finalizeTimeStep( const GridP & grid,
   // This function should get called exactly once per timestep
   const double delT = m_application->getDelT();
 
-  if (dbg.active()) {
-    dbg << " finalizeTimeStep,"
-        << " time step = " << m_application->getTimeStep()
-        << " sim time = " << m_application->getSimTime()
-        << " delT= " << delT << "\n";
-  }
+  DOUTR( g_DA_dbg,  "DataArchiver::finalizeTimeStep," << setw(10)
+        << " timestep:" << m_application->getTimeStep()
+        << ", sim time:" << m_application->getSimTime()
+        << ", delT: " << delT );
 
   beginOutputTimeStep( grid );
 
@@ -1080,7 +1083,6 @@ DataArchiver::finalizeTimeStep( const GridP & grid,
         indexAddGlobals(); // add saved global (reduction/sole) variables to index.xml
       }
     }
-
 
     if (delT != 0.0) {
       m_wereSavesAndCheckpointsInitialized = true;
@@ -1114,9 +1116,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
                                           SchedulerP & sched,
                                           bool         recompile /* = false */ )
 {
-  if (dbg.active()) {
-    dbg << "  sched_allOutputTasks \n";
-  }
+  printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_allOutputTasks");
 
   // Don't schedule more tasks unless recompiling.
   if ( !recompile ) {
@@ -1126,12 +1126,13 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
   const double delT = m_application->getDelT();
 
   //__________________________________
-  //  Schedule outputing
+  //  Schedule non-checkpoint output task
   if( (delT != 0.0 || m_outputInitTimeStep) &&
       (m_outputInterval > 0.0 ||
        m_outputTimeStepInterval > 0) ) {
 
-    // Schedule the writing of the global vars to a data file.
+    printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputGlobalVars");
+
     Task* task = scinew Task( "DataArchiver::outputGlobalVars",
                               this, &DataArchiver::outputGlobalVars );
 
@@ -1145,22 +1146,19 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     sched->addTask(task, nullptr, nullptr);
 
-    if (dbg.active()) {
-      dbg << "  scheduled output tasks (reduction/sole variables)\n";
-    }
-
-    // Output requested vars to an output file.
-    scheduleOutputTimeStep( m_saveLabels, grid, sched, false );
+    // schedule task for non-global variables
+    sched_outputVariables( m_saveLabels, grid, sched, false );
   }
 
   //__________________________________
-  //  Schedule Checkpoint (reduction/sole variables)
+  //  Schedule checkpoint (reduction/sole variables)
   if( delT != 0.0 &&                       // m_checkpointCycle > 0 &&
       ( m_checkpointInterval > 0 ||
         m_checkpointTimeStepInterval > 0 ||
         m_checkpointWallTimeInterval > 0 ) ) {
 
-    // Output global vars to a checkpoint file.
+    printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputVariables (CheckpointGlobal)" );
+
     Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",
                               this, &DataArchiver::outputVariables, CHECKPOINT_GLOBAL );
 
@@ -1174,14 +1172,12 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     sched->addTask(task, nullptr, nullptr);
 
-    if (dbg.active()) {
-      dbg << "  scheduled output tasks (checkpoint variables)\n";
-    }
-
-    // Output required vars to a checkpoint file.
-    scheduleOutputTimeStep( m_checkpointLabels, grid, sched, true );
+    // schedule task for non-global variables to a checkpoint
+    sched_outputVariables( m_checkpointLabels, grid, sched, true );
   }
 
+  //__________________________________
+  //
 #if HAVE_PIDX
   if ( m_outputFileFormat == PIDX ) {
     /*  Create PIDX communicators (one communicator per AMR level) */
@@ -1192,7 +1188,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     // ARS - It can get called multiple times when regridding.
 
-    dbg << "  Creating communicatore per AMR level (required for PIDX)\n";
+    DOUTR( g_DA_dbg, "  Creating communicatore per AMR level (required for PIDX)\n");
     createPIDXCommunicator( m_checkpointLabels,  grid, sched, true );
   }
 #endif
@@ -1278,12 +1274,12 @@ DataArchiver::setCheckpointTimeStep( bool val,
 
       if( d_myworld->myRank() == 0 ) {
         if( m_checkpointCycle == 0 ) {
-          DOUT( true, "WARNING the checkpoint cycle is set to zero. "
+          DOUTR( true, "WARNING the checkpoint cycle is set to zero. "
                 "No checkpoints will be deleted. This may cause unacceptable disk usage." );
         }
 
         if( (int) m_checkpointTimeStepDirs.size() > 10 ) {
-          DOUT( true, "WARNING there are currently checkpoint "
+          DOUTR( true, "WARNING there are currently checkpoint "
                 << m_checkpointTimeStepDirs.size() << " files. "
                 << "This may be excessive and cause unacceptable disk usage." );
         }
@@ -1300,9 +1296,6 @@ DataArchiver::setCheckpointTimeStep( bool val,
 void
 DataArchiver::beginOutputTimeStep( const GridP& grid )
 {
-  if (dbg.active()) {
-    dbg << "    beginOutputTimeStep\n";
-  }
 
   const int    timeStep = m_application->getTimeStep();
   const double simTime  = m_application->getSimTime();
@@ -1354,11 +1347,9 @@ DataArchiver::beginOutputTimeStep( const GridP& grid )
 
   setCheckpointTimeStep( isCheckpointTimeStep, grid );
 
-  if (dbg.active()) {
-    dbg << "    write output timestep (" << isOutputTimeStep << ")" << std::endl
-        << "    write CheckPoints (" << isCheckpointTimeStep << ")" << std::endl
-        << "    end\n";
-  }
+
+  DOUTR( g_DA_dbg,  "DataArchiver::beginOutputTimeStep isOutputTimeStep: " << isOutputTimeStep << " "
+                    << " isCheckpointTimeStep: " << isCheckpointTimeStep );
 } // end beginOutputTimeStep
 
 //______________________________________________________________________
@@ -1373,11 +1364,9 @@ DataArchiver::makeTimeStepDirs(       Dir                            & baseDir,
 
   int dir_timestep = getTimeStepTopLevel();
 
-  if (dbg.active()) {
-    dbg << "      makeTimeStepDirs for timestep: "
-        << m_application->getTimeStep()
-        << " dir_timestep: " << dir_timestep<< "\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::makeTimeStepDirs timestep: "
+                   << m_application->getTimeStep()
+                   << " dir_timestep: " << dir_timestep );
 
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
@@ -1409,10 +1398,6 @@ void
 DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
                                                  const GridP& grid )
 {
-  if (dbg.active()) {
-    dbg << "  findNext_OutputCheckPoint_TimeStep() begin\n";
-  }
-
   const int    timeStep = m_application->getTimeStep();
   const double simTime  = m_application->getSimTime();
 #ifdef HAVE_PIDX
@@ -1592,24 +1577,21 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
   }
 #endif
 
-  if (dbg.active()) {
-    dbg << "  " << std::setprecision(15) << timeStep
-        << "  " << std::setprecision(15) << simTime << "  " << "\n"
-        << "    is output timestep: " << m_isOutputTimeStep
-        << "       output interval: " << std::setprecision(15) << m_outputInterval
-        << "  next output sim time: " << std::setprecision(15) << m_nextOutputTime
-        << "       output timestep: " << m_outputTimeStepInterval
-        << "  next output timestep: " << m_nextOutputTimeStep << "\n"
 
-        << "    is checkpoint timestep: " << m_isCheckpointTimeStep
-        << "       checkpoint interval: " << std::setprecision(15) << m_checkpointInterval
-        << "  next checkpoint sim time: " << std::setprecision(15) << m_nextCheckpointTime
-        << "       checkpoint timestep: " << m_checkpointTimeStepInterval
-        << "  next checkpoint timestep: " << m_nextCheckpointTimeStep
-        << "  next checkpoint WallTime: " << std::setprecision(15) << m_nextCheckpointWallTime << "\n";
+  DOUTR(g_DA_dbg, "DataArchiver::findNext_OutputCheckPointTimeStep  "   << setw(20)
+                  << "isOutputTimeStep: " << m_isOutputTimeStep         << setw(20)
+                  << ", outputInterval: " << m_outputInterval           << setw(20)
+                  << ", nextOutputTime: " <<  m_nextOutputTime          << setw(20)
+                  << ", outputTimeStepInterval: " << m_outputTimeStepInterval<< setw(20)
+                  << ", nextOutputTimeStep: " << m_nextOutputTimeStep );
 
-    dbg << "  findNext_OutputCheckPoint_TimeStep() end\n";
-  }
+  DOUTR(g_DA_dbg, "DataArchiver::findNext_OutputCheckPointTimeStep  "   << setw(20)
+                  << "isCheckpointTimeStep: " << m_isCheckpointTimeStep << setw(20)
+                  << ", checkpointInterval: "   << m_checkpointInterval << setw(20)
+                  << ", nextCheckpointTime: "   << m_nextCheckpointTime << setw(20)
+                  << ", checkpointTimeStepInterval: " << m_checkpointTimeStepInterval
+                  << ", nextCheckpointTimeStep: " << m_nextCheckpointTimeStep
+                  << ", nextCheckpointWallTime: " << m_nextCheckpointWallTime );
 
 } // end findNext_OutputCheckPoint_TimeStep()
 
@@ -1618,9 +1600,8 @@ DataArchiver::findNext_OutputCheckPointTimeStep( const bool restart,
 void
 DataArchiver::recompute_OutputCheckPointTimeStep()
 {
-  if (dbg.active()) {
-    dbg << "  recompute_OutputCheckPointTimeStep() begin\n";
-  }
+
+
 
   const double simTime = m_application->getSimTime();
   const double delT    = m_application->getDelT();
@@ -1648,9 +1629,9 @@ DataArchiver::recompute_OutputCheckPointTimeStep()
   m_checkpointGlobalCalled = false;
 #endif
 
-  if (dbg.active()) {
-    dbg << "  reevaluate_OutputCheckPointTimeStep() end\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::recompute_OutputCheckPointTimeStep() "
+                   << " isOutputTimeStep: " << m_isOutputTimeStep
+                   << " isCheckpointTimeStep: " << m_isCheckpointTimeStep );
 }
 
 //______________________________________________________________________
@@ -1660,17 +1641,14 @@ void
 DataArchiver::writeto_xml_files( const GridP& grid )
 {
   if( !m_isCheckpointTimeStep && !m_isOutputTimeStep ) {
-    if (dbg.active()) {
-      dbg << "   Not an output or checkpoint timestep, returning...\n";
-    }
+    DOUTR( g_DA_dbg, "DataArchiver::writeto_xml_files:  Not an output or checkpoint timestep");
     return;
   }
 
   double simTime = m_application->getSimTime();
   double delT    = m_application->getDelT();
 
-  if( m_outputPreviousTimeStep || m_checkpointPreviousTimeStep )
-  {
+  if( m_outputPreviousTimeStep || m_checkpointPreviousTimeStep ){
     //__________________________________
     if( m_application->getLastRegridTimeStep() > getTimeStepTopLevel() ) {
       DOUT( d_myworld->myRank() == 0,
@@ -1687,9 +1665,7 @@ DataArchiver::writeto_xml_files( const GridP& grid )
   Timers::Simple timer;
   timer.start();
 
-  if (dbg.active()) {
-    dbg << "  writeto_xml_files() begin\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::writeto_xml_files:V1");
 
   //__________________________________
   //  Writeto XML files
@@ -1984,9 +1960,6 @@ DataArchiver::writeto_xml_files( const GridP& grid )
   (*m_runtimeStats)[XMLIOTime] += myTime;
   (*m_runtimeStats)[TotalIOTime ] += myTime;
 
-  if (dbg.active()) {
-    dbg << "  end\n";
-  }
 } // end writeto_xml_files()
 
 //______________________________________________________________________
@@ -2000,7 +1973,7 @@ DataArchiver::writeto_xml_files( std::map< std::string,
 #ifdef HAVE_VISIT
   if( isProc0_macro && m_application->getVisIt() && modifiedVars.size() )
   {
-    dbg << "  writeto_xml_files() begin\n";
+    DOUTR( g_DA_dbg, "  DataArchiver::writeto_xml_files:V2");
 
     //__________________________________
     //  Writeto XML files
@@ -2511,12 +2484,11 @@ DataArchiver::writeDataTextWriter( const bool hasGlobals, const string & data_pa
 //______________________________________________________________________
 //
 void
-DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
-                                      const GridP            & grid,
-                                            SchedulerP       & sched,
-                                            bool               isThisCheckpoint )
+DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
+                                     const GridP            & grid,
+                                           SchedulerP       & sched,
+                                           bool               isThisCheckpoint )
 {
-  // Schedule a bunch of tasks - one for each variable, for each patch
   int var_cnt = 0;
 
   for( int i = 0; i < grid->numLevels(); i++ ) {
@@ -2565,13 +2537,15 @@ DataArchiver::scheduleOutputTimeStep(       vector<SaveItem> & saveLabels,
       }
     }
 
+    std::string msg;
+    msg = "DataArchiver::sched_outputVariables for (" + Uintah::to_string(var_cnt) + ") variables on";
+    printSchedule( level, g_DA_dbg, msg );
+
     task->setType( Task::Output );
     sched->addTask( task, patches, m_materialManager->allMaterials() );
   }
 
-  if (dbg.active()) {
-    dbg << "  scheduled output task for " << var_cnt << " variables\n";
-  }
+
 }
 
 //______________________________________________________________________
@@ -2646,9 +2620,7 @@ DataArchiver::getOutputLocation() const
 void
 DataArchiver::indexAddGlobals()
 {
-  if (dbg.active()) {
-    dbg << "  indexAddGlobals()\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::indexAddGlobals()" );
 
   // add info to index.xml about each global (reduction/sole) variable. Assume
   // for now that global variables that get computed will not change
@@ -2701,7 +2673,7 @@ DataArchiver::indexAddGlobals()
 //
 void
 DataArchiver::outputGlobalVars( const ProcessorGroup *,
-                                const PatchSubset    * /* pss */,
+                                const PatchSubset    * patches,
                                 const MaterialSubset * /* matls */,
                                       DataWarehouse  * old_dw,
                                       DataWarehouse  * new_dw )
@@ -2746,9 +2718,8 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
     return;
   }
 
-  if (dbg.active()) {
-    dbg << "  outputGlobalVars task begin\n";
-  }
+
+  printTask( patches, g_DA_dbg, " DataArchiver::outputGlobalVars, begin" );
 
   Timers::Simple timer;
   timer.start();
@@ -2770,9 +2741,9 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
     for (int m = 0; m < matls->size(); m++) {
       int matlIndex = matls->get(m);
 
-      if (dbg.active()) {
-        dbg << "    Global variable " << var->getName() << " matl: " << matlIndex << "\n";
-      }
+      std::ostringstream msg;
+      msg << " DataArchiver::outputGlobalVars,     Global variable " << var->getName() << " matl: " << matlIndex;
+      printTask( patches, g_DA_dbg, msg.str()  );
 
       ostringstream filename;
       filename << m_outputDir.getName() << "/" << var->getName();
@@ -2806,7 +2777,7 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
       if( m_outputGlobalVarsSimTime ) {             // default true
         out << std::setprecision(17) << simTime + delT << "\t";
       }
-      // Output the global var for this matial index.
+      // Output the global var for this material index.
       new_dw->print(out, var, 0, matlIndex);
       out << std::endl;
     }
@@ -2816,7 +2787,7 @@ DataArchiver::outputGlobalVars( const ProcessorGroup *,
   (*m_runtimeStats)[OutputGlobalIOTime] += myTime;
   (*m_runtimeStats)[TotalIOTime ] += myTime;
 
-  dbg << "  outputGlobalVars task end\n";
+  printTask( patches, g_DA_dbg, " DataArchiver::outputGlobalVars end"  );
 }
 
 //______________________________________________________________________
@@ -2853,9 +2824,7 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
     return;
   }
 
-  if (dbg.active()) {
-    dbg << "  outputVariables task begin\n";
-  }
+  printTask( patches, g_DA_dbg, "DataArchiver::outputVariables  begin"  );
 
 #if SCI_ASSERTION_LEVEL >= 2
   // Double-check to make sure only called once per level.
@@ -2894,28 +2863,31 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
   //__________________________________
   // debugging output
   // this task should be called once per variable (per patch/matl subset).
-  if (dbg.active()) {
+  if (g_DA_dbg) {
+    ostringstream msg;
     if ( type == CHECKPOINT_GLOBAL ) {
-      dbg << "    global";
+      msg << "    global";
     }
     else /* if (type == OUTPUT || type == CHECKPOINT) */ {
       if ( type == CHECKPOINT ) {
-        dbg << "    checkpoint ";
+        msg << "    checkpoint ";
       }
-      dbg << "    patches: ";
+      msg << "    patches: ";
       for(int p=0;p<patches->size();p++) {
         if(p != 0) {
-          dbg << ", ";
+          msg << ", ";
         }
         if (patches->get(p) == 0){
-          dbg << -1;
+          msg << -1;
         }else{
-          dbg << patches->get(p)->getID();
+          msg << patches->get(p)->getID();
         }
       }
     }
 
-    dbg << " on timestep: " << getTimeStepTopLevel() << "\n";
+    msg << " on timestep: " << getTimeStepTopLevel();
+    printTask( patches, g_DA_dbg, msg.str()  );
+
   }
 
   //__________________________________
@@ -3055,15 +3027,16 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
         //__________________________________
         //  debugging output
-        if( dbg.active() ) {
-          dbg << "    " << var->getName() << ", materials: ";
+        if( g_DA_dbg ) {
+          ostringstream msg;
+          msg << "    " << var->getName() << ", materials: ";
           for( int m = 0; m < var_matls->size(); m++ ) {
             if( m != 0 ) {
-              dbg << ", ";
+              msg << ", ";
             }
-            dbg << var_matls->get( m );
+            msg << var_matls->get( m );
           }
-          dbg << "\n";
+          printTask( patches, g_DA_dbg, msg.str());
         }
 
         //__________________________________
@@ -3236,9 +3209,8 @@ DataArchiver::outputVariables( const ProcessorGroup * pg,
 
   (*m_runtimeStats)[TotalIOTime ] += myTime;
 
-  if (dbg.active()) {
-    dbg << "  outputVariables task end\n";
-  }
+  printTask( patches, g_DA_dbg, "DataArchiver::outputVariables  end"  );
+
 } // end outputVariables()
 
 //______________________________________________________________________
@@ -3824,11 +3796,9 @@ DataArchiver::makeVersionedDir()
 //______________________________________________________________________
 //  Determine which labels will be saved.
 void
-DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
+DataArchiver::initSaveLabels( SchedulerP & sched,
+                              bool initTimeStep )
 {
-  if (dbg.active()) {
-    dbg << "  initSaveLabels()\n";
-  }
 
   // if this is the initTimeStep, then don't complain about saving all
   // the vars, just save the ones you can.  They'll most likely be
@@ -3842,11 +3812,14 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
 
+  //__________________________________
   // Iterate through each of the saveLabelNames we created in problemSetup
 
   for( list<SaveNameItem>::iterator iter = m_saveLabelNames.begin(); iter != m_saveLabelNames.end(); ++iter ) {
 
-    VarLabel* var = VarLabel::find( (*iter).labelName );
+    const SaveNameItem saveLabel = *iter;
+
+    VarLabel* var = VarLabel::find( saveLabel.labelName );
 
     //   see if that variable has been created, set the compression
     //   mode make sure that the scheduler shows that that it has been
@@ -3856,12 +3829,12 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
         continue;
       }
       else {
-        throw ProblemSetupException((*iter).labelName +" variable not found to save.", __FILE__, __LINE__);
+        throw ProblemSetupException(saveLabel.labelName +" variable not found to save.", __FILE__, __LINE__);
       }
     }
 
-    if ((*iter).compressionMode != "") {
-      var->setCompressionMode((*iter).compressionMode);
+    if ( saveLabel.compressionMode != "") {
+      var->setCompressionMode( saveLabel.compressionMode );
     }
 
     Scheduler::VarLabelMaterialMap::iterator found = pLabelMatlMap->find( var->getName() );
@@ -3871,32 +3844,42 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
       if (initTimeStep) {
         // Ignore this on the init timestep, cuz lots of vars aren't
         // computed on the init timestep.
-
-        if (dbg.active()) {
-          dbg << "    Ignoring var " << iter->labelName << " on initialization timestep\n";
-        }
+        DOUTR( g_DA_dbg, "DataArchiver::initSaveLabels  Ignoring var " << saveLabel.labelName << " on initialization timestep");
 
         continue;
       }
       else {
-        throw ProblemSetupException( (*iter).labelName + " variable not computed for saving.", __FILE__, __LINE__);
+        throw ProblemSetupException( saveLabel.labelName + " variable not computed for saving.", __FILE__, __LINE__);
       }
     }
+
     saveItem.label = var;
     saveItem.matlSet.clear();
 
-    for ( ConsecutiveRangeSet::iterator crs_iter = (*iter).levels.begin(); crs_iter != (*iter).levels.end(); ++crs_iter ) {
+    for ( ConsecutiveRangeSet::iterator iter = saveLabel.levels.begin(); iter != saveLabel.levels.end(); ++iter ) {
+      const int levelIndex = *iter;
 
-      ConsecutiveRangeSet matlsToSave = ( ConsecutiveRangeSet( (*found).second ) ).intersected( ( *iter ).matls );
-      saveItem.setMaterials( *crs_iter, matlsToSave, m_prevMatls, m_prevMatlSet );
 
-      if (((*iter).matls != ConsecutiveRangeSet::all) && ((*iter).matls != matlsToSave)) {
-        throw ProblemSetupException( (*iter).labelName + " variable not computed for all materials specified to save.", __FILE__, __LINE__ );
+
+      ConsecutiveRangeSet matlsToSave = ( ConsecutiveRangeSet( (*found).second ) ).intersected( saveLabel.matls );
+      saveItem.setMaterials( levelIndex, matlsToSave, m_prevMatls, m_prevMatlSet );
+
+      DOUTR( g_DA_dbg, "DataArchiver::initSaveLabels: "
+                       << saveLabel.labelName
+                       << ", levels " << saveLabel.levels
+                       << ", matls " << matlsToSave );
+
+      if ((saveLabel.matls != ConsecutiveRangeSet::all) && ( saveLabel.matls != matlsToSave)) {
+        throw ProblemSetupException( saveLabel.labelName + " variable not computed for all materials specified to save.", __FILE__, __LINE__ );
       }
     }
 
-    if ( saveItem.label->typeDescription()->getType() == TypeDescription::ReductionVariable ||
-         saveItem.label->typeDescription()->getType() == TypeDescription::SoleVariable ) {
+    //__________________________________
+    //
+    const TypeDescription::Type varType = saveItem.label->typeDescription()->getType();
+
+    if ( varType == TypeDescription::ReductionVariable ||
+         varType == TypeDescription::SoleVariable ) {
       m_saveGlobalLabels.push_back( saveItem );
     }
     else {
@@ -3914,9 +3897,7 @@ DataArchiver::initSaveLabels( SchedulerP & sched, bool initTimeStep )
 void
 DataArchiver::initCheckpoints( const SchedulerP & sched )
 {
-  if (dbg.active()) {
-    dbg << "  initCheckpoints()\n";
-  }
+  DOUTR( g_DA_dbg, "DataArchiver::initCheckpoints" );
 
   typedef vector<const Task::Dependency*> dep_vector;
   const dep_vector& initreqs = sched->getInitialRequires();
@@ -4062,7 +4043,7 @@ DataArchiver::initCheckpoints( const SchedulerP & sched )
 //______________________________________________________________________
 //
 void
-DataArchiver::SaveItem::setMaterials( const int                   level,
+DataArchiver::SaveItem::setMaterials( const int                   levelIndex,
                                       const ConsecutiveRangeSet & matls,
                                             ConsecutiveRangeSet & prevMatls,
                                             MaterialSetP        & prevMatlSet )
@@ -4071,10 +4052,10 @@ DataArchiver::SaveItem::setMaterials( const int                   level,
   // different SaveItems in a row -- easier than finding all reusable
   // material set, but effective in many common cases.
   if( ( prevMatlSet != nullptr ) && ( matls == prevMatls ) ) {
-    matlSet[ level ] = prevMatlSet;
+    matlSet[ levelIndex ] = prevMatlSet;
   }
   else {
-    MaterialSetP& m = matlSet[ level ];
+    MaterialSetP& m = matlSet[ levelIndex ];
     m = scinew MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());

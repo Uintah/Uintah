@@ -300,6 +300,7 @@ class LoadBalancer;
       const MaterialSubset* getMaterialSubset( const Level * level ) const;
 
       const VarLabel* label;
+      
       std::map<int, MaterialSetP> matlSet;
     };
     
@@ -398,7 +399,7 @@ class LoadBalancer;
     int m_lastOutputOfTimeStepXML = -1; 
 
     // helper for finalizeTimeStep - schedules a task for each var's output
-    void scheduleOutputTimeStep(       std::vector<SaveItem> & saveLabels,
+    void sched_outputVariables(        std::vector<SaveItem> & saveLabels,
                                  const GridP                 & grid, 
                                        SchedulerP            & sched,
                                        bool                    isThisCheckpoint );
