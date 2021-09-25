@@ -28,6 +28,7 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -107,12 +108,21 @@ Pressure::Pressure( const std::string& pressureName,
   if (!isConstDensity_) rhoStar_ = create_field_request<SVolField>(rhoStarTag);
   
   if (hasIntrusion_)    volfrac_ = create_field_request<SVolField>(volfractag);
+
+  std::string timeIntegratorName = WasatchCore::Wasatch::get_timeIntegratorName();
+  if (timeIntegratorName =="FE")
+      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::FE,{true},solver_,matrixLabel_,pressureLabel_,prhsLabel_);  
+  else if (timeIntegratorName =="RK2SSP")
+      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::RK2_1,{!WasatchCore::Wasatch::guess_stage_1()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
+  else if (timeIntegratorName =="RK3SSP")
+      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::RK3_11,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
 }
 
 //--------------------------------------------------------------------
 
 Pressure::~Pressure()
 {
+  delete pressure_scheduler_helper_;
   Uintah::VarLabel::destroy( pressureLabel_ );
   Uintah::VarLabel::destroy( prhsLabel_     );
   Uintah::VarLabel::destroy( matrixLabel_   );
@@ -129,11 +139,15 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
   if (enforceSolvability_) {
     solver_.scheduleEnforceSolvability<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
   }
-  solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
-                         pressureLabel_, true,
-                         prhsLabel_, Uintah::Task::NewDW,
-                         pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-                          RKStage == 1 ? true:false);
+
+  pressure_scheduler_helper_->schedule(level,sched,materials,RKStage);
+  
+  // old code for pressure schedule
+  // solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
+  //                        pressureLabel_, true,
+  //                        prhsLabel_, Uintah::Task::NewDW,
+  //                        pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
+  //                         RKStage == 1 ? true:false);
   if(useRefPressure_) {
     solver_.scheduleSetReferenceValue<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
   }
