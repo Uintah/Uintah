@@ -769,6 +769,9 @@ namespace WasatchCore{
                                                                   persistentFields_ ));
     }
 
+    // add a task graph recompile condition
+    if (using_pressure_guess()&& low_cost_integ_need_recompile())
+      need_recompile_helper_.add_condition(new LowCostIntegratorNeedRecompile(timeStep_,/*timestep threshold*/lowCostTimestepRecompile_,lowCostIntegRecompiled_));
     //
     // get the 2D variable density, oscillating (and periodic) mms params, if any, and parse them.
     //
