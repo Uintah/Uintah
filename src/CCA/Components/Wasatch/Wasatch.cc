@@ -108,6 +108,15 @@ using std::endl;
 WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
 bool WasatchCore::Wasatch::needPressureSolve_ = false;
 bool WasatchCore::Wasatch::hasDualTime_ = false;
+bool WasatchCore::Wasatch::lowCostIntegRecompiled_ = false;
+bool WasatchCore::Wasatch::lowCostIntegNeedRecompile_ = false;
+std::string WasatchCore::Wasatch::timeIntegratorName_ = "FE";
+Uintah::timeStep_vartype WasatchCore::Wasatch::timeStep_=0;
+bool WasatchCore::Wasatch::use_pressure_guess_ = false;
+bool WasatchCore::Wasatch::use_guess_stage_1_ = false;
+bool WasatchCore::Wasatch::use_guess_stage_2_ = false;
+int WasatchCore::Wasatch::lowCostTimestepRecompile_ = 0;
+
 namespace WasatchCore{
 
   //--------------------------------------------------------------------
@@ -581,6 +590,7 @@ namespace WasatchCore{
     wasatchSpec_->get("TimeIntegrator",timeIntName);
     timeIntegrator_ = TimeIntegrator(timeIntName);
     nRKStages_ = timeIntegrator_.nStages;
+    timeIntegratorName_ = timeIntegrator_.name==""? "FE" : timeIntegrator_.name;
 
     // parse dual time specification, set coordinate tags for matrix assembly
     if( wasatchSpec_->findBlock("DualTime") ){
@@ -1799,11 +1809,15 @@ namespace WasatchCore{
     Uintah::DataWarehouse* whichDW = has_dual_time() ? oldDW->getOtherDataWarehouse(Uintah::Task::ParentOldDW) : oldDW;
 
     // grab the timestep
+    // set the static value of the timestep
     // const double simTime = m_materialManager->getElapsedSimTime();
     // const double timeStep = m_materialManager->getCurrentTopLevelTimeStep();
     
     Uintah::timeStep_vartype timeStep;
     whichDW->get( timeStep, getTimeStepLabel() );
+
+    //update the static value of timestep_
+    timeStep_ = timeStep;
 
     Uintah::simTime_vartype simTime;
     whichDW->get( simTime, getSimTimeLabel() );

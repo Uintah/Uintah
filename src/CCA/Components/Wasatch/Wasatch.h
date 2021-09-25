@@ -326,6 +326,18 @@ namespace WasatchCore{
     static void has_dual_time( const bool hasDualTime ){ hasDualTime_ = hasDualTime; }
     static bool has_dual_time(){ return hasDualTime_; }
 
+    static Uintah::timeStep_vartype get_timestep(){return timeStep_;}
+    static bool low_cost_integ_recompiled(){return lowCostIntegRecompiled_;}
+    static bool low_cost_integ_need_recompile(){return lowCostIntegNeedRecompile_;}
+    static void low_cost_integ_need_recompile(const int& at_timestep) { lowCostIntegNeedRecompile_ = true; lowCostTimestepRecompile_ = at_timestep;}
+    static std::string get_timeIntegratorName(){return timeIntegratorName_;}
+    static bool using_pressure_guess(){return use_pressure_guess_;}
+    static void set_using_pressure_guess(const bool use_pressue_guess_value){use_pressure_guess_ = use_pressue_guess_value;}
+    static void set_guess_stage_1(const bool& use_guess){use_guess_stage_1_ = use_guess;}
+    static void set_guess_stage_2(const bool& use_guess){use_guess_stage_2_ = use_guess;}
+    static bool guess_stage_1(){return use_guess_stage_1_;}
+    static bool guess_stage_2(){return use_guess_stage_2_;}
+    
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
@@ -376,6 +388,14 @@ namespace WasatchCore{
     static FlowTreatment flowTreatment_;
     static bool needPressureSolve_;
     static bool hasDualTime_;
+    static bool lowCostIntegRecompiled_;
+    static bool lowCostIntegNeedRecompile_;
+    static std::string timeIntegratorName_;
+    static Uintah::timeStep_vartype timeStep_;
+    static bool use_pressure_guess_;
+    static bool use_guess_stage_1_;
+    static bool use_guess_stage_2_;
+    static int lowCostTimestepRecompile_;
     
     Uintah::SchedulerP subsched_; // needed for dualtime
     bool dualTime_;
