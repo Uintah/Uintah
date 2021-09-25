@@ -162,6 +162,7 @@ namespace WasatchCore{
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
+    need_recompile_helper_ = NeedRecompileHelper();
   }
 
   //--------------------------------------------------------------------
@@ -382,6 +383,11 @@ namespace WasatchCore{
   }
   
   //--------------------------------------------------------------------
+
+  bool Wasatch::needRecompile( const Uintah::GridP & grid )
+  {
+    return need_recompile_helper_.check_conditions();
+  }
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& uintahSpec,
                               const Uintah::ProblemSpecP& restartSpec,

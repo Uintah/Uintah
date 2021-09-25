@@ -115,6 +115,7 @@
 #include "BCHelper.h"
 #include "WasatchBCHelper.h"
 #include "TimeIntegratorTools.h"
+#include "NeedRecompileHelper.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
 
@@ -244,6 +245,11 @@ namespace WasatchCore{
                                     Uintah::SchedulerP& sched );
 
     /**
+     * \brief This will cause the scheduler to rebuild the task graph
+     */
+    bool needRecompile( const Uintah::GridP & grid);
+
+    /**
      *  \brief Set up things that need to be done on a restart
      */
     void restartInitialize();
@@ -345,6 +351,7 @@ namespace WasatchCore{
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
 
+    NeedRecompileHelper need_recompile_helper_;
 
 
     /**
