@@ -29,6 +29,8 @@
 #include "Wasatch.h"
 
 #include <boost/foreach.hpp>
+#include <string>
+#include <vector>
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
@@ -45,20 +47,120 @@
 namespace WasatchCore {
 
   //==================================================================
+  /**
+   * @brief a helper function used to split a string based on a given delimiter
+   * 
+   * @param to_split string to split
+   * @param delimiter string delimiter
+   * @return std::vector<std::string> 
+   */
+  std::vector<std::string> split(std::string to_split, std::string delimiter) {
+      size_t pos = 0;
+      std::vector<std::string> matches{};
+      do {
+          pos = to_split.find(delimiter);
+          int change_end;
+          if (pos == std::string::npos) {
+              pos = to_split.length() - 1;
+              change_end = 1;
+          }
+          else {
+              change_end = 0;
+          }
+          matches.push_back(to_split.substr(0, pos+change_end));
+          
+          to_split.erase(0, pos+1);
+
+      }
+      while (!to_split.empty());
+      return matches;
+
+  }
+
+  /**
+   * @brief This a function that is used in the construction of the Tagname of variable being saved. 
+   * 
+   * @param old_name string of the variable name
+   * @param delimiter string of the delimiter being used to split the old name
+   * @return std::string 
+   */
+  std::string construct_name(std::string old_name,std::string delimiter){
+      std::string new_name;
+      std::vector<std::string> splitted_name = split(old_name,delimiter);
+      // this part is used to avoid messing with "_old" suffix in existing code.
+      // eventually this has to be changed to "_NM_0" by adapting this condition statement
+      // if (splitted_name.size()==1) new_name = old_name + delimiter+"NM"+ delimiter + "0";
+      //----------------------------------------------------------------------------------------------------
+      if (splitted_name.size()==1) new_name = old_name + delimiter+"old";
+      else if (splitted_name.back() =="old") new_name = splitted_name[0] + delimiter+"NM"+ delimiter + "1";
+      //----------------------------------------------------------------------------------------------------
+      else
+      {
+          splitted_name.back() = std::to_string(std::stoi(splitted_name.back())+1);
+          new_name = splitted_name[0];
+          for (int i = 1 ; i<splitted_name.size(); i++)
+              new_name += delimiter + splitted_name[i];
+      }
+      return new_name;
+  }
 
   /*
    * \brief Helper function that creates the tag for an old variable
   */
-  Expr::Tag create_old_var_tag(const Expr::Tag& varTag, const bool retainVarName)
+  Expr::Tag create_old_var_tag(const Expr::Tag& varTag, const bool retainVarName, const bool recentValue = false)
   {
-    return Expr::Tag( varTag.name() + ( (retainVarName) ? "" : "_old" ), Expr::STATE_NONE);
+    if (recentValue) return Expr::Tag( varTag.name() + ( (retainVarName) ? "" : "_recent" ), Expr::STATE_NONE);
+    else{
+      if (retainVarName) return Expr::Tag( varTag.name(), Expr::STATE_NONE);
+      else return Expr::Tag( construct_name(varTag.name(),"_"), Expr::STATE_NONE);
+      } 
   }
   
+  /**
+   * @brief Create an old variable taglist object for a number (num) of timestep back in time.
+   * 
+   * @param varTag the tag of the variable of interest
+   * @param num number of placeholder for the variable values from previous timestep. 
+   * @return Expr::TagList 
+   * 
+   * example: if we save the pressure from the previous three timesteps, the return taglist from this function will be:
+   *  pressure, pressure_NM_0, and pressure_NM_1
+   */
+  Expr::TagList create_old_var_tag_list(const Expr::Tag& varTag, const int& num)
+  {
+    Expr::TagList oldVarTags;
+    oldVarTags.push_back(varTag);
+    for (int i = 1; i<num; i++)
+        oldVarTags.push_back(create_old_var_tag(oldVarTags[i-1],false));
+    return oldVarTags;
+  }
+
+  /**
+   * @brief Get the old variable taglist object for a number (num) of timestep back in time
+   *        to be used in an expression when creating field requests.
+   * 
+   * 
+   * @param varTag the tag of the variable that was saved for multiple of timesteps
+   * @param num the number of timestep for which this variable was saved
+   * @return Expr::TagList 
+   * 
+   * example: if the pressure was saved from the previous three timesteps, the return taglist from this function will be:
+   *  pressure_NM_0, pressure_NM_1, and pressure_NM_2
+   */
+  Expr::TagList get_old_var_taglist(const Expr::Tag& varTag, int num)
+  {
+    Expr::TagList oldVarTags;
+    oldVarTags.push_back(create_old_var_tag(varTag,false));
+    for (int i = 1; i<num; i++)
+        oldVarTags.push_back(create_old_var_tag(oldVarTags[i-1],false));
+    return oldVarTags;
+  }
+
   class OldVariable::VarHelperBase
   {
   protected:
     const Expr::Tag name_, oldName_;
-    bool needsNewVarLabel_;
+    bool needsNewVarLabel_, recentValue_;
     Uintah::VarLabel *oldVarLabel_, *varLabel_;  // jcs need to get varLabel_ from an existing one...
     Uintah::Ghost::GhostType ghostType_;
     // note that we can pull a VarLabel from the Expr::FieldManager if we have that available.  But we will need a tag and not a string to identify the variable.
@@ -67,10 +169,12 @@ namespace WasatchCore {
 
     VarHelperBase( const Expr::Tag& var,
                    const bool retainName,
+                   const bool recentValue,
                    const Uintah::TypeDescription* typeDesc,
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
-      oldName_( create_old_var_tag(name_,retainName) ),
+      oldName_( create_old_var_tag(name_,retainName, recentValue) ),
+      recentValue_(recentValue),
       needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == nullptr ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc ) ),
       varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc ) : Uintah::VarLabel::find( name_.name() ) ),
@@ -85,6 +189,7 @@ namespace WasatchCore {
 
     const Expr::Tag& var_name()     const{ return name_;    }
     const Expr::Tag& old_var_name() const{ return oldName_; }
+    const bool recentValue() const { return recentValue_; }
 
     Uintah::VarLabel* const  get_var_label    () const{ return varLabel_;    }
     Uintah::VarLabel* const  get_old_var_label() const{ return oldVarLabel_; }
@@ -101,9 +206,11 @@ namespace WasatchCore {
   public:
 
     VarHelper( const Expr::Tag& var,
-               const bool retainName )
+               const bool retainName,
+               const bool recentValue)
     : VarHelperBase( var,
                      retainName,
+                     recentValue,
                      get_uintah_field_type_descriptor<T>(),
                      get_uintah_ghost_type<T>())
     {}
@@ -129,8 +236,9 @@ namespace WasatchCore {
       const SpatialOps::GhostData gd( get_n_ghost<T>() );
       TPtr fOldVal = wrap_uintah_field_as_spatialops<T>(oldVal,ainfo,gd);
       
-      Uintah::DataWarehouse* dw = (rkStage == 1) ? ainfo.oldDW : ainfo.newDW;
-      
+      Uintah::DataWarehouse* dw;
+      if (recentValue()) dw = (rkStage == 1) ? ainfo.oldDW : ainfo.newDW;
+      else dw = ainfo.oldDW;
       if (dw->exists(varLabel_,ainfo.materialIndex,ainfo.patch)) {
         dw->get( val, varLabel_, ainfo.materialIndex, ainfo.patch, gt, ng );
         const TPtr f = wrap_uintah_field_as_spatialops<T>(val,ainfo,gd);
@@ -175,7 +283,8 @@ namespace WasatchCore {
   void
   OldVariable::add_variable( const Category category,
                              const Expr::Tag& var,
-                             const bool retainName)
+                             const bool retainName,
+                             const bool recentValue )
   {
     if( hasDoneSetup_ ){
       std::ostringstream msg;
@@ -191,17 +300,17 @@ namespace WasatchCore {
     
     // if this expression has already been registered, then return
     Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);
-    const Expr::Tag oldVarTag = create_old_var_tag(var, retainName);
+    const Expr::Tag oldVarTag = create_old_var_tag(var, retainName, recentValue);
     if( factory.have_entry( oldVarTag ) )
     {
       return;
     }
 
-    VarHelperBase* const vh = new VarHelper<T>(var, retainName);
+    VarHelperBase* const vh = new VarHelper<T>(var, retainName, recentValue);
     typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
     
-    factory.register_expression( new PlaceHolder( vh->old_var_name() ), false );
-
+    const Expr::ExpressionID id =factory.register_expression( new PlaceHolder( vh->old_var_name() ), false );
+    wasatch_->graph_categories()[category]->rootIDs.insert(id);
     varHelpers_.push_back( vh );
 
     // don't allow the ExpressionTree to reclaim memory for this field since
@@ -211,6 +320,19 @@ namespace WasatchCore {
     }
   }
 
+  template< typename T >
+  void
+  OldVariable::add_variables(const Category category,
+                             const Expr::Tag& varTag,
+                             const int& numVal)
+  {
+    const Expr::TagList& varTagList = create_old_var_tag_list(varTag,numVal);
+    for( Expr::TagList::const_iterator iTag = varTagList.begin(); iTag != varTagList.end(); ++iTag )
+    {
+      const Expr::Tag tag = * iTag;
+      add_variable<T>(category, tag);
+    }
+  }
   //------------------------------------------------------------------
 
   void
@@ -276,7 +398,8 @@ namespace WasatchCore {
 
 #define INSTANTIATE( T )                 \
   template class WasatchCore::VarHelper<T>;  \
-  template void WasatchCore::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
+  template void WasatchCore::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName, const bool recentValue); \
+  template void WasatchCore::OldVariable::add_variables<T>(const Category, const Expr::Tag&, const int&);
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )

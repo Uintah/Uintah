@@ -48,6 +48,8 @@ namespace Uintah{
 
 namespace WasatchCore {
 
+  Expr::TagList get_old_var_taglist(const Expr::Tag& varTag, int num); // declaration of a helper function
+
   class Wasatch;  // forward declaration
 
   /**
@@ -109,11 +111,14 @@ namespace WasatchCore {
      * @brief add a new variable to the list of variables that should have
      *  "old" copies retained.
      * @param category indicates which task category this should be active on
-     * @param var the variable that we want an "old" copy for
+     * @param var the variable that we want an "old" copy of
      * @param retainName indicates whether to retain the same varlabel for the
      *        the old variable. Set this to true when you want to copy a variable
      *        from the old DW to keep it floating around and avoid recalculating it.
-     *
+     * @param recentValue indicates whether to save the variable from the previous
+     *        Runge-Kutta stage or from the previous timestep. Set recentValue to true
+     *        in order to retain the recent stage value and set it to false to retain 
+     *        the value from the previous timestep.
      * When a variable is added, an "old" counterpart is created and a
      * PlaceHolder expression is registered with the factory associated
      * with the specified category.  After the variable's value has been
@@ -123,7 +128,29 @@ namespace WasatchCore {
     template< typename T >
     void add_variable( const Category category,
                        const Expr::Tag& var,
-                       const bool retainName=false);
+                       const bool retainName=false,
+                       const bool recentValue=false);
+    
+    /**
+     * @brief add a new variable to the list of variables that should have 
+     *        numVal of old copies retained.
+     * 
+     * @param category indicates which task category this should be active on
+     * @param varTag the tag of the variable that we want an old copies of
+     * @param numVal the number of values from previous timestep to be saved
+     * 
+     * When a variable is added, a numVal "old" counterparts are created and
+     * PlaceHolder expressions are registered with the factory associated
+     * with the specified category. The values that are stored in these placeholders
+     * are being copied via the same task that allows the addition of one single variable.
+     * 
+     * only values from previous timesteps are retained. no values from recent RK stages.
+     *
+     */
+    template< typename T >
+    void add_variables(const Category category,
+                             const Expr::Tag& varTag,
+                             const int& numVal);
 
     class VarHelperBase;  // forward
 
