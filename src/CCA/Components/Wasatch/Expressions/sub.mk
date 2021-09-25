@@ -44,10 +44,12 @@ CUDA_ENABLED_SRCS :=      \
      ActuatorDisk         \
      MomentumPartialRHS   \
      MomentumRHS          \
+     MomHat               \
      MonolithicRHS        \
      PoissonExpression    \
      Pressure             \
      PressureSource       \
+     PressureGuess        \
      PrimVar              \
      ScalabilityTestSrc   \
      ScalarEOSCoupling    \
@@ -58,6 +60,7 @@ CUDA_ENABLED_SRCS :=      \
      Strain               \
      TargetValueSource    \
      TimeAdvance          \
+     TimeAdvanceMomentum  \
      TestNestedExpression
 
 ifeq ($(HAVE_CUDA),yes)

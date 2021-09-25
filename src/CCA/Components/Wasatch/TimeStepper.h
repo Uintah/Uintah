@@ -81,12 +81,21 @@ namespace WasatchCore{
       
       Expr::Tag solnVarTag;
       Expr::Tag rhsTag;
+      Expr::Tag varHatTag = Expr::Tag();
       
       FieldInfo( const std::string& name,
                  Expr::Tag varTag,
                  Expr::Tag rhsVarTag )
         : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag)
       {}
+
+      FieldInfo( const std::string& name,
+                 Expr::Tag varTag,
+                 Expr::Tag rhsVarTag,
+                 Expr::Tag hatTag )
+        : varname( name ), solnVarTag(varTag), rhsTag(rhsVarTag), varHatTag(hatTag)
+      {}
+
       bool operator==( const FieldInfo& fi ) const{ return varname.compare(fi.varname); }
       bool operator<( const FieldInfo& fi ) const{ return varname < fi.varname; }
       bool operator>( const FieldInfo& fi ) const{ return varname > fi.varname; }
@@ -178,6 +187,10 @@ namespace WasatchCore{
     void add_equations( const Expr::TagList& solnVarTags,
                         const Expr::TagList& rhsTags );
 
+    template<typename FieldT>
+    void add_equation( const std::string& solnVarName,
+                       const Expr::Tag&   rhsTag,
+                       const Expr::Tag&   momHatTag );
     /**
      *  \brief schedule the tasks associated with this TimeStepper
      *

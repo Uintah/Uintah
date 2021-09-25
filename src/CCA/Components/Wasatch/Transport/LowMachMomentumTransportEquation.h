@@ -116,7 +116,7 @@ namespace WasatchCore{
     static std::string get_phi_name( Uintah::ProblemSpecP params );
 
   protected:
-
+    Expr::Tag momHatTag_;
     void setup_diffusive_flux( FieldTagInfo& ){}
     void setup_convective_flux( FieldTagInfo& ){}
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}

@@ -53,11 +53,16 @@ class MomRHS
  : public Expr::Expression<FieldT>
 {
   typedef SpatialOps::SVolField PFieldT;
+  typedef SpatialOps::SingleValueField TimeField;
   typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<FieldT, DirT>::Gradient, PFieldT, FieldT >::type Grad;
 
   DECLARE_FIELDS(FieldT, rhsPart_, volfrac_)
   DECLARE_FIELD(PFieldT, pressure_)
+  DECLARE_FIELD(TimeField, rkStage_)
+  DECLARE_FIELD(PFieldT,pressureGuess_)
   const bool hasP_, hasIntrusion_;
+  bool guessStage1_, guessStage2_;
+  std::string integName_;
   const Grad* gradOp_;
 
   MomRHS( const Expr::Tag& pressure,

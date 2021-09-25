@@ -39,13 +39,15 @@ namespace WasatchCore{
   EquationBase::
   EquationBase( GraphCategories& gc,
                 const std::string solnVarName,
-                const Direction direction )
+                const Direction direction,
+                const bool hasHat )
   : direction_    ( direction ),
     gc_           ( gc ),
     solnVarName_  ( solnVarName ),
     solnVarTag_   ( solnVarName, Expr::STATE_DYNAMIC ),
     solnVarNP1Tag_( solnVarName, Expr::STATE_NP1 ),
-    rhsTag_       ( solnVarName + "_rhs", Expr::STATE_NONE )
+    rhsTag_       ( solnVarName + "_rhs", Expr::STATE_NONE ),
+    momHatTag_    (hasHat ?  Expr::Tag(solnVarName + "_hat", Expr::STATE_NONE) :Expr::Tag())
   {}
 
 
