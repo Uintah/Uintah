@@ -101,6 +101,10 @@ namespace WasatchCore{
     strainyx, strainyy, strainyz,
     strainzx, strainzy, strainzz;
     
+    // momentum hat related variables
+    const Expr::Tag 
+    divmomhat, pressureguess;
+
     // turbulence related variables
     const Expr::Tag
     turbulentviscosity,

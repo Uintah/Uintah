@@ -446,6 +446,8 @@ Pressure::evaluate()
   // the solver in the "schedule_solver" method.
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
+  if (! WasatchCore::Wasatch::using_pressure_guess())
+  {
   if (!isConstDensity_) {
     const SVolField& rhoStar = rhoStar_->field_ref();
     if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(fx_->field_ref() / (*s2XInterOp_)(rhoStar) ));
@@ -455,6 +457,7 @@ Pressure::evaluate()
     if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(fx_->field_ref() ));
     if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(fy_->field_ref() ));
     if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(fz_->field_ref() ));
+  }
   }
   if( hasIntrusion_) rhs <<= rhs * volfrac_->field_ref();
 

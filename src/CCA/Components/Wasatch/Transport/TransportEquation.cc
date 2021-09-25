@@ -41,7 +41,7 @@ namespace WasatchCore{
   TransportEquation( GraphCategories& gc,
                      const std::string& solnVarName,
                      const Direction stagLoc )
-  : EquationBase::EquationBase( gc, solnVarName, stagLoc ),
+  : EquationBase::EquationBase( gc, solnVarName, stagLoc, WasatchCore::Wasatch::using_pressure_guess() ),
     flowTreatment_  ( Wasatch::flow_treatment()        ),
     isConstDensity_ ( flowTreatment_ == INCOMPRESSIBLE )
   {}

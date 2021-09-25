@@ -204,7 +204,17 @@ namespace WasatchCore{
   {
     return rhs_part_tag( momTag.name() );
   }
+ 
+ //==================================================================
+  Expr::Tag mom_hat_tag( const std::string& momName )
+  {
+    return Expr::Tag(momName + "_hat", Expr::STATE_NONE);
+  }
 
+  Expr::Tag old_mom_hat_tag( const std::string& momName )
+  {
+    return Expr::Tag(momName + "_hat_old", Expr::STATE_NONE);
+  }
   //==================================================================
   
   void set_vel_tags( Uintah::ProblemSpecP params,
@@ -241,7 +251,41 @@ namespace WasatchCore{
     if( dozmom ) momTags.push_back( mom_tag(zmomname, old) );
     else         momTags.push_back( Expr::Tag() );
   }
-  
+   //==================================================================
+
+  void set_mom_hat_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& momHatTags)
+  {
+    std::string xmomname, ymomname, zmomname;
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    if( doxmom ) momHatTags.push_back( mom_hat_tag(xmomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+    if( doymom ) momHatTags.push_back( mom_hat_tag(ymomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+    if( dozmom ) momHatTags.push_back( mom_hat_tag(zmomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+  }
+
+  //==================================================================
+
+  void set_old_mom_hat_tags( Uintah::ProblemSpecP params,
+                        Expr::TagList& momHatTags)
+  {
+    std::string xmomname, ymomname, zmomname;
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    if( doxmom ) momHatTags.push_back( old_mom_hat_tag(xmomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+    if( doymom ) momHatTags.push_back( old_mom_hat_tag(ymomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+    if( dozmom ) momHatTags.push_back( old_mom_hat_tag(zmomname) );
+    else         momHatTags.push_back( Expr::Tag() );
+  }
   //==================================================================
   
   template< typename FieldT >
@@ -654,7 +698,11 @@ namespace WasatchCore{
     
     set_mom_tags( params, this->momTags_ );
     set_mom_tags( params, this->oldMomTags_, true );
-
+    if ( WasatchCore::Wasatch::using_pressure_guess())
+    {
+    set_mom_hat_tags( params, this->momHatTags_ );
+    set_old_mom_hat_tags( params, this->oldMomHatTags_ );
+    }
     //_____________
     // volume fractions for embedded boundaries Terms
     const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
@@ -683,6 +731,9 @@ namespace WasatchCore{
         factory.register_expression( new Dilatation(dilTag, this->velTags_) );
         const Expr::Tag divRhoUTag = tagNames.divrhou;
         factory.register_expression( new Dilatation(divRhoUTag, this->momTags_) );
+        // div mom hat
+        if ( WasatchCore::Wasatch::using_pressure_guess())
+        factory.register_expression( new Dilatation(tagNames.divmomhat, this->momHatTags_) );
       }
     }
     

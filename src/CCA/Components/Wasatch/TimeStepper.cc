@@ -29,6 +29,7 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include <CCA/Components/Wasatch/Expressions/TimeAdvance.h>
+#include <CCA/Components/Wasatch/Expressions/TimeAdvanceMomentum.h>
 
 
 //-- ExprLib includes --//
@@ -66,12 +67,22 @@ namespace WasatchCore{
                                    const bool cleaveSolnVarFromChildren )
   {
     typedef typename TimeAdvance<FieldT>::Builder TimeAdvBuilder;
+    typedef typename TimeAdvanceMomentum<FieldT>::Builder TimeAdvMomBuilder;
     typedef typename std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
       if (!gh->exprFactory->have_entry(ifld->solnVarTag)) {
+         if (ifld->varHatTag == Expr::Tag())
+        {
         const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ) );
         gh->rootIDs.insert(id);
         if(cleaveSolnVarFromChildren) gh->exprFactory->cleave_from_children(id);
+        }
+        else
+        {
+        const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvMomBuilder(ifld->solnVarTag, ifld->varHatTag,ifld->rhsTag, timeInt ) );
+        gh->rootIDs.insert(id);
+        if(cleaveSolnVarFromChildren) gh->exprFactory->cleave_from_children(id);
+        }
       }
     }
   }
@@ -233,6 +244,29 @@ namespace WasatchCore{
   template<typename FieldT>
   void
   TimeStepper::add_equation( const std::string& solnVarName,
+                             const Expr::Tag&   rhsTag,
+                             const Expr::Tag&   momHatTag )
+  {
+    const std::string rhsName = rhsTag.name();
+
+    const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NP1);
+    const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
+    
+    std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
+    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarTag, rhsVarTag, momHatTag ) );
+
+    typedef Expr::PlaceHolder<FieldT>  FieldExpr;
+    Expr::ExpressionFactory& solnFactory = *solnGraphHelper_->exprFactory;
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N      )), true );
+    solnFactory                       .register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
+    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1    )), true );
+  }
+
+  //------------------------------------------------------------------
+
+  template<typename FieldT>
+  void
+  TimeStepper::add_equation( const std::string& solnVarName,
                              const Expr::Tag&   rhsTag )
   {
     const std::string rhsName = rhsTag.name();
@@ -310,6 +344,12 @@ namespace WasatchCore{
   template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::Tag& );
   template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::Tag& );
   template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::Tag& );
+
+  template void TimeStepper::add_equation<so::SVolField              >( const std::string&, const Expr::Tag&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::XVolField              >( const std::string&, const Expr::Tag&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::Tag&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::Tag&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::Tag&, const Expr::Tag& );
 
   template void TimeStepper::add_equations<so::SVolField              >( const Expr::TagList&, const Expr::TagList& );
   template void TimeStepper::add_equations<so::XVolField              >( const Expr::TagList&, const Expr::TagList& );

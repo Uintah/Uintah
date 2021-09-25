@@ -77,8 +77,14 @@ namespace WasatchCore{
     EqnTimestepAdaptor( EquationBase* eqn ) : EqnTimestepAdaptorBase(eqn) {}
     void hook( TimeStepper& ts ) const
     {
-      ts.add_equation<FieldT>( eqn_->solution_variable_name(),
-                              eqn_->rhs_tag() );
+      const Expr::Tag& momHatTag = eqn_->momHat_tag();
+        if (momHatTag != Expr::Tag())
+          ts.add_equation<FieldT>( eqn_->solution_variable_name(),
+                                eqn_->rhs_tag(),
+                                momHatTag );
+        else
+          ts.add_equation<FieldT>( eqn_->solution_variable_name(),
+                                eqn_->rhs_tag() );
       
     }
   };
