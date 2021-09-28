@@ -67,6 +67,7 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/InstantaneousPressure.h>
 
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleInitialization.h>
 
@@ -1482,6 +1483,29 @@ namespace WasatchCore{
             std::ostringstream msg;
             msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      else if ( exprParams->findBlock("InstantaneousPressure") ) {
+        Uintah::ProblemSpecP InstPressSpec = exprParams->findBlock("InstantaneousPressure");
+        double order=0.0;
+        InstPressSpec->getAttribute("order",order);
+        Uintah::ProblemSpecP momentumSpec = parser->findBlock("MomentumEquations");
+        
+        if ( (!momentumSpec->findBlock("UsingPressureGuess")) || (order > 3.0) )
+        {
+          std::ostringstream msg;
+          msg << "ERROR: The instantaneous pressure can only be used when <UsingPressureGuess /> is applied in the momentum transport equation and for order <= 3.0. Please revise your input file." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        else{
+        const Expr::Tag pressuret = WasatchCore::TagNames::self().pressure;
+        // store the necessary number of pseudo-pressure values necessary for the 
+        // construction of the instantaneous pressure.
+        OldVariable& oldVar = OldVariable::self();
+        oldVar.add_variables<SVolField>(ADVANCE_SOLUTION, pressuret, order);
+
+        typedef InstantaneousPressure::Builder Builder;
+        builder = scinew Builder(tag, order);
         }
       }
 
