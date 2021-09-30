@@ -111,11 +111,11 @@ Pressure::Pressure( const std::string& pressureName,
 
   std::string timeIntegratorName = WasatchCore::Wasatch::get_timeIntegratorName();
   if (timeIntegratorName =="FE")
-      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::FE,{true},solver_,matrixLabel_,pressureLabel_,prhsLabel_);  
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new FEScheduler,{true},solver_,matrixLabel_,pressureLabel_,prhsLabel_);  
   else if (timeIntegratorName =="RK2SSP")
-      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::RK2_1,{!WasatchCore::Wasatch::guess_stage_1()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK21Scheduler,{!WasatchCore::Wasatch::guess_stage_1()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
   else if (timeIntegratorName =="RK3SSP")
-      pressure_scheduler_helper_ = new SchedulerHelper::RKPressureSchedulerHelper(new SchedulerHelper::RK3_11,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK311Scheduler,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
 }
 
 //--------------------------------------------------------------------
