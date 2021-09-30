@@ -121,6 +121,11 @@ namespace Uintah {
     ParticleVariable<Vector> pPosChargeGrad;
     ParticleVariable<Vector> pNegChargeGrad;
     ParticleVariable<double> pPermittivity;
+
+    // Hydro-mechanical coupling MPM
+    ParticleVariable<double> pFluidMass, pSolidMass, pPorePressure, pPorosity;
+    ParticleVariable<Vector> pFluidVelocity, pfluidacceleration;
+    ParticleVariable<Vector> pPrescribedPorePressure;
     } ParticleVars;
 
   protected:
@@ -179,6 +184,7 @@ namespace Uintah {
     bool d_computeScaleFactor;
     bool d_useCPTI;
     bool d_withGaussSolver;
+    bool d_coupledflow;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     

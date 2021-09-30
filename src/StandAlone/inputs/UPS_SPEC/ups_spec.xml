@@ -444,7 +444,7 @@
                                                 RMCRT_Test,
                                                 rmpmice, rigidmpmice, RIGIDMPMICE,
                                                 rmpm, rigidmpm, RIGIDMPM,
-                                                sfmpm, SFmpm, SFMPM,
+                                                sfmpm, shmpm, SFmpm, SFMPM,
                                                 smpmice, shellmpmice, SHELLMPMICE,
                                                 smpm, shellmpm, SHELLMPM,
                                                 solvertest2, SOLVERTEST2,

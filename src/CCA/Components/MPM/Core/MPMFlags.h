@@ -100,6 +100,7 @@ class Output;
     bool        d_doExplicitHeatConduction;
     bool        d_deleteGeometryObjects;
     bool        d_doPressureStabilization;
+    bool        d_doCapDensity;
     bool        d_computeNormals;
     bool        d_useLogisticRegression;
     bool        d_computeColinearNormals;
@@ -121,6 +122,13 @@ class Output;
 
     bool        d_with_ice;
     std::string d_mms_type;                                    // MMS Flag
+
+    //********** For Hydro mechanical coupling MPM *********************
+    bool        d_coupledflow;                                 // For coupled fluid-soil analysis
+    bool        d_coupledflow_contact;                         // Contact formulation for fluid
+    double      d_waterdampingCoeff;
+    double      d_soliddampingCoeff;
+    bool		d_PorePressureFilter;						 // Pore Water Pressure filter option
 
    //********** Start Reactive Flow Section *********************
     bool        d_doScalarDiffusion;

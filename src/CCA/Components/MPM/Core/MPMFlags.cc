@@ -88,6 +88,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doExplicitHeatConduction           =  true;
   d_deleteGeometryObjects              =  false;
   d_doPressureStabilization            =  false;
+  d_doCapDensity = false;
   d_computeNodalHeatFlux               =  false;
   d_computeScaleFactor                 =  false;
   d_doTransientImplicitHeatConduction  =  true;
@@ -112,6 +113,13 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->KE               = false;
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
+
+  //******* Hydro-mechanical coupling MPM
+  d_coupledflow = false;
+  d_coupledflow_contact = false; //Changed to true if contact is specified
+  d_waterdampingCoeff = 0.0;
+  d_soliddampingCoeff = 0.0;
+  d_PorePressureFilter = false;
 
   //******* Reactive Flow Component
   d_doScalarDiffusion   =  false;  // for diffusion component found  in ReactiveFlow
@@ -210,6 +218,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("exactDeformation",            d_exactDeformation);
   mpm_flag_ps->get("use_cohesive_zones",          d_useCohesiveZones);
 
+  // Hydro mechanical coupling
+  mpm_flag_ps->get("coupled_flow_analysis", d_coupledflow);
+  mpm_flag_ps->get("solid_damping_coef", d_soliddampingCoeff);
+  mpm_flag_ps->get("water_damping_coef", d_waterdampingCoeff);
+  mpm_flag_ps->get("PorePressureFilter", d_PorePressureFilter);
+
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
     if (d_myworld->myRank() == 0){
       cerr << "artificial viscosity is not implemented" << endl;
@@ -229,6 +243,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoExplicitHeatConduction",          d_doExplicitHeatConduction);
   mpm_flag_ps->get("DeleteGeometryObjects",             d_deleteGeometryObjects);
   mpm_flag_ps->get("DoPressureStabilization",           d_doPressureStabilization);
+  mpm_flag_ps->get("DoCapDensity", d_doCapDensity);
   mpm_flag_ps->get("DoThermalExpansion",                d_doThermalExpansion);
   mpm_flag_ps->getWithDefault("UseGradientEnhancedVelocityProjection",  d_GEVelProj,false);
   mpm_flag_ps->get("do_grid_reset",                     d_doGridReset);
@@ -419,6 +434,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoExplicitHeatConduction",           d_doExplicitHeatConduction);
   ps->appendElement("DeleteGeometryObjects",              d_deleteGeometryObjects);
   ps->appendElement("DoPressureStabilization",            d_doPressureStabilization);
+  ps->appendElement("DoCapDensity", d_doCapDensity);
   ps->appendElement("computeNodalHeatFlux",               d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",                 d_computeScaleFactor);
   ps->appendElement("DoThermalExpansion",                 d_doThermalExpansion);
@@ -429,6 +445,12 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("minimum_mass_for_acc",               d_min_mass_for_acceleration);
   ps->appendElement("maximum_particle_velocity",          d_max_vel);
   ps->appendElement("UsePrescribedDeformation",           d_prescribeDeformation);
+
+  // Hydro mechanical coupling
+  ps->appendElement("coupled_flow_analysis", d_coupledflow);
+  ps->appendElement("water_damping_coef", d_waterdampingCoeff);
+  ps->appendElement("solid_damping_coef", d_soliddampingCoeff);
+  ps->appendElement("PorePressureFilter", d_PorePressureFilter);
 
   if(d_prescribeDeformation){
     ps->appendElement("PrescribedDeformationFile",d_prescribedDeformationFile);

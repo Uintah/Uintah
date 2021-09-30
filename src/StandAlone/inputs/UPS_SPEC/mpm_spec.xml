@@ -21,6 +21,7 @@
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DeleteGeometryObjects              spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
+	  <DoCapDensity                       spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
@@ -69,6 +70,13 @@
       <auto_cycle_max                     spec="OPTIONAL DOUBLE" />
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
       <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
+
+		<!-- Hydro mechanical coupling -->
+		<coupled_flow_analysis spec="OPTIONAL BOOLEAN" />
+		<water_damping_coef spec="OPTIONAL DOUBLE" />
+		<solid_damping_coef spec="OPTIONAL DOUBLE" />
+		<PorePressureFilter spec="OPTIONAL BOOLEAN" />
+		
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -156,6 +164,12 @@
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
 
+		  <!--Hydro mechanical coupling-->s
+		  <water_density spec="OPTIONAL DOUBLE 'positive'"/>
+		  <porosity spec="OPTIONAL DOUBLE 'positive'"/>
+		  <permeability spec="OPTIONAL DOUBLE 'positive'"/>
+		  <initial_pore_pressure spec="OPTIONAL DOUBLE"/>
+		  
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
         <!-- Damage models -->

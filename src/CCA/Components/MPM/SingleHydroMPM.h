@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SERIALMPM_H
-#define UINTAH_HOMEBREW_SERIALMPM_H
+#ifndef UINTAH_HOMEBREW_SingleHydroMPM_H
+#define UINTAH_HOMEBREW_SingleHydroMPM_H
 
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
@@ -45,6 +45,8 @@
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
+#include <CCA/Components/MPM/SerialMPM.h>
+
 namespace Uintah {
 
 class ThermalContact;
@@ -56,23 +58,18 @@ class FluxBCModel;
 /**************************************
 
 CLASS
-   SerialMPM
+   SingleHydroMPM
    
-   Short description...
-
 GENERAL INFORMATION
 
-   SerialMPM.h
+   SingleHydroMPM.h   (copied from SerialMPM)
 
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+   Quoc Anh Tran
+   Department of Civil and Environmental Engineering
+   Norwegian University of Science and Technology 
    
 KEYWORDS
-   SerialMPM
+   SingleHydroMPM
 
 DESCRIPTION
    Long description...
@@ -81,14 +78,15 @@ WARNING
   
 ****************************************/
 
-  class SerialMPM : public MPMCommon {
+  class SingleHydroMPM : public MPMCommon {
 public:
-    SerialMPM(const ProcessorGroup* myworld,
+    SingleHydroMPM(const ProcessorGroup* myworld,
               const MaterialManagerP materialManager);
 
-  virtual ~SerialMPM();
+  virtual ~SingleHydroMPM();
 
   Contact*         contactModel;
+  Contact*         fluidContactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
   SDInterfaceModel* d_sdInterfaceModel;
@@ -145,6 +143,13 @@ public:
         flags->d_with_ice = true;
   };
 
+  /*
+  void setWithARCHES()
+  {computeCurrentParticleSize
+        flags->d_with_arches = true;
+  };
+  */
+
   enum IntegratorType {
     Explicit,
     Implicit,
@@ -156,7 +161,13 @@ protected:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
-  friend class SingleHydroMPM;
+  friend class MPMICE2;
+  friend class MPMICE2explicit;
+  friend class MPMICEexplicit;
+  friend class MPMArches;
+
+  SerialMPM* d_mpm;
+  int              d_8or27;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
@@ -224,57 +235,12 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void actuallyComputeStableTimestep(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
   virtual void interpolateParticlesToGrid(const ProcessorGroup*,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
-  virtual void computeNormals(const ProcessorGroup  *,
-                              const PatchSubset     * patches,
-                              const MaterialSubset  * ,
-                                    DataWarehouse   * old_dw,
-                                    DataWarehouse   * new_dw );
-
-  virtual void computeLogisticRegression(const ProcessorGroup  *,
-                                         const PatchSubset     * patches,
-                                         const MaterialSubset  * ,
-                                               DataWarehouse   * old_dw,
-                                               DataWarehouse   * new_dw );
-
-  virtual void findSurfaceParticles(const ProcessorGroup  *,
-                                    const PatchSubset     * patches,
-                                    const MaterialSubset  * ,
-                                          DataWarehouse   * old_dw,
-                                          DataWarehouse   * new_dw );
-
-  virtual void computeSSPlusVp(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-  virtual void computeSPlusSSPlusVp(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void addCohesiveZoneForces(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -292,14 +258,6 @@ protected:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void computeContactArea(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-  
   virtual void computeInternalForce(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
@@ -307,13 +265,22 @@ protected:
                               DataWarehouse* new_dw);
 
   //////////
-  // Calculates the grid-based rate of species diffusion
-  virtual void computeAndIntegrateDiffusion(const ProcessorGroup*
-                                           ,const PatchSubset     * patches
-                                           ,const MaterialSubset  * matls
-                                           ,      DataWarehouse   * old_dw
-                                           ,      DataWarehouse   * new_dw);
+ // F_drag = Q * (w-v)
+  virtual void computeFluidDragForce(const ProcessorGroup*,
+      const PatchSubset* patches,
+      const MaterialSubset*,
+      DataWarehouse* old_dw,
+      DataWarehouse* new_dw);
+ 
   //////////
+ // For hydro-mechanical coupling MPM, compute fluid velocities and acceleration
+  virtual void computeAndIntegrateFluidAcceleration(const ProcessorGroup*,
+      const PatchSubset* patches,
+      const MaterialSubset* matls,
+      DataWarehouse* old_dw,
+      DataWarehouse* new_dw);
+
+    //////////
   // Insert Documentation Here:
   virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                const PatchSubset* patches,
@@ -333,17 +300,11 @@ protected:
   // and external heat rate.  I'm creating a separate task so that
   // user defined schemes for setting these can be implemented without
   // editing the core routines
-  void applyExternalLoads(const ProcessorGroup*,
+  void applyExternalFluidLoads(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* ,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
-
-  void computeCurrentParticleSize(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* ,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
 
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -382,46 +343,23 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void updateCohesiveZones(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
+  virtual void InterpolateParticleToGridFilter(const ProcessorGroup*,
+      const PatchSubset* patches,
+      const MaterialSubset* matls,
+      DataWarehouse* old_dw,
+      DataWarehouse* new_dw);
 
-  //////////
-  // Insert Documentation Here:
-  virtual void setPrescribedMotion(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
+  virtual void InterpolateGridToParticleFilter(const ProcessorGroup*,
+      const PatchSubset* patches,
+      const MaterialSubset* matls,
+      DataWarehouse* old_dw,
+      DataWarehouse* new_dw);
 
-  //////////
-  // Allow blocks of particles to be moved according to a prescribed schedule:
   virtual void insertParticles(const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-  //////////
-  // Add new particles to the simulation based on criteria TBD:
-  virtual void addParticles(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
-
-
-  // Used to compute the particles initial physical size
-  // for use in deformed particle visualization
-  virtual void computeParticleScaleFactor(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw);
+      const PatchSubset* patches,
+      const MaterialSubset* matls,
+      DataWarehouse* old_dw,
+      DataWarehouse* new_dw);
 
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
@@ -441,32 +379,8 @@ protected:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
-  virtual void scheduleComputeNormals(SchedulerP        & sched,
-                                      const PatchSet    * patches,
-                                      const MaterialSet * matls );
-
-  virtual void scheduleComputeLogisticRegression(SchedulerP        & sched,
-                                                 const PatchSet    * patches,
-                                                 const MaterialSet * matls );
-
-  virtual void scheduleFindSurfaceParticles(SchedulerP        & sched,
-                                            const PatchSet    * patches,
-                                            const MaterialSet * matls );
-
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
-
-  virtual void scheduleComputeSSPlusVp(SchedulerP&, const PatchSet*,
-                                                    const MaterialSet*);
-
-  virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
-                                                         const MaterialSet*);
-
-  virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
-                                             const PatchSet*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
-                                             const MaterialSet*);
 
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
@@ -474,15 +388,15 @@ protected:
   virtual void scheduleExMomInterpolated(SchedulerP&, const PatchSet*,
                                          const MaterialSet*);
 
+  virtual void scheduleFluidExMomInterpolated(SchedulerP&, const PatchSet*,
+      const MaterialSet*);
+
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
 
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
                                       const MaterialSet*);
 
-  virtual void scheduleComputeContactArea(SchedulerP&, const PatchSet*,
-                                          const MaterialSet*);
-  
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
@@ -495,9 +409,12 @@ protected:
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
 
-  virtual void scheduleComputeAndIntegrateDiffusion(SchedulerP&,
-                                                    const PatchSet*,
-                                                    const MaterialSet*);
+  virtual void scheduleComputeFluidDragForce(SchedulerP&, const PatchSet*,
+      const MaterialSet*);
+  
+  virtual void scheduleComputeAndIntegrateFluidAcceleration(SchedulerP&,
+      const PatchSet*,
+      const MaterialSet*);
 
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
@@ -509,14 +426,14 @@ protected:
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
                                        const MaterialSet*);
 
+  virtual void scheduleFluidExMomIntegrated(SchedulerP&, const PatchSet*,
+      const MaterialSet*);
+
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
                                                  
-  void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
+  void scheduleApplyExternalFluidLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
-
-  void scheduleComputeCurrentParticleSize(SchedulerP&, const PatchSet*,
-                                          const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
@@ -530,66 +447,29 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-  virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
-                                           const PatchSet*,
-                                           const MaterialSubset*,
-                                           const MaterialSubset*,
-                                           const MaterialSet*);
+  // Null space filter for pore pressure
+  virtual void scheduleInterpolateParticleToGridFilter(SchedulerP&,
+      const PatchSet*,
+      const MaterialSet*);
 
-  virtual void scheduleSetPrescribedMotion(SchedulerP&, 
-                                           const PatchSet*,
-                                           const MaterialSet*);
+  virtual void scheduleInterpolateGridToParticleFilter(SchedulerP&,
+      const PatchSet*,
+      const MaterialSet*);
 
-  virtual void scheduleInsertParticles(SchedulerP&, 
-                                       const PatchSet*,
-                                       const MaterialSet*);
-
-  virtual void scheduleAddParticles(SchedulerP&, 
-                                    const PatchSet*,
-                                    const MaterialSet*);
-
-  virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
-                                                  const PatchSet*,
-                                                  const MaterialSet*);
+  virtual void scheduleInsertParticles(SchedulerP&,
+      const PatchSet*,
+      const MaterialSet*);
 
   // JBH -- Scalar Diffusion Related
-  virtual void scheduleConcInterpolated(        SchedulerP  &
-                                       ,  const PatchSet    *
-                                       ,  const MaterialSet *);
-
-  virtual void scheduleComputeFlux(        SchedulerP  &
-                                  ,  const PatchSet    *
-                                  ,  const MaterialSet *);
-
-  virtual void computeFlux( const ProcessorGroup *
-                          , const PatchSubset    *
-                          , const MaterialSubset *
-                          ,       DataWarehouse  *
-                          ,       DataWarehouse  *  );
-
-
-  virtual void scheduleComputeDivergence(        SchedulerP  &
-                                        ,  const PatchSet    *
-                                        ,  const MaterialSet *);
-
-  virtual void computeDivergence( const ProcessorGroup  *
-                                , const PatchSubset     *
-                                , const MaterialSubset  *
-                                ,       DataWarehouse   *
-                                ,       DataWarehouse   * );
-
-
-  virtual void scheduleDiffusionInterfaceDiv(        SchedulerP  &
-                                            ,  const PatchSet    *
-                                            ,  const MaterialSet *);
-
-
 
   void readPrescribedDeformations(std::string filename);
 
   void readInsertParticlesFile(std::string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+
+  // Check for rigid material and coupled flow
+  bool hasFluid(int m);
 
   //__________________________________
   // refinement criteria threshold knobs
@@ -669,8 +549,8 @@ protected:
   
 private:
 
-  SerialMPM(const SerialMPM&);
-  SerialMPM& operator=(const SerialMPM&);
+  SingleHydroMPM(const SingleHydroMPM&);
+  SingleHydroMPM& operator=(const SingleHydroMPM&);
 };
       
 } // end namespace Uintah

@@ -40,5 +40,6 @@ SRCS     += \
 	$(SRCDIR)/ContactFactory.cc   \
 	$(SRCDIR)/CompositeContact.cc \
 	$(SRCDIR)/NullContact.cc      \
+	$(SRCDIR)/FluidContact.cc      \
 	$(SRCDIR)/ContactMaterialSpec.cc \
 	$(SRCDIR)/Contact.cc

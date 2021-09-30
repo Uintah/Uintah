@@ -79,6 +79,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
+#include <CCA/Components/MPM/SingleHydroMPM.h>
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_FVM)
@@ -238,6 +239,13 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "sfmpm ";
   }
 
+  if (sim_comp == "shmpm" || sim_comp == "SHmpm" || sim_comp == "SHMPM") {
+      return scinew SingleHydroMPM(myworld, materialManager);
+  }
+  else {
+      turned_on_options += "shmpm ";
+
+  }
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(myworld, materialManager);
   }

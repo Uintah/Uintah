@@ -360,6 +360,52 @@ namespace Uintah {
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
 
+      // Hydro-mechanical coupling
+      const VarLabel* ccPorosity;
+      const VarLabel* ccPorePressure;
+      const VarLabel* ccPorePressureOld;
+      const VarLabel* ccRHS_FlowEquation;
+      const VarLabel* ccTransmissivityMatrix;
+      const VarLabel* pFluidMassLabel;
+      const VarLabel* pFluidVelocityLabel;
+      const VarLabel* pFluidAccelerationLabel;
+      const VarLabel* pSolidMassLabel;
+      const VarLabel* pPorosityLabel;
+      const VarLabel* pPorosityLabel_preReloc;
+      const VarLabel* pPrescribedPorePressureLabel;
+      const VarLabel* pPorePressureLabel;
+      const VarLabel* pPorePressureFilterLabel;
+
+      const VarLabel* pStressRateLabel;
+      const VarLabel* pStressRateLabel_preReloc;
+      const VarLabel* gFluidMassBarLabel;
+      const VarLabel* gFluidMassLabel;
+      const VarLabel* gFluidVelocityLabel;
+      const VarLabel* FluidVelInc;
+      const VarLabel* gFluidVelocityStarLabel;
+      const VarLabel* gFluidAccelerationLabel;
+      const VarLabel* gInternalFluidForceLabel;
+      const VarLabel* gExternalFluidForceLabel;
+      const VarLabel* gInternalDragForceLabel;
+      const VarLabel* gFlowInertiaForceLabel;
+      const VarLabel* gPorePressureLabel;
+      const VarLabel* gPorePressureFilterLabel;
+
+      const VarLabel* pFluidMassLabel_preReloc;
+      const VarLabel* pFluidVelocityLabel_preReloc;
+      const VarLabel* pFluidAccelerationLabel_preReloc;
+      const VarLabel* pSolidMassLabel_preReloc;
+      const VarLabel* pPorePressureLabel_preReloc;
+      const VarLabel* pPorePressureFilterLabel_preReloc;
+      const VarLabel* gFluidMassBarLabel_preReloc;
+      const VarLabel* gFluidMassLabel_preReloc;
+      const VarLabel* gFluidVelocityLabel_preReloc;
+      const VarLabel* gFluidVelocityStarLabel_preReloc;
+      const VarLabel* gFluidAccelerationLabel_preReloc;
+
+      // MPM Hydrostatic BC label
+      const VarLabel* boundaryPointsPerCellLabel;
+
     };
 } // End namespace Uintah
 

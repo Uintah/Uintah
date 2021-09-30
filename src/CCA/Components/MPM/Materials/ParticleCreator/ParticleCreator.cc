@@ -123,6 +123,9 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 
   d_flags = flags;
 
+  // Hydro-mechanical coupling MPM
+  d_coupledflow = flags->d_coupledflow;
+
   registerPermanentParticleState(matl);
 }
 
@@ -575,6 +578,20 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
      new_dw->allocateAndPut(pvars.pExternalScalarFlux,
                                   d_lb->diffusion->pExternalScalarFlux, subset);
   }
+
+  if (d_coupledflow) {  // Harmless that rigid allocates and put, as long as
+                        // nothing it put
+      new_dw->allocateAndPut(pvars.pSolidMass, d_lb->pSolidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidMass, d_lb->pFluidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorosity, d_lb->pPorosityLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorePressure, d_lb->pPorePressureLabel,
+          subset);
+      new_dw->allocateAndPut(pvars.pPrescribedPorePressure,
+          d_lb->pPrescribedPorePressureLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidVelocity, d_lb->pFluidVelocityLabel,
+          subset);
+  }
+
   if(d_withGaussSolver){
      new_dw->allocateAndPut(pvars.pPosCharge,
                                           d_lb->pPosChargeLabel,    subset);
@@ -783,6 +800,22 @@ ParticleCreator::initializeParticle(const Patch* patch,
     }
     pvars.pTempGrad[i] = Vector(0.0);
   
+    if (d_coupledflow &&
+        !matl->getIsRigid()) {  // mass is determined by incoming porosity
+        double rho_s = matl->getInitialDensity();
+        double rho_w = matl->getWaterDensity();
+        double n = matl->getPorosity();
+        pvars.pmass[i] = (n * rho_w + (1.0 - n) * rho_s) * pvars.pvolume[i];
+        pvars.pFluidMass[i] = rho_w * pvars.pvolume[i];
+        pvars.pSolidMass[i] = rho_s * pvars.pvolume[i];
+        pvars.pFluidVelocity[i] = pvars.pvelocity[i];
+        pvars.pPorosity[i] = n;
+        pvars.pPorePressure[i] = matl->getInitialPorepressure();
+        pvars.pPrescribedPorePressure[i] = Vector(0., 0., 0.);
+        pvars.pdisp[i] = Vector(0., 0., 0.);
+    }
+    else { // Using original line of MPM
+
     double vol_frac_CC = 1.0;
     try {
      if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
@@ -797,6 +830,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
       pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
     }
     pvars.pdisp[i]        = Vector(0.,0.,0.);
+
+    } // end else
+
   }
   
   if(d_with_color){
@@ -1058,6 +1094,26 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
     matl->getScalarDiffusionModel()->addParticleState(particle_state,
                                                       particle_state_preReloc);
+  }
+
+  if (d_coupledflow && !matl->getIsRigid()) {
+      //if (d_coupledflow ) {
+      particle_state.push_back(d_lb->pFluidMassLabel);
+      particle_state.push_back(d_lb->pSolidMassLabel);
+      particle_state.push_back(d_lb->pPorePressureLabel);
+      particle_state.push_back(d_lb->pPorosityLabel);
+
+      // Error Cannot find in relocateParticles ???
+
+      particle_state_preReloc.push_back(d_lb->pFluidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_lb->pSolidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_lb->pPorePressureLabel_preReloc);
+      particle_state_preReloc.push_back(d_lb->pPorosityLabel_preReloc);
+
+      if (d_flags->d_integrator_type == "explicit") {
+          particle_state.push_back(d_lb->pFluidVelocityLabel);
+          particle_state_preReloc.push_back(d_lb->pFluidVelocityLabel_preReloc);
+      }
   }
 
   if(d_withGaussSolver){

@@ -148,6 +148,11 @@ WARNING
 
    int nullGeomObject() const;
 
+   // MPM Hydro-mechanical coupling
+   double getWaterDensity() const;
+   double getPorosity() const;
+   double getPermeability() const;
+   double getInitialPorepressure() const;
 
    // For MPMICE
    double getGamma() const;
@@ -192,6 +197,9 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
+
+   // Parameters related to MPM Hydro-mechanical coupling
+   double d_waterdensity, d_porosity, d_permeability, d_initial_porepressure;
 
    // for autocycleflux boundary condtions
    bool d_do_conc_reduction;

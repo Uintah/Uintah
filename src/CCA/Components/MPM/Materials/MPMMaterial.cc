@@ -124,6 +124,21 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
   
+  // Also use for Darcy momentum exchange model
+  ps->get("permeability", d_permeability);
+
+  // For MPM hydro-mechanical coupling
+  if (flags->d_coupledflow) {
+      // Rigid material does not require porosity and permeability
+      if (!ps->findBlockWithAttributeValue("constitutive_model", "type", "rigid")) {
+          ps->require("water_density", d_waterdensity);
+          ps->require("porosity", d_porosity);
+          //ps->require("permeability", d_permeability);
+          d_initial_porepressure = 0.0;
+          ps->get("initial_pore_pressure", d_initial_porepressure);
+      }
+  }
+
   // Assume the the centered specific heat is C_v
   d_Cv = d_specificHeat;
 
@@ -379,6 +394,29 @@ double MPMMaterial::getThermalConductivity() const
 {
   return d_thermalConductivity;
 }
+
+// MPM Hydro-mechanical coupling
+double MPMMaterial::getWaterDensity() const
+{
+    return d_waterdensity;
+}
+
+double MPMMaterial::getPorosity() const
+{
+    return d_porosity;
+}
+
+double MPMMaterial::getPermeability() const
+{
+    return d_permeability;
+}
+
+double MPMMaterial::getInitialPorepressure() const
+{
+    return d_initial_porepressure;
+}
+
+// End MPM Hydro-mechanical coupling
 
 
 /* --------------------------------------------------------------------- 

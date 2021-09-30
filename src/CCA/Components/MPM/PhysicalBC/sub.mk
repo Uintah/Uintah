@@ -34,6 +34,7 @@ SRCDIR   := CCA/Components/MPM/PhysicalBC
 SRCS     += \
 	$(SRCDIR)/MPMPhysicalBCFactory.cc  \
 	$(SRCDIR)/FluxBCModelFactory.cc    \
+	$(SRCDIR)/HydrostaticBC.cc         \
 	$(SRCDIR)/ForceBC.cc               \
 	$(SRCDIR)/PressureBC.cc            \
 	$(SRCDIR)/ScalarFluxBC.cc          \
