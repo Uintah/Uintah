@@ -126,6 +126,16 @@ Notes:
 
 
 //__________________________________
+//  To pull a single directory <src/scripts> from master
+ git init
+ git remote add origin -f git@github.com:/Uintah/Uintah or https://github.com/Uintah/Uintah.git
+ git config core.sparsecheckout true
+ nedit .git/info/sparse-checkout 
+      add src/scripts
+ git pull origin master
+
+
+//__________________________________
 // Additional Resources
 
 Git Learning Resources:
