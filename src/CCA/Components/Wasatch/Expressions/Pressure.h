@@ -127,7 +127,7 @@ class Pressure
   const Uintah::Patch* patch_;
   WasatchBCHelper* bcHelper_;
 
-  SchedulerHelper::RKPressureSchedulerHelper *pressure_scheduler_helper_;
+  RKPressureSchedulerHelper *pressure_scheduler_helper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,

@@ -38,7 +38,6 @@
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-namespace SchedulerHelper{
 /**
  * @brief This Pressure scheduler helper implements the State design patterns
  * 
@@ -114,9 +113,9 @@ class RKPressureSchedulerHelper{
 
     ~RKPressureSchedulerHelper(){
         delete concrete_RK_scheduler_;
-        matrixLabel = nullptr;        // this class is not responsible of the distruction of matrixLabel
-        pressureLabel = nullptr;      // this class is not responsible of the distruction of pressureLabel
-        prhsLabel = nullptr;          // this class is not responsible of the distruction of prhsLabel
+        matrixLabel = nullptr;        // this class is not responsible of the destruction of matrixLabel
+        pressureLabel = nullptr;      // this class is not responsible of the destruction of pressureLabel
+        prhsLabel = nullptr;          // this class is not responsible of the destruction of prhsLabel
         }
     /**
      * @brief The RKPressureSchedulerHelper allows changing the concrete RKPressureScheduler object at runtime.
@@ -163,7 +162,7 @@ class RKPressureSchedulerHelper{
  * 
  */
 
-class FE : public RKPressureSchedulerInterface{
+class FEScheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -176,7 +175,7 @@ class FE : public RKPressureSchedulerInterface{
                                                                   this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
                                                                   this->RK_scheduler_helper_->pressureLabel, Uintah::Task::OldDW,
                                                                   true);
-        this->RK_scheduler_helper_->transition_to(new FE);
+        this->RK_scheduler_helper_->transition_to(new FEScheduler);
     }
 
     void schedule_stage_2(const Uintah::LevelP& level,
@@ -195,7 +194,7 @@ class FE : public RKPressureSchedulerInterface{
  * @brief RK2 concrete scheduler classes
  * 
  */
-class RK2_0 : public RKPressureSchedulerInterface{
+class RK20Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -221,7 +220,7 @@ class RK2_0 : public RKPressureSchedulerInterface{
                   const int RKStage ){}
 };
 
-class RK2_1 : public RKPressureSchedulerInterface{
+class RK21Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -246,8 +245,8 @@ class RK2_1 : public RKPressureSchedulerInterface{
                                                                   this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
                                                                   false);
         if (this->RK_scheduler_helper_->d_i[0])
-            this->RK_scheduler_helper_->transition_to(new RK2_1);
-        else this->RK_scheduler_helper_->transition_to(new RK2_0);
+            this->RK_scheduler_helper_->transition_to(new RK21Scheduler);
+        else this->RK_scheduler_helper_->transition_to(new RK20Scheduler);
     }
     void schedule_stage_3(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -259,7 +258,7 @@ class RK2_1 : public RKPressureSchedulerInterface{
  * @brief RK3 concrete scheduler classes
  * 
  */
-class RK3_00 : public RKPressureSchedulerInterface{
+class RK300Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -288,7 +287,7 @@ class RK3_00 : public RKPressureSchedulerInterface{
     }
 };
 
-class RK3_10 : public RKPressureSchedulerInterface{
+class RK310Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -321,7 +320,7 @@ class RK3_10 : public RKPressureSchedulerInterface{
     }
 };
 
-class RK3_01 : public RKPressureSchedulerInterface{
+class RK301Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -354,7 +353,7 @@ class RK3_01 : public RKPressureSchedulerInterface{
     }
 };
 
-class RK3_11 : public RKPressureSchedulerInterface{
+class RK311Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(const Uintah::LevelP& level,
                   Uintah::SchedulerP sched,
@@ -392,13 +391,12 @@ class RK3_11 : public RKPressureSchedulerInterface{
                                                                   false);
 
         if (!this->RK_scheduler_helper_->d_i[0] && !this->RK_scheduler_helper_->d_i[1])
-            this->RK_scheduler_helper_->transition_to(new RK3_00);
+            this->RK_scheduler_helper_->transition_to(new RK300Scheduler);
         else if (!this->RK_scheduler_helper_->d_i[0] && this->RK_scheduler_helper_->d_i[1])
-            this->RK_scheduler_helper_->transition_to(new RK3_01);
+            this->RK_scheduler_helper_->transition_to(new RK301Scheduler);
         else if (this->RK_scheduler_helper_->d_i[0] && !this->RK_scheduler_helper_->d_i[1])
-            this->RK_scheduler_helper_->transition_to(new RK3_10);
-        else this->RK_scheduler_helper_->transition_to(new RK3_11);
+            this->RK_scheduler_helper_->transition_to(new RK310Scheduler);
+        else this->RK_scheduler_helper_->transition_to(new RK311Scheduler);
     }
 };
-}//SchedulerHelper
 #endif // PRESSURE_SCHEDULER_HELPER
