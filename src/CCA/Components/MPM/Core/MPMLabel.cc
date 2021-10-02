@@ -1307,6 +1307,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gFluidVelocityLabel_preReloc);
   VarLabel::destroy(gFluidAccelerationLabel_preReloc);
 
+  VarLabel::destroy(gFluidVelocityStarLabel);
+  VarLabel::destroy(gFluidVelocityStarLabel_preReloc);
+
   // MPM Hydrostatic BC label
   VarLabel::destroy(boundaryPointsPerCellLabel);
 }
