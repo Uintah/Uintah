@@ -32,6 +32,8 @@
 
 #include <CCA/Components/MPM/ImpMPM.h> 
 #include <CCA/Components/MPM/Core/ImpMPMFlags.h> 
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -96,6 +98,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
   MPMCommon(myworld, materialManager)
 {
   flags = scinew ImpMPMFlags(myworld);
+  Il = scinew ImpMPMLabel();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
@@ -117,6 +120,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld,
 ImpMPM::~ImpMPM()
 {
   delete flags;
+  delete Il;
 
   if(d_perproc_patches && d_perproc_patches->removeReference()) { 
     delete d_perproc_patches;
@@ -1485,7 +1489,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
-  t->computes(lb->pXXLabel);
+  t->computes(Il->pXXLabel);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
@@ -3587,7 +3591,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(paccNew,    lb->pAccelerationLabel_preReloc,pset);
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,           pset);
-      new_dw->allocateAndPut(pxx,        lb->pXXLabel,                   pset);
+      new_dw->allocateAndPut(pxx,        Il->pXXLabel,                   pset);
       new_dw->allocateAndPut(pmassNew,   lb->pMassLabel_preReloc,        pset);
       new_dw->allocateAndPut(pvolumeNew, lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);

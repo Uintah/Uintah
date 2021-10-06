@@ -62,7 +62,6 @@ namespace Uintah {
       const VarLabel* pScratchLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
-      const VarLabel* pXXLabel;
       const VarLabel* pPartitionUnityLabel;
 
       //PermanentParticleState

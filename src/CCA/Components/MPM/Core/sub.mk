@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/MPMDiffusionLabel.cc \
 	$(SRCDIR)/MPMFlags.cc          \
 	$(SRCDIR)/MPMLabel.cc          \
+	$(SRCDIR)/ImpMPMLabel.cc       \
 	$(SRCDIR)/ImpMPMFlags.cc
 
 PSELIBS := \

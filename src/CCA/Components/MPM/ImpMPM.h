@@ -32,7 +32,6 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -134,6 +133,7 @@ public:
     Explicit,
     Implicit 
   };
+  ImpMPMLabel* Il {nullptr};
 
 private:
   //////////
