@@ -88,10 +88,9 @@ namespace WasatchCore {
       std::string new_name;
       std::vector<std::string> splitted_name = split(old_name,delimiter);
       // this part is used to avoid messing with "_old" suffix in existing code.
-      // eventually this has to be changed to "_NM_0" by adapting this condition statement
-      // if (splitted_name.size()==1) new_name = old_name + delimiter+"NM"+ delimiter + "0";
+      // eventually this has to be changed to "_NM_0" 
       //----------------------------------------------------------------------------------------------------
-      if (splitted_name.size()==1) new_name = old_name + delimiter+"old";
+      if (splitted_name.back()!="old") new_name = old_name + delimiter + "old";
       else if (splitted_name.back() =="old") new_name = splitted_name[0] + delimiter+"NM"+ delimiter + "1";
       //----------------------------------------------------------------------------------------------------
       else
