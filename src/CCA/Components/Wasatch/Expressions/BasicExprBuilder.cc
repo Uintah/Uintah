@@ -1188,7 +1188,8 @@ namespace WasatchCore{
       
       const TagNames tNames = TagNames::self();
       OldVariable& oldVar = OldVariable::self();
-      
+      oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, Expr::Tag( "pressure", Expr::STATE_NONE ));
+
       if( doxmom ){
         typedef XVolField FieldT;
         const double targetVelocity =targetVelocities[0];
@@ -1197,7 +1198,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_x", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(xmomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(xmomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(xmomname, Expr::STATE_DYNAMIC);
         
         // now create an XVOL geometry expression using GeometryBased
@@ -1205,12 +1206,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(xmomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(xmomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
       
       if( doymom ){
@@ -1222,7 +1223,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_y", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(ymomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(ymomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(ymomname, Expr::STATE_DYNAMIC);
         
         // now create a YVOL geometry expression using GeometryBased
@@ -1230,12 +1231,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(ymomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(ymomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
       
       if( dozmom ){
@@ -1245,7 +1246,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_z", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(zmomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(zmomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(zmomname, Expr::STATE_DYNAMIC);
         
         // now create a ZVOL geometry expression using GeometryBased
@@ -1253,12 +1254,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(zmomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(zmomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
     }
 

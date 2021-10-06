@@ -31,6 +31,7 @@
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 /**
  *  \class 	FanModel
@@ -58,7 +59,7 @@ Then, we solve for S
  S = \frac{\rho^{n+1} U - (\rho u)^{n}}{\Delta t} - ( mom_old_RHS - S_old)
  \f]
  */
-template< typename FieldT >
+template< typename FieldT, typename DirT >
 class FanModel
  : public Expr::Expression<FieldT>
 {
@@ -66,14 +67,16 @@ class FanModel
   
   // interpolant for density: svol to fieldT
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;  
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<FieldT, DirT>::Gradient, SVolField, FieldT >::type Grad;
   const DensityInterpT* densityInterpOp_;
 
   
   typedef typename SpatialOps::SingleValueField TimeField;
   DECLARE_FIELD ( TimeField, dt_ )
-  DECLARE_FIELD ( SVolField, rho_ )
+  DECLARE_FIELDS ( SVolField, rho_, pressure_ )
   DECLARE_FIELDS( FieldT, mom_, momRHS_, fanSourceOld_, volFrac_ )
   const double targetVel_;
+  const Grad* gradOp_;
   FanModel( const Expr::Tag& rhoTag,
             const Expr::Tag& momTag,
             const Expr::Tag& momRHSTag,
@@ -87,7 +90,7 @@ public:
   {
     const Expr::Tag rhot_;
     const Expr::Tag momt_;
-    const Expr::Tag momrhst_;
+    const Expr::Tag momrhspartt_;
     const Expr::Tag volfract_;
     const Expr::Tag fansrcoldt_;
     const double targetvelocity_;
@@ -96,7 +99,7 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoTag,
              const Expr::Tag& momTag,
-             const Expr::Tag& momRHSTag,
+             const Expr::Tag& momRHSPartTag,
              const Expr::Tag& volFracTag,
              const double targetVelocity);
 
