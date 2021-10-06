@@ -87,28 +87,18 @@ evaluate()
   FieldT& result = this->value();
   if (WasatchCore::Wasatch::using_pressure_guess())
   {
-    if (WasatchCore::Wasatch::low_cost_integ_recompiled())
-    {
-      const TimeField& RKStage = rkStage_->field_ref();
-      const PFieldT& pguess = pressureGuess_->field_ref();
-      if (integName_=="RK2SSP" && (*RKStage.begin() ==1 && guessStage1_))
-          result <<= -(*gradOp_)(pguess);
-  
-      else if (integName_=="RK3SSP" && ((*RKStage.begin() ==1 && guessStage1_)||(*RKStage.begin() ==2 && guessStage2_)))
-          result <<= -(*gradOp_)(pguess);
-      else  
-      {
-        const PFieldT& p = pressure_->field_ref();
-        if( hasIntrusion_ )  result <<= - volfrac_->field_ref() * ((*gradOp_)(p) );
-        else                 result <<= - (*gradOp_)(p);
-      }
-    }
-    else 
-    {
-        const PFieldT& p = pressure_->field_ref();
-        if( hasIntrusion_ )  result <<= - volfrac_->field_ref() * ((*gradOp_)(p) );
-        else                 result <<= - (*gradOp_)(p);
-    }
+    const PFieldT& p = pressure_->field_ref();
+    const PFieldT& pguess = pressureGuess_->field_ref();
+    const TimeField& RKStage = rkStage_->field_ref();
+
+    bool rk2Cond = integName_=="RK2SSP" && (*RKStage.begin() ==1 && guessStage1_);
+    bool rk3Cond = integName_=="RK3SSP" && ((*RKStage.begin() ==1 && guessStage1_)||(*RKStage.begin() ==2 && guessStage2_));
+    bool recompiled = WasatchCore::Wasatch::low_cost_integ_recompiled();
+    // the momentum rhs only contains the pressure gradient when using the integrator model that uses mom-hat. 
+    if (recompiled && (rk2Cond || rk3Cond)) result <<= - (*gradOp_)(pguess);
+    else result <<= - (*gradOp_)(p);
+
+    if( hasIntrusion_ ) result <<= volfrac_->field_ref() * result;
   }
   else{
   const FieldT&  rhsPart = rhsPart_->field_ref();
