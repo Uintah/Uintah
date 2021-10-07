@@ -193,13 +193,13 @@
       </contact>
 
       <dissolution                       spec="MULTIPLE NO_DATA" >
-        <Vm_cm3_mol                      spec="REQUIRED DOUBLE 'positive'" /> 
-        <R_ug-cm2_us2-mol-K              spec="REQUIRED DOUBLE 'positive'" /> 
-        <Ao_mol_cm2-us                   spec="REQUIRED DOUBLE 'positive'" /> 
-        <Ea_ug-cm2_us2-mol               spec="REQUIRED DOUBLE 'positive'" /> 
+        <Vm_cm3_mol                      spec="OPTIONAL DOUBLE 'positive'" /> 
+        <R_ug-cm2_us2-mol-K              spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ao_mol_cm2-us                   spec="OPTIONAL DOUBLE 'positive'" /> 
+        <Ea_ug-cm2_us2-mol               spec="OPTIONAL DOUBLE 'positive'" /> 
         <Ao_clay_mol_cm2-us              spec="OPTIONAL DOUBLE 'positive'" /> 
         <Ea_clay_ug-cm2_us2-mol          spec="OPTIONAL DOUBLE 'positive'" /> 
-        <StressThreshold                 spec="REQUIRED DOUBLE 'positive'" />
+        <StressThreshold                 spec="OPTIONAL DOUBLE 'positive'" />
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, saltPrecipitationModel'" />
