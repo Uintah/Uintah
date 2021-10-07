@@ -186,8 +186,9 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
 
     // Field for position, normal, tangential and length.
     // Everything else is assumed to be zero.
-    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,mt,mb;
-    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mt >> mb){
+    double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
+    int mt,mb;
+    while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mb >> mt){
       //cout << f1 << " " << f2 << " " << f3 << endl;
       if(patch->containsPoint(Point(f1,f2,f3))){
         sum++;
