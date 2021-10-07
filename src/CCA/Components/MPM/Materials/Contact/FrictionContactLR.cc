@@ -119,10 +119,8 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    constNCVariable<double>  gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel,
-         d_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
-
+    // First, calculate the gradient of the mass everywhere
+    // normalize it, and stick it in surfNorm
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],          lb->gMassLabel,     dwi, patch, gnone, 0);
@@ -169,14 +167,14 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
           for(int n = 0; n < numMatls; n++){
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
-            if(gmass[n][c] > 1.e-8*gmassglobal[c]){ 
-              // There is mass of material beta at this node
+            double mass=gmass[n][c];
+            if(mass>1.e-16){ // There is mass of material beta at this node
               // Check relative separation of the material prominence
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
               // If that separation is negative, the matls have overlapped
-//              if(separation <= 0.0){
-              if(separation <= 0.01*dx.x()){
+              if(separation <= 0.0){
+//              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
                double normalDeltaVel=Dot(deltaVelocity,normal);
@@ -207,8 +205,8 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
                    Dv=Dv*ff;
                 }
 #endif 
-                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
-                Dv=Dv*ff;
+//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+//                Dv=Dv*ff;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
                 gvelocity[n][c]    +=Dv;
                 gvelocity[alpha][c]+=DvAlpha;
@@ -253,10 +251,6 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
     new_dw->get(normAlphaToBeta,  lb->gNormAlphaToBetaLabel,0,patch, gnone, 0);
 
     // Retrieve necessary data from DataWarehouse
-    constNCVariable<double>  gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel,
-         d_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
-
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
@@ -302,11 +296,12 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
           for(int n = 0; n < numMatls; n++){
            if(!d_matls.requested(n)) continue;
            if(n==alpha) continue;
-            if(gmass[n][c] > 1.e-8*gmassglobal[c] && gmass[n][c] > 1.e-16){ 
+            double mass=gmass[n][c];
+            if(mass>1.e-16){
               double separation = gmatlprominence[n][c] - 
                                   gmatlprominence[alpha][c];
-//              if(separation <= 0.0){
-              if(separation <= 0.01*dx.x()){
+              if(separation <= 0.0){
+//              if(separation <= 0.01*dx.x()){
                Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
                Vector normal = -1.0*normAlphaToBeta[c];
                double normalDeltaVel=Dot(deltaVelocity,normal);
@@ -337,8 +332,8 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
                   Dv=Dv*ff;
                 }
 #endif 
-                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
-                Dv=Dv*ff;
+//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
+//                Dv=Dv*ff;
                 gvelocity_star[n][c]    +=Dv;
                 Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
                 gvelocity_star[alpha][c]+=DvAlpha;
@@ -366,8 +361,6 @@ void FrictionContactLR::addComputesAndRequiresInterpolated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                  Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,
-           d_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
@@ -395,8 +388,6 @@ void FrictionContactLR::addComputesAndRequiresIntegrated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                  Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,
-           d_materialManager->getAllInOneMatls(),Task::OutOfDomain,Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,                Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,         Ghost::None);
