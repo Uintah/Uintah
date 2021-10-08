@@ -83,6 +83,9 @@
 #include <CCA/Components/MPM/PhysicalBC/HydrostaticBC.h>
 #include <CCA/Components/MPM/Materials/Contact/FluidContact.h>
 
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/HydroMPMLabel.h>
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -114,6 +117,7 @@ SingleHydroMPM::SingleHydroMPM( const ProcessorGroup* myworld,
   MPMCommon( myworld, materialManager )
 {
   flags = scinew MPMFlags(myworld);
+  Hlb = scinew HydroMPMLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -145,6 +149,7 @@ SingleHydroMPM::~SingleHydroMPM()
   delete d_fluxBC;
   delete d_sdInterfaceModel;
   delete flags;
+  delete Hlb;
   delete d_switchCriteria;
 
   d_mpm->releaseComponents();
@@ -303,7 +308,7 @@ void SingleHydroMPM::problemSetup(const ProblemSpecP& prob_spec,
   flags->d_computeNormals        = needNormals;
   flags->d_useLogisticRegression = useLR;
 
-  fluidContactModel = scinew FluidContact(d_myworld, m_materialManager, lb, flags);
+  fluidContactModel = scinew FluidContact(d_myworld, m_materialManager, lb,Hlb, flags);
 
   thermalContactModel =
     ThermalContactFactory::create(restart_mat_ps, m_materialManager, lb,flags);
@@ -476,11 +481,11 @@ void SingleHydroMPM::scheduleInitialize(const LevelP& level,
 
   // Hydro-mechanical coupling
   if (flags->d_coupledflow) {
-      t->computes(lb->pFluidVelocityLabel);
-      t->computes(lb->pFluidMassLabel);
-      t->computes(lb->pSolidMassLabel);
-      t->computes(lb->pPorePressureLabel);
-      t->computes(lb->pPrescribedPorePressureLabel);
+      t->computes(Hlb->pFluidVelocityLabel);
+      t->computes(Hlb->pFluidMassLabel);
+      t->computes(Hlb->pSolidMassLabel);
+      t->computes(Hlb->pPorePressureLabel);
+      t->computes(Hlb->pPrescribedPorePressureLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -670,7 +675,7 @@ void SingleHydroMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
 
-    t->computes(lb->boundaryPointsPerCellLabel);
+    t->computes(Hlb->boundaryPointsPerCellLabel);
 
     sched->addTask(t, patches, m_materialManager->allMaterials( "MPM" ));
 
@@ -685,8 +690,8 @@ void SingleHydroMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->modifies(lb->pExternalForceLabel);
    
     if (flags->d_coupledflow) {
-        t->requires(Task::NewDW, lb->boundaryPointsPerCellLabel, Ghost::None);
-        t->modifies(lb->pPrescribedPorePressureLabel);
+        t->requires(Task::NewDW, Hlb->boundaryPointsPerCellLabel, Ghost::None);
+        t->modifies(Hlb->pPrescribedPorePressureLabel);
     }
 
     if (flags->d_useCBDI) {
@@ -954,22 +959,22 @@ void SingleHydroMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   }
 
   if (flags->d_coupledflow) {
-      t->requires(Task::OldDW, lb->pFluidMassLabel, gan, NGP);
-      t->requires(Task::OldDW, lb->pSolidMassLabel, gan, NGP);
-      t->requires(Task::OldDW, lb->pFluidVelocityLabel, gan, NGP);
-      t->requires(Task::OldDW, lb->pPorePressureLabel, gan, NGP);
+      t->requires(Task::OldDW, Hlb->pFluidMassLabel, gan, NGP);
+      t->requires(Task::OldDW, Hlb->pSolidMassLabel, gan, NGP);
+      t->requires(Task::OldDW, Hlb->pFluidVelocityLabel, gan, NGP);
+      t->requires(Task::OldDW, Hlb->pPorePressureLabel, gan, NGP);
       //t->requires(Task::NewDW, lb->pPrescribedPorePressureLabel, gan, NGP);
 
-      t->computes(lb->gExternalFluidForceLabel);
+      t->computes(Hlb->gExternalFluidForceLabel);
 
-      t->computes(lb->gFluidMassLabel);
-      t->computes(lb->gFluidMassBarLabel);
-      t->computes(lb->gFluidVelocityLabel);
-      t->computes(lb->gFluidMassLabel, m_materialManager->getAllInOneMatls(),
+      t->computes(Hlb->gFluidMassLabel);
+      t->computes(Hlb->gFluidMassBarLabel);
+      t->computes(Hlb->gFluidVelocityLabel);
+      t->computes(Hlb->gFluidMassLabel, m_materialManager->getAllInOneMatls(),
           Task::OutOfDomain);
-      t->computes(lb->gFluidMassBarLabel, m_materialManager->getAllInOneMatls(),
+      t->computes(Hlb->gFluidMassBarLabel, m_materialManager->getAllInOneMatls(),
           Task::OutOfDomain);
-      t->computes(lb->gFluidVelocityLabel, m_materialManager->getAllInOneMatls(),
+      t->computes(Hlb->gFluidVelocityLabel, m_materialManager->getAllInOneMatls(),
           Task::OutOfDomain);
   }
 
@@ -1149,9 +1154,9 @@ void SingleHydroMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->computes(lb->gInternalForceLabel);
 
   if (flags->d_coupledflow) {
-      t->requires(Task::OldDW, lb->pPorePressureLabel, gan, NGP);
-      // t->requires(Task::NewDW, lb->pPorePressureLabel_preReloc, gan, NGP);
-      t->computes(lb->gInternalFluidForceLabel);
+      t->requires(Task::OldDW, Hlb->pPorePressureLabel, gan, NGP);
+      // t->requires(Task::NewDW, Hlb->pPorePressureLabel_preReloc, gan, NGP);
+      t->computes(Hlb->gInternalFluidForceLabel);
 
   }
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
@@ -1224,18 +1229,18 @@ void SingleHydroMPM::scheduleComputeFluidDragForce(SchedulerP& sched,
     Ghost::GhostType gan = Ghost::AroundNodes;
     //Ghost::GhostType gnone = Ghost::None;
     t->requires(Task::OldDW, lb->pVelocityLabel, gan, NGP);
-    t->requires(Task::OldDW, lb->pFluidVelocityLabel, gan, NGP);
-    t->requires(Task::OldDW, lb->pFluidMassLabel, gan, NGP);
+    t->requires(Task::OldDW, Hlb->pFluidVelocityLabel, gan, NGP);
+    t->requires(Task::OldDW, Hlb->pFluidMassLabel, gan, NGP);
 
     t->requires(Task::NewDW, lb->gVelocityLabel, gan, NGP);
-    t->requires(Task::NewDW, lb->gFluidVelocityLabel, gan, NGP);
+    t->requires(Task::NewDW, Hlb->gFluidVelocityLabel, gan, NGP);
 
     t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
     //t->requires(Task::OldDW, lb->pSizeLabel, gan, NGP);
     t->requires(Task::NewDW, lb->pCurSizeLabel, gan, NGP);
     t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan, NGP);
 
-    t->computes(lb->gInternalDragForceLabel);
+    t->computes(Hlb->gInternalDragForceLabel);
 
     sched->addTask(t, patches, matls);
 }
@@ -1253,14 +1258,14 @@ void SingleHydroMPM::scheduleComputeAndIntegrateFluidAcceleration(
         &SingleHydroMPM::computeAndIntegrateFluidAcceleration);
 
     t->requires(Task::OldDW, lb->delTLabel);
-    t->requires(Task::NewDW, lb->gFluidMassLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gFluidVelocityLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gExternalFluidForceLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gInternalFluidForceLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gInternalDragForceLabel, Ghost::None);
+    t->requires(Task::NewDW, Hlb->gFluidMassLabel, Ghost::None);
+    t->requires(Task::NewDW, Hlb->gFluidVelocityLabel, Ghost::None);
+    t->requires(Task::NewDW, Hlb->gExternalFluidForceLabel, Ghost::None);
+    t->requires(Task::NewDW, Hlb->gInternalFluidForceLabel, Ghost::None);
+    t->requires(Task::NewDW, Hlb->gInternalDragForceLabel, Ghost::None);
 
-    t->computes(lb->gFluidVelocityStarLabel);
-    t->computes(lb->gFluidAccelerationLabel);
+    t->computes(Hlb->gFluidVelocityStarLabel);
+    t->computes(Hlb->gFluidAccelerationLabel);
 
     sched->addTask(t, patches, matls);
 }
@@ -1286,11 +1291,11 @@ void SingleHydroMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
 
   if (flags->d_coupledflow) {
-      t->requires(Task::NewDW, lb->gFluidMassLabel, Ghost::None);
-      t->requires(Task::NewDW, lb->gFluidMassBarLabel, Ghost::None);
-      t->requires(Task::NewDW, lb->gInternalFluidForceLabel, Ghost::None);
-      t->requires(Task::NewDW, lb->gFluidVelocityLabel, Ghost::None);
-      t->requires(Task::NewDW, lb->gFluidAccelerationLabel, Ghost::None);
+      t->requires(Task::NewDW, Hlb->gFluidMassLabel, Ghost::None);
+      t->requires(Task::NewDW, Hlb->gFluidMassBarLabel, Ghost::None);
+      t->requires(Task::NewDW, Hlb->gInternalFluidForceLabel, Ghost::None);
+      t->requires(Task::NewDW, Hlb->gFluidVelocityLabel, Ghost::None);
+      t->requires(Task::NewDW, Hlb->gFluidAccelerationLabel, Ghost::None);
   }
 
   t->computes(lb->gVelocityStarLabel);
@@ -1367,9 +1372,9 @@ void SingleHydroMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
   if (flags->d_coupledflow) {
-      t->modifies(lb->gFluidAccelerationLabel, mss);
-      t->modifies(lb->gFluidVelocityStarLabel, mss);
-      t->requires(Task::NewDW, lb->gFluidVelocityLabel, Ghost::None);
+      t->modifies(Hlb->gFluidAccelerationLabel, mss);
+      t->modifies(Hlb->gFluidVelocityStarLabel, mss);
+      t->requires(Task::NewDW, Hlb->gFluidVelocityLabel, Ghost::None);
   }
 
   sched->addTask(t, patches, matls);
@@ -1444,16 +1449,16 @@ void SingleHydroMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
 
   if (flags->d_coupledflow) {
-      t->requires(Task::OldDW, lb->pSolidMassLabel, gnone);
-      t->requires(Task::OldDW, lb->pFluidMassLabel, gnone);
-      t->requires(Task::OldDW, lb->pFluidVelocityLabel, gnone);
-      t->requires(Task::OldDW, lb->pPorosityLabel, gnone);
-      t->requires(Task::NewDW, lb->gFluidAccelerationLabel, gac, NGN);
+      t->requires(Task::OldDW, Hlb->pSolidMassLabel, gnone);
+      t->requires(Task::OldDW, Hlb->pFluidMassLabel, gnone);
+      t->requires(Task::OldDW, Hlb->pFluidVelocityLabel, gnone);
+      t->requires(Task::OldDW, Hlb->pPorosityLabel, gnone);
+      t->requires(Task::NewDW, Hlb->gFluidAccelerationLabel, gac, NGN);
 
-      t->computes(lb->pFluidMassLabel_preReloc);
-      t->computes(lb->pSolidMassLabel_preReloc);
-      t->computes(lb->pFluidVelocityLabel_preReloc);
-      t->computes(lb->pPorosityLabel_preReloc);
+      t->computes(Hlb->pFluidMassLabel_preReloc);
+      t->computes(Hlb->pSolidMassLabel_preReloc);
+      t->computes(Hlb->pFluidVelocityLabel_preReloc);
+      t->computes(Hlb->pPorosityLabel_preReloc);
   }
 
   //__________________________________
@@ -1536,9 +1541,9 @@ void SingleHydroMPM::scheduleComputeParticleGradients(SchedulerP& sched,
 
   // Hydro mechanical coupling
   if (flags->d_coupledflow) {
-      t->requires(Task::OldDW, lb->pPorePressureLabel, gnone);
-      t->requires(Task::NewDW, lb->gFluidVelocityStarLabel, gac, NGN);
-      t->computes(lb->pPorePressureLabel_preReloc);
+      t->requires(Task::OldDW, Hlb->pPorePressureLabel, gnone);
+      t->requires(Task::NewDW, Hlb->gFluidVelocityStarLabel, gac, NGN);
+      t->computes(Hlb->pPorePressureLabel_preReloc);
   }
 
   // JBH -- Need code to use these variables -- FIXME TODO
@@ -1581,10 +1586,10 @@ void SingleHydroMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 
   /*
   if (flags->d_coupledflow) {
-      t->requires(Task::NewDW, lb->pFluidMassLabel_preReloc, gnone);
-      t->requires(Task::NewDW, lb->pSolidMassLabel_preReloc, gnone);
-      t->requires(Task::NewDW, lb->pVelGradLabel_preReloc, gnone);
-      t->modifies(lb->pVolumeLabel_preReloc);
+      t->requires(Task::NewDW, Hlb->pFluidMassLabel_preReloc, gnone);
+      t->requires(Task::NewDW, Hlb->pSolidMassLabel_preReloc, gnone);
+      t->requires(Task::NewDW, Hlb->pVelGradLabel_preReloc, gnone);
+      t->modifies(Hlb->pVolumeLabel_preReloc);
   }
   */
   sched->addTask(t, patches, matls);
@@ -1614,9 +1619,9 @@ void SingleHydroMPM::scheduleInterpolateParticleToGridFilter(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel, gan, NGP);
     t->requires(Task::NewDW, lb->pCurSizeLabel, gan, NGP);
 
-    t->requires(Task::NewDW, lb->pPorePressureLabel_preReloc, gan, NGP);
-    t->computes(lb->gPorePressureFilterLabel);
-    t->computes(lb->gPorePressureFilterLabel, m_materialManager->getAllInOneMatls(),
+    t->requires(Task::NewDW, Hlb->pPorePressureLabel_preReloc, gan, NGP);
+    t->computes(Hlb->gPorePressureFilterLabel);
+    t->computes(Hlb->gPorePressureFilterLabel, m_materialManager->getAllInOneMatls(),
         Task::OutOfDomain);
 
     sched->addTask(t, patches, matls);
@@ -1642,8 +1647,8 @@ void SingleHydroMPM::scheduleInterpolateGridToParticleFilter(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel, gnone);
     t->requires(Task::NewDW, lb->pCurSizeLabel, gnone);
 
-    t->requires(Task::NewDW, lb->gPorePressureFilterLabel, gac, NGN);
-    t->computes(lb->pPorePressureFilterLabel_preReloc);
+    t->requires(Task::NewDW, Hlb->gPorePressureFilterLabel, gac, NGN);
+    t->computes(Hlb->pPorePressureFilterLabel_preReloc);
 
     sched->addTask(t, patches, matls);
 }
@@ -1883,7 +1888,7 @@ void SingleHydroMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
           int dwi = mpm_matl->getDWIndex();
 
           CCVariable<int> numPtsPerCell;
-          new_dw->allocateAndPut(numPtsPerCell, lb->boundaryPointsPerCellLabel,
+          new_dw->allocateAndPut(numPtsPerCell, Hlb->boundaryPointsPerCellLabel,
               dwi, patch);
           numPtsPerCell.initialize(0);
 
@@ -1949,8 +1954,8 @@ void SingleHydroMPM::initializePressureBC(const ProcessorGroup*,
       constCCVariable<int> numPtsPerCell;
       ParticleVariable<Vector> prescribedporepressure;
       if (flags->d_coupledflow) {
-          new_dw->get(numPtsPerCell, lb->boundaryPointsPerCellLabel, dwi, patch, Ghost::None, 0);
-          new_dw->getModifiable(prescribedporepressure, lb->pPrescribedPorePressureLabel, pset);
+          new_dw->get(numPtsPerCell, Hlb->boundaryPointsPerCellLabel, dwi, patch, Ghost::None, 0);
+          new_dw->getModifiable(prescribedporepressure, Hlb->pPrescribedPorePressureLabel, pset);
       }
 
       ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
@@ -2303,9 +2308,9 @@ void SingleHydroMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // TODO: Global fluidmass and velocity not needed, I think. Should be
    // confirmed.
     if (flags->d_coupledflow) {
-        new_dw->allocateAndPut(gfluidmassglobal, lb->gFluidMassLabel,
+        new_dw->allocateAndPut(gfluidmassglobal, Hlb->gFluidMassLabel,
             globMatID, patch);
-        new_dw->allocateAndPut(gfluidvelglobal, lb->gFluidVelocityLabel,
+        new_dw->allocateAndPut(gfluidvelglobal, Hlb->gFluidVelocityLabel,
             globMatID, patch);
         gfluidvelglobal.initialize(Vector(0.0));
         gfluidmassglobal.initialize(0.0);
@@ -2372,14 +2377,14 @@ void SingleHydroMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       //constParticleVariable<Vector> prescribedporepressure;
       constParticleVariable<Vector> pfluidvelocity;
      //if (hasFluid(m)) {
-          old_dw->get(pfluidmass, lb->pFluidMassLabel, pset);
+          old_dw->get(pfluidmass, Hlb->pFluidMassLabel, pset);
           //cout << "Can I haz fluidvelocity plz?" << endl;
-          old_dw->get(pfluidvelocity, lb->pFluidVelocityLabel, pset);
+          old_dw->get(pfluidvelocity, Hlb->pFluidVelocityLabel, pset);
           //cout << "Kthxbye" << endl;
-          old_dw->get(pmass, lb->pSolidMassLabel, pset);
+          old_dw->get(pmass, Hlb->pSolidMassLabel, pset);
           old_dw->get(ptotalmass, lb->pMassLabel, pset);
-          old_dw->get(pporepressure, lb->pPorePressureLabel, pset);
-         // new_dw->get(prescribedporepressure, lb->pPrescribedPorePressureLabel,
+          old_dw->get(pporepressure, Hlb->pPorePressureLabel, pset);
+         // new_dw->get(prescribedporepressure, Hlb->pPrescribedPorePressureLabel,
           //    pset);
      // }
      // else {
@@ -2446,13 +2451,13 @@ void SingleHydroMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<Vector> gfluidvelocity;
       NCVariable<Vector> gexternalfluidforce;
       if (flags->d_coupledflow) {
-          new_dw->allocateAndPut(gfluidmass, lb->gFluidMassLabel, dwi, patch);
-          new_dw->allocateAndPut(gfluidmassbar, lb->gFluidMassBarLabel, dwi,
+          new_dw->allocateAndPut(gfluidmass, Hlb->gFluidMassLabel, dwi, patch);
+          new_dw->allocateAndPut(gfluidmassbar, Hlb->gFluidMassBarLabel, dwi,
               patch);
-          new_dw->allocateAndPut(gfluidvelocity, lb->gFluidVelocityLabel, dwi,
+          new_dw->allocateAndPut(gfluidvelocity, Hlb->gFluidVelocityLabel, dwi,
               patch);
           new_dw->allocateAndPut(gexternalfluidforce,
-              lb->gExternalFluidForceLabel, dwi, patch);
+              Hlb->gExternalFluidForceLabel, dwi, patch);
           gfluidvelocity.initialize(Vector(0.0, 0.0, 0.0));
           gfluidmass.initialize(d_SMALL_NUM_MPM);
           gfluidmassbar.initialize(d_SMALL_NUM_MPM);
@@ -2759,8 +2764,8 @@ void SingleHydroMPM::computeInternalForce(const ProcessorGroup*,
       //else {
 
      // if (hasFluid(m)) {
-          old_dw->get(p_pressure, lb->pPorePressureLabel, pset);
-          new_dw->allocateAndPut(internalfluidforce, lb->gInternalFluidForceLabel,
+          old_dw->get(p_pressure, Hlb->pPorePressureLabel, pset);
+          new_dw->allocateAndPut(internalfluidforce, Hlb->gInternalFluidForceLabel,
               dwi, patch);
           internalfluidforce.initialize(Vector(0., 0., 0.));
       //}
@@ -3012,15 +3017,15 @@ void SingleHydroMPM::computeFluidDragForce(const ProcessorGroup*,
             old_dw->get(pFOld, lb->pDeformationMeasureLabel, pset);
 
             old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-            old_dw->get(pfluidvelocity, lb->pFluidVelocityLabel, pset);
-            old_dw->get(pfluidmass, lb->pFluidMassLabel, pset);
+            old_dw->get(pfluidvelocity, Hlb->pFluidVelocityLabel, pset);
+            old_dw->get(pfluidmass, Hlb->pFluidMassLabel, pset);
 
             Ghost::GhostType gac = Ghost::AroundCells;
             new_dw->get(gvelocity, lb->gVelocityLabel, dwi, patch, gac, NGP);
-            new_dw->get(gfluidvelocity, lb->gFluidVelocityLabel, dwi, patch, gac,
+            new_dw->get(gfluidvelocity, Hlb->gFluidVelocityLabel, dwi, patch, gac,
                 NGP);
 
-            new_dw->allocateAndPut(internaldragforce, lb->gInternalDragForceLabel,
+            new_dw->allocateAndPut(internaldragforce, Hlb->gInternalDragForceLabel,
                 dwi, patch);
             new_dw->allocateTemporary(littleq, patch, gac, NGP);
             internaldragforce.initialize(Vector(0, 0, 0));
@@ -3109,18 +3114,18 @@ void SingleHydroMPM::computeAndIntegrateFluidAcceleration(const ProcessorGroup*,
             NCVariable<Vector> fluidvelocity_star, fluidacceleration;
 
             old_dw->get(delT, lb->delTLabel, getLevel(patches));
-            new_dw->get(externalfluidforce, lb->gExternalFluidForceLabel, dwi, patch,
+            new_dw->get(externalfluidforce, Hlb->gExternalFluidForceLabel, dwi, patch,
                 gnone, 0);
-            new_dw->get(internalfluidforce, lb->gInternalFluidForceLabel, dwi, patch,
+            new_dw->get(internalfluidforce, Hlb->gInternalFluidForceLabel, dwi, patch,
                 gnone, 0);
-            new_dw->get(internaldragforce, lb->gInternalDragForceLabel, dwi, patch,
+            new_dw->get(internaldragforce, Hlb->gInternalDragForceLabel, dwi, patch,
                 gnone, 0);
-            new_dw->get(fluidmass, lb->gFluidMassLabel, dwi, patch, gnone, 0);
-            new_dw->get(fluidvelocity, lb->gFluidVelocityLabel, dwi, patch, gnone, 0);
+            new_dw->get(fluidmass, Hlb->gFluidMassLabel, dwi, patch, gnone, 0);
+            new_dw->get(fluidvelocity, Hlb->gFluidVelocityLabel, dwi, patch, gnone, 0);
 
-            new_dw->allocateAndPut(fluidvelocity_star, lb->gFluidVelocityStarLabel,
+            new_dw->allocateAndPut(fluidvelocity_star, Hlb->gFluidVelocityStarLabel,
                 dwi, patch);
-            new_dw->allocateAndPut(fluidacceleration, lb->gFluidAccelerationLabel,
+            new_dw->allocateAndPut(fluidacceleration, Hlb->gFluidAccelerationLabel,
                 dwi, patch);
 
             fluidacceleration.initialize(Vector(0., 0., 0.));
@@ -3205,13 +3210,13 @@ void SingleHydroMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<Vector> fluidacceleration, fluidvelocity,
           internalfluidforce;
      //if (hasFluid(m)) {
-          new_dw->get(internalfluidforce, lb->gInternalFluidForceLabel, dwi,
+          new_dw->get(internalfluidforce, Hlb->gInternalFluidForceLabel, dwi,
               patch, gnone, 0);
-          new_dw->get(fluidmass, lb->gFluidMassLabel, dwi, patch, gnone, 0);
-          new_dw->get(fluidmassbar, lb->gFluidMassBarLabel, dwi, patch, gnone, 0);
-          new_dw->get(fluidvelocity, lb->gFluidVelocityLabel, dwi, patch, gnone,
+          new_dw->get(fluidmass, Hlb->gFluidMassLabel, dwi, patch, gnone, 0);
+          new_dw->get(fluidmassbar, Hlb->gFluidMassBarLabel, dwi, patch, gnone, 0);
+          new_dw->get(fluidvelocity, Hlb->gFluidVelocityLabel, dwi, patch, gnone,
               0);
-          new_dw->get(fluidacceleration, lb->gFluidAccelerationLabel, dwi, patch,
+          new_dw->get(fluidacceleration, Hlb->gFluidAccelerationLabel, dwi, patch,
               gnone, 0);
 
      // }
@@ -3342,11 +3347,11 @@ void SingleHydroMPM::setGridBoundaryConditions(const ProcessorGroup*,
       bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
 
      // if (hasFluid(m)) {
-          new_dw->getModifiable(gfluidacceleration, lb->gFluidAccelerationLabel,
+          new_dw->getModifiable(gfluidacceleration, Hlb->gFluidAccelerationLabel,
               dwi, patch);
-          new_dw->getModifiable(gwelocity_star, lb->gFluidVelocityStarLabel, dwi,
+          new_dw->getModifiable(gwelocity_star, Hlb->gFluidVelocityStarLabel, dwi,
               patch);
-          new_dw->get(gwelocity, lb->gFluidVelocityLabel, dwi, patch, Ghost::None,
+          new_dw->get(gwelocity, Hlb->gFluidVelocityLabel, dwi, patch, Ghost::None,
               0);
 
           bc.setBoundaryCondition(patch, dwi, "Velocity", gwelocity_star, interp_type);
@@ -3634,16 +3639,16 @@ void SingleHydroMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Hydro mechanical coupling
       //if (hasFluid(m)) {
-          old_dw->get(psolidmass, lb->pSolidMassLabel, pset);
-          old_dw->get(pfluidmass, lb->pFluidMassLabel, pset);
-          old_dw->get(pfluidvelocity, lb->pFluidVelocityLabel, pset);
-          old_dw->get(porosity, lb->pPorosityLabel, pset);
-          new_dw->get(gfluidacceleration, lb->gFluidAccelerationLabel, dwi, patch,
+          old_dw->get(psolidmass, Hlb->pSolidMassLabel, pset);
+          old_dw->get(pfluidmass, Hlb->pFluidMassLabel, pset);
+          old_dw->get(pfluidvelocity, Hlb->pFluidVelocityLabel, pset);
+          old_dw->get(porosity, Hlb->pPorosityLabel, pset);
+          new_dw->get(gfluidacceleration, Hlb->gFluidAccelerationLabel, dwi, patch,
               Ghost::AroundCells, NGP);
-          new_dw->allocateAndPut(pfluidmassNew, lb->pFluidMassLabel_preReloc, pset);
-          new_dw->allocateAndPut(psolidmassNew, lb->pSolidMassLabel_preReloc, pset);
-          new_dw->allocateAndPut(pfluidvelNew, lb->pFluidVelocityLabel_preReloc, pset);
-          new_dw->allocateAndPut(porosityNew, lb->pPorosityLabel_preReloc, pset);
+          new_dw->allocateAndPut(pfluidmassNew, Hlb->pFluidMassLabel_preReloc, pset);
+          new_dw->allocateAndPut(psolidmassNew, Hlb->pSolidMassLabel_preReloc, pset);
+          new_dw->allocateAndPut(pfluidvelNew, Hlb->pFluidVelocityLabel_preReloc, pset);
+          new_dw->allocateAndPut(porosityNew, Hlb->pPorosityLabel_preReloc, pset);
       //}
 
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
@@ -4001,9 +4006,9 @@ void SingleHydroMPM::computeParticleGradients(const ProcessorGroup*,
 
       constNCVariable<Vector> gfluidvelocity_star;
       //if (hasFluid(m)) {
-          old_dw->get(pporepressure, lb->pPorePressureLabel, pset);
-          new_dw->allocateAndPut(pporepressureNew, lb->pPorePressureLabel_preReloc, pset);
-          new_dw->get(gfluidvelocity_star, lb->gFluidVelocityStarLabel, dwi, patch, gac, NGP);
+          old_dw->get(pporepressure, Hlb->pPorePressureLabel, pset);
+          new_dw->allocateAndPut(pporepressureNew, Hlb->pPorePressureLabel_preReloc, pset);
+          new_dw->get(gfluidvelocity_star, Hlb->gFluidVelocityStarLabel, dwi, patch, gac, NGP);
      // }          
 
       // Compute velocity gradient and deformation gradient on every particle
@@ -4312,7 +4317,7 @@ void SingleHydroMPM::InterpolateParticleToGridFilter(const ProcessorGroup*,
             m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None, 0);
 
         NCVariable<double>       gPorePressureglobal;
-        new_dw->allocateAndPut(gPorePressureglobal, lb->gPorePressureFilterLabel,
+        new_dw->allocateAndPut(gPorePressureglobal, Hlb->gPorePressureFilterLabel,
             m_materialManager->getAllInOneMatls()->get(0), patch);
         gPorePressureglobal.initialize(0.0);
 
@@ -4335,8 +4340,8 @@ void SingleHydroMPM::InterpolateParticleToGridFilter(const ProcessorGroup*,
 
             constParticleVariable<double> pPorePressure;
             NCVariable<double>		      gPorePressure;
-            new_dw->get(pPorePressure, lb->pPorePressureLabel_preReloc, pset);
-            new_dw->allocateAndPut(gPorePressure, lb->gPorePressureFilterLabel, dwi, patch);
+            new_dw->get(pPorePressure, Hlb->pPorePressureLabel_preReloc, pset);
+            new_dw->allocateAndPut(gPorePressure, Hlb->gPorePressureFilterLabel, dwi, patch);
             gPorePressure.initialize(0.0);
             double PoreVol = 0.0;
 
@@ -4407,8 +4412,8 @@ void SingleHydroMPM::InterpolateGridToParticleFilter(const ProcessorGroup*,
 
             constNCVariable<double> gPorePressure;
             ParticleVariable<double> pPorePressurenew;
-            new_dw->get(gPorePressure, lb->gPorePressureFilterLabel, dwi, patch, gac, NGP);
-            new_dw->allocateAndPut(pPorePressurenew, lb->pPorePressureFilterLabel_preReloc, pset);
+            new_dw->get(gPorePressure, Hlb->gPorePressureFilterLabel, dwi, patch, gac, NGP);
+            new_dw->allocateAndPut(pPorePressurenew, Hlb->pPorePressureFilterLabel_preReloc, pset);
 
             // Loop over particles
             for (ParticleSubset::iterator iter = pset->begin();

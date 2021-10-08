@@ -37,6 +37,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
@@ -52,8 +53,7 @@ using namespace std;
 
 FluidContact::FluidContact(const ProcessorGroup* myworld,
                                  MaterialManagerP& d_sS,
-                                 MPMLabel* Mlb,MPMFlags* MFlag)
-  : Contact(myworld, Mlb, MFlag, 0)
+                                 MPMLabel* Mlb, HydroMPMLabel* Hlb, MPMFlags* MFlag)
 {
   // Constructor  
 
@@ -295,11 +295,11 @@ void FluidContact::exMomIntegrated(const ProcessorGroup*,
       // new_dw->get(gposition[m],   lb->gPositionLabel,    dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);
       new_dw->get(gvelocity[m],   lb->gVelocityLabel,    dwi, patch, gnone, 0);
-      new_dw->get(gfluidvelocity[m],   lb->gFluidVelocityLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gfluidvelocity[m],   Hlb->gFluidVelocityLabel,    dwi, patch, gnone, 0);
       if (m != d_rigid_material) {
-        new_dw->getModifiable(gfluidvelocity_star[m], lb->gFluidVelocityStarLabel,
+        new_dw->getModifiable(gfluidvelocity_star[m], Hlb->gFluidVelocityStarLabel,
                               dwi, patch);
-        new_dw->getModifiable(gfluidacceleration[m], lb->gFluidAccelerationLabel,
+        new_dw->getModifiable(gfluidacceleration[m], Hlb->gFluidAccelerationLabel,
                               dwi, patch);
       }
     }
@@ -368,7 +368,7 @@ void FluidContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
   // t->computes(lb->gStressLabel); // Will this influence pore pressure?
-  t->modifies(lb->gFluidVelocityLabel, mss);
+  t->modifies(Hlb->gFluidVelocityLabel, mss);
 
   sched->addTask(t, patches, ms);
 
@@ -395,9 +395,9 @@ void FluidContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   // t->requires(Task::NewDW, lb->gPositionLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityLabel,         Ghost::None);
-  t->requires(Task::NewDW, lb->gFluidVelocityLabel,         Ghost::None);
-  t->modifies(             lb->gFluidVelocityStarLabel,  mss);
-  t->modifies(             lb->gFluidAccelerationLabel,  mss);
+  t->requires(Task::NewDW, Hlb->gFluidVelocityLabel,         Ghost::None);
+  t->modifies(             Hlb->gFluidVelocityStarLabel,  mss);
+  t->modifies(             Hlb->gFluidAccelerationLabel,  mss);
 
   sched->addTask(t, patches, ms);
 

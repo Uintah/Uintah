@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/HydroMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -113,6 +114,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
 {
   d_lb = scinew MPMLabel();
+  d_Hlb = scinew HydroMPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -132,6 +134,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 ParticleCreator::~ParticleCreator()
 {
   delete d_lb;
+  delete d_Hlb;
 }
 
 particleIndex 
@@ -581,14 +584,14 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 
   if (d_coupledflow) {  // Harmless that rigid allocates and put, as long as
                         // nothing it put
-      new_dw->allocateAndPut(pvars.pSolidMass, d_lb->pSolidMassLabel, subset);
-      new_dw->allocateAndPut(pvars.pFluidMass, d_lb->pFluidMassLabel, subset);
-      new_dw->allocateAndPut(pvars.pPorosity, d_lb->pPorosityLabel, subset);
-      new_dw->allocateAndPut(pvars.pPorePressure, d_lb->pPorePressureLabel,
+      new_dw->allocateAndPut(pvars.pSolidMass, d_Hlb->pSolidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidMass, d_Hlb->pFluidMassLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorosity, d_Hlb->pPorosityLabel, subset);
+      new_dw->allocateAndPut(pvars.pPorePressure, d_Hlb->pPorePressureLabel,
           subset);
       new_dw->allocateAndPut(pvars.pPrescribedPorePressure,
-          d_lb->pPrescribedPorePressureLabel, subset);
-      new_dw->allocateAndPut(pvars.pFluidVelocity, d_lb->pFluidVelocityLabel,
+          d_Hlb->pPrescribedPorePressureLabel, subset);
+      new_dw->allocateAndPut(pvars.pFluidVelocity, d_Hlb->pFluidVelocityLabel,
           subset);
   }
 
@@ -1098,21 +1101,21 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   if (d_coupledflow && !matl->getIsRigid()) {
       //if (d_coupledflow ) {
-      particle_state.push_back(d_lb->pFluidMassLabel);
-      particle_state.push_back(d_lb->pSolidMassLabel);
-      particle_state.push_back(d_lb->pPorePressureLabel);
-      particle_state.push_back(d_lb->pPorosityLabel);
+      particle_state.push_back(d_Hlb->pFluidMassLabel);
+      particle_state.push_back(d_Hlb->pSolidMassLabel);
+      particle_state.push_back(d_Hlb->pPorePressureLabel);
+      particle_state.push_back(d_Hlb->pPorosityLabel);
 
       // Error Cannot find in relocateParticles ???
 
-      particle_state_preReloc.push_back(d_lb->pFluidMassLabel_preReloc);
-      particle_state_preReloc.push_back(d_lb->pSolidMassLabel_preReloc);
-      particle_state_preReloc.push_back(d_lb->pPorePressureLabel_preReloc);
-      particle_state_preReloc.push_back(d_lb->pPorosityLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pFluidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pSolidMassLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorePressureLabel_preReloc);
+      particle_state_preReloc.push_back(d_Hlb->pPorosityLabel_preReloc);
 
       if (d_flags->d_integrator_type == "explicit") {
-          particle_state.push_back(d_lb->pFluidVelocityLabel);
-          particle_state_preReloc.push_back(d_lb->pFluidVelocityLabel_preReloc);
+          particle_state.push_back(d_Hlb->pFluidVelocityLabel);
+          particle_state_preReloc.push_back(d_Hlb->pFluidVelocityLabel_preReloc);
       }
   }
 

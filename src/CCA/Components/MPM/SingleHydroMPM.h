@@ -35,7 +35,6 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
@@ -54,6 +53,9 @@ class HeatConduction;
 class AnalysisModule;
 class SDInterfaceModel;
 class FluxBCModel;
+
+class HydroMPMLabel;
+class FluidContact;
 
 /**************************************
 
@@ -86,7 +88,7 @@ public:
   virtual ~SingleHydroMPM();
 
   Contact*         contactModel;
-  Contact*         fluidContactModel;
+  FluidContact*         fluidContactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
   SDInterfaceModel* d_sdInterfaceModel;
@@ -547,6 +549,8 @@ protected:
   std::vector<AnalysisModule*> d_analysisModules;
   SwitchingCriteria* d_switchCriteria;
   
+  HydroMPMLabel* Hlb{ nullptr };
+
 private:
 
   SingleHydroMPM(const SingleHydroMPM&);

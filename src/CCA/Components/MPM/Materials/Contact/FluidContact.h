@@ -41,6 +41,16 @@
 
 
 namespace Uintah {
+
+    class DataWarehouse;
+    class MPMLabel;
+    class HydroMPMLabel;
+    class MPMFlags;
+    class ProcessorGroup;
+    class Patch;
+    class VarLabel;
+    class Task;
+
 /**************************************
 
 CLASS
@@ -68,7 +78,7 @@ WARNING
   
 ****************************************/
 
-      class FluidContact : public Contact {
+      class FluidContact  {
       private:
          
          // Prevent copying of this class
@@ -90,7 +100,7 @@ WARNING
       public:
          // Constructor
          FluidContact(const ProcessorGroup* myworld,
-                         MaterialManagerP& d_sS,MPMLabel* lb,
+                         MaterialManagerP& d_sS,MPMLabel* lb, HydroMPMLabel* Hlb,
                          MPMFlags* MFlag);
          
          // Destructor
@@ -118,6 +128,14 @@ WARNING
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls);
+      
+      protected:
+          MPMLabel* lb;
+          MPMFlags* flag;
+          HydroMPMLabel* Hlb;
+          int    d_oneOrTwoStep;
+
+          ContactMaterialSpec d_matls;
       };
 } // End namespace Uintah
       

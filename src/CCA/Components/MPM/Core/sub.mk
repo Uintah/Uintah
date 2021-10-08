@@ -37,7 +37,8 @@ SRCS     += \
 	$(SRCDIR)/MPMFlags.cc          \
 	$(SRCDIR)/MPMLabel.cc          \
 	$(SRCDIR)/ImpMPMLabel.cc       \
-	$(SRCDIR)/ImpMPMFlags.cc
+	$(SRCDIR)/ImpMPMFlags.cc       \
+	$(SRCDIR)/HydroMPMLabel.cc          
 
 PSELIBS := \
 	Core/Disclosure     \
