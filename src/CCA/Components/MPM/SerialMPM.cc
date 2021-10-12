@@ -6768,11 +6768,11 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++) {
           IntVector node = ni[k];
-          if(gmass[TopMat][node]>2.e-200){
+          if(gmass[TopMat][node]>2.e-100){
             velTop      += gvelocity[TopMat][node]* S[k];
             sumSTop     += S[k];
           }
-          if(gmass[BotMat][node]>2.e-200){
+          if(gmass[BotMat][node]>2.e-100){
             velBot      += gvelocity[BotMat][node]* S[k];
             sumSBot     += S[k];
           }
@@ -6786,7 +6786,13 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
         czx_new[idx]         = czx[idx]       + .5*(velTop + velBot)*delT;
         czDispTop_new[idx]   = czDispTop[idx] + velTop*delT;
         czDispBot_new[idx]   = czDispBot[idx] + velBot*delT;
-        czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
+        // This mass check is done in case CZs are placed where one or both
+        // of the materials' masses is zero
+        if(massTop>1.e-99 && massBot>1.e-99){
+          czsep_new[idx]       = czDispTop_new[idx] - czDispBot_new[idx];
+        } else {
+          czsep_new[idx]       = czsep[idx];
+        }
 
         double disp_old = czsep[idx].length();
         double disp     = czsep_new[idx].length();
