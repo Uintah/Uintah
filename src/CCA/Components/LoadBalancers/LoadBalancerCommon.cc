@@ -455,7 +455,7 @@ LoadBalancerCommon::restartInitialize(       DataArchive * archive
   if (d_myworld->myRank() == 0) {
     DOUTR(g_lb_dbg,  " LoadBal: check after restart: " << m_check_after_restart);
 
-#if 1
+#if 0
     int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
     std::ostringstream message;
       for (unsigned i = 0; i < m_processor_assignment.size(); i++) {
