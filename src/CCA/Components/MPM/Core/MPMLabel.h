@@ -49,8 +49,6 @@ namespace Uintah {
       //   for the final particle update.
       const VarLabel* fAllParticlesUpdated;
 
-      const VarLabel* doMechLabel;
-
       const VarLabel* partCountLabel;
       
       // Heat flux from fire
@@ -62,7 +60,6 @@ namespace Uintah {
       const VarLabel* pScratchLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
-      const VarLabel* pPartitionUnityLabel;
 
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
@@ -101,8 +98,6 @@ namespace Uintah {
       const VarLabel* pdTdtLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
-      const VarLabel* pExternalHeatFluxLabel; //for heat conduction
-      const VarLabel* pExternalHeatFluxLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
@@ -118,24 +113,7 @@ namespace Uintah {
       const VarLabel* pScaleFactorLabel_preReloc;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
-      const VarLabel* pESPotential;
-      const VarLabel* pESGradPotential;
-      const VarLabel* pPosChargeLabel;
-      const VarLabel* pPosChargeLabel_preReloc;
-      const VarLabel* pNegChargeLabel;
-      const VarLabel* pNegChargeLabel_preReloc;
-      const VarLabel* pPermittivityLabel;
-      const VarLabel* pPermittivityLabel_preReloc;
-      const VarLabel* pPosChargeGradLabel;
-      const VarLabel* pPosChargeGradLabel_preReloc;
-      const VarLabel* pNegChargeGradLabel;
-      const VarLabel* pNegChargeGradLabel_preReloc;
-      const VarLabel* pPosChargeFluxLabel;
-      const VarLabel* pPosChargeFluxLabel_preReloc;
-      const VarLabel* pNegChargeFluxLabel;
-      const VarLabel* pNegChargeFluxLabel_preReloc;
       
-      const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
@@ -165,7 +143,6 @@ namespace Uintah {
       const VarLabel* gExternalForceLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
-      const VarLabel* gContactLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gSp_volLabel;          // specific volume 
@@ -176,11 +153,6 @@ namespace Uintah {
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
-      const VarLabel* gConcentrationLabel;
-      const VarLabel* gConcentrationNoBCLabel;
-      const VarLabel* gConcentrationRateLabel;
-      const VarLabel* gConcentrationStarLabel;
-      const VarLabel* gExternalScalarFluxLabel;
       const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
@@ -198,8 +170,6 @@ namespace Uintah {
       const VarLabel* gVolumeLabel;
       const VarLabel* gVolumeF0Label;
       const VarLabel* gVolumeF1Label;
-      const VarLabel* gZOILabel;
-      const VarLabel* MPMRefineCellLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* numLocInCellLabel;
       const VarLabel* numInCellLabel;
@@ -209,15 +179,6 @@ namespace Uintah {
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
 
-      const VarLabel* gPosChargeLabel;
-      const VarLabel* gPosChargeStarLabel;
-      const VarLabel* gPosChargeNoBCLabel;
-      const VarLabel* gNegChargeLabel;
-      const VarLabel* gNegChargeStarLabel;
-      const VarLabel* gNegChargeNoBCLabel;
-      const VarLabel* gPosChargeRateLabel;
-      const VarLabel* gNegChargeRateLabel;
-      
       const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
 
@@ -239,18 +200,6 @@ namespace Uintah {
 
       const VarLabel* pCellNAPIDLabel;
 
-      // Implicit MPM labels
-      const VarLabel* gVelocityOldLabel;
-      const VarLabel* dispNewLabel;
-      const VarLabel* dispIncLabel;
-      const VarLabel* pAccelerationLabel;
-      const VarLabel* dispIncQNorm0;
-      const VarLabel* dispIncNormMax;
-      const VarLabel* dispIncQNorm;
-      const VarLabel* dispIncNorm;
-
-      const VarLabel* pAccelerationLabel_preReloc;
-
       // Labels for particle erosion
       const VarLabel* pErosionLabel;
       const VarLabel* pErosionLabel_preReloc;
@@ -263,101 +212,59 @@ namespace Uintah {
       const VarLabel* p_qLabel;
       const VarLabel* p_qLabel_preReloc;
 
-      // for Fracture ----------
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
-      const VarLabel* pDispGradsLabel;
-      const VarLabel* pDispGradsLabel_preReloc;
-      const VarLabel* pStrainEnergyDensityLabel;
-      const VarLabel* pStrainEnergyDensityLabel_preReloc;
-
-      const VarLabel* pgCodeLabel;
-      const VarLabel* pKineticEnergyDensityLabel;
-      const VarLabel* pVelGradsLabel;
-
-      const VarLabel* gNumPatlsLabel;
-      const VarLabel* GNumPatlsLabel;
       const VarLabel* gDisplacementLabel;
-      const VarLabel* GDisplacementLabel;
-      const VarLabel* gGridStressLabel;
-      const VarLabel* GGridStressLabel;
-      const VarLabel* gDispGradsLabel;
-      const VarLabel* GDispGradsLabel;
-      const VarLabel* gVelGradsLabel;
-      const VarLabel* GVelGradsLabel;
-      const VarLabel* gStrainEnergyDensityLabel;
-      const VarLabel* GStrainEnergyDensityLabel;
-      const VarLabel* gKineticEnergyDensityLabel;
-      const VarLabel* GKineticEnergyDensityLabel;
 
-      const VarLabel* GCrackNormLabel;
-      const VarLabel* GMassLabel;
-      const VarLabel* GVolumeLabel;
-      const VarLabel* GVelocityLabel;
-      const VarLabel* GTemperatureLabel;
-      const VarLabel* GTemperatureNoBCLabel;
-      const VarLabel* GExternalForceLabel;
-      const VarLabel* GExternalHeatRateLabel;
-      const VarLabel* GThermalContactTemperatureRateLabel;
-      const VarLabel* GInternalForceLabel;
-      const VarLabel* GdTdtLabel;
-      const VarLabel* GTemperatureRateLabel;
-      const VarLabel* GTemperatureStarLabel;
-      const VarLabel* GVelocityStarLabel;
-      const VarLabel* GAccelerationLabel;
-      const VarLabel* GSp_volLabel;      
-      const VarLabel* GSp_vol_srcLabel; 
-      // ------------------------------
-
-      // Labels for shell materials
-      const VarLabel* pThickTopLabel;
-      const VarLabel* pInitialThickTopLabel;
-      const VarLabel* pThickBotLabel;
-      const VarLabel* pInitialThickBotLabel;
-      const VarLabel* pNormalLabel;
-      const VarLabel* pInitialNormalLabel;
-      const VarLabel* pThickTopLabel_preReloc;
-      const VarLabel* pInitialThickTopLabel_preReloc;
-      const VarLabel* pThickBotLabel_preReloc;
-      const VarLabel* pInitialThickBotLabel_preReloc;
-      const VarLabel* pNormalLabel_preReloc;
-      const VarLabel* pInitialNormalLabel_preReloc;
-      const VarLabel* pTypeLabel;
-      const VarLabel* pTypeLabel_preReloc;
-
-      const VarLabel* gNormalRotRateLabel; 
-      const VarLabel* gNormalRotMomentLabel; 
-      const VarLabel* gNormalRotMassLabel; 
-      const VarLabel* gNormalRotAccLabel; 
-      
       // Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
 
-      // For Cohesive Zones
-      const VarLabel* czAreaLabel; 
-      const VarLabel* czAreaLabel_preReloc; 
-      const VarLabel* czNormLabel; 
-      const VarLabel* czNormLabel_preReloc; 
-      const VarLabel* czTangLabel; 
-      const VarLabel* czTangLabel_preReloc; 
-      const VarLabel* czDispTopLabel; 
-      const VarLabel* czDispTopLabel_preReloc; 
-      const VarLabel* czDispBottomLabel; 
-      const VarLabel* czDispBottomLabel_preReloc; 
-      const VarLabel* czSeparationLabel; 
-      const VarLabel* czSeparationLabel_preReloc; 
-      const VarLabel* czForceLabel; 
-      const VarLabel* czForceLabel_preReloc; 
-      const VarLabel* czTopMatLabel; 
-      const VarLabel* czTopMatLabel_preReloc; 
-      const VarLabel* czBotMatLabel; 
-      const VarLabel* czBotMatLabel_preReloc; 
-      const VarLabel* czFailedLabel; 
-      const VarLabel* czFailedLabel_preReloc; 
-      const VarLabel* czIDLabel; 
-      const VarLabel* czIDLabel_preReloc; 
-      const VarLabel* pCellNACZIDLabel;
+      // Hydro-mechanical coupling
+      const VarLabel* ccPorosity;
+      const VarLabel* ccPorePressure;
+      const VarLabel* ccPorePressureOld;
+      const VarLabel* ccRHS_FlowEquation;
+      const VarLabel* ccTransmissivityMatrix;
+      const VarLabel* pFluidMassLabel;
+      const VarLabel* pFluidVelocityLabel;
+      const VarLabel* pFluidAccelerationLabel;
+      const VarLabel* pSolidMassLabel;
+      const VarLabel* pPorosityLabel;
+      const VarLabel* pPorosityLabel_preReloc;
+      const VarLabel* pPrescribedPorePressureLabel;
+      const VarLabel* pPorePressureLabel;
+      const VarLabel* pPorePressureFilterLabel;
+
+      const VarLabel* pStressRateLabel;
+      const VarLabel* pStressRateLabel_preReloc;
+      const VarLabel* gFluidMassBarLabel;
+      const VarLabel* gFluidMassLabel;
+      const VarLabel* gFluidVelocityLabel;
+      const VarLabel* FluidVelInc;
+      const VarLabel* gFluidVelocityStarLabel;
+      const VarLabel* gFluidAccelerationLabel;
+      const VarLabel* gInternalFluidForceLabel;
+      const VarLabel* gExternalFluidForceLabel;
+      const VarLabel* gInternalDragForceLabel;
+      const VarLabel* gFlowInertiaForceLabel;
+      const VarLabel* gPorePressureLabel;
+      const VarLabel* gPorePressureFilterLabel;
+
+      const VarLabel* pFluidMassLabel_preReloc;
+      const VarLabel* pFluidVelocityLabel_preReloc;
+      const VarLabel* pFluidAccelerationLabel_preReloc;
+      const VarLabel* pSolidMassLabel_preReloc;
+      const VarLabel* pPorePressureLabel_preReloc;
+      const VarLabel* pPorePressureFilterLabel_preReloc;
+      const VarLabel* gFluidMassBarLabel_preReloc;
+      const VarLabel* gFluidMassLabel_preReloc;
+      const VarLabel* gFluidVelocityLabel_preReloc;
+      const VarLabel* gFluidVelocityStarLabel_preReloc;
+      const VarLabel* gFluidAccelerationLabel_preReloc;
+
+      // MPM Hydrostatic BC label
+      const VarLabel* boundaryPointsPerCellLabel;
 
     };
 } // End namespace Uintah

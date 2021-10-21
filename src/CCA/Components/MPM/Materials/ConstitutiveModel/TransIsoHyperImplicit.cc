@@ -36,6 +36,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 //#include <iostream>
@@ -278,7 +279,7 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
       Ghost::GhostType  gac   = Ghost::AroundCells;
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
-        old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
+        old_dw->get(dispNew,Il->dispNewLabel,dwi,patch, gac, 1);
         computeDeformationGradientFromIncrementalDisplacement(
                                                       dispNew, pset, px,
                                                       deformationGradient,
@@ -866,7 +867,7 @@ TransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patches,
      Ghost::GhostType  gac   = Ghost::AroundCells;
      if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
-        new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
+        new_dw->get(dispNew,Il->dispNewLabel,dwi,patch, gac, 1);
         computeDeformationGradientFromIncrementalDisplacement(
                                                     dispNew, pset, px,
                                                     deformationGradient,

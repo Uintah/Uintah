@@ -55,6 +55,7 @@ class SDInterfaceModel;
 class FluxBCModel;
 
 class HydroMPMLabel;
+class CZLabel;
 class FluidContact;
 
 /**************************************
@@ -550,6 +551,7 @@ protected:
   SwitchingCriteria* d_switchCriteria;
   
   HydroMPMLabel* Hlb{ nullptr };
+  CZLabel* Cl{ nullptr };
 
 private:
 

@@ -63,15 +63,13 @@ void NonLinearDiff2::addInitialComputesAndRequires(
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_lb->diffusion->pDiffusivity,   matlset);
-  task->computes(d_lb->pPosChargeFluxLabel, matlset);
-  task->computes(d_lb->pNegChargeFluxLabel, matlset);
+  task->computes(d_Al->pPosChargeFluxLabel, matlset);
+  task->computes(d_Al->pNegChargeFluxLabel, matlset);
 }
 
-void NonLinearDiff2::initializeSDMData(
-                                       const Patch          * patch,
+void NonLinearDiff2::initializeSDMData(const Patch          * patch,
                                        const MPMMaterial    * matl,
-                                             DataWarehouse  * new_dw
-                                      )
+                                             DataWarehouse  * new_dw)
 {
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
@@ -80,8 +78,8 @@ void NonLinearDiff2::initializeSDMData(
   ParticleVariable<Vector>  pNegFlux;
 
   new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity,   pset);
-  new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel, pset);
-  new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel, pset);
+  new_dw->allocateAndPut(pPosFlux,     d_Al->pPosChargeFluxLabel, pset);
+  new_dw->allocateAndPut(pNegFlux,     d_Al->pNegChargeFluxLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++)
   {
@@ -97,12 +95,12 @@ void NonLinearDiff2::addParticleState(
                                      ) const
 {
   from.push_back(d_lb->diffusion->pDiffusivity);
-  from.push_back(d_lb->pPosChargeFluxLabel);
-  from.push_back(d_lb->pNegChargeFluxLabel);
+  from.push_back(d_Al->pPosChargeFluxLabel);
+  from.push_back(d_Al->pNegChargeFluxLabel);
 
   to.push_back(d_lb->diffusion->pDiffusivity_preReloc);
-  to.push_back(d_lb->pPosChargeFluxLabel_preReloc);
-  to.push_back(d_lb->pNegChargeFluxLabel_preReloc);
+  to.push_back(d_Al->pPosChargeFluxLabel_preReloc);
+  to.push_back(d_Al->pNegChargeFluxLabel_preReloc);
 }
 
 void NonLinearDiff2::scheduleComputeFlux(
@@ -116,25 +114,23 @@ void NonLinearDiff2::scheduleComputeFlux(
 
   // task->requires(Task::OldDW, d_lb->simulationTimeLabel,);
 
-  task->requires(Task::OldDW, d_lb->pPosChargeLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pNegChargeLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pPosChargeGradLabel, matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pNegChargeGradLabel, matlset, gnone);
-  task->requires(Task::NewDW, d_lb->pESGradPotential, matlset, gnone);
+  task->requires(Task::OldDW, d_Al->pPosChargeLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_Al->pNegChargeLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_Al->pPosChargeGradLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_Al->pNegChargeGradLabel, matlset, gnone);
+  task->requires(Task::NewDW, d_Al->pESGradPotential, matlset, gnone);
 
   task->computes(d_lb->delTLabel,getLevel(patch));
 
-  task->computes(d_lb->pPosChargeFluxLabel_preReloc, matlset);
-  task->computes(d_lb->pNegChargeFluxLabel_preReloc, matlset);
+  task->computes(d_Al->pPosChargeFluxLabel_preReloc, matlset);
+  task->computes(d_Al->pNegChargeFluxLabel_preReloc, matlset);
   task->computes(d_lb->diffusion->pDiffusivity_preReloc,   matlset);
 }
 
-void NonLinearDiff2::computeFlux(
-                                 const Patch          * patch,
+void NonLinearDiff2::computeFlux(const Patch          * patch,
                                  const MPMMaterial    * matl,
                                        DataWarehouse  * old_dw,
-                                       DataWarehouse  * new_dw
-                                )
+                                       DataWarehouse  * new_dw)
 {
   // Get the current simulation time
   // double simTime = d_materialManager->getElapsedSimTime();
@@ -157,15 +153,15 @@ void NonLinearDiff2::computeFlux(
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pPosCharge,       d_lb->pPosChargeLabel, pset);
-  old_dw->get(pNegCharge,       d_lb->pNegChargeLabel, pset);
-  old_dw->get(pPosChargeGrad,   d_lb->pPosChargeGradLabel, pset);
-  old_dw->get(pNegChargeGrad,   d_lb->pNegChargeGradLabel, pset);
-  new_dw->get(pESGradPotential, d_lb->pESGradPotential, pset);
+  old_dw->get(pPosCharge,       d_Al->pPosChargeLabel, pset);
+  old_dw->get(pNegCharge,       d_Al->pNegChargeLabel, pset);
+  old_dw->get(pPosChargeGrad,   d_Al->pPosChargeGradLabel, pset);
+  old_dw->get(pNegChargeGrad,   d_Al->pNegChargeGradLabel, pset);
+  new_dw->get(pESGradPotential, d_Al->pESGradPotential, pset);
 
-  new_dw->allocateAndPut(pPosFlux,     d_lb->pPosChargeFluxLabel_preReloc, pset);
-  new_dw->allocateAndPut(pNegFlux,     d_lb->pNegChargeFluxLabel_preReloc, pset);
-  new_dw->allocateAndPut(pDiffusivity, d_lb->diffusion->pDiffusivity_preReloc,   pset);
+  new_dw->allocateAndPut(pPosFlux,    d_Al->pPosChargeFluxLabel_preReloc, pset);
+  new_dw->allocateAndPut(pNegFlux,    d_Al->pNegChargeFluxLabel_preReloc, pset);
+  new_dw->allocateAndPut(pDiffusivity,d_lb->diffusion->pDiffusivity_preReloc,   pset);
 
   double D = d_D0;
   double timestep = 1.0e99;
@@ -199,21 +195,19 @@ void NonLinearDiff2::scheduleComputeDivergence(       Task         * task,
   task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
 
-  task->requires(Task::NewDW, d_lb->pPosChargeFluxLabel_preReloc, gan, NGP);
-  task->requires(Task::NewDW, d_lb->pNegChargeFluxLabel_preReloc, gan, NGP);
+  task->requires(Task::NewDW, d_Al->pPosChargeFluxLabel_preReloc, gan, NGP);
+  task->requires(Task::NewDW, d_Al->pNegChargeFluxLabel_preReloc, gan, NGP);
 
-  task->computes(d_lb->gPosChargeRateLabel, matlset);
-  task->computes(d_lb->gNegChargeRateLabel, matlset);
+  task->computes(d_Al->gPosChargeRateLabel, matlset);
+  task->computes(d_Al->gNegChargeRateLabel, matlset);
 
   task->computes(d_lb->diffusion->gConcentrationRate, matlset);
 }
 
-void NonLinearDiff2::computeDivergence(
-                                       const Patch          * patch,
+void NonLinearDiff2::computeDivergence(const Patch          * patch,
                                        const MPMMaterial    * matl,
                                              DataWarehouse  * old_dw,
-                                             DataWarehouse  * new_dw
-                                      )
+                                             DataWarehouse  * new_dw)
 {
   Ghost::GhostType  gan = Ghost::AroundNodes;
   int dwi = matl->getDWIndex();
@@ -248,11 +242,11 @@ void NonLinearDiff2::computeDivergence(
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   new_dw->get(psize,               d_lb->pCurSizeLabel,            pset);
 
-  new_dw->get(pPosChargeFlux,      d_lb->pPosChargeFluxLabel_preReloc, pset);
-  new_dw->get(pNegChargeFlux,      d_lb->pNegChargeFluxLabel_preReloc, pset);
+  new_dw->get(pPosChargeFlux,      d_Al->pPosChargeFluxLabel_preReloc, pset);
+  new_dw->get(pNegChargeFlux,      d_Al->pNegChargeFluxLabel_preReloc, pset);
 
-  new_dw->allocateAndPut(gPosChargeRate, d_lb->gPosChargeRateLabel,    dwi,patch);
-  new_dw->allocateAndPut(gNegChargeRate, d_lb->gNegChargeRateLabel,    dwi,patch);
+  new_dw->allocateAndPut(gPosChargeRate, d_Al->gPosChargeRateLabel,    dwi,patch);
+  new_dw->allocateAndPut(gNegChargeRate, d_Al->gNegChargeRateLabel,    dwi,patch);
   new_dw->allocateAndPut(gConcRate,      d_lb->diffusion->gConcentrationRate,dwi,patch);
 
   gConcRate.initialize(0.0);

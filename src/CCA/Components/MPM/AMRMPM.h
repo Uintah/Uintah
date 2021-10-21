@@ -48,6 +48,7 @@ namespace Uintah {
 class GeometryObject;
 class SDInterfaceModel;
 class FluxBCModel;
+class AMRMPMLabel;
 
 class AMRMPM : public SerialMPM {
 
@@ -441,6 +442,7 @@ private:
   Ghost::GhostType  d_gac;            // for readability
   Ghost::GhostType  d_gan;
   Ghost::GhostType  d_gn;
+  AMRMPMLabel* Al;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   std::string d_CFI_interpolator;     // user can override interpolator at CFI

@@ -56,6 +56,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(
 // This variable currently isn't used
 
   d_lb = scinew MPMLabel;
+  d_Al = scinew AMRMPMLabel;
 
   ps->require("diffusivity", d_D0);
   ps->require("max_concentration", d_MaxConcentration);
@@ -257,7 +258,7 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(      Task         * t,
     // Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, d_lb->gZOILabel,     d_one_matl, Ghost::None,0);
+    t->requires(Task::NewDW, d_Al->gZOILabel,     d_one_matl, Ghost::None,0);
     t->requires(Task::OldDW, d_lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::NewDW, d_lb->pCurSizeLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pMassLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
@@ -326,15 +327,14 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset    * finePatc
       Id.Identity();
 
       constNCVariable<Stencil7> zoi_fine;
-      new_dw->get(zoi_fine, d_lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+      new_dw->get(zoi_fine, d_Al->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
       NCVariable<double> gConcRate;
       new_dw->getModifiable(gConcRate, d_lb->diffusion->gConcentrationRate,
                                                      dwi, finePatch);
 
       // loop over the coarse patches under the fine patches.
-      for(unsigned int cp=0; cp<coarsePatches.size(); cp++)
-      {
+      for(unsigned int cp=0; cp<coarsePatches.size(); cp++) {
         const Patch* coarsePatch = coarsePatches[cp];
 
         // get coarse level particle data 

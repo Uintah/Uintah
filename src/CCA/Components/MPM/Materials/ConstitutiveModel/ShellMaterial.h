@@ -33,6 +33,7 @@
 
 namespace Uintah {
 
+  class ShellMPMLabel;
   ////////////////////////////////////////////////////////////////////////////
   /*! 
     \class ShellMaterial
@@ -84,6 +85,7 @@ namespace Uintah {
   private:
     // Prevent copying of this class:
     ShellMaterial& operator=(const ShellMaterial &cm);
+    ShellMPMLabel* Sl;
 
   public:
     // constructors

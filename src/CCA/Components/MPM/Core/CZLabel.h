@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_IMPMPMLABEL_H
-#define UINTAH_HOMEBREW_IMPMPMLABEL_H
+#ifndef UINTAH_HOMEBREW_CZLABEL_H
+#define UINTAH_HOMEBREW_CZLABEL_H
 
 #include <vector>
 
@@ -31,26 +31,36 @@ namespace Uintah {
 
   class VarLabel;
 
-    class ImpMPMLabel {
+    class CZLabel {
     public:
 
-      ImpMPMLabel();
-      ~ImpMPMLabel();
+      CZLabel();
+      ~CZLabel();
 
-      const VarLabel* pXXLabel;
-      const VarLabel* gVelocityOldLabel;
-      const VarLabel* dispNewLabel;
-      const VarLabel* dispIncLabel;
-      const VarLabel* dispIncQNorm0;
-      const VarLabel* dispIncNormMax;
-      const VarLabel* dispIncQNorm;
-      const VarLabel* dispIncNorm;
-      const VarLabel* pAccelerationLabel;
-      const VarLabel* pAccelerationLabel_preReloc;
-      const VarLabel* pExternalHeatFluxLabel; //for heat conduction
-      const VarLabel* pExternalHeatFluxLabel_preReloc; //for heat conduction
-      const VarLabel* gContactLabel;
-
+      // For Cohesive Zones
+      const VarLabel* czAreaLabel; 
+      const VarLabel* czAreaLabel_preReloc; 
+      const VarLabel* czNormLabel; 
+      const VarLabel* czNormLabel_preReloc; 
+      const VarLabel* czTangLabel; 
+      const VarLabel* czTangLabel_preReloc; 
+      const VarLabel* czDispTopLabel; 
+      const VarLabel* czDispTopLabel_preReloc; 
+      const VarLabel* czDispBottomLabel; 
+      const VarLabel* czDispBottomLabel_preReloc; 
+      const VarLabel* czSeparationLabel; 
+      const VarLabel* czSeparationLabel_preReloc; 
+      const VarLabel* czForceLabel; 
+      const VarLabel* czForceLabel_preReloc; 
+      const VarLabel* czTopMatLabel; 
+      const VarLabel* czTopMatLabel_preReloc; 
+      const VarLabel* czBotMatLabel; 
+      const VarLabel* czBotMatLabel_preReloc; 
+      const VarLabel* czFailedLabel; 
+      const VarLabel* czFailedLabel_preReloc; 
+      const VarLabel* czIDLabel; 
+      const VarLabel* czIDLabel_preReloc; 
+      const VarLabel* pCellNACZIDLabel;
     };
 } // End namespace Uintah
 

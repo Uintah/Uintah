@@ -43,6 +43,7 @@ namespace Uintah {
   class Patch;
   class VarLabel;
   class MPMLabel;
+  class ImpMPMLabel;
   class MPMFlags;
   class MPMMaterial;
   class Solver;
@@ -149,11 +150,9 @@ namespace Uintah {
                                     const bool SchedParent) const;
 
     MPMLabel* d_lb;
+    ImpMPMLabel* Il;
 
   };
 } // End namespace Uintah
-      
-
 
 #endif  
-

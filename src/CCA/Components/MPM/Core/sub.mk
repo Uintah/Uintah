@@ -21,10 +21,6 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
-# 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -37,8 +33,11 @@ SRCS     += \
 	$(SRCDIR)/MPMFlags.cc          \
 	$(SRCDIR)/MPMLabel.cc          \
 	$(SRCDIR)/ImpMPMLabel.cc       \
-	$(SRCDIR)/ImpMPMFlags.cc       \
-	$(SRCDIR)/HydroMPMLabel.cc          
+	$(SRCDIR)/ShellMPMLabel.cc     \
+	$(SRCDIR)/CZLabel.cc           \
+	$(SRCDIR)/AMRMPMLabel.cc       \
+	$(SRCDIR)/HydroMPMLabel.cc     \
+	$(SRCDIR)/ImpMPMFlags.cc
 
 PSELIBS := \
 	Core/Disclosure     \

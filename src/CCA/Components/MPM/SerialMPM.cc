@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
+#include <CCA/Components/MPM/Core/CZLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
@@ -111,6 +112,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 {
   flags = scinew MPMFlags(myworld);
 
+  Cl = scinew CZLabel();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   contactModel        = nullptr;
@@ -121,7 +123,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   d_loadCurveIndex=0;
   d_switchCriteria = nullptr;
 
-  d_fracture = false;
+//  d_fracture = false;
 
   // Diffusion related
   d_fluxBC           = nullptr;
@@ -137,6 +139,7 @@ SerialMPM::~SerialMPM()
   delete d_sdInterfaceModel;
   delete flags;
   delete d_switchCriteria;
+  delete Cl;
 
   MPMPhysicalBCFactory::clean();
 
@@ -764,7 +767,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_cohesiveZoneState_preReloc,
                                     lb->pXLabel,
                                     d_cohesiveZoneState,
-                                    lb->czIDLabel, cz_matls,2);
+                                    Cl->czIDLabel, cz_matls,2);
   }
 
   //__________________________________
@@ -980,9 +983,9 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                     cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
-  t->requires(Task::NewDW, lb->czBotMatLabel_preReloc,      cz_matls, gan,NGP);
+  t->requires(Task::NewDW, Cl->czForceLabel_preReloc,       cz_matls, gan,NGP);
+  t->requires(Task::NewDW, Cl->czTopMatLabel_preReloc,      cz_matls, gan,NGP);
+  t->requires(Task::NewDW, Cl->czBotMatLabel_preReloc,      cz_matls, gan,NGP);
   t->requires(Task::NewDW, lb->gMassLabel,                  mpm_matls,gac,NGN);
 
   t->modifies(lb->gExternalForceLabel, mpm_matls);
@@ -1509,30 +1512,30 @@ void SerialMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVelocityLabel,     mpm_matls,   gac,NGN);
   t->requires(Task::NewDW, lb->gMassLabel,         mpm_matls,   gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,            cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czAreaLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czNormLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czTangLabel,        cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czDispTopLabel,     cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czDispBottomLabel,  cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czSeparationLabel,  cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czForceLabel,       cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czTopMatLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czBotMatLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czFailedLabel,      cz_matls,    gnone);
-  t->requires(Task::OldDW, lb->czIDLabel,          cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czAreaLabel,        cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czNormLabel,        cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czTangLabel,        cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czDispTopLabel,     cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czDispBottomLabel,  cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czSeparationLabel,  cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czForceLabel,       cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czTopMatLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czBotMatLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czFailedLabel,      cz_matls,    gnone);
+  t->requires(Task::OldDW, Cl->czIDLabel,          cz_matls,    gnone);
 
   t->computes(lb->pXLabel_preReloc,           cz_matls);
-  t->computes(lb->czAreaLabel_preReloc,       cz_matls);
-  t->computes(lb->czNormLabel_preReloc,       cz_matls);
-  t->computes(lb->czTangLabel_preReloc,       cz_matls);
-  t->computes(lb->czDispTopLabel_preReloc,    cz_matls);
-  t->computes(lb->czDispBottomLabel_preReloc, cz_matls);
-  t->computes(lb->czSeparationLabel_preReloc, cz_matls);
-  t->computes(lb->czForceLabel_preReloc,      cz_matls);
-  t->computes(lb->czTopMatLabel_preReloc,     cz_matls);
-  t->computes(lb->czBotMatLabel_preReloc,     cz_matls);
-  t->computes(lb->czFailedLabel_preReloc,     cz_matls);
-  t->computes(lb->czIDLabel_preReloc,         cz_matls);
+  t->computes(Cl->czAreaLabel_preReloc,       cz_matls);
+  t->computes(Cl->czNormLabel_preReloc,       cz_matls);
+  t->computes(Cl->czTangLabel_preReloc,       cz_matls);
+  t->computes(Cl->czDispTopLabel_preReloc,    cz_matls);
+  t->computes(Cl->czDispBottomLabel_preReloc, cz_matls);
+  t->computes(Cl->czSeparationLabel_preReloc, cz_matls);
+  t->computes(Cl->czForceLabel_preReloc,      cz_matls);
+  t->computes(Cl->czTopMatLabel_preReloc,     cz_matls);
+  t->computes(Cl->czBotMatLabel_preReloc,     cz_matls);
+  t->computes(Cl->czFailedLabel_preReloc,     cz_matls);
+  t->computes(Cl->czIDLabel_preReloc,         cz_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -2704,9 +2707,9 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
       constParticleVariable<int> czTopMat, czBotMat;
 
       old_dw->get(czx,          lb->pXLabel,                          pset);
-      new_dw->get(czforce,      lb->czForceLabel_preReloc,            pset);
-      new_dw->get(czTopMat,     lb->czTopMatLabel_preReloc,           pset);
-      new_dw->get(czBotMat,     lb->czBotMatLabel_preReloc,           pset);
+      new_dw->get(czforce,      Cl->czForceLabel_preReloc,            pset);
+      new_dw->get(czTopMat,     Cl->czTopMatLabel_preReloc,           pset);
+      new_dw->get(czBotMat,     Cl->czBotMatLabel_preReloc,           pset);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -4409,30 +4412,30 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
       ParticleVariable<int> czTopMat_new, czBotMat_new, czFailed_new;
 
       old_dw->get(czx,          lb->pXLabel,                         pset);
-      old_dw->get(czarea,       lb->czAreaLabel,                     pset);
-      old_dw->get(cznorm,       lb->czNormLabel,                     pset);
-      old_dw->get(cztang,       lb->czTangLabel,                     pset);
-      old_dw->get(czDispTop,    lb->czDispTopLabel,                  pset);
-      old_dw->get(czDispBot,    lb->czDispBottomLabel,               pset);
-      old_dw->get(czsep,        lb->czSeparationLabel,               pset);
-      old_dw->get(czforce,      lb->czForceLabel,                    pset);
-      old_dw->get(czids,        lb->czIDLabel,                       pset);
-      old_dw->get(czTopMat,     lb->czTopMatLabel,                   pset);
-      old_dw->get(czBotMat,     lb->czBotMatLabel,                   pset);
-      old_dw->get(czFailed,     lb->czFailedLabel,                   pset);
+      old_dw->get(czarea,       Cl->czAreaLabel,                     pset);
+      old_dw->get(cznorm,       Cl->czNormLabel,                     pset);
+      old_dw->get(cztang,       Cl->czTangLabel,                     pset);
+      old_dw->get(czDispTop,    Cl->czDispTopLabel,                  pset);
+      old_dw->get(czDispBot,    Cl->czDispBottomLabel,               pset);
+      old_dw->get(czsep,        Cl->czSeparationLabel,               pset);
+      old_dw->get(czforce,      Cl->czForceLabel,                    pset);
+      old_dw->get(czids,        Cl->czIDLabel,                       pset);
+      old_dw->get(czTopMat,     Cl->czTopMatLabel,                   pset);
+      old_dw->get(czBotMat,     Cl->czBotMatLabel,                   pset);
+      old_dw->get(czFailed,     Cl->czFailedLabel,                   pset);
 
       new_dw->allocateAndPut(czx_new,      lb->pXLabel_preReloc,          pset);
-      new_dw->allocateAndPut(czarea_new,   lb->czAreaLabel_preReloc,      pset);
-      new_dw->allocateAndPut(cznorm_new,   lb->czNormLabel_preReloc,      pset);
-      new_dw->allocateAndPut(cztang_new,   lb->czTangLabel_preReloc,      pset);
-      new_dw->allocateAndPut(czDispTop_new,lb->czDispTopLabel_preReloc,   pset);
-      new_dw->allocateAndPut(czDispBot_new,lb->czDispBottomLabel_preReloc,pset);
-      new_dw->allocateAndPut(czsep_new,    lb->czSeparationLabel_preReloc,pset);
-      new_dw->allocateAndPut(czforce_new,  lb->czForceLabel_preReloc,     pset);
-      new_dw->allocateAndPut(czids_new,    lb->czIDLabel_preReloc,        pset);
-      new_dw->allocateAndPut(czTopMat_new, lb->czTopMatLabel_preReloc,    pset);
-      new_dw->allocateAndPut(czBotMat_new, lb->czBotMatLabel_preReloc,    pset);
-      new_dw->allocateAndPut(czFailed_new, lb->czFailedLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czarea_new,   Cl->czAreaLabel_preReloc,      pset);
+      new_dw->allocateAndPut(cznorm_new,   Cl->czNormLabel_preReloc,      pset);
+      new_dw->allocateAndPut(cztang_new,   Cl->czTangLabel_preReloc,      pset);
+      new_dw->allocateAndPut(czDispTop_new,Cl->czDispTopLabel_preReloc,   pset);
+      new_dw->allocateAndPut(czDispBot_new,Cl->czDispBottomLabel_preReloc,pset);
+      new_dw->allocateAndPut(czsep_new,    Cl->czSeparationLabel_preReloc,pset);
+      new_dw->allocateAndPut(czforce_new,  Cl->czForceLabel_preReloc,     pset);
+      new_dw->allocateAndPut(czids_new,    Cl->czIDLabel_preReloc,        pset);
+      new_dw->allocateAndPut(czTopMat_new, Cl->czTopMatLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czBotMat_new, Cl->czBotMatLabel_preReloc,    pset);
+      new_dw->allocateAndPut(czFailed_new, Cl->czFailedLabel_preReloc,    pset);
 
       czarea_new.copyData(czarea);
       czids_new.copyData(czids);

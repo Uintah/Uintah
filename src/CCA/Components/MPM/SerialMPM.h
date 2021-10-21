@@ -52,6 +52,7 @@ class HeatConduction;
 class AnalysisModule;
 class SDInterfaceModel;
 class FluxBCModel;
+class CZLabel;
 
 /**************************************
 
@@ -161,6 +162,7 @@ protected:
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   FluxBCModel*  d_fluxBC;
+  CZLabel* Cl;
  
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -661,7 +663,7 @@ protected:
   std::vector<Vector> d_IPVelNew;
 
 
-  bool             d_fracture;
+//  bool             d_fracture;
   MaterialSubset*  d_loadCurveIndex;
   
   std::vector<AnalysisModule*> d_analysisModules;

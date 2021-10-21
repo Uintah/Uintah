@@ -36,6 +36,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/AMRMPMLabel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -190,6 +191,7 @@ namespace Uintah {
                               ) const;
 
     MPMLabel* d_lb;
+    AMRMPMLabel* d_Al;
     MPMFlags* d_Mflag;
     MaterialManagerP d_materialManager;
     ConductivityEquation* d_conductivity_equation;

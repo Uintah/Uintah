@@ -85,6 +85,7 @@
 
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
+#include <CCA/Components/MPM/Core/CZLabel.h>
 
 #include <iostream>
 #include <fstream>
@@ -118,6 +119,7 @@ SingleHydroMPM::SingleHydroMPM( const ProcessorGroup* myworld,
 {
   flags = scinew MPMFlags(myworld);
   Hlb = scinew HydroMPMLabel();
+  Cl = scinew CZLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -852,7 +854,7 @@ SingleHydroMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_cohesiveZoneState_preReloc,
                                     lb->pXLabel,
                                     d_cohesiveZoneState,
-                                    lb->czIDLabel, cz_matls,2);
+                                    Cl->czIDLabel, cz_matls,2);
   }
 
   //__________________________________

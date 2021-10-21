@@ -46,6 +46,7 @@ namespace Uintah {
   class MPMFlags;
   class CZMaterial;
   class MPMLabel;
+  class CZLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -93,6 +94,7 @@ namespace Uintah {
     ParticleVariable<int> czFailed;
 
     MPMLabel* d_lb;
+    CZLabel*  d_Cl;
     MPMFlags* d_flags;
     MaterialManagerP d_materialManager;
 

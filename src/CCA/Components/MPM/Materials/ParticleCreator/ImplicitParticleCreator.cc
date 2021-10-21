@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ImplicitParticleCreator.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 using namespace Uintah;
@@ -37,6 +38,7 @@ ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
                                                  MPMFlags* flags)
   :  ParticleCreator(matl,flags)
 {
+  d_Il = scinew ImpMPMLabel();
   registerPermanentParticleState(matl);
 }
 
@@ -74,9 +76,9 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
                                                               dwi,patch,
                                                               new_dw, pvars);
 
-  new_dw->allocateAndPut(pvars.pacceleration, d_lb->pAccelerationLabel, subset);
+  new_dw->allocateAndPut(pvars.pacceleration, d_Il->pAccelerationLabel, subset);
 #ifdef HEAT
-  new_dw->allocateAndPut(pvars.pExternalHeatFlux, d_lb->pExternalHeatFluxLabel, 
+  new_dw->allocateAndPut(pvars.pExternalHeatFlux, d_Il->pExternalHeatFluxLabel, 
                          subset);
 #endif
 
@@ -88,12 +90,12 @@ void
 ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
 
 {
-  particle_state.push_back(d_lb->pAccelerationLabel);
-  particle_state_preReloc.push_back(d_lb->pAccelerationLabel_preReloc);
+  particle_state.push_back(d_Il->pAccelerationLabel);
+  particle_state_preReloc.push_back(d_Il->pAccelerationLabel_preReloc);
 
 #ifdef HEAT
-  particle_state.push_back(d_lb->pExternalHeatFluxLabel);
-  particle_state_preReloc.push_back(d_lb->pExternalHeatFluxLabel_preReloc);
+  particle_state.push_back(d_Il->pExternalHeatFluxLabel);
+  particle_state_preReloc.push_back(d_Il->pExternalHeatFluxLabel_preReloc);
 #endif
 
 #if 0

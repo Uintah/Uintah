@@ -44,6 +44,7 @@ namespace Uintah {
   class MPMFlags;
   class MPMMaterial;
   class MPMLabel;
+  class AMRMPMLabel;
   class HydroMPMLabel;
   class ParticleSubset;
   class VarLabel;
@@ -176,6 +177,7 @@ namespace Uintah {
                             const Vector dxpp);
 
     MPMLabel* d_lb;
+    AMRMPMLabel* d_Al;
     HydroMPMLabel* d_Hlb;
     MPMFlags* d_flags;
 

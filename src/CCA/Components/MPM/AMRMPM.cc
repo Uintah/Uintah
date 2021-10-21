@@ -29,6 +29,7 @@
 
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h> // for MPMDiffusionLabel
 #include <CCA/Components/MPM/Core/MPMLabel.h>          // for MPMLabel
+#include <CCA/Components/MPM/Core/AMRMPMLabel.h>
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>      // for MPMBoundCond
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
@@ -131,6 +132,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld,
   //flags = scinew MPMFlags(myworld);
   flags->d_minGridLevel = 0;
   flags->d_maxGridLevel = 1000;
+  Al = scinew AMRMPMLabel();
 
   d_SMALL_NUM_MPM=1e-200;
   contactModel   = 0;
@@ -510,9 +512,9 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   }
 
   if(flags->d_withGaussSolver){
-    t->computes(lb->pPosChargeLabel);
-    t->computes(lb->pNegChargeLabel);
-    t->computes(lb->pPermittivityLabel);
+    t->computes(Al->pPosChargeLabel);
+    t->computes(Al->pNegChargeLabel);
+    t->computes(Al->pPermittivityLabel);
   }
 
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
@@ -783,8 +785,8 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
 
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pLastLevelLabel_preReloc);
-  t->computes(lb->pPartitionUnityLabel);
-  t->computes(lb->MPMRefineCellLabel, d_one_matl);
+  t->computes(Al->pPartitionUnityLabel);
+  t->computes(Al->MPMRefineCellLabel, d_one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -804,7 +806,7 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
     Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
                     this, &AMRMPM::computeZoneOfInfluence);
 
-    t->computes(lb->gZOILabel, d_one_matl);
+    t->computes(Al->gZOILabel, d_one_matl);
 
     sched->addTask(t, patches, matls);
 
@@ -864,10 +866,10 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 #endif
   }
   if(flags->d_withGaussSolver){
-    t->requires(Task::OldDW, lb->pPosChargeLabel, d_gan, NGP);
-    t->requires(Task::OldDW, lb->pNegChargeLabel, d_gan, NGP);
-    t->computes(lb->gPosChargeLabel);
-    t->computes(lb->gNegChargeLabel);
+    t->requires(Task::OldDW, Al->pPosChargeLabel, d_gan, NGP);
+    t->requires(Task::OldDW, Al->pNegChargeLabel, d_gan, NGP);
+    t->computes(Al->gPosChargeLabel);
+    t->computes(Al->gNegChargeLabel);
   }
   
   sched->addTask(t, patches, matls);
@@ -909,7 +911,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, lb->gZOILabel,                d_one_matl,  Ghost::None, 0);
+    t->requires(Task::NewDW, Al->gZOILabel,                d_one_matl,  Ghost::None, 0);
     t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
@@ -1045,10 +1047,10 @@ void AMRMPM::scheduleNormalizeNodalVelTempConc(SchedulerP& sched,
     t->modifies(lb->diffusion->gHydrostaticStress);
   }
   if(flags->d_withGaussSolver){
-    t->modifies(lb->gPosChargeLabel);
-    t->modifies(lb->gNegChargeLabel);
-    t->computes(lb->gPosChargeNoBCLabel);
-    t->computes(lb->gNegChargeNoBCLabel);
+    t->modifies(Al->gPosChargeLabel);
+    t->modifies(Al->gNegChargeLabel);
+    t->computes(Al->gPosChargeNoBCLabel);
+    t->computes(Al->gNegChargeNoBCLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1162,7 +1164,7 @@ void AMRMPM::scheduleComputeInternalForce_CFI(SchedulerP& sched,
     //  Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, lb->gZOILabel,     d_one_matl, Ghost::None,0);
+    t->requires(Task::NewDW, Al->gZOILabel,     d_one_matl, Ghost::None,0);
     t->requires(Task::OldDW, lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::OldDW, lb->pStressLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
     t->requires(Task::OldDW, lb->pVolumeLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gac, npc);
@@ -1216,14 +1218,14 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   }
 
   if(flags->d_withGaussSolver){
-    t->requires(Task::NewDW, lb->gPosChargeNoBCLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gNegChargeNoBCLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->gPosChargeLabel,     Ghost::None);
-    t->requires(Task::NewDW, lb->gNegChargeLabel,     Ghost::None);
-    t->computes(lb->gPosChargeStarLabel);
-    t->computes(lb->gNegChargeStarLabel);
-    t->modifies(lb->gPosChargeRateLabel);
-    t->modifies(lb->gNegChargeRateLabel);
+    t->requires(Task::NewDW, Al->gPosChargeNoBCLabel, Ghost::None);
+    t->requires(Task::NewDW, Al->gNegChargeNoBCLabel, Ghost::None);
+    t->requires(Task::NewDW, Al->gPosChargeLabel,     Ghost::None);
+    t->requires(Task::NewDW, Al->gNegChargeLabel,     Ghost::None);
+    t->computes(Al->gPosChargeStarLabel);
+    t->computes(Al->gNegChargeStarLabel);
+    t->modifies(Al->gPosChargeRateLabel);
+    t->modifies(Al->gNegChargeRateLabel);
   }
 
   sched->addTask(t, patches, matls);
@@ -1292,10 +1294,10 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   }
 
   if(flags->d_withGaussSolver){
-    t->requires(Task::NewDW, lb->gPosChargeStarLabel, d_gac, NGN);
-    t->requires(Task::NewDW, lb->gNegChargeStarLabel, d_gac, NGN);
-    t->computes(lb->pPosChargeGradLabel_preReloc);
-    t->computes(lb->pNegChargeGradLabel_preReloc);
+    t->requires(Task::NewDW, Al->gPosChargeStarLabel, d_gac, NGN);
+    t->requires(Task::NewDW, Al->gNegChargeStarLabel, d_gac, NGN);
+    t->computes(Al->pPosChargeGradLabel_preReloc);
+    t->computes(Al->pNegChargeGradLabel_preReloc);
   }
 
   sched->addTask(t, patches, matls);
@@ -1368,15 +1370,15 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   }
 
   if(flags->d_withGaussSolver){
-    t->requires(Task::OldDW, lb->pPosChargeLabel, d_gn);
-    t->requires(Task::OldDW, lb->pNegChargeLabel, d_gn);
-    t->requires(Task::OldDW, lb->pPermittivityLabel, d_gn);
-    t->requires(Task::NewDW, lb->gPosChargeRateLabel, d_gac, NGN);
-    t->requires(Task::NewDW, lb->gNegChargeRateLabel, d_gac, NGN);
+    t->requires(Task::OldDW, Al->pPosChargeLabel, d_gn);
+    t->requires(Task::OldDW, Al->pNegChargeLabel, d_gn);
+    t->requires(Task::OldDW, Al->pPermittivityLabel, d_gn);
+    t->requires(Task::NewDW, Al->gPosChargeRateLabel, d_gac, NGN);
+    t->requires(Task::NewDW, Al->gNegChargeRateLabel, d_gac, NGN);
 
-    t->computes(lb->pPosChargeLabel_preReloc);
-    t->computes(lb->pNegChargeLabel_preReloc);
-    t->computes(lb->pPermittivityLabel_preReloc);
+    t->computes(Al->pPosChargeLabel_preReloc);
+    t->computes(Al->pNegChargeLabel_preReloc);
+    t->computes(Al->pPermittivityLabel_preReloc);
   }
 
   t->computes(lb->TotalMassLabel);
@@ -1490,7 +1492,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     }
     t->modifies(lb->pLastLevelLabel_preReloc);
     t->modifies(lb->pVelGradLabel_preReloc);
-    t->modifies(lb->MPMRefineCellLabel, d_one_matl);
+    t->modifies(Al->MPMRefineCellLabel, d_one_matl);
 
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
     t->computes(             lb->pCellNAPIDLabel, d_one_matl);
@@ -1524,7 +1526,7 @@ void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
     Task* t=scinew Task("AMRMPM::reduceFlagsExtents",
                         this, &AMRMPM::reduceFlagsExtents);
 
-    t->requires(Task::NewDW, lb->MPMRefineCellLabel, d_one_matl, Ghost::None);
+    t->requires(Task::NewDW, Al->MPMRefineCellLabel, d_one_matl, Ghost::None);
 
     t->computes(RefineFlagXMaxLabel);
     t->computes(RefineFlagXMinLabel);
@@ -1633,7 +1635,7 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
 
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
 
-  task->requires(Task::NewDW, lb->MPMRefineCellLabel,
+  task->requires(Task::NewDW, Al->MPMRefineCellLabel,
                0, Task::FineLevel,  d_one_matl,oims, d_gn, 0, fat);
 
   task->requires(Task::NewDW, RefineFlagXMaxLabel);
@@ -1643,7 +1645,7 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, RefineFlagZMaxLabel);
   task->requires(Task::NewDW, RefineFlagZMinLabel);
 
-  task->modifies(lb->MPMRefineCellLabel, d_one_matl, oims, fat);
+  task->modifies(Al->MPMRefineCellLabel, d_one_matl, oims, fat);
 
   sched->addTask(task, patch_set, all_matls);
 }
@@ -1666,11 +1668,11 @@ void AMRMPM::coarsen(const ProcessorGroup*,
     cout_doing << "  patch " << coarsePatch->getID()<< endl;
 
     CCVariable<double> refineCell;
-    new_dw->getModifiable(refineCell, lb->MPMRefineCellLabel, 0, coarsePatch);
+    new_dw->getModifiable(refineCell, Al->MPMRefineCellLabel, 0, coarsePatch);
     bool computesAve = true;
 
     fineToCoarseOperator<double>(refineCell, computesAve,
-                       lb->MPMRefineCellLabel, 0,   new_dw,
+                       Al->MPMRefineCellLabel, 0,   new_dw,
                        coarsePatch, coarseLevel, fineLevel);
 
     if( coarseLevel->getIndex() == numLevels - 2 ){
@@ -1742,7 +1744,7 @@ void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
                                         m_regridder->refineFlagMaterials());
   task->modifies(m_regridder->getRefinePatchFlagLabel(),
                                         m_regridder->refineFlagMaterials());
-  task->requires(Task::NewDW, lb->MPMRefineCellLabel, Ghost::None);
+  task->requires(Task::NewDW, Al->MPMRefineCellLabel, Ghost::None);
 
   sched->addTask(task, coarseLevel->eachPatch(),
                                         m_materialManager->allMaterials( "MPM" ));
@@ -1922,7 +1924,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
 
     // Create and Initialize refine flags to be modified later
     CCVariable<double> refineCell;
-    new_dw->allocateAndPut(refineCell, lb->MPMRefineCellLabel, 0, patch);
+    new_dw->allocateAndPut(refineCell, Al->MPMRefineCellLabel, 0, patch);
     refineCell.initialize(0.0);
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
@@ -1947,7 +1949,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
       old_dw->get(plastlevel,        lb->pLastLevelLabel,  pset);
       new_dw->allocateAndPut(psizenew,       lb->pSizeLabel_preReloc,     pset);
       new_dw->allocateAndPut(plastlevelnew,  lb->pLastLevelLabel_preReloc,pset);
-      new_dw->allocateAndPut(partitionUnity, lb->pPartitionUnityLabel,    pset);
+      new_dw->allocateAndPut(partitionUnity, Al->pPartitionUnityLabel,    pset);
 
       for (ParticleSubset::iterator iter = pset->begin();
                                     iter != pset->end(); iter++){
@@ -2054,8 +2056,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
       if(flags->d_withGaussSolver){
-        old_dw->get(pPosCharge, lb->pPosChargeLabel, pset);
-        old_dw->get(pNegCharge, lb->pNegChargeLabel, pset);
+        old_dw->get(pPosCharge, Al->pPosChargeLabel, pset);
+        old_dw->get(pNegCharge, Al->pNegChargeLabel, pset);
       }
 
       // Create arrays for the grid data
@@ -2097,8 +2099,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gextscalarflux.initialize(0);
       }
       if(flags->d_withGaussSolver){
-        new_dw->allocateAndPut(gposcharge, lb->gPosChargeLabel, dwi, patch);
-        new_dw->allocateAndPut(gnegcharge, lb->gNegChargeLabel, dwi, patch);
+        new_dw->allocateAndPut(gposcharge, Al->gPosChargeLabel, dwi, patch);
+        new_dw->allocateAndPut(gnegcharge, Al->gNegChargeLabel, dwi, patch);
         gposcharge.initialize(0.0);
         gnegcharge.initialize(0.0);
       }
@@ -2223,7 +2225,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     ParticleInterpolator* interpolator =flags->d_interpolator->clone(finePatch);
 
     constNCVariable<Stencil7> zoi_fine;
-    new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, d_gn, 0 );
+    new_dw->get(zoi_fine, Al->gZOILabel, 0, finePatch, d_gn, 0 );
 
     // Determine extents for coarser level particle data
     // Linear Interpolation:  1 layer of coarse level cells
@@ -2387,7 +2389,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI_GIMP(const ProcessorGroup*,
     ParticleInterpolator* interpolator =flags->d_interpolator->clone(finePatch);
 
     constNCVariable<Stencil7> zoi_fine;
-    new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, d_gn, 0 );
+    new_dw->get(zoi_fine, Al->gZOILabel, 0, finePatch, d_gn, 0 );
 
     // Determine extents for coarser level particle data
     // Linear Interpolation:  1 layer of coarse level cells
@@ -2833,10 +2835,10 @@ void AMRMPM::normalizeNodalVelTempConc(const ProcessorGroup*,
                                     lb->diffusion->gConcentrationNoBC,dwi,patch);
       }
       if(flags->d_withGaussSolver){
-        new_dw->getModifiable(gPosCharge, lb->gPosChargeLabel, dwi, patch, d_gn,0);
-        new_dw->getModifiable(gNegCharge, lb->gNegChargeLabel, dwi, patch, d_gn,0);
-        new_dw->allocateAndPut(gPosChargeNoBC, lb->gPosChargeNoBCLabel, dwi, patch);
-        new_dw->allocateAndPut(gNegChargeNoBC, lb->gNegChargeNoBCLabel, dwi, patch);
+        new_dw->getModifiable(gPosCharge, Al->gPosChargeLabel, dwi, patch, d_gn,0);
+        new_dw->getModifiable(gNegCharge, Al->gNegChargeLabel, dwi, patch, d_gn,0);
+        new_dw->allocateAndPut(gPosChargeNoBC, Al->gPosChargeNoBCLabel, dwi, patch);
+        new_dw->allocateAndPut(gNegChargeNoBC, Al->gNegChargeNoBCLabel, dwi, patch);
       }
       
       //__________________________________
@@ -3088,7 +3090,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
       Id.Identity();
         
       constNCVariable<Stencil7> zoi_fine;
-      new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+      new_dw->get(zoi_fine, Al->gZOILabel, 0, finePatch, Ghost::None, 0 );
   
       unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
       
@@ -3260,16 +3262,15 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       }
 
       if(flags->d_withGaussSolver){
-        new_dw->get(gPosCharge,     lb->gPosChargeLabel,     dwi, patch, d_gn, 0);
-        new_dw->get(gPosChargeNoBC, lb->gPosChargeNoBCLabel, dwi, patch, d_gn, 0);
-        new_dw->get(gNegCharge,     lb->gNegChargeLabel,     dwi, patch, d_gn, 0);
-        new_dw->get(gNegChargeNoBC, lb->gNegChargeNoBCLabel, dwi, patch, d_gn, 0);
+        new_dw->get(gPosCharge,     Al->gPosChargeLabel,     dwi, patch,d_gn,0);
+        new_dw->get(gPosChargeNoBC, Al->gPosChargeNoBCLabel, dwi, patch,d_gn,0);
+        new_dw->get(gNegCharge,     Al->gNegChargeLabel,     dwi, patch,d_gn,0);
+        new_dw->get(gNegChargeNoBC, Al->gNegChargeNoBCLabel, dwi, patch,d_gn,0);
 
-        new_dw->allocateAndPut(gPosChargeStar, lb->gPosChargeStarLabel, dwi, patch);
-        new_dw->allocateAndPut(gNegChargeStar, lb->gNegChargeStarLabel, dwi, patch);
-
-        new_dw->getModifiable(gPosChargeRate, lb->gPosChargeRateLabel,dwi, patch);
-        new_dw->getModifiable(gNegChargeRate, lb->gNegChargeRateLabel,dwi, patch);
+        new_dw->allocateAndPut(gPosChargeStar, Al->gPosChargeStarLabel, dwi, patch);
+        new_dw->allocateAndPut(gNegChargeStar, Al->gNegChargeStarLabel, dwi, patch);
+        new_dw->getModifiable(gPosChargeRate,  Al->gPosChargeRateLabel, dwi, patch);
+        new_dw->getModifiable(gNegChargeRate, Al->gNegChargeRateLabel,dwi, patch);
       }
 
 
@@ -3422,7 +3423,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
  
     printTask(patches, patch,cout_doing,"Doing AMRMPM::computeZoneOfInfluence");
     NCVariable<Stencil7> zoi;
-    new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
+    new_dw->allocateAndPut(zoi, Al->gZOILabel, 0, patch);
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -3450,7 +3451,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     const Patch* coarsePatch = CFI_coarsePatches[p];
     
     NCVariable<Stencil7> zoi;
-    new_dw->getModifiable(zoi, lb->gZOILabel, 0,coarsePatch);
+    new_dw->getModifiable(zoi, Al->gZOILabel, 0,coarsePatch);
 
     const Level* fineLevel = level->getFinerLevel().get_rep();
 
@@ -3523,7 +3524,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     const Patch* finePatch = CFI_finePatches2[p];
 
     NCVariable<Stencil7> zoi_fine;
-    new_dw->getModifiable(zoi_fine, lb->gZOILabel, 0,finePatch);
+    new_dw->getModifiable(zoi_fine, Al->gZOILabel, 0,finePatch);
 
     //__________________________________
     // Iterate over coarse/fine interface faces
@@ -3648,11 +3649,11 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
       }
 
       if(flags->d_withGaussSolver){
-        new_dw->get(gPosChargeStar, lb->gPosChargeStarLabel, dwi, patch, d_gac, NGP);
-        new_dw->get(gNegChargeStar, lb->gNegChargeStarLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gPosChargeStar, Al->gPosChargeStarLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gNegChargeStar, Al->gNegChargeStarLabel, dwi, patch, d_gac, NGP);
 
-        new_dw->allocateAndPut(pPosChargeGrad, lb->pPosChargeGradLabel_preReloc, pset);
-        new_dw->allocateAndPut(pNegChargeGrad, lb->pNegChargeGradLabel_preReloc, pset);
+        new_dw->allocateAndPut(pPosChargeGrad, Al->pPosChargeGradLabel_preReloc, pset);
+        new_dw->allocateAndPut(pNegChargeGrad, Al->pNegChargeGradLabel_preReloc, pset);
       }
 
       double rho_init=mpm_matl->getInitialDensity();
@@ -3902,16 +3903,16 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       if(flags->d_withGaussSolver){
-        old_dw->get(pPosCharge,    lb->pPosChargeLabel,    pset);
-        old_dw->get(pNegCharge,    lb->pNegChargeLabel,    pset);
-        old_dw->get(pPermittivity, lb->pPermittivityLabel, pset);
+        old_dw->get(pPosCharge,    Al->pPosChargeLabel,    pset);
+        old_dw->get(pNegCharge,    Al->pNegChargeLabel,    pset);
+        old_dw->get(pPermittivity, Al->pPermittivityLabel, pset);
 
-        new_dw->get(gPosChargeRate, lb->gPosChargeRateLabel, dwi, patch, d_gac, NGP);
-        new_dw->get(gNegChargeRate, lb->gNegChargeRateLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gPosChargeRate, Al->gPosChargeRateLabel, dwi, patch, d_gac, NGP);
+        new_dw->get(gNegChargeRate, Al->gNegChargeRateLabel, dwi, patch, d_gac, NGP);
 
-        new_dw->allocateAndPut(pPosChargeNew,    lb->pPosChargeLabel_preReloc,    pset);
-        new_dw->allocateAndPut(pNegChargeNew,    lb->pNegChargeLabel_preReloc,    pset);
-        new_dw->allocateAndPut(pPermittivityNew, lb->pPermittivityLabel_preReloc, pset);
+        new_dw->allocateAndPut(pPosChargeNew,    Al->pPosChargeLabel_preReloc,    pset);
+        new_dw->allocateAndPut(pNegChargeNew,    Al->pNegChargeLabel_preReloc,    pset);
+        new_dw->allocateAndPut(pPermittivityNew, Al->pPermittivityLabel_preReloc, pset);
       }
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -4151,7 +4152,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
 
     // Mark cells where particles are refined for grid refinement
     CCVariable<double> refineCell;
-    new_dw->getModifiable(refineCell, lb->MPMRefineCellLabel, 0, patch);
+    new_dw->getModifiable(refineCell, Al->MPMRefineCellLabel, 0, patch);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
@@ -4702,7 +4703,7 @@ void AMRMPM::reduceFlagsExtents(const ProcessorGroup*,
 
     // Mark cells where particles are refined for grid refinement
     constCCVariable<double> refineCell;
-    new_dw->get(refineCell, lb->MPMRefineCellLabel, 0, patch, d_gn, 0);
+    new_dw->get(refineCell, Al->MPMRefineCellLabel, 0, patch, d_gn, 0);
 
     int xmax,xmin,ymax,ymin,zmax,zmin;
     xmax = -999;   ymax = -999;   zmax = -999;
@@ -4804,7 +4805,7 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
                                                                   0, patch);
     new_dw->get(refinePatchFlag, m_regridder->getRefinePatchFlagLabel(),
                                                                   0, patch);
-    new_dw->get(refineCell,     lb->MPMRefineCellLabel, 0, patch, d_gn, 0);
+    new_dw->get(refineCell,     Al->MPMRefineCellLabel, 0, patch, d_gn, 0);
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
 
@@ -5023,7 +5024,7 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
                    this,&AMRMPM::debug_CFI);
   printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
   if(level->hasFinerLevel()){ 
-    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, d_gn, 0);
+    t->requires(Task::NewDW, Al->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, d_gn, 0);
   }
 
   t->requires(Task::OldDW, lb->pXLabel,                  d_gn,0);
@@ -5123,7 +5124,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
         constParticleVariable<Point>  px_CFI;
         constNCVariable<Stencil7> zoi;
         old_dw->get(px_CFI, lb->pXLabel,  pset2);
-        new_dw->get(zoi,    lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+        new_dw->get(zoi,    Al->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
         ParticleInterpolator* interpolatorFine = flags->d_interpolator->clone(finePatch);
 
@@ -5273,7 +5274,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel, gn);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
     t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, d_gn,0);
-    t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, d_gn,0);
+    t->requires(Task::NewDW, Al->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, d_gn,0);
     
     t->modifies(lb->pXLabel_preReloc);
     t->modifies(lb->pDispLabel_preReloc);
@@ -5321,7 +5322,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
         ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
         
         constNCVariable<Stencil7> zoi_fine;
-        new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+        new_dw->get(zoi_fine, Al->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
         for(unsigned int m = 0; m < numMatls; m++){
           MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );

@@ -108,8 +108,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException("No type for constitutive_model", __FILE__, __LINE__);
 
   if (flags->d_integrator_type != "implicit" &&
-      flags->d_integrator_type != "explicit" &&
-      flags->d_integrator_type != "fracture"){
+      flags->d_integrator_type != "explicit"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
@@ -146,8 +145,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   //__________________________________
   //  All use UCNH
   else if (cm_type ==  "comp_neo_hook") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew UCNH( child, flags, false, false ) );
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -175,8 +173,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew TransIsoHypoFrictional(child,flags));
   }
   else if (cm_type ==  "trans_iso_hyper") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew TransIsoHyper(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -185,8 +182,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
   else if (cm_type ==  "visco_trans_iso_hyper") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew ViscoTransIsoHyper(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -208,8 +204,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew TH_Water(child,flags));
   }
   else if (cm_type ==  "visco_scram"){
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew ViscoScram(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -221,8 +216,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew ViscoSCRAMHotSpot(child,flags));
   }
   else if (cm_type ==  "hypo_elastic") {
-    if (flags->d_integrator_type == "explicit" ||
-        flags->d_integrator_type == "fracture"){
+    if (flags->d_integrator_type == "explicit"){
       return(scinew HypoElastic(child,flags));
     }
     else if (flags->d_integrator_type == "implicit"){
@@ -294,7 +288,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     } else {
       ostringstream msg;
       msg << "\n ERROR: One may not use TongeRameshPTR along with \n"
-          << " the fracture or implicit intergrator \n";
+          << " the implicit intergrator \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
   }
@@ -323,8 +317,7 @@ else if (cm_type == "HypoplasticB") {
   }
 
   else if (cm_type == "QADamage") {
-	  if (flags->d_integrator_type == "explicit" ||
-		  flags->d_integrator_type == "fracture") {
+	  if (flags->d_integrator_type == "explicit") {
 		  return(scinew QADamage(child, flags, false, false));
 	  }
 	  else if (flags->d_integrator_type == "implicit") {

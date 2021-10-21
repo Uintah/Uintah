@@ -29,6 +29,7 @@
 
 namespace Uintah {
 
+  class ImpMPMLabel;
   class ImplicitParticleCreator : public ParticleCreator {
   public:
     
@@ -52,6 +53,7 @@ namespace Uintah {
                                               DataWarehouse* new_dw,
                                               ParticleVars& pvars);
  
+    ImpMPMLabel* d_Il;
   };
 
 

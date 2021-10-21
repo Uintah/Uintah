@@ -54,6 +54,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/ImpMPMLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Matrix3.h>
@@ -1446,7 +1447,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
     // GET GLOBAL DATA 
     old_dw->get(delT,         lb->delTLabel, getLevel(patches));
-    new_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
+    new_dw->get(gDisp,        Il->dispNewLabel, dwi, patch, gac, 1);
 
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
@@ -1873,7 +1874,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
     ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
 
     // GET GLOBAL DATA 
-    old_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
+    old_dw->get(gDisp,        Il->dispNewLabel, dwi, patch, gac, 1);
 
     parent_old_dw->get(delT,         lb->delTLabel, getLevel(patches));
     parent_old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 

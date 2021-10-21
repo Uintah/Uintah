@@ -25,8 +25,9 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
-#include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/HydroMPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/AMRMPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -113,8 +114,9 @@ using namespace std;
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)
 {
-  d_lb = scinew MPMLabel();
   d_Hlb = scinew HydroMPMLabel();
+  d_lb = scinew MPMLabel();
+  d_Al = scinew AMRMPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -133,8 +135,9 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 
 ParticleCreator::~ParticleCreator()
 {
-  delete d_lb;
   delete d_Hlb;
+  delete d_lb;
+  delete d_Al;
 }
 
 particleIndex 
@@ -597,15 +600,15 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 
   if(d_withGaussSolver){
      new_dw->allocateAndPut(pvars.pPosCharge,
-                                          d_lb->pPosChargeLabel,    subset);
+                                          d_Al->pPosChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pNegCharge,
-                                          d_lb->pNegChargeLabel,    subset);
+                                          d_Al->pNegChargeLabel,    subset);
      new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_lb->pPosChargeGradLabel,subset);
+                                          d_Al->pPosChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_lb->pNegChargeGradLabel,subset);
+                                          d_Al->pNegChargeGradLabel,subset);
      new_dw->allocateAndPut(pvars.pPermittivity,
-                                          d_lb->pPermittivityLabel, subset);
+                                          d_Al->pPermittivityLabel, subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -1120,20 +1123,20 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   }
 
   if(d_withGaussSolver){
-    particle_state.push_back(d_lb->pPosChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeLabel_preReloc);
+    particle_state.push_back(d_Al->pPosChargeLabel);
+    particle_state_preReloc.push_back(d_Al->pPosChargeLabel_preReloc);
 
-    particle_state.push_back(d_lb->pNegChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
+    particle_state.push_back(d_Al->pNegChargeLabel);
+    particle_state_preReloc.push_back(d_Al->pNegChargeLabel_preReloc);
 
-    particle_state.push_back(d_lb->pPosChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeGradLabel_preReloc);
+    particle_state.push_back(d_Al->pPosChargeGradLabel);
+    particle_state_preReloc.push_back(d_Al->pPosChargeGradLabel_preReloc);
 
-    particle_state.push_back(d_lb->pNegChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeGradLabel_preReloc);
+    particle_state.push_back(d_Al->pNegChargeGradLabel);
+    particle_state_preReloc.push_back(d_Al->pNegChargeGradLabel_preReloc);
 
-    particle_state.push_back(d_lb->pPermittivityLabel);
-    particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);
+    particle_state.push_back(d_Al->pPermittivityLabel);
+    particle_state_preReloc.push_back(d_Al->pPermittivityLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
