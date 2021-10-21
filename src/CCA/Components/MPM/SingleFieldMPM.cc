@@ -1009,6 +1009,7 @@ void SingleFieldMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
                                               const MaterialSubset* cz_matls,
                                               const MaterialSet* matls)
 {
+/*
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
@@ -1029,6 +1030,7 @@ void SingleFieldMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
   t->modifies(lb->gExternalForceLabel, mpm_matls);
 
   sched->addTask(t, patches, matls);
+*/
 }
 
 void SingleFieldMPM::scheduleComputeHeatExchange(SchedulerP& sched,
@@ -1523,6 +1525,7 @@ void SingleFieldMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
                                             const MaterialSubset* cz_matls,
                                             const MaterialSet* matls)
 {
+/*
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
@@ -1565,6 +1568,7 @@ void SingleFieldMPM::scheduleUpdateCohesiveZones(SchedulerP& sched,
   t->computes(lb->czIDLabel_preReloc,         cz_matls);
 
   sched->addTask(t, patches, matls);
+*/
 }
 
 void SingleFieldMPM::scheduleInsertParticles(SchedulerP& sched,
@@ -2570,6 +2574,7 @@ void SingleFieldMPM::addCohesiveZoneForces(const ProcessorGroup*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+/*
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2708,6 +2713,7 @@ void SingleFieldMPM::addCohesiveZoneForces(const ProcessorGroup*,
     }
     delete interpolator;
   }
+*/
 }
 
 void SingleFieldMPM::computeStressTensor(const ProcessorGroup*,
@@ -4199,6 +4205,7 @@ void SingleFieldMPM::updateCohesiveZones(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
+#if 0
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
@@ -4442,6 +4449,7 @@ void SingleFieldMPM::updateCohesiveZones(const ProcessorGroup*,
 
     delete interpolator;
   }
+#endif
 }
 
 void SingleFieldMPM::insertParticles(const ProcessorGroup*,
