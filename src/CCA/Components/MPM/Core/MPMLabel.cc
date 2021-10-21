@@ -681,6 +681,10 @@ MPMLabel::MPMLabel()
   pDispLabel_preReloc = VarLabel::create( "p.displacement+",
                   ParticleVariable<Vector>::getTypeDescription());
 
+  gDisplacementLabel = VarLabel::create("g.displacement",
+                  NCVariable<Vector>::getTypeDescription() );
+
+#if 0
   pDispGradsLabel = VarLabel::create("p.dispGrads",
                   ParticleVariable<Matrix3>::getTypeDescription());
   pDispGradsLabel_preReloc = VarLabel::create( "p.dispGrads+",
@@ -699,9 +703,6 @@ MPMLabel::MPMLabel()
 
   GNumPatlsLabel = VarLabel::create("G.numPatls",
                   NCVariable<int>::getTypeDescription());
-
-  gDisplacementLabel = VarLabel::create("g.displacement",
-                  NCVariable<Vector>::getTypeDescription() );
 
   GDisplacementLabel = VarLabel::create("G.displacement",
                   NCVariable<Vector>::getTypeDescription() );
@@ -783,6 +784,7 @@ MPMLabel::MPMLabel()
   GSp_vol_srcLabel =  VarLabel::create("G.sp_vol_src",
                   NCVariable<double>::getTypeDescription()); 
   // ------------------------------------------------------
+#endif
 
   // Material point erosion algorithms
   pErosionLabel = VarLabel::create("p.erosion",
@@ -1271,6 +1273,8 @@ MPMLabel::~MPMLabel()
  // for Fracture --------------
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
+  VarLabel::destroy(gDisplacementLabel);
+/*
   VarLabel::destroy(pDispGradsLabel);
   VarLabel::destroy(pDispGradsLabel_preReloc);
   VarLabel::destroy(pStrainEnergyDensityLabel);
@@ -1279,7 +1283,6 @@ MPMLabel::~MPMLabel()
 
   VarLabel::destroy(gNumPatlsLabel);
   VarLabel::destroy(GNumPatlsLabel);
-  VarLabel::destroy(gDisplacementLabel);
   VarLabel::destroy(GDisplacementLabel);
   VarLabel::destroy(gGridStressLabel);
   VarLabel::destroy(GGridStressLabel);
@@ -1310,6 +1313,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GSp_volLabel);
   VarLabel::destroy(GSp_vol_srcLabel);
   // --------------------------------
+*/
 
   // Destroy Material point erosion labels
   VarLabel::destroy(pErosionLabel);

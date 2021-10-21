@@ -277,9 +277,11 @@ namespace Uintah {
       const VarLabel* p_qLabel;
       const VarLabel* p_qLabel_preReloc;
 
-      // for Fracture ----------
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
+      const VarLabel* gDisplacementLabel;
+/*
+      // for Fracture ----------
       const VarLabel* pDispGradsLabel;
       const VarLabel* pDispGradsLabel_preReloc;
       const VarLabel* pStrainEnergyDensityLabel;
@@ -321,6 +323,7 @@ namespace Uintah {
       const VarLabel* GSp_volLabel;      
       const VarLabel* GSp_vol_srcLabel; 
       // ------------------------------
+*/
 
       // Labels for shell materials
       const VarLabel* pThickTopLabel;
