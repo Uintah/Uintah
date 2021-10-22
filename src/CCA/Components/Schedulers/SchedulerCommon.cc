@@ -880,10 +880,10 @@ SchedulerCommon::addTask(       Task        * task
 
   bool is_init = m_is_init_timestep || m_is_restart_init_timestep;
 
-  DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " adding Task: " << task->getName()
-                                      << ",  # patches: "    << (patches ? patches->size() : 0)
-                                      << ",    # matls: "    << (matls ? matls->size() : 0)
-                                      << ", task-graph: "    << ((tg_num < 0) ? (is_init ? "init-tg" : "all") : std::to_string(tg_num)));
+  DOUTR(g_schedulercommon_dbg, " adding Task: " << task->getName()
+                            << ",  # patches: " << (patches ? patches->size() : 0)
+                            << ",    # matls: " << (matls ? matls->size() : 0)
+                            << ", task-graph: " << ((tg_num < 0) ? (is_init ? "init-tg" : "all") : std::to_string(tg_num)));
 
   // bulletproofing - ignore during initialization, the first and only
   // task graph is used regardless.
@@ -953,13 +953,13 @@ SchedulerCommon::addTask(       Task        * task
       int dw = dep->mapDataWarehouse();
 
       if (dep->m_var->allowsMultipleComputes()) {
-        DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Skipping Reduction task for multi compute variable: "
-                                             << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw);
+        DOUTR( g_schedulercommon_dbg, " Skipping Reduction task for multi compute variable: "<< dep->m_var->getName() 
+                                   << " on level " << levelidx << ", DW " << dw);
         continue;
       }
 
-      DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Creating Reduction task for variable: "
-                                           << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw);
+      DOUTR( g_schedulercommon_dbg, " Creating Reduction task for variable: " << dep->m_var->getName() 
+                                 << " on level " << levelidx << ", DW " << dw);
 
       std::ostringstream taskname;
       taskname << "Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
@@ -978,8 +978,11 @@ SchedulerCommon::addTask(       Task        * task
 
       int matlIdx = -1;
       if (dep->m_matls != nullptr) {
+      
         reduction_task->modifies(dep->m_var, dep->m_reduction_level, dep->m_matls, Task::OutOfDomain);
+      
         for (int i = 0; i < dep->m_matls->size(); i++) {
+        
           matlIdx = dep->m_matls->get(i);
           const DataWarehouse* const_dw = get_dw(dw);
           VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
@@ -988,9 +991,11 @@ SchedulerCommon::addTask(       Task        * task
           // each of which will create reduction task. The last
           // reduction task should be kept. This is because the tasks
           // do not get sorted.
-          if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
-          {
-            DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
+          if( m_reduction_tasks.find(key) == m_reduction_tasks.end() ){
+          
+            DOUTR( g_schedulercommon_dbg, " 1) Excluding previous reduction task for variable: " << dep->m_var->getName() 
+                                       << " on level " << levelidx << ", DW " << dw 
+                                       << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
           }
           m_reduction_tasks[key] = reduction_task;
 
@@ -998,9 +1003,15 @@ SchedulerCommon::addTask(       Task        * task
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
-          reduction_task->modifies(dep->m_var, dep->m_reduction_level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
-          for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); ++i) {
-            matlIdx = task->getMaterialSet()->getSubset(m)->get(i);
+        
+          const MaterialSubset* matlSubset = task->getMaterialSet()->getSubset(m);
+        
+          reduction_task->modifies(dep->m_var, dep->m_reduction_level, matlSubset, Task::OutOfDomain);
+          
+          for (int i = 0; i < matlSubset->size(); ++i) {
+          
+            matlIdx = matlSubset->get(i);
+          
             const DataWarehouse* const_dw = get_dw(dw);
             VarLabelMatl<Level,DataWarehouse> key(dep->m_var, matlIdx, dep->m_reduction_level, const_dw);
 
@@ -1008,9 +1019,11 @@ SchedulerCommon::addTask(       Task        * task
             // each of which will create reduction task. The last
             // reduction task should be kept. This is because the
             // tasks do not get sorted.
-            if( m_reduction_tasks.find(key) == m_reduction_tasks.end() )
-            {
-              DOUT( g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " Excluding previous reduction task for variable: " << dep->m_var->getName() << " on level " << levelidx << ", DW " << dw << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
+            if( m_reduction_tasks.find(key) == m_reduction_tasks.end() ){
+            
+              DOUTR( g_schedulercommon_dbg, " 2) Excluding previous reduction task for variable: " << dep->m_var->getName() 
+                                         << " on level " << levelidx << ", DW " << dw 
+                                         << " dep->m_reduction_level " << dep->m_reduction_level << " material index " << matlIdx );
             }
 
             m_reduction_tasks[key] = reduction_task;
@@ -1184,7 +1197,7 @@ SchedulerCommon::advanceDataWarehouse( const GridP & grid
                                      ,       bool    initialization /* = false */
                                      )
 {
-  DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " advanceDataWarehouse, numDWs = " << m_dws.size());
+  DOUTR(g_schedulercommon_dbg, " advanceDataWarehouse, numDWs = " << m_dws.size());
 
   ASSERT(m_dws.size() >= 2);
 
@@ -1384,13 +1397,13 @@ SchedulerCommon::compile()
   
   if (m_num_tasks > 0) {
 
-    DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon starting compile");
+    DOUTR(g_schedulercommon_dbg, " SchedulerCommon starting compile");
 
     const auto num_task_graphs = m_task_graphs.size();
 
     for (auto i = 0u; i < num_task_graphs; i++) {
       if (num_task_graphs > 1) {
-        DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Compiling task graph: " << i+1 << " of " << m_task_graphs.size() << " with " << m_num_tasks << " tasks.");
+        DOUTR(g_schedulercommon_dbg,  "  Compiling task graph: " << i+1 << " of " << m_task_graphs.size() << " with " << m_num_tasks << " tasks.");
       }
 
       Timers::Simple tg_compile_timer;
@@ -1413,7 +1426,7 @@ SchedulerCommon::compile()
     // check scheduler at runtime, that all ranks are executing the same size TG (excluding spatial tasks)
     verifyChecksum();
 
-    DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << " SchedulerCommon finished compile");
+    DOUTR(g_schedulercommon_dbg, " SchedulerCommon finished compile");
   }
   else {
     return; // no tasks, so nothing to do
@@ -1699,7 +1712,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
       }
 
       if (refinePatchSets[L]->size() > 0) {
-        DOUT(g_schedulercommon_dbg, "Rank-" << d_myworld->myRank() << "  Calling scheduleRefine for patches " << *refinePatchSets[L].get_rep());
+        DOUTR(g_schedulercommon_dbg, "  Calling scheduleRefine for patches " << *refinePatchSets[L].get_rep());
         m_application->scheduleRefine(refinePatchSets[L].get_rep(), sched);
       }
 
@@ -1718,7 +1731,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         MaterialSubset* matls = iter->second;
 
         dataTasks.back()->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-        DOUT(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
+        DOUTR(g_schedulercommon_dbg, "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copyPatchSets[L].get_rep());
         dataTasks.back()->computes(var, matls);
       }
       addTask(dataTasks.back(), copyPatchSets[L].get_rep(), m_materialManager->allMaterials());
@@ -1737,7 +1750,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP & grid )
         MaterialSubset* matls = iter->second;
 
         dataTasks.back()->requires(Task::OldDW, var, nullptr, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-        DOUT(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
+        DOUTR(g_schedulercommon_dbg, "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refinePatchSets[L].get_rep());
         dataTasks.back()->modifies(var, matls);
       }
       addTask(dataTasks.back(), refinePatchSets[L].get_rep(), m_materialManager->allMaterials());
@@ -1850,7 +1863,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
                                   ,       DataWarehouse  * new_dw
                                   )
 {
-  DOUT(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches);
+  DOUTR(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() BGN on patches " << *patches);
 
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
@@ -2080,7 +2093,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup * /* pg */
     }
   }  // end patches
 
-  DOUT(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() END");
+  DOUTR(g_schedulercommon_dbg, "SchedulerCommon::copyDataToNewGrid() END");
 }
 
 //______________________________________________________________________

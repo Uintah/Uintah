@@ -116,7 +116,7 @@ DependencyBatch::received( const ProcessorGroup * pg )
     for (DetailedDep* dep = m_head; dep != nullptr; dep = dep->m_next) {
       message << "\tSatisfying " << *dep << "\n";
     }
-    DOUT(true, message.str());
+    DOUTR(true, message.str());
   }
 }
 
