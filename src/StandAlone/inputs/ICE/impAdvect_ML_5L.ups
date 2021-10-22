@@ -135,12 +135,12 @@
     </BoundaryConditions>
     <Level>
       <Box label="1">
-        <lower>        [0,0,0]         </lower>        
-        <upper>        [1,1,1]         </upper>        
-        <extraCells>   [1,1,1]         </extraCells>   
-        <patches>      [1,1,1]         </patches>      
+        <lower>        [0,0,0]         </lower>
+        <upper>        [1,1,1]         </upper>
+        <extraCells>   [1,1,1]         </extraCells>
+        <patches>      [1,1,1]         </patches>
       </Box>
-      <spacing>         [0.1,0.1,0.1]  </spacing>      
+      <spacing>         [0.1,0.1,0.1]  </spacing>
     </Level>
 
     <Level>
@@ -208,14 +208,18 @@
     <save label="grad_dp_ZFC"/>
     <save label="sum_rho_CC"/>
     <save label="rhs"/>
-    
+
+    <save label="mean_press_CC"/>
+    <save label="mean_vel_CC"/>
+    <save label="mean_temp_CC"/>
+
     <save label="variance_vel_CC"/>
     <save label="variance_press_CC"/>
     <save label="variance_temp_CC"/>
     <save label="covariance_vel_CC"/>
     <save label="covariance_temp_CC"/>
     <save label="covariance_press_CC"/>
-    
+
     <checkpoint timestepInterval="5" cycle="1"/>
   </DataArchiver>
 
@@ -299,7 +303,7 @@
       </material>
     </ICE>
   </MaterialProperties>
-  
+
   <!--____________________________________________________________________-->
     <DataAnalysis>
 
@@ -314,6 +318,6 @@
           <analyze label="vel_CC"    fluidVelocityLabel="true" />
         </Variables>
       </Module>
-    </DataAnalysis>  
+    </DataAnalysis>
 
 </Uintah_specification>

@@ -146,35 +146,14 @@ WARNING
       MaterialSubset * matlSubset   {nullptr};
 
       bool isInitialized            {false};  // have the summation variables initialized
+
       const Uintah::TypeDescription* subtype;
 
       //__________________________________
       // summation timesteps
-      int  firstSumTimestep;          // first timestep
-      int  nTimesteps;                // number of timesteps summation has occured
-      bool is_firstSumTimestep_set;
-
-      void initialize_summation_firstSumTimestep(){
-        firstSumTimestep        = -9;
-        is_firstSumTimestep_set = false;
-      }
-
-      int get_firstSumTimestep(){
-        return firstSumTimestep;
-      }
-
-      // The timestep upon which summation started
-      void set_firstSumTimestep( const int ts) {
-        ASSERT ( ts >= 0 )
-
-        if( is_firstSumTimestep_set == false ){
-          firstSumTimestep = ts;
-          is_firstSumTimestep_set   = true;
-        }
-        //std::cout << "  setStart: " << isSet << " timestep: " << timestep << " " << name << std::endl;
-      }
-
-
+      int  firstSumTimestep     {-9};          // first timestep
+      int  nTimesteps           {-9};          // number of timesteps summation has occured
+      bool isStatEnabled        {false};
 
       //__________________________________
       // utilities
@@ -182,7 +161,9 @@ WARNING
         const std::string name = Label->getName();
         proc0cout << std::setw(15) <<  name <<  " matl: " << matl
                   << " subtype: " << subtype->getName()
-                  << " summation started on timestep: " << firstSumTimestep <<"\n";
+                  << " summation started on timestep: " << firstSumTimestep
+                  << " nTimesteps: " << nTimesteps
+                  << " enabled/diabled: " << isStatEnabled << "\n";
       };
 
     };
@@ -292,12 +273,11 @@ WARNING
                                  DataWarehouse    * new_dw,
                                  const PatchSubset* patches );
 
-    void setup_firstSumTimestep( DataWarehouse * old_dw,
-                                 const int curr_timestep );
+    void set_firstSumTimestep( Qvar_ptr  Q,
+                               const int curr_timestep );
 
     //__________________________________
     // global constants
-    bool                 m_statEnabled  {false};        // timestep when stats are turn on.
     IntVector            m_monitorCell;                 // debugging cell to monitor
     std::vector< Qvar_ptr >  m_Qvars;
     Qvar_ptr                 m_velVar;

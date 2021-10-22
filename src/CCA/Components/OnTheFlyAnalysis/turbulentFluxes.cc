@@ -36,6 +36,9 @@
 
 #define DEBUG
 
+// return std:cout if rank 0 and the x == Y
+#define proc0cout_cmp(X,Y) if( isProc0_macro && X == Y) std::cout
+
 //______________________________________________________________________
 //    TO DO:
 
@@ -214,7 +217,6 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
     auto Q     = make_shared< Qvar >(matl);
     Q->Label   = label;
     Q->subtype = subtype;
-    Q->initialize_summation_firstSumTimestep();          // initialize the start timestep = 0;
 
     Q->Qsum_Label          = createVarLabel( "sum_"    + name,        td );
     Q->Q2sum_Label         = createVarLabel( "sum_"    + name + "2",  td );
@@ -263,8 +265,9 @@ void turbulentFluxes::problemSetup(const ProblemSpecP &,
             const string name =  Q->Label->getName();
 
             if( varname == name ){
-              int timestep = stoi( attributes["firstSumTimestep"] );
-              Q->set_firstSumTimestep( timestep );
+              Q->firstSumTimestep = std::stoi( attributes[ "firstSumTimestep" ] );
+              Q->isStatEnabled    = std::stoi( attributes[ "isStatEnabled" ] );
+
 
               break;
             }
@@ -412,8 +415,9 @@ turbulentFluxes::outputProblemSpec( ProblemSpecP& root_ps)
     const string name = Q->Label->getName();
     ProblemSpecP newElem = var_ps->appendChild("variable");
     newElem->setAttribute( "name",             Q->Label->getName() );
-    newElem->setAttribute( "firstSumTimestep", std::to_string( Q->get_firstSumTimestep() ) );
+    newElem->setAttribute( "firstSumTimestep", std::to_string( Q->firstSumTimestep ) );
     newElem->setAttribute( "nTimesteps",       std::to_string( Q->nTimesteps ) );
+    newElem->setAttribute( "isStatEnabled",    std::to_string( Q->isStatEnabled ) );
   }
 }
 
@@ -492,8 +496,6 @@ void turbulentFluxes::task_Q_mean( const ProcessorGroup * ,
   old_dw->get(timeStep, m_timeStepLabel);
   const int curr_timestep = timeStep;
 
-  setup_firstSumTimestep( old_dw, curr_timestep );
-
   //__________________________________
   //  Time to compute something
   for( auto p=0;p<patches->size();p++ ){
@@ -506,6 +508,8 @@ void turbulentFluxes::task_Q_mean( const ProcessorGroup * ,
 
     for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
       Qvar_ptr Q = m_Qvars[i];
+
+      set_firstSumTimestep( Q, curr_timestep );
 
       switch(Q->subtype->getType()) {
 
@@ -563,7 +567,7 @@ void turbulentFluxes::Q_mean( DataWarehouse * old_dw,
   new_dw->allocateAndPut( Qu_Qv_Qw_sum, Q->Qu_Qv_Qw_sum_Label,  matl, patch );
   new_dw->allocateAndPut( Qu_Qv_Qw_mean, Q->Qu_Qv_Qw_mean_Label,matl, patch );
 
-  int Q_ts = Q->get_firstSumTimestep();
+  int Q_ts = Q->firstSumTimestep;
   int timesteps = curr_timestep - Q_ts + 1;
   T nTimesteps(timesteps);
 
@@ -851,23 +855,26 @@ void turbulentFluxes::carryForward_variances( DataWarehouse     * old_dw,
 
 //______________________________________________________________________
 //
-void turbulentFluxes::setup_firstSumTimestep(DataWarehouse * old_dw,
-                                             const int curr_timestep)
+void turbulentFluxes::set_firstSumTimestep(Qvar_ptr Q,
+                                           const int curr_timestep)
 {
-  if( m_statEnabled ){
+
+  if( Q->isStatEnabled ){
     return;
   }
 
   //__________________________________
   //
-  proc0cout << "________________________DataAnalysis: TurbulentFluxes\n"
-            << " Started computing the variance & covariance for:\n";
+  static int count = 0;
 
-  for ( unsigned int i =0 ; i < m_Qvars.size(); i++ ) {
-    Qvar_ptr Q = m_Qvars[i];
-    Q->set_firstSumTimestep( curr_timestep );
-    Q->print();
-  }
-  proc0cout << "________________________DataAnalysis: TurbulentFluxes\n";
-  m_statEnabled = true;
+  proc0cout_cmp(count, 0) << "________________________DataAnalysis: TurbulentFluxes\n"
+                          << " Started computing the variance & covariance for:\n";
+  Q->isStatEnabled = true;
+  Q->firstSumTimestep = curr_timestep;
+  Q->print();
+
+  count ++;
+  proc0cout_cmp(count, (int) m_Qvars.size()) << "________________________DataAnalysis: TurbulentFluxes\n";
+
+
 }
