@@ -181,10 +181,10 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld,
 //
 AMRMPM::~AMRMPM()
 {
-//  delete lb;
 //  delete flags;
   delete d_sdInterfaceModel;
   delete d_fluxbc;
+  delete Al;
 
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
