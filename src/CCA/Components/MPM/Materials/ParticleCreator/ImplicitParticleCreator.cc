@@ -44,6 +44,7 @@ ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
 
 ImplicitParticleCreator::~ImplicitParticleCreator()
 {
+  delete d_Il;
 }
 
 void 
