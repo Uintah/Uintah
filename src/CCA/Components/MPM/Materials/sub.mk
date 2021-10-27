@@ -38,7 +38,6 @@ SUBDIRS := \
 	$(SRCDIR)/Contact           \
 	$(SRCDIR)/Dissolution       \
 	$(SRCDIR)/ConstitutiveModel \
-	$(SRCDIR)/Diffusion         \
 	$(SRCDIR)/ParticleCreator
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

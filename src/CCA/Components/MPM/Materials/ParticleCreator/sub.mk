@@ -22,9 +22,6 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
 
@@ -34,5 +31,3 @@ SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc
-#	$(SRCDIR)/MembraneParticleCreator.cc	\
-#	$(SRCDIR)/ShellParticleCreator.cc 

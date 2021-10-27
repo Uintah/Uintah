@@ -125,20 +125,6 @@ namespace Uintah {
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pESPotential;
       const VarLabel* pESGradPotential;
-      const VarLabel* pPosChargeLabel;
-      const VarLabel* pPosChargeLabel_preReloc;
-      const VarLabel* pNegChargeLabel;
-      const VarLabel* pNegChargeLabel_preReloc;
-      const VarLabel* pPermittivityLabel;
-      const VarLabel* pPermittivityLabel_preReloc;
-      const VarLabel* pPosChargeGradLabel;
-      const VarLabel* pPosChargeGradLabel_preReloc;
-      const VarLabel* pNegChargeGradLabel;
-      const VarLabel* pNegChargeGradLabel_preReloc;
-      const VarLabel* pPosChargeFluxLabel;
-      const VarLabel* pPosChargeFluxLabel_preReloc;
-      const VarLabel* pNegChargeFluxLabel;
-      const VarLabel* pNegChargeFluxLabel_preReloc;
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
@@ -220,18 +206,6 @@ namespace Uintah {
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
 
-      const VarLabel* gPosChargeLabel;
-      const VarLabel* gPosChargeStarLabel;
-      const VarLabel* gPosChargeNoBCLabel;
-      const VarLabel* gNegChargeLabel;
-      const VarLabel* gNegChargeStarLabel;
-      const VarLabel* gNegChargeNoBCLabel;
-      const VarLabel* gPosChargeRateLabel;
-      const VarLabel* gNegChargeRateLabel;
-      
-      const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
-      const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
-
       const VarLabel* StrainEnergyLabel;
       const VarLabel* AccStrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
@@ -280,72 +254,7 @@ namespace Uintah {
       const VarLabel* pDispLabel;
       const VarLabel* pDispLabel_preReloc;
       const VarLabel* gDisplacementLabel;
-/*
-      // for Fracture ----------
-      const VarLabel* pDispGradsLabel;
-      const VarLabel* pDispGradsLabel_preReloc;
-      const VarLabel* pStrainEnergyDensityLabel;
-      const VarLabel* pStrainEnergyDensityLabel_preReloc;
 
-      const VarLabel* pKineticEnergyDensityLabel;
-      const VarLabel* pVelGradsLabel;
-
-      const VarLabel* gNumPatlsLabel;
-      const VarLabel* GNumPatlsLabel;
-      const VarLabel* gDisplacementLabel;
-      const VarLabel* GDisplacementLabel;
-      const VarLabel* gGridStressLabel;
-      const VarLabel* GGridStressLabel;
-      const VarLabel* gDispGradsLabel;
-      const VarLabel* GDispGradsLabel;
-      const VarLabel* gVelGradsLabel;
-      const VarLabel* GVelGradsLabel;
-      const VarLabel* gStrainEnergyDensityLabel;
-      const VarLabel* GStrainEnergyDensityLabel;
-      const VarLabel* gKineticEnergyDensityLabel;
-      const VarLabel* GKineticEnergyDensityLabel;
-
-      const VarLabel* GCrackNormLabel;
-      const VarLabel* GMassLabel;
-      const VarLabel* GVolumeLabel;
-      const VarLabel* GVelocityLabel;
-      const VarLabel* GTemperatureLabel;
-      const VarLabel* GTemperatureNoBCLabel;
-      const VarLabel* GExternalForceLabel;
-      const VarLabel* GExternalHeatRateLabel;
-      const VarLabel* GThermalContactTemperatureRateLabel;
-      const VarLabel* GInternalForceLabel;
-      const VarLabel* GdTdtLabel;
-      const VarLabel* GTemperatureRateLabel;
-      const VarLabel* GTemperatureStarLabel;
-      const VarLabel* GVelocityStarLabel;
-      const VarLabel* GAccelerationLabel;
-      const VarLabel* GSp_volLabel;      
-      const VarLabel* GSp_vol_srcLabel; 
-      // ------------------------------
-*/
-
-      // Labels for shell materials
-      const VarLabel* pThickTopLabel;
-      const VarLabel* pInitialThickTopLabel;
-      const VarLabel* pThickBotLabel;
-      const VarLabel* pInitialThickBotLabel;
-      const VarLabel* pNormalLabel;
-      const VarLabel* pInitialNormalLabel;
-      const VarLabel* pThickTopLabel_preReloc;
-      const VarLabel* pInitialThickTopLabel_preReloc;
-      const VarLabel* pThickBotLabel_preReloc;
-      const VarLabel* pInitialThickBotLabel_preReloc;
-      const VarLabel* pNormalLabel_preReloc;
-      const VarLabel* pInitialNormalLabel_preReloc;
-      const VarLabel* pTypeLabel;
-      const VarLabel* pTypeLabel_preReloc;
-
-      const VarLabel* gNormalRotRateLabel; 
-      const VarLabel* gNormalRotMomentLabel; 
-      const VarLabel* gNormalRotMassLabel; 
-      const VarLabel* gNormalRotAccLabel; 
-      
       // Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;

@@ -73,11 +73,9 @@
 #endif
 
 #ifndef NO_MPM
-#include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/SingleFieldMPM.h>
 #endif
 
@@ -228,25 +226,11 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "rigidmpm ";
   }
 
-  if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "amrmpm ";
-  }
-
   if (sim_comp == "sfmpm" || sim_comp == "SFmpm" || sim_comp == "SFMPM") {
     return scinew SingleFieldMPM(myworld, materialManager);
   }
   else {
     turned_on_options += "sfmpm ";
-  }
-
-  if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(myworld, materialManager);
-  }
-  else {
-    turned_on_options += "shellmpm ";
   }
 
   if (sim_comp == "impm" || sim_comp == "IMPM") {

@@ -505,7 +505,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if (zeroth_matl->removeReference())
     delete zeroth_matl; // shouln't happen, but...
 
-  if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
+  if (flags->d_useLoadCurves) {
     // Schedule the initialization of pressure BCs per particle
     t->computes(lb->pLoadCurveIDLabel);
     scheduleInitializePressureBCs(level, sched);

@@ -132,14 +132,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
 
-  //******* Reactive Flow Component
-  d_doScalarDiffusion   =  false;  // for diffusion component found  in ReactiveFlow
-  d_doAutoCycleBC       =  false;  // for scalar flux boundary conditions
-  d_autoCycleUseMinMax  =  false;
-  d_autoCycleMax        =  .9;
-  d_autoCycleMin        =  .1;
-  d_withGaussSolver     =  false;
-
   // MMS
   if(d_mms_type=="AxisAligned"){
     d_mms_type = "AxisAligned";
@@ -308,17 +300,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_addFrictionWork = 0.0;
   }
 
-  // Setting Scalar Diffusion
-  mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
-  mpm_flag_ps->get("do_auto_cycle_bc", d_doAutoCycleBC);
-  mpm_flag_ps->get("auto_cycle_use_minmax", d_autoCycleUseMinMax);
-  mpm_flag_ps->get("auto_cycle_max", d_autoCycleMax);
-  mpm_flag_ps->get("auto_cycle_min", d_autoCycleMin);
-  mpm_flag_ps->get("with_gauss_solver", d_withGaussSolver);
-  
-  
   d_computeScaleFactor = dataArchive->isLabelSaved("p.scalefactor");
-
 
   // d_doComputeHeatFlux if the label g.HeatFlux is saved or if
   // flatPlat_heatFlux analysis module is used.
@@ -504,7 +486,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("computeColinearNormals",      d_computeColinearNormals);
   ps->appendElement("extra_solver_flushes",        d_extraSolverFlushes);
   ps->appendElement("boundary_traction_faces",     d_bndy_face_txt_list);
-  ps->appendElement("do_scalar_diffusion",         d_doScalarDiffusion);
   ps->appendElement("d_ndim",                      d_ndim);
 
   // Cyberstone

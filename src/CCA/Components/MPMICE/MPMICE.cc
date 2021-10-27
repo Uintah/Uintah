@@ -36,7 +36,7 @@
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
+//#include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 
@@ -96,9 +96,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   case RIGID_MPMICE:
     d_mpm = scinew RigidMPM(myworld, m_materialManager);
     d_rigidMPM = true;
-    break;
-  case SHELL_MPMICE:
-    d_mpm = scinew ShellMPM(myworld, m_materialManager);
     break;
   default:
     d_mpm = scinew SerialMPM(myworld, m_materialManager);

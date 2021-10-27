@@ -36,9 +36,7 @@ SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
 	$(SRCDIR)/MPMCommon.cc    \
 	$(SRCDIR)/ImpMPM.cc       \
-	$(SRCDIR)/ShellMPM.cc     \
-	$(SRCDIR)/SingleFieldMPM.cc     \
-	$(SRCDIR)/AMRMPM.cc       
+	$(SRCDIR)/SingleFieldMPM.cc
 
 PSELIBS := \
 	$(SRCDIR)/CohesiveZone   \

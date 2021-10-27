@@ -26,9 +26,7 @@
 
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -53,15 +51,8 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, con
        mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
     }
 
-    for(ProblemSpecP child = current_ps->findBlock("scalar_flux"); child != nullptr; child = child->findNextBlock("scalar_flux") ) {
-       mpmPhysicalBCs.push_back(scinew ScalarFluxBC(child, grid, flags));
-    }
-
     for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != nullptr;  child = child->findNextBlock("heat_flux") ) {
        mpmPhysicalBCs.push_back(scinew HeatFluxBC(child, grid));
-    }
-    for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); child != nullptr; child = child->findNextBlock("arches_heat_flux") ) {
-       mpmPhysicalBCs.push_back( scinew ArchesHeatFluxBC( child, grid ) );
     }
   }
 }

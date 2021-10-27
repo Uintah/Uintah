@@ -54,7 +54,6 @@ namespace Uintah {
  class ErosionModel;
  class MPMLabel;
  class ParticleCreator;
- class ScalarDiffusionModel;
 
       
 /**************************************
@@ -120,8 +119,6 @@ WARNING
    
    ErosionModel* getErosionModel() const;
 
-   ScalarDiffusionModel* getScalarDiffusionModel() const;
-
    particleIndex createParticles(
                         CCVariable<int>& cellNAPID,
                         const Patch*,
@@ -175,7 +172,6 @@ WARNING
    ConstitutiveModel*     d_cm;
    DamageModel*           d_damageModel;
    ErosionModel*          d_erosionModel;
-   ScalarDiffusionModel*  d_sdm;
    ParticleCreator*       d_particle_creator;
 
    double d_density;
