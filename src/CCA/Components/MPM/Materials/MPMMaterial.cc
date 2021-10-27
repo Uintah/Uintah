@@ -33,8 +33,6 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/Materials/Diffusion/ScalarDiffusionModelFactory.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -82,9 +80,6 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   // 1.  Determine the type of constitutive model and create it.
   // 2.  Create damage model.
   //
-  // 3.  Determine if scalar diffusion is used and the type of
-  //     scalar diffusion model and create it.
-  //     Added for reactive flow component.
   // 4.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
   // 5.  Loop through all of the geometry pieces that make up a single
@@ -110,15 +105,6 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_damageModel = DamageModelFactory::create(ps,flags,ss.get_rep() );
   
   d_erosionModel = scinew ErosionModel( ps, flags, ss.get_rep() );
-
-  // Step 3 -- check if scalar diffusion is used and
-  // create the scalar diffusion model.
-  if(flags->d_doScalarDiffusion){
-    d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
-  }else{
-    d_sdm = nullptr;
-  }
-
 
   // Step 4 -- get the general material properties
 
@@ -165,18 +151,6 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
     geom_obj_data.push_back(GeometryObject::DataItem("color",                GeometryObject::Double));
   } 
 
-  // ReactiveFlow Diffusion Component
-  if(flags->d_doScalarDiffusion){
-    geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
-  }
-
-  if(flags->d_withGaussSolver){
-    std::cout << "************With Gauss Solver***********" << std::endl;
-    geom_obj_data.push_back(GeometryObject::DataItem("pos_charge_density", GeometryObject::Double));
-    geom_obj_data.push_back(GeometryObject::DataItem("neg_charge_density", GeometryObject::Double));
-    geom_obj_data.push_back(GeometryObject::DataItem("permittivity", GeometryObject::Double));
-  }
-
   if(!isRestart){
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
@@ -221,9 +195,6 @@ MPMMaterial::~MPMMaterial()
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
   }
-  if(d_sdm){
-    delete d_sdm;
-  }
 }
 
 void MPMMaterial::registerParticleState( std::vector<std::vector<const VarLabel* > > &PState,
@@ -258,10 +229,6 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_damageModel->outputProblemSpec(mpm_ps);
   d_erosionModel->outputProblemSpec(mpm_ps);
   
-  if(getScalarDiffusionModel()){
-    d_sdm->outputProblemSpec(mpm_ps);
-  }
-
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
     (*it)->outputProblemSpec(mpm_ps);
@@ -316,11 +283,6 @@ bool
 MPMMaterial::is_pLocalizedPreComputed() const
 {
   return d_pLocalizedComputed;
-}
-
-ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const
-{
-  return d_sdm;
 }
 
 particleIndex MPMMaterial::createParticles(

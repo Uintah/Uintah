@@ -119,16 +119,6 @@ namespace Uintah {
     ParticleVariable<double> pExternalHeatFlux;
     //MembraneParticleCreator
     ParticleVariable<Vector> pTang1, pTang2, pNorm;
-    //Scalar Diffusion
-    ParticleVariable<double> pConcentration;
-    ParticleVariable<double> pConcPrevious;
-    ParticleVariable<Vector> pConcGrad;
-    ParticleVariable<double> pExternalScalarFlux;
-    ParticleVariable<double> pPosCharge;
-    ParticleVariable<double> pNegCharge;
-    ParticleVariable<Vector> pPosChargeGrad;
-    ParticleVariable<Vector> pNegChargeGrad;
-    ParticleVariable<double> pPermittivity;
     } ParticleVars;
 
   protected:
@@ -176,11 +166,9 @@ namespace Uintah {
 
     bool d_useLoadCurves;
     bool d_with_color;
-    bool d_doScalarDiffusion;
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
     bool d_useCPTI;
-    bool d_withGaussSolver;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
     

@@ -42,7 +42,6 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -462,7 +461,7 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux" ) {
+    if (bcs_type == "HeatFlux") {
       nofHeatFluxBCs++;
       //cout << "nofHeatFluxBCs = " << nofHeatFluxBCs << endl;
 
@@ -536,7 +535,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux" ) {
+    if (bcs_type == "HeatFlux") {
 
       // Get the material points per load curve
       sumlong_vartype numPart = 0;
@@ -556,24 +555,6 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
         //cout << "fluxPerPart = " << fluxPerPart << endl;
       }
       
-      ArchesHeatFluxBC* pahf=0;
-      if (bcs_type == "ArchesHeatFlux") {
-        pahf = 
-          dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-        //cout << "numPart = " << numPart << endl;
-        pahf->numMaterialPoints(numPart);
-      // Calculate the force per particle at t = 0.0
-        fluxPerPart = pahf->fluxPerParticle(time);
-        //cout << "fluxPerPart = " << fluxPerPart << endl;
-      }
-
-
-#if 0
-      // Calculate the force per particle at t = 0.0
-      double fluxPerPart = pbc->fluxPerParticle(time);
-      cout << "fluxPerPart = " << fluxPerPart << endl;
-#endif
-
       // Loop through the patches and calculate the force vector
       // at each particle
       for(int p=0;p<patches->size();p++){
@@ -595,16 +576,10 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
-//            for(int k=0;k<3;k++){
              if (pLoadCurveID[idx](0) == nofHeatFluxBCs) {
               if (bcs_type == "HeatFlux")
                 pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
-              if (bcs_type == "ArchesHeatFlux") {
-                pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
-                //   cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx]         << endl;
-              }
              }
-//            }
           }
         } // matl loop
       }  // patch loop
@@ -1854,7 +1829,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   std::vector<PressureBC*> pbcP;
   std::vector<double> heatFluxMagPerPart;
   std::vector<HeatFluxBC*> hfbcP;
-  std::vector<ArchesHeatFluxBC*> ahfbcP;
   if (flags->d_useLoadCurves) {
     // Currently, only one load curve at a time is supported, but
     // I've left the infrastructure in place to go to multiple
@@ -1889,22 +1863,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         // Calculate the force per particle at current time
 
         heatFluxMagPerPart.push_back(hfbc->fluxPerParticle(simTime));
-      }
-      if (bcs_type == "ArchesHeatFlux"){
-        ArchesHeatFluxBC* ahfbc =
-         dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-#if 0
-        cout << *ahfbc << endl;
-        cout << "ahfbc type =        " << ahfbc->getType() << endl;
-        cout << "surface area =      " << ahfbc->getSurfaceArea() << endl;
-        cout << "heat flux =         " << ahfbc->heatflux(time) << endl;
-        cout << "flux per particle = " << ahfbc->fluxPerParticle(time) << endl;
-#endif
-        ahfbcP.push_back(ahfbc);
-
-        // Calculate the heat flux per particle at current time
-
-        heatFluxMagPerPart.push_back(ahfbc->fluxPerParticle(simTime));
       }
     }
   }
@@ -3889,7 +3847,7 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux")
+    if (bcs_type == "HeatFlux")
       loadCurveIndex->add(nofHeatFluxBCs++);
   }
   if (nofHeatFluxBCs > 0) {

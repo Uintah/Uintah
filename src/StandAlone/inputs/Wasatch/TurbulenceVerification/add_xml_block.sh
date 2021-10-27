@@ -1,1 +1,0 @@
-sed -i '/<DataArchiver/a \ \t \t \t \t \t \t <save label="TotalKineticEnergy_uintah"\/>' *.ups 

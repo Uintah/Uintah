@@ -23,21 +23,17 @@
  */
 
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/Core/MPMDiffusionLabel.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
-#include <CCA/Components/MPM/Materials/Diffusion/DiffusionModels/ScalarDiffusionModel.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -117,8 +113,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
-  d_doScalarDiffusion = flags->d_doScalarDiffusion;
-  d_withGaussSolver = flags->d_withGaussSolver;
   d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
@@ -194,11 +188,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         colors      = sgp->getColors();
       }
 
-      if(d_withGaussSolver){
-        poscharges = sgp->getPosCharge();
-        negcharges = sgp->getNegCharge();
-        permittivities = sgp->getPermittivity();
-      }
     } // if smooth geometry piece
 
     // The following is for FileGeometryPiece, I'm not sure why this
@@ -351,34 +340,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (concentrations) {
-        if (!concentrations->empty()) {
-          pvars.pConcentration[pidx] = *concentrationiter;
-          ++concentrationiter;
-        }
-      }
-
-      if (poscharges) {
-        if (!poscharges->empty()) {
-          pvars.pPosCharge[pidx] = *poschargeiter;
-          ++poschargeiter;
-        }
-      }
-
-      if (negcharges) {
-        if (!negcharges->empty()) {
-          pvars.pNegCharge[pidx] = *negchargeiter;
-          ++negchargeiter;
-        }
-      }
-
-      if (permittivities) {
-        if (!negcharges->empty()) {
-          pvars.pPermittivity[pidx] = *permittivityiter;
-          ++permittivityiter;
-        }
-      }
-
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
       // physical BC pointer
@@ -386,21 +347,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (checkForSurface(piece,*itr,dxpp,d_flags->d_ndim)) {
           Vector areacomps;
           pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp, areacomps, dwi);
-#if 0
-          if (d_doScalarDiffusion) {
-            pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
-                                     pvars.parea[pidx].y()*areacomps.y(),
-                                     pvars.parea[pidx].z()*areacomps.z());
-          }
-#endif
         } else {
           pvars.pLoadCurveID[pidx] = IntVector(0,0,0);
         }
-#if 0
-        if(pvars.pLoadCurveID[pidx].x()==0 && d_doScalarDiffusion) {
-          pvars.parea[pidx]=Vector(0.);
-        }
-#endif
       }
       count++;
     }
@@ -431,25 +380,9 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
          k++;
       }
     }
-    else if (bcs_type == "ScalarFlux") {
-      ScalarFluxBC* pbc = 
-        dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp, areacomps)) {
-         ret(k) = pbc->loadCurveID(); 
-         k++;
-      }
-    }
     else if (bcs_type == "HeatFlux") {      
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (hfbc->flagMaterialPoint(pp, dxpp)) {
-         ret(k) = hfbc->loadCurveID(); 
-         k++;
-      }
-    }
-    else if (bcs_type == "ArchesHeatFlux") {      
-      ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
          ret(k) = hfbc->loadCurveID(); 
          k++;
@@ -472,11 +405,6 @@ void ParticleCreator::printPhysicalBCs()
     if (bcs_type == "HeatFlux") {
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      cerr << *hfbc << endl;
-    }
-    if (bcs_type == "ArchesHeatFlux") {
-      ArchesHeatFluxBC* hfbc = 
-        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *hfbc << endl;
     }
   }
@@ -546,35 +474,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_with_color){
      new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
   }
-  if(d_doScalarDiffusion){
-     new_dw->allocateAndPut(pvars.parea,  d_lb->diffusion->pArea,       subset);
-
-     new_dw->allocateAndPut(pvars.pConcentration,
-                                      d_lb->diffusion->pConcentration,  subset);
-     new_dw->allocateAndPut(pvars.pConcPrevious,
-                                      d_lb->diffusion->pConcPrevious,   subset);
-     new_dw->allocateAndPut(pvars.pConcGrad,
-                                 d_lb->diffusion->pGradConcentration,   subset);
-     new_dw->allocateAndPut(pvars.pExternalScalarFlux,
-                                  d_lb->diffusion->pExternalScalarFlux, subset);
-  }
-  if(d_withGaussSolver){
-     new_dw->allocateAndPut(pvars.pPosCharge,
-                                          d_lb->pPosChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pNegCharge,
-                                          d_lb->pNegChargeLabel,    subset);
-     new_dw->allocateAndPut(pvars.pPosChargeGrad,
-                                          d_lb->pPosChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pNegChargeGrad,
-                                          d_lb->pNegChargeGradLabel,subset);
-     new_dw->allocateAndPut(pvars.pPermittivity,
-                                          d_lb->pPermittivityLabel, subset);
-  }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
-  }
-  if(d_flags->d_AMR){
-     new_dw->allocateAndPut(pvars.pLastLevel, d_lb->pLastLevelLabel,    subset);
   }
   return subset;
 }
@@ -784,22 +685,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
   
   if(d_with_color){
     pvars.pcolor[i] = (*obj)->getInitialData_double("color");
-  }
-  if(d_doScalarDiffusion){
-    pvars.pConcentration[i] = (*obj)->getInitialData_double("concentration");
-    pvars.pConcPrevious[i]  = pvars.pConcentration[i];
-    pvars.pConcGrad[i]  = Vector(0.0);
-    pvars.pExternalScalarFlux[i] = 0.0;
-    pvars.parea[i]      = area;
-  }
-  if(d_withGaussSolver){
-    pvars.pPosCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("pos_charge_density");
-    pvars.pNegCharge[i] = pvars.pvolume[i]
-                        * (*obj)->getInitialData_double("neg_charge_density");
-    pvars.pPosChargeGrad[i]  = Vector(0.0);
-    pvars.pNegChargeGrad[i]  = Vector(0.0);
-    pvars.pPermittivity[i] = (*obj)->getInitialData_double("permittivity");
   }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
@@ -1014,43 +899,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_with_color){
     particle_state.push_back(d_lb->pColorLabel);
     particle_state_preReloc.push_back(d_lb->pColorLabel_preReloc);
-  }
-
-  if (d_doScalarDiffusion){
-    particle_state.push_back(d_lb->diffusion->pConcentration);
-    particle_state_preReloc.push_back(d_lb->diffusion->pConcentration_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pConcPrevious);
-    particle_state_preReloc.push_back(d_lb->diffusion->pConcPrevious_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pGradConcentration);
-    particle_state_preReloc.push_back(d_lb->diffusion->pGradConcentration_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pExternalScalarFlux);
-    particle_state_preReloc.push_back(d_lb->diffusion->pExternalScalarFlux_preReloc);
-
-    particle_state.push_back(d_lb->diffusion->pArea);
-    particle_state_preReloc.push_back(d_lb->diffusion->pArea_preReloc);
-
-    matl->getScalarDiffusionModel()->addParticleState(particle_state,
-                                                      particle_state_preReloc);
-  }
-
-  if(d_withGaussSolver){
-    particle_state.push_back(d_lb->pPosChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeLabel_preReloc);
-
-    particle_state.push_back(d_lb->pNegChargeLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeLabel_preReloc);
-
-    particle_state.push_back(d_lb->pPosChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pPosChargeGradLabel_preReloc);
-
-    particle_state.push_back(d_lb->pNegChargeGradLabel);
-    particle_state_preReloc.push_back(d_lb->pNegChargeGradLabel_preReloc);
-
-    particle_state.push_back(d_lb->pPermittivityLabel);
-    particle_state_preReloc.push_back(d_lb->pPermittivityLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);

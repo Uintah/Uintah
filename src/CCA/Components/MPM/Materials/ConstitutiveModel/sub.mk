@@ -50,7 +50,6 @@ SRCS   += \
         $(SRCDIR)/ViscoScramImplicit.cc         \
         $(SRCDIR)/MWViscoElastic.cc             \
         $(SRCDIR)/IdealGasMP.cc                 \
-        $(SRCDIR)/ShellMaterial.cc              \
         $(SRCDIR)/ElasticPlasticHP.cc           \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/TH_Water.cc                   \
@@ -66,9 +65,7 @@ SRCS   += \
         $(SRCDIR)/Arenisca.cc                   \
         $(SRCDIR)/Arenisca3.cc                  \
         $(SRCDIR)/Arenisca4.cc                  \
-        $(SRCDIR)/TongeRamesh_gitInfo.cc        \
-        $(SRCDIR)/ArrudaBoyce8Chain.cc          \
-        $(SRCDIR)/RFElasticPlastic.cc			
+        $(SRCDIR)/TongeRamesh_gitInfo.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

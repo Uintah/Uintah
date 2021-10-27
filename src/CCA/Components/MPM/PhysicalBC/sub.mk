@@ -33,14 +33,9 @@ SRCDIR   := CCA/Components/MPM/PhysicalBC
 
 SRCS     += \
 	$(SRCDIR)/MPMPhysicalBCFactory.cc  \
-	$(SRCDIR)/FluxBCModelFactory.cc    \
 	$(SRCDIR)/ForceBC.cc               \
 	$(SRCDIR)/PressureBC.cc            \
-	$(SRCDIR)/ScalarFluxBC.cc          \
 	$(SRCDIR)/HeatFluxBC.cc            \
-	$(SRCDIR)/FluxBCModel.cc           \
-	$(SRCDIR)/AutoCycleFluxBC.cc       \
-	$(SRCDIR)/ArchesHeatFluxBC.cc	   \
 	$(SRCDIR)/BurialHistory.cc	   \
 	$(SRCDIR)/PolynomialData.cc		
 

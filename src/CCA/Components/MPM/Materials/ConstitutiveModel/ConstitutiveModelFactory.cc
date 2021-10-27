@@ -48,7 +48,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ProgramBurn.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/ShellMaterial.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/IdealGasMP.h>
@@ -65,10 +65,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca4.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ArenaSoilBanerjeeBrannon/ArenaPartiallySaturated.h>
-//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Biswajit/CamClay.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/ArrudaBoyce8Chain.h>
 
 // Generalized Viscoelastic CMs
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoElastic/KelvinVoigt.h>
@@ -265,9 +262,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew ProgramBurn(child,flags));
   }
-  else if (cm_type ==  "shell_CNH"){
-    return(scinew ShellMaterial(child,flags));
-  }
   else if (cm_type ==  "elastic_plastic" ||
            cm_type ==  "elastic_plastic_hp"){
     computes_pLocalizedMPM = true;
@@ -286,13 +280,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew JWLppMPM(child,flags));
   }
-//  else if (cm_type ==  "camclay"){
-//    return(scinew CamClay(child,flags));
-//  }
-  else if (cm_type ==  "rf_elastic_plastic"){
-    computes_pLocalizedMPM = true;
-    return(scinew RFElasticPlastic(child,flags));
-  }
   else if (cm_type ==  "TongeRameshPTR") {
     if (flags->d_integrator_type == "explicit"){
       computes_pLocalizedMPM = true;
@@ -304,12 +291,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
   }
-
-  else if (cm_type == "ArrudaBoyce8") {
-    computes_pLocalizedMPM = false;
-    return(scinew ArrudaBoyce8Chain(child,flags));
-  }
-
   else if (cm_type == "Kelvin_Voigt") {
     computes_pLocalizedMPM = false;
     return(scinew KelvinVoigt(child,flags));
@@ -320,7 +301,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew MaxwellWeichert(child,flags));
   }
 
-else if (cm_type == "HypoplasticB") {
+  else if (cm_type == "HypoplasticB") {
 	  return(scinew HypoplasticB(child, flags));
   }
 
