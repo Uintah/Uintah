@@ -320,9 +320,9 @@ void SingleHydroMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
-  cohesiveZoneProblemSetup(restart_mat_ps, flags);
-
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
+
+  cohesiveZoneTasks->cohesiveZoneProblemSetup(restart_mat_ps, flags);
 
   if (flags->d_doScalarDiffusion) {
     d_sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager, flags, lb);
@@ -856,10 +856,10 @@ SingleHydroMPM::scheduleTimeAdvance(const LevelP & level,
 
  if(flags->d_useCohesiveZones){
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_cohesiveZoneState_preReloc,
-                                    lb->pXLabel,
-                                    d_cohesiveZoneState,
-                                    Cl->czIDLabel, cz_matls,2);
+                                cohesiveZoneTasks->d_cohesiveZoneState_preReloc,
+                                lb->pXLabel,
+                                cohesiveZoneTasks->d_cohesiveZoneState,
+                                Cl->czIDLabel, cz_matls,2);
   }
 
   //__________________________________

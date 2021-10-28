@@ -57,6 +57,9 @@ namespace Uintah {
 
     virtual ~CohesiveZoneTasks();
 
+    virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
+                                          MPMFlags* flags);
+
     virtual void scheduleAddCohesiveZoneForces(SchedulerP&,
                                                const PatchSet*,
                                                const MaterialSubset*,
@@ -80,6 +83,9 @@ namespace Uintah {
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
+    std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
   protected:
 
