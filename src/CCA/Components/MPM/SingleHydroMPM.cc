@@ -33,6 +33,7 @@
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/Materials/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
+#include <CCA/Components/MPM/CohesiveZone/CohesiveZoneTasks.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -320,6 +321,8 @@ void SingleHydroMPM::problemSetup(const ProblemSpecP& prob_spec,
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
   cohesiveZoneProblemSetup(restart_mat_ps, flags);
+
+  cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
   if (flags->d_doScalarDiffusion) {
     d_sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager, flags, lb);
@@ -760,15 +763,17 @@ SingleHydroMPM::scheduleTimeAdvance(const LevelP & level,
       d_mpm->scheduleFindSurfaceParticles(         sched, patches, matls);
       d_mpm->scheduleComputeLogisticRegression(    sched, patches, matls);
   }
-  scheduleExMomInterpolated(              sched, patches, matls);
+  scheduleExMomInterpolated(                       sched, patches, matls);
   if(flags->d_doScalarDiffusion) {
       d_mpm->scheduleConcInterpolated(             sched, patches, matls);
   }
   if(flags->d_useCohesiveZones){
-      d_mpm->scheduleUpdateCohesiveZones(          sched, patches, mpm_matls_sub,
+      cohesiveZoneTasks->scheduleUpdateCohesiveZones(
+                                          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
-      d_mpm->scheduleAddCohesiveZoneForces(        sched, patches, mpm_matls_sub,
+      cohesiveZoneTasks->scheduleAddCohesiveZoneForces(
+                                          sched, patches, mpm_matls_sub,
                                                           cz_matls_sub,
                                                           all_matls);
   }
