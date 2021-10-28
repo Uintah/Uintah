@@ -270,14 +270,6 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  virtual void addCohesiveZoneForces(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -371,14 +363,6 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  virtual void updateCohesiveZones(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
   virtual void setPrescribedMotion(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -456,12 +440,6 @@ protected:
   virtual void scheduleComputeSPlusSSPlusVp(SchedulerP&, const PatchSet*,
                                                          const MaterialSet*);
 
-  virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
-                                             const PatchSet*,
-                                             const MaterialSubset*,
-                                             const MaterialSubset*,
-                                             const MaterialSet*);
-
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
 
@@ -515,12 +493,6 @@ protected:
 
   virtual void scheduleFinalParticleUpdate(SchedulerP&, 
                                            const PatchSet*,
-                                           const MaterialSet*);
-
-  virtual void scheduleUpdateCohesiveZones(SchedulerP&, 
-                                           const PatchSet*,
-                                           const MaterialSubset*,
-                                           const MaterialSubset*,
                                            const MaterialSet*);
 
   virtual void scheduleSetPrescribedMotion(SchedulerP&, 

@@ -552,6 +552,7 @@ protected:
   
   HydroMPMLabel* Hlb{ nullptr };
   CZLabel* Cl{ nullptr };
+  CohesiveZoneTasks* cohesiveZoneTasks;
 
 private:
 
