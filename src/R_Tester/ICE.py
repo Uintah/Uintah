@@ -76,7 +76,7 @@ chanFlow_powerLaw2_ups = modUPS2( the_dir,                       \
 
 NIGHTLYTESTS = [   ("advect",             "advect.ups",              1, "All", ["exactComparison"]),
                    ("advectPeriodic",     "advect_periodic.ups",     8, "All", ["exactComparison"]),
-                   ("advectScalar",       "advectScalar.ups",        4  "All", ["exactComparison"]),
+                   ("advectScalar",       "advectScalar.ups",        4, "All", ["exactComparison"]),
                    ("riemann_1L",         riemann_1L_ups,            1, "All", ["exactComparison"]),
                    ("hotBlob2mat",        "hotBlob2mat.ups",         1, "All", ["exactComparison"]),
                    ("hotBlob2mat_sym",    "hotBlob2mat_sym.ups",     1, "All", ["exactComparison"]),
