@@ -146,15 +146,15 @@ namespace Uintah {
     virtual void registerAMRRefluxVariable(const MaterialSet* matlSet,
                                            const VarLabel* var);
 
-    virtual std::vector<TransportedVariable*> getTransportedVars() {return d_trans_vars; }
-    virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_reflux_vars; }
+    virtual std::vector<TransportedVariable*> getTransportedVars() {return d_transVars; }
+    virtual std::vector<AMRRefluxVariable*> getAMRRefluxVars() { return d_refluxVars; }
 
     virtual bool computesThermoTransportProps() const
     { return m_modelComputesThermoTransportProps; }
 
   // protected:
-    std::vector<TransportedVariable*> d_trans_vars;
-    std::vector<AMRRefluxVariable*> d_reflux_vars;
+    std::vector<TransportedVariable*> d_transVars;
+    std::vector<AMRRefluxVariable*> d_refluxVars;
 
     bool m_modelComputesThermoTransportProps {false};
 

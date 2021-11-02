@@ -185,12 +185,14 @@ WARNING
     public:
       int index;
       std::string name;
+      std::string fullName;
       
       // labels for this particular scalar
-      VarLabel* scalar_CCLabel;
-      VarLabel* scalar_source_CCLabel;
-      VarLabel* mag_grad_scalarLabel;
-      VarLabel* diffusionCoefLabel;
+      VarLabel* Q_CCLabel;
+      VarLabel* Q_src_CCLabel;
+      VarLabel* mag_grad_Q_CCLabel;
+      VarLabel* diffusionCoef_CCLabel;
+      VarLabel* sum_Q_CCLabel;
       
       std::vector<Region*> regions;
       std::vector<interiorRegion*> interiorRegions;
@@ -199,14 +201,7 @@ WARNING
       double refineCriteria;
       int  initialize_diffusion_knob;
     };
-    
-    // general labels
-    class PassiveScalarLabel {
-    public:
-      VarLabel* sum_scalar_fLabel;
-    };
-    
-    PassiveScalarLabel* Slb;
+
     Scalar* d_scalar;
 
     //__________________________________

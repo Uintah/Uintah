@@ -32,7 +32,7 @@
 using namespace Uintah;
 using namespace std;
 
-typedef unsigned char byte;
+typedef unsigned char my_byte;
 
 // forwared function declarations
 void usage( char *prog_name );
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
   // make room to store the image
   int nsize = res[0]*res[1]*res[2];
-  byte* pimg = scinew byte[nsize];
+  my_byte* pimg = scinew my_byte[nsize];
 
   // Initialize pimg to zero
   for(int n=0;n<nsize;n++){
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
     cout << "FATAL ERROR : Failed opening points file" << endl;
     exit(0);
   }
-  fwrite(pimg, sizeof(byte), nsize, dest);
+  fwrite(pimg, sizeof(my_byte), nsize, dest);
 
   // clean up image data
   delete [] pimg;

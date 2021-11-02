@@ -1217,11 +1217,15 @@ void BC_bulletproofing(const ProblemSpecP & prob_spec,
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
 
-      // valid user input
+      // valididate user input
+      // Note a scalar could have multiple names
+      bool isNot_Scalar = ( bc_type["label"].find( "scalar" ) == string::npos);
+
       if( bc_type["label"] != "Pressure"      && bc_type["label"] != "Temperature" &&
           bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity"    &&
           bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric"   &&
-          bc_type["label"] != "scalar-f"      && bc_type["label"] != "cumulativeEnergyReleased"){
+          isNot_Scalar                        && bc_type["label"] != "cumulativeEnergyReleased"){
+
         ostringstream warn;
         warn <<"\n   ERROR: ICE::\n   The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
