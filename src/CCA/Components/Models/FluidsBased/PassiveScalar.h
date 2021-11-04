@@ -35,12 +35,12 @@
 #include <vector>
 
 namespace Uintah {
-  
+
 /**************************************
 
 CLASS
    PassiveScalar
-   
+
    PassiveScalar simulation
 
 GENERAL INFORMATION
@@ -52,89 +52,89 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
+
+
 KEYWORDS
    PassiveScalar
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
   class ICELabel;
   class PassiveScalar :public FluidsBasedModel {
   public:
-    PassiveScalar(const ProcessorGroup* myworld, 
+    PassiveScalar(const ProcessorGroup* myworld,
                   const MaterialManagerP& materialManager,
                   const ProblemSpecP& params);
-    
+
     virtual ~PassiveScalar();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-    
+
     virtual void problemSetup(GridP& grid,
                                const bool isRestart);
-    
+
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);
 
     virtual void restartInitialize() {}
-      
+
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
-                                  
+
     virtual void scheduleComputeModelSources(SchedulerP&,
                                              const LevelP& level);
-                                            
+
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                         const LevelP&,
                                                         const MaterialSet*);
-                                                
+
    virtual void computeSpecificHeat(CCVariable<double>&,
                                     const Patch*,
                                     DataWarehouse*,
                                     const int);
-                                    
+
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
-                                      
+
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches);
-                                      
+
   private:
     ICELabel* Ilb;
-                                                
-   void modifyThermoTransportProperties(const ProcessorGroup*, 
-                                        const PatchSubset* patches,        
-                                        const MaterialSubset*,             
-                                        DataWarehouse*,                    
-                                        DataWarehouse* new_dw);             
-   
-    void initialize(const ProcessorGroup*, 
+
+   void modifyThermoTransportProperties(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw);
+
+    void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
-                    const MaterialSubset* matls, 
-                    DataWarehouse*, 
+                    const MaterialSubset* matls,
+                    DataWarehouse*,
                     DataWarehouse* new_dw);
-                                   
-    void computeModelSources(const ProcessorGroup*, 
+
+    void computeModelSources(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
-                             
-    void testConservation(const ProcessorGroup*, 
+
+    void testConservation(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
-                                                       
+
     void errorEstimate(const ProcessorGroup* pg,
                        const PatchSubset* patches,
-                       const MaterialSubset* matl, 
-                       DataWarehouse* old_dw,      
-                       DataWarehouse* new_dw,      
+                       const MaterialSubset* matl,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
                        bool initial);
 
     PassiveScalar(const PassiveScalar&);
@@ -165,10 +165,10 @@ WARNING
       bool exponentialInitialize_1D;
       bool exponentialInitialize_2D;
       bool triangularInitialize;
-      
+
       bool  uniformInitialize;
     };
-    
+
     //__________________________________
     //  For injecting a scalar inside the domain
     class interiorRegion {
@@ -186,27 +186,34 @@ WARNING
       int index;
       std::string name;
       std::string fullName;
-      
+
       // labels for this particular scalar
       VarLabel* Q_CCLabel;
       VarLabel* Q_src_CCLabel;
       VarLabel* mag_grad_Q_CCLabel;
       VarLabel* diffusionCoef_CCLabel;
       VarLabel* sum_Q_CCLabel;
-      
+      VarLabel* expDecayCoefLabel;
+
       std::vector<Region*> regions;
       std::vector<interiorRegion*> interiorRegions;
-      
+
+      double decayRate;               // constant decayRate
       double diff_coeff;
       double refineCriteria;
-      int  initialize_diffusion_knob;
+
+      // for exponential decay model
+      double  c1;
+      double  c2;
     };
 
     Scalar* d_scalar;
 
     //__________________________________
     // global constants
-    bool d_test_conservation;
+    bool d_runConservationTask  {false};
+    bool d_withExpDecayModel    {false};
+
   };
 }
 

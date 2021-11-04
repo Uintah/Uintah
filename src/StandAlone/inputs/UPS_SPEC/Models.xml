@@ -361,12 +361,18 @@
                                          attribute1="name REQUIRED STRING" >
 
           <test_conservation           spec="OPTIONAL BOOLEAN"/>
-          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+
           <constants                   spec="OPTIONAL NO_DATA" >
             <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
             <diffusivity               spec="OPTIONAL DOUBLE" />
-            <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
+            <decayRate                 spec="OPTIONAL DOUBLE" />
           </constants>
+          
+          <exponentialDecay            spec="OPTIONAL NO_DATA" >
+            <c1                        spec="REQUIRED DOUBLE 'positive'" />
+            <c2                        spec="REQUIRED DOUBLE 'positive'" />
+          </exponentialDecay>
+          
           <initialization              spec="REQUIRED NO_DATA" >
             <geom_object               spec="MULTIPLE" />
           </initialization>

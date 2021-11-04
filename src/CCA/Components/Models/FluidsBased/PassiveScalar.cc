@@ -73,12 +73,12 @@ PassiveScalar::~PassiveScalar()
     delete d_matl_set;
   }
 
-
   VarLabel::destroy( d_scalar->Q_CCLabel );
   VarLabel::destroy( d_scalar->Q_src_CCLabel );
   VarLabel::destroy( d_scalar->diffusionCoef_CCLabel );
   VarLabel::destroy( d_scalar->mag_grad_Q_CCLabel );
   VarLabel::destroy( d_scalar->sum_Q_CCLabel );
+  VarLabel::destroy( d_scalar->expDecayCoefLabel );
 
   delete Ilb;
 
@@ -183,9 +183,11 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
 
 
-  d_scalar->Q_CCLabel                = VarLabel::create( fullName,              td_CCdouble);
-  d_scalar->diffusionCoef_CCLabel    = VarLabel::create( fullName +"_diffCoef", td_CCdouble);
-  d_scalar->Q_src_CCLabel            = VarLabel::create( fullName +"_src",      td_CCdouble);
+  d_scalar->Q_CCLabel                = VarLabel::create( fullName,                  td_CCdouble);
+  d_scalar->diffusionCoef_CCLabel    = VarLabel::create( fullName +"_diffCoef",     td_CCdouble);
+  d_scalar->Q_src_CCLabel            = VarLabel::create( fullName +"_src",          td_CCdouble);
+  d_scalar->expDecayCoefLabel        = VarLabel::create( fullName +"_expDecayCoef", td_CCdouble);
+
   d_scalar->mag_grad_Q_CCLabel       = VarLabel::create( "mag_grad_"+fullName,  td_CCdouble);
   d_scalar->sum_Q_CCLabel            = VarLabel::create( "sum_"+fullName,    sum_vartype::getTypeDescription());
 
@@ -201,16 +203,26 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 
   //__________________________________
   // Read in the constants for the scalar
-  scalar_ps->getWithDefault("test_conservation", d_test_conservation, false);
+  scalar_ps->getWithDefault("test_conservation", d_runConservationTask, false);
 
   ProblemSpecP const_ps = scalar_ps->findBlock("constants");
   if(!const_ps) {
     throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
   }
 
-  const_ps->getWithDefault( "initialize_diffusion_knob",  d_scalar->initialize_diffusion_knob,   0);
-  const_ps->getWithDefault( "diffusivity",                d_scalar->diff_coeff, 0.0);
-  const_ps->getWithDefault( "AMR_Refinement_Criteria",    d_scalar->refineCriteria,1e100);
+  const_ps->getWithDefault( "decayRate",               d_scalar->decayRate,  0.0);
+  const_ps->getWithDefault( "diffusivity",             d_scalar->diff_coeff, 0.0);
+  const_ps->getWithDefault( "AMR_Refinement_Criteria", d_scalar->refineCriteria,1e100);
+
+  //__________________________________
+  // exponentialDecay
+  ProblemSpecP exp_ps = scalar_ps->findBlock("exponentialDecay");
+
+  if( exp_ps ) {
+    d_withExpDecayModel = true;
+    exp_ps->require( "c1", d_scalar->c1);
+    exp_ps->require( "c2", d_scalar->c2);
+  }
 
   //__________________________________
   //  Initialization: Read in the geometry objects for the scalar
@@ -280,13 +292,20 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP scalar_ps = PS_ps->appendChild( "scalar" );
   scalar_ps->setAttribute( "name", d_scalar->name );
 
-  scalar_ps->appendElement( "test_conservation", d_test_conservation );
+  scalar_ps->appendElement( "test_conservation", d_runConservationTask );
 
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
-  const_ps->appendElement( "initialize_diffusion_knob",d_scalar->initialize_diffusion_knob) ;
+  const_ps->appendElement( "decayRate",                d_scalar->decayRate );
   const_ps->appendElement( "diffusivity",              d_scalar->diff_coeff );
   const_ps->appendElement( "AMR_Refinement_Criteria",  d_scalar->refineCriteria );
+
+  if(d_withExpDecayModel){
+    ProblemSpecP exp_ps = scalar_ps->appendChild( "exponentialDecay" );
+    exp_ps->appendElement( "c1", d_scalar->c1 );
+    exp_ps->appendElement( "c2", d_scalar->c2 );
+  }
+
 
   //__________________________________
   //  initialization regions
@@ -331,6 +350,10 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->timeStepLabel );
   t->computes(d_scalar->Q_CCLabel);
 
+  if( d_withExpDecayModel ){
+    t->computes(d_scalar->expDecayCoefLabel);
+  }
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -354,9 +377,18 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 
     int indx = d_matl->getDWIndex();
 
+    //__________________________________
+    //  Initialize coefficient used in exponential decay model
+    if( d_withExpDecayModel ){
+      CCVariable<double> c2;
+      new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
+      c2.initialize( d_scalar->c2 );
+    }
+
+    //__________________________________
+    // Passive Scalar
     CCVariable<double> f;
     new_dw->allocateAndPut(f, d_scalar->Q_CCLabel, indx, patch);
-
     f.initialize(0);
 
     //__________________________________
@@ -545,10 +577,18 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task( taskName, this,&PassiveScalar::computeModelSources);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
+
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
 
   t->requires( Task::NewDW, d_scalar->diffusionCoef_CCLabel, gac,1 );
   t->requires( Task::OldDW, d_scalar->Q_CCLabel,             gac,1 );
+
+  if ( d_withExpDecayModel ){
+    t->requires( Task::OldDW, d_scalar->expDecayCoefLabel,   gn,0 );
+    t->computes( d_scalar->expDecayCoefLabel );
+  }
+
   t->modifies( d_scalar->Q_src_CCLabel );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -557,14 +597,16 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
 //______________________________________________________________________
 void PassiveScalar::computeModelSources(const ProcessorGroup*,
                                         const PatchSubset* patches,
-                                        const MaterialSubset* /*matls*/,
+                                        const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel, level);
+
   Ghost::GhostType gac = Ghost::AroundCells;
+  Ghost::GhostType gn  = Ghost::None;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -572,7 +614,8 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     const string msg = "Doing PassiveScalar::computeModelSources_("+ d_scalar->fullName+")";
     printTask(patches, patch, dout_models_ps, msg);
 
-    constCCVariable<double> f_old, diff_coeff;
+    constCCVariable<double> f_old;
+    constCCVariable<double> diff_coeff;
     CCVariable<double>  f_src;
 
     int indx = d_matl->getDWIndex();
@@ -580,6 +623,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     new_dw->get(diff_coeff, d_scalar->diffusionCoef_CCLabel, indx, patch, gac,1);
 
     new_dw->allocateAndPut(f_src, d_scalar->Q_src_CCLabel,indx, patch);
+
     f_src.initialize(0.0);
 
     //__________________________________
@@ -593,6 +637,52 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
                               placeHolder, f_src, diff_coeff, delT);
     }
+    //__________________________________
+    //  constant decay
+    const double decayRate = d_scalar->decayRate;
+    if ( decayRate != 0 ){
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        f_src[c] = -delT * decayRate;
+
+#if 0
+        if( c == IntVector(3,3,3) ){
+          cout << " Linear Decay: " << d_scalar->fullName << endl;
+          cout << "\n f_old: " << f_old[c]
+               << "\n fsrc:  " << f_src[c] << endl;
+
+        }
+#endif
+      }
+    }
+
+    //__________________________________
+    //  exponential decay
+    if ( d_withExpDecayModel ){
+      
+      constCCVariable<double> c2;
+      old_dw->get( c2, d_scalar->expDecayCoefLabel, indx, patch, gn,0);
+
+      new_dw->transferFrom( old_dw, d_scalar->expDecayCoefLabel, patches, matls );
+
+      const double c1 = d_scalar->c1;
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        f_src[c]  = f_old[c] * exp(-c1 * c2[c] * delT ) - f_old[c];
+#if 0
+        if( c == IntVector(3,3,3) ){
+          cout << " ExponentialDecay: " << d_scalar->fullName <<endl;
+          cout << "\n f_old: " << f_old[c]
+               << "\n c1:    " << c1
+               << "\n c2[c]: " << c2[c]
+               << "\n exp(): " << exp (-c1 * c2[c] * delT )
+               << "\n fsrc:  " << f_src[c] << endl;
+        }
+#endif
+      }
+    }
 
     //__________________________________
     //  interior source regions
@@ -600,7 +690,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
                                           iter != d_scalar->interiorRegions.end(); iter++){
       interiorRegion* region = *iter;
 
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
         Point p = patch->cellPosition(c);
@@ -617,6 +707,17 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
         }
       } // Over cells
     }  //interiorRegions
+
+    //__________________________________
+    //  Clamp:  a scalar must always be > 0
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+
+      if( (f_old[c] + f_src[c]) < 0.0){
+        f_src[c] = -f_old[c];
+      }
+    }
+
   }  // patches
 }
 //__________________________________
@@ -633,7 +734,7 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
   const Level* level = getLevel(patches);
   int L = level->getIndex();
 
-  if(d_test_conservation && L == 0){
+  if(d_runConservationTask && L == 0){
 
     const string taskName = "PassiveScalar::scheduleTestConservation_("+ d_scalar->fullName+")";
     printSchedule(patches, dout_models_ps, taskName);
