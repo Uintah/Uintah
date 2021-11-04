@@ -1177,6 +1177,7 @@ void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
+  t->requires(Task::OldDW, lb->delTLabel );
   t->requires(Task::OldDW, lb->pXLabel,                     cz_matls,  gan, 1);
   t->requires(Task::NewDW, lb->czForceLabel_preReloc,       cz_matls,  gan, 1);
   t->requires(Task::NewDW, lb->czTopMatLabel_preReloc,      cz_matls,  gan, 1);
@@ -3073,6 +3074,12 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > gext_force(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
+
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+    Vector dx = patch->dCell();
+    double dxlength=dx.x();
+
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
@@ -3140,10 +3147,20 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
           if(patch->containsNode(node)) {
             // Distribute force according to material mass on the nodes
             // to get an approximately equal contribution to the acceleration
-            gext_force[BotMat][node] += czforce[idx]*S[k]*gmass[BotMat][node]
-                                                                 /totMassBot;
-            gext_force[TopMat][node] -= czforce[idx]*S[k]*gmass[TopMat][node]
-                                                                 /totMassTop;
+            Vector CZFBot = czforce[idx]*S[k]*gmass[BotMat][node]/totMassBot;
+            Vector CZFTop = czforce[idx]*S[k]*gmass[TopMat][node]/totMassTop;
+
+	    if(CZFBot.length()/gmass[BotMat][node]*delT*delT < 0.5*dxlength){
+              gext_force[BotMat][node] += CZFBot;
+	    }
+	    if(CZFTop.length()/gmass[TopMat][node]*delT*delT < 0.5*dxlength){
+              gext_force[TopMat][node] -= CZFTop;
+	    }
+
+//            gext_force[BotMat][node] += czforce[idx]*S[k]*gmass[BotMat][node]
+//                                                                 /totMassBot;
+//            gext_force[TopMat][node] -= czforce[idx]*S[k]*gmass[TopMat][node]
+//                                                                 /totMassTop;
 
 //            gext_force[BotMat][node] += czforce[idx]*S[k]/sumSBot;
 //            gext_force[TopMat][node] -= czforce[idx]*S[k]/sumSTop;
@@ -3624,6 +3641,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
            if((velocity_star[c]*delT).length2() > 0.25*cell_size_sq){
             cerr << "velocity_star[" << c << "] = " << velocity_star[c] << endl;
             cerr << "mass[" << c << "] = " << mass[c] << endl;
+            cerr << "internalforce[" << c << "] = " << internalforce[c] << endl;
+            cerr << "externalforce[" << c << "] = " << externalforce[c] << endl;
+            cerr << "matl = " << m << endl;
               cerr << "Restarting timestep, velocity star too large" << endl;
               new_dw->put( bool_or_vartype(true), 
                            VarLabel::find(abortTimeStep_name));
