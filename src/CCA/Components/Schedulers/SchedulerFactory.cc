@@ -134,6 +134,14 @@ SchedulerFactory::create( const ProblemSpecP   & ps
   // Output which scheduler will be used
   proc0cout << "Scheduler: \t\t" << scheduler << std::endl;
 
+#if defined(UINTAH_ENABLE_KOKKOS)
+  // Output Execution Space and Memory Space that will be used with Kokkos builds
+  proc0cout << "Kokkos HOST Execution Space: \t\t"   << Kokkos::DefaultHostExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos HOST Memory Space: \t\t"      << Kokkos::DefaultHostExecutionSpace::memory_space::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Execution Space: \t\t" << Kokkos::DefaultExecutionSpace::name() << std::endl;
+  proc0cout << "Kokkos DEVICE Memory Space: \t\t"    << Kokkos::DefaultExecutionSpace::memory_space::name() << std::endl;
+#endif
+
   return sch;
 
 }
