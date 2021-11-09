@@ -1379,6 +1379,9 @@ public: // class Task
          void usesKokkosOpenMP(bool state);
   inline bool usesKokkosOpenMP() const { return m_uses_kokkos_openmp; }
 
+         void usesKokkosOpenMPTarget(bool state);
+  inline bool usesKokkosOpenMPTarget() const { return m_uses_kokkos_openmptarget; }
+
          void usesKokkosCuda(bool state);
   inline bool usesKokkosCuda() const { return m_uses_kokkos_cuda; }
 
@@ -1871,6 +1874,7 @@ protected: // class Task
   bool m_uses_device{false};
   bool m_preload_sim_vars{false};
   bool m_uses_kokkos_openmp{false};
+  bool m_uses_kokkos_openmptarget{false};
   bool m_uses_kokkos_cuda{false};
   int  m_max_streams_per_task{1};
   bool m_subpatch_capable{false};
