@@ -136,9 +136,11 @@ private:
   TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FaceParticleVel<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -147,9 +149,11 @@ private:
   TaskAssignedExecutionSpace FaceParticleVel<T>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
