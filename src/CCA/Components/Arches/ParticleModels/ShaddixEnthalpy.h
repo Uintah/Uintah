@@ -170,9 +170,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &ShaddixEnthalpy<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ShaddixEnthalpy<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &ShaddixEnthalpy<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -181,9 +183,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace ShaddixEnthalpy<T>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &ShaddixEnthalpy<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ShaddixEnthalpy<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &ShaddixEnthalpy<T>::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
