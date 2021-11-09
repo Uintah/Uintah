@@ -133,9 +133,11 @@ private:
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &ExampleParticleModel<IT, DT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ExampleParticleModel<IT, DT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &ExampleParticleModel<IT, DT>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -144,9 +146,11 @@ private:
   TaskAssignedExecutionSpace ExampleParticleModel<IT, DT>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &ExampleParticleModel<IT, DT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ExampleParticleModel<IT, DT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &ExampleParticleModel<IT, DT>::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
