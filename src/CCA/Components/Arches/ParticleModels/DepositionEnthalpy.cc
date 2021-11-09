@@ -25,9 +25,11 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskComputeBCsFunctionPointer
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DepositionEnthalpy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DepositionEnthalpy::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DepositionEnthalpy::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -35,9 +37,11 @@ TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskInitializeFunctionPointer
 TaskAssignedExecutionSpace DepositionEnthalpy::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &DepositionEnthalpy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DepositionEnthalpy::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &DepositionEnthalpy::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
