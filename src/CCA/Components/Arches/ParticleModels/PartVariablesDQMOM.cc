@@ -19,9 +19,11 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskComputeBCsFunctionPointer
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &PartVariablesDQMOM::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &PartVariablesDQMOM::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -29,9 +31,11 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointer
 TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &PartVariablesDQMOM::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
