@@ -155,9 +155,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FOWYDevol<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FOWYDevol<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FOWYDevol<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FOWYDevol<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FOWYDevol<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -166,9 +168,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace FOWYDevol<T>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &FOWYDevol<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FOWYDevol<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FOWYDevol<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FOWYDevol<T>::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
