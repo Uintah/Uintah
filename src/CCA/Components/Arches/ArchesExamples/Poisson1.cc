@@ -10,34 +10,42 @@ using namespace Uintah::ArchesExamples;
 //---------------------------------------------- load function pointers ----------------------------------------------------
 TaskAssignedExecutionSpace Poisson1::loadTaskComputeBCsFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::BC>( this
-									 , &Poisson1::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-									 , &Poisson1::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-									 , &Poisson1::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
-									 );
+                                     , &Poisson1::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Poisson1::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Poisson1::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Poisson1::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Poisson1::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     );
 }
 
 TaskAssignedExecutionSpace Poisson1::loadTaskInitializeFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &Poisson1::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &Poisson1::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &Poisson1::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &Poisson1::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Poisson1::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Poisson1::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Poisson1::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Poisson1::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
 TaskAssignedExecutionSpace Poisson1::loadTaskEvalFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &Poisson1::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &Poisson1::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &Poisson1::eval<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     , &Poisson1::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Poisson1::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Poisson1::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Poisson1::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Poisson1::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
 TaskAssignedExecutionSpace Poisson1::loadTaskTimestepInitFunctionPointers(){
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-									 , &Poisson1::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-									 , &Poisson1::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-									 , &Poisson1::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
-									 );
+                                     , &Poisson1::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Poisson1::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Poisson1::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Poisson1::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Poisson1::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+ );
 }
 
 TaskAssignedExecutionSpace Poisson1::loadTaskRestartInitFunctionPointers(){
