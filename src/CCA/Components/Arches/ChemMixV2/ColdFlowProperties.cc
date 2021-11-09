@@ -16,9 +16,11 @@ ColdFlowProperties::~ColdFlowProperties(){
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskComputeBCsFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::BC>( this
-                                     , &ColdFlowProperties::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ColdFlowProperties::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ColdFlowProperties::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ColdFlowProperties::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -26,9 +28,11 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskComputeBCsFunctionPointer
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &ColdFlowProperties::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ColdFlowProperties::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ColdFlowProperties::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ColdFlowProperties::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -36,9 +40,11 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskInitializeFunctionPointer
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &ColdFlowProperties::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ColdFlowProperties::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ColdFlowProperties::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -46,9 +52,11 @@ TaskAssignedExecutionSpace ColdFlowProperties::loadTaskEvalFunctionPointers()
 TaskAssignedExecutionSpace ColdFlowProperties::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &ColdFlowProperties::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ColdFlowProperties::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ColdFlowProperties::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ColdFlowProperties::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ColdFlowProperties::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ColdFlowProperties::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ColdFlowProperties::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
