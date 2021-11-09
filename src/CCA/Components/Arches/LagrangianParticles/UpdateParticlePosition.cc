@@ -21,9 +21,11 @@ TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskComputeBCsFunctionPoi
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &UpdateParticlePosition::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &UpdateParticlePosition::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &UpdateParticlePosition::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &UpdateParticlePosition::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticlePosition::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticlePosition::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticlePosition::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticlePosition::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -31,9 +33,11 @@ TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskInitializeFunctionPoi
 TaskAssignedExecutionSpace UpdateParticlePosition::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &UpdateParticlePosition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &UpdateParticlePosition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &UpdateParticlePosition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &UpdateParticlePosition::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &UpdateParticlePosition::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &UpdateParticlePosition::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &UpdateParticlePosition::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &UpdateParticlePosition::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
