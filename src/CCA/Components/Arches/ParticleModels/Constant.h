@@ -133,9 +133,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace Constant<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &Constant<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &Constant<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &Constant<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Constant<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Constant<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Constant<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Constant<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Constant<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -151,9 +153,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace Constant<T>::loadTaskTimestepInitFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &Constant<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &Constant<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Constant<T>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Constant<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Constant<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Constant<T>::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
