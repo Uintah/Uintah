@@ -25,9 +25,11 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &RateDeposition::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &RateDeposition::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &RateDeposition::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &RateDeposition::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &RateDeposition::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -35,9 +37,11 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &RateDeposition::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &RateDeposition::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &RateDeposition::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &RateDeposition::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &RateDeposition::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &RateDeposition::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -45,9 +49,11 @@ TaskAssignedExecutionSpace RateDeposition::loadTaskEvalFunctionPointers()
 TaskAssignedExecutionSpace RateDeposition::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &RateDeposition::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &RateDeposition::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &RateDeposition::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &RateDeposition::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
