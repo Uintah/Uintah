@@ -52,6 +52,10 @@ namespace Uintah {
     // a way in C++11 to do that.  The Type Erasure Idiom was close, but our need relied on templated return types
     // and it couldn't mesh with Type Erasure Idiom's polymorphism.  std::variant seems like a decent idea, but that's C++17.
     // For now, I'm hard coding the two options we use, Kokkos::OpenMP and Kokkos::Cuda.  -- Brad P.
+    //
+    // Adding third option Kokkos::Experimental::OpenMPTarget. However, it would be better to compact them all 
+    // or at least OpenMP and OpenMPTarget whenever the later is operational. As of now, I think the functionality
+    // is missing. One day, all of them should use Kokkos::DefaultExecutionSpace to make this generic   -- M. Garcia
 
 // Prototype declaration
 template <typename RandomGenerator>
@@ -59,6 +63,10 @@ class KokkosRandom;
 
 #if defined(KOKKOS_ENABLE_OPENMP)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPRandomPool;
+#endif
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPTargetRandomPool;
+// MGM - std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Experimental::OpenMPTarget > > > openMPTargetRandomPool;
 #endif
 #if defined(KOKKOS_ENABLE_CUDA)
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda > > > cudaRandomPool;
@@ -99,6 +107,11 @@ void cleanupKokkosTools() {
       openMPRandomPool.release();
     }
 #endif
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+    if (openMPTargetRandomPool) {
+      openMPTargetRandomPool.release();
+    }
+#endif
 #if defined(KOKKOS_ENABLE_CUDA)
     if (cudaRandomPool) {
       cudaRandomPool.release();
@@ -108,7 +121,7 @@ void cleanupKokkosTools() {
 }
 
 // Don't create any pool until a user first requests one.  Once one is requested, reuse it.
-#if defined(KOKKOS_ENABLE_OPENMP)
+#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <typename ExecSpace>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP >>::type
 GetKokkosRandom1024Pool() {
@@ -122,7 +135,6 @@ GetKokkosRandom1024Pool() {
   return openMPRandomPool->getRandPool();
 }
 #endif
-
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <typename ExecSpace>
