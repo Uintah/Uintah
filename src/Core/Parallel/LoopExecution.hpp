@@ -57,10 +57,16 @@ using std::min;
 #include <Kokkos_Core.hpp>
   const bool HAVE_KOKKOS = true;
 #if !defined( KOKKOS_ENABLE_CUDA )  //This define comes from Kokkos itself.
-  //Kokkos GPU is not included in this build.  Create some stub types so these types at least exist.
+  //Kokkos CUDA (NVIDIA GPU) is not included in this build.  Create some stub types so these types at least exist.
   namespace Kokkos {
     class Cuda {};
     class CudaSpace {};
+  }
+#elif !defined( KOKKOS_ENABLE_OPENMPTARGET )
+  // Kokkos OpenMPTarget (Intel GPU) is not included in this build. Create some stub types so these types at least exist.
+  namespace Kokkos {
+    class OpenMPTarget {};
+    class OpenMPTargetSpace {};
   }
 #elif !defined( KOKKOS_ENABLE_OPENMP )
   // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
@@ -76,6 +82,8 @@ using std::min;
   namespace Kokkos {
     class OpenMP {};
     class HostSpace {};
+    class OpenMPTarget {};
+    class OpenMPTargetSpace {};
     class Cuda {};
     class CudaSpace {};
   }
@@ -92,6 +100,10 @@ namespace UintahSpaces{
   class GPU {};          // At the moment, this is only used to describe data in Cuda Memory
   class CudaSpace {};    // and not to manage non-Kokkos GPU tasks.
 #endif //HAVE_CUDA
+#if defined( HAVE_OPENMPTARGET )
+  class OpenMPTarget {}; // To describe data in Kokkos OpenMPTarget Memory
+  class OpenMPTargetSpace {};
+#endif //HAVE_OPENMPTARGET
 }
 
 enum TASKGRAPH {
@@ -115,6 +127,8 @@ enum TASKGRAPH {
 
 //using UINTAH_CPU_TAG = UintahSpaces::CPU;
 //using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
+//using KOKKOS_DEFAULT_HOST_TAG = Kokkos::DefaultHostExecutionSpace;
+//using KOKKOS_DEFAULT_DEVICE_TAG = Kokkos::DefaultExecutionSpace;
 //using KOKKOS_CUDA_TAG = Kokkos::Cuda;
 
 // Main concept of the below tags: Whatever tags the user supplies is directly compiled into the Uintah binary build.
@@ -122,32 +136,87 @@ enum TASKGRAPH {
 // the tag is "downgraded" to one that is valid.  So in a non-CUDA build, KOKKOS_CUDA_TAG gets associated with
 // Kokkos::OpenMP or UintahSpaces::CPU.  This helps ensure that the compiler never attempts to compile anything with a
 // Kokkos::Cuda data type in a non-GPU build
-#define ORIGINAL_UINTAH_CPU_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-#define ORIGINAL_KOKKOS_OPENMP_TAG  Kokkos::OpenMP COMMA Kokkos::HostSpace
-#define ORIGINAL_KOKKOS_CUDA_TAG    Kokkos::Cuda COMMA Kokkos::CudaSpace
+#define ORIGINAL_UINTAH_CPU_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+#define ORIGINAL_KOKKOS_OPENMP_TAG          Kokkos::OpenMP COMMA Kokkos::HostSpace
+#define ORIGINAL_KOKKOS_DEFAULT_HOST_TAG    Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+#define ORIGINAL_KOKKOS_DEFAULT_DEVICE_TAG  Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+#define ORIGINAL_KOKKOS_CUDA_TAG            Kokkos::Cuda COMMA Kokkos::CudaSpace
+
+// Example of Kokkos options following Kokkos internal order:
+//     https://github.com/kokkos/kokkos/blob/develop/core/src/Kokkos_Core_fwd.hpp
+//     https://github.com/kokkos/kokkos/wiki/Initialization
+
+// Execution Space                            Memory Space
+// -------------------------------------      --------------
+// Kokkos::DefaultHostExecutionSpace          Kokkos::DefaultHostExecutionSpace::memory_space
+// Kokkos::DefaultExecutionSpace              Kokkos::DefaultExecutionSpace::memory_space
+
+// Kokkos chooses the two spaces using the following list:
+//
+// 1. Kokkos::Cuda                            Kokkos::CudaSpace 
+// 2. Kokkos::Experimental::OpenMPTarget      Kokkos::Experimental::OpenMPTargetSpace
+// 3. Kokkos::Experimental::HIP               Kokkos::Experimental::HIPSpace
+// 4. Kokkos::Experimental::SYCL              Kokkos::Experimental::SYCLDeviceUSMSpace
+// 5. Kokkos::OpenMP                          Kokkos::HostSpace
+// 6. Kokkos::Threads                         Kokkos::HostSpace
+// 7. Kokkos::Experimental::HPX               Kokkos::HostSpace
+// 8. Kokkos::Serial                          Kokkos::HostSpace
+//
+
+// The highest execution space in the list which is enabled is Kokkos' default execution space, 
+// and the highest enabled host execution space is Kokkos' default host execution space. 
 
 #if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
   #if defined(KOKKOS_ENABLE_OPENMP)
     #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
+//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
   #else
     #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace 
   #endif
   #define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
+  #define KOKKOS_DEFAULT_DEVICE_TAG   Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+//    |- This should default into:    Kokkos::Cuda COMMA Kokkos::CudaSpace
+
 #elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
-  #if defined(KOKKOS_ENABLE_OPENMP)
+
+  #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+    #define UINTAH_CPU_TAG            Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+    #define KOKKOS_OPENMP_TAG         Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
+//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+//    |- This should default into:    Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
+    #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+
+  #elif defined(KOKKOS_ENABLE_OPENMP)
     #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space 
+//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
     #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+
   #else
+
     #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #define KOKKOS_DEFAULT_DEVICE_TAG UintahSpaces::CPU COMMA UintahSpaces::HostSpace
     #define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+
   #endif
+
 #elif !defined(UINTAH_ENABLE_KOKKOS)
   #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define KOKKOS_DEFAULT_HOST_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define KOKKOS_DEFAULT_DEVICE_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
 
@@ -314,6 +383,7 @@ struct int_3
 
 // -------------------------------------  parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
@@ -336,6 +406,34 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   });
 }
 
+#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+template <typename ExecSpace, typename MemSpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor )
+{
+
+  const unsigned int i_size = r.end(0) - r.begin(0);
+  const unsigned int j_size = r.end(1) - r.begin(1);
+  const unsigned int k_size = r.end(2) - r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(0, numItems).set_chunk_size(1), [&, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2](int n) {
+    const int k = n / (j_size * i_size) + rbegin2;
+    const int j = (n / i_size) % j_size + rbegin1;
+    const int i = n % i_size + rbegin0;
+    functor( i, j, k );
+  });
+}
+
+#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -517,6 +615,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
 
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
@@ -587,6 +686,42 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 
 }
 
+#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red  )
+{
+  ReductionType tmp = red;
+  const unsigned int i_size = r.end(0) - r.begin(0);
+  const unsigned int j_size = r.end(1) - r.begin(1);
+  const unsigned int k_size = r.end(2) - r.begin(2);
+  const unsigned int rbegin0 = r.begin(0);
+  const unsigned int rbegin1 = r.begin(1);
+  const unsigned int rbegin2 = r.begin(2);
+
+  // ... a lot of lines in comments...
+
+  //Range policy manual approach:
+
+  const unsigned int numItems = (i_size > 0 ? i_size : 1) * (j_size > 0 ? j_size : 1) * (k_size > 0 ? k_size : 1);
+
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(0, numItems).set_chunk_size(1), [&, i_size, j_size, k_size, rbegin0, rbegin1, rbegin2](const int& n, ReductionType & tmp) {
+    const int k = n / (j_size * i_size) + rbegin2;
+    const int j = (n / i_size) % j_size + rbegin1;
+    const int i = n % i_size + rbegin0;
+    ReductionType tmp2=0;
+    functor( i, j, k, tmp2 );
+    tmp+=tmp2;
+  }, red);
+
+}
+
+#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -740,6 +875,7 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -764,6 +900,38 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
   red = min(tmp0,red); 
 
 }
+#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
+                     BlockRange const & r, const Functor & functor, ReductionType & red  )
+{
+  ReductionType tmp0 = red;
+
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  // Manual approach
+  Kokkos::parallel_reduce( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(kb, ke).set_chunk_size(1), [=](int k, ReductionType & tmp1) {
+    ReductionType tmp2;
+    for (int j=jb; j<je; ++j) {
+    for (int i=ib; i<ie; ++i) {
+      functor(i,j,k,tmp2);
+      tmp1=min(tmp2,tmp1);
+    }}
+  }, Kokkos::Min<ReductionType>(tmp0));
+
+  red = min(tmp0,red); 
+
+}
+
+#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -905,6 +1073,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 
 // -------------------------------------  sweeping_parallel_for loops  ---------------------------------------------
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
@@ -995,6 +1164,103 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     }); // end Kokkos::parallel_for
   } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
+#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+template <typename ExecSpace, typename MemSpace, typename Functor>
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
+{
+  const int ib = r.begin(0); const int ie = r.end(0);
+  const int jb = r.begin(1); const int je = r.end(1);
+  const int kb = r.begin(2); const int ke = r.end(2);
+
+  ////////////CUBIC BLOCKS SUPPORTED ONLY/////////////////// 
+  // RECTANGLES ARE HARD BUT POSSIBLYE MORE EFFICIENT //////
+  // ///////////////////////////////////////////////////////
+  const int nPartitionsx=npart; // try to break domain into nxnxn block
+  const int nPartitionsy=npart; 
+  const int nPartitionsz=npart; 
+  const int  dx=ie-ib;
+  const int  dy=je-jb;
+  const int  dz=ke-kb;
+  const int  sdx=dx/nPartitionsx;
+  const int  sdy=dy/nPartitionsy;
+  const int  sdz=dz/nPartitionsz;
+  const int  rdx=dx-sdx*nPartitionsx;
+  const int  rdy=dy-sdy*nPartitionsy;
+  const int  rdz=dz-sdz*nPartitionsz;
+
+  const int nphase=nPartitionsx+nPartitionsy+nPartitionsz-2;
+  int tpp=0; //  Total parallel processes/blocks
+
+  int concurrentBlocksArray[nphase/2+1]; // +1 needed for odd values, use symmetry
+
+  for (int iphase=0; iphase <nphase; iphase++ ){
+    if  ((nphase-iphase -1)>= iphase){
+      tpp=(iphase+2)*(iphase+1)/2;
+
+      tpp-=max(iphase-nPartitionsx+1,0)*(iphase-nPartitionsx+2)/2;
+      tpp-=max(iphase-nPartitionsy+1,0)*(iphase-nPartitionsy+2)/2;
+      tpp-=max(iphase-nPartitionsz+1,0)*(iphase-nPartitionsz+2)/2;
+
+      concurrentBlocksArray[iphase]=tpp;
+    }else{
+      tpp=concurrentBlocksArray[nphase-iphase-1];
+    }
+
+    Kokkos::View<int*, Kokkos::HostSpace> xblock("xblock",tpp) ;
+    Kokkos::View<int*, Kokkos::HostSpace> yblock("yblock",tpp) ;
+    Kokkos::View<int*, Kokkos::HostSpace> zblock("zblock",tpp) ;
+
+    int icount = 0 ;
+    for (int k=0;  k< min(iphase+1,nPartitionsz);  k++ ){ // attempts to iterate over k j i , despite  spatial dependencies
+      for (int j=0;  j< min(iphase-k+1,nPartitionsy);  j++ ){
+        if ((iphase -k-j) <nPartitionsx){
+          xblock(icount)=iphase-k-j;
+          yblock(icount)=j;
+          zblock(icount)=k;
+          icount++;
+        }
+      }
+    }
+
+    ///////// Multidirectional parameters
+    const int   idir= plusX ? 1 : -1; 
+    const int   jdir= plusY ? 1 : -1; 
+    const int   kdir= plusZ ? 1 : -1; 
+
+    Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(0, tpp).set_chunk_size(2), [=](int iblock) {
+      const int  xiBlock = plusX ? xblock(iblock) : nPartitionsx-xblock(iblock)-1;
+      const int  yiBlock = plusY ? yblock(iblock) : nPartitionsx-yblock(iblock)-1;
+      const int  ziBlock = plusZ ? zblock(iblock) : nPartitionsx-zblock(iblock)-1;
+
+      const int blockx_start=ib+xiBlock *sdx;
+      const int blocky_start=jb+yiBlock *sdy;
+      const int blockz_start=kb+ziBlock *sdz;
+
+      const int blockx_end= ib+ (xiBlock+1)*sdx +(xiBlock+1 ==nPartitionsx ?  rdx:0 );
+      const int blocky_end= jb+ (yiBlock+1)*sdy +(yiBlock+1 ==nPartitionsy ?  rdy:0 );
+      const int blockz_end= kb+ (ziBlock+1)*sdz +(ziBlock+1 ==nPartitionsz ?  rdz:0 );
+
+      const int blockx_end_dir= plusX ? blockx_end :-blockx_start+1 ;
+      const int blocky_end_dir= plusY ? blocky_end :-blocky_start+1 ;
+      const int blockz_end_dir= plusZ ? blockz_end :-blockz_start+1 ;
+
+      for (int k=plusZ? blockz_start : blockz_end-1; k*kdir<blockz_end_dir; k=k+kdir) {
+        for (int j=plusY? blocky_start : blocky_end-1; j*jdir<blocky_end_dir; j=j+jdir) {
+          for (int i=plusX? blockx_start : blockx_end-1; i*idir<blockx_end_dir; i=i+idir) {
+            functor(i,j,k);
+          }
+        }
+      }
+    }); // end Kokkos::parallel_for
+  } // end for ( int iphase = 0; iphase < nphase; iphase++ )
+}
+#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 #if defined(UINTAH_ENABLE_KOKKOS)
@@ -1013,6 +1279,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 // often needed for boundary conditions and possibly structured grids
 // TODO: Can this be called parallel_for_unstructured?
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -1022,6 +1289,25 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   });
 }
+#endif  //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+
+// Allows the user to specify a vector (or view) of indices that require an operation,
+// often needed for boundary conditions and possibly structured grids
+// TODO: Can this be called parallel_for_unstructured?
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+template <typename ExecSpace, typename MemSpace, typename Functor>
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
+             Kokkos::View<int_3*, Kokkos::HostSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
+{
+  Kokkos::parallel_for( Kokkos::RangePolicy<Kokkos::Experimental::OpenMPTarget, int>(0, list_size).set_chunk_size(1), [=](const unsigned int & iblock) {
+    functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
+  });
+}
+#endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #endif  //#if defined(UINTAH_ENABLE_KOKKOS)
 
 //Allows the user to specify a vector (or view) of indices that require an operation, often needed for boundary conditions and possibly structured grids
@@ -1115,6 +1401,7 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, T2 KV3, const T3 ini
 // ------------------------------------------------------------------------------------------------------------------
 
 #if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
@@ -1150,6 +1437,47 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //  }
 //}
 
+#endif //KOKKOS_ENABLE_OPENMP
+#endif //UINTAH_ENABLE_KOKKOS
+
+#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
+                            const struct1DArray<T, ARRAY_SIZE>& KKV3,  const ValueType& init_val ){
+
+  //TODO: This should probably be serialized and not use a Kokkos::parallel_for?
+
+  unsigned int n_cells = 0;
+  for (unsigned int j = 0; j < KKV3.runTime_size; j++){
+    n_cells += KKV3[j].m_view.size();
+  }
+
+  Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace, int>(0, n_cells).set_chunk_size(2), [=](unsigned int i_tot) {
+    // TODO: Find a more efficient way of doing this.
+    int i = i_tot;
+    int j = 0;
+    while ( i-(int) KKV3[j].m_view.size() > -1 ){
+      i -= KKV3[j].m_view.size();
+      j++;
+    }
+    KKV3[j](i)=init_val;
+  });
+}
+
+//template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
+//typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+//parallel_initialize_single(ExecutionObject& execObj, T2 KKV3, const T3 init_val ){
+//  for (unsigned int j=0; j < KKV3.size(); j++){
+//    Kokkos::parallel_for( Kokkos::RangePolicy<ExecSpace, int>(0,KKV3(j).m_view.size() ).set_chunk_size(2), [=](int i) {
+//      KKV3(j)(i)=init_val;
+//    });
+//  }
+//}
+
+#endif //KOKKOS_ENABLE_OPENMPTARGET
 #endif //UINTAH_ENABLE_KOKKOS
 
 template <class TTT> // Needed for the casting inside of the Variadic template, also allows for nested templating
@@ -1303,7 +1631,12 @@ inline void sumViewSize(const struct1DArray< T, Capacity> & small_v, int &index)
 }
 
 template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>  // Could this be modified to accept grid variables AND containers of grid variables?
+#if defined(KOKKOS_ENABLE_OPENMP)
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
+#endif //KOKKOS_ENABLE_OPENMP or KOKKOS_ENABLE_OPENMPTARGET
+
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& initializationValue,  Ts & ... inputs) {
 
   // Count the number of views used (sometimes they may be views of views)
