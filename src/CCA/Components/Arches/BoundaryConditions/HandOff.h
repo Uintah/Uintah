@@ -100,9 +100,11 @@ private:
   TaskAssignedExecutionSpace HandOff<T>::loadTaskComputeBCsFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &HandOff<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &HandOff<T>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &HandOff<T>::compute_bcs<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &HandOff<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &HandOff<T>::compute_bcs<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -111,9 +113,11 @@ private:
   TaskAssignedExecutionSpace HandOff<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &HandOff<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &HandOff<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &HandOff<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &HandOff<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &HandOff<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &HandOff<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -129,9 +133,11 @@ private:
   TaskAssignedExecutionSpace HandOff<T>::loadTaskTimestepInitFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &HandOff<T>::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &HandOff<T>::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &HandOff<T>::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &HandOff<T>::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &HandOff<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &HandOff<T>::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
