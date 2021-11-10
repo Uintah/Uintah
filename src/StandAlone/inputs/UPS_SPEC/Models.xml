@@ -370,7 +370,11 @@
           
           <exponentialDecay            spec="OPTIONAL NO_DATA" >
             <c1                        spec="REQUIRED DOUBLE 'positive'" />
-            <c2                        spec="REQUIRED DOUBLE 'positive'" />
+            <c2                        spec="REQUIRED NO_DATA"
+                                          attribute1="type REQUIRED STRING 'constant variable'" >
+              <value                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>
+              <filename                spec="REQUIRED STRING"            need_applies_to="type variable"/>
+            </c2>
           </exponentialDecay>
           
           <initialization              spec="REQUIRED NO_DATA" >

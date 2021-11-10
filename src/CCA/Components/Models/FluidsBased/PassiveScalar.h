@@ -136,14 +136,17 @@ WARNING
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        bool initial);
+                       
+    void readTable( const Patch * patch,
+                    const Level * level,
+                    CCVariable<double>& c2 );
 
     PassiveScalar(const PassiveScalar&);
     PassiveScalar& operator=(const PassiveScalar&);
 
     ProblemSpecP d_params;
-
     const Material* d_matl;
-    MaterialSet* d_matl_set;
+    MaterialSet*    d_matl_set;
     const MaterialSubset* d_matl_sub;
 
     //__________________________________
@@ -203,8 +206,9 @@ WARNING
       double refineCriteria;
 
       // for exponential decay model
-      double  c1;
-      double  c2;
+      double  c1 {-9};
+      double  c2 {-9};
+      std::string c2_filename {"-9"};
     };
 
     Scalar* d_scalar;
@@ -213,6 +217,9 @@ WARNING
     // global constants
     bool d_runConservationTask  {false};
     bool d_withExpDecayModel    {false};
+    
+    enum decayCoef{ constant, variable, none};
+    decayCoef  d_decayCoef = none; 
 
   };
 }
