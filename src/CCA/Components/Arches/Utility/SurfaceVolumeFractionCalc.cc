@@ -14,9 +14,11 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskComputeBCsFunction
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &SurfaceVolumeFractionCalc::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceVolumeFractionCalc::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &SurfaceVolumeFractionCalc::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &SurfaceVolumeFractionCalc::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &SurfaceVolumeFractionCalc::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -30,9 +32,11 @@ TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskEvalFunctionPointe
 TaskAssignedExecutionSpace SurfaceVolumeFractionCalc::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &SurfaceVolumeFractionCalc::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     , &SurfaceVolumeFractionCalc::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &SurfaceVolumeFractionCalc::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
