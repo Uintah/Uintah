@@ -133,9 +133,11 @@ private:
   TaskAssignedExecutionSpace ShunnMMSP3<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &ShunnMMSP3<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &ShunnMMSP3<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &ShunnMMSP3<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
