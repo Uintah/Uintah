@@ -18,9 +18,11 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &sumRadiation::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &sumRadiation::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &sumRadiation::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &sumRadiation::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sumRadiation::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &sumRadiation::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -28,9 +30,11 @@ TaskAssignedExecutionSpace sumRadiation::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace sumRadiation::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &sumRadiation::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &sumRadiation::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &sumRadiation::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &sumRadiation::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &sumRadiation::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &sumRadiation::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sumRadiation::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &sumRadiation::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
