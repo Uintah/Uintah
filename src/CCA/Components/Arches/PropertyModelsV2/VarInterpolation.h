@@ -136,9 +136,11 @@ template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &VarInterpolation<T, IT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -147,9 +149,11 @@ template <typename T, typename IT>
 TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
