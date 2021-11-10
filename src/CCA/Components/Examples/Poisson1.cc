@@ -69,10 +69,12 @@ typedef constNCVariable<double> constvartype;
 
 
 //______________________________________________________________________
-// A sample implementation supporting three modes of execution:
-//   &Poisson1::timeAdvance<UINTAH_CPU_TAG>    // Task supports non-Kokkos builds and is executed serially
-//   &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG> // Task supports Kokkos::OpenMP builds and is executed using OpenMP via Kokkos
-//   &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>   // Task supports Kokkos::Cuda builds and is executed using CUDA via Kokkos
+// A sample implementation supporting several modes of execution:
+//   &Poisson1::timeAdvance<UINTAH_CPU_TAG>            // Task supports non-Kokkos builds and is executed serially
+//   &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>         // Task supports Kokkos::OpenMP builds and is executed using OpenMP via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>   // Task supports Kokkos::DefaultHostExecutionSpace builds and is executed using the Default Host Execution space via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG> // Task supports Kokkos::DefaultExecutionSpace builds and is executed using the Default Execution space via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>           // Task supports Kokkos::Cuda builds and is executed using CUDA via Kokkos
 
 Poisson1::Poisson1( const ProcessorGroup   * myworld
                   , const MaterialManagerP   materialManager
@@ -170,6 +172,8 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                         "Poisson1::timeAdvance",
                         &Poisson1::timeAdvance<UINTAH_CPU_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
@@ -280,16 +284,15 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
                           phi(i, j - 1, k) + phi(i, j, k + 1) + phi(i, j, k - 1) );
 
 
-//      printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
-//             phi.m_view.data(), &(phi(i,j,k)),
-//             phi(i,j,k),
-//             phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
-//             phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
-//             newphi(i,j,k));
+//    printf("In lambda CUDA at %d,%d,%d), m_phi is at %p %p %g from %g, %g, %g, %g, %g, %g and m_newphi is %g\n", i, j, k,
+//           phi.m_view.data(), &(phi(i,j,k)),
+//           phi(i,j,k),
+//           phi(i + 1, j, k), phi(i - 1, j, k), phi(i, j + 1, k),
+//           phi(i, j - 1, k), phi(i, j, k + 1), phi(i, j, k - 1),
+//           newphi(i,j,k));
 
       double diff = newphi(i, j, k) - phi(i, j, k);
       residual += diff * diff;
     }, residual);
 
-  }
 }
