@@ -61,9 +61,11 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace MassFlowRate::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &MassFlowRate::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &MassFlowRate::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MassFlowRate::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &MassFlowRate::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MassFlowRate::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MassFlowRate::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -71,9 +73,11 @@ TaskAssignedExecutionSpace MassFlowRate::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace MassFlowRate::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &MassFlowRate::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &MassFlowRate::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MassFlowRate::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &MassFlowRate::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MassFlowRate::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MassFlowRate::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MassFlowRate::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
