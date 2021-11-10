@@ -114,9 +114,11 @@ private:
   TaskAssignedExecutionSpace WaveFormInit<T, CT>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &WaveFormInit<T, CT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &WaveFormInit<T, CT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &WaveFormInit<T, CT>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
