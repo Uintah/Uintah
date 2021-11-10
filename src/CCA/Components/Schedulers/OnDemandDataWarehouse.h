@@ -883,6 +883,29 @@ public:
   }
 #endif
 
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMPTARGET )
+  template <typename grid_T,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::Experimental::OpenMPTargetSpace >::value, KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace> >::type
+  getGridVariable( const VarLabel         * label
+                 ,       int                matlIndex
+                 , const Patch            * patch
+                 ,       Ghost::GhostType   gtype           = Ghost::None
+                 ,       int                numGhostCells   = 0
+                 ,       bool               l_getModifiable = false
+                 )
+  {
+    grid_T var;
+    if ( matlIndex != -999 ) {
+      if ( l_getModifiable ) {
+        this->getModifiable( var, label, matlIndex, patch, gtype, numGhostCells );
+      }else{
+        this->allocateAndPut( var, label, matlIndex, patch, gtype, numGhostCells );
+      }
+    }
+    return KokkosView3<T, Kokkos::Experimental::OpenMPTargetSpace>();
+  }
+#endif
+
 #if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
@@ -933,6 +956,24 @@ public:
       this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
     }
     return constVar.getKokkosView();
+  }
+#endif
+
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMPTARGET )
+  template <typename grid_CT,typename T, typename MemSpace>
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::Experimental::OpenMPTargetSpace >::value, KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace> >::type
+  getConstGridVariable( const VarLabel         * label
+                      ,       int                matlIndex
+                      , const Patch            * patch
+                      ,       Ghost::GhostType   gtype
+                      ,       int                numGhostCells
+                      )
+  {
+    grid_CT constVar;
+    if ( matlIndex != -999 ) {
+        this->get( constVar, label, matlIndex, patch, gtype, numGhostCells );
+    }
+    return KokkosView3<const T, Kokkos::Experimental::OpenMPTargetSpace>();
   }
 #endif
 
