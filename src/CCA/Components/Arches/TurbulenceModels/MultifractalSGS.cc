@@ -68,9 +68,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &MultifractalSGS::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &MultifractalSGS::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &MultifractalSGS::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &MultifractalSGS::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &MultifractalSGS::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -78,9 +80,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &MultifractalSGS::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &MultifractalSGS::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &MultifractalSGS::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &MultifractalSGS::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &MultifractalSGS::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &MultifractalSGS::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &MultifractalSGS::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &MultifractalSGS::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -88,9 +92,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace MultifractalSGS::loadTaskTimestepInitFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &MultifractalSGS::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &MultifractalSGS::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &MultifractalSGS::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &MultifractalSGS::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &MultifractalSGS::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &MultifractalSGS::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &MultifractalSGS::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &MultifractalSGS::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
