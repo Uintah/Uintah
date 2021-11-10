@@ -111,9 +111,11 @@ private:
   TaskAssignedExecutionSpace Diffusion<T>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &Diffusion<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &Diffusion<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &Diffusion<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Diffusion<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Diffusion<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Diffusion<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Diffusion<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Diffusion<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -122,9 +124,11 @@ private:
   TaskAssignedExecutionSpace Diffusion<T>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &Diffusion<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &Diffusion<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &Diffusion<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &Diffusion<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &Diffusion<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &Diffusion<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &Diffusion<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &Diffusion<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
