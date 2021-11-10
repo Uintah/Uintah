@@ -38,9 +38,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace SGSforTransport::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &SGSforTransport::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &SGSforTransport::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &SGSforTransport::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &SGSforTransport::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -48,9 +50,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace SGSforTransport::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &SGSforTransport::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &SGSforTransport::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &SGSforTransport::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &SGSforTransport::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -58,9 +62,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace SGSforTransport::loadTaskTimestepInitFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                       , &SGSforTransport::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &SGSforTransport::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &SGSforTransport::timestep_init<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &SGSforTransport::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &SGSforTransport::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
