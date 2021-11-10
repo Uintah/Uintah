@@ -32,9 +32,11 @@ TaskAssignedExecutionSpace StressTensor::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &StressTensor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &StressTensor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &StressTensor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &StressTensor::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &StressTensor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &StressTensor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &StressTensor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &StressTensor::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -42,9 +44,11 @@ TaskAssignedExecutionSpace StressTensor::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace StressTensor::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &StressTensor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &StressTensor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &StressTensor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &StressTensor::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &StressTensor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &StressTensor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &StressTensor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &StressTensor::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
