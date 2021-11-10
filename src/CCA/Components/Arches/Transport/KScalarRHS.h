@@ -267,9 +267,11 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskComputeBCsFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &KScalarRHS<T, PT>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KScalarRHS<T, PT>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KScalarRHS<T, PT>::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -278,9 +280,11 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &KScalarRHS<T, PT>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KScalarRHS<T, PT>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KScalarRHS<T, PT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KScalarRHS<T, PT>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -289,9 +293,11 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
   TaskAssignedExecutionSpace KScalarRHS<T, PT>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       , &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &KScalarRHS<T, PT>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &KScalarRHS<T, PT>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &KScalarRHS<T, PT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &KScalarRHS<T, PT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       , &KScalarRHS<T, PT>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                        );
   }
 
