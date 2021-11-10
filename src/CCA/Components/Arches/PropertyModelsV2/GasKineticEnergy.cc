@@ -22,9 +22,11 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskComputeBCsFunctionPointers(
 TaskAssignedExecutionSpace GasKineticEnergy::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &GasKineticEnergy::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &GasKineticEnergy::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GasKineticEnergy::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &GasKineticEnergy::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &GasKineticEnergy::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &GasKineticEnergy::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -32,9 +34,11 @@ TaskAssignedExecutionSpace GasKineticEnergy::loadTaskInitializeFunctionPointers(
 TaskAssignedExecutionSpace GasKineticEnergy::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &GasKineticEnergy::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &GasKineticEnergy::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &GasKineticEnergy::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &GasKineticEnergy::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &GasKineticEnergy::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &GasKineticEnergy::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
