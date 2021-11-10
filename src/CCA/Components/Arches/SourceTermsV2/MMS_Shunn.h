@@ -130,9 +130,11 @@ template <typename T>
 TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &MMS_Shunn<T>::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_Shunn<T>::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &MMS_Shunn<T>::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MMS_Shunn<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_Shunn<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MMS_Shunn<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MMS_Shunn<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -141,9 +143,11 @@ template <typename T>
 TaskAssignedExecutionSpace MMS_Shunn<T>::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &MMS_Shunn<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &MMS_Shunn<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &MMS_Shunn<T>::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &MMS_Shunn<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &MMS_Shunn<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &MMS_Shunn<T>::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
