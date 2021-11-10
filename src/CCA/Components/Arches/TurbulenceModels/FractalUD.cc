@@ -68,9 +68,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace FractalUD::loadTaskInitializeFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                       , &FractalUD::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FractalUD::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FractalUD::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FractalUD::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FractalUD::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FractalUD::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -78,9 +80,11 @@ namespace Uintah{
   TaskAssignedExecutionSpace FractalUD::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &FractalUD::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       //, &FractalUD::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &FractalUD::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &FractalUD::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       //, &FractalUD::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                       //, &FractalUD::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &FractalUD::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &FractalUD::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
