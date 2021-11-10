@@ -24,9 +24,11 @@ TaskAssignedExecutionSpace sootVolumeFrac::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &sootVolumeFrac::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &sootVolumeFrac::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &sootVolumeFrac::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &sootVolumeFrac::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &sootVolumeFrac::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -34,9 +36,11 @@ TaskAssignedExecutionSpace sootVolumeFrac::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace sootVolumeFrac::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &sootVolumeFrac::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &sootVolumeFrac::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &sootVolumeFrac::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &sootVolumeFrac::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &sootVolumeFrac::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
