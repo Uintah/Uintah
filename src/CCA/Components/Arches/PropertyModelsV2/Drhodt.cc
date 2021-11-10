@@ -23,9 +23,11 @@ TaskAssignedExecutionSpace Drhodt::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &Drhodt::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &Drhodt::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &Drhodt::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &Drhodt::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Drhodt::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Drhodt::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Drhodt::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -33,9 +35,11 @@ TaskAssignedExecutionSpace Drhodt::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace Drhodt::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &Drhodt::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &Drhodt::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &Drhodt::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &Drhodt::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &Drhodt::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &Drhodt::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &Drhodt::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &Drhodt::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
