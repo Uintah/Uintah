@@ -157,7 +157,7 @@
       <save label="scalar-f"/>
       <save label="scalar-f_X_FC_flux"/>
       <save label="scalar-f_X_FC_corr" levels = "0"/>
-      <save label="sum_scalar-f"/>
+      <save label="totalSum_scalar-f"/>
       <save label="refineFlag"/> 
       <checkpoint interval="0.05" cycle="2"/>
    </DataArchiver>

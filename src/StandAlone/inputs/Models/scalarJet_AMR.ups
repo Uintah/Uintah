@@ -209,7 +209,7 @@
         <save label = "TotalMomentum"/>
         <save label = "TotalMass"/>
         <save label = "TotalIntEng"/>
-        <save label = "sum_scalar-f"/> 
+        <save label = "totalSum_scalar-f"/> 
         <save label = "mag_grad_scalar-f"/>
         <save label = "scalar-f"/>
         <save label = "refineFlag"/>-->

@@ -191,7 +191,7 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   d_scalar->expDecayCoefLabel        = VarLabel::create( fullName +"_expDecayCoef", td_CCdouble);
 
   d_scalar->mag_grad_Q_CCLabel       = VarLabel::create( "mag_grad_"+fullName,  td_CCdouble);
-  d_scalar->sum_Q_CCLabel            = VarLabel::create( "sum_"+fullName,    sum_vartype::getTypeDescription());
+  d_scalar->sum_Q_CCLabel            = VarLabel::create( "totalSum_"+fullName,  sum_vartype::getTypeDescription());
 
   registerTransportedVariable( d_matl_set,
                               d_scalar->Q_CCLabel,

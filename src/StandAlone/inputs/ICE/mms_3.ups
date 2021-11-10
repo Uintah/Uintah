@@ -71,7 +71,7 @@
       <save label="temp_CC"/>
       <!--
       <save label="scalar-f"/>
-      <save label="sum_scalar-f"/>
+      <save label="totalSum_scalar-f"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <save label="TotalMomentum"/> -->

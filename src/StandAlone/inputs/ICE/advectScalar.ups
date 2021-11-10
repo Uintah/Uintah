@@ -193,9 +193,9 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
       <save label="scalar-f"/>
-      <save label="sum_scalar-f"/>
+      <save label="totalSum_scalar-f"/>
       <save label="scalar-q"/>
-      <save label="sum_scalar-q"/>
+      <save label="totalSum_scalar-q"/>
 
       <checkpoint timestepInterval="3" cycle="2"/>
    </DataArchiver>

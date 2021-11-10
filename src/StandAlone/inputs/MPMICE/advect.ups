@@ -200,12 +200,16 @@
 
       <save label="scalar-f"/>
       <save label="scalar-f_src"/>
-      <save label="sum_scalar-f"/>
+      <save label="totalSum_scalar-f"/>
+      <save label="mean_scalar-f"/>
+      <save label="variance_scalar-f"/>
 
       <save label="scalar-q"/>
       <save label="scalar-q_src"/>
-      <save label="sum_scalar-q"/>
+      <save label="totalSum_scalar-q"/>
       <save label="scalar-q_expDecayCoef"/>
+      <save label="mean_scalar-q"/>
+      <save label="variance_scalar-q"/>
       
       <save label="TotalMass"/>
       <checkpoint interval="0.0051" cycle="1"/>
@@ -293,12 +297,12 @@
          </material>
       </ICE>       
        
-            <exchange_properties> 
+      <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [0.0]           </heat>
-        </exchange_coefficients>
-            </exchange_properties> 
+          </exchange_coefficients>
+      </exchange_properties> 
     </MaterialProperties>
     
     <!--____________________________________________________________________-->
@@ -378,6 +382,19 @@
       <Variables>
         <analyze label="scalar-f" weighting="nCells"/>
         <analyze label="scalar-q" weighting="nCells"/>
+      </Variables>
+    </Module>
+
+    <Module name="statistics">
+      <material>          atmosphere  </material>
+      <samplingFrequency> 1000        </samplingFrequency>
+      <timeStart>         0.0         </timeStart>
+      <timeStop>          100        </timeStop>
+
+
+      <Variables>
+        <analyze label="scalar-f" />
+        <analyze label="scalar-q" />
       </Variables>
     </Module>
     
