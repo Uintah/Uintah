@@ -146,9 +146,11 @@ private:
   TaskAssignedExecutionSpace TimeAve<T>::loadTaskComputeBCsFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::BC>( this
-                                       , &TimeAve<T>::compute_bcs<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TimeAve<T>::compute_bcs<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TimeAve<T>::compute_bcs<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &TimeAve<T>::compute_bcs<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &TimeAve<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &TimeAve<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &TimeAve<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &TimeAve<T>::compute_bcs<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
@@ -164,9 +166,11 @@ private:
   TaskAssignedExecutionSpace TimeAve<T>::loadTaskEvalFunctionPointers()
   {
     return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                       , &TimeAve<T>::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                       , &TimeAve<T>::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                       //, &TimeAve<T>::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                       , &TimeAve<T>::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                       , &TimeAve<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                       //, &TimeAve<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                       //, &TimeAve<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                       //, &TimeAve<T>::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                        );
   }
 
