@@ -23,9 +23,11 @@ TaskAssignedExecutionSpace DensityStar::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace DensityStar::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &DensityStar::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityStar::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &DensityStar::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -33,9 +35,11 @@ TaskAssignedExecutionSpace DensityStar::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &DensityStar::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityStar::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &DensityStar::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -43,9 +47,11 @@ TaskAssignedExecutionSpace DensityStar::loadTaskEvalFunctionPointers()
 TaskAssignedExecutionSpace DensityStar::loadTaskTimestepInitFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_INITIALIZE>( this
-                                     , &DensityStar::timestep_init<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &DensityStar::timestep_init<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &DensityStar::timestep_init<KOKKOS_CUDA_TAG>  // Task supports Kokkos::Cuda builds
+                                     , &DensityStar::timestep_init<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &DensityStar::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &DensityStar::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &DensityStar::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &DensityStar::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
