@@ -19,9 +19,11 @@ TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskComputeBCsFunctio
 TaskAssignedExecutionSpace InitLagrangianParticleSize::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &InitLagrangianParticleSize::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &InitLagrangianParticleSize::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     //, &InitLagrangianParticleSize::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
                                      );
 }
 
