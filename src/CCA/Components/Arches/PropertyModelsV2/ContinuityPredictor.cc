@@ -22,9 +22,11 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskComputeBCsFunctionPointe
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &ContinuityPredictor::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ContinuityPredictor::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ContinuityPredictor::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ContinuityPredictor::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ContinuityPredictor::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ContinuityPredictor::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -32,9 +34,11 @@ TaskAssignedExecutionSpace ContinuityPredictor::loadTaskInitializeFunctionPointe
 TaskAssignedExecutionSpace ContinuityPredictor::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &ContinuityPredictor::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &ContinuityPredictor::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &ContinuityPredictor::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &ContinuityPredictor::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &ContinuityPredictor::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &ContinuityPredictor::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
