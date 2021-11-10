@@ -295,4 +295,5 @@ void Poisson1::timeAdvance( const PatchSubset                          * patches
       residual += diff * diff;
     }, residual);
 
+  }
 }
