@@ -34,9 +34,11 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskComputeBCsFunctionPointers()
 TaskAssignedExecutionSpace FaceVelocities::loadTaskInitializeFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
-                                     , &FaceVelocities::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &FaceVelocities::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &FaceVelocities::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &FaceVelocities::initialize<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &FaceVelocities::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &FaceVelocities::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &FaceVelocities::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
@@ -44,9 +46,11 @@ TaskAssignedExecutionSpace FaceVelocities::loadTaskInitializeFunctionPointers()
 TaskAssignedExecutionSpace FaceVelocities::loadTaskEvalFunctionPointers()
 {
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
-                                     , &FaceVelocities::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
-                                     , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     , &FaceVelocities::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     , &FaceVelocities::eval<UINTAH_CPU_TAG>               // Task supports non-Kokkos builds
+                                     , &FaceVelocities::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
+                                     //, &FaceVelocities::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
+                                     //, &FaceVelocities::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
+                                     , &FaceVelocities::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
                                      );
 }
 
