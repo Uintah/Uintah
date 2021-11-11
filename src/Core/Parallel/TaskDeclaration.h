@@ -144,6 +144,32 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
     }
+    // Kokkos OpenMPTarget
+    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace4>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace5>::value ) {
+      taskName = taskName + " (GPUTask)";
+      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {       /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace4>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace5>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf5, std::forward<Args>(args)... );
+      }
+
+      //TODO: Consolidate these
+      task->usesDevice(true);
+      task->usesKokkosOpenMPTarget(true);
+      task->usesSimVarPreloading(true);
+
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMPTARGET, TaskAssignedMemorySpace::KOKKOS_OPENMPTARGETSPACE );
+    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -274,6 +300,29 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
     }
+    // Kokkos OpenMPTarget
+    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace4>::value ) {
+      taskName = taskName + " (GPUTask)";
+      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {       /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace4>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
+      }
+
+      // TODO: Consolidate these
+      task->usesDevice(true);
+      task->usesKokkosOpenMPTarget(true);
+      task->usesSimVarPreloading(true);
+
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMPTARGET, TaskAssignedMemorySpace::KOKKOS_OPENMPTARGETSPACE );
+    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -386,6 +435,26 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
     }
+    // Kokkos OpenMPTarget
+    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ) {
+      taskName = taskName + " (GPUTask)";
+      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {       /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace3>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
+      }
+
+      // TODO: Consolidate these
+      task->usesDevice(true);
+      task->usesKokkosOpenMPTarget(true);
+      task->usesSimVarPreloading(true);
+
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMPTARGET, TaskAssignedMemorySpace::KOKKOS_OPENMPTARGETSPACE );
+    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -480,6 +549,23 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
     }
+    // Kokkos OpenMPTarget
+    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value || std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {
+      taskName = taskName + " (GPUTask)";
+      if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) {       /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
+      }
+      else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace2>::value ) {  /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+        task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
+      }
+
+      // TODO: Consolidate these
+      task->usesDevice(true);
+      task->usesKokkosOpenMPTarget(true);
+      task->usesSimVarPreloading(true);
+
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMPTARGET, TaskAssignedMemorySpace::KOKKOS_OPENMPTARGETSPACE );
+    }
   }
 
   // Check for CPU tasks if a GPU task did not get loaded
@@ -553,6 +639,18 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
       task->usesSimVarPreloading(true);
 
       task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_CUDA, TaskAssignedMemorySpace::KOKKOS_CUDASPACE );
+    }
+    // Kokkos OpenMPTarget
+    else if ( std::is_same<Kokkos::Experimental::OpenMPTarget, ExecSpace1>::value ) { /* Task supports Kokkos::Experimental::OpenMPTarget builds */
+      taskName = taskName + " (GPUTask)";
+      task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
+
+      //TODO: Consolidate these
+      task->usesDevice(true);
+      task->usesKokkosOpenMPTarget(true);
+      task->usesSimVarPreloading(true);
+
+      task->setExecutionAndMemorySpace( TaskAssignedExecutionSpace::KOKKOS_OPENMPTARGET, TaskAssignedMemorySpace::KOKKOS_OPENMPTARGETSPACE );
     }
   }
 
