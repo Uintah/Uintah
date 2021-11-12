@@ -52,7 +52,7 @@ AMRTESTS   = [
                   ("advect_HollowSphere_amr", "advect_HollowSphere_amr.ups", 8,  "ALL", ["no_dbg"])
              ]
 
-LOCALTESTS = [   ("advect",                   "advect.ups",                1,  "ALL", ["exactComparison"]),
+LOCALTESTS = [   ("advect",                   "advect.ups",                8,  "ALL", ["exactComparison"]),
                  ("2d_diw",                   "2ddiw.ups",                 2,  "ALL", ["exactComparison"]),
                  ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
                  ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison","no_restart"]),
