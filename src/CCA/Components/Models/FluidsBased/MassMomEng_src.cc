@@ -323,14 +323,22 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
           if ( vol_frac[c] > 0.001 && region->piece->inside(p)) {
 
             const double mass_old = rho_CC_old[c] * cellVol;
-            double usr_eng_src  = region->temp_src      * mass_old * cv[c];
-            double usr_mass_src = region->density_src   * cellVol;
-            Vector usr_mom_src  = region->velocity_src  * mass_old;
 
-            eng_src[c]  += ( usr_eng_src  * vol_frac[c] ) - cv_old[c] * temp_CC_old[c] * mass_old;
-            mass_src[c] += ( usr_mass_src * vol_frac[c] ) - mass_old;
-            mom_src[c]  += ( usr_mom_src  * vol_frac[c] ) - vel_CC_old[c] * mass_old;
-//          vol_src[c]  += usr_mass_src * sp_vol_CC[c]*vol_frac[c];// volume src
+            if( region->velocity_src != Vector(0.,0.,0.) ){
+              Vector usr_mom_src  = region->velocity_src * mass_old;
+              mom_src[c]  += ( usr_mom_src  * vol_frac[c] ) - vel_CC_old[c] * mass_old;
+            }
+
+            if( region->temp_src != 0.0 ){
+              double usr_eng_src  = region->temp_src * mass_old * cv[c];
+              eng_src[c]  += ( usr_eng_src  * vol_frac[c] ) - cv_old[c] * temp_CC_old[c] * mass_old;
+            }
+
+            if( region->density_src != 0.0 ){
+              double usr_mass_src = region->density_src * cellVol;
+              mass_src[c] += ( usr_mass_src * vol_frac[c] ) - mass_old;
+  //          vol_src[c]  += mass_src * sp_vol_CC[c]*vol_frac[c];// volume src
+            }
 
             totalMass_src += mass_src[c];
             totalMom_src  += mom_src[c];
