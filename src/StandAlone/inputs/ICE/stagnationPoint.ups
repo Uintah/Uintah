@@ -22,7 +22,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-      <!-- <max_Timesteps>      50         </max_Timesteps> -->
+       <max_Timesteps>      50         </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -136,7 +136,8 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>stagnationPoint.uda</filebase>
-      <outputInterval>0.1</outputInterval>
+      <!-- <outputInterval>0.1</outputInterval> -->
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
@@ -145,7 +146,7 @@
       <save label="scalar-f_src"/>
       <save label="totalSum_scalar-f"/>
 
-      <checkpoint timestepInterval="3" cycle="2"/>
+      <checkpoint timestepInterval="5" cycle="2"/>
    </DataArchiver>
 
     
