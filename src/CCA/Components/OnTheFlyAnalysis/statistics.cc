@@ -461,6 +461,9 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   // only add task if a variable was not found in old_dw
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), d_matlSet);
+  } 
+  else{             
+    delete t;        // to prevent a memory leak
   }
 }
 
