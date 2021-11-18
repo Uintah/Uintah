@@ -285,6 +285,21 @@ void statistics::problemSetup(const ProblemSpecP &,
   if(restart_prob_spec){
     ProblemSpecP da_rs_ps = restart_prob_spec->findBlock("DataAnalysisRestart");
 
+    // bulletproofing
+    if (!da_rs_ps){
+      string msg = "ERROR DataAnalysis:Statistics  The xml section below is missing from checkpoints/t*****/timestep.xml: \n\n \
+      <DataAnalysisRestart>           \n \
+        <Module name=\"statistics\">  \n \
+          <StartTimestep>             \n \
+            <scalar-v>XX</scalar-v>   \n \
+            <scalar-f>XX</scalar-f>   \n \
+          </StartTimestep>            \n \
+        </Module>                     \n \
+      </DataAnalysisRestart>";
+      
+      throw ProblemSetupException(msg, __FILE__, __LINE__);
+    }
+
     ProblemSpecP stat_ps = da_rs_ps->findBlockWithAttributeValue("Module", "name", "statistics");
     ProblemSpecP st_ps   = stat_ps->findBlock("StartTimestep");
 
