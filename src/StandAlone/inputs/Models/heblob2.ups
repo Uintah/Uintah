@@ -161,7 +161,7 @@
       <save label= "modelEng_src"/>
       <save label= "cumulativeEnergyReleased"/>
       <save label= "rhs"/>
-      <save label="sum_scalar_f"/>
+      <save label="sum_scalar-f"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <checkpoint interval="0.005" cycle="2"/>

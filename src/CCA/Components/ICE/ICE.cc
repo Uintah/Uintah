@@ -4301,9 +4301,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          IntVector c = *iter;
          massGain += modelMass_src[c];
         }
-        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
-           iter++) {
+
+        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
          IntVector c = *iter;
+
            //  must have a minimum mass
           double mass = rho_CC[c] * vol;
           double min_mass = tiny_rho * vol;
@@ -4323,6 +4324,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
             mom_L[c][dir] = mom_source[c][dir] +
                   plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
           }
+
           // must have a minimum int_eng
           double min_int_eng = min_mass * cv[c] * temp_CC[c];
           double int_eng_tmp = mass * cv[c] * temp_CC[c];
@@ -4340,8 +4342,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //                   the equilibration pressure from going nuts
 
           int_eng_L[c] = int_eng_tmp +
-                             int_eng_source[c] +
-                             modelEng_src[c];
+                         int_eng_source[c] +
+                         modelEng_src[c];
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
 

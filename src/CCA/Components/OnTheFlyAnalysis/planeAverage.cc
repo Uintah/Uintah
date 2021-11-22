@@ -97,6 +97,10 @@ planeAverage::~planeAverage()
   if(d_matl_set && d_matl_set->removeReference()) {
     delete d_matl_set;
   }
+  
+  if(d_matl_subSet && d_matl_subSet->removeReference()) {
+    delete d_matl_subSet;
+  }
 
   VarLabel::destroy(d_lb->lastCompTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
@@ -135,6 +139,10 @@ void planeAverage::problemSetup(const ProblemSpecP&,
   }
 
   int defaultMatl = d_matl->getDWIndex();
+
+  d_matl_subSet = scinew MaterialSubset();
+  d_matl_subSet->add( defaultMatl );
+  d_matl_subSet->addReference();
 
   vector<int> m;
   m.push_back(0);            // matl for FileInfo label
@@ -507,7 +515,7 @@ void planeAverage::sched_computePlanarSums(SchedulerP   & sched,
 
   Ghost::GhostType gn = Ghost::None;
   if( d_lb->weightLabel != nullptr ){
-    t->requires( Task::NewDW, d_lb->weightLabel, gn, 0);
+    t->requires( Task::NewDW, d_lb->weightLabel, d_matl_subSet, gn, 0);
   }
 
   const int L_indx = level->getIndex();

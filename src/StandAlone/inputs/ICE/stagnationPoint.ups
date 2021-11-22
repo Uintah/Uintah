@@ -16,7 +16,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.03        </maxTime>
+       <maxTime>            30        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -34,7 +34,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
                             <value> 0. </value> 
         </BCType> 
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" 
@@ -50,15 +50,12 @@
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>                
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -73,15 +70,12 @@
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "0"   label = "scalar-q"      var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -94,9 +88,6 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>                  
@@ -104,7 +95,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -117,66 +108,26 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
+      
       <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
-                              <value> 0.0</value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0"   label = "scalar-q"     var = "Neumann">
-                              <value> 0.0</value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [-0.5,-0.5,-0.05]    </lower>
-              <upper>        [0.5,  0.5, 0.05]    </upper>
+              <lower>        [-0.5,-0.5,-0.0025]    </lower>
+              <upper>        [0.5,  0.5, 0.0025]    </upper>
               <extraCells>   [1,1,1]              </extraCells>
-              <patches>      [2,2,1]              </patches>
-              <resolution>   [100,100,1]          </resolution>
+              <patches>      [3,3,1]              </patches>
+              <resolution>   [200,200,1]          </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -184,20 +135,18 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>advectScalar.uda</filebase>
+      <filebase>stagnationPoint.uda</filebase>
+      <!-- <outputInterval>0.1</outputInterval> -->
       <outputTimestepInterval>10</outputTimestepInterval>
-      <save label="press_equil_CC"/>
-      <save label="delP_Dilatate"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
+      <save label="temp_CC"/>
       <save label="scalar-f"/>
+      <save label="scalar-f_src"/>
       <save label="totalSum_scalar-f"/>
-      <save label="scalar-q"/>
-      <save label="totalSum_scalar-q"/>
 
-      <checkpoint timestepInterval="3" cycle="2"/>
+      <checkpoint timestepInterval="5" cycle="2"/>
    </DataArchiver>
 
     
@@ -212,7 +161,7 @@
         
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.001            </knob_for_speedSound>
+          <knob_for_speedSound>  0.001        </knob_for_speedSound>
         </TimeStepControl>
         
         <ImplicitSolver>
@@ -252,9 +201,9 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <ICE>
-         <material name = "BackgroundGas">
+         <material name = "atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+           <dynamic_viscosity>   15.89e-6               </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <gamma>              1.4                     </gamma>
@@ -264,7 +213,7 @@
                     <max>       [  1.,  1.,  1. ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [10.,10.,0.]               </velocity>
+               <velocity>      [0.,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -273,12 +222,78 @@
       </ICE>       
     </MaterialProperties> 
     
+<!--______________________________________________________________________-->
+    <Models>
+      <Model type="mass_momentum_energy_src">
+        <MassMomEng_src>
+          <material> atmosphere   </material>
+          
+          <sources>
+            <geom_object>
+              <cylinder label="fan_top">
+                <top>    [ 0.0, 0.42, 0.0]  </top>
+                <bottom> [ 0.0, 0.40, 0.0]  </bottom>
+                <radius>    0.05          </radius>
+              </cylinder>
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>    [0.0,-2.0,0.0]   </velocity_src>
+                <density_src>      0               </density_src>
+                <temperature_src>  0               </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_right">
+                <top>    [ 0.42, 0.0, 0.0]    </top>
+                <bottom> [ 0.40, 0.0, 0.0]    </bottom>
+                <radius>    0.05              </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>    [-2.0,0.0,0.0]   </velocity_src>
+                <density_src>      0               </density_src>
+                <temperature_src>  0               </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_bottom">
+                <top>    [ 0.0, -0.40, 0.0]     </top>
+                <bottom> [ 0.0, -0.42, 0.0]     </bottom>
+                <radius>    0.05                </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>   [0.0,2.0,0.0]    </velocity_src>
+                <density_src>      0              </density_src>
+                <temperature_src>  0              </temperature_src>
+              </algorithm>
+            </geom_object>
+            
+            <geom_object>
+              <cylinder label="fan_left">
+                <top>    [ -0.40, 0.0, 0.0]   </top>
+                <bottom> [ -0.42, 0.0, 0.0]   </bottom>
+                <radius>    0.05                </radius>
+              </cylinder>
+              
+              <algorithm type="fixedPrimitiveValues">
+                <velocity_src>   [2.0,0.0,0.0]    </velocity_src>
+                <density_src>      0              </density_src>
+                <temperature_src>  0              </temperature_src>
+              </algorithm>
+            </geom_object>
+          </sources>
+        
+        </MassMomEng_src>
+      </Model>
+
+       
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to transport two identical scalars        -->
-    <Models>
       <Model type="PassiveScalar">
         <PassiveScalar>
-          <material>BackgroundGas</material>
+          <material>atmosphere</material>
           <scalar name="f">
             <test_conservation>       true            </test_conservation>
             
@@ -288,78 +303,31 @@
             
             <initialization>
               <geom_object>
-                <difference>
                   <box label="wholeDomain">             </box>
-                  <box label="scalar_box">
-                    <min>         [-0.1,-0.1,-0.1]       </min>
-                    <max>         [ 0.1, 0.1, 0.1]       </max>
-                  </box>
-                </difference>
                 <scalar>    0.00   </scalar>
-              </geom_object>
-            
-              <geom_object>
-                 <box label="scalar_box"/>
-                 <scalar>    1.00   </scalar>
               </geom_object>
             </initialization>
 
             <interiorSources>
               <geom_object>
-                <union>
-                  <sphere label = "1">
-                    <origin>[-0.4,-0.4,0.0  ]</origin>
-                    <radius>0.05 </radius>
-                  </sphere>
-
-                  <sphere label = "2">
-                    <origin>[0.4,0.4,0.0  ]</origin>
-                    <radius>0.05 </radius>
-                  </sphere>
-                </union>
+                <cylinder label = "fan_top"/>
+                <scalar>    1 </scalar>
+                <maxScalar> 1 </maxScalar>
+              </geom_object>
+              <geom_object>
+                <cylinder label = "fan_right"/>
                 <scalar>    2 </scalar>
                 <maxScalar> 2 </maxScalar>
               </geom_object>
-            </interiorSources>
-
-          </scalar>
-        </PassiveScalar>
-      </Model>
-    <!--__________________________________-->
-
-      <Model type="PassiveScalar">
-        <PassiveScalar>
-          <material>BackgroundGas</material>
-          <scalar name="q">
-            <test_conservation>       true            </test_conservation>
-            
-            <constants>
-              <diffusivity>              0.0           </diffusivity>
-            </constants>
-            
-            <initialization>
               <geom_object>
-                <difference>
-                  <box label="wholeDomain"/>
-                  <box label="scalar_box"/>
-                </difference>
-                <scalar>    0.00   </scalar>
+                <cylinder label = "fan_bottom"/>
+                <scalar>    3 </scalar>
+                <maxScalar> 3 </maxScalar>
               </geom_object>
-            
               <geom_object>
-                 <box label="scalar_box"/>
-                 <scalar>    1.00   </scalar>
-              </geom_object>
-            </initialization>
-
-            <interiorSources>
-              <geom_object>
-                <union>
-                  <sphere label = "1"/>
-                  <sphere label = "2"/>
-                </union>
-                <scalar>    2 </scalar>
-                <maxScalar> 2 </maxScalar>
+                <cylinder label = "fan_left"/>
+                <scalar>    4 </scalar>
+                <maxScalar> 4 </maxScalar>
               </geom_object>
             </interiorSources>
 

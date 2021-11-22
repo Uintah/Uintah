@@ -42,6 +42,12 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -57,6 +63,12 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -76,6 +88,12 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -91,6 +109,12 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -110,6 +134,12 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>                  
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -127,16 +157,22 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]          </lower>
+              <lower>        [-0.0,-0.0,-0.0]          </lower>
               <upper>        [2.5,2.5,2.5]    </upper>
               <extraCells> [1,1,1]            </extraCells>
-              <patches>    [1,1,1]            </patches>
+              <patches>    [2,2,2]            </patches>
            </Box>
-           <spacing>        [0.5,0.5,0.5]     </spacing>
+          <spacing>        [0.05,0.05,0.05]     </spacing>
        </Level>
     </Grid>
    
@@ -145,7 +181,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect_mpmice.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -161,6 +197,21 @@
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
+
+      <save label="scalar-f"/>
+      <save label="scalar-f_src"/>
+      <save label="totalSum_scalar-f"/>
+      <save label="mean_scalar-f"/>
+      <save label="variance_scalar-f"/>
+
+      <save label="scalar-q"/>
+      <save label="scalar-q_src"/>
+      <save label="totalSum_scalar-q"/>
+      <save label="scalar-q_expDecayCoef"/>
+      <save label="mean_scalar-q"/>
+      <save label="variance_scalar-q"/>
+      
+      <save label="TotalMass"/>
       <checkpoint interval="0.0051" cycle="1"/>
    </DataArchiver>
 
@@ -207,12 +258,12 @@
                 <thermal_conductivity>  400.0         </thermal_conductivity>
                 <specific_heat>         386.0         </specific_heat>
                 <geom_object>
-                    <box label="gpmpm">
+                    <box label="mpm_box">
                         <min>           [1.0,1.0,1.0]   </min>
                         <max>           [1.5,1.5,1.5]   </max>
                     </box>
                     <res>               [2,2,2]         </res>
-                    <velocity>          [10.0,10.0,10.0]   </velocity>
+                    <velocity>          [0.0,0.0,0.0]   </velocity>
                     <temperature>       300             </temperature>
                 </geom_object>
          </material>
@@ -223,7 +274,7 @@
             </contact>
       </MPM>
        <ICE>
-         <material name = "air">
+         <material name = "atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
@@ -231,17 +282,14 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label="gpice">
+                <box label="domain">
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [4.0,4.0,4.0 ]      </max>
                 </box>
-              <box label="gpicehole">
-                    <min>           [1.0,1.0,1.0]       </min>
-                    <max>           [1.5,1.5,1.5]       </max>
-                </box>
+                <box label="mpm_box"/>
               </difference>
                <res>                      [2,2,2]        </res>
-               <velocity>           [10.0,10.0,10.0]     </velocity>
+               <velocity>           [0.0,0.0,0.0]     </velocity>
                <temperature>        300.0               </temperature>
                <density>    1.1792946927374306000e+00   </density>
                <pressure>           101325.0            </pressure>
@@ -249,22 +297,112 @@
          </material>
       </ICE>       
        
-            <exchange_properties> 
+      <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [0.0]           </heat>
-        </exchange_coefficients>
-            </exchange_properties> 
+          </exchange_coefficients>
+      </exchange_properties> 
     </MaterialProperties>
     
-    <!--__________________________________-->
-    <DataAnalysis>
+    <!--____________________________________________________________________-->
+    <!--  Use passiveScalar model to advect a scalar around                -->
+    <Models>
+      <Model type="PassiveScalar">
+        <PassiveScalar>
+          <material>atmosphere</material>
+          <scalar name="f">
+            <test_conservation> true   </test_conservation>
 
-      <Module name = "minMax">
-        <material>        air     </material>
-        <samplingFrequency> 1e10 </samplingFrequency>
-        <timeStart>          0   </timeStart>
-        <timeStop>          100  </timeStop>
+            <constants>
+              <diffusivity>  0.0   </diffusivity>
+              <decayRate>    100  </decayRate>
+            </constants>
+
+            <initialization>
+              <geom_object>
+                <box label="domain"/>
+                <scalar>    1.00   </scalar>
+              </geom_object>
+            </initialization>
+
+          </scalar>
+        </PassiveScalar>
+      </Model>
+      <!--__________________________________-->
+      
+      <Model type="PassiveScalar">
+        <PassiveScalar>
+          <material>atmosphere</material>
+          <scalar name="q">
+            <test_conservation> true   </test_conservation>
+
+            <constants>
+              <diffusivity>  0.0   </diffusivity>
+              <decayRate>    0.0   </decayRate>
+            </constants>
+            
+            <exponentialDecay>
+              <c1> 60 </c1>
+
+         <!--<c2 type="constant">
+                <value> 1 </value>
+              </c2> -->
+              
+              <c2 type="variable">
+                <filename> inputs/MPMICE/testExpDecay_Coeff.csv  </filename>
+              </c2>
+              
+              
+            </exponentialDecay>
+
+            <initialization>
+              <geom_object>
+                <box label="domain"/>
+                <scalar>    1.00   </scalar>
+              </geom_object>
+            </initialization>
+
+          </scalar>
+        </PassiveScalar>
+      </Model>
+    </Models>
+<!--__________________________________-->
+  <DataAnalysis>
+  
+    <Module name="planeAverage">
+
+      <material>           atmosphere  </material>
+      <samplingFrequency>  1000        </samplingFrequency>
+      <timeStart>          0.000       </timeStart>
+      <timeStop>           10000       </timeStop>
+
+      <planeOrientation>  XZ   </planeOrientation>
+      <weight label= "mass_adv"/>
+      <Variables>
+        <analyze label="scalar-f" weighting="nCells"/>
+        <analyze label="scalar-q" weighting="nCells"/>
+      </Variables>
+    </Module>
+
+    <Module name="statistics">
+      <material>          atmosphere  </material>
+      <samplingFrequency> 1000        </samplingFrequency>
+      <timeStart>         0.0         </timeStart>
+      <timeStop>          100        </timeStop>
+
+
+      <Variables>
+        <analyze label="scalar-f" />
+        <analyze label="scalar-q" />
+      </Variables>
+    </Module>
+    
+    <Module name = "minMax">
+        <material>        atmosphere     </material>
+        <samplingFrequency> 1e10         </samplingFrequency>
+        <timeStart>          0           </timeStart>
+        <timeStop>          100          </timeStop>
         <Variables>
           <analyze label="press_CC"  matl="0"/>
           <analyze label="temp_CC"   matl="1"/>

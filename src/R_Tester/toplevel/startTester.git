@@ -283,6 +283,9 @@ else
 
   git clone  --verbose --progress --depth 100 --branch $GIT_branch $GIT_url .  > /tmp/"${gitLog}" 2>&1
   rc=$?
+  
+  # Set th URL so a user can checkin code using ssh keys
+  git remote set-url origin git@github.com:Uintah/Uintah
  
   mv /tmp/"${gitLog}" "${BUILDROOT}"/"${gitLog}"
   

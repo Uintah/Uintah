@@ -595,8 +595,7 @@ ______________________________________________________________________*/
 
     //__________________________________
     //     PUBLIC:  VARIABLES
-    MaterialSet*  d_matl_set;
-
+    MaterialSet*    d_matl_set;
 
     enum orientation { XY, XZ, YZ };        // plane orientation
     orientation d_planeOrientation;
@@ -702,6 +701,8 @@ ______________________________________________________________________*/
     // Flag: has this rank has executed this task on this level
     std::vector< std::vector< bool > > d_progressVar;
     enum taskNames { INITIALIZE=0, ZERO=1, SUM=2, N_TASKS=3 };
+    
+    MaterialSubset* d_matl_subSet;    
 
   };
 }
