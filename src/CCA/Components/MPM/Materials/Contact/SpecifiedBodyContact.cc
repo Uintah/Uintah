@@ -343,6 +343,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
 //        if(n==d_material) continue; 
+        if(!d_matls.requested(n)) continue;
 
         // set each velocity component being modified to a new velocity
         Vector new_vel( gvelocity[n][c] );
@@ -445,6 +446,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 //          if(n==d_material){
 //             continue;
 //          }
+        if(!d_matls.requested(n)) continue;
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){
           Vector normal = gsurfnorm[c];
