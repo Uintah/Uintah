@@ -123,7 +123,7 @@
       </material>
       <contact>
         <type>rigid</type>
-        <materials>[0]</materials>
+        <materials>[0,1]</materials>
         <direction>[0,1,0]</direction>
         <stop_time>999999.9</stop_time>
       </contact>
