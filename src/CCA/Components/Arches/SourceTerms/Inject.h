@@ -355,8 +355,8 @@ private:
     }
 
     std::string variable = getString( file );
-    //double space1 = getDouble( file );
-    //double space2 = getDouble( file );
+    double space1 = getDouble( file );
+    double space2 = getDouble( file );
     int num_points = getInt( file );
     std::map<IntVector, double> result;
 
