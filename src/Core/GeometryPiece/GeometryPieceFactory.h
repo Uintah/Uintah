@@ -89,10 +89,10 @@ namespace Uintah {
     // they do, they won't be executing at the same time (in different
     // threads)... If this is not the case, then this variable should
     // be locked...
-    static std::map<std::string,GeometryPieceP> namedPieces_;
-    static std::vector<GeometryPieceP>          unnamedPieces_;
-    static std::map<std::string, std::map<int, std::vector<Point> > > insidePointsMap_; // geompiece name -> (patchID, inside points vector)
-    static std::map< int, std::vector<Point> > allInsidePointsMap_; // patchID -> insidePoints. returns ALL points inside geometries for a given patch
+    static std::map<std::string,GeometryPieceP> m_namedPieces;
+    static std::vector<GeometryPieceP>          m_unnamedPieces;
+    static std::map<std::string, std::map<int, std::vector<Point> > > m_insidePointsMap; // geompiece name -> (patchID, inside points vector)
+    static std::map< int, std::vector<Point> > m_allInsidePointsMap;                    // patchID -> insidePoints. returns ALL points inside geometries for a given patch
     /*
      *  \brief A private helper function to check whether we already looked for the inside points
      for this patch and geometry or not.
