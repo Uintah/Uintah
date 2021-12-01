@@ -1925,6 +1925,8 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
   }      // patch loop
 }
 
+//______________________________________________________________________
+//
 void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset*,
@@ -1939,8 +1941,17 @@ void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
      cout << "MPM::Deleting Geometry Objects  matl: " << mpm_matl->getDWIndex() << "\n";
      mpm_matl->deleteGeomObjects();
    }
-}
 
+    // The call below is necessary because the GeometryPieceFactory holds on to a pointer
+    // to all geom_pieces (so that it can look them up by name during initialization)
+    // The pieces are never actually deleted until the factory is destroyed at the end
+    // of the program. resetFactory() will rid of the pointer (lookup table) and
+    // allow the deletion of the unneeded pieces.  
+
+    GeometryPieceFactory::resetFactory();
+}
+//______________________________________________________________________
+//
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -2079,17 +2090,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       new_dw->put(sum_vartype(0.0), lb->diffusion->rTotalConcentration);
     }
   }
-
-  // The call below is necessary because the GeometryPieceFactory holds on to a pointer
-  // to all geom_pieces (so that it can look them up by name during initialization)
-  // The pieces are never actually deleted until the factory is destroyed at the end
-  // of the program. resetFactory() will rid of the pointer (lookup table) and
-  // allow the deletion of the unneeded pieces.  
-  
-  GeometryPieceFactory::resetFactory();
- 
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::readPrescribedDeformations(string filename)
 {
 
