@@ -184,6 +184,7 @@
           <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
                                                                       need_applies_to="type Threshold"/> 
           <friction_angle       spec="OPTIONAL DOUBLE"                need_applies_to="type Threshold"/> 
+          <LocalizeParticles    spec="OPTIONAL BOOLEAN"               need_applies_to="type Threshold"/>
           <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE '0,1e999'"         
                                                                       need_applies_to="type Threshold"/> 
 

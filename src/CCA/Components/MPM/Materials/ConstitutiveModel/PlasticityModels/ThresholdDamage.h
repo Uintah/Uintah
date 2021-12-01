@@ -53,6 +53,7 @@ namespace Uintah {
       std::string scaling; /* Volume scaling method: "none" or "kayenta" */
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
+      bool localizeOrNot;
       
       void print(){
         std::cout << " mean:" << mean << " std: " << std << " exponent: " << exponent
