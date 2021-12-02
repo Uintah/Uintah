@@ -27,20 +27,7 @@
 #ifndef Uintah_Components_Arches_CQMOMInversion_h
 #define Uintah_Components_Arches_CQMOMInversion_h
 
-
-
-#include <sci_defs/uintah_defs.h> // For FIX_NAME
-
-// declare lapack eigenvalue solver
-extern "C"{
-# define DSYEV FIX_NAME(dsyev)
-  void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
-              double* w, double* work, int* lwork, int* info );
-  
-# define DGESV FIX_NAME(dgesv)
-  void DGESV(int *n, int *nrhs, double *a, int *lda,
-             int *ipiv, double *b, int *ldb, int *info);
-}
+#include <Core/Math/sci_lapack.h> // lapack eigenvalue solver
 
 //uncomment to debug matricies
 //#define cqmom_dbg

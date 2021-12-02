@@ -29,21 +29,12 @@
 #include <cmath>
 
 #include <Core/Util/DebugStream.h>
-
-#include <sci_defs/uintah_defs.h>
+#include <Core/Math/sci_lapack.h>  // lapack eigenvalue solver
 
 //set up a debug stream for qmom without ifdef compiler commands
 static Uintah::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
 #define dbg_qmom_on dbgqmom.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_qmom  if( dbg_qmom_on ) dbgqmom
-
-#define DSYEV FIX_NAME(dsyev)
-
-// declare lapack eigenvalue solver
-extern "C"{
-  void DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
-	      double* w, double* work, int* lwork, int* info );
-}
 
 
 /**

@@ -43,7 +43,7 @@ list( APPEND F_FILE_PREFIXES
     )
 
 foreach( name ${F_FILE_PREFIXES} )
-list( APPEND F_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${name}.F )
+  list( APPEND F_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${name}.F )
 #  list( APPEND INC_FILES ${name}_fort.h )
 endforeach()
 

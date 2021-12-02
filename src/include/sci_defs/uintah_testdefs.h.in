@@ -43,15 +43,5 @@
 #cmakedefine HAVE_CXX11
 
 #cmakedefine NO_FORTRAN
-@DEF_FORTRAN_UNDERSCORE@
-
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
 
 #endif // UINTAH_DEFS_H

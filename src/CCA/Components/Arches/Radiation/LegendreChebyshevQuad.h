@@ -1,12 +1,7 @@
 #ifndef Gauss_Legendre_Chebyshev_quadrature_h
 #define Gauss_Legendre_Chebyshev_quadrature_h
-extern "C"{
-# define DGEEV FIX_NAME(dgeev)
-void DGEEV( char* jobvl, char* jobvr, int* n, double* a,
-    int* lda, double* wr, double* wi, double* vl, int* ldvl,
-    double* vr, int* ldvr, double* work, int* lwork, int* info );
-}
 
+#include <Core/Math/sci_lapack.h>
 
 //****************************************************************************
 //  Use "quicksort" algorithm to sort doubles

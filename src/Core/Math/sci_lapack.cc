@@ -34,8 +34,6 @@
 */
 
 #include <sci_defs/cuda_defs.h>
-#include <sci_defs/lapack_defs.h>
-#include <sci_defs/uintah_defs.h> // For FIX_NAME
 
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
@@ -97,23 +95,6 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 }
 
 #if defined(HAVE_LAPACK)
-
-#  define DGETRF FIX_NAME(dgetrf)
-#  define DGETRI FIX_NAME(dgetri)
-#  define DGESVD FIX_NAME(dgesvd)
-#  define DGEEV  FIX_NAME(dgeev)
-
-extern "C" {
-  int DGETRF( int *m, int *n, double *a, int *lda, int *ipiv, int *info );
-  int DGETRI( int *m, double *a, int *lda, int *ipiv, 
-              double *work, int *lwork, int *info );
-  int DGESVD( char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
-              double *S, double *u, int *ldu, double *vt, int *ldvt, 
-              double *work, int *lwork, int *info );
-  int DGEEV( char *jobvl, char *jobvr, int *n, double *a, int *lda,
-             double *Er, double *Ei, double *vl, int *ldvl, double *vr, 
-             int *ldvr, double *work, int *lwork, int *info );
-}
 
 bool
 lapackinvert(double *A, int n)

@@ -37,7 +37,23 @@ target_link_libraries( Core_Math
 target_include_directories( Core_Math
         PUBLIC
             ${CMAKE_SOURCE_DIR}
+            ${CMAKE_BINARY_DIR}
         PRIVATE
             ${MPI_CXX_INCLUDE_DIRS}
             ${LIBXML2_INCLUDE_DIRS}
     )
+
+if( ENABLE_FORTRAN )
+  include( FortranCInterface )
+  FortranCInterface_VERIFY( CXX )
+  # This will generate a header with appropriate name-mangling macros for C-Fortran compatibility
+  FortranCInterface_HEADER( LapackFortranNameMangle.h
+      SYMBOLS
+        DGEEV
+        DGESV
+        DGESVD
+        DGETRF
+        DGETRI
+        DSYEV
+      )
+endif()

@@ -36,6 +36,33 @@
 #ifndef SCI_Math_sci_lapack_h
 #define SCI_Math_sci_lapack_h 1
 
+#include <sci_defs/uintah_defs.h>
+#include <sci_defs/lapack_defs.h>
+
+#if defined(HAVE_LAPACK)
+
+#  if !defined(NO_FORTRAN)
+#    include <Core/Math/LapackFortranNameMangle.h>
+#  endif
+
+extern "C" {
+int DGEEV( char *jobvl, char *jobvr, int *n, double *a, int *lda,
+           double *Er, double *Ei, double *vl, int *ldvl, double *vr,
+           int *ldvr, double *work, int *lwork, int *info );
+int DGESV(int *n, int *nrhs, double *a, int *lda,
+           int *ipiv, double *b, int *ldb, int *info);
+int DGESVD( char *jobu, char *jobvt, int *m, int *n, double *a, int *lda,
+            double *S, double *u, int *ldu, double *vt, int *ldvt,
+            double *work, int *lwork, int *info );
+int DGETRF( int *m, int *n, double *a, int *lda, int *ipiv, int *info );
+int DGETRI( int *m, double *a, int *lda, int *ipiv,
+            double *work, int *lwork, int *info );
+int DSYEV( char* jobz, char* uplo, int* n, double* a, int* lda,
+            double* w, double* work, int* lwork, int* info );
+}
+#endif // HAVE_LAPACK
+
+
 namespace Uintah {
 
 bool lapackinvert(double *A, int n);  
