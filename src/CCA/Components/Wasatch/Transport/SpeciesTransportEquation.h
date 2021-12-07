@@ -49,6 +49,8 @@ class DualTimeMatrixInfo;  // forward declaration
 
 class EqnTimestepAdaptorBase;
 
+void setup_cantera( Uintah::ProblemSpecP wasatchSpec );
+
 std::vector<EqnTimestepAdaptorBase*>
 setup_species_equations( Uintah::ProblemSpecP params,
                          Uintah::ProblemSpecP wasatchSpec,

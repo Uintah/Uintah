@@ -647,6 +647,10 @@ namespace WasatchCore{
     TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
 
+    //
+    // setup property evaluations
+    //
+    setup_property_evaluation( wasatchSpec_, graphCategories_, persistentFields_ );
 
     //
     // Build species transport equations
@@ -683,10 +687,6 @@ namespace WasatchCore{
                                                   persistentFields_ ) );
     }
 
-    //
-    // setup property evaluations
-    //
-    setup_property_evaluation( wasatchSpec_, graphCategories_, persistentFields_ );
     //
     // Build coupled transport equations scalability test for wasatch.
     //

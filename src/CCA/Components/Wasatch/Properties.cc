@@ -42,6 +42,7 @@
 #ifdef HAVE_POKITT
 #include <pokitt/CanteraObjects.h>
 #include <pokitt/thermo/Density.h>
+#include <CCA/Components/Wasatch/Transport/SpeciesTransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/DensityFromSpeciesAndEnthalpy.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/DRhoDY.h>
 #include <CCA/Components/Wasatch/Expressions/DensitySolvers/SpeciesAndEnthalpyExpressions/DRhoDEnthalpy.h>
@@ -411,54 +412,63 @@ namespace WasatchCore{
 
       //_______________________________________
       // extract dependent variable information
-      const Expr::Tag dvarTag = parse_nametag( dvarParams->findBlock("NameTag") );
+      const Expr::Tag dvarTag = parse_nametag(dvarParams->findBlock("NameTag"));
 
       std::string dvarTableName;
-      dvarParams->get( "NameInTable", dvarTableName );
-      if( !table.has_depvar(dvarTableName) ){
+      dvarParams->get("NameInTable", dvarTableName);
+      if (!table.has_depvar(dvarTableName)) {
         std::ostringstream msg;
         msg << "Table '" << fileName
             << "' has no dependent variable named '" << dvarTableName << "'"
             << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__);
       }
 
       proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
-      const InterpT* const interp = table.find_entry( dvarTableName );
-      assert( interp != nullptr );
+      const InterpT *const interp = table.find_entry(dvarTableName);
+      assert(interp != nullptr);
 
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
-      dvarParams->getWithDefault( "Type", fieldType, "SVOL" );
+      dvarParams->getWithDefault("Type", fieldType, "SVOL");
 
-      switch( get_field_type(fieldType) ){
-      case SVOL: {
-        typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        break;
+      try {
+        switch (get_field_type(fieldType)) {
+          case SVOL: {
+            typedef TabPropsEvaluator<SpatialOps::SVolField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, *interp, ivarNames));
+            break;
+          }
+          case XVOL: {
+            typedef TabPropsEvaluator<SpatialOps::SSurfXField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, *interp, ivarNames));
+            break;
+          }
+          case YVOL: {
+            typedef TabPropsEvaluator<SpatialOps::SSurfYField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, *interp, ivarNames));
+            break;
+          }
+          case ZVOL: {
+            typedef TabPropsEvaluator<SpatialOps::SSurfZField>::Builder PropEvaluator;
+            gh.exprFactory->register_expression(scinew PropEvaluator(dvarTag, *interp, ivarNames));
+            break;
+          }
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported field type named '" << fieldType << "'" << endl
+                << __FILE__ << " : " << __LINE__ << endl;
+            throw std::runtime_error(msg.str());
+        }
       }
-      case XVOL: {
-        typedef TabPropsEvaluator<SpatialOps::SSurfXField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        break;
-      }
-      case YVOL: {
-        typedef TabPropsEvaluator<SpatialOps::SSurfYField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        break;
-      }
-      case ZVOL: {
-        typedef TabPropsEvaluator<SpatialOps::SSurfZField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
-        break;
-      }
-      default:
+      catch( std::exception& err ){
         std::ostringstream msg;
-        msg << "ERROR: unsupported field type named '" << fieldType << "'" << endl
-            << __FILE__ << " : " << __LINE__ << endl;
-        throw std::runtime_error( msg.str() );
+        msg << "\nERROR caught while registering evaluator for " << dvarTag << endl
+            << "\tRegistered expressions follow:" << endl;
+        gh.exprFactory->dump_expressions( msg );
+        msg << "\nMore information: " << err.what() << endl;
       }
     }
 
@@ -516,6 +526,8 @@ namespace WasatchCore{
 
     Expr::ExpressionID id;
     std::vector<Expr::ExpressionID> ids;
+
+    setup_cantera( params );
 
     const std::string prefix = "rho_";
     const TagNames& tagNames =  TagNames::self();

@@ -76,6 +76,20 @@ struct SpeciesBoundaryTyper
   typedef typename ConstantBCNew<FaceT,FaceNeumannBCOpT>::Builder ConstantFaceNeumannBC;
 };
 
+void setup_cantera( Uintah::ProblemSpecP wasatchSpec )
+{
+  if( CanteraObjects::is_ready() ) return;  // don't try to set it up multiple times
+
+  Uintah::ProblemSpecP specEqnParams = wasatchSpec->findBlock("SpeciesTransportEquations");
+
+  std::string canteraInputFileName, canteraGroupName;
+  specEqnParams->get("CanteraInputFile",canteraInputFileName);
+  specEqnParams->get("CanteraGroup",    canteraGroupName    );
+
+  CanteraObjects::Setup canteraSetup( "Mix", canteraInputFileName, canteraGroupName );
+  CanteraObjects::setup_cantera( canteraSetup );
+}
+
 std::vector<EqnTimestepAdaptorBase*>
 setup_species_equations( Uintah::ProblemSpecP specEqnParams,
                          Uintah::ProblemSpecP wasatchSpec,
@@ -89,22 +103,16 @@ setup_species_equations( Uintah::ProblemSpecP specEqnParams,
                          bool computeKineticsJacobian )
 {
   std::vector<EqnTimestepAdaptorBase*> specEqns;
-
   const TagNames& tagNames = TagNames::self();
 
-  std::string canteraInputFileName, canteraGroupName;
-  specEqnParams->get("CanteraInputFile",canteraInputFileName);
-  specEqnParams->get("CanteraGroup",    canteraGroupName    );
-
-  CanteraObjects::Setup canteraSetup( "Mix", canteraInputFileName, canteraGroupName );
-  CanteraObjects::setup_cantera( canteraSetup );
+  setup_cantera( wasatchSpec );
 
   const int nspec = CanteraObjects::number_species();
 
   Expr::ExpressionFactory&   factory = *gc[ADVANCE_SOLUTION]->exprFactory;
   Expr::ExpressionFactory& icFactory = *gc[INITIALIZATION  ]->exprFactory;
 
-  const bool isLowMach =  Wasatch::flow_treatment() == LOWMACH;
+  const bool isLowMach = Wasatch::flow_treatment() == LOWMACH;
   Expr::Context context = isLowMach ? Expr::STATE_NP1 : Expr::STATE_NONE;
 
   Expr::TagList yiTags, yiInitTags;
