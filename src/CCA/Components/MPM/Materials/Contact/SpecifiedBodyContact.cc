@@ -196,83 +196,6 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   }
 }
 
-// find velocity from table of values
-Vector
-SpecifiedBodyContact::findValFromProfile(double t, 
-                                         vector<pair<double, Vector> > profile) const
-{
-  int smin = 0;
-  int smax = (int)(profile.size())-1;
-  double tmin = profile[0].first;
-  double tmax = profile[smax].first;
-  if(t<=tmin) {
-      return profile[0].second;
-  }
-  else if(t>=tmax) {
-      return profile[smax].second;
-  }
-  else {
-      // bisection search on table
-      // could probably speed this up by keeping copy of last successful
-      // search, and looking at that point and a couple to the right
-      //
-      while (smax>smin+1) {
-          int smid = (smin+smax)/2;
-          if(d_vel_profile[smid].first<t){
-            smin = smid;
-          }
-          else{
-            smax = smid;
-          }
-      }
-      double l  = (profile[smin+1].first-profile[smin].first);
-      double xi = (t-profile[smin].first)/l;
-      double vx = xi*profile[smin+1].second[0]+(1-xi)*profile[smin].second[0];
-      double vy = xi*profile[smin+1].second[1]+(1-xi)*profile[smin].second[1];
-      double vz = xi*profile[smin+1].second[2]+(1-xi)*profile[smin].second[2];
-      return Vector(vx,vy,vz);
-    }
-}
-
-#if 1
-// find velocity from table of values
-Vector
-SpecifiedBodyContact::findVelFromProfile(double t) const
-{
-  int smin = 0;
-  int smax = (int)(d_vel_profile.size())-1;
-  double tmin = d_vel_profile[0].first;
-  double tmax = d_vel_profile[smax].first;
-  if(t<=tmin) {
-      return d_vel_profile[0].second;
-  }
-  else if(t>=tmax) {
-      return d_vel_profile[smax].second;
-  }
-  else {
-      // bisection search on table
-      // could probably speed this up by keeping copy of last successful
-      // search, and looking at that point and a couple to the right
-      //
-      while (smax>smin+1) {
-          int smid = (smin+smax)/2;
-          if(d_vel_profile[smid].first<t){
-            smin = smid;
-          }
-          else{
-            smax = smid;
-          }
-      }
-      double l  = (d_vel_profile[smin+1].first-d_vel_profile[smin].first);
-      double xi = (t-d_vel_profile[smin].first)/l;
-      double vx = xi*d_vel_profile[smin+1].second[0]+(1-xi)*d_vel_profile[smin].second[0];
-      double vy = xi*d_vel_profile[smin+1].second[1]+(1-xi)*d_vel_profile[smin].second[1];
-      double vz = xi*d_vel_profile[smin+1].second[2]+(1-xi)*d_vel_profile[smin].second[2];
-      return Vector(vx,vy,vz);
-    }
-}
-#endif
-
 // apply boundary conditions to interpolated velocity v^k
 void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              const PatchSubset* patches,
@@ -280,6 +203,9 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+ cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact" 
+      << endl;
+#if 0
  if(d_oneOrTwoStep==2){
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
@@ -319,7 +245,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       rigid_velocity = false;
     } else if(d_vel_profile.size()>0) {
       requested_velocity = findValFromProfile(simTime, d_vel_profile);
-//      requested_velocity = findVelFromProfile(simTime);
       if(d_includeRotation){
         requested_origin = findValFromProfile(simTime, d_ori_profile);
         requested_omega  = findValFromProfile(simTime, d_rot_profile);
@@ -359,6 +284,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     }   // loop over nodes
   }     // loop over patches
  }   // if d_oneOrTwoStep
+#endif
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
@@ -416,7 +342,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     } else if(d_vel_profile.size()>0) {
       rigid_velocity = false;
       requested_velocity = findValFromProfile(simTime, d_vel_profile);
-//      requested_velocity = findVelFromProfile(simTime);
       if(d_includeRotation){
         requested_origin = findValFromProfile(simTime, d_ori_profile);
         requested_omega  = findValFromProfile(simTime, d_rot_profile);
@@ -527,3 +452,42 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
 }
+
+// find velocity from table of values
+Vector
+SpecifiedBodyContact::findValFromProfile(double t, 
+                                 vector<pair<double, Vector> > profile) const
+{
+  int smin = 0;
+  int smax = (int)(profile.size())-1;
+  double tmin = profile[0].first;
+  double tmax = profile[smax].first;
+  if(t<=tmin) {
+      return profile[0].second;
+  }
+  else if(t>=tmax) {
+      return profile[smax].second;
+  }
+  else {
+      // bisection search on table
+      // could probably speed this up by keeping copy of last successful
+      // search, and looking at that point and a couple to the right
+      //
+      while (smax>smin+1) {
+          int smid = (smin+smax)/2;
+          if(d_vel_profile[smid].first<t){
+            smin = smid;
+          }
+          else{
+            smax = smid;
+          }
+      }
+      double l  = (profile[smin+1].first-profile[smin].first);
+      double xi = (t-profile[smin].first)/l;
+      double vx = xi*profile[smin+1].second[0]+(1-xi)*profile[smin].second[0];
+      double vy = xi*profile[smin+1].second[1]+(1-xi)*profile[smin].second[1];
+      double vz = xi*profile[smin+1].second[2]+(1-xi)*profile[smin].second[2];
+      return Vector(vx,vy,vz);
+    }
+}
+

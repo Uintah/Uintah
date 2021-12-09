@@ -136,7 +136,6 @@ DESCRIPTION
     SpecifiedBodyContact(const SpecifiedBodyContact &con);
     SpecifiedBodyContact& operator=(const SpecifiedBodyContact &con);
          
-    Vector findVelFromProfile(double t) const;
     Vector findValFromProfile(double t, 
                         std::vector< std::pair<double, Vector> > profile) const;
     
