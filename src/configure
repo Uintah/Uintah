@@ -35192,7 +35192,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : Kokkos libraries and headers
 ## arg 3 : Kokkos_Core.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : kokkos
+## arg 5 : kokkoscore
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -35272,10 +35272,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "kokkos"; then
+if test -n "kokkoscore"; then
 
    found_framework=no
-   for lib in kokkos; do
+   for lib in kokkoscore; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -35570,7 +35570,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" kokkos; do
+  for i in "" kokkoscore; do
     if test -z "$i"; then
        continue
     fi
@@ -35707,7 +35707,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : Kokkos libraries and headers
 ## arg 3 : Kokkos_Core.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : kokkos
+## arg 5 : kokkoscore
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -35787,10 +35787,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "kokkos"; then
+if test -n "kokkoscore"; then
 
    found_framework=no
-   for lib in kokkos; do
+   for lib in kokkoscore; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -36085,7 +36085,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" kokkos; do
+  for i in "" kokkoscore; do
     if test -z "$i"; then
        continue
     fi
@@ -36388,11 +36388,11 @@ fi
 
 
 # Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
-#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100) and Volta (GV100) architectures  now (APH 10/16/18)
-if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \); then
+#   NOTE: We only support code generation for Kepler, Maxwell, Pascal (P100), Volta (GV100) and Ampere (A100) architectures  now (APH 10/16/18; JKH+MGM 12/10/21)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \) -a \( "$cuda_gencode" != "60" \) -a \( "$cuda_gencode" != "70" \) -a \( "$cuda_gencode" != "80" \); then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 60, 70 " "$LINENO" 5
+  as_fn_error $? "The specified value provided: \"--enable-gencode=$cuda_gencode\" is invalid, must be: 30, 35, 50, 52, 60, 70, 80 " "$LINENO" 5
 fi
 
 NVCC_CXXFLAGS="$NVCC_CXXFLAGS -arch=sm_$cuda_gencode"
