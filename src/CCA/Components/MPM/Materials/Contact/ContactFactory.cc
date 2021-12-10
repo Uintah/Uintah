@@ -30,6 +30,7 @@
 #include <CCA/Components/MPM/Materials/Contact/NodalSVFContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyFrictionContact.h>
+#include <CCA/Components/MPM/Materials/Contact/ApproachContact.h>
 #include <CCA/Components/MPM/Materials/Contact/CompositeContact.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -78,6 +79,10 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      }
      else if (con_type == "friction_bard") {
        contact_list->add(scinew FrictionContactBard(myworld,child,ss,lb,flag));
+       needNormals=true;
+     }
+     else if (con_type == "approach") {
+       contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
        needNormals=true;
      }
      else if (con_type == "specified_friction") {
