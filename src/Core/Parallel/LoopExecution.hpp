@@ -61,18 +61,12 @@ using std::min;
   namespace Kokkos {
     class Cuda {};
     class CudaSpace {};
+#if !defined( KOKKOS_ENABLE_OPENMPTARGET )
     namespace Experimental { 
       class OpenMPTarget {};
       class OpenMPTargetSpace {};
     }
-  }
-#elif !defined( KOKKOS_ENABLE_OPENMPTARGET )
-  // Kokkos OpenMPTarget (Intel GPU) is not included in this build. Create some stub types so these types at least exist.
-  namespace Kokkos {
-    namespace Experimental {
-      class OpenMPTarget {};
-      class OpenMPTargetSpace {};
-    }
+#endif
   }
 #elif !defined( KOKKOS_ENABLE_OPENMP )
   // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
@@ -80,10 +74,6 @@ using std::min;
   // and the Unified Scheduler is no longer used for GPU logic.  Brad P Jun 2018
   namespace Kokkos {
     class OpenMP {};
-    namespace Experimental {
-      class OpenMPTarget {};
-      class OpenMPTargetSpace {};
-    }
   }
 #endif
 #else //if defined( UINTAH_ENABLE_KOKKOS )
