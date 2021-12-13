@@ -53,11 +53,9 @@ FrictionContactLR::FrictionContactLR(const ProcessorGroup* myworld,
   : Contact(myworld, Mlb, MFlag, ps)
 {
   // Constructor
-  d_vol_const=0.;
   d_oneOrTwoStep = 2;
 
   ps->require("mu",d_mu);
-  ps->get("volume_constraint",d_vol_const);
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
 
   d_materialManager = d_sS;
@@ -81,7 +79,6 @@ void FrictionContactLR::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type", "friction_LR");
   contact_ps->appendElement("mu",                d_mu);
-  contact_ps->appendElement("volume_constraint", d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
   d_matls.outputProblemSpec(contact_ps);
 }
@@ -107,8 +104,7 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
 
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z();
+//    Vector dx = patch->dCell();
     constNCVariable<double> NC_CCweight;
     constNCVariable<int> alphaMaterial;
     constNCVariable<Vector> normAlphaToBeta;
@@ -150,71 +146,57 @@ void FrictionContactLR::exMomInterpolated(const ProcessorGroup*,
       if(alpha>=0){  // Only work on nodes where alpha!=-99
         centerOfMassVelocity/=centerOfMassMass;
 
-        if(flag->d_axisymmetric){
-          // Nodal volume isn't constant for axisymmetry
-          // volume = r*dr*dtheta*dy  (dtheta = 1 radian)
-          double r = min((patch->getNodePosition(c)).x(),.5*dx.x());
-          cell_vol =  r*dx.x()*dx.y();
-        }
+        // Loop over materials.  Only proceed if velocity field mass
+        // is nonzero (not numerical noise) and the difference from
+        // the centerOfMassVelocity is nonzero (More than one velocity
+        // field is contributing to grid vertex).
+        for(int n = 0; n < numMatls; n++){
+         if(!d_matls.requested(n)) continue;
+         if(n==alpha) continue;
+          double mass=gmass[n][c];
+          if(mass>1.e-16){ // There is mass of material beta at this node
+            // Check relative separation of the material prominence
+            double separation = gmatlprominence[n][c] - 
+                                gmatlprominence[alpha][c];
+            // If that separation is negative, the matls have overlapped
+            if(separation <= 0.0){
+             Vector deltaVelocity=gvelocity[n][c] - centerOfMassVelocity;
+             Vector normal = -1.0*normAlphaToBeta[c];
+             double normalDeltaVel=Dot(deltaVelocity,normal);
+             Vector Dv(0.,0.,0.);
+             if(normalDeltaVel > 0.0){
+               Vector normal_normaldV = normal*normalDeltaVel;
+               Vector dV_normalDV = deltaVelocity - normal_normaldV;
+               Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
+               double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+               double frictionCoefficient=
+                       Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
 
-        // Only apply contact if the node is full relative to a constraint
-        if((totalNodalVol/cell_vol) > d_vol_const){
-
-          // Loop over materials.  Only proceed if velocity field mass
-          // is nonzero (not numerical noise) and the difference from
-          // the centerOfMassVelocity is nonzero (More than one velocity
-          // field is contributing to grid vertex).
-          for(int n = 0; n < numMatls; n++){
-           if(!d_matls.requested(n)) continue;
-           if(n==alpha) continue;
-            double mass=gmass[n][c];
-            if(mass>1.e-16){ // There is mass of material beta at this node
-              // Check relative separation of the material prominence
-              double separation = gmatlprominence[n][c] - 
-                                  gmatlprominence[alpha][c];
-              // If that separation is negative, the matls have overlapped
-              if(separation <= 0.0){
-//              if(separation <= 0.01*dx.x()){
-               Vector deltaVelocity=gvelocity[n][c] - centerOfMassVelocity;
-               Vector normal = -1.0*normAlphaToBeta[c];
-               double normalDeltaVel=Dot(deltaVelocity,normal);
-               Vector Dv(0.,0.,0.);
-               if(normalDeltaVel > 0.0){
-                 Vector normal_normaldV = normal*normalDeltaVel;
-                 Vector dV_normalDV = deltaVelocity - normal_normaldV;
-                 Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
-                 double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
-                 double frictionCoefficient=
-                         Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
-
-                 // Calculate velocity change needed to enforce contact
-                 Dv = -normal_normaldV
-                   -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+               // Calculate velocity change needed to enforce contact
+               Dv = -normal_normaldV
+                 -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
 
 #if 0
-                // Define contact algorithm imposed strain, find maximum
-                Vector epsilon=(Dv/dx)*delT;
-                double epsilon_max=
-                  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-                if(!compare(epsilon_max,0.0)){
-                   epsilon_max *= Max(1.0, mass/(centerOfMassMass-mass));
- 
-                   // Scale velocity change if contact algorithm
-                   // imposed strain is too large.
-                   double ff=Min(epsilon_max,.5)/epsilon_max;
-                   Dv=Dv*ff;
-                }
+              // Define contact algorithm imposed strain, find maximum
+              Vector epsilon=(Dv/dx)*delT;
+              double epsilon_max=
+                Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+              if(!compare(epsilon_max,0.0)){
+                 epsilon_max *= Max(1.0, mass/(centerOfMassMass-mass));
+
+                 // Scale velocity change if contact algorithm
+                 // imposed strain is too large.
+                 double ff=Min(epsilon_max,.5)/epsilon_max;
+                 Dv=Dv*ff;
+              }
 #endif 
-//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
-//                Dv=Dv*ff;
-                Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
-                gvelocity[n][c]    +=Dv;
-                gvelocity[alpha][c]+=DvAlpha;
-              } // if (relative velocity) * normal < 0
-             }  // if separation
-            }   // if !compare && !compare
-          }     // matls
-        }       // if (volume constraint)
+              Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
+              gvelocity[n][c]    +=Dv;
+              gvelocity[alpha][c]+=DvAlpha;
+            } // if (relative velocity) * normal < 0
+           }  // if separation
+          }   // if !compare && !compare
+        }     // matls
       }         // if(alpha > 0)
     }           // NodeIterator
   }             // patches
@@ -241,8 +223,7 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z();
+//    Vector dx = patch->dCell();
     constNCVariable<double> NC_CCweight;
     constNCVariable<int> alphaMaterial;
     constNCVariable<Vector> normAlphaToBeta;
@@ -279,69 +260,58 @@ void FrictionContactLR::exMomIntegrated(const ProcessorGroup*,
 
       if(alpha>=0){  // Only work on nodes where alpha!=-99
         centerOfMassVelocity/=centerOfMassMass;
-        if(flag->d_axisymmetric){
-          // Nodal volume isn't constant for axisymmetry
-          // volume = r*dr*dtheta*dy  (dtheta = 1 radian)
-          double r = min((patch->getNodePosition(c)).x(),.5*dx.x());
-          cell_vol =  r*dx.x()*dx.y();
-        }
 
         // Only apply contact if the node is full relative to a constraint
-        if((totalNodalVol/cell_vol) > d_vol_const){
 
-          // Loop over materials.  Only proceed if velocity field mass
-          // is nonzero (not numerical noise) and the difference from
-          // the centerOfMassVelocity is nonzero (More than one velocity
-          // field is contributing to grid vertex).
-          for(int n = 0; n < numMatls; n++){
-           if(!d_matls.requested(n)) continue;
-           if(n==alpha) continue;
-            double mass=gmass[n][c];
-            if(mass>1.e-16){
-              double separation = gmatlprominence[n][c] - 
-                                  gmatlprominence[alpha][c];
-              if(separation <= 0.0){
-//              if(separation <= 0.01*dx.x()){
-               Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
-               Vector normal = -1.0*normAlphaToBeta[c];
-               double normalDeltaVel=Dot(deltaVelocity,normal);
-               Vector Dv(0.,0.,0.);
-               if(normalDeltaVel > 0.0){
+        // Loop over materials.  Only proceed if velocity field mass
+        // is nonzero (not numerical noise) and the difference from
+        // the centerOfMassVelocity is nonzero (More than one velocity
+        // field is contributing to grid vertex).
+        for(int n = 0; n < numMatls; n++){
+         if(!d_matls.requested(n)) continue;
+         if(n==alpha) continue;
+          double mass=gmass[n][c];
+          if(mass>1.e-16){
+            double separation = gmatlprominence[n][c] - 
+                                gmatlprominence[alpha][c];
+            if(separation <= 0.0){
+             Vector deltaVelocity=gvelocity_star[n][c] - centerOfMassVelocity;
+             Vector normal = -1.0*normAlphaToBeta[c];
+             double normalDeltaVel=Dot(deltaVelocity,normal);
+             Vector Dv(0.,0.,0.);
+             if(normalDeltaVel > 0.0){
 
-                Vector normal_normaldV = normal*normalDeltaVel;
-                Vector dV_normalDV = deltaVelocity - normal_normaldV;
-                Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
-                double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
-                double frictionCoefficient=
-                        Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
-                // Calculate velocity change needed to enforce contact
-                Dv = -normal_normaldV
-                     -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+              Vector normal_normaldV = normal*normalDeltaVel;
+              Vector dV_normalDV = deltaVelocity - normal_normaldV;
+              Vector surfaceTangent = dV_normalDV/(dV_normalDV.length()+1.e-100);
+              double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+              double frictionCoefficient=
+                      Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+              // Calculate velocity change needed to enforce contact
+              Dv = -normal_normaldV
+                   -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
 
 #if 0
-                // Define contact algorithm imposed strain, find maximum
-                Vector epsilon=(Dv/dx)*delT;
-                double epsilon_max=
-                  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
-                if(!compare(epsilon_max,0.0)){
-                  epsilon_max *= Max(1.0, mass/(centerOfMassMass-mass));
+              // Define contact algorithm imposed strain, find maximum
+              Vector epsilon=(Dv/dx)*delT;
+              double epsilon_max=
+                Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+              if(!compare(epsilon_max,0.0)){
+                epsilon_max *= Max(1.0, mass/(centerOfMassMass-mass));
 
-                  // Scale velocity change if contact algorithm
-                  // imposed strain is too large.
-                  double ff=Min(epsilon_max,.5)/epsilon_max;
-                  Dv=Dv*ff;
-                }
+                // Scale velocity change if contact algorithm
+                // imposed strain is too large.
+                double ff=Min(epsilon_max,.5)/epsilon_max;
+                Dv=Dv*ff;
+              }
 #endif 
-//                double ff = max(1.0,(.01*dx.x() - separation)/.01*dx.x());
-//                Dv=Dv*ff;
-                gvelocity_star[n][c]    +=Dv;
-                Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
-                gvelocity_star[alpha][c]+=DvAlpha;
-              }  // if (relative velocity) * normal < 0
-             }   // if separation
-            }    // if mass[beta] > 0
-          }      // matls
-        }        // if (volume constraint)
+              gvelocity_star[n][c]    +=Dv;
+              Vector DvAlpha = -Dv*gmass[n][c]/gmass[alpha][c];
+              gvelocity_star[alpha][c]+=DvAlpha;
+            }  // if (relative velocity) * normal < 0
+           }   // if separation
+          }    // if mass[beta] > 0
+        }      // matls
       }          // if(alpha > 0)
     }           // nodeiterator
   } // patches

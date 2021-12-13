@@ -120,7 +120,6 @@ DESCRIPTION
     int       d_material;
     int       NGP;
     int       NGN;
-    bool      d_NormalOnly;
     bool      d_includeRotation;
     double    d_mu;
     std::string    d_filename;

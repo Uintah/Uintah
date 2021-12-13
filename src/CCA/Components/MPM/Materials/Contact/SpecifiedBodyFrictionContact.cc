@@ -67,9 +67,6 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
 
-//  d_oneOrTwoStep = 2;
-//  ps->get("OneOrTwoStep",     d_oneOrTwoStep);
-
   ps->getWithDefault("include_rotation", d_includeRotation, false);
 
   if(d_filename!="") {
@@ -144,7 +141,6 @@ void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("stop_time",          d_stop_time);
   contact_ps->appendElement("mu",                 d_mu);
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
-//  contact_ps->appendElement("OneOrTwoStep",     d_oneOrTwoStep);
   contact_ps->appendElement("include_rotation",   d_includeRotation);
 
   d_matls.outputProblemSpec(contact_ps);
@@ -200,86 +196,6 @@ void SpecifiedBodyFrictionContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-#if 0
- if(d_oneOrTwoStep==2){
-  simTime_vartype simTime;
-  old_dw->get(simTime, lb->simulationTimeLabel);
-
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel, getLevel(patches));
-  
-  int numMatls = d_materialManager->getNumMatls( "MPM" );
-  ASSERTEQ(numMatls, matls->size());
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-
-    // Retrieve necessary data from DataWarehouse
-    std::vector<constNCVariable<double> > gmass(numMatls);
-    std::vector<     NCVariable<Vector> > gvelocity(numMatls);
-    std::vector<     NCVariable<double> > frictionWork(numMatls);
-    
-    for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
-      new_dw->get(gmass[m],           lb->gMassLabel, dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,     dwi, patch);
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi, patch);
-    }
-    
-    // three ways to get velocity 
-    //   if > stop time, always use stop velocity
-    //   if we have a specified profile, use value from the velocity profile
-    //   otherwise, apply rigid velocity to all cells that share a rigid body.
-
-    bool  rigid_velocity = true;
-    Vector requested_velocity(0.0, 0.0, 0.0);
-    Vector requested_origin(0.0, 0.0, 0.0);
-    Vector requested_omega(0.0, 0.0, 0.0);
-    if(simTime>d_stop_time) {
-      requested_velocity = d_vel_after_stop;
-      rigid_velocity = false;
-    } else if(d_vel_profile.size()>0) {
-      requested_velocity = findValFromProfile(simTime, d_vel_profile);
-      if(d_includeRotation){
-        requested_origin = findValFromProfile(simTime, d_ori_profile);
-        requested_omega  = findValFromProfile(simTime, d_rot_profile);
-      }
-      rigid_velocity  = false;
-    }
-
-//    Point origin = Point(0.,0.,0.);
-//    Vector omega = Vector(0.,0.,1.);
-
-    // Set each field's velocity equal to the requested velocity
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-
-      Point NodePos = patch->getNodePosition(c);
-      Vector r = NodePos - requested_origin.asPoint();
-      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
-      if(rigid_velocity) {
-        rigid_vel = gvelocity[d_material][c];
-      }
-
-      for(int n = 0; n < numMatls; n++){ // update rigid body here
-//        if(n==d_material) continue; 
-        if(!d_matls.requested(n)) continue;
-
-        // set each velocity component being modified to a new velocity
-        Vector new_vel( gvelocity[n][c] );
-        if(d_direction[0]) new_vel.x( rigid_vel.x() );
-        if(d_direction[1]) new_vel.y( rigid_vel.y() );
-        if(d_direction[2]) new_vel.z( rigid_vel.z() );
-        
-        // this is the updated velocity
-        if(!compare(gmass[d_material][c],0.)){
-          gvelocity[n][c] = new_vel;
-        }
-      } // loop over matls
-    }   // loop over nodes
-  }     // loop over patches
- }   // if d_oneOrTwoStep
-#endif
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
@@ -307,7 +223,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
 //    Vector dx = patch->dCell();
-//    double cell_vol = dx.x()*dx.y()*dx.z();
     constNCVariable<double> NC_CCweight;
     constNCVariable<int>    alphaMaterial;
     constNCVariable<Vector> normAlphaToBeta;
@@ -329,7 +244,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
     // rigid_velocity just means that the master_material's initial velocity
-    // remains constant through the simulation, until d_stop_time is reached
+    // remains constant through the simulation, until d_stop_time is reached.
     // If the velocity comes from a profile specified in a file, or after
     // d_stop_time, rigid_velocity is false
     bool  rigid_velocity = true;
@@ -365,19 +280,42 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
 
         for(int  n = 0; n < numMatls; n++){
           if(!d_matls.requested(n)) continue;
-          Vector new_vel(gvelocity_star[n][c]);
-          new_vel = gvelocity_star[n][c];
-          if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
-          if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
-          if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
+          Vector new_vel = rigid_vel;
 
-          if (!compare(gmass[d_material][c], 0.)) {
-            Vector old_vel = gvelocity_star[n][c];
+          if(n==d_material){
             gvelocity_star[n][c] =  new_vel;
-            //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
-            reaction_force  -= ginternalForce[n][c];
-            reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-          }  // if
+          } else if (!compare(gmass[d_material][c], 0.) &&
+                     !compare(gmass[n][c],0)) {
+            double separation = gmatlprominence[n][c] -
+                                gmatlprominence[alpha][c];
+            if(separation <= 0.0){
+              Vector old_vel = gvelocity_star[n][c];
+
+              Vector deltaVelocity=gvelocity_star[n][c] - new_vel;
+              Vector normal = -1.0*normAlphaToBeta[c];
+              double normalDeltaVel=Dot(deltaVelocity,normal);
+              Vector Dv(0.,0.,0.);
+              if(normalDeltaVel > 0.0){
+
+                Vector normal_normaldV = normal*normalDeltaVel;
+                Vector dV_normalDV = deltaVelocity - normal_normaldV;
+                Vector surfaceTangent = 
+                                   dV_normalDV/(dV_normalDV.length()+1.e-100);
+                double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
+                double frictionCoefficient=
+                        Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                // Calculate velocity change needed to enforce contact
+                Dv = -normal_normaldV
+                     -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
+
+                gvelocity_star[n][c]    +=Dv;
+
+                //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
+                reaction_force  -= ginternalForce[n][c];
+                reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+              }  // if normalDeltaVel > 0
+            }  // if separation
+          }  // if mass of both matls>0
         }    // for matls
       }
     }      // for Node Iterator
@@ -391,18 +329,6 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresInterpolated(
                                                        const PatchSet* patches,
                                                        const MaterialSet* ms) 
 {
-#if 0
-  Task * t = scinew Task("SpecifiedBodyFrictionContact::exMomInterpolated",
-                      this, &SpecifiedBodyFrictionContact::exMomInterpolated);
-  
-  const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW, lb->simulationTimeLabel);
-
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->modifies(             lb->gVelocityLabel,       mss);
-  
-  sched->addTask(t, patches, ms);
-#endif
 }
 
 void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
