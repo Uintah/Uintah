@@ -71,6 +71,13 @@ CompositeContact::initFriction(const ProcessorGroup*,
 }
 
 void
+CompositeContact::setContactMaterialAttributes()
+{
+  for (list<Contact*>::const_iterator it = d_m.begin(); it != d_m.end(); it++)
+    (*it)->setContactMaterialAttributes();
+}
+
+void
 CompositeContact::exMomInterpolated(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
@@ -90,10 +97,9 @@ CompositeContact::exMomIntegrated(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  for(list<Contact*>::iterator mit(d_m.begin());mit!=d_m.end();mit++)
-    {
+  for(list<Contact*>::iterator mit(d_m.begin());mit!=d_m.end();mit++) {
       (*mit)->exMomIntegrated(pg, patches, matls, old_dw, new_dw);
-    }
+  }
 }
 
 void

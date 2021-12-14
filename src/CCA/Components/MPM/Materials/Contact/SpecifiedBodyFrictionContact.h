@@ -141,6 +141,9 @@ DESCRIPTION
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 
+    // Currently, setting if any materials are rigid
+    virtual void setContactMaterialAttributes();
+
     // Basic contact methods
     virtual void exMomInterpolated(const ProcessorGroup*,
                                    const PatchSubset* patches,

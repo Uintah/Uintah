@@ -24,6 +24,7 @@
 
 // SpecifiedBodyFrictionContact.cc
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyFrictionContact.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
@@ -116,6 +117,7 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
   ps->getWithDefault("velocity_after_stop",d_vel_after_stop, Vector(0,0,0));
   
   d_materialManager = d_sS;
+
   lb = Mlb;
   flag = MFlag;
   if(flag->d_8or27==8){
@@ -127,8 +129,16 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
   }
 }
 
+
 SpecifiedBodyFrictionContact::~SpecifiedBodyFrictionContact()
 {
+}
+
+void SpecifiedBodyFrictionContact::setContactMaterialAttributes()
+{
+  MPMMaterial* mpm_matl = 
+         (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
+  mpm_matl->setIsRigid(true);
 }
 
 void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)

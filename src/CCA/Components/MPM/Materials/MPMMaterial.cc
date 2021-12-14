@@ -380,6 +380,11 @@ int MPMMaterial::nullGeomObject() const
   return -1;
 }
 
+void MPMMaterial::setIsRigid(const bool is_rigid)
+{
+  d_is_rigid=is_rigid;
+}
+
 bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;

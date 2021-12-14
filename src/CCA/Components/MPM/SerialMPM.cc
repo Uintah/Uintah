@@ -298,6 +298,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
+  contactModel->setContactMaterialAttributes();
+
   cohesiveZoneTasks = scinew CohesiveZoneTasks(m_materialManager, flags);
 
   cohesiveZoneTasks->cohesiveZoneProblemSetup(restart_mat_ps, flags);
@@ -5284,6 +5286,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     NCVariable<int> NumParticlesOnNode;
     NCVariable<Vector> normAlphaToBeta;
     std::vector<NCVariable<Int130> > ParticleList(numMPMMatls);
+    std::vector<bool> IsRigidMaterial(numMPMMatls);
 
     new_dw->allocateAndPut(alphaMaterial,  lb->gAlphaMaterialLabel,   0, patch);
     new_dw->allocateAndPut(normAlphaToBeta,lb->gNormAlphaToBetaLabel, 0, patch);
@@ -5310,6 +5313,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
       new_dw->allocateTemporary(ParticleList[m], patch);
+      IsRigidMaterial[m] = mpm_matl->getIsRigid();
     }
 
     // Here, find out two things:
@@ -5325,6 +5329,14 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
             // This is the alpha material, all other matls are beta
             alphaMaterial[c]=m;
             maxMass=gmass[m][c];
+          }
+        }
+      } // Loop over materials
+      
+      for(unsigned int m = 0; m < numMPMMatls; m++){
+        if(IsRigidMaterial[m]){
+          if(gmass[m][c] > 1.e-16){
+            alphaMaterial[c]=m;
           }
         }
       } // Loop over materials

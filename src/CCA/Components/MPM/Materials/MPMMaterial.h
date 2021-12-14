@@ -142,6 +142,7 @@ WARNING
    double getMeltTemperature() const;
 
    bool getIsRigid() const;
+   void setIsRigid(const bool is_rigid);
 
    double getSpecificHeat() const;
    double getThermalConductivity() const;

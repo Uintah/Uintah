@@ -94,6 +94,8 @@ WARNING
                            const MaterialSubset* matls,
                            DataWarehouse*,
                            DataWarehouse* new_dw);
+
+         void setContactMaterialAttributes();
          
       private: // hide
          CompositeContact(const CompositeContact &);
