@@ -32,7 +32,6 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 
 #include <iostream>
-using namespace LowCostIntegrator;
 
 PressureGuess::PressureGuess(const int order)
 :Expr::Expression<SpatialOps::SVolField>(),

@@ -244,7 +244,7 @@ namespace WasatchCore{
     OldVariable& oldVar = OldVariable::self();
   
     if( !factory.have_entry( tagNames.pressureguess ) && approx_order !=0){   
-      const Expr::ExpressionID pressureGuessId = factory.register_expression( new LowCostIntegrator::PressureGuess::Builder( tagNames.pressureguess, approx_order ));
+      const Expr::ExpressionID pressureGuessId = factory.register_expression( new PressureGuess::Builder( tagNames.pressureguess, approx_order ));
       oldVar.add_variables<SVolField>(ADVANCE_SOLUTION, tagNames.pressure, approx_order);
       // graphHelper.rootIDs.insert(pressureGuessId); // temporarly
       }
