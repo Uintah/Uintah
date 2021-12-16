@@ -54,7 +54,6 @@
  * This expression relies on pseudo-pressures from previous time levels.
  */
 
-namespace LowCostIntegrator{
 
 class PressureApproximationsHelper; //forward declaration
 
@@ -204,7 +203,5 @@ class RK3Approx: public PressureApproximationsInterface{
     }
 };
 
-
-}
 
 #endif // PRESSURE_GUESS
