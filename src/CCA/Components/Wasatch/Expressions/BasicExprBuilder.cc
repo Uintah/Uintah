@@ -1817,6 +1817,56 @@ namespace WasatchCore{
         graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
       }
     }
+
+    //___________________________________________________________
+    // parse and save old variables from the previous n timesteps
+    //___________________________________________________________
+    // loop over the blocks of OldVariables
+    for( Uintah::ProblemSpecP oldVarsParams = parser->findBlock("OldVariables");
+         oldVarsParams != nullptr;
+         oldVarsParams = oldVarsParams->findNextBlock("OldVariables") ){
+      
+      // reference to the old variable instance
+      OldVariable& oldVar = OldVariable::self();
+
+      // get the type of the fields to save and for how many timesteps 
+      std::string fieldType;
+      int last_n_steps = 0;
+      
+      oldVarsParams->getAttribute("type", fieldType);
+      oldVarsParams->getAttribute("last_n_steps",last_n_steps);
+
+      // get the graph category 
+      const Category cat = parse_tasklist(oldVarsParams,false);
+
+      // loop over the variables to save
+      for( Uintah::ProblemSpecP varTagParams = oldVarsParams->findBlock("save");
+          varTagParams != nullptr;
+          varTagParams = varTagParams->findNextBlock("save") ) {
+            
+            // get the name and the state of the variable
+            std::string varName, stateName;
+
+            varTagParams->getAttribute("name", varName);
+            varTagParams->getAttribute("state",stateName);
+            
+            // create a tag from the varName and stateName
+            const Expr::Tag oldVarTag( varName,  Expr::str2context(stateName));
+
+            // add variables to the oldVar instance based on the field type
+            switch( get_field_type(fieldType) ){
+              case SVOL : oldVar.add_variables< SVolField >( cat, oldVarTag, last_n_steps );  break;
+              case XVOL : oldVar.add_variables< XVolField >( cat, oldVarTag, last_n_steps );  break;
+              case YVOL : oldVar.add_variables< YVolField >( cat, oldVarTag, last_n_steps );  break;
+              case ZVOL : oldVar.add_variables< ZVolField >( cat, oldVarTag, last_n_steps );  break;
+              default:
+                std::ostringstream msg;
+                msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+                throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+          }
+    }
+
   }
   
   //------------------------------------------------------------------
