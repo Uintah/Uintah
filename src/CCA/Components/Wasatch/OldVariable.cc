@@ -90,7 +90,7 @@ namespace WasatchCore {
       // this part is used to avoid messing with "_old" suffix in existing code.
       // eventually this has to be changed to "_NM_0" 
       //----------------------------------------------------------------------------------------------------
-      if (splitted_name.back()!="old") new_name = old_name + delimiter + "old";
+      if (splitted_name.back()!="old" && splitted_name[1]!="NM") new_name = old_name + delimiter + "old";
       else if (splitted_name.back() =="old") new_name = splitted_name[0] + delimiter+"NM"+ delimiter + "1";
       //----------------------------------------------------------------------------------------------------
       else
