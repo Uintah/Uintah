@@ -1840,9 +1840,9 @@ namespace WasatchCore{
       const Category cat = parse_tasklist(oldVarsParams,false);
 
       // loop over the variables to save
-      for( Uintah::ProblemSpecP varTagParams = oldVarsParams->findBlock("save");
+      for( Uintah::ProblemSpecP varTagParams = oldVarsParams->findBlock("carry");
           varTagParams != nullptr;
-          varTagParams = varTagParams->findNextBlock("save") ) {
+          varTagParams = varTagParams->findNextBlock("carry") ) {
             
             // get the name and the state of the variable
             std::string varName, stateName;
