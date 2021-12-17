@@ -64,18 +64,9 @@ class RKPressureSchedulerInterface{
         this->RK_scheduler_helper_=RK_scheduler_helper;
     }
 
-    virtual void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ) = 0;
-    virtual void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ) = 0;
-    virtual void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ) = 0;
+    virtual void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var) = 0;
+    virtual void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var) = 0;
+    virtual void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var) = 0;
 };
 
 /**
@@ -92,30 +83,16 @@ class RKPressureSchedulerHelper{
     RKPressureSchedulerInterface * concrete_RK_scheduler_;
     public:
     std::vector<bool> d_i;
-    Uintah::SolverInterface& pressuerSolver;
-    const Uintah::VarLabel* matrixLabel;
-    const Uintah::VarLabel* pressureLabel;
-    const Uintah::VarLabel* prhsLabel;
     RKPressureSchedulerHelper(RKPressureSchedulerInterface * concrete_RK_scheduler, 
-                              std::vector<bool> projection_control_parameters,
-                              Uintah::SolverInterface& solver,
-                              const Uintah::VarLabel* matLabel,
-                              const Uintah::VarLabel* pLabel,
-                              const Uintah::VarLabel* prhsLabel) 
+                              std::vector<bool> projection_control_parameters) 
                               : concrete_RK_scheduler_(nullptr),
-                              d_i(projection_control_parameters),
-                              pressuerSolver(solver),
-                              matrixLabel(matLabel),
-                              pressureLabel(pLabel),
-                              prhsLabel(prhsLabel){
+                              d_i(projection_control_parameters)
+                              {
         this->transition_to(concrete_RK_scheduler);
     }
 
     ~RKPressureSchedulerHelper(){
         delete concrete_RK_scheduler_;
-        matrixLabel = nullptr;        // this class is not responsible of the destruction of matrixLabel
-        pressureLabel = nullptr;      // this class is not responsible of the destruction of pressureLabel
-        prhsLabel = nullptr;          // this class is not responsible of the destruction of prhsLabel
         }
     /**
      * @brief The RKPressureSchedulerHelper allows changing the concrete RKPressureScheduler object at runtime.
@@ -138,19 +115,17 @@ class RKPressureSchedulerHelper{
      * @param materials 
      * @param RKStage 
      */
-    void schedule(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
+    void schedule(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var,
                   const int RKStage ){
         switch (RKStage){
             case 1:
-            this->concrete_RK_scheduler_->schedule_stage_1(level,sched,materials,RKStage);
+            this->concrete_RK_scheduler_->schedule_stage_1(do_schedule_var, use_new_dw_var, is_first_solve_var);
             break;
             case 2:
-            this->concrete_RK_scheduler_->schedule_stage_2(level,sched,materials,RKStage);
+            this->concrete_RK_scheduler_->schedule_stage_2(do_schedule_var, use_new_dw_var, is_first_solve_var);
             break;
             case 3:
-            this->concrete_RK_scheduler_->schedule_stage_3(level,sched,materials,RKStage);
+            this->concrete_RK_scheduler_->schedule_stage_3(do_schedule_var, use_new_dw_var, is_first_solve_var);
             break;
         }
         
@@ -164,28 +139,24 @@ class RKPressureSchedulerHelper{
 
 class FEScheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 1"<<std::endl;
-
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::OldDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = true;
+        is_first_solve_var = true;
+        
         this->RK_scheduler_helper_->transition_to(new FEScheduler);
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){}
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){}
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
+        // will never reach this function
+    }
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
+        // will never reach this function
+    }
 };
 
 
@@ -196,62 +167,52 @@ class FEScheduler : public RKPressureSchedulerInterface{
  */
 class RK20Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"no pressure solve at stage 1"<<std::endl;
+        do_schedule_var = false;
+        use_new_dw_var = false;
+        is_first_solve_var = false;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 2"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = true;
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){}
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
+        // will never reach this function
+    }
 };
 
 class RK21Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 1"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::OldDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = false; // Uintah::Task::OldDW
+        is_first_solve_var = true;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 2"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  false);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
+        
         if (this->RK_scheduler_helper_->d_i[0])
             this->RK_scheduler_helper_->transition_to(new RK21Scheduler);
         else this->RK_scheduler_helper_->transition_to(new RK20Scheduler);
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage){}
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
+        // will never reach this function
+    }
 };
 
 /**
@@ -260,135 +221,105 @@ class RK21Scheduler : public RKPressureSchedulerInterface{
  */
 class RK300Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"no pressure solve at stage 1"<<std::endl;
+        do_schedule_var = false;
+        use_new_dw_var = false;
+        is_first_solve_var = false;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"no pressure solve at stage 2"<<std::endl;
+        do_schedule_var = false;
+        use_new_dw_var = false;
+        is_first_solve_var = false;
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 3"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  true);
-
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = true;
     }
 };
 
 class RK310Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 1"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::OldDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = false; // Uintah::Task::OldDW
+        is_first_solve_var = true;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"no pressure solve at stage 2"<<std::endl;
+        do_schedule_var = false;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 3"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  false);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
     }
 };
 
 class RK301Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"no pressure solve at stage 1"<<std::endl;
+        do_schedule_var = false;
+        use_new_dw_var = false; // Uintah::Task::OldDW
+        is_first_solve_var = false;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 2"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = true;
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 3"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  false);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
     }
 };
 
 class RK311Scheduler : public RKPressureSchedulerInterface{
     public:
-    void schedule_stage_1(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 1"<<std::endl;
-
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::OldDW,
-                                                                  true);
+        do_schedule_var = true;
+        use_new_dw_var = false; // Uintah::Task::OldDW
+        is_first_solve_var = true;
     }
 
-    void schedule_stage_2(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 2"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  false);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
     }
-    void schedule_stage_3(const Uintah::LevelP& level,
-                  Uintah::SchedulerP sched,
-                  const Uintah::MaterialSet* const materials,
-                  const int RKStage ){
+    void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
+    {
         std::cout<<"scheduling stage 3"<<std::endl;
-        this->RK_scheduler_helper_->pressuerSolver.scheduleSolve( level, sched, materials, this->RK_scheduler_helper_->matrixLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, true,
-                                                                  this->RK_scheduler_helper_->prhsLabel, Uintah::Task::NewDW,
-                                                                  this->RK_scheduler_helper_->pressureLabel, Uintah::Task::NewDW,
-                                                                  false);
+        do_schedule_var = true;
+        use_new_dw_var = true; // Uintah::Task::NewDW
+        is_first_solve_var = false;
 
         if (!this->RK_scheduler_helper_->d_i[0] && !this->RK_scheduler_helper_->d_i[1])
             this->RK_scheduler_helper_->transition_to(new RK300Scheduler);
