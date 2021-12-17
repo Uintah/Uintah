@@ -111,11 +111,11 @@ Pressure::Pressure( const std::string& pressureName,
 
   std::string timeIntegratorName = WasatchCore::Wasatch::get_timeIntegratorName();
   if (timeIntegratorName =="FE")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new FEScheduler,{true},solver_,matrixLabel_,pressureLabel_,prhsLabel_);  
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new FEScheduler,{true});  
   else if (timeIntegratorName =="RK2SSP")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK21Scheduler,{!WasatchCore::Wasatch::guess_stage_1()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK21Scheduler,{!WasatchCore::Wasatch::guess_stage_1()}); 
   else if (timeIntegratorName =="RK3SSP")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK311Scheduler,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()},solver_,matrixLabel_,pressureLabel_,prhsLabel_); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK311Scheduler,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()}); 
 }
 
 //--------------------------------------------------------------------
@@ -139,15 +139,21 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
   if (enforceSolvability_) {
     solver_.scheduleEnforceSolvability<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
   }
-
-  pressure_scheduler_helper_->schedule(level,sched,materials,RKStage);
+  bool do_schedule_, use_new_dw_, is_first_solve;
   
-  // old code for pressure schedule
-  // solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
-  //                        pressureLabel_, true,
-  //                        prhsLabel_, Uintah::Task::NewDW,
-  //                        pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
-  //                         RKStage == 1 ? true:false);
+  // pressure_scheduler_helper_ will set the values: 
+  // do_schedule_, use_new_dw_, is_first_solve
+  // based on the RKStage and the type of the integrator used
+  
+  pressure_scheduler_helper_->schedule(do_schedule_,use_new_dw_,is_first_solve,RKStage);
+  
+  if (do_schedule_)
+    solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
+                          pressureLabel_, true,
+                          prhsLabel_, Uintah::Task::NewDW, // always newdw
+                          pressureLabel_, use_new_dw_ ? Uintah::Task::NewDW : Uintah::Task::OldDW,
+                          is_first_solve); // is this the first solve
+
   if(useRefPressure_) {
     solver_.scheduleSetReferenceValue<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
   }
