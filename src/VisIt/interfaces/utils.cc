@@ -101,6 +101,12 @@ void copyComponents(double *dest, const int &src)
 }
 
 template <>
+void copyComponents(double *dest, const long64 &src)
+{
+  (*dest) = (double) src;
+}
+
+template <>
 void copyComponents(double *dest, const float &src)
 {
   (*dest) = (double) src;

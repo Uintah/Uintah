@@ -89,6 +89,9 @@ template <>
 void copyComponents(double *dest, const int &src);
 
 template <>
+void copyComponents(double *dest, const long64 &src);
+
+template <>
 void copyComponents(double *dest, const float &src);
 
 template <>
