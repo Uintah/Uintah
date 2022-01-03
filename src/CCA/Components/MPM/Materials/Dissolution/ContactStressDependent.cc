@@ -174,6 +174,9 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                         * exp(-d_Ea_clay/(d_R*d_temperature))
                         * 8.0*3.1536e19*d_timeConversionFactor;
       double rate_clay = 0.25*dL_dt*area;
+      // Limit the dissolution rate to take no more than 1% of a cell width
+      // in a single timestep
+      double limit = 0.01*dx.x();
 //      int numNodesMBRGT0 = 0;
 //      double mBRSum = 0.;
 //      double normtrac_mean = 0.;
@@ -208,10 +211,18 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             double surfClay = max(gSurfaceClay[md][c], 
                                   gSurfaceClay[inContactMatl][c]);
 
-            massBurnRate[md][c] += NC_CCweight[c]*rho*stressDiff*
-                                   (rate*(1.-surfClay)  + rate_clay*surfClay);
-            dLdt[md][c] += NC_CCweight[c]*stressDiff*
+            double dLdt_now = NC_CCweight[c]*stressDiff*
                                    (dL_dt*(1.-surfClay) + dL_dt_clay*surfClay);
+            double slowBurn = 1.0;
+            if(dLdt_now > limit){
+               slowBurn = limit/dLdt_now;
+            }
+            dLdt[md][c] += dLdt_now*slowBurn;
+
+            double massBurnRate_now = NC_CCweight[c]*rho*stressDiff*
+                                   (rate*(1.-surfClay)  + rate_clay*surfClay);
+            massBurnRate[md][c] += massBurnRate_now*slowBurn;
+
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 

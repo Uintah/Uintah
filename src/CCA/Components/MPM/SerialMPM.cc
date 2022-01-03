@@ -83,7 +83,9 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/OS/Dir.h>
 
+#include <dirent.h>
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -2454,8 +2456,10 @@ void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
 
    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
    for(unsigned int m = 0; m < numMPMMatls; m++){
-     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
-     cout << "MPM::Deleting Geometry Objects  matl: " << mpm_matl->getDWIndex() << "\n";
+     MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+     proc0cout << "MPM::Deleting Geometry Objects  matl: " 
+               << mpm_matl->getDWIndex() << "\n";
      mpm_matl->deleteGeomObjects();
    }
 }
@@ -4246,8 +4250,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     old_dw->get( OIMSV, lb->InitialMassSVLabel);
 
     if(timestep<=2){
-     cout << "timestep = " << timestep 
-          << ", oldTotalMass = " << oldTotalMass << endl;
+     proc0cout << "timestep = " << timestep 
+               << ", oldTotalMass = " << oldTotalMass << endl;
      OIMSV = oldTotalMass;
     }
 
@@ -6149,6 +6153,35 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //    std::vector<std::vector<int> > triInContact(numLSMatls);
     Matrix3 size; size.Identity();
 
+    std::ofstream OSS;
+    if(m_output->isOutputTimeStep()){
+      timeStep_vartype timeStep;
+      old_dw->get(timeStep, lb->timeStepLabel);
+      int timestep = timeStep;
+
+      string udaDir = m_output->getOutputLocation();
+      ostringstream tname;
+      tname << setw(5) << setfill('0') << timestep;
+      string tnames = tname.str();
+//      string pPath = udaDir + "/t" + tnames;
+      string pPath = udaDir + "/results_contacts";
+      DIR *check = opendir(pPath.c_str());
+      if ( check == nullptr ) {
+        cout << Parallel::getMPIRank()
+             << "results_contacts:Making directory " << pPath << endl;
+        MKDIR( pPath.c_str(), 0777 );
+      } else {
+        closedir(check);
+      }
+
+      stringstream pnum;
+      pnum << patch->getID();
+      string pnums = pnum.str();
+      string fname = pPath + "/TriContact." + pnums + "." + tnames;
+      cout << "fname  = " << fname  << endl;
+      OSS.open(fname.c_str());
+    }
+
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
       TriangleMaterial* t_matl0 = (TriangleMaterial *) 
                              m_materialManager->getMaterial("Triangle", tmo);
@@ -6378,6 +6411,18 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
               Vector tForceC  = -forceMag*triTriNormal[i]*areaC;
               totalContactArea += triAreaAtNodes[tmo][idx0][iu];
               totalContactAreaTri += 0.5*totalArea;
+
+              if(m_output->isOutputTimeStep()){
+                // triangle_ids[tmo][idx0] is the triangle that is penetrating
+                // iu is the vertex of the penetrating triangle
+                // triangle_ids[tmi][vecIdx] is the penetrated triangle
+                OSS << tmo << " " << tmi << " " << " "
+                    << triangle_ids[tmo][idx0] << " "
+                    << triangle_ids[tmi][vecIdx] << " "
+                    << iu << " " << 0.5*totalArea <<  " "
+                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+              }
+
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
 //                cout << "totalAreaA, closest  = " << 0.5*totalArea 
 //                     << " "                      << closest << endl;
@@ -6525,6 +6570,15 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 Vector tForceC  = -forceMag*triTriNormal[i]*areaC;
                 totalContactArea += triAreaAtNodes[tmo][idx0][iu];
                 totalContactAreaTri += 0.5*totalArea;
+
+                if(m_output->isOutputTimeStep()){
+                OSS << tmo << " " << tmi << " " << " "
+                    << triangle_ids[tmo][idx0] << " "
+                    << triangle_ids[tmi][vecIdx] << " "
+                    << iu << " " << 0.5*totalArea <<  " "
+                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+                }
+
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
 //                cout << "totalAreaA, closest  = " << 0.5*totalArea 
 //                     << " "                      << closest << endl;

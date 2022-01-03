@@ -249,6 +249,9 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     double B2 = d_initialData.B2;
     double Dam= d_initialData.D;
 
+    // limit the viscoplastic strain rate
+    double epsDotMax = 0.1/delT;
+
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -322,6 +325,8 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       // Compute scalar representation of the viscoplastic strain rate (Eq. 2.9)
       double epsDotBar_vp = A1*pow(vonMisesKach/G, n1) 
                           + A2*pow(vonMisesKach/G, n2);
+
+      epsDotBar_vp = min(epsDotBar_vp,epsDotMax);
 
 //      cout << "vonMisesKach = " << vonMisesKach << endl;
 //      cout << "epsDotBar_vp = " << epsDotBar_vp << endl;

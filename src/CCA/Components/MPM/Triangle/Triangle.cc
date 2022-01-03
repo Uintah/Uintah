@@ -160,8 +160,8 @@ Triangle::createTriangles(TriangleMaterial* matl,
     }
     totalArea+=ptArea[i];
     if(triangles[i].size() > 30){
-       cout << "Node " << i << " has " << triangles[i].size() 
-            << " triangles in grain " << trifilename << endl;
+       proc0cout << "Node " << i << " has " << triangles[i].size() 
+                 << " triangles in grain " << trifilename << endl;
     }
   } // for lines in the pts file
 

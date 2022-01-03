@@ -211,16 +211,16 @@ WARNING
           timePoint->require("time_Ma",                 time);
           if(d_BHE == "effectiveStress_bar"){
             timePoint->require("effectiveStress_bar",   Stress);
-            std::cout << "d_BHE = " << d_BHE << std::endl;
+            proc0cout << "d_BHE = " << d_BHE << std::endl;
           } else if(d_BHE == "sigma_h_bar"){
             timePoint->require("sigma_h_bar",           Stress);
-            std::cout << "d_bHE = " << d_BHE << std::endl;
+            proc0cout << "d_bHE = " << d_BHE << std::endl;
           } else if(d_BHE == "sigma_H_bar"){
             timePoint->require("sigma_H_bar",           Stress);
-            std::cout << "d_BhE = " << d_BHE << std::endl;
+            proc0cout << "d_BhE = " << d_BHE << std::endl;
           } else if(d_BHE == "sigma_V_bar"){
             timePoint->require("sigma_V_bar",           Stress);
-            std::cout << "d_BHe = " << d_BHE << std::endl;
+            proc0cout << "d_BHe = " << d_BHE << std::endl;
           }
           timePoint->getWithDefault("UintahDissolutionTime", UDT, 0);
 
