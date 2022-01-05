@@ -230,7 +230,7 @@ printTask( const PatchSubset * patches
     msg.width(50);
     msg << where;
     
-    if ( patches->empty() ){
+    if ( patches == nullptr || patches->empty() ){
       msg << "  \tEmpty patch subset";
     } 
     else {
@@ -258,7 +258,7 @@ printTask( const PatchSubset * patches
     msg.width(50);
     msg << where;
     
-    if ( patches->empty() ){
+    if ( patches == nullptr || patches->empty() ){
       msg << "  \tEmpty patch subset";
     } 
     else {
