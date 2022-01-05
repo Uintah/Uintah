@@ -71,7 +71,7 @@ class DetailedTask;
  ****************************************/
 
 class Task {
- 
+
 public: // class Task
 
   enum CallBackEvent
@@ -81,7 +81,7 @@ public: // class Task
     , GPU      // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
     , postGPU  // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
   };
- 
+
 
 protected: // class Task
 
@@ -283,12 +283,13 @@ public: // class Task
 
   enum TaskType {
       Normal
-    , Reduction
+    , Reduction             // tasks with MPI reductions
     , InitialSend
-    , OncePerProc // make sure to pass a PerProcessor PatchSet to the addTask function
+    , OncePerProc           // make sure to pass a PerProcessor PatchSet to the addTask function
     , Output
-    , Spatial     // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
-    , Hypre       // previously identified as a OncePerProc
+    , OutputGlobalVars   // task the outputs the reduction variables
+    , Spatial               // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Hypre
   };
 
 
@@ -793,7 +794,7 @@ public: // class Task
   //////////
   // Prints out all information about the task, including dependencies
   void displayAll_DOUT( Uintah::Dout& dbg) const;
-  
+
   void displayAll( std::ostream & out ) const;
 
   int mapDataWarehouse( WhichDW dw ) const;
@@ -808,6 +809,7 @@ public: // class Task
 
   void setSets( const PatchSet * patches, const MaterialSet * matls );
 
+  static const MaterialSubset* getGlobalMatlSubset();
 
 private: // class Task
 
@@ -832,7 +834,7 @@ protected: // class Task
   Task& operator=( Task && )      = delete;
 
 
-  static const MaterialSubset* getGlobalMatlSubset();
+
 
   static MaterialSubset* globalMatlSubset;
 

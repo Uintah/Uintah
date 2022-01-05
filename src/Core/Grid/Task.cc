@@ -366,7 +366,7 @@ Task::requires(       WhichDW          dw
               )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  
+
   if(vartype == TypeDescription::ReductionVariable) {
     requires(dw, var, (const Level*) nullptr, matls, NormalDomain, oldTG);
   }
@@ -404,10 +404,10 @@ void Task::requires(       WhichDW              dw
     else if (matls->size() == 0) {
       return;  // no materials, no dependency
     }
-    
+
     Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
     dep->m_next = nullptr;
-    
+
     if (m_req_tail) {
       m_req_tail->m_next = dep;
     }
@@ -415,7 +415,7 @@ void Task::requires(       WhichDW              dw
       m_req_head = dep;
     }
     m_req_tail = dep;
-    
+
     if (dw == OldDW) {
       m_requires_old_dw.insert(std::make_pair(var, dep));
     }
@@ -728,7 +728,7 @@ bool Task::hasRequires( const VarLabel  * var
     depMap = m_requires_old_dw;
   }
 
-  Dependency* dep = isInDepMap(depMap, var, matlIndex, patch);  
+  Dependency* dep = isInDepMap(depMap, var, matlIndex, patch);
 
 
   if (dep) {
@@ -737,7 +737,7 @@ bool Task::hasRequires( const VarLabel  * var
 
     Patch::getGhostOffsets(var->typeDescription()->getType(), dep->m_gtype, dep->m_num_ghost_cells,
                            allowableLowOffset, allowableHighOffset);
-                           
+
     return ((Max(allowableLowOffset, lowOffset) == allowableLowOffset) &&
             (Max(allowableHighOffset, highOffset) == allowableHighOffset));
   }
@@ -916,7 +916,7 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset * domainPatches) const
   case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
     return PatchSubset::intersection(m_patches, domainPatches);
   case Task::CoarseLevel:
-  case Task::FineLevel:      
+  case Task::FineLevel:
     return getOtherLevelPatchSubset(m_patches_dom, m_level_offset, m_patches, domainPatches, m_num_ghost_cells);
   default:
     SCI_THROW(InternalError(std::string("Unknown patch domain ") + " type " +
@@ -1010,7 +1010,7 @@ Task::display( std::ostream & out ) const
   }
 
   out << " (" << d_tasktype << ")";
- 
+
   if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output ) && m_patch_set != nullptr) {
     out << ", Level " << getLevel(m_patch_set)->getIndex();
   }
@@ -1165,7 +1165,7 @@ operator <<( std::ostream & out, const Uintah::Task::Dependency & dep )
   out << "]";
   return out;
 }
-  
+
 //______________________________________________________________________
 //
 std::ostream &
@@ -1174,7 +1174,7 @@ operator <<( std::ostream & out, const Task & task )
   task.display(out);
   return out;
 }
-  
+
 //______________________________________________________________________
 //
 std::ostream&
@@ -1183,6 +1183,9 @@ operator <<( std::ostream & out, const Task::TaskType & tt )
   switch (tt) {
     case Task::Normal :
       out << "Normal";
+      break;
+    case Task::OutputGlobalVars :
+      out << "OutputGlobalVars";
       break;
     case Task::Reduction :
       out << "Reduction";

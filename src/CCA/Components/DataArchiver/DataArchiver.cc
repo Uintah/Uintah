@@ -88,11 +88,15 @@
 #undef  XML_TEXTWRITER
 
 using namespace Uintah;
+
+namespace Uintah {
+  //  Used externally, keep them visible outside this unit
+  Dout g_DA_dbg( "DataArchiver_DBG", "DataArchiver", "general debug information"  , false );
+}
+
 using namespace std;
 
 namespace {
-  Dout g_DA_dbg( "DataArchiver_DBG", "DataArchiver", "general debug information"  , false );
-
 #ifdef HAVE_PIDX
   DebugStream dbgPIDX ("DataArchiverPIDX", "DataArchiver", "Data archiver PIDX debug stream", false);
 #endif
@@ -1126,32 +1130,32 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
   const double delT = m_application->getDelT();
 
   //__________________________________
-  //  Schedule non-checkpoint output task
+  //  Schedule output for non-checkpoint, grid, particle, reduction/sole variables
   if( (delT != 0.0 || m_outputInitTimeStep) &&
       (m_outputInterval > 0.0 ||
        m_outputTimeStepInterval > 0) ) {
 
     printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputGlobalVars");
 
-    Task* task = scinew Task( "DataArchiver::outputGlobalVars",
-                              this, &DataArchiver::outputGlobalVars );
+    Task* task = scinew Task( "DataArchiver::outputGlobalVars",this, 
+                              &DataArchiver::outputGlobalVars );
 
     for( int i=0; i<(int)m_saveGlobalLabels.size(); ++i) {
       SaveItem& saveItem = m_saveGlobalLabels[i];
-      const VarLabel* var = saveItem.label;
 
-      const MaterialSubset* matls = saveItem.getMaterialSubset(0);
-      task->requires( Task::NewDW, var, matls, true );
+      const MaterialSubset* mss = saveItem.getMaterialSubset(0);
+      task->requires( Task::NewDW, saveItem.label, mss, true);
     }
 
-    sched->addTask(task, nullptr, nullptr);
+    task->setType( Task::OutputGlobalVars ); 
+    sched->addTask(task, nullptr , nullptr);
 
     // schedule task for non-global variables
     sched_outputVariables( m_saveLabels, grid, sched, false );
   }
 
   //__________________________________
-  //  Schedule checkpoint (reduction/sole variables)
+  //  Schedule output for a checkpoint 
   if( delT != 0.0 &&                       // m_checkpointCycle > 0 &&
       ( m_checkpointInterval > 0 ||
         m_checkpointTimeStepInterval > 0 ||
@@ -1159,15 +1163,14 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
 
     printSchedule( nullptr, g_DA_dbg, "DataArchiver::sched_outputVariables (CheckpointGlobal)" );
 
-    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",
-                              this, &DataArchiver::outputVariables, CHECKPOINT_GLOBAL );
+    Task* task = scinew Task( "DataArchiver::outputVariables (CheckpointGlobal)",this, 
+                              &DataArchiver::outputVariables, CHECKPOINT_GLOBAL );
 
     for( int i = 0; i < (int) m_checkpointGlobalLabels.size(); i++ ) {
-      SaveItem& saveItem = m_checkpointGlobalLabels[ i ];
-      const VarLabel* var = saveItem.label;
-      const MaterialSubset* matls = saveItem.getMaterialSubset(0);
+      SaveItem& saveItem = m_checkpointGlobalLabels[i];
 
-      task->requires(Task::NewDW, var, matls, true);
+      const MaterialSubset* mss = saveItem.getMaterialSubset(0);
+      task->requires(Task::NewDW, saveItem.label, mss, true);
     }
 
     sched->addTask(task, nullptr, nullptr);
@@ -2433,7 +2436,9 @@ DataArchiver::writeGridTextWriter( const bool hasGlobals,
 //______________________________________________________________________
 //
 void
-DataArchiver::writeDataTextWriter( const bool hasGlobals, const string & data_path, const GridP & grid,
+DataArchiver::writeDataTextWriter( const bool hasGlobals,
+                                   const string & data_path,
+                                   const GridP & grid,
                                    const vector< vector<bool> > & procOnLevel )
 {
   int                   numLevels = grid->numLevels();
@@ -2507,7 +2512,6 @@ DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
     ///// hacking: add in a dummy requirement to make the checkpoint
     //             task dependent on the IO task so that they run in a
     //             deterministic order
-#if 1
     if( isThisCheckpoint ) {
       Ghost::GhostType  gn  = Ghost::None;
       task->requires( Task::NewDW, m_sync_io_label, gn, 0 );
@@ -2515,15 +2519,14 @@ DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
     else {
       task->computes( m_sync_io_label );
     }
-#endif
 
     //__________________________________
     //
     for( vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter != saveLabels.end(); ++saveIter ) {
-      const MaterialSubset* matls = saveIter->getMaterialSubset( level.get_rep() );
+      const MaterialSubset* matlSubset = saveIter->getMaterialSubset( level.get_rep() );
 
-      if ( matls != nullptr ) {
-        task->requires( Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true );
+      if ( matlSubset != nullptr ) {
+        task->requires( Task::NewDW, (*saveIter).label, matlSubset, Task::OutOfDomain, Ghost::None, 0, true );
 
         // Do not scrub any variables that are saved so they can be
         // accessed at any time after all of the tasks are finished.
@@ -3858,8 +3861,6 @@ DataArchiver::initSaveLabels( SchedulerP & sched,
 
     for ( ConsecutiveRangeSet::iterator iter = saveLabel.levels.begin(); iter != saveLabel.levels.end(); ++iter ) {
       const int levelIndex = *iter;
-
-
 
       ConsecutiveRangeSet matlsToSave = ( ConsecutiveRangeSet( (*found).second ) ).intersected( saveLabel.matls );
       saveItem.setMaterials( levelIndex, matlsToSave, m_prevMatls, m_prevMatlSet );
