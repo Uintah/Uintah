@@ -419,19 +419,22 @@ MPIScheduler::postMPISends( DetailedTask * dtask
      // if an output or checkpoint time step or not. Not sure that is
      // desired but not sure of the effect of not calling it and doing
      // an out of sync output or checkpoint.
-     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output &&
-         !m_output->isOutputTimeStep() && !m_output->isCheckpointTimeStep()) {
+     if (req->m_to_tasks.front()->getTask()->getType() == Task::Output
+         && !m_output->isOutputTimeStep() 
+         && !m_output->isCheckpointTimeStep()) {
        DOUTR(g_dbg, "   Ignoring non-output-timestep send for " << *req);
        continue;
      }
 
       OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
 
-      DOUTR(g_dbg, " --> sending " << *req << ", ghost type: " << "\""
-               << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
-               << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
-               << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
-               << ", from dw " << dw->getID());
+      DOUTR(g_dbg, " --> sending " << *req );
+      DOUTR(g_dbg, "     From task: " << batch->m_from_task->getName() );
+      DOUTR(g_dbg, "     To task:   " << req->m_to_tasks.front()->getTask()->getName() << " and  rank " << to);  
+      DOUTR(g_dbg, "     ghost type: " << Ghost::getGhostTypeName(req->m_req->m_gtype)
+                   << ", num req ghost: " << req->m_req->m_num_ghost_cells
+                   << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype)
+                   << ", from dw " << dw->getID());
 
       // the load balancer is used to determine where data was in the
       // old DW on the prev timestep, so pass it in if the particle
@@ -440,7 +443,7 @@ MPIScheduler::postMPISends( DetailedTask * dtask
       OnDemandDataWarehouse * posDW;
 
       if( !m_reloc_new_pos_label && m_parent_scheduler ) {
-        posDW = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW    = m_dws[req->m_req->m_task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = m_parent_scheduler->m_reloc_new_pos_label;
       }
       else {
@@ -460,10 +463,14 @@ MPIScheduler::postMPISends( DetailedTask * dtask
         top = top->m_parent_scheduler;
       }
 
+
       dw->sendMPI( batch, posLabel, mpibuff, posDW, req, m_loadBalancer );
     }
 
+
+    //__________________________________
     // Post the send
+    
     if (mpibuff.count() > 0) {
       ASSERT(batch->m_message_tag > 0);
       void* buf = nullptr;
@@ -505,7 +512,6 @@ MPIScheduler::postMPISends( DetailedTask * dtask
   }  // end for (DependencyBatch* batch = task->getComputes())
 
   send_timer.stop();
-
   {
     std::lock_guard<Uintah::MasterLock> send_time_lock(g_send_time_mutex);
     m_mpi_info[TotalSend] += send_timer().seconds();
@@ -546,6 +552,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
   std::vector<DependencyBatch*> sorted_reqs;
   std::map<DependencyBatch*, DependencyBatch*>::const_iterator iter = dtask->getRequires().cbegin();
   for (; iter != dtask->getRequires().cend(); ++iter) {
+  //  std::cout << " counter " << std::endl;
     sorted_reqs.push_back(iter->first);
   }
 
@@ -621,16 +628,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         // if an output or checkpoint time step or not. Not sure that is
         // desired but not sure of the effect of not calling it and doing
         // an out of sync output or checkpoint.
-        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output->isOutputTimeStep()
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output 
+            && !m_output->isOutputTimeStep()
             && !m_output->isCheckpointTimeStep()) {
           DOUTR(g_dbg, "   Ignoring non-output-timestep receive for " << *req);
           continue;
         }
 
-        DOUTR(g_dbg,  " <-- receiving " << *req << ", ghost type: " << "\""
-                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << "\", " << "num req ghost "
-                      << Ghost::getGhostTypeName(req->m_req->m_gtype) << ": " << req->m_req->m_num_ghost_cells
-                      << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) << ", into dw " << dw->getID());
+        DOUTR(g_dbg,  " <-- receiving "     << *req );
+        DOUTR(g_dbg, "     From task: "     << batch->m_from_task->getName() );
+        DOUTR(g_dbg, "     ghost type: "    << Ghost::getGhostTypeName(req->m_req->m_gtype) 
+                      << ", num req ghost " << req->m_req->m_num_ghost_cells
+                      << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->m_req->m_gtype) 
+                      << ", into dw "       << dw->getID());
 
         OnDemandDataWarehouse* posDW;
 
@@ -663,7 +673,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
         }
       }
 
+      //__________________________________
       // Post the receive
+      
       if ( mpibuff.count() > 0 ) {
 
         ASSERT(batch->m_message_tag > 0);
@@ -712,7 +724,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask * dtask
 
     recv_timer.stop();
 
-  }
+  }  // lock
 
 
   {
