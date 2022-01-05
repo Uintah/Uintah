@@ -962,7 +962,7 @@ SchedulerCommon::addTask(       Task        * task
                                  << " on level " << levelidx << ", DW " << dw);
 
       std::ostringstream taskname;
-      taskname << "Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
+      taskname << "SchedulerCommon::Reduction: " << dep->m_var->getName() << ", level " << levelidx << ", dw " << dw;
 
       Task* reduction_task = scinew Task(taskname.str(), Task::Reduction);
       
