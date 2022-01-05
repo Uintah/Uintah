@@ -82,7 +82,7 @@ using namespace Uintah;
 namespace Uintah {
 
   extern Dout g_mpi_dbg;
-
+  extern Dout g_DA_dbg;
 #ifdef HAVE_CUDA
   extern DebugStream gpudbg;
 #endif
@@ -990,6 +990,12 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
 
     ReductionVariableBase* var;
 
+    // debugging info
+    int levelIndx = level ? level->getIndex() : -1;
+    DOUTR(g_mpi_dbg, " DW:reduceMPI label: " << label->getName() << " matlIndex " << matlIndex << " level: " 
+          << levelIndx << " exists: " <<  m_level_DB.exists( label, matlIndex, level ) );
+
+
     if( m_level_DB.exists( label, matlIndex, level ) ) {
       var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     }
@@ -998,7 +1004,6 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
       var = dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
       var->setBenignValue();
 
-      DOUT(g_mpi_dbg, "Rank-" << d_myworld->myRank() << " reduceMPI: initializing (" <<label->getName() <<")" );
       m_level_DB.put( label, matlIndex, level, var, d_scheduler->copyTimestep(), true );
     }
 
@@ -1090,6 +1095,7 @@ OnDemandDataWarehouse::put( const ReductionVariableBase & var
   // Put it in the database
   bool init = (d_scheduler->copyTimestep()) || !(m_level_DB.exists( label, matlIndex, level ));
   m_level_DB.putReduce( label, matlIndex, level, var.clone(), init );
+
 }
 
 //______________________________________________________________________
@@ -2744,6 +2750,15 @@ OnDemandDataWarehouse::print(       std::ostream & intout
     checkGetAccess( label, matlIndex, nullptr );
     ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     var->print( intout );
+    
+    // Debugging output   
+    if( g_DA_dbg.active() ){
+      std::ostringstream me;
+      var->print( me );
+
+      int levelIndx = level ? level->getIndex() : -1;
+      DOUTR(true, " OnDemandDataWarehouse::print " << label->getName() << " matl: "<< matlIndex << " "  << me.str() << " level: " << levelIndx ); 
+    }
   }
   catch( UnknownVariable& ) {
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on print ", __FILE__, __LINE__) );
