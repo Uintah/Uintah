@@ -5047,19 +5047,21 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         Vector surf(0.0,0.0,0.0);
   
         double sumSk=0.0;
+        Vector gSN(0.,0.,0.);
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < NN; k++){
           IntVector node = ni[k];
           vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
           sumSk += gmass[adv_matl][node]*S[k];
           surf   -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+          gSN   += gSurfNorm[adv_matl][node]*S[k];
         }
         if(sumSk > 1.e-90){
           // This is the normal condition, when at least one of the nodes
           // influencing a tracer has mass on it.
           vel/=sumSk;
           tx_new[idx] = tx[idx] + vel*delT;
-          tx_new[idx] += surf*delT;
+          tx_new[idx] += (surf/gSN.length())*delT;
         } else {
             // This is the "just in case" instance that none of the nodes
             // influencing a vertex has mass on it.  In this case, use an
@@ -5940,12 +5942,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           Vector vel(0.0,0.0,0.0);
           Vector surf(0.0,0.0,0.0);
           double sumSk=0.0;
+          Vector gSN(0.,0.,0.);
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
             vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
             sumSk += gmass[adv_matl][node]*S[k];
             surf  -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            gSN   += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
           }
 
@@ -5954,7 +5958,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             // influencing a vertex has mass on it.
             vel/=sumSk;
             P[itv] += vel*delT;
-            P[itv] += surf*delT;
+            P[itv] += (surf/gSN.length())*delT;
             vertexVel[itv] = vel + surf;
             populatedVertex[itv] = 1.;
           } else {
@@ -6071,6 +6075,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       } // Outer loop over triangles for vertex area calculation
 #endif
     }  // matls
+
     delete interpolator;
   }    // patches
 }
@@ -6167,8 +6172,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       string pPath = udaDir + "/results_contacts";
       DIR *check = opendir(pPath.c_str());
       if ( check == nullptr ) {
-        cout << Parallel::getMPIRank()
-             << "results_contacts:Making directory " << pPath << endl;
+//        cout << Parallel::getMPIRank()
+//             << "results_contacts:Making directory " << pPath << endl;
         MKDIR( pPath.c_str(), 0777 );
       } else {
         closedir(check);
@@ -6178,7 +6183,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       pnum << patch->getID();
       string pnums = pnum.str();
       string fname = pPath + "/TriContact." + pnums + "." + tnames;
-      cout << "fname  = " << fname  << endl;
+//      cout << "fname  = " << fname  << endl;
       OSS.open(fname.c_str());
     }
 
