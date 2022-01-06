@@ -4364,6 +4364,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       if(flags->d_XPIC2){
         new_dw->get(gvelSPSSP,     lb->gVelSPSSPLabel,       dwi,patch,gac,NGP);
+      } else{
+        NCVariable<Vector> gvelSPSSP_create;
+        new_dw->allocateTemporary(gvelSPSSP_create,              patch,gac,NGP);
+        gvelSPSSP_create.initialize(Vector(0.,0.,0.));
+        gvelSPSSP = gvelSPSSP_create;               // reference created data
       }
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
@@ -4390,6 +4395,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double Cp=mpm_matl->getSpecificHeat();
       Vector dx = patch->dCell();
 
+      double useXPIC=0.;
+
       // The following logic is intended to turn on every 10th dissolution step
       // For problems not involving dissolution, or during phases of the
       // dissolution simulation where dissolution isn't happening, XPIC is
@@ -4399,229 +4406,118 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          (flags->d_XPIC2 && 
           flags->d_currentPhase=="dissolution" && flags->d_doingDissolution 
                                         && timestep%10==1)){
-        // Loop over particles
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
+        useXPIC=1.0;
+      }
+      // Loop over particles
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
 
-          // Get the node indices that surround the cell
-          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                    pcursize[idx]);
-          Vector vel(0.0,0.0,0.0);
-          Vector velSSPSSP(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          Vector pSN(0.0,0.0,0.0);
-          double tempRate = 0.0;
-          double burnFraction = 0.0;
+        // Get the node indices that surround the cell
+        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                  pcursize[idx]);
+        Vector vel(0.0,0.0,0.0);
+        Vector velSSPSSP(0.0,0.0,0.0);
+        Vector acc(0.0,0.0,0.0);
+        Vector pSN(0.0,0.0,0.0);
+        double tempRate = 0.0;
+        double burnFraction = 0.0;
 
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel      += gvelocity_star[node]  * S[k];
-            velSSPSSP+= gvelSPSSP[node]       * S[k];
-            acc      += gacceleration[node]   * S[k];
-            pSN      += gSurfNorm[node]       * S[k];
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < NN; k++) {
+          IntVector node = ni[k];
+          vel      += gvelocity_star[node]  * S[k];
+          velSSPSSP+= gvelSPSSP[node]       * S[k];
+          acc      += gacceleration[node]   * S[k];
+          pSN      += gSurfNorm[node]       * S[k];
 
-            tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
-            burnFraction += massBurnFrac[node]  * S[k];
-          }
-
-          // Update particle vel and pos using Nairn's XPIC(2) method
-          pxnew[idx] = px[idx]    + vel*delT
-                     - 0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
-                                                       + velSSPSSP)*delT;
-          pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
-          pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
-          pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
-          pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-          if (flags->d_doingDissolution){
-            if(pSurf[idx]>=0.99 && burnFraction != 0.0){
-              // Normalize particle surface normal
-              double pSNL=pSN.length();
-              if(pSNL > 0.0){
-                 pSN = pSN/pSNL;
-              }
-              int maxDir = 0; double maxComp=fabs(pSN.x());
-              for(int i = 1; i<3; i++){
-                if(fabs(pSN[i])>maxComp){
-                  maxComp=fabs(pSN[i]);
-                  maxDir=i;
-                }
-              }
-              int maxDirP1 = (maxDir+1)%3;
-              int maxDirP2 = (maxDir+2)%3;
-              pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
-              double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
-              Vector L[3];
-              double Ll[3];
-              double dL[3];
-              double pSNdotL[3];
-              for(int i=0;i<3;i++){
-                L[i]=Vector(psize[idx](0,i),psize[idx](1,i),psize[idx](2,i));
-                Ll[i] = L[i].length();
-
-                L[i]/=Ll[i];
-                pSNdotL[i] = fabs(Dot(pSN,L[i]));
-              }
-
-              double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
-              double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
-
-              dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
-                                         (Ll[maxDirP1]*Ll[maxDirP2] 
-                                   + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
-                                   + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
-
-              dL[maxDirP1] = dL1overdL0*dL[maxDir];
-              dL[maxDirP2] = dL2overdL0*dL[maxDir];
-              L[maxDir]   *= (Ll[maxDir]   - dL[maxDir]);
-              L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
-              L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
-
-              psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
-                                      L[0].y(), L[1].y(), L[2].y(),
-                                      L[0].z(), L[1].z(), L[2].z());
-
-              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
-                                           dL[1]*dx.y()*pSN.y(),
-                                           dL[2]*dx.z()*pSN.z());
-              pxnew[idx] = pxnew[idx] - deltaPos;
-            } else {
-              pmassNew[idx] = pmass[idx];
-              psizeNew[idx] = psize[idx];
-            }
-          } else {
-            pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
-            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
-          }
-
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-//          if(m==0){
-          totalMom   += pvelnew[idx]*pmass[idx];
-          if(!mpm_matl->getIsPistonMaterial()){
-            totalmass  += pmass[idx];
-          }
-          dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
-          pistonmass += pmass[idx]*useInKECalc[m];
-//          }
+          tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
+          burnFraction += massBurnFrac[node]  * S[k];
+//            burnFraction = min(massBurnFrac[node],burnFraction);
+//            burnFraction += massBurnFrac[node];
         }
-      } else {  // Not XPIC(2)
-        // Loop over particles
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
+//          burnFraction *=0.25*0.125;
 
-          // Get the node indices that surround the cell
-          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                    pcursize[idx]);
-          Vector vel(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          Vector pSN(0.0,0.0,0.0);
-          double tempRate = 0.0;
-          double burnFraction = 0.0;
-
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < NN; k++) {
-            IntVector node = ni[k];
-            vel      += gvelocity_star[node]  * S[k];
-            acc      += gacceleration[node]   * S[k];
-            pSN      += gSurfNorm[node]       * S[k];
-
-            tempRate += (gTemperatureRate[node] + dTdt[node])   * S[k];
-            burnFraction += massBurnFrac[node]     * S[k];
-          }
-
-          // Update the particle's pos and vel using std "FLIP" method
-          pxnew[idx]   = px[idx]        + vel*delT;
-          pdispnew[idx]= pdisp[idx]     + vel*delT;
-          pvelnew[idx] = pvelocity[idx] + acc*delT;
-
-          pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
-          pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
-          if (flags->d_doingDissolution){
-            if(pSurf[idx]>=0.99){
-              // Normalize particle surface normal
-              double pSNL=pSN.length();
-              if(pSNL > 0.0){
-                 pSN = pSN/pSNL;
-              }
-              int maxDir = 0; double maxComp=fabs(pSN.x());
-              for(int i = 1; i<3; i++){
-                if(fabs(pSN[i])>maxComp){
-                  maxComp=fabs(pSN[i]);
-                  maxDir=i;
-                }
-              }
-              int maxDirP1 = (maxDir+1)%3;
-              int maxDirP2 = (maxDir+2)%3;
-              pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
-              double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
-              Vector L[3];
-              double Ll[3];
-              double dL[3];
-              double pSNdotL[3];
-              for(int i=0;i<3;i++){
-                L[i]=Vector(psize[idx](0,i),psize[idx](1,i),psize[idx](2,i));
-                Ll[i] = L[i].length();
-
-                L[i]/=Ll[i];
-                pSNdotL[i] = fabs(Dot(pSN,L[i]));
-              }
-
-              double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
-              double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
-
-              dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
-                                         (Ll[maxDirP1]*Ll[maxDirP2] 
-                                   + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
-                                   + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
-
-              dL[maxDirP1] = dL1overdL0*dL[maxDir];
-              dL[maxDirP2] = dL2overdL0*dL[maxDir];
-              L[maxDir]   *= (Ll[maxDir]   - dL[maxDir]);
-              L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
-              L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
-
-              psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
-                                      L[0].y(), L[1].y(), L[2].y(),
-                                      L[0].z(), L[1].z(), L[2].z());
-
-//            This, and below, are my attempts to make the dissolving particles
-//            retreat, but it doesn't look great.
-//            Matrix3 sizeRed=Matrix3(1.-deltaMassFrac,0.,0.,0.,1.,0.,0.,0.,1.);
-//            psizeNew[idx] = sizeRed*psize[idx];
-//            Matrix3 pszNew = sizeRed*psize[idx];
-//            double deltaX = 0.5*dx*(psize[idx](0,0) - psizeNew[idx](0,0));
-//            pxnew[idx] = pxnew[idx] - Vector(deltaX,0.,0.);
-              Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
-                                           dL[1]*dx.y()*pSN.y(),
-                                           dL[2]*dx.z()*pSN.z());
-//            cout << "deltaPos = " << deltaPos << endl;
-              pxnew[idx] = pxnew[idx] - deltaPos;
-            } else {
-              pmassNew[idx] = pmass[idx];
-              psizeNew[idx] = psize[idx];
+        // Update particle vel and pos using Nairn's XPIC(2) method
+        // if useXPIC==1, otherwise just standard FLIP
+        pxnew[idx] = px[idx]    + vel*delT
+             - useXPIC*(0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
+                                                     + velSSPSSP))*delT;
+        pvelnew[idx]  = useXPIC*(2.0*pvelSSPlus[idx] - velSSPSSP) + acc*delT;
+        pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
+        pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
+        pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+        if (flags->d_doingDissolution){
+          if(pSurf[idx]>=0.99 && burnFraction != 0.0){
+            // Normalize particle surface normal
+            double pSNL=pSN.length();
+            if(pSNL > 0.0){
+               pSN = pSN/pSNL;
             }
-          } else {
-            pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
-            psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
-          }
+            int maxDir = 0; double maxComp=fabs(pSN.x());
+            for(int i = 1; i<3; i++){
+              if(fabs(pSN[i])>maxComp){
+                maxComp=fabs(pSN[i]);
+                maxDir=i;
+              }
+            }
+            int maxDirP1 = (maxDir+1)%3;
+            int maxDirP2 = (maxDir+2)%3;
+            pmassNew[idx]    = Max(pmass[idx] - burnFraction*delT, 0.);
+            double deltaMassFrac = (pmass[idx]-pmassNew[idx])/pmass[idx];
+            Vector L[3];
+            double Ll[3];
+            double dL[3];
+            double pSNdotL[3];
+            for(int i=0;i<3;i++){
+              L[i]=Vector(psize[idx](0,i),psize[idx](1,i),psize[idx](2,i));
+              Ll[i] = L[i].length();
 
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-//          if(m==0){
-          totalMom   += pvelnew[idx]*pmass[idx];
-          if(!mpm_matl->getIsPistonMaterial()){
-            totalmass  += pmass[idx];
+              L[i]/=Ll[i];
+              pSNdotL[i] = fabs(Dot(pSN,L[i]));
+            }
+
+            double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
+            double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
+
+            dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
+                                       (Ll[maxDirP1]*Ll[maxDirP2] 
+                                 + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
+                                 + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
+
+            dL[maxDirP1] = dL1overdL0*dL[maxDir];
+            dL[maxDirP2] = dL2overdL0*dL[maxDir];
+            L[maxDir]   *= (Ll[maxDir]   - dL[maxDir]);
+            L[maxDirP1] *= (Ll[maxDirP1] - dL[maxDirP1]);
+            L[maxDirP2] *= (Ll[maxDirP2] - dL[maxDirP2]);
+
+            psizeNew[idx] = Matrix3(L[0].x(), L[1].x(), L[2].x(),
+                                    L[0].y(), L[1].y(), L[2].y(),
+                                    L[0].z(), L[1].z(), L[2].z());
+
+            Vector deltaPos = 0.5*Vector(dL[0]*dx.x()*pSN.x(),
+                                         dL[1]*dx.y()*pSN.y(),
+                                         dL[2]*dx.z()*pSN.z());
+            pxnew[idx] = pxnew[idx] - deltaPos;
+          } else {
+            pmassNew[idx] = pmass[idx];
+            psizeNew[idx] = psize[idx];
           }
-          dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
-          pistonmass += pmass[idx]*useInKECalc[m];
-//          }
+        } else {
+          pmassNew[idx]    = Max(pmass[idx]*(1.    - burnFraction),0.);
+          psizeNew[idx]    = (pmassNew[idx]/pmass[idx])*psize[idx];
         }
-      } // use XPIC(2) or not
+
+        thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+        ke += .5*pmass[idx]*pvelnew[idx].length2()*useInKECalc[m];
+        CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
+        totalMom   += pvelnew[idx]*pmass[idx];
+        if(!mpm_matl->getIsPistonMaterial()){
+          totalmass  += pmass[idx];
+        }
+        dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
+        pistonmass += pmass[idx]*useInKECalc[m];
+      }
 
       // scale back huge particle velocities.
       // Default for d_max_vel is 3.e105, hence the conditional
@@ -6267,6 +6163,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
            }
          }
        } // loop over all triangles
+
+       // Now loop over the nodes and normalize SurfClay by the area
        for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
          IntVector c = *iter;
