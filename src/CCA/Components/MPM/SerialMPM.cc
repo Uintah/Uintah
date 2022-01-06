@@ -4330,7 +4330,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pVolumeOld,   lb->pVolumeLabel,                    pset);
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
-      }
+      } 
       new_dw->get(pSurf,        lb->pSurfLabel_preReloc,             pset);
 
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
@@ -4395,7 +4395,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double Cp=mpm_matl->getSpecificHeat();
       Vector dx = patch->dCell();
 
-      double useXPIC=0.;
+      bool useXPIC=false;
 
       // The following logic is intended to turn on every 10th dissolution step
       // For problems not involving dissolution, or during phases of the
@@ -4406,7 +4406,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          (flags->d_XPIC2 && 
           flags->d_currentPhase=="dissolution" && flags->d_doingDissolution 
                                         && timestep%10==1)){
-        useXPIC=1.0;
+        useXPIC=true;
       }
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -4439,11 +4439,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //          burnFraction *=0.25*0.125;
 
         // Update particle vel and pos using Nairn's XPIC(2) method
-        // if useXPIC==1, otherwise just standard FLIP
-        pxnew[idx] = px[idx]    + vel*delT
-             - useXPIC*(0.5*(acc*delT + (pvelocity[idx] - 2.0*pvelSSPlus[idx])
-                                                     + velSSPSSP))*delT;
-        pvelnew[idx]  = useXPIC*(2.0*pvelSSPlus[idx] - velSSPSSP) + acc*delT;
+	// if useXPIC, otherwise just standard FLIP
+        pxnew[idx]   = px[idx]    + vel*delT;
+        if(useXPIC){
+          pxnew[idx] -= 0.5*(acc*delT + 
+                      (pvelocity[idx] - 2.0*pvelSSPlus[idx]) + velSSPSSP)*delT;
+          pvelnew[idx]  = 2.0*pvelSSPlus[idx] - velSSPSSP   + acc*delT;
+        } else {
+          pvelnew[idx] = pvelocity[idx] + acc*delT;
+        }
         pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
         pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
