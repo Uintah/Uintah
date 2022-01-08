@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/ContactStressIndependent.h>
 #include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 #include <CCA/Components/MPM/Materials/Dissolution/SaltPrecipitationModel.h>
+#include <CCA/Components/MPM/Materials/Dissolution/QuartzOvergrowth.h>
 #include <CCA/Components/MPM/Materials/Dissolution/CompositeDissolution.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Malloc/Allocator.h>
@@ -74,6 +75,11 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      }
      else if (dis_type == "saltPrecipitationModel") {
       dissolution_list->add(scinew SaltPrecipitationModel(myworld,child,ss,lb));
+      flag->d_doingDissolution=true;
+      flag->d_computeNormals=true;
+     }
+     else if (dis_type == "QuartzOvergrowth") {
+      dissolution_list->add(scinew QuartzOvergrowth(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
       flag->d_computeNormals=true;
      }
