@@ -3457,7 +3457,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= gvolume[c];
       }
 
-     if(m!=flags->d_KEMaterial){
+     if(m!=((unsigned int) flags->d_KEMaterial)){
 
       // save boundary forces before apply symmetry boundary condition.
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
