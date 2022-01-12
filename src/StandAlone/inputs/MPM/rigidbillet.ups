@@ -16,7 +16,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>rigidbillet.uda</filebase>
@@ -26,18 +26,20 @@
        <save label="StrainEnergy"/>
        <save label="CenterOfMassPosition"/>
        <save label="TotalMomentum"/>
+       <save label="RigidReactionForce"/>
        <save label="p.x"/>
        <save label="p.velocity"/>
        <save label="p.volume"/>
        <save label="p.stress"/>
+       <save label="p.scalefactor"/>
        <save label="g.mass"/>
-       <save label="g.stressFS"/>
        <save label="g.velocity"/>
        <save label="g.velocity_star"/>
    </DataArchiver>
 
     <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
     </MPM>
 
     <PhysicalConstants>
@@ -56,12 +58,12 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                  <box label = "box">
-                     <min>[0.0,0.0,0.8]</min>
+                  <box label = "piston_top">
+                     <min>[0.0, 0.0,0.8]</min>
                      <max>[0.05,1.0,0.9]</max>
                   </box>
-                  <res>[2,2,2]</res>
-                  <velocity>[0.0,0.0,-2.0]</velocity>
+                  <res>[1,2,2]</res>
+                  <velocity>[0.0,0.0,-0.2]</velocity>
                   <temperature>12</temperature>
                </geom_object>
            </material>
@@ -77,20 +79,50 @@
               <specific_heat>5</specific_heat>
               <geom_object>
                   <cylinder label="gp2">
-                     <bottom>[0.0,.5,.5]</bottom>
-                     <top>[.05,.5,.5]</top>
-                     <radius> .25 </radius>
+                     <bottom>[0.0, .5,.5]</bottom>
+                     <top>[   0.05,.5,.5]</top>
+                     <radius> .3 </radius>
                   </cylinder>
-                  <res>[2,2,2]</res>
+                  <res>[1,2,2]</res>
                   <velocity>[0.0,0.0,0]</velocity>
                   <temperature>12</temperature>
                </geom_object>
            </material>
 
+           <material>
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "piston_bottom">
+                     <min>[0.0, 0.0,0.1]</min>
+                     <max>[0.05,1.0,0.2]</max>
+                  </box>
+                  <res>[1,2,2]</res>
+                  <velocity>[0.0,0.0,0.2]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
            <contact>
-             <type>rigid</type>
+             <type>specified</type>
              <materials>[0,1]</materials>
-              <stop_time>999999.9 </stop_time>
+             <master_material>0</master_material>
+             <direction>[1,1,1]</direction>
+             <stop_time>0.1 </stop_time>
+           </contact>
+
+           <contact>
+             <type>specified</type>
+             <materials>[1,2]</materials>
+             <master_material>2</master_material>
+             <direction>[1,1,1]</direction>
+             <stop_time>0.1 </stop_time>
            </contact>
        </MPM>
 
@@ -125,9 +157,8 @@
               <upper>[0.05,1.0,1.0]</upper>
                <resolution>[1,20,20]</resolution>
               <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
            </Box>
        </Level>
     </Grid>
-
-    
 </Uintah_specification>
