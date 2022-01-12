@@ -57,7 +57,8 @@ PSELIBS :=                 \
 
 # ICE Models
 ifeq ($(BUILD_ICE),yes)
-  SUBDIRS += $(SRCDIR)/FluidsBased
+  SUBDIRS += $(SRCDIR)/FluidsBased \
+             $(SRCDIR)/ParticleBased
 
   PSELIBS += CCA/Components/ICE/Core      \
 	     CCA/Components/ICE/CustomBCs \

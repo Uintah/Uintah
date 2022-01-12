@@ -35,6 +35,7 @@
 #  include <CCA/Components/Models/FluidsBased/TestModel.h>
 #  include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+#  include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #endif
 
 #if !defined( NO_ICE ) && !defined( NO_MPM )
@@ -111,6 +112,9 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
     }
     else if(type == "PassiveScalar") {
       d_models.push_back(scinew PassiveScalar(myworld, materialManager, model_ps));
+    }
+    else if(type == "TracerParticles") {
+      d_models.push_back(scinew TracerParticles(myworld, materialManager, model_ps));
     }
 #endif
 
