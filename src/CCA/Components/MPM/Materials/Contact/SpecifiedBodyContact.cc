@@ -307,6 +307,10 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   constNCVariable<Vector>               gsurfnorm;
+  
+  // per-matl 
+  vector<Vector> reaction_force(  numMatls, Vector(0.0) );
+  vector<Vector> reaction_torque( numMatls, Vector(0.0) );
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -347,9 +351,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         requested_omega  = findValFromProfile(simTime, d_rot_profile);
       }
     }
-
-    Vector reaction_force(0.0,0.0,0.0);
-    Vector reaction_torque(0.0,0.0,0.0);
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
@@ -392,14 +393,32 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
-          reaction_force  -= ginternalForce[n][c];
-          reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+          reaction_force[n]  -= ginternalForce[n][c];
+          reaction_torque[n] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
         }  // if
       }    // for matls
     }      // for Node Iterator
-    new_dw->put(sumvec_vartype(reaction_force),  lb->RigidReactionForceLabel);
-    new_dw->put(sumvec_vartype(reaction_torque), lb->RigidReactionTorqueLabel);
+    
   } // loop over patches
+  
+  //__________________________________
+  //  reduction Vars
+  Vector allMatls_reaction_force( 0.0, 0.0, 0.0 );
+  Vector allMatls_reaction_torque(0.0, 0.0, 0.0 );
+    
+  for(int  n = 0; n < numMatls; n++){
+    int dwi = matls->get(n);
+    
+    if( numMatls > 1 ){  // ignore for single matl problems
+      new_dw->put( sumvec_vartype(reaction_force[n]),  lb->RigidReactionForceLabel,  nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_torque[n]), lb->RigidReactionTorqueLabel, nullptr, dwi);
+    }
+    allMatls_reaction_force  += reaction_force[n];
+    allMatls_reaction_torque += reaction_torque[n];
+  }
+  
+  new_dw->put( sumvec_vartype( allMatls_reaction_force ),  lb->RigidReactionForceLabel, nullptr, -1 );
+  new_dw->put( sumvec_vartype( allMatls_reaction_torque ), lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
@@ -444,13 +463,38 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   }
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
-  t->computes(lb->RigidReactionForceLabel);
-  t->computes(lb->RigidReactionTorqueLabel);
+  
+  //__________________________________
+  //  Create reductionMatlSubSet that includes all mss matls
+  //  and the global matlsubset
+  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
+
+  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  reduction_mss->add( global_mss->get(0) );
+
+  unsigned int numMatls = mss->size();
+
+  if( numMatls > 1 ){  // ignore for single matl problems
+    for (unsigned int m = 0; m < numMatls; m++ ) {
+      reduction_mss->add( mss->get(m) );
+    }
+  }
+
+  reduction_mss->addReference();
+
+  
+  t->computes( lb->RigidReactionForceLabel,  reduction_mss );
+  t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
 
   sched->addTask(t, patches, ms);
 
-  if (z_matl->removeReference())
+  if (z_matl->removeReference()){
     delete z_matl; // shouln't happen, but...
+  }
+  
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
+  } 
 }
 
 // find velocity from table of values
