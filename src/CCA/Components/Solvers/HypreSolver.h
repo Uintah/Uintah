@@ -37,8 +37,6 @@
 #include <HYPRE_krylov.h>
 
 #include <iostream>
-#include <string>
-
 
 /**
  *  @class  HypreSolver2
@@ -325,10 +323,7 @@ namespace Uintah {
     SolverType stringToSolverType( std::string str );
 
     const VarLabel * m_timeStepLabel;
-
-//    const VarLabel * hypre_solver_label;
-    std::vector<const VarLabel *> hypre_solver_label;
-    int                m_hypre_num_of_threads{1}, m_partition_size{1};
+    const VarLabel * hypre_solver_label;
     
     HypreParams * m_params = nullptr;
     
