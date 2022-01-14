@@ -193,7 +193,7 @@ void custom_partition_master(int num_partitions, int threads_per_partition, Func
     int num_teams = l1, first_team = 0;
 #endif
 
-    std::atomic<int> completed{0};
+    std::atomic<int> completed=0;
     #pragma omp parallel num_threads(num_teams)
     {
         int team_id = omp_get_thread_num() + first_team; //offset -1 for funneled comm. compute threads reimain from 0 to n-1.
