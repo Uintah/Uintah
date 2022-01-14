@@ -138,7 +138,6 @@ namespace Uintah {
       , m_isFirstSolve(isFirstSolve_in)
     {
 
-#ifdef HYPRE_USING_MPI_EP
       const char* hypre_num_of_threads_str = std::getenv("HYPRE_THREADS"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
       if(hypre_num_of_threads_str)
       {
@@ -151,7 +150,6 @@ namespace Uintah {
         token = strtok(NULL, s);
         m_partition_size =  atoi(token);
       }
-#endif
       m_hypre_num_of_threads = std::max(m_hypre_num_of_threads, 1);
       m_partition_size = std::max(m_partition_size, 1);
       m_hypre_solver_label.resize(m_hypre_num_of_threads);
@@ -1311,7 +1309,6 @@ namespace Uintah {
 #endif
     //-----------------  end of hypre-cuda  -----------------
 
-#ifdef HYPRE_USING_MPI_EP
     const char* hypre_num_of_threads_str = std::getenv("HYPRE_THREADS"); //use diff env variable if it conflicts with OMP. but using same will be consistent.
     if(hypre_num_of_threads_str)
     {
@@ -1324,7 +1321,6 @@ namespace Uintah {
         token = strtok(NULL, s);
         m_partition_size =  atoi(token);
     }
-#endif
 
     m_hypre_num_of_threads = std::max(1, m_hypre_num_of_threads);
     m_partition_size = std::max(1, m_partition_size);

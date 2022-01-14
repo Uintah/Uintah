@@ -270,7 +270,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
       // A task_worker can run either a serial task, e.g. threads_per_partition == 1
       //       or a Kokkos-based data parallel task, e.g. threads_per_partition > 1
 
-      this->runTasks(partition_id);
+      this->runTasks();
 
     }; //end task_worker
 
@@ -281,7 +281,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
 #else //KOKKOS_ENABLE_OPENMP
 
-    this->runTasks(0);
+    this->runTasks();
 
 #endif // UINTAH_ENABLE_KOKKOS
 
@@ -391,7 +391,7 @@ KokkosOpenMPScheduler::runReadyTask( DetailedTask* readyTask )
 //______________________________________________________________________
 //
 void
-KokkosOpenMPScheduler::runTasks(int partition_id)
+KokkosOpenMPScheduler::runTasks()
 {
   while( g_num_tasks_done < m_num_tasks && !g_have_hypre_task ) {
 
@@ -403,15 +403,10 @@ KokkosOpenMPScheduler::runTasks(int partition_id)
     // ----------------------------------------------------------------------------------
     // Part 1 (serial): Task selection
     // ----------------------------------------------------------------------------------
-    //{
-      //std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
+    {
+      std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
 
       while ( !havework ) {
-    	//Damodar 08212021: Adding partition_id==0 condition for reduction task causes partition 0 to indefinitely wait for the lock, if some other
-    	// thread happens to be inside havework loop and there is no other task apart from reduction. leads to deadlock. Hence moving lock_guard
-    	//inside the while loop. Do not know what performance impact it will have. Hopefully not much, anyways threads wait untill lock is acquired
-
-   	    std::lock_guard<Uintah::MasterLock> scheduler_mutex_guard(g_scheduler_mutex);
 
         /*
          * (1.0)
@@ -429,9 +424,7 @@ KokkosOpenMPScheduler::runTasks(int partition_id)
          * If it is time to setup for a reduction task, then do so.
          *
          */
-        //Damodar 08212021: Added partition_id==0 check. found a deadlock happening within MPI in spite of using phase and different comms for every phase.
-        //hence funneling all the reductions through partition 0. Do not know what performance impact it will have, hopefully none, because MPI anyway uses global locks
-        if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1) && partition_id==0) {
+        if ((m_phase_sync_task[m_curr_phase] != nullptr) && (m_phase_tasks_done[m_curr_phase] == m_phase_tasks[m_curr_phase] - 1)) {
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
@@ -507,7 +500,7 @@ KokkosOpenMPScheduler::runTasks(int partition_id)
           break;
         }
       }  // end while (!havework)
-    //}  // end lock_guard
+    }  // end lock_guard
 
 
 
