@@ -435,11 +435,6 @@ KokkosOpenMPScheduler::runTasks(int partition_id)
           readyTask = m_phase_sync_task[m_curr_phase];
           havework = true;
           markTaskConsumed(&g_num_tasks_done, m_curr_phase, m_num_phases, readyTask);
-          if ( readyTask->getTask()->getType() == Task::Hypre ) {
-            g_HypreTask = readyTask;
-            g_have_hypre_task = true;
-            return;
-          }
           break;
         }
 
