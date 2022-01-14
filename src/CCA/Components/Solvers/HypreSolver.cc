@@ -406,10 +406,8 @@ namespace Uintah {
     {
         const ProcessorGroup * pg = uintahParams.getProcessorGroup();
         checkExecutionSpace<ExecSpace, MemSpace>(pg->myRank());
-
-        m_hypre_num_of_threads = std::min(m_hypre_num_of_threads, patches->size()); //reduce num of hypre partitions if there are not enough patches
-
         PatchSubset **new_patches = distributePatches(patches);
+
 
         //__________________________________
         //   timers
@@ -442,6 +440,7 @@ namespace Uintah {
         OnDemandDataWarehouse* b_dw     = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_b_dw ));
         OnDemandDataWarehouse* guess_dw = reinterpret_cast<OnDemandDataWarehouse *>(new_dw->getOtherDataWarehouse( m_which_guess_dw ));
 
+        int num_threads = std::min(m_hypre_num_of_threads, patches->size());
         hypre_set_num_threads(m_hypre_num_of_threads, m_partition_size, get_custom_team_id);
 
         custom_partition_master(m_hypre_num_of_threads, m_partition_size, [&](int t){
