@@ -62,9 +62,6 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
   ps->get("filename", d_filename);
   ps->require("mu",d_mu);
 
-  IntVector defaultDir(0,0,1);
-  ps->getWithDefault("direction",d_direction, defaultDir);
-
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
 
@@ -144,9 +141,8 @@ void SpecifiedBodyFrictionContact::setContactMaterialAttributes()
 void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
-  contact_ps->appendElement("type","specified");
+  contact_ps->appendElement("type","specified_friction");
   contact_ps->appendElement("filename",           d_filename);
-  contact_ps->appendElement("direction",          d_direction);
   contact_ps->appendElement("master_material",    d_material);
   contact_ps->appendElement("stop_time",          d_stop_time);
   contact_ps->appendElement("mu",                 d_mu);
