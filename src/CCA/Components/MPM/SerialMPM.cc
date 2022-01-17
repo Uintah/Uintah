@@ -5395,7 +5395,23 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }
         nodeList.clear();
       }    // Loop over Particles
-    }
+    }  // Loop over materials
+
+    // Do an additional check to make sure that nodes identified as 
+    // multi-material have multiple materials with particles contributing
+    // If not, set alphaMaterial back to -99
+    for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      int numMatlsWParticles=0;
+      for(unsigned int m = 0; m < numMPMMatls; m++){
+        if(ParticleList[m][c][ParticleList[m][c][399]] > 0){
+          numMatlsWParticles++;
+        }
+      }  // Loop over materials
+      if(numMatlsWParticles<2){
+        alphaMaterial[c]=-99;
+      }
+    }  // Loop over nodes
 
     // This is the Logistic Regression code that finds the normal to the
     // plane that separates two materials.  This is as directly as possible

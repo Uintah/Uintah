@@ -769,12 +769,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
-#if 0
-//  if(p.z()>0.04 && p.z()<0.0444){
-  if(p.z()>0.0424 && p.z()<0.0468){
-    pvars.plocalized[i] = 1.0;
-  }
-#endif
 
   // For AMR
   const Level* curLevel = patch->getLevel();
@@ -869,15 +863,13 @@ ParticleCreator::initializeParticle(const Patch* patch,
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
   GeometryPieceP piece = (*obj)->getPiece();
-  pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
-  pvars.psurfgrad[i] = Vector(0.,0.,0.);
-
-#if 0
-//  if(p.z()>0.0424 && p.z()<0.0468){
-  if(p.z()>0.0424 && p.z()<0.0474){
+  FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+  if(fgp){
     pvars.psurface[i] = 1.0;
+  } else {
+    pvars.psurface[i] = checkForSurface2(piece,p,dxpp);
   }
-#endif
+  pvars.psurfgrad[i] = Vector(0.,0.,0.);
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
