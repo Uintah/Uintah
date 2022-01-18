@@ -390,13 +390,38 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   t->requires(Task::NewDW, lb->gNormAlphaToBetaLabel, z_matl, Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
-  t->computes(lb->RigidReactionForceLabel);
-  t->computes(lb->RigidReactionTorqueLabel);
+
+  //__________________________________
+  //  Create reductionMatlSubSet that includes all mss matls
+  //  and the global matlsubset
+  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
+
+  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  reduction_mss->add( global_mss->get(0) );
+
+  unsigned int numMatls = mss->size();
+
+  if( numMatls > 1 ){  // ignore for single matl problems
+    for (unsigned int m = 0; m < numMatls; m++ ) {
+      reduction_mss->add( mss->get(m) );
+    }
+  }
+
+  reduction_mss->addReference();
+
+  t->computes( lb->RigidReactionForceLabel,  reduction_mss );
+  t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
 
   sched->addTask(t, patches, ms);
 
-  if (z_matl->removeReference())
+  if (z_matl->removeReference()){
     delete z_matl; // shouln't happen, but...
+  }
+
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
+  } 
+
 }
 
 // find velocity from table of values
