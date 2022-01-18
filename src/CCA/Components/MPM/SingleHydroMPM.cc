@@ -848,19 +848,8 @@ SingleHydroMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_particleState_preReloc,
-                                    lb->pXLabel,
-                                    d_particleState,
-                                    lb->pParticleIDLabel, matls, 1);
-
- if(flags->d_useCohesiveZones){
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                cohesiveZoneTasks->d_cohesiveZoneState_preReloc,
-                                lb->pXLabel,
-                                cohesiveZoneTasks->d_cohesiveZoneState,
-                                Cl->czIDLabel, cz_matls,2);
-  }
+ d_mpm->scheduleParticleRelocation(           sched, level,  matls,  
+                                                             cz_matls);
 
   //__________________________________
   //  on the fly analysis

@@ -223,7 +223,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     ProblemSpecP refine_ps =
                      mpm_amr_ps->findBlock("Refinement_Criteria_Thresholds");
     //__________________________________
-    // Pull out the refinement threshold criteria 
+    // Pull out the refinement threshold criteria
     if( refine_ps != nullptr ){
       for( ProblemSpecP var_ps = refine_ps->findBlock( "Variable" ); var_ps != nullptr; var_ps = var_ps->findNextBlock( "Variable" ) ) {
         thresholdVar data;
@@ -250,7 +250,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
         unsigned int numMatls = m_materialManager->getNumMatls();
 
         //__________________________________
-        // if using "all" matls 
+        // if using "all" matls
         if(matl == "all"){
           for (unsigned int m = 0; m < numMatls; m++){
             data.matl = m;
@@ -262,7 +262,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
       }
     } // refine_ps
   } // amr_ps
-  
+
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
@@ -312,7 +312,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  create analysis modules
   // call problemSetup
-  if(!flags->d_with_ice ){ // mpmice 
+  if(!flags->d_with_ice ){ // mpmice
     d_analysisModules = AnalysisModuleFactory::create(d_myworld,
                                                       m_materialManager,
                                                       prob_spec);
@@ -459,13 +459,13 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
   for(unsigned int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
-    
+
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-    
+
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires( t, mpm_matl );
-    
+
     ErosionModel* em = mpm_matl->getErosionModel();
     em->addInitialComputesAndRequires( t, mpm_matl );
 
@@ -765,19 +765,10 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_particleState_preReloc,
-                                    lb->pXLabel,
-                                    d_particleState,
-                                    lb->pParticleIDLabel, matls, 1);
 
- if(flags->d_useCohesiveZones){
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    cohesiveZoneTasks->d_cohesiveZoneState_preReloc,
-                                    lb->pXLabel,
-                                    cohesiveZoneTasks->d_cohesiveZoneState,
-                                    Cl->czIDLabel, cz_matls,2);
-  }
+ SerialMPM::scheduleParticleRelocation(       sched, level,  matls,
+                                                             cz_matls);
+
 
   //__________________________________
   //  on the fly analysis
@@ -790,7 +781,72 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 }
+//______________________________________________________________________
+//  Purpose:  If needed update the labels and materialSubsets that are passed
+//             to Relocate and schedule particle relocate
+void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
+                                            const LevelP      & level,
+                                            const MaterialSet * matls,
+                                            const MaterialSet * cz_matls)
+{
 
+
+  //__________________________________
+  //  Unmodified labels and matls subset
+  std::vector<std::vector<const VarLabel* > > old_labels;
+  std::vector<std::vector<const VarLabel* > > new_labels;
+
+  old_labels = d_particleState_preReloc;
+  new_labels = d_particleState;
+
+  const MaterialSubset*  old_mss = matls->getSubset(0);
+  MaterialSubset*        new_mss = scinew MaterialSubset();
+  new_mss->addReference();
+
+  new_mss->addSubset( old_mss );
+
+  //__________________________________
+  // If needed concatenate the labels and matls that are passed into
+  // the ParticleRelocate
+  if(flags->d_useCohesiveZones){
+
+    //update the mss
+    const MaterialSubset*  mss  = cz_matls->getSubset(0);
+    new_mss->addSubset( mss );
+
+    // update the labels
+    int numLabels = cohesiveZoneTasks->d_cohesiveZoneState_preReloc.size();
+    for( int i=0; i<numLabels; i++){
+      old_labels.push_back( cohesiveZoneTasks->d_cohesiveZoneState_preReloc[i] );
+      new_labels.push_back( cohesiveZoneTasks->d_cohesiveZoneState[i] );
+    }
+  }
+
+  //__________________________________
+  //  create a new material set containing the
+  //  the updated matlSubset.
+  MaterialSet* newMatlSet = scinew MaterialSet();
+  newMatlSet->addSubset( new_mss );
+  newMatlSet->addReference();
+
+
+  sched->scheduleParticleRelocation(level,
+                                    lb->pXLabel_preReloc,
+                                    old_labels,
+                                    lb->pXLabel,
+                                    new_labels,
+                                    lb->pParticleIDLabel,
+                                    newMatlSet );
+
+  if(newMatlSet && newMatlSet->removeReference()) {
+    delete newMatlSet;
+  }
+}
+
+
+
+//______________________________________________________________________
+//
 void SerialMPM::scheduleComputeCurrentParticleSize(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
@@ -1041,7 +1097,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
-  
+
   //__________________________________
   //  Additional tasks
   scheduleUpdateStress_DamageErosionModels( sched, patches, matls );
@@ -1516,7 +1572,7 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
   t->modifies(lb->pSizeLabel_preReloc);
   t->modifies(lb->pDispLabel_preReloc);
   t->modifies(lb->pStressLabel_preReloc);
-  
+
   if (flags->d_with_color) {
     t->modifies(lb->pColorLabel_preReloc);
   }
@@ -1588,7 +1644,7 @@ SerialMPM::scheduleSetPrescribedMotion(       SchedulerP  & sched,
                                         const PatchSet    * patches,
                                         const MaterialSet * matls )
 {
-  if ( !flags->doMPMOnLevel( getLevel(patches)->getIndex(), 
+  if ( !flags->doMPMOnLevel( getLevel(patches)->getIndex(),
         getLevel(patches)->getGrid()->numLevels() ) ) {
     return;
   }
@@ -1664,10 +1720,10 @@ SerialMPM::scheduleRefine( const PatchSet   * patches,
 
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-    
+
     DamageModel* dm = mpm_matl->getDamageModel();
     dm->addInitialComputesAndRequires(t, mpm_matl);
-    
+
     ErosionModel* em = mpm_matl->getErosionModel();
     em->addInitialComputesAndRequires(t, mpm_matl);
   }
@@ -1948,7 +2004,7 @@ void SerialMPM::deleteGeometryObjects(const ProcessorGroup*,
     // to all geom_pieces (so that it can look them up by name during initialization)
     // The pieces are never actually deleted until the factory is destroyed at the end
     // of the program. resetFactory() will rid of the pointer (lookup table) and
-    // allow the deletion of the unneeded pieces.  
+    // allow the deletion of the unneeded pieces.
 
     GeometryPieceFactory::resetFactory();
 }
@@ -1993,13 +2049,13 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     // - Initialize NC_CCweight = 0.125
     // - Find the walls with symmetry BC and double NC_CCweight
     NC_CCweight.initialize(0.125);
-    
+
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    
+
     for( auto itr = bf.begin(); itr != bf.end(); ++itr ){
-      Patch::FaceType face = *itr;   
-        
+      Patch::FaceType face = *itr;
+
       int mat_id = 0;
 
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
@@ -2017,10 +2073,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
-      
+
       //initialize Damage model
       mpm_matl->getDamageModel()->initializeLabels( patch, mpm_matl, new_dw );
-      
+
       mpm_matl->getErosionModel()->initializeLabels( patch, mpm_matl, new_dw );
 
       if (flags->d_doScalarDiffusion) {
@@ -2060,9 +2116,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
             interp_type=="3rdorderBS" ||
             interp_type=="fast_cpdi"  ||
             interp_type=="cpti"       ||
-            interp_type=="cpdi")                          && 
-            (  (num_extra_cells+periodic)!=IntVector(1,1,1) && 
-            (!((num_extra_cells+periodic)==IntVector(1,1,0) && 
+            interp_type=="cpdi")                          &&
+            (  (num_extra_cells+periodic)!=IntVector(1,1,1) &&
+            (!((num_extra_cells+periodic)==IntVector(1,1,0) &&
              flags->d_axisymmetric))))){
       ostringstream msg;
       msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
@@ -3082,9 +3138,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
            if((velocity_star[c]*delT).length2() > 0.25*cell_size_sq){
             cerr << "Aborting timestep, velocity star too large" << endl;
             cerr << "velocity_star[" << c << "] = " << velocity_star[c] << endl;
-            new_dw->put( bool_or_vartype(true), 
+            new_dw->put( bool_or_vartype(true),
                          VarLabel::find(abortTimeStep_name));
-            new_dw->put( bool_or_vartype(true), 
+            new_dw->put( bool_or_vartype(true),
                          VarLabel::find(recomputeTimeStep_name));
            }
         }
@@ -3307,7 +3363,7 @@ void SerialMPM::computeCurrentParticleSize(const ProcessorGroup* ,
     string interp_type = flags->d_interpolator_type;
 
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
@@ -3322,7 +3378,7 @@ void SerialMPM::computeCurrentParticleSize(const ProcessorGroup* ,
       old_dw->get(pFOld,                lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pCurSize,  lb->pCurSizeLabel,            pset);
 
-      if(interp_type == "cpdi" || interp_type == "fast_cpdi" 
+      if(interp_type == "cpdi" || interp_type == "fast_cpdi"
                                || interp_type == "cpti"){
         if(flags->d_axisymmetric){
           for (ParticleSubset::iterator iter = pset->begin();
@@ -4122,7 +4178,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
         pTempNew[idx] += pdTdt[idx]*delT;
 
         // Delete particles whose mass is too small (due to combustion),
-        // whose pLocalized flag has been set to -999 or who have 
+        // whose pLocalized flag has been set to -999 or who have
         // a negative temperature
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
             (pLocalized[idx]==-999)){
@@ -4219,7 +4275,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
-      ParticleVariable<double> pESF; 
+      ParticleVariable<double> pESF;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,ptempgrad;
       ParticleVariable<int> pref,ploc,prefOld,pSplitR1R2R3;
       ParticleVariable<IntVector> pLoadCID;
@@ -4992,8 +5048,8 @@ void SerialMPM::scheduleComputeNormals(SchedulerP   & sched,
                                        const MaterialSet * matls )
 {
   printSchedule(patches,cout_doing,"MPM::scheduleComputeNormals");
-  
-  Task* t = scinew Task("MPM::computeNormals", this, 
+
+  Task* t = scinew Task("MPM::computeNormals", this,
                         &SerialMPM::computeNormals);
 
   MaterialSubset* z_matl = scinew MaterialSubset();
@@ -5060,7 +5116,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
 
     // Find surface normal at each material based on a gradient of nodal mass
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gan,  1);
@@ -5184,7 +5240,7 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
 
     // Make traditional norms unit length, compute gnormtraction
     for(unsigned int m=0;m<numMPMMatls;m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                    (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       MPMBoundCond bc;
@@ -5213,8 +5269,8 @@ void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
                                                   const MaterialSet * matls )
 {
   printSchedule(patches,cout_doing,"MPM::scheduleComputeLogisticRegression");
-  
-  Task* t = scinew Task("MPM::computeLogisticRegression", this, 
+
+  Task* t = scinew Task("MPM::computeLogisticRegression", this,
                         &SerialMPM::computeLogisticRegression);
 
   MaterialSubset* z_matl = scinew MaterialSubset();
@@ -5308,7 +5364,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
          m_materialManager->getAllInOneMatls()->get(0), patch, gnone, 0);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],                lb->gMassLabel,   dwi,patch,gnone,0);
@@ -5332,7 +5388,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
           }
         }
       } // Loop over materials
-      
+
       for(unsigned int m = 0; m < numMPMMatls; m++){
         if(IsRigidMaterial[m]){
           if(gmass[m][c] > 1.e-16){
@@ -5345,7 +5401,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       }
     }   // Node Iterator
 
-    // In this section of code, we find the particles that are in the 
+    // In this section of code, we find the particles that are in the
     // vicinity of a multi-material node and put their indices in a list
     // so we can retrieve their positions later.
 
@@ -5353,7 +5409,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // the last element in the array holds the number of entries in the
     // array.  I don't yet know how to allocate an STL container on the nodes.
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -5381,13 +5437,13 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         set<IntVector> nodeList;
 
         for(int k = 0; k < NN; k++) {
-          if (patch->containsNode(ni[k]) && 
-              NumMatlsOnNode[ni[k]]>1    && 
+          if (patch->containsNode(ni[k]) &&
+              NumMatlsOnNode[ni[k]]>1    &&
               S[k]>1.e-8){
             nodeList.insert(ni[k]);
           } // conditional
         }   // loop over nodes returned by interpolator
-        for (set<IntVector>::iterator it1 = nodeList.begin(); 
+        for (set<IntVector>::iterator it1 = nodeList.begin();
                                       it1!= nodeList.end();  it1++){
           ParticleList[m][*it1][ParticleList[m][*it1][399]]=idx;
           ParticleList[m][*it1][399]++;
@@ -5481,7 +5537,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
             for(int i = 0; i<4; i++){
               RHS[i]+=psi*wp*(cp - fEq20)*xp4[i];
             }
-          } // Loop over each material's particle list 
+          } // Loop over each material's particle list
         }     // Loop over materials
 
         // Solve (FMJtWJ)^(-1)*RHS.  The solution comes back in the RHS array
@@ -5536,14 +5592,14 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
     // gNormalAlphaToBeta vector.
     // For the beta materials (every other material) find g.position as the
     // minimum of the dot product between each particle corner and the
-    // gNormalAlphaToBeta vector.  
+    // gNormalAlphaToBeta vector.
     // Compute "MatlProminence" as the min/max of the dot product between
     // the normal and the particle corners
 
     std::vector<NCVariable<double> >      d_x_p_dot_n(numMPMMatls);
-    
+
     for(unsigned int m=0;m<numMPMMatls;m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                    (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
       int dwi = mpm_matl->getDWIndex();
 
@@ -5701,16 +5757,16 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
 void SerialMPM::scheduleFindSurfaceParticles(SchedulerP   & sched,
                                              const PatchSet * patches,
                                              const MaterialSet * matls )
-{ 
+{
   printSchedule(patches,cout_doing,"SerialMPM::scheduleFindSurfaceParticles");
-  
-  Task* t = scinew Task("MPM::findSurfaceParticles", this, 
+
+  Task* t = scinew Task("MPM::findSurfaceParticles", this,
                         &SerialMPM::findSurfaceParticles);
-  
+
   Ghost::GhostType  gp;
   int ngc_p;
   getParticleGhostLayer(gp, ngc_p);
-  
+
   t->requires(Task::OldDW, lb->pSurfLabel,               gp, ngc_p);
   t->computes(lb->pSurfLabel_preReloc);
 
@@ -5733,7 +5789,7 @@ void SerialMPM::findSurfaceParticles(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, "Doing findSurfaceParticles");
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial*  mpm_matl  = 
+      MPMMaterial*  mpm_matl  =
                        (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
       int dwi = mpm_matl->getDWIndex();
 

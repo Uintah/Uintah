@@ -173,6 +173,12 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
+
+  void scheduleParticleRelocation( SchedulerP        & sched,
+                                   const LevelP      & level,
+                                   const MaterialSet * matls,
+                                   const MaterialSet * cz_matls);
+
   void deleteGeometryObjects(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,

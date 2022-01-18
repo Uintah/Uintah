@@ -183,16 +183,6 @@ class Scheduler : public UintahParallelPort {
                                            , const MaterialSet  * matls
                                            ) = 0;
 
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * posLabel
-                                           , const VarLabelList & labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            w
-                                           ) = 0;
-
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).

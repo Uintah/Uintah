@@ -100,6 +100,9 @@ public:
 
   void add( const T& i ) { items.push_back(i); }
 
+  // adds items of a subset to an existing subset
+  void addSubset( const ComputeSubset<T> * sub );
+
   bool empty() const { return items.size() == 0; }
 
   bool contains( T elem ) const
@@ -205,16 +208,19 @@ public:
   // Adds one element as a new subset
   void add(const T&);
 
+  // Adds an existing subset to the set
+  void addSubset( ComputeSubset<T>* subset );
+
   void sortSubsets();
 
   int size() const { return (int)d_set.size(); }
 
   ComputeSubset<T>* getSubset(int idx) { return d_set[idx]; }
 
+  const ComputeSubset<T>* getSubset(int idx) const { return d_set[idx]; }
+
   /// Returns the vector of subsets managed by this set
   const std::vector<ComputeSubset<T>*>& getVector() const { return d_set; }
-
-  const ComputeSubset<T>* getSubset(int idx) const { return d_set[idx]; }
 
   const ComputeSubset<T>* getUnion() const;
 
@@ -332,6 +338,18 @@ ComputeSet<T>::add( const T& item )
 //
 template<class T>
 void
+ComputeSet<T>::addSubset( ComputeSubset<T> * sub )
+{
+  ASSERT(!d_un);
+
+  ComputeSubset<T>* subset = sub;  // hack to get around const issue
+  d_set.push_back(subset);
+}
+
+//______________________________________________________________________
+//
+template<class T>
+void
 ComputeSet<T>::sortSubsets()
 {
   for(int i=0;i<(int)d_set.size();i++){
@@ -412,6 +430,20 @@ ComputeSubset<const Patch*>::compareElems( const Patch* e1, const Patch* e2 );
 template<class T>
 bool
 ComputeSubset<T>::compareElems( const T e1, const T e2 ) { return e1 < e2; }
+
+//__________________________________
+// adds items of a subset to an existing subset
+template<class T>
+void
+ComputeSubset<T>::addSubset( const ComputeSubset<T> * ss )
+{
+ // const ComputeSubset<T>*  ss  = sub->getSubset( indx );
+
+  for (auto m = 0; m < ss->size(); m++) {
+    add( ss->get(m) );
+  }
+}
+
 
 
 //______________________________________________________________________

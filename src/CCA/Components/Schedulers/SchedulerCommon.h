@@ -224,17 +224,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                            , const MaterialSet  * matls
                                            );
 
-
-    virtual void scheduleParticleRelocation( const LevelP       & level
-                                           , const VarLabel     * old_posLabel
-                                           , const VarLabelList & old_labels
-                                           , const VarLabel     * new_posLabel
-                                           , const VarLabelList & new_labels
-                                           , const VarLabel     * particleIDLabel
-                                           , const MaterialSet  * matls
-                                           ,       int            which
-                                           );
-
     virtual void scheduleParticleRelocation( const LevelP       & coarsestLevelwithParticles
                                            , const VarLabel     * old_posLabel
                                            , const VarLabelList & old_labels
@@ -417,7 +406,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::ofstream*              m_mem_logfile{nullptr};
 
     Relocate                    m_relocate_1;
-    Relocate                    m_relocate_2;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)

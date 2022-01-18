@@ -687,11 +687,13 @@ SingleFieldMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+  sched->scheduleParticleRelocation(level, 
+                                    lb->pXLabel_preReloc,
                                     d_particleState_preReloc,
                                     lb->pXLabel,
                                     d_particleState,
-				    lb->pParticleIDLabel, matls, 1);
+				        lb->pParticleIDLabel, 
+                                    matls );
 
   //__________________________________
   //  on the fly analysis
