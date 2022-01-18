@@ -400,25 +400,29 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }      // for Node Iterator
     
   } // loop over patches
-  
+
   //__________________________________
   //  reduction Vars
   Vector allMatls_reaction_force( 0.0, 0.0, 0.0 );
   Vector allMatls_reaction_torque(0.0, 0.0, 0.0 );
-    
+
   for(int  n = 0; n < numMatls; n++){
     int dwi = matls->get(n);
-    
+
     if( numMatls > 1 ){  // ignore for single matl problems
-      new_dw->put( sumvec_vartype(reaction_force[n]),  lb->RigidReactionForceLabel,  nullptr, dwi);
-      new_dw->put( sumvec_vartype(reaction_torque[n]), lb->RigidReactionTorqueLabel, nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_force[n]),
+                                    lb->RigidReactionForceLabel,  nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_torque[n]),
+                                    lb->RigidReactionTorqueLabel, nullptr, dwi);
     }
     allMatls_reaction_force  += reaction_force[n];
     allMatls_reaction_torque += reaction_torque[n];
   }
-  
-  new_dw->put( sumvec_vartype( allMatls_reaction_force ),  lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( allMatls_reaction_torque ), lb->RigidReactionTorqueLabel,nullptr, -1 );
+
+  new_dw->put( sumvec_vartype( allMatls_reaction_force ),
+                                     lb->RigidReactionForceLabel, nullptr, -1 );
+  new_dw->put( sumvec_vartype( allMatls_reaction_torque ),
+                                     lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
