@@ -337,8 +337,13 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
 
   //__________________________________
   //  reduction Vars
-  Vector allMatls_reaction_force( 0.0, 0.0, 0.0 );
-  Vector allMatls_reaction_torque(0.0, 0.0, 0.0 );
+  reaction_force[d_material]=Vector(0.0,0.0,0.0);
+
+  for(int  n = 0; n < numMatls; n++){
+    if(n!=d_material){
+      reaction_force[d_material]+=reaction_force[n];
+    }
+  }
 
   for(int  n = 0; n < numMatls; n++){
     int dwi = matls->get(n);
@@ -349,13 +354,11 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->put( sumvec_vartype(reaction_torque[n]),
                                     lb->RigidReactionTorqueLabel, nullptr, dwi);
     }
-    allMatls_reaction_force  += reaction_force[n];
-    allMatls_reaction_torque += reaction_torque[n];
   }
 
-  new_dw->put( sumvec_vartype( allMatls_reaction_force ),
+  new_dw->put( sumvec_vartype( reaction_force[d_material] ),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( allMatls_reaction_torque ),
+  new_dw->put( sumvec_vartype( reaction_torque[d_material] ),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
