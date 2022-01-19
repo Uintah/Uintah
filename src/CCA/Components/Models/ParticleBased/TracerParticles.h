@@ -26,7 +26,7 @@
 #ifndef Uintah_Models_ParticleBased_TracerParticles_h
 #define Uintah_Models_ParticleBased_TracerParticles_h
 
-#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/ParticleBased/ParticleModel.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
@@ -36,7 +36,7 @@
 namespace Uintah {
 
   class ICELabel;
-  class TracerParticles : public ModelInterface {
+  class TracerParticles : public ParticleModel {
   public:
     TracerParticles(const ProcessorGroup    * myworld,
                     const MaterialManagerP  & materialManager,
@@ -54,28 +54,25 @@ namespace Uintah {
 
     virtual void restartInitialize() {};
 
-    virtual void scheduleComputeStableTimeStep(SchedulerP  &,
-                                               const LevelP & level){};
-
     virtual void scheduleComputeModelSources(SchedulerP   &,
                                              const LevelP & level);
-
-
-   virtual void scheduleTestConservation(SchedulerP   &,
-                                         const PatchSet* patches){};
    
 
   //______________________________________________________________________
   //        
   private:
     
-
     //__________________________________
     // labels
     ICELabel* Ilb;                                      
-    VarLabel * pXLabel;     // particle position label of type Uintah::Point
-    VarLabel * pIDLabel;    // particle ID label, of type long64
-    VarLabel * nPPCLabel;   // number of particles in a cell
+    VarLabel * pXLabel;           // particle position label
+    VarLabel * pXLabel_preReloc;
+    VarLabel * pDispLabel;
+    VarLabel * pDispLabel_preReloc;
+    VarLabel * pIDLabel;          // particle ID label, of type long64
+    VarLabel * pIDLabel_preReloc;
+    
+    VarLabel * nPPCLabel;         // number of particles in a cell
 
     //__________________________________
     //  Region used for initialization
@@ -124,12 +121,15 @@ namespace Uintah {
                     const MaterialSubset  * matls,
                     DataWarehouse         *,
                     DataWarehouse         * new_dw);
+                             
+    void sched_updateParticles(SchedulerP  & sched,
+                               const LevelP& level);
 
-    void computeModelSources(const ProcessorGroup *,
-                             const PatchSubset    * patches,
-                             const MaterialSubset *,
-                             DataWarehouse        * old_dw,
-                             DataWarehouse        * new_dw);
+    void updateParticles(const ProcessorGroup  *,
+                         const PatchSubset     * patches,                  
+                         const MaterialSubset  * matls,                    
+                         DataWarehouse         * old_dw,                   
+                         DataWarehouse         * new_dw);                  
 
     TracerParticles(const TracerParticles&);
     TracerParticles& operator=(const TracerParticles&);
@@ -138,10 +138,6 @@ namespace Uintah {
     //__________________________________
     //
     ProblemSpecP    d_params;
-    const Material* d_matl;
-    MaterialSet*    d_matl_set;
-    const MaterialSubset* d_matl_mss;
-
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
 

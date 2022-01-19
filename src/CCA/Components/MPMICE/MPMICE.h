@@ -54,7 +54,7 @@ namespace Uintah {
 
 CLASS
    MPMICE
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -66,16 +66,16 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    MPMICE
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
 enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
@@ -86,20 +86,20 @@ public:
   MPMICE(const ProcessorGroup* myworld,
          const MaterialManagerP materialManager,
          MPMType type, const bool doAMR = false);
-  
+
   virtual ~MPMICE();
-  
-  virtual double recomputeDelT(const double delT); 
-          
-  virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, 
+
+  virtual double recomputeDelT(const double delT);
+
+  virtual void problemSetup(const ProblemSpecP& params,
+                            const ProblemSpecP& restart_prob_spec,
                             GridP& grid);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
-         
+
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
-                                  
+
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
@@ -107,20 +107,21 @@ public:
 
   virtual void scheduleComputeStableTimeStep(const LevelP& level,
                                              SchedulerP&);
-  
+
   // scheduleTimeAdvance version called by the AMR simulation controller.
-  virtual void scheduleTimeAdvance( const LevelP& level, 
+  virtual void scheduleTimeAdvance( const LevelP& level,
                                     SchedulerP&);
- 
-  virtual void scheduleFinalizeTimestep(const LevelP& level, 
+
+  virtual void scheduleFinalizeTimestep(const LevelP& level,
                                         SchedulerP&);
-                            
-  void scheduleInterpolateNCToCC_0(SchedulerP&, 
+
+protected:
+  void scheduleInterpolateNCToCC_0(SchedulerP&,
                                   const PatchSet*,
                                   const MaterialSubset*,
                                   const MaterialSet*);
 
-  void scheduleCoarsenCC_0(SchedulerP&, 
+  void scheduleCoarsenCC_0(SchedulerP&,
                            const PatchSet*,
                            const MaterialSet*);
 
@@ -128,32 +129,28 @@ public:
                              const PatchSet*,
                              const MaterialSet*);
 
-  void scheduleComputeLagrangianValuesMPM(SchedulerP&, 
+  void scheduleComputeLagrangianValuesMPM(SchedulerP&,
                                           const PatchSet*,
                                           const MaterialSubset*,
                                           const MaterialSet*);
 
-  void scheduleCoarsenLagrangianValuesMPM(SchedulerP&, 
+  void scheduleCoarsenLagrangianValuesMPM(SchedulerP&,
                                           const PatchSet*,
                                           const MaterialSet*);
 
-  void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
+  void scheduleInterpolateCCToNC(SchedulerP&,
+                                 const PatchSet*,
                                  const MaterialSet*);
 
-  void scheduleComputeCCVelAndTempRates(SchedulerP&, const PatchSet*,
+  void scheduleComputeCCVelAndTempRates(SchedulerP&,
+                                        const PatchSet*,
                                         const MaterialSet*);
 
-  void scheduleRefineCC(SchedulerP&, const PatchSet*,
+  void scheduleRefineCC(SchedulerP&,
+                        const PatchSet*,
                         const MaterialSet*);
 
-  void scheduleComputeNonEquilibrationPressure(SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-                                               const MaterialSet*);
-
-  void scheduleComputePressure(SchedulerP&, 
+  void scheduleComputePressure(SchedulerP&,
                                const PatchSet*,
                                const MaterialSubset*,
                                const MaterialSubset*,
@@ -161,54 +158,42 @@ public:
                                const MaterialSet*);
 
 
-  void scheduleInterpolatePressCCToPressNC(SchedulerP&, 
+  void scheduleInterpolatePressCCToPressNC(SchedulerP&,
                                           const PatchSet*,
                                           const MaterialSubset*,
                                           const MaterialSet*);
 
-  void scheduleRefinePressCC(SchedulerP&, 
-                                      const PatchSet*,
-                                      const MaterialSubset*,
-                                      const MaterialSet*);
+  void scheduleRefinePressCC(SchedulerP&,
+                             const PatchSet*,               
+                             const MaterialSubset*,         
+                             const MaterialSet*);           
 
-  void scheduleInterpolatePAndGradP(SchedulerP&, 
+  void scheduleInterpolatePAndGradP(SchedulerP&,
                                     const PatchSet*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSubset*,
                                     const MaterialSet*);
-            
-  void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-                                    const MaterialSet*);
 
-  void computeInternalForce(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+  void scheduleParticleRelocation( SchedulerP        & sched,
+                                   const LevelP      & level,
+                                   const MaterialSet * mpm_matls);
 
 //______________________________________________________________________
-//       A C T U A L   S T E P S : 
+//       A C T U A L   S T E P S :
   void actuallyInitialize(const ProcessorGroup*,
                           const PatchSubset* patch,
                           const MaterialSubset* matls,
                           DataWarehouse*,
                           DataWarehouse* new_dw);
-                         
 
-  void actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
-                                          const PatchSubset* patch,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse* new_dw);
-                         
-                                                    
+
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const PatchSubset* patch,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
-  
+
   void computeLagrangianValuesMPM(const ProcessorGroup*,
                                   const PatchSubset* patch,
                                   const MaterialSubset* matls,
@@ -218,7 +203,7 @@ public:
   void computeEquilibrationPressure(const ProcessorGroup*,
                                     const PatchSubset* patch,
                                     const MaterialSubset* matls,
-                                    DataWarehouse*, 
+                                    DataWarehouse*,
                                     DataWarehouse*,
                                     const MaterialSubset* press_matl);
 
@@ -235,12 +220,6 @@ public:
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-  void interpolateCCToNCRefined(const ProcessorGroup*,
-                                const PatchSubset* patch,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw);
-
   void interpolatePressCCToPressNC(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
@@ -252,37 +231,18 @@ public:
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
-                            
-  void HEChemistry(const ProcessorGroup*,
-                   const PatchSubset* patch,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw);
-  
-  void printData( int indx,
-                  const Patch* patch, 
-                  int   include_EC,
-                  const std::string&    message1,
-                  const std::string&    message2,
-                  const NCVariable<double>& q_NC);
-                  
-  void printNCVector(int indx,
-                     const Patch* patch, int include_EC,
-                     const std::string&    message1,
-                     const std::string&    message2,
-                     int     component,
-                     const NCVariable<Vector>& q_NC);
-                     
-  void binaryPressureSearch(std::vector<constCCVariable<double> >& Temp, 
-                            std::vector<CCVariable<double> >& rho_micro, 
-                            std::vector<CCVariable<double> >& vol_frac, 
+
+
+  void binaryPressureSearch(std::vector<constCCVariable<double> >& Temp,
+                            std::vector<CCVariable<double> >& rho_micro,
+                            std::vector<CCVariable<double> >& vol_frac,
                             std::vector<CCVariable<double> >& rho_CC_new,
                             std::vector<CCVariable<double> >& speedSound_new,
-                            std::vector<double> & dp_drho, 
-                            std::vector<double> & dp_de, 
+                            std::vector<double> & dp_drho,
+                            std::vector<double> & dp_de,
                             std::vector<double> & press_eos,
                             constCCVariable<double> & press,
-                            CCVariable<double> & press_new, 
+                            CCVariable<double> & press_new,
                             double press_ref,
                             std::vector<constCCVariable<double> > & cv,
                             std::vector<constCCVariable<double> > & gamma,
@@ -290,14 +250,7 @@ public:
                             unsigned int numALLMatls,
                             int & count,
                             double & sum,
-                            IntVector c );                   
-//__________________________________
-//    R A T E   F O R M                   
-  void computeRateFormPressure(const ProcessorGroup*,
-                               const PatchSubset* patch,
-                               const MaterialSubset* matls,
-                               DataWarehouse*, 
-                               DataWarehouse*); 
+                            IntVector c );
 
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
@@ -306,11 +259,11 @@ public:
   virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                        SchedulerP& scheduler,
                                        bool needOld, bool needNew);
-  
-  virtual void scheduleRefine (const PatchSet* patches, 
-                               SchedulerP& sched); 
-    
-  virtual void scheduleCoarsen(const LevelP& coarseLevel, 
+
+  virtual void scheduleRefine (const PatchSet* patches,
+                               SchedulerP& sched);
+
+  virtual void scheduleCoarsen(const LevelP& coarseLevel,
                                SchedulerP& sched);
 
   void refine(const ProcessorGroup*,
@@ -321,7 +274,7 @@ public:
 
   virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                             SchedulerP& sched);
-                                               
+
   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                      SchedulerP& sched);
 
@@ -335,7 +288,7 @@ public:
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const VarLabel* variable,
-                                   T defaultValue, 
+                                   T defaultValue,
                                    bool modifies,
                                    const std::string& coarsenMethod);
 
@@ -375,7 +328,7 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const VarLabel* variable,
-                           T defaultValue, 
+                           T defaultValue,
                            bool modifies,
                            std::string coarsenMethod);
 
@@ -396,13 +349,6 @@ public:
                                    DataWarehouse* fine_old_dw,
                                    DataWarehouse* fine_new_dw);
 
-private:                        
-     
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
 protected:
   MPMICE(const MPMICE&);
   MPMICE& operator=(const MPMICE&);
@@ -410,7 +356,6 @@ protected:
   MPMLabel*        Mlb;
   ICELabel*        Ilb;
   MPMICELabel*     MIlb;
-  ExchangeModel*   d_exchModel;
 
   bool             d_rigidMPM;
   SerialMPM*       d_mpm;
@@ -420,18 +365,14 @@ protected:
   bool             d_testForNegTemps_mpm;
   bool             do_mlmpmice;
 
-  int              pbx_matl_num;
-  MaterialSubset*  pbx_matl;
-
   std::vector<AnalysisModule*>  d_analysisModules;
 
   SwitchingCriteria* d_switchCriteria;
 
-  std::vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
   double d_TINY_RHO;
 };
 
 } // End namespace Uintah
-      
+
 #endif

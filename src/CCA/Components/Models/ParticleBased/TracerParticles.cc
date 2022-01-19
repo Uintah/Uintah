@@ -55,10 +55,35 @@ Dout dout_models_tp("Models_tracerParticles", "Models::TracerParticles", "Models
 TracerParticles::TracerParticles(const ProcessorGroup  * myworld,
                                  const MaterialManagerP& materialManager,
                                  const ProblemSpecP    & params)
-    : ModelInterface(myworld, materialManager), d_params(params)
+    : ParticleModel(myworld, materialManager), d_params(params)
 {
   d_matl_set = {nullptr};
   Ilb  = scinew ICELabel();
+  
+  
+  pXLabel             = VarLabel::create( "p.x",  // The varlabel is hardcoded to p.x to match MPM.
+                              d_Part_point,
+                              IntVector(0,0,0), 
+                              VarLabel::PositionVariable);
+
+  pXLabel_preReloc    = VarLabel::create( "p.x+",
+                              d_Part_point,
+                              IntVector(0,0,0), 
+                              VarLabel::PositionVariable);
+                              
+  pDispLabel          = VarLabel::create( "p.displacement",  d_Part_Vector );
+  pDispLabel_preReloc = VarLabel::create( "p.displacement+", d_Part_Vector ); 
+  pIDLabel            = VarLabel::create( "p.particleID",    d_Part_long64 );
+  pIDLabel_preReloc   = VarLabel::create( "p.particleID+",   d_Part_long64 );
+
+  d_oldLabels.push_back( pIDLabel_preReloc );
+  d_oldLabels.push_back( pDispLabel_preReloc );
+  
+  d_newLabels.push_back( pIDLabel );
+  d_newLabels.push_back( pDispLabel );
+  
+  nPPCLabel = VarLabel::create("nPPC", CCVariable<int>::getTypeDescription() );
+  
 }
 
 //______________________________________________________________________
@@ -71,8 +96,15 @@ TracerParticles::~TracerParticles()
   
   // VarLabels
   VarLabel::destroy( pXLabel );
+  VarLabel::destroy( pXLabel_preReloc );
+  
+  VarLabel::destroy( pDispLabel );
+  VarLabel::destroy( pDispLabel_preReloc );
+  
   VarLabel::destroy( pIDLabel );
+  VarLabel::destroy( pIDLabel_preReloc );
   VarLabel::destroy( nPPCLabel ) ;
+
   delete Ilb;
 
   // regions used during initialization
@@ -115,7 +147,8 @@ TracerParticles::interiorRegion::interiorRegion(GeometryPieceP piece,
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void TracerParticles::problemSetup(GridP&, const bool isRestart)
+void TracerParticles::problemSetup( GridP&, 
+                                    const bool isRestart)
 {
   DOUT(dout_models_tp, "Doing racerParticles::problemSetup" );
 
@@ -129,18 +162,8 @@ void TracerParticles::problemSetup(GridP&, const bool isRestart)
   d_matl_set->addReference();
   d_matl_mss = d_matl_set->getUnion();
 
-  //__________________________________
-  // - create Label names
 
-  pXLabel = VarLabel::create( "p.x",
-                              ParticleVariable<Point>::getTypeDescription(),
-                              IntVector(0,0,0), 
-                              VarLabel::PositionVariable);
 
-  pIDLabel = VarLabel::create("p.particleID",
-                               ParticleVariable<long64>::getTypeDescription());
-                                       
-  nPPCLabel = VarLabel::create("nPPC", CCVariable<int>::getTypeDescription() );
 
   //__________________________________
   //
@@ -270,9 +293,10 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
 
   Task* t = scinew Task(taskName, this, &TracerParticles::initialize);
   
-  t->computes( nPPCLabel, d_matl_mss );
-  t->computes( pXLabel,   d_matl_mss );
-  t->computes( pIDLabel,  d_matl_mss );
+  t->computes( nPPCLabel,  d_matl_mss );
+  t->computes( pXLabel,    d_matl_mss );
+  t->computes( pDispLabel, d_matl_mss );
+  t->computes( pIDLabel,   d_matl_mss );
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 
@@ -365,15 +389,17 @@ void TracerParticles::initialize(const ProcessorGroup *,
     //__________________________________
     //  allocate the particle variables
     ParticleVariable<Point>  pX;
+    ParticleVariable<Vector> pDisp;
     ParticleVariable<long64> pID;
     CCVariable<int>          nPPC;    // number of particles per cell
     
     int indx = d_matl->getDWIndex();
     ParticleSubset* part_ss = new_dw->createParticleSubset( nParticles, indx, patch );
     
-    new_dw->allocateAndPut( pX,   pXLabel,  part_ss );
-    new_dw->allocateAndPut( pID,  pIDLabel, part_ss );
-    new_dw->allocateAndPut( nPPC, nPPCLabel, indx, patch );
+    new_dw->allocateAndPut( pX,    pXLabel,     part_ss );
+    new_dw->allocateAndPut( pDisp, pDispLabel,  part_ss );
+    new_dw->allocateAndPut( pID,   pIDLabel,    part_ss );
+    new_dw->allocateAndPut( nPPC,  nPPCLabel, indx, patch );
     nPPC.initialize(0);
     
     int pIndx = 0;
@@ -406,6 +432,7 @@ void TracerParticles::initialize(const ProcessorGroup *,
         }
         
         pX[pIndx] = pos;
+        pDisp[pIndx] = Vector(0);
         
         ASSERT(cell_indx.x() <= 0xffff && 
                cell_indx.y() <= 0xffff && 
@@ -427,6 +454,7 @@ void TracerParticles::initialize(const ProcessorGroup *,
   }  // patches
 }
 
+
 //______________________________________________________________________
 void TracerParticles::scheduleComputeModelSources(SchedulerP  & sched,
                                                   const LevelP& level)
@@ -434,20 +462,49 @@ void TracerParticles::scheduleComputeModelSources(SchedulerP  & sched,
   const string taskName = "TracerParticles::scheduleComputeModelSources_("+ d_tracer->fullName+")";
   printSchedule(level,dout_models_tp, taskName);
 
-  Task* t = scinew Task( taskName, this,&TracerParticles::computeModelSources);
+  sched_updateParticles( sched, level );
+}
+
+//______________________________________________________________________
+//  Task: updateParticles
+//  Purpose:  Update the particles:
+//              - position
+//              - displacement
+//              - delete any particles outside the domain
+//______________________________________________________________________
+void TracerParticles::sched_updateParticles(SchedulerP  & sched,
+                                            const LevelP& level)
+{
+
+  const string schedName = "sched_updateParticles_("+ d_tracer->fullName+")";
+  printSchedule( level ,dout_models_tp, schedName);
+
+  const string taskName = "TracerParticles::updateParticles_("+ d_tracer->fullName+")";
+  Task* t = scinew Task( taskName, this, &TracerParticles::updateParticles);
 
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
 
+  t->requires( Task::OldDW, pXLabel,     d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pDispLabel,  d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pIDLabel,    d_matl_mss, d_gn );
+    
+  t->requires( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );
+  
+  t->computes( pXLabel_preReloc,    d_matl_mss ); 
+  t->computes( pDispLabel_preReloc, d_matl_mss );
+  t->computes( pIDLabel_preReloc,   d_matl_mss );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
 //______________________________________________________________________
-void TracerParticles::computeModelSources(const ProcessorGroup  *,
-                                          const PatchSubset     * patches,
-                                          const MaterialSubset  * matls,
-                                          DataWarehouse         * old_dw,
-                                          DataWarehouse         * new_dw)
+//
+//______________________________________________________________________
+void TracerParticles::updateParticles(const ProcessorGroup  *,
+                                      const PatchSubset     * patches,
+                                      const MaterialSubset  * matls,
+                                      DataWarehouse         * old_dw,
+                                      DataWarehouse         * new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -456,33 +513,58 @@ void TracerParticles::computeModelSources(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    const string msg = "Doing TracerParticles::computeModelSources_("+ d_tracer->fullName+")";
+    const string msg = "Doing TracerParticles::updateParticles_("+ d_tracer->fullName+")";
     printTask(patches, patch, dout_models_tp, msg);
 
-
     //__________________________________
-    //  interior  regions
-    for(vector<interiorRegion*>::iterator iter = d_tracer->interiorRegions.begin();
-                                          iter != d_tracer->interiorRegions.end(); iter++){
-      interiorRegion* region = *iter;
+    //  
+    ParticleVariable<Point>  pX;
+    ParticleVariable<Vector> pDisp;
+    ParticleVariable<long64> pID;
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
+    constParticleVariable<Point>  pX_old;
+    constParticleVariable<Vector> pDisp_old;
+    constParticleVariable<long64> pID_old;
+    constCCVariable<Vector>       vel_CC;
+    
+    int matlIndx = d_matl->getDWIndex();
+    ParticleSubset* pset   = old_dw->getParticleSubset( matlIndx, patch );
+    ParticleSubset* delset = scinew ParticleSubset(0, matlIndx, patch);
+    
+    old_dw->get( vel_CC,           Ilb->vel_CCLabel, matlIndx, patch, d_gn, 0);
+    old_dw->get( pX_old,           pXLabel,              pset );           
+    old_dw->get( pDisp_old,        pDispLabel,           pset );   
+    old_dw->get( pID_old,          pIDLabel,             pset );            
+    
+    new_dw->allocateAndPut( pX,    pXLabel_preReloc,     pset );             
+    new_dw->allocateAndPut( pDisp, pDispLabel_preReloc,  pset );   
+    new_dw->allocateAndPut( pID,   pIDLabel_preReloc,    pset );         
+    pID.copyData( pID_old );
 
-        Point p = patch->cellPosition(c);
-
-        if(region->piece->inside(p)) {
-
-        }
-      } // Over cells
-    }  //interiorRegions
-
+    BBox compDomain;
+    GridP grid = level->getGrid();
+    grid->getInteriorSpatialRange(compDomain);
+   
     //__________________________________
-    //  Clamp:  a scalar must always be > 0
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-
+    //  Update particle postion and displacement
+    for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      
+      IntVector cell_indx;
+      if ( !patch->findCell( pX_old[idx],cell_indx ) ) {
+        continue;
+      }
+       
+      pX[idx]    = pX_old[idx] + vel_CC[cell_indx]*delT;
+      pDisp[idx] = pDisp_old[idx]  + ( pX[idx] - pX_old[idx] );
+      
+      //__________________________________
+      //  delete particles that are ouside the domain
+      if ( ! compDomain.inside( pX[idx] ) ){
+        delset->addParticle(idx);
+      }
+      
     }
-
-  }  // patches
+    new_dw->deleteParticles(delset);
+  }
 }

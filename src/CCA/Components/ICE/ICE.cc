@@ -37,6 +37,7 @@
 #include <CCA/Components/Models/ModelFactory.h>
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 #include <CCA/Components/Models/HEChem/HEChemModel.h>
+#include <CCA/Components/Models/ParticleBased/TracerParticles.h>
 #include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #include <CCA/Components/Models/MultiMatlExchange/ExchangeFactory.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
@@ -1258,6 +1259,11 @@ void ICE::scheduleComputeModelSources(SchedulerP        & sched,
       SolidReactionModel* sr_model = dynamic_cast<SolidReactionModel*>( *m_iter );
       if( sr_model ){
         sr_model->scheduleComputeModelSources( sched, level );
+      }
+
+      ParticleModel*  p_model = dynamic_cast<ParticleModel*>( *m_iter );
+      if( p_model ){
+        p_model->scheduleComputeModelSources( sched, level );
       }
     }
   }
