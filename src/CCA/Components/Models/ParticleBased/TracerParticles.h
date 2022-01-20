@@ -76,21 +76,16 @@ namespace Uintah {
 
     //__________________________________
     //  Region used for initialization
+    //  and adding particles
     class Region {
     public:
       Region(GeometryPieceP piece, ProblemSpecP&);
 
       GeometryPieceP piece;
-      IntVector ppc;          // particles per cell
-    };
-
-    //__________________________________
-    //  For injecting a scalar inside the domain
-    class interiorRegion {
-    public:
-      interiorRegion(GeometryPieceP piece, ProblemSpecP&);
-      GeometryPieceP piece;
-      IntVector ppc;          // particles per cell
+      int particlesPerCell          {8};     // particles per cell
+      int particlesPerCellPerSecond {0};     // particles per cell per second
+      double elapsedTime            {0};     //  Elapsed time since particles were added 
+      bool isInteriorRegion         {false};
     };
 
     //__________________________________
@@ -101,7 +96,7 @@ namespace Uintah {
       std::string fullName;
 
       std::vector<Region*> regions;
-      std::vector<interiorRegion*> interiorRegions;
+      std::vector<Region*> interiorRegions;
     };
 
     Tracer* d_tracer;
@@ -113,8 +108,19 @@ namespace Uintah {
     
     //__________________________________
     //
-    unsigned int countParticles( const Patch   * patch,
-                                 regionPoints  & pPositions);
+    unsigned int distributeParticles( const Patch   * patch,
+                                      const double    delT,
+                                      const std::vector<Region*> regions,
+                                      regionPoints  & pPositions);
+                                 
+    void initializeRegions( const Patch   * patch,
+                            unsigned int    pIndx,            
+                            regionPoints  & pPositions,       
+                            std::vector<Region*> regions,     
+                            ParticleVariable<Point> & pX,     
+                            ParticleVariable<Vector>& pDisp,  
+                            ParticleVariable<long64>& pID,    
+                            CCVariable<int>         & nPPC ); 
 
     void initialize(const ProcessorGroup  *,
                     const PatchSubset     * patches,
@@ -129,7 +135,16 @@ namespace Uintah {
                          const PatchSubset     * patches,                  
                          const MaterialSubset  * matls,                    
                          DataWarehouse         * old_dw,                   
-                         DataWarehouse         * new_dw);                  
+                         DataWarehouse         * new_dw);  
+                         
+    void sched_addParticles( SchedulerP  & sched,
+                             const LevelP& level);
+                             
+    void addParticles(const ProcessorGroup  *,
+                      const PatchSubset     * patches,
+                      const MaterialSubset  * ,
+                      DataWarehouse         * old_dw,
+                      DataWarehouse         * new_dw);               
 
     TracerParticles(const TracerParticles&);
     TracerParticles& operator=(const TracerParticles&);
