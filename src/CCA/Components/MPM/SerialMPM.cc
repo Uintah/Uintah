@@ -1075,6 +1075,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
+  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,    gan,NGP);
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
     t->requires(Task::NewDW,  lb->pExternalForceCorner2Label,gan,NGP);
@@ -1103,6 +1104,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->massBurnFractionLabel);
   t->computes(lb->dLdtDissolutionLabel);
+  t->computes(lb->NodalWeightSumLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -1516,9 +1518,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
 
-  t->requires(Task::NewDW, lb->massBurnFractionLabel,    gac,NGN);
+  t->requires(Task::NewDW, lb->massBurnFractionLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->NodalWeightSumLabel,           gac,NGN);
   if(flags->d_with_ice){
-    t->requires(Task::NewDW, lb->dTdt_NCLabel,           gac,NGN);
+    t->requires(Task::NewDW, lb->dTdt_NCLabel,                  gac,NGN);
   }
 
   t->computes(lb->pDispLabel_preReloc);
@@ -2716,6 +2719,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<Matrix3> pVelGrad;
       constParticleVariable<Vector>  pTempGrad;
+      constParticleVariable<double>  pSurf;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -2733,6 +2737,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->get(psize,          lb->pCurSizeLabel,       pset);
 
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      new_dw->get(pSurf,          lb->pSurfLabel_preReloc,     pset);
+
       constParticleVariable<IntVector> pLoadCurveID;
       if (flags->d_useCBDI) {
         new_dw->get(pExternalForceCorner1,
@@ -2757,6 +2763,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gTemperatureRate,massBurnFrac,dLdt;
+      NCVariable<double> nodalWeightSum;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
@@ -2776,6 +2783,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(dLdt,             lb->dLdtDissolutionLabel,
                              dwi,patch);
+      new_dw->allocateAndPut(nodalWeightSum,   lb->NodalWeightSumLabel,
+                             dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2789,6 +2798,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gSp_vol.initialize(0.);
       massBurnFrac.initialize(0.);
       dLdt.initialize(0.);
+      nodalWeightSum.initialize(0.0);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -2833,6 +2843,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[node]   += ptemp_ext * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol   * pmass[idx] * S[k];
             //gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
+            if(pSurf[idx] >= 0.99 && S[k]>1.e-20){
+              nodalWeightSum[node]+=S[k];
+            }
           }
         }
         if (flags->d_useCBDI && pLoadCurveID[idx].x()>0) {
@@ -4319,6 +4332,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
       constNCVariable<Vector> gSurfNorm;
+      constNCVariable<double> nodalWeightSum;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -4370,8 +4384,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         gvelSPSSP_create.initialize(Vector(0.,0.,0.));
         gvelSPSSP = gvelSPSSP_create;               // reference created data
       }
+
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+      new_dw->get(nodalWeightSum,  lb->NodalWeightSumLabel,  dwi,patch,gac,NGP);
+
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
       } else{
@@ -4408,6 +4425,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         && timestep%10==1)){
         useXPIC=true;
       }
+
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -4432,11 +4450,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pSN      += gSurfNorm[node]       * S[k];
 
           tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
-          burnFraction += massBurnFrac[node]  * S[k];
-//            burnFraction = min(massBurnFrac[node],burnFraction);
-//            burnFraction += massBurnFrac[node];
         }
-//          burnFraction *=0.25*0.125;
+
+        if(pSurf[idx]>=0.99){
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            burnFraction += massBurnFrac[node]*S[k]
+                           /(nodalWeightSum[node]+1.e-100);
+          }
+        }
 
         // Update particle vel and pos using Nairn's XPIC(2) method
 	// if useXPIC, otherwise just standard FLIP
@@ -4594,7 +4616,8 @@ void SerialMPM::computeParticleGradients(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       Ghost::GhostType  gac = Ghost::AroundCells;
       // Get the arrays of particle values to be changed

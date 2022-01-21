@@ -164,15 +164,12 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
                    * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
                    * exp(-d_Ea/(d_R*d_temperature))*d_StressThresh
                    * 8.0*3.1536e19*d_timeConversionFactor;
-      double rate = 0.25*dL_dt*area;
 
       double dL_dt_clay = (0.75*M_PI)
                         * ((d_Vm*d_Vm)*d_Ao_clay)/(d_R*d_temperature)
                         * exp(-d_Ea_clay/(d_R*d_temperature))*d_StressThresh
                         * 8.0*3.1536e19*d_timeConversionFactor;
-      double rate_clay = 0.25*dL_dt_clay*area;
 //      cout << "dL_dt = " << dL_dt << endl;
-//      cout << "rateI = " << rate << endl;
 //      cout << "d_timeConversionFactor = " << rate << endl;
 //      int numNodesMBRGT0 = 0;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -202,11 +199,11 @@ void ContactStressIndependent::computeMassBurnFraction(const ProcessorGroup*,
             double surfClay = max(gSurfaceClay[md][c], 
                                   gSurfaceClay[inContactMatl][c]);
 
-            massBurnRate[md][c] += NC_CCweight[c]*rho*
-                                   (rate*(1.-surfClay)  + rate_clay*surfClay);
-            dLdt[md][c] += NC_CCweight[c]*
-                                   (dL_dt*(1.-surfClay) + dL_dt_clay*surfClay);
-//            numNodesMBRGT0++;
+            double localSurfRate = NC_CCweight[c]*
+                                   (dL_dt*(1.-surfClay)  + dL_dt_clay*surfClay);
+            dLdt[md][c] += localSurfRate;
+            massBurnRate[md][c] += localSurfRate*rho*gSurfaceArea[md][c];
+//          numNodesMBRGT0++;
 //          cout << "mBR["<<md<<"]["<<c<<"] = " << massBurnRate[md][c] << endl;
 //          cout << "NC_CCweight["<<c<<"] = "   << NC_CCweight[c]      << endl;
           } // Stress threshold

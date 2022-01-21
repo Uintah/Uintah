@@ -151,7 +151,7 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
       int md=m;
 
       double dL_dt =  -d_growthRate;
-      double massAddedTotal=0.;
+//      double massAddedTotal=0.;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -164,7 +164,7 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
                                   && NC_CCweight[c] < 0.2) {
           massBurnRate[md][c] += rho[m]*dL_dt*gSurfaceArea[md][c];
           dLdt[md][c] += dL_dt;
-          massAddedTotal+=massBurnRate[md][c];
+//          massAddedTotal+=massBurnRate[md][c];
         } // mass is present
       } // nodes
      } // endif a masterMaterial

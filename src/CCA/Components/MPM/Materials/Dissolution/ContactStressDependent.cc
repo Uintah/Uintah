@@ -168,12 +168,10 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
                    * ((d_Vm*d_Vm)*d_Ao)/(d_R*d_temperature)
                    * exp(-d_Ea/(d_R*d_temperature))
                    * 8.0*3.1536e19*d_timeConversionFactor;
-      double rate = 0.25*dL_dt*area;
       double dL_dt_clay = (0.75*M_PI)
                         * ((d_Vm*d_Vm)*d_Ao_clay)/(d_R*d_temperature)
                         * exp(-d_Ea_clay/(d_R*d_temperature))
                         * 8.0*3.1536e19*d_timeConversionFactor;
-      double rate_clay = 0.25*dL_dt*area;
       // Limit the dissolution rate to take no more than 1% of a cell width
       // in a single timestep
       double limit = 0.01*dx.x();
@@ -211,17 +209,17 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             double surfClay = max(gSurfaceClay[md][c], 
                                   gSurfaceClay[inContactMatl][c]);
 
-            double dLdt_now = NC_CCweight[c]*stressDiff*
-                                   (dL_dt*(1.-surfClay) + dL_dt_clay*surfClay);
-            double slowBurn = 1.0;
-            if(dLdt_now > limit){
-               slowBurn = limit/dLdt_now;
-            }
-            dLdt[md][c] += dLdt_now*slowBurn;
+            double localSurfRate = NC_CCweight[c]*stressDiff*
+                                   (dL_dt*(1.-surfClay)  + dL_dt_clay*surfClay);
 
-            double massBurnRate_now = NC_CCweight[c]*rho*stressDiff*
-                                   (rate*(1.-surfClay)  + rate_clay*surfClay);
-            massBurnRate[md][c] += massBurnRate_now*slowBurn;
+            // Limit burn rate to 1% of a cell width in a single timestep
+            double slowBurn = 1.0;
+            if(localSurfRate > limit){
+               slowBurn = limit/localSurfRate;
+            }
+            dLdt[md][c] += localSurfRate*slowBurn;
+
+            massBurnRate[md][c] += localSurfRate*rho*slowBurn;
 
 //           cout << "c = " << c << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
