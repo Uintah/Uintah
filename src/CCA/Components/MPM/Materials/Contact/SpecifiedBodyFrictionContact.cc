@@ -232,7 +232,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-//    Vector dx = patch->dCell();
     constNCVariable<double> NC_CCweight;
     constNCVariable<int>    alphaMaterial;
     constNCVariable<Vector> normAlphaToBeta;
@@ -273,9 +272,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
       }
     }
 
-//    Vector reaction_force(0.0,0.0,0.0);
-//    Vector reaction_torque(0.0,0.0,0.0);
-
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
       
@@ -313,7 +309,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
                                    dV_normalDV/(dV_normalDV.length()+1.e-100);
                 double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                 double frictionCoefficient=
-                        Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                  Min(d_mu,tangentDeltaVelocity/(fabs(normalDeltaVel)+1.e-100));
                 // Calculate velocity change needed to enforce contact
                 Dv = -normal_normaldV
                      -surfaceTangent*frictionCoefficient*fabs(normalDeltaVel);
@@ -329,10 +325,17 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
             }  // if separation
           }  // if mass of both matls>0
         }    // for matls
+      } else{  // alpha!=0
+        Point NodePos = patch->getNodePosition(c);
+        Vector r = NodePos - requested_origin.asPoint();
+        Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+        for(int  n = 0; n < numMatls; n++){
+          if(n==d_material && gmass[n][c]>1.e-99){
+            gvelocity_star[n][c] =  rigid_vel;
+          }
+        }
       }
     }      // for Node Iterator
-//    new_dw->put(sumvec_vartype(reaction_force),  lb->RigidReactionForceLabel);
-//    new_dw->put(sumvec_vartype(reaction_torque), lb->RigidReactionTorqueLabel);
   } // loop over patches
 
   //__________________________________
