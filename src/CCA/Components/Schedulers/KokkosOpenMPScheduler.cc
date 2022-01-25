@@ -155,7 +155,7 @@ KokkosOpenMPScheduler::problemSetup( const ProblemSpecP     & prob_spec
   proc0cout << "Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   if (d_myworld->myRank() == 0) {
-    std::cout << "   WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
+    std::cout << "WARNING: Kokkos-OpenMP Scheduler is EXPERIMENTAL, not all tasks are Kokkos-enabled yet." << std::endl;
   }
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
