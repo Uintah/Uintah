@@ -160,10 +160,14 @@ DESCRIPTION
   public:
     // Constructor
     SpecifiedBodyContact(const ProcessorGroup* myworld,
-                         ProblemSpecP& ps,MaterialManagerP& d_sS,MPMLabel* lb,MPMFlags*flag);
+                         ProblemSpecP& ps, MaterialManagerP& d_sS,
+                         MPMLabel* lb, MPMFlags*flag);
          
     // Destructor
     virtual ~SpecifiedBodyContact();
+
+    // Currently, setting if any materials are rigid
+    virtual void setContactMaterialAttributes();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
 

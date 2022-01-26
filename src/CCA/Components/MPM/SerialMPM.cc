@@ -307,6 +307,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if (flags->d_doScalarDiffusion) {
     d_sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, m_materialManager, flags, lb);
   }
+
   d_fluxBC = FluxBCModelFactory::create(m_materialManager, flags);
 
   //__________________________________
@@ -2799,12 +2800,13 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gvolumeglobal;
     new_dw->get(gvolumeglobal,  lb->gVolumeLabel,
-                m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None,0);
+           m_materialManager->getAllInOneMatls()->get(0), patch, Ghost::None,0);
     new_dw->allocateAndPut(gstressglobal, lb->gStressForSavingLabel,
-                           m_materialManager->getAllInOneMatls()->get(0), patch);
+                          m_materialManager->getAllInOneMatls()->get(0), patch);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
@@ -2862,109 +2864,110 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       Matrix3 stressvol;
       Matrix3 stresspress;
 
-      // for the non axisymmetric case:
-      if(!flags->d_axisymmetric){
-        for (ParticleSubset::iterator iter = pset->begin();
-             iter != pset->end();
-             iter++){
-          particleIndex idx = *iter;
+      if(!mpm_matl->getIsRigid()){
+        // for the non axisymmetric case:
+        if(!flags->d_axisymmetric){
+          for (ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end();
+               iter++){
+            particleIndex idx = *iter;
 
-          // Get the node indices that surround the cell
-          int NN =
-            interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+            // Get the node indices that surround the cell
+            int NN =
+              interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
                                                      d_S,psize[idx]);
-          stressvol  = pstress[idx]*pvol[idx];
-          stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
+            stressvol  = pstress[idx]*pvol[idx];
+            stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
 
-          for (int k = 0; k < NN; k++){
-            if(patch->containsNode(ni[k])){
-              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                         d_S[k].z()*oodx[2]);
-              internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
-              gstress[ni[k]]       += stressvol * S[k];
+            for (int k = 0; k < NN; k++){
+              if(patch->containsNode(ni[k])){
+                Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                           d_S[k].z()*oodx[2]);
+                internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+                gstress[ni[k]]       += stressvol * S[k];
+              }
             }
           }
-        }
-      }
+        } else { 
+          // for the axisymmetric case
+          for (ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end();
+               iter++){
+            particleIndex idx = *iter;
+  
+            int NN =
+              interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+                                                     d_S,psize[idx]);
 
-      // for the axisymmetric case
-      if(flags->d_axisymmetric){
-        for (ParticleSubset::iterator iter = pset->begin();
-             iter != pset->end();
-             iter++){
-          particleIndex idx = *iter;
+            stressvol   = pstress[idx]*pvol[idx];
+            stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
 
-          int NN =
-            interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-                                                   d_S,psize[idx]);
-
-          stressvol   = pstress[idx]*pvol[idx];
-          stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
-
-          // r is the x direction, z (axial) is the y direction
-          double IFr=0.,IFz=0.;
-          for (int k = 0; k < NN; k++){
-            if(patch->containsNode(ni[k])){
-              IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
-                    d_S[k].y()*oodx[1]*stresspress(0,1) +
-                    d_S[k].z()*stresspress(2,2);
-              IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
-                  + d_S[k].y()*oodx[1]*stresspress(1,1);
-              internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];
-              gstress[ni[k]]       += stressvol * S[k];
-            }
-          }
-        }
-      }
-
-      for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        gstressglobal[c] += gstress[c];
-        gstress[c] /= gvolume[c];
-      }
-
-      // save boundary forces before apply symmetry boundary condition.
-      for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
-          fit!=d_bndy_traction_faces.end();fit++) {
-        Patch::FaceType face = *fit;
-
-        // Check if the face is on an external boundary
-        if(patch->getBCType(face)==Patch::Neighbor)
-           continue;
-
-        const int iface = (int)face;
-
-        // We are on the boundary, i.e. not on an interior patch
-        // boundary, and also on the correct side,
-
-        IntVector projlow, projhigh;
-        patch->getFaceNodes(face, 0, projlow, projhigh);
-        Vector norm = face_norm(face);
-        double celldepth  = dx[iface/2]; // length in dir. perp. to boundary
-
-        // loop over face nodes to find boundary forces, ave. stress (traction).
-        // Note that nodearea incorporates a factor of two as described in the
-        // bndyCellArea calculation in order to get node face areas.
-
-        for (int i = projlow.x(); i<projhigh.x(); i++) {
-          for (int j = projlow.y(); j<projhigh.y(); j++) {
-            for (int k = projlow.z(); k<projhigh.z(); k++) {
-              IntVector ijk(i,j,k);
-
-              // flip sign so that pushing on boundary gives positive force
-              bndyForce[iface] -= internalforce[ijk];
-
-              double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
-              for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
-               bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*nodearea;
+            // r is the x direction, z (axial) is the y direction
+            double IFr=0.,IFz=0.;
+            for (int k = 0; k < NN; k++){
+              if(patch->containsNode(ni[k])){
+                IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
+                      d_S[k].y()*oodx[1]*stresspress(0,1) +
+                      d_S[k].z()*stresspress(2,2);
+                IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
+                    + d_S[k].y()*oodx[1]*stresspress(1,1);
+                internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];
+                gstress[ni[k]]       += stressvol * S[k];
               }
             }
           }
         }
-      } // faces
 
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
+        for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          gstressglobal[c] += gstress[c];
+          gstress[c] /= gvolume[c];
+        }
+
+        // save boundary forces before apply symmetry boundary condition.
+        for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin());
+            fit!=d_bndy_traction_faces.end();fit++) {
+          Patch::FaceType face = *fit;
+
+          // Check if the face is on an external boundary
+          if(patch->getBCType(face)==Patch::Neighbor)
+             continue;
+
+          const int iface = (int)face;
+
+          // We are on the boundary, i.e. not on an interior patch
+          // boundary, and also on the correct side,
+
+          IntVector projlow, projhigh;
+          patch->getFaceNodes(face, 0, projlow, projhigh);
+          Vector norm = face_norm(face);
+          double celldepth  = dx[iface/2]; // length in dir. perp. to boundary
+
+          // loop over face nodes to find boundary forces, ave. stress(traction)
+          // Note that nodearea incorporates a factor of two as described in the
+          // bndyCellArea calculation in order to get node face areas.
+
+          for (int i = projlow.x(); i<projhigh.x(); i++) {
+            for (int j = projlow.y(); j<projhigh.y(); j++) {
+              for (int k = projlow.z(); k<projhigh.z(); k++) {
+                IntVector ijk(i,j,k);
+  
+                // flip sign so that pushing on boundary gives positive force
+                bndyForce[iface] -= internalforce[ijk];
+  
+                double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
+                for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
+                 bndyTraction[iface][ic]+=gstress[ijk](ic,jc)*norm[jc]*nodearea;
+                }
+              }
+            }
+          }
+        } // faces
+
+        MPMBoundCond bc;
+        bc.setBoundaryCondition(patch,dwi, "Symmetric",
+                                internalforce, interp_type);
+      }
     }
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
