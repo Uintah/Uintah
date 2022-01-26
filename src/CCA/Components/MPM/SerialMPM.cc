@@ -5392,13 +5392,16 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }
       } // Loop over materials
 
+      double maxRigidMass=1.e-90;
       for(unsigned int m = 0; m < numMPMMatls; m++){
         if(IsRigidMaterial[m]){
-          if(gmass[m][c] > 1.e-16){
+          if(gmass[m][c] > maxRigidMass){
+            maxRigidMass=gmass[m][c];
             alphaMaterial[c]=m;
           }
         }
       } // Loop over materials
+
       if(NumMatlsOnNode[c]<2){
         alphaMaterial[c]=-99;
       }

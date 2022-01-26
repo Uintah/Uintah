@@ -92,12 +92,17 @@
         <tracer               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" >
 
-          <initialization     spec="REQUIRED NO_DATA" >
-            <geom_object      spec="MULTIPLE" />
+          <initialization       spec="REQUIRED NO_DATA" >
+            <geom_object        spec="MULTIPLE">
+              <particlesPerCell spec="REQUIRED DOUBLE"/>
+            </geom_object>
           </initialization>
 
           <interiorSources    spec="OPTIONAL NO_DATA" >
-            <geom_object      spec="MULTIPLE" />
+            <geom_object      spec="MULTIPLE">
+              <particlesPerCellPerSecond
+                              spec="REQUIRED DOUBLE"/>
+            </geom_object>
           </interiorSources>
         </tracer>
       </TracerParticles>

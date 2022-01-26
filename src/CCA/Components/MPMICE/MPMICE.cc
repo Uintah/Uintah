@@ -649,7 +649,6 @@ MPMICE::scheduleParticleRelocation( SchedulerP        & sched,
 
   new_mss->addSubset( old_mss );
 
-#if 1
   //__________________________________
   // Update VarLabels and matl Subsets
   if(d_ice->d_models.size() ){
@@ -663,7 +662,7 @@ MPMICE::scheduleParticleRelocation( SchedulerP        & sched,
       }
     }
   }
-#endif
+
   //__________________________________
   //  create a new material set containing the
   //  the updated matlSubset.
@@ -722,19 +721,8 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
   // only do on finest level until we get AMR MPM
   if (level->getIndex() == level->getGrid()->numLevels()-1) {
-
-
+  
     MPMICE::scheduleParticleRelocation( sched, level,mpm_matls);
-
-#if 0
-    sched->scheduleParticleRelocation(level,
-                                      Mlb->pXLabel_preReloc,
-                                      d_mpm->d_particleState_preReloc,
-                                      Mlb->pXLabel,
-                                      d_mpm->d_particleState,
-                                      Mlb->pParticleIDLabel,
-                                      mpm_matls);
-#endif
   }
 
   //__________________________________
