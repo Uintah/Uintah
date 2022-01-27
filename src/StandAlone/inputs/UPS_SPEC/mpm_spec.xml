@@ -201,10 +201,11 @@
         <Ea_clay_ug-cm2_us2-mol          spec="OPTIONAL DOUBLE 'positive'" /> 
         <StressThreshold                 spec="OPTIONAL DOUBLE 'positive'" />
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
+        <GrowthRate                      spec="OPTIONAL DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
-        <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, saltPrecipitationModel'" />
+        <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, saltPrecipitationModel, QuartzOvergrowth'" />
         <masterModalID                   spec="REQUIRED INTEGER" />
-        <InContactWithModalID            spec="REQUIRED INTEGER" />
+        <InContactWithModalID            spec="OPTIONAL INTEGER" />
       </dissolution>
 
       <material                          spec="MULTIPLE NO_DATA"
