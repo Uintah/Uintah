@@ -32,6 +32,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/QuartzOvergrowth.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -56,9 +57,9 @@ QuartzOvergrowth::QuartzOvergrowth(const ProcessorGroup* myworld,
   // Constructor
   d_materialManager = d_sS;
   lb = Mlb;
-  ps->require("masterModalID",     d_masterModalID);
-  ps->require("GrowthRate",        d_growthRate);
-//  ps->require("InContactWithModalID", d_inContactWithModalID);
+  ps->require("masterModalID",             d_masterModalID);
+  ps->require("GrowthRate_cmPerMY",        d_growthRate);
+  ps->require("GrowthRateClay_cmPerMY",    d_growthRateClay);
 }
 
 QuartzOvergrowth::~QuartzOvergrowth()
@@ -68,8 +69,10 @@ QuartzOvergrowth::~QuartzOvergrowth()
 void QuartzOvergrowth::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",         "quartzOvergrowth");
-  dissolution_ps->appendElement("masterModalID",        d_masterModalID);
+  dissolution_ps->appendElement("type",                   "quartzOvergrowth");
+  dissolution_ps->appendElement("masterModalID",          d_masterModalID);
+  dissolution_ps->appendElement("GrowthRate_cmPerMY",     d_growthRate);
+  dissolution_ps->appendElement("GrowthRateClay_cmPerMY", d_growthRateClay);
 }
 
 void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
@@ -81,31 +84,13 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
    int numMatls = d_materialManager->getNumMatls("MPM");
    ASSERTEQ(numMatls, matls->size());
 
-   // Get the current simulation time
-   simTime_vartype simTimeVar;
-   old_dw->get(simTimeVar, lb->simulationTimeLabel);
-   double time = simTimeVar;
-
    delt_vartype delT;
    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
+//   string interp_type = flags->d_interpolator_type;
+
 //  proc0cout << "phase = " << d_phase << endl;
-//  if(d_phase=="dissolution"){
-   // Get the dissolved mass and free surface area from previous timestep
-   sum_vartype TSA;
-   old_dw->get(TSA,  lb->TotalSurfaceAreaLabel);
-   double TotalSurfArea = TSA;
-//   double OrigTotalMassSV = OIMSV;
-
-//   double MassPerArea = DisMass/(TotalSurfArea+1.e-100);
-
-//   cout << "MassDiffFrac = " << MassDiffFrac << endl;
-//   cout << "OrigTotalMass = "   << OrigTotalMass << endl;
-//   cout << "OrigTotalMassSV = " << OrigTotalMassSV << endl;
-//   cout << "CurTotalMass = " << CurTotalMass << endl;
-//   cout << "DisMass = " << DisMass << endl;
-//   cout << "TotalSurfArea = " << TotalSurfArea << endl;
-//   cout << "MassPerArea = " << MassPerArea << endl;
+  if(d_phase=="dissolution"){
 
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -115,7 +100,8 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
     std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
-//    std::vector<constNCVariable<double> > gSurfaceClay(numMatls);
+    std::vector<constNCVariable<double> > gSurfaceClay(numMatls);
+    std::vector<constNCVariable<Vector> > gContactForce(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
     std::vector<NCVariable<double> >  dLdt(numMatls);
     constNCVariable<double> NC_CCweight;
@@ -129,8 +115,10 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
       new_dw->get(gvolume[m],   lb->gVolumeLabel,         dwi, patch, gnone, 0);
       new_dw->get(gSurfaceArea[m],
                                 lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
-//      new_dw->get(gSurfaceClay[m],
-//                              lb->gSurfaceClayLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gSurfaceClay[m],
+                                lb->gSurfaceClayLabel,    dwi, patch, gnone, 0);
+      new_dw->get(gContactForce[m],
+                                lb->gLSContactForceLabel, dwi, patch, gnone, 0);
       new_dw->getModifiable(massBurnRate[m],
                                 lb->massBurnFractionLabel,dwi, patch);
       new_dw->getModifiable(dLdt[m],
@@ -149,8 +137,12 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
+//    MPMMaterial* mpm_matl = 
+//                      (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+//    int dwi = mpm_matl->getDWIndex();
 
-      double dL_dt =  -d_growthRate;
+      double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
+      double dL_dt_clay =  -d_growthRateClay*3.1536e19*d_timeConversionFactor;
 //      double massAddedTotal=0.;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
@@ -160,17 +152,23 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
             sumMass+=gmass[n][c]; 
         }
 
-        if(gmass[md][c] > 2.e-100 && gmass[md][c] == sumMass 
+        if(gmass[md][c] > 2.e-100 && gContactForce[md][c].length() < 1.e-8
                                   && NC_CCweight[c] < 0.2) {
-          massBurnRate[md][c] += rho[m]*dL_dt*gSurfaceArea[md][c];
-          dLdt[md][c] += dL_dt;
+
+          double surfClay = gSurfaceClay[md][c];
+          double localSurfRate = (dL_dt*(1.-surfClay)  + dL_dt_clay*surfClay);
+          massBurnRate[md][c] += rho[m]*localSurfRate*gSurfaceArea[md][c];
+          dLdt[md][c] += localSurfRate;
 //          massAddedTotal+=massBurnRate[md][c];
         } // mass is present
       } // nodes
+//      MPMBoundCond bc;
+//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",dLdt[md],"gimp");
+//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",massBurnRate[md],"gimp");
      } // endif a masterMaterial
     } // materials
   } // patches
-// } // if dissolution
+ } // if dissolution
 }
 
 void QuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
@@ -194,7 +192,8 @@ void QuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
-//  t->requires(Task::NewDW, lb->gSurfaceClayLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gSurfaceClayLabel,        Ghost::None);
+  t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
