@@ -24,6 +24,7 @@
 
 // SpecifiedBodyContact.cc
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
@@ -135,6 +136,13 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 
 SpecifiedBodyContact::~SpecifiedBodyContact()
 {
+}
+
+void SpecifiedBodyContact::setContactMaterialAttributes()
+{
+  MPMMaterial* mpm_matl = 
+         (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
+  mpm_matl->setIsRigid(true);
 }
 
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
