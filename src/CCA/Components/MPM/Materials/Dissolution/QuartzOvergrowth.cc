@@ -59,7 +59,7 @@ QuartzOvergrowth::QuartzOvergrowth(const ProcessorGroup* myworld,
   lb = Mlb;
   ps->require("masterModalID",             d_masterModalID);
   ps->require("GrowthRate_cmPerMY",        d_growthRate);
-  ps->require("GrowthRateClay_cmPerMY",    d_growthRateClay);
+  ps->getWithDefault("GrowthRateClay_cmPerMY",  d_growthRateClay, d_growthRate);
 }
 
 QuartzOvergrowth::~QuartzOvergrowth()
