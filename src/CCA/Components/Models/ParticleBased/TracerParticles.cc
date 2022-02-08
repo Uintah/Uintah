@@ -324,8 +324,8 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
 {
   unsigned int count = 0;
   
-  for( auto iter = regions.begin(); iter != regions.end(); iter++){
-    Region* region = *iter;
+  for( auto r_iter = regions.begin(); r_iter != regions.end(); r_iter++){
+    Region* region = *r_iter;
     
     // is this region contained on this patch
     GeometryPieceP piece = region->piece;
@@ -333,7 +333,7 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
     Box b2 = patch->getExtraBox();
     Box b  = b1.intersect(b2);
     if( b.degenerate() ){
-       return 0;
+       continue;
     }
     
     Vector dx = patch->dCell();
@@ -350,7 +350,6 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
       
       nParticlesPerCell = Uintah::RoundDown(region->particlesPerCellPerSecond * elapsedTime);
       
-      cout << " distributeParticles: elapsedTime " << elapsedTime << " nParticlesPerCell " << nParticlesPerCell << endl;
       // reset if particles are added
       if( nParticlesPerCell > 0 ){
         region->elapsedTime = 0;
@@ -359,8 +358,8 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
     
     //__________________________________
     //
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+    for(CellIterator c_iter = patch->getCellIterator(); !c_iter.done(); c_iter++){
+      IntVector c = *c_iter;
       
       Point CC_pos =patch->cellPosition(c);
       
@@ -390,11 +389,12 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
     }  // cell
   }  // region
   
-  stringstream msg;
-  msg <<" TracerParticles::addParticles  patch-"<<patch->getID() 
-      << " adding " << count << " particles";
+  if( count > 0 ){
+    stringstream msg;
+    msg <<" TracerParticles::addParticles  patch-"<<patch->getID() 
+        << " adding " << count << " particles ";
     DOUTR( true, msg.str() );
-    
+  }
   return count;
 }
 
@@ -437,6 +437,8 @@ void TracerParticles::initializeRegions( const Patch   * patch,
         continue;
       }
 
+      DOUTR( true, " initializeRegions: patch: " << patch->getID() << " pIdx: " << pIndx << " pos " << pos );
+       
       pX[pIndx] = pos;
       pDisp[pIndx] = Vector(0);
 
@@ -509,6 +511,10 @@ void TracerParticles::initialize(const ProcessorGroup *,
     new_dw->allocateAndPut( nPPC,  nPPCLabel, indx, patch );
     nPPC.initialize(0);
     
+    if (nParticles == 0 ) {
+      continue;
+    }
+
     int pIndx = 0;
     
     initializeRegions(  patch, pIndx, pPositions, d_tracer->regions,
@@ -709,8 +715,8 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
     ParticleVariable<Vector> pDisp;
     ParticleVariable<long64> pID;
 
-    ParticleSubset* part_ss   = old_dw->getParticleSubset( matlIndx, patch );
-    unsigned int oldNumPar = part_ss->addParticles( nParticles );
+    ParticleSubset* part_ss  = old_dw->getParticleSubset( matlIndx, patch );
+    unsigned int oldNumPar   = part_ss->addParticles( nParticles );
 
     new_dw->getModifiable( pX,    pXLabel_preReloc,     part_ss );
     new_dw->getModifiable( pDisp, pDispLabel_preReloc,  part_ss );

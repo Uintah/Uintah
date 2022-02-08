@@ -862,7 +862,7 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
 }
 /* _____________________________________________________________________
  Task:  ICE::scheduleTimeAdvance--
- Purpose:  Schedule all tasks for computing a single timestep 
+ Purpose:  Schedule all tasks for computing a single timestep
 _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP & level,
@@ -1016,6 +1016,52 @@ ICE::scheduleFinalizeTimestep( const LevelP & level,
 
   scheduleConservedtoPrimitive_Vars( sched, patches, ice_matls_sub,
                                      all_matls, "finalizeTimestep");
+
+
+
+  //__________________________________
+  //  If a particle model is used schedule relocate
+  if( d_models.size() ){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      ParticleModel* pModel = dynamic_cast<ParticleModel*>( *m_iter );
+      if( pModel ) {
+
+        std::vector<std::vector<const VarLabel* > > old_labels;
+        std::vector<std::vector<const VarLabel* > > new_labels;
+
+        MaterialSubset* new_mss = scinew MaterialSubset();
+        new_mss->addReference();
+
+        old_labels.push_back( pModel->d_oldLabels );
+        new_labels.push_back( pModel->d_newLabels );
+        new_mss->addSubset(   pModel->d_matl_mss );
+
+        //__________________________________
+        //  create a new material set containing the
+        //  the updated matlSubset.
+        MaterialSet* newMatlSet = scinew MaterialSet();
+        newMatlSet->addSubset( new_mss );
+        newMatlSet->addReference();
+
+        sched->scheduleParticleRelocation(level,
+                                          pModel->pXLabel_preReloc,
+                                          old_labels,
+                                          pModel->pXLabel,
+                                          new_labels,
+                                          pModel->pIDLabel,
+                                          newMatlSet );
+
+        if(newMatlSet && newMatlSet->removeReference()) {
+          delete newMatlSet;
+        }
+
+      }
+    }
+  }
+
+
+
 }
 
 /* _____________________________________________________________________
@@ -1490,7 +1536,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP           & sched,
 
 /* _____________________________________________________________________
  Task:     scheduleAccumulateEnergySourceSinks--
- Purpose:  Accumulate all of the energy sources and sinks  
+ Purpose:  Accumulate all of the energy sources and sinks
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP          & sched,
                                               const PatchSet      * patches,
@@ -1769,7 +1815,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
 
 /* _____________________________________________________________________
   Task:     scheduleAdvectAndAdvanceInTime--
-  Purpose:  Advect the conserved quantities, mass, momentum, energy 
+  Purpose:  Advect the conserved quantities, mass, momentum, energy
             specific volume and any passive scalar variables.
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP     & sched,
@@ -1970,15 +2016,15 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
 
     MaterialSubset* reduction_mss = scinew MaterialSubset();
     reduction_mss->add( global_mss->get(0) );
-    
+
     unsigned int numICEmatls = m_materialManager->getNumMatls( "ICE" );
-    
+
     if( numICEmatls > 1 ){  // ignore for single matl problems
       for (unsigned int m = 0; m < numICEmatls; m++ ) {
         reduction_mss->add( ice_mss->get(m) );
       }
     }
-    
+
     reduction_mss->addReference();
 
     if(d_conservationTest->exchange){
@@ -5438,7 +5484,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
   if(d_conservationTest->mass){
 
     new_dw->put( sum_vartype( allMatls_totalMass),  lb->TotalMassLabel, nullptr, -1);
-    
+
     if( numICEmatls > 1 ){  // ignore for single matl problems
       for (unsigned int m = 0; m < numICEmatls; m++ ) {
         ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
@@ -5461,7 +5507,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
 
     new_dw->put( sum_vartype( allMatls_totalKE ),      lb->KineticEnergyLabel, nullptr, -1);
     new_dw->put( sum_vartype( allMatls_totalIntEng ),  lb->TotalIntEngLabel,   nullptr, -1);
-    
+
     if( numICEmatls > 1 ){  // ignore for single matl problems
       for (unsigned int m = 0; m < numICEmatls; m++ ) {
         ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);

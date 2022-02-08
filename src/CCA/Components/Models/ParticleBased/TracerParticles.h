@@ -65,12 +65,10 @@ namespace Uintah {
     //__________________________________
     // labels
     ICELabel* Ilb;                                      
-    VarLabel * pXLabel;           // particle position label
-    VarLabel * pXLabel_preReloc;
+
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
-    VarLabel * pIDLabel;          // particle ID label, of type long64
-    VarLabel * pIDLabel_preReloc;
+
     
     VarLabel * nPPCLabel;         // number of particles in a cell
 
