@@ -84,9 +84,10 @@ namespace Uintah {
       Qvar(){};
 
       int matl;
-      VarLabel * CCVarLabel      {nullptr};
-      VarLabel * pQLabel_preReloc{nullptr};
-      VarLabel * pQLabel         {nullptr};
+      std::string CCVarName;
+      VarLabel *  CCVarLabel      {nullptr};
+      VarLabel *  pQLabel_preReloc{nullptr};
+      VarLabel *  pQLabel         {nullptr};
 
       ~Qvar()
       {

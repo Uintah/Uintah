@@ -53,9 +53,9 @@ using std::ostringstream;
 //______________________________________________________________________
 //To Do:
 //  -Add start and stop times.
-//  -Test restarts
-//  -Can only setVariables from old_DW
-//  - Must initialze variables after adding them.
+//  - Restart bug.  Allow model to be turned on any time.
+//  - Can only setVariables from old_DW
+//  - Must initialze particle variables after adding them.
 #define proc0cout_eq(X,Y) if( isProc0_macro && X == Y) std::cout
 #define proc0cout_gt(X,Y) if( isProc0_macro && X >= Y) std::cout
 #define proc0cout_lt(X,Y) if( isProc0_macro && X <= Y) std::cout
@@ -218,8 +218,8 @@ void TracerParticles::problemSetup( GridP&,
       mainpiece = pieces[0];
     }
 
-    Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
-    d_tracer->regions.push_back( region );
+      Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
+      d_tracer->regions.push_back( region );
    }
   }
 
@@ -301,6 +301,7 @@ void TracerParticles::problemSetup( GridP&,
       //__________________________________
       //  populate the vector of particle variables
       auto me               = make_unique< Qvar >();
+      me->CCVarName         = labelName;
       me->CCVarLabel        = label;
       me->pQLabel_preReloc  = QLabel_preReloc;
       me->pQLabel           = QLabel;
@@ -317,6 +318,7 @@ void TracerParticles::problemSetup( GridP&,
   }
 }
 
+
 //______________________________________________________________________
 //  Function:  TracerParticles::outputProblemSpec
 //  Purpose:   Output to the checkpoints variables needed for a restart
@@ -325,16 +327,29 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute( "type","TracerParticles" );
-  ProblemSpecP PS_ps = model_ps->appendChild( "TracerParticles" );
+  ProblemSpecP tp_ps = model_ps->appendChild( "TracerParticles" );
 
-  PS_ps->appendElement( "material", d_matl->getName() );
-  ProblemSpecP scalar_ps = PS_ps->appendChild( "tracer" );
-  scalar_ps->setAttribute( "name", d_tracer->name );
+  tp_ps->appendElement( "material", d_matl->getName() );
 
+  //__________________________________
+  //  CC variables
+  if( d_Qvars.size() > 0 ){
+    ProblemSpecP nv_ps = tp_ps->appendChild( "newVariables" );
+
+    for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
+      std::shared_ptr<Qvar> Q = d_Qvars[i];
+
+      ProblemSpecP CC_ps = nv_ps->appendChild( "CCVarLabel" );
+      CC_ps->setAttribute( "label", Q->CCVarName );
+    }
+  }
+
+  ProblemSpecP tracer_ps = tp_ps->appendChild( "tracer" );
+  tracer_ps->setAttribute( "name", d_tracer->name );
 
   //__________________________________
   //  initialization regions
-  ProblemSpecP init_ps = scalar_ps->appendChild( "initialization" );
+  ProblemSpecP init_ps = tracer_ps->appendChild( "initialization" );
 
   vector<Region*>::const_iterator iter;
   for ( iter = d_tracer->regions.begin(); iter != d_tracer->regions.end(); iter++) {
@@ -347,11 +362,10 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
     geom_ps->appendElement( "particlesPerCell",   region->particlesPerCell );
   }
 
-
   //__________________________________
   //  regions for particle injection
   if( d_tracer->interiorRegions.size() > 0 ){
-    ProblemSpecP int_ps = scalar_ps->appendChild( "interiorSources" );
+    ProblemSpecP int_ps = tracer_ps->appendChild( "interiorSources" );
 
     vector<Region*>::const_iterator itr;
     for ( iter = d_tracer->interiorRegions.begin(); iter != d_tracer->interiorRegions.end(); iter++) {
@@ -365,7 +379,6 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
     }
   }
 }
-
 
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
