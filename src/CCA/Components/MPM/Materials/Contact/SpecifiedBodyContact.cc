@@ -416,6 +416,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
       reaction_force[d_material]+=reaction_force[n];
+      reaction_torque[d_material]+=reaction_torque[n];
     }
   }
 

@@ -75,6 +75,11 @@ namespace Uintah {
     // used for particle relocation
     std::vector<const VarLabel* > d_newLabels;
     std::vector<const VarLabel* > d_oldLabels;
+    VarLabel * pXLabel;           // particle position label
+    VarLabel * pXLabel_preReloc;
+    
+    VarLabel * pIDLabel;          // particle ID label, of type long64
+    VarLabel * pIDLabel_preReloc;
 
   protected:
     const Material* d_matl;
