@@ -28,14 +28,17 @@
 
 #include <CCA/Components/Models/ParticleBased/ParticleModel.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 #include <map>
 #include <vector>
+#include <memory>
 
 namespace Uintah {
-
+  class VarLabel;
   class ICELabel;
+
+
   class TracerParticles : public ParticleModel {
   public:
     TracerParticles(const ProcessorGroup    * myworld,
@@ -56,21 +59,41 @@ namespace Uintah {
 
     virtual void scheduleComputeModelSources(SchedulerP   &,
                                              const LevelP & level);
-   
+
 
   //______________________________________________________________________
-  //        
+  //
   private:
-    
+
+    // remove this once C++14 is adopted
+    template<typename T, typename ...Args>
+    std::unique_ptr<T> make_unique( Args&& ...args );
+
     //__________________________________
     // labels
-    ICELabel* Ilb;                                      
+    ICELabel* Ilb;
 
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
-
-    
     VarLabel * nPPCLabel;         // number of particles in a cell
+
+    //__________________________________
+    //  Variables that will be monitored
+    struct Qvar{
+
+      Qvar(){};
+
+      int matl;
+      VarLabel * CCVarLabel      {nullptr};
+      VarLabel * pQLabel_preReloc{nullptr};
+      VarLabel * pQLabel         {nullptr};
+
+      ~Qvar()
+      {
+        VarLabel::destroy( pQLabel_preReloc );
+        VarLabel::destroy( pQLabel );
+      }
+    };
 
     //__________________________________
     //  Region used for initialization
@@ -82,7 +105,7 @@ namespace Uintah {
       GeometryPieceP piece;
       int particlesPerCell          {8};     // particles per cell
       int particlesPerCellPerSecond {0};     // particles per cell per second
-      double elapsedTime            {0};     //  Elapsed time since particles were added 
+      double elapsedTime            {0};     //  Elapsed time since particles were added
       bool isInteriorRegion         {false};
     };
 
@@ -98,51 +121,60 @@ namespace Uintah {
     };
 
     Tracer* d_tracer;
-    
-    
+
+
     //__________________________________
     //  typedefs to help laying down particles
     typedef std::map<Region*, std::vector<Point> > regionPoints;
-    
+
     //__________________________________
     //
     unsigned int distributeParticles( const Patch   * patch,
                                       const double    delT,
                                       const std::vector<Region*> regions,
                                       regionPoints  & pPositions);
-                                 
+
     void initializeRegions( const Patch   * patch,
-                            unsigned int    pIndx,            
-                            regionPoints  & pPositions,       
-                            std::vector<Region*> regions,     
-                            ParticleVariable<Point> & pX,     
-                            ParticleVariable<Vector>& pDisp,  
-                            ParticleVariable<long64>& pID,    
-                            CCVariable<int>         & nPPC ); 
+                            unsigned int    pIndx,
+                            regionPoints  & pPositions,
+                            std::vector<Region*> regions,
+                            ParticleVariable<Point> & pX,
+                            ParticleVariable<Vector>& pDisp,
+                            ParticleVariable<long64>& pID,
+                            CCVariable<int>         & nPPC );
 
     void initialize(const ProcessorGroup  *,
                     const PatchSubset     * patches,
                     const MaterialSubset  * matls,
                     DataWarehouse         *,
                     DataWarehouse         * new_dw);
-                             
-    void sched_updateParticles(SchedulerP  & sched,
-                               const LevelP& level);
 
-    void updateParticles(const ProcessorGroup  *,
-                         const PatchSubset     * patches,                  
-                         const MaterialSubset  * matls,                    
-                         DataWarehouse         * old_dw,                   
-                         DataWarehouse         * new_dw);  
-                         
+    void sched_moveParticles(SchedulerP  & sched,
+                             const LevelP& level);
+
+    void moveParticles(const ProcessorGroup  *,
+                       const PatchSubset     * patches,
+                       const MaterialSubset  * matls,
+                       DataWarehouse         * old_dw,
+                       DataWarehouse         * new_dw);
+
     void sched_addParticles( SchedulerP  & sched,
                              const LevelP& level);
-                             
+
     void addParticles(const ProcessorGroup  *,
                       const PatchSubset     * patches,
                       const MaterialSubset  * ,
                       DataWarehouse         * old_dw,
-                      DataWarehouse         * new_dw);               
+                      DataWarehouse         * new_dw);
+
+    void sched_setParticleVars( SchedulerP  & sched,
+                                const LevelP& level);
+
+    void setParticleVars(const ProcessorGroup  *,
+                         const PatchSubset     * patches,
+                         const MaterialSubset  * ,
+                         DataWarehouse         * ,
+                         DataWarehouse         * new_dw );
 
     TracerParticles(const TracerParticles&);
     TracerParticles& operator=(const TracerParticles&);
@@ -153,6 +185,7 @@ namespace Uintah {
     ProblemSpecP    d_params;
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
+    std::vector< std::shared_ptr< Qvar > >  d_Qvars;
 
   };
 }

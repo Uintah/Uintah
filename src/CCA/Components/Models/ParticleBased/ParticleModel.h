@@ -87,6 +87,7 @@ namespace Uintah {
 
     const TypeDescription* d_Part_point  = ParticleVariable<Point>::getTypeDescription();
     const TypeDescription* d_Part_Vector = ParticleVariable<Vector>::getTypeDescription();
+    const TypeDescription* d_Part_double = ParticleVariable<double>::getTypeDescription();
     const TypeDescription* d_Part_long64 = ParticleVariable<long64>::getTypeDescription();
 
   private:

@@ -89,6 +89,11 @@
       <!--  TracerParticles -->
       <TracerParticles        spec="OPTIONAL NO_DATA">
         <material             spec="OPTIONAL STRING"/>
+
+        <newVariables         spec="OPTIONAL NO_DATA">
+          <CCVarLabel         spec="MULTIPLE NO_DATA" attribute1="label REQUIRED STRING" />
+        </newVariables>
+
         <tracer               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" >
 
