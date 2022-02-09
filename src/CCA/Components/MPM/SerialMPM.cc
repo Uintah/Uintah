@@ -4975,7 +4975,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
         Vector vel(0.0,0.0,0.0);
         Vector surf(0.0,0.0,0.0);
-        double DLDT=0.;
   
         double sumSk=0.0;
         Vector gSN(0.,0.,0.);
@@ -4986,7 +4985,6 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           sumSk += gmass[adv_matl][node]*S[k];
           surf  -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
           gSN   += gSurfNorm[adv_matl][node]*S[k];
-          DLDT  += dLdt[adv_matl][node]*S[k];
         }
         if(sumSk > 1.e-90){
           // This is the normal condition, when at least one of the nodes
