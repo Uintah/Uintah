@@ -264,6 +264,12 @@ protected:
                                     DataWarehouse   * old_dw,
                                     DataWarehouse   * new_dw );
 
+  virtual void computeNormalsTri(const ProcessorGroup  *,
+                                 const PatchSubset     * patches,
+                                 const MaterialSubset  * ,
+                                       DataWarehouse   * old_dw,
+                                       DataWarehouse   * new_dw );
+
   virtual void computeLogisticRegression(const ProcessorGroup  *,
                                          const PatchSubset     * patches,
                                          const MaterialSubset  * ,
@@ -557,6 +563,12 @@ protected:
                                       const PatchSet    * patches,
                                       const MaterialSet * matls );
 
+  virtual void scheduleComputeNormalsTri(SchedulerP        & sched,
+                                         const PatchSet    * patches,
+                                         const MaterialSubset*,
+                                         const MaterialSubset*,
+                                         const MaterialSet * matls );
+
   virtual void scheduleComputeLogisticRegression(SchedulerP        & sched,
                                                  const PatchSet    * patches,
                                                  const MaterialSet * matls );
@@ -809,6 +821,14 @@ protected:
   
   std::vector<AnalysisModule*> d_analysisModules;
   SwitchingCriteria* d_switchCriteria;
+
+#if 0
+  std::vector<int> d_tmo;
+  std::vector<int> d_tmi;
+  std::vector<long64> d_triPenetrating;
+  std::vector<int> d_vtxPenetrating;
+  std::vector<long64> d_triPenetrated;
+#endif
   
 private:
 

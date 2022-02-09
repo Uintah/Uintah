@@ -132,6 +132,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
   int ip0,ip1,ip2;
   unsigned int numtri = 0;
   vector<double> triAreaNow;
+  vector<Vector> triNormal;
   while (tri >> ip0 >> ip1 >> ip2) {
     long64 tid = numtri;
     i0.push_back(ip0);
@@ -147,6 +148,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
     Vector A = P1-P0;
     Vector B = P2-P0;
     triAreaNow.push_back(0.5*Cross(A,B).length());
+    triNormal.push_back(Cross(A,B));
     numtri++;
   } // while lines in the tri file
 
@@ -219,6 +221,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangle_pos[pidx]   = test;
         triangleID[pidx]     = TID[i];
         triangleArea[pidx]   = triAreaNow[i];
+        triangleNormal[pidx] = triNormal[i];
         triangleClay[pidx]   = triClay[i];
         triangleMidToNode0[pidx] = P0 - test;
         triangleMidToNode1[pidx] = P1 - test;
@@ -293,6 +296,7 @@ Triangle::allocateVariables(particleIndex numTriangles,
                                          d_lb->triUseInPenaltyLabel,    subset);
   new_dw->allocateAndPut(triangleArea,   d_lb->triAreaLabel,            subset);
   new_dw->allocateAndPut(triangleClay,   d_lb->triClayLabel,            subset);
+  new_dw->allocateAndPut(triangleNormal, d_lb->triNormalLabel,          subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
                                          d_lb->triAreaAtNodesLabel,     subset);
 
@@ -431,6 +435,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_lb->triAreaAtNodesLabel);
   d_triangle_state.push_back(d_lb->triAreaLabel);
   d_triangle_state.push_back(d_lb->triClayLabel);
+  d_triangle_state.push_back(d_lb->triNormalLabel);
 
   d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -443,6 +448,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_lb->triAreaAtNodesLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triAreaLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->triClayLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_lb->triNormalLabel_preReloc);
 }
 //__________________________________
 //

@@ -94,6 +94,7 @@ namespace Uintah {
     ParticleVariable<Vector>  triangleAreaAtNodes;
     ParticleVariable<double>  triangleArea;
     ParticleVariable<double>  triangleClay;  // 0 - no clay, 1 - full clay
+    ParticleVariable<Vector>  triangleNormal;
     ParticleVariable<IntVector>  triangleUseInPenalty;
 
     MPMLabel* d_lb;

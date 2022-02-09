@@ -831,7 +831,13 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
 //  scheduleFindGrainCollisions(          sched, patches, matls);
   if(flags->d_computeNormals){
-    scheduleComputeNormals(               sched, patches, matls);
+    if(flags->d_useTriangles){
+      scheduleComputeNormalsTri(          sched, patches, mpm_matls_sub,
+                                                          triangle_matls_sub,
+                                                          all_matls);
+    } else {
+      scheduleComputeNormals(             sched, patches, matls);
+    }
   }
   if(flags->d_useLogisticRegression){
     scheduleComputeLogisticRegression(    sched, patches, matls);
@@ -1791,6 +1797,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(lb->triAreaLabel_preReloc,                triangle_matls);
   t->computes(lb->triAreaAtNodesLabel_preReloc,         triangle_matls);
   t->computes(lb->triClayLabel_preReloc,                triangle_matls);
+  t->computes(lb->triNormalLabel_preReloc,              triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -4968,6 +4975,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
         int NN = interpolator->findCellAndWeights(tx[idx],ni,S,size);
         Vector vel(0.0,0.0,0.0);
         Vector surf(0.0,0.0,0.0);
+        double DLDT=0.;
   
         double sumSk=0.0;
         Vector gSN(0.,0.,0.);
@@ -4978,6 +4986,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           sumSk += gmass[adv_matl][node]*S[k];
           surf  -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
           gSN   += gSurfNorm[adv_matl][node]*S[k];
+          DLDT  += dLdt[adv_matl][node]*S[k];
         }
         if(sumSk > 1.e-90){
           // This is the normal condition, when at least one of the nodes
@@ -5785,7 +5794,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<double> triArea, triClay;
       ParticleVariable<double>      triArea_new, triClay_new;
       constParticleVariable<Vector> triAreaAtNodes;
-      ParticleVariable<Vector>      triAreaAtNodes_new;
+      ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
 //    ParticleVariable<Stencil7>    triNode0TriIDs_new, 
 //                                  triNode1TriIDs_new, triNode2TriIDs_new;
 //    constParticleVariable<Stencil7>  triNode0TriIDs, 
@@ -5824,6 +5833,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                        lb->triAreaAtNodesLabel_preReloc,  pset);
       new_dw->allocateAndPut(triClay_new,
                                        lb->triClayLabel_preReloc,         pset);
+      new_dw->allocateAndPut(triNormal_new,
+                                       lb->triNormalLabel_preReloc,       pset);
 //    new_dw->allocateAndPut(triNode0TriIDs_new,
 //                                lb->triNode0TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode1TriIDs_new,
@@ -5916,7 +5927,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         }
 
         tx_new[idx] = (P[0]+P[1]+P[2])/3.;
-        triArea_new[idx]=0.5*Cross(P[1]-P[0],P[2]-P[0]).length();
+        Vector triNorm = Cross(P[1]-P[0],P[2]-P[0]);
+        triArea_new[idx]=0.5*triNorm.length();
+        triNormal_new[idx]=triNorm;
 
         triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
         triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
@@ -8019,6 +8032,104 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
   }    // patches
 }
 
+void SerialMPM::scheduleComputeNormalsTri(SchedulerP& sched,
+                                          const PatchSet* patches,
+                                          const MaterialSubset* mpm_matls,
+                                          const MaterialSubset* triangle_matls,
+                                          const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNormalsTri");
+
+  Task* t=scinew Task("MPM::computeNormalsTri",
+                      this, &SerialMPM::computeNormalsTri);
+
+  Ghost::GhostType  gac = Ghost::AroundCells;
+
+  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->triNormalLabel,       triangle_matls, gac, 2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
+
+  t->computes(lb->gSurfNormLabel,                    mpm_matls);
+
+  sched->addTask(t, patches, matls);
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::computeNormalsTri(const ProcessorGroup *,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset * ,
+                                        DataWarehouse  * old_dw,
+                                        DataWarehouse  * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeNormalsTri");
+
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    string interp_type = flags->d_interpolator_type;
+
+    Ghost::GhostType gan   = Ghost::AroundNodes;
+
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    std::vector<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      new_dw->allocateAndPut(gsurfnorm[m],    lb->gSurfNormLabel,    dwi,patch);
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+    }
+
+    int numTriMatls=m_materialManager->getNumMatls("Triangle");
+    Matrix3 size; size.Identity(); size*=0.5;
+
+    for(int tmo = 0; tmo < numTriMatls; tmo++) {
+      TriangleMaterial* t_matl = (TriangleMaterial *) 
+                             m_materialManager->getMaterial("Triangle", tmo);
+      int dwi_tri = t_matl->getDWIndex();
+      int adv_matl = t_matl->getAssociatedMaterial();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi_tri, patch,
+                                                        gan, 2, lb->pXLabel);
+      constParticleVariable<Point>  tx;
+      constParticleVariable<Vector> triNormal;
+      old_dw->get(tx,         lb->pXLabel,            pset);
+      old_dw->get(triNormal,  lb->triNormalLabel,     pset);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+         int nn = interpolator->findCellAndWeights(tx[idx], ni, S, size);
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           if(patch->containsNode(node)){
+             gsurfnorm[adv_matl][node] += triNormal[idx]*S[k];
+           }
+         }
+      } // triangles
+    }   // triangle materials
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        gsurfnorm[m][c] /= (gsurfnorm[m][c].length()+1.e-100);
+      } // Nodes
+    }   // MPM materials
+  }     // patches
+}
+
+//______________________________________________________________________
 //
 void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,
                                                   const PatchSet * patches,

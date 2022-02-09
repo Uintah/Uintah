@@ -753,6 +753,12 @@ MPMLabel::MPMLabel()
 
   triAreaAtNodesLabel_preReloc = VarLabel::create("tri.AreaAtNodes+",
 			ParticleVariable<Vector>::getTypeDescription() );
+
+  triNormalLabel = VarLabel::create("tri.normal",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  triNormalLabel_preReloc = VarLabel::create("tri.normal+",
+			ParticleVariable<Vector>::getTypeDescription() );
 #if 0
   triNode0TriangleIDsLabel = VarLabel::create("tri.Node0TriangleIDs",
 			ParticleVariable<Stencil7>::getTypeDescription() );
@@ -884,6 +890,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(triAreaLabel_preReloc);
   VarLabel::destroy(triAreaAtNodesLabel);
   VarLabel::destroy(triAreaAtNodesLabel_preReloc);
+  VarLabel::destroy(triNormalLabel);
+  VarLabel::destroy(triNormalLabel_preReloc);
   VarLabel::destroy(triClayLabel);
   VarLabel::destroy(triClayLabel_preReloc);
 #if 0
