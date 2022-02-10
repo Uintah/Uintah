@@ -55,7 +55,8 @@ namespace Uintah {
     virtual void scheduleInitialize(SchedulerP   &,
                                     const LevelP & level);
 
-    virtual void restartInitialize() {};
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level);
 
     virtual void scheduleComputeModelSources(SchedulerP   &,
                                              const LevelP & level);
@@ -144,6 +145,13 @@ namespace Uintah {
                             ParticleVariable<long64>& pID,
                             CCVariable<int>         & nPPC );
 
+    void initializeRegions2( const Patch             *  patch,
+                             unsigned int               pIndx,
+                             regionPoints             & pPositions,
+                             std::vector<Region*>       regions,
+                             constCCVariable<double>  & Q_CC,
+                             ParticleVariable<double> & pQ  );
+
     void initialize(const ProcessorGroup  *,
                     const PatchSubset     * patches,
                     const MaterialSubset  * matls,
@@ -187,6 +195,7 @@ namespace Uintah {
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
+    bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
 
   };
 }

@@ -169,6 +169,9 @@ void TracerParticles::problemSetup( GridP&,
   DOUT(dout_models_tp, "Doing racerParticles::problemSetup" );
 
   ProblemSpecP TP_ps = d_params->findBlock("TracerParticles");
+
+  TP_ps->get( "modelPreviouslyInitialized", d_previouslyInitialized );
+
   d_matl = m_materialManager->parseAndLookupMaterial(TP_ps, "material");
 
   vector<int> m(1);
@@ -200,7 +203,7 @@ void TracerParticles::problemSetup( GridP&,
   //  Initialization: Read in the geometry objects for the scalar
   ProblemSpecP init_ps = tracer_ps->findBlock("initialization");
 
-  if( !isRestart ){
+  if( !d_previouslyInitialized ){
 
    for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
@@ -329,6 +332,8 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
   model_ps->setAttribute( "type","TracerParticles" );
   ProblemSpecP tp_ps = model_ps->appendChild( "TracerParticles" );
 
+  tp_ps->appendElement( "modelPreviouslyInitialized", d_previouslyInitialized );
+
   tp_ps->appendElement( "material", d_matl->getName() );
 
   //__________________________________
@@ -401,6 +406,17 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   }
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+
+
+//______________________________________________________________________
+//
+void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
+                                                const LevelP & level)
+{
+  if( !d_previouslyInitialized ){
+    scheduleInitialize( sched, level );
+  }
 }
 
 //______________________________________________________________________
@@ -638,11 +654,12 @@ void TracerParticles::scheduleComputeModelSources(SchedulerP  & sched,
   const string taskName = "TracerParticles::scheduleComputeModelSources_("+ d_tracer->fullName+")";
   printSchedule(level,dout_models_tp, taskName);
 
+  sched_setParticleVars( sched, level );
+  
   sched_moveParticles(   sched, level );
 
-  sched_setParticleVars( sched, level );
-
   sched_addParticles(    sched, level );
+
 }
 
 //______________________________________________________________________
@@ -775,6 +792,13 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   t->modifies( pIDLabel_preReloc,   d_matl_mss );
   t->computes( nPPCLabel,           d_matl_mss );
 
+  // ancillary variables
+  for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
+    std::shared_ptr<Qvar> Q = d_Qvars[i];
+    t->modifies( Q->pQLabel_preReloc,   d_matl_mss );
+  }
+
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -847,12 +871,40 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
       pID_tmp[idx]   = pID[idx];
     }
 
+    // update their values
     initializeRegions(  patch, oldNumPar, pPositions, d_tracer->interiorRegions,
                         pX_tmp,  pDisp_tmp, pID_tmp, nPPC );
 
-     new_dw->put( pX_tmp,    pXLabel_preReloc,    true);
-     new_dw->put( pDisp_tmp, pDispLabel_preReloc, true);
-     new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
+    
+    new_dw->put( pX_tmp,    pXLabel_preReloc,    true);
+    new_dw->put( pDisp_tmp, pDispLabel_preReloc, true);
+    new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
+
+    //__________________________________
+    //
+    // now take care on any ancillary variables
+    for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
+     std::shared_ptr<Qvar> Q = d_Qvars[i];
+
+     constCCVariable<double>  Q_CC;
+     old_dw->get( Q_CC, Q->CCVarLabel, matlIndx, patch,  d_gn, 0 );
+
+     ParticleVariable<double> pQ;
+     ParticleVariable<double> pQ_tmp;
+
+     new_dw->getModifiable( pQ,   Q->pQLabel_preReloc, pset );
+     new_dw->allocateTemporary( pQ_tmp,     pset );
+
+     for( unsigned int idx=0; idx<oldNumPar; ++idx ){
+       pQ_tmp[idx] = pQ[idx];
+     }
+
+     initializeRegions2(  patch, oldNumPar, pPositions,
+                          d_tracer->interiorRegions, 
+                          Q_CC, pQ_tmp );
+
+     new_dw->put( pQ_tmp,  Q->pQLabel_preReloc, true);
+    }
   }
 }
 
@@ -870,7 +922,7 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
   const string taskName = "TracerParticles::setParticleVars_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::setParticleVars);
 
-  t->requires( Task::NewDW, pXLabel_preReloc, d_matl_mss, d_gn, 0 );
+  t->requires( Task::OldDW, pXLabel, d_matl_mss, d_gn, 0 );
 
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
     std::shared_ptr<Qvar> Q = d_Qvars[i];
@@ -903,7 +955,7 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
     ParticleSubset* pset  = old_dw->getParticleSubset( matlIndx, patch );
 
     constParticleVariable<Point>  pX;
-    new_dw->get( pX, pXLabel_preReloc, pset );
+    old_dw->get( pX, pXLabel, pset );
 
     //__________________________________
     //
@@ -919,8 +971,12 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
       for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        pQ[idx] = -9;
+        
         IntVector cell;
         if ( !patch->findCell( pX[idx],cell ) ) {
+        
+          DOUTR(true, " setParticleVars, pX: " << pX[idx] << " cell: " << cell << " patch: " << patch->getID() );
           continue;
         }
 
@@ -928,4 +984,51 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
       }
     }  // Qvars loop
   }  // patches
+}
+
+
+
+//______________________________________________________________________
+//  function:  initializeRegions2
+//  purpose:   Set the values in the newly created particles
+//______________________________________________________________________
+void TracerParticles::initializeRegions2( const Patch             *  patch,
+                                          unsigned int               pIndx,
+                                          regionPoints             & pPositions,
+                                          std::vector<Region*>       regions,
+                                          constCCVariable<double>  & Q_CC,
+                                          ParticleVariable<double> & pQ_tmp  )
+{
+  //__________________________________
+  //  Region loop
+  for( vector<Region*>::iterator iter = regions.begin(); iter !=regions.end(); iter++){
+    Region* region = *iter;
+
+    // ignore if region isn't contained in the patch
+    GeometryPieceP piece = region->piece;
+    Box b2 = patch->getExtraBox();
+    Box b1 = piece->getBoundingBox();
+    Box b  = b1.intersect(b2);
+
+    if( b.degenerate() ) {
+      continue;
+    }
+
+    vector<Point>::const_iterator itr;
+    for(itr=pPositions[region].begin();itr!=pPositions[region].end(); ++itr){
+      const Point pos = *itr;
+
+      if (!patch->containsPoint( pos )) {
+        continue;
+      }
+
+      IntVector cell;
+      if ( !patch->findCell( pos,cell ) ) {
+        continue;
+      }
+
+      pQ_tmp[pIndx] = Q_CC[cell];;
+      pIndx++;
+    }  // particles
+  }  // regions
 }

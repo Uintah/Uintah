@@ -86,26 +86,27 @@ WARNING
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);
 
-    virtual void initialize(const ProcessorGroup*,
-                            const PatchSubset*,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse*);
-
-    virtual void restartInitialize() {}
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level){};
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
       
  
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level);
+                                             const LevelP& level);
                                              
    virtual void scheduleRefine( const PatchSet* patches,
                                 SchedulerP& sched );
                                              
   private:    
   
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset*,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse*);
+
     bool isDoubleEqual(double a, double b);
     
     void problemSetup_BulletProofing(ProblemSpecP& ps);

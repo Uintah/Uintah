@@ -86,8 +86,8 @@ WARNING
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);
 
-    virtual void restartInitialize() {}
-      
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level);
 
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
@@ -106,9 +106,9 @@ WARNING
   private:
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-                      const MaterialSubset* matls, 
-                    DataWarehouse*, 
-                      DataWarehouse* new_dw);
+                    const MaterialSubset* matls,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw);
                     
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
