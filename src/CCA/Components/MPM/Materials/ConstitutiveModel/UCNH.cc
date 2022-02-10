@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Core/ImpMPMLabel.h>
-//#include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -94,14 +93,15 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 //  Labels needed for plasticity Models
 void UCNH::createPlasticityLabels()
 {
-  const TypeDescription* P_dbl = ParticleVariable<double>::getTypeDescription();
+  const TypeDescription* P_dbl =ParticleVariable<double>::getTypeDescription();
+  const TypeDescription* P_mat3=ParticleVariable<Matrix3>::getTypeDescription();
 
   pPlasticStrainLabel          = VarLabel::create("p.plasticStrain", P_dbl );
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",P_dbl );
   pYieldStressLabel            = VarLabel::create("p.yieldStress",   P_dbl );
   pYieldStressLabel_preReloc   = VarLabel::create("p.yieldStress+",  P_dbl );
-  bElBarLabel                  = VarLabel::create("p.bElBar",        P_dbl );
-  bElBarLabel_preReloc         = VarLabel::create("p.bElBar+",        P_dbl );
+  bElBarLabel                  = VarLabel::create("p.bElBar",        P_mat3);
+  bElBarLabel_preReloc         = VarLabel::create("p.bElBar+",       P_mat3);
 }
 
 
@@ -206,7 +206,7 @@ void UCNH::carryForward(const PatchSubset* patches,
       constParticleVariable<Matrix3> bElBar;
       old_dw->get(pPlasticStrain_old,         pPlasticStrainLabel,       pset);
       old_dw->get(pYieldStress_old,           pYieldStressLabel,         pset);
-      old_dw->get(bElBar,                bElBarLabel,                    pset);
+      old_dw->get(bElBar,                     bElBarLabel,               pset);
       new_dw->allocateAndPut(pPlasticStrain,  pPlasticStrainLabel_preReloc,
                                                                           pset);
       new_dw->allocateAndPut(pYieldStress,    pYieldStressLabel_preReloc,pset);
@@ -1001,9 +1001,9 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
   if(d_usePlasticity) {
     from.push_back(pPlasticStrainLabel);
     from.push_back(pYieldStressLabel);
+    from.push_back(bElBarLabel);
     to.push_back(pPlasticStrainLabel_preReloc);
     to.push_back(pYieldStressLabel_preReloc);
-    from.push_back(bElBarLabel);
     to.push_back(bElBarLabel_preReloc);
   }
 }
@@ -2024,23 +2024,21 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
   ParticleVariable<Matrix3> bElBarTmp;
   ParticleVariable<double> pYieldStress,    pPlasticStrain;
   ParticleVariable<double> pYieldStressTmp, pPlasticStrainTmp;
-  new_dw->getModifiable(    bElBar,    bElBarLabel_preReloc,     pset);
-  new_dw->allocateTemporary(bElBarTmp,                           pset);
   if(d_usePlasticity){
     new_dw->getModifiable(pPlasticStrain, pPlasticStrainLabel_preReloc, pset);
     new_dw->allocateTemporary(pPlasticStrainTmp,                        pset);
     new_dw->getModifiable(pYieldStress,   pYieldStressLabel_preReloc,   pset);
     new_dw->allocateTemporary(pYieldStressTmp,                          pset);
+    new_dw->getModifiable(    bElBar,     bElBarLabel_preReloc,         pset);
+    new_dw->allocateTemporary(bElBarTmp,                                pset);
   }
 
   // copy data from old variables for particle IDs and the position vector
-  for(unsigned int pp=0; pp<oldNumPar; ++pp ){
-    bElBarTmp[pp] = bElBar[pp];
-  }
   if(d_usePlasticity){
     for(unsigned int pp=0; pp<oldNumPar; ++pp ){
       pPlasticStrainTmp[pp]   = pPlasticStrain[pp];
       pYieldStressTmp[pp]     = pYieldStress[pp];
+      bElBarTmp[pp] = bElBar[pp];
     }
   }
 
@@ -2054,8 +2052,8 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
         } else {
           new_index=(oldNumPar-1)+(fourOrEight-1)*numRefPar+i;
         }
-        bElBarTmp[new_index]     = bElBar[idx];
         if(d_usePlasticity){
+          bElBarTmp[new_index]           = bElBar[idx];
           pPlasticStrainTmp[new_index]   = pPlasticStrain[idx];
           pYieldStressTmp[new_index]     = pYieldStress[idx];
         }
@@ -2064,10 +2062,10 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
     }
   }
 
-  new_dw->put(bElBarTmp,           bElBarLabel_preReloc,            true);
   if(d_usePlasticity){
     new_dw->put(pPlasticStrainTmp, pPlasticStrainLabel_preReloc,    true);
     new_dw->put(pYieldStressTmp,   pYieldStressLabel_preReloc,      true);
+    new_dw->put(bElBarTmp,         bElBarLabel_preReloc,            true);
   }
 }
 //______________________________________________________________________
