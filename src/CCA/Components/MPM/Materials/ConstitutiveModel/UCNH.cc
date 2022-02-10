@@ -549,14 +549,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     // Temporary and "get" variables
-    double delgamma = 0.0, fTrial = 0.0, IEl = 0.0, J = 0.0, Jinc = 0.0;
-    double muBar = 0.0, p = 0.0, sTnorm = 0.0, U = 0.0, W = 0.0;
     double se=0.0;     // Strain energy placeholder
-    double c_dil=0.0;  // Speed of sound
 
-    Matrix3 pBBar_new(0.0), bEB_new(0.0), bElBarTrial(0.0), pDefGradInc(0.0);
-    Matrix3 fBar(0.0), defGrad(0.0), normal(0.0);
-    Matrix3 tauDev(0.0), tauDevTrial(0.0);
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     // Get particle info and patch info
@@ -584,17 +578,16 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
     // Plasticity gets
     if(d_usePlasticity) {
-      old_dw->get(pPlasticStrain_old,
-                             pPlasticStrainLabel,              pset);
-      old_dw->get(pYieldStress_old,
-                             pYieldStressLabel,                pset);
-      old_dw->get(bElBar,    bElBarLabel,                      pset);
+      old_dw->get(pPlasticStrain_old, pPlasticStrainLabel,              pset);
+      old_dw->get(pYieldStress_old,   pYieldStressLabel,                pset);
+      old_dw->get(bElBar,             bElBarLabel,                      pset);
+
       new_dw->allocateAndPut(pPlasticStrain,
-                             pPlasticStrainLabel_preReloc,     pset);
+                                      pPlasticStrainLabel_preReloc,     pset);
       new_dw->allocateAndPut(pYieldStress,
-                             pYieldStressLabel_preReloc,       pset);
+                                      pYieldStressLabel_preReloc,       pset);
       new_dw->allocateAndPut(bElBar_new,  
-                             bElBarLabel_preReloc,             pset);
+                                      bElBarLabel_preReloc,             pset);
 
       pPlasticStrain.copyData(pPlasticStrain_old);
       pYieldStress.copyData(pYieldStress_old);
@@ -624,13 +617,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
-      Jinc    = pDefGradInc.Determinant();
-      defGrad = pDefGrad_new[idx];
+      Matrix3 pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
+      double Jinc         = pDefGradInc.Determinant();
 
       // 1) Get the volumetric part of the deformation
       // 2) Compute the deformed volume and new density
-      J               = defGrad.Determinant();
+      double J        = pDefGrad_new[idx].Determinant();
       double rho_cur  = rho_orig/J;
 
       // Check 1: Look at Jacobian
@@ -651,10 +643,11 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
 
       // Get the volume preserving part of the deformation gradient increment
-      fBar = pDefGradInc/cbrt(Jinc);
+      Matrix3 fBar = pDefGradInc/cbrt(Jinc);
 
       // Compute the trial elastic part of the volume preserving
       // part of the left Cauchy-Green deformation tensor
+      Matrix3 bElBarTrial, tauDev;
       if(d_usePlasticity){
         bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
       } else {
@@ -663,41 +656,43 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         bElBarTrial           = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()
                                  /Jtothetwothirds;
       }
-      IEl   = onethird*bElBarTrial.Trace();
-      muBar = IEl*shear;
+      double IEl   = onethird*bElBarTrial.Trace();
+      double muBar = IEl*shear;
 
       // tauDevTrial is equal to the shear modulus times dev(bElBar)
       // Compute ||tauDevTrial||
-      tauDevTrial = (bElBarTrial - Identity*IEl)*shear;
-      sTnorm      = tauDevTrial.Norm();
+      Matrix3 tauDevTrial = (bElBarTrial - Identity*IEl)*shear;
+      double sTnorm      = tauDevTrial.Norm();
 
       // Check for plastic loading
       double alpha;
       if(d_usePlasticity) {
         flow = pYieldStress[idx];
         alpha  = pPlasticStrain[idx];
-        fTrial = sTnorm - sqtwthds*(K*alpha + flow);
-      }
-      if (d_usePlasticity && (fTrial > 0.0) ) {
-        // plastic
-        // Compute increment of slip in the direction of flow
-        delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
-        normal   = tauDevTrial/sTnorm;
+        double fTrial = sTnorm - sqtwthds*(K*alpha + flow);
+        bElBar_new[idx] = bElBarTrial;
+        tauDev          = tauDevTrial;
+        if (fTrial > 0.0){
+          // plastic
+          // Compute increment of slip in the direction of flow
+          double delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
+          Matrix3 normal   = tauDevTrial/sTnorm;
 
-        // The actual shear stress
-        tauDev = tauDevTrial - normal*2.0*muBar*delgamma;
+          // The actual shear stress
+          tauDev = tauDevTrial - normal*2.0*muBar*delgamma;
 
-        // Deal with history variables
-        pPlasticStrain[idx] = alpha + sqtwthds*delgamma;
-        bElBar_new[idx]     = tauDev/shear + Identity*IEl;
-        bElBarTrial = bElBar_new[idx];
+          // Deal with history variables
+          pPlasticStrain[idx] = alpha + sqtwthds*delgamma;
+          bElBar_new[idx]     = tauDev/shear + Identity*IEl;
+          bElBarTrial = bElBar_new[idx];
+        }
       } else {
         // The actual shear stress
         tauDev          = tauDevTrial;
       }
 
       // get the hydrostatic part of the stress
-      p = 0.5*bulk*(J - 1.0/J);
+      double p = 0.5*bulk*(J - 1.0/J);
 
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
@@ -706,14 +701,14 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for non-localized particles
       // Note this calculation is lagging by a timestep.
       if(pLocalizedOld[idx] == 0){
-        U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-        W = .5*shear*(bElBarTrial.Trace() - 3.0);
+        double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+        double W = .5*shear*(bElBarTrial.Trace() - 3.0);
         double e = (U + W)*pVolume_new[idx]/J;
         se += e;
       }
 
       // Compute the local sound speed (uniaxial strain, p-wave modulus)
-      c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
+      double c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
 
       // Compute wave speed at each particle, store the maximum
       Vector pvel = pVelocity[idx];
