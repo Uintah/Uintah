@@ -37,6 +37,7 @@
 namespace Uintah {
   class VarLabel;
   class ICELabel;
+  class Patch;
 
 
   class TracerParticles : public ParticleModel {
@@ -107,8 +108,9 @@ namespace Uintah {
       GeometryPieceP piece;
       int particlesPerCell          {8};     // particles per cell
       int particlesPerCellPerSecond {0};     // particles per cell per second
-      double elapsedTime            {0};     //  Elapsed time since particles were added
-      bool isInteriorRegion         {false};
+
+      bool isInteriorRegion         {false}; // flag for particle injection
+      std::map<const Patch* ,double> elapsedTime;     //  Elapsed time since particles were added
     };
 
     //__________________________________
@@ -118,8 +120,8 @@ namespace Uintah {
       std::string name;
       std::string fullName;
 
-      std::vector<Region*> regions;
-      std::vector<Region*> interiorRegions;
+      std::vector<Region*> initializeRegions;             // regions where initial particles are placed
+      std::vector<Region*> injectionRegions;    // regions where particles are injected
     };
 
     Tracer* d_tracer;
