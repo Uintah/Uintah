@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
+#include <CCA/Components/MPM/Core/TriangleLabel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -118,6 +119,8 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
 {
   flags               = scinew MPMFlags(myworld);
   burialHistory       = scinew BurialHistory(/*myworld*/);
+
+  TriL = scinew TriangleLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -607,7 +610,7 @@ void SerialMPM::schedulePrintTriangleCount(const LevelP& level,
 {
   Task* t = scinew Task("MPM::printTriangleCount",
                         this, &SerialMPM::printTriangleCount);
-  t->requires(Task::NewDW, lb->triangleCountLabel);
+  t->requires(Task::NewDW, TriL->triangleCountLabel);
   t->setType(Task::OncePerProc);
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "Triangle" ));
@@ -621,7 +624,7 @@ void SerialMPM::printTriangleCount(const ProcessorGroup* pg,
                                    DataWarehouse* new_dw)
 {
   sumlong_vartype trcount;
-  new_dw->get(trcount, lb->triangleCountLabel);
+  new_dw->get(trcount, TriL->triangleCountLabel);
 
   if(pg->myRank() == 0){
    std::cout << "Created " << (long) trcount << " total triangles" << std::endl;
@@ -958,7 +961,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_triangleState_preReloc,
                                     lb->pXLabel,
                                     d_triangleState,
-                                    lb->triangleIDLabel, triangle_matls, 5);
+                                    TriL->triangleIDLabel, triangle_matls, 5);
  }
 
   //__________________________________
@@ -1770,41 +1773,47 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
              m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
   t->requires(Task::NewDW, lb->gVelocityLabel,
              m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
-  t->requires(Task::OldDW, lb->pXLabel,                 triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->pSizeLabel,              triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triangleIDLabel,         triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,   triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,   triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,   triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pXLabel,                  triangle_matls, gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,               triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triangleIDLabel,         triangle_matls,gnone);
+  t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,   triangle_matls,gnone);
+  t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,   triangle_matls,gnone);
+  t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,   triangle_matls,gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-                                                        triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triUseInPenaltyLabel,    triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triAreaLabel,            triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,     triangle_matls, gnone);
-  t->requires(Task::OldDW, lb->triClayLabel,            triangle_matls, gnone);
-//t->requires(Task::OldDW, lb->triNode0TriangleIDsLabel,triangle_matls, gnone);
-//t->requires(Task::OldDW, lb->triNode1TriangleIDsLabel,triangle_matls, gnone);
-//t->requires(Task::OldDW, lb->triNode2TriangleIDsLabel,triangle_matls, gnone);
+                                                         triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triUseInPenaltyLabel,   triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN0VectorLabel, triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN1VectorLabel, triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN2VectorLabel, triangle_matls, gnone);
+//t->requires(Task::OldDW, TriL->triNode0TriangleIDsLabel,triangle_matls,gnone);
+//t->requires(Task::OldDW, TriL->triNode1TriangleIDsLabel,triangle_matls,gnone);
+//t->requires(Task::OldDW, TriL->triNode2TriangleIDsLabel,triangle_matls,gnone);
 
-  t->computes(lb->pXLabel_preReloc,                     triangle_matls);
-  t->computes(lb->pSizeLabel_preReloc,                  triangle_matls);
-  t->computes(lb->triangleIDLabel_preReloc,             triangle_matls);
-  t->computes(lb->triMidToN0VectorLabel_preReloc,       triangle_matls);
-  t->computes(lb->triMidToN1VectorLabel_preReloc,       triangle_matls);
-  t->computes(lb->triMidToN2VectorLabel_preReloc,       triangle_matls);
-  t->computes(lb->pDeformationMeasureLabel_preReloc,    triangle_matls);
-  t->computes(lb->triUseInPenaltyLabel_preReloc,        triangle_matls);
-  t->computes(lb->triAreaLabel_preReloc,                triangle_matls);
-  t->computes(lb->triAreaAtNodesLabel_preReloc,         triangle_matls);
-  t->computes(lb->triClayLabel_preReloc,                triangle_matls);
-  t->computes(lb->triNormalLabel_preReloc,              triangle_matls);
+  t->computes(lb->pXLabel_preReloc,                      triangle_matls);
+  t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
+  t->computes(TriL->triangleIDLabel_preReloc,            triangle_matls);
+  t->computes(TriL->triMidToN0VectorLabel_preReloc,      triangle_matls);
+  t->computes(TriL->triMidToN1VectorLabel_preReloc,      triangle_matls);
+  t->computes(TriL->triMidToN2VectorLabel_preReloc,      triangle_matls);
+  t->computes(lb->pDeformationMeasureLabel_preReloc,     triangle_matls);
+  t->computes(TriL->triUseInPenaltyLabel_preReloc,       triangle_matls);
+  t->computes(TriL->triAreaLabel_preReloc,               triangle_matls);
+  t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
+  t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
+  t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
+  t->computes(TriL->triCemVecN0VectorLabel_preReloc,     triangle_matls);
+  t->computes(TriL->triCemVecN1VectorLabel_preReloc,     triangle_matls);
+  t->computes(TriL->triCemVecN2VectorLabel_preReloc,     triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
 
-//t->computes(lb->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
-//t->computes(lb->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
-//t->computes(lb->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
+//t->computes(TriL->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
+//t->computes(TriL->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
+//t->computes(TriL->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -1855,24 +1864,24 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
 
   t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN0VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN1VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triMidToN2VectorLabel,triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triUseInPenaltyLabel, triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triangleIDLabel,      triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triAreaAtNodesLabel,  triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triClayLabel,         triangle_matls, gac, 2);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
+  t->requires(Task::OldDW, lb->pXLabel,                triangle_matls, gac, 2);
+  t->requires(Task::OldDW, lb->pSizeLabel,             triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triUseInPenaltyLabel, triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triangleIDLabel,      triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
+  t->requires(Task::NewDW, lb->gMassLabel,             mpm_matls,   gac,NGN+3);
 
-  t->computes(lb->gLSContactForceLabel,             mpm_matls);
-  t->computes(lb->gInContactMatlLabel,              mpm_matls);
+  t->computes(lb->gLSContactForceLabel,                mpm_matls);
+  t->computes(lb->gInContactMatlLabel,                 mpm_matls);
   if (flags->d_doingDissolution) {
-    t->computes(lb->gSurfaceAreaLabel,              mpm_matls);
-    t->computes(lb->gSurfaceClayLabel,              mpm_matls);
+    t->computes(lb->gSurfaceAreaLabel,                 mpm_matls);
+    t->computes(lb->gSurfaceClayLabel,                 mpm_matls);
   }
-//  t->computes(lb->triInContactLabel,                triangle_matls);
+//  t->computes(TriL->triInContactLabel,                triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -5783,10 +5792,12 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<Matrix3> tsize, tF;
       ParticleVariable<Matrix3> tsize_new, tF_new;
       constParticleVariable<long64> triangle_ids;
-      ParticleVariable<long64> triangle_ids_new;
+      ParticleVariable<long64> tri_ids_new;
       constParticleVariable<Vector> triMidToN0Vec, triMidToN1Vec, triMidToN2Vec;
+      constParticleVariable<Vector> triCemVecN0, triCemVecN1, triCemVecN2;
       ParticleVariable<Vector> triMidToN0Vec_new, 
                                triMidToN1Vec_new,triMidToN2Vec_new;
+      ParticleVariable<Vector> triCemVecN0_new, triCemVecN1_new,triCemVecN2_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
       constParticleVariable<double> triArea, triClay;
@@ -5800,51 +5811,63 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
-      old_dw->get(triangle_ids,    lb->triangleIDLabel,                 pset);
+      old_dw->get(triangle_ids,    TriL->triangleIDLabel,               pset);
       old_dw->get(tF,              lb->pDeformationMeasureLabel,        pset);
-      old_dw->get(triMidToN0Vec,   lb->triMidToN0VectorLabel,           pset);
-      old_dw->get(triMidToN1Vec,   lb->triMidToN1VectorLabel,           pset);
-      old_dw->get(triMidToN2Vec,   lb->triMidToN2VectorLabel,           pset);
-      old_dw->get(triUseInPenalty, lb->triUseInPenaltyLabel,            pset);
-      old_dw->get(triArea,         lb->triAreaLabel,                    pset);
-      old_dw->get(triAreaAtNodes,  lb->triAreaAtNodesLabel,             pset);
-      old_dw->get(triClay,         lb->triClayLabel,                    pset);
-//    old_dw->get(triNode0TriIDs,  lb->triNode0TriangleIDsLabel,        pset);
-//    old_dw->get(triNode1TriIDs,  lb->triNode1TriangleIDsLabel,        pset);
-//    old_dw->get(triNode2TriIDs,  lb->triNode2TriangleIDsLabel,        pset);
+      old_dw->get(triMidToN0Vec,   TriL->triMidToN0VectorLabel,         pset);
+      old_dw->get(triMidToN1Vec,   TriL->triMidToN1VectorLabel,         pset);
+      old_dw->get(triMidToN2Vec,   TriL->triMidToN2VectorLabel,         pset);
+      old_dw->get(triUseInPenalty, TriL->triUseInPenaltyLabel,          pset);
+      old_dw->get(triArea,         TriL->triAreaLabel,                  pset);
+      old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
+      old_dw->get(triClay,         TriL->triClayLabel,                  pset);
+      old_dw->get(triCemVecN0,     TriL->triCemVecN0VectorLabel,        pset);
+      old_dw->get(triCemVecN1,     TriL->triCemVecN1VectorLabel,        pset);
+      old_dw->get(triCemVecN2,     TriL->triCemVecN2VectorLabel,        pset);
+//    old_dw->get(triNode0TriIDs,  TriL->triNode0TriangleIDsLabel,      pset);
+//    old_dw->get(triNode1TriIDs,  TriL->triNode1TriangleIDsLabel,      pset);
+//    old_dw->get(triNode2TriIDs,  TriL->triNode2TriangleIDsLabel,      pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
-      new_dw->allocateAndPut(triangle_ids_new,lb->triangleIDLabel_preReloc,pset);
+      new_dw->allocateAndPut(tri_ids_new,  TriL->triangleIDLabel_preReloc,pset);
       new_dw->allocateAndPut(tF_new,lb->pDeformationMeasureLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN0Vec_new,
-                                       lb->triMidToN0VectorLabel_preReloc,pset);
+                                     TriL->triMidToN0VectorLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN1Vec_new,
-                                       lb->triMidToN1VectorLabel_preReloc,pset);
+                                     TriL->triMidToN1VectorLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN2Vec_new,
-                                       lb->triMidToN2VectorLabel_preReloc,pset);
+                                     TriL->triMidToN2VectorLabel_preReloc,pset);
       new_dw->allocateAndPut(triUseInPenalty_new,
-                                       lb->triUseInPenaltyLabel_preReloc, pset);
+                                     TriL->triUseInPenaltyLabel_preReloc, pset);
       new_dw->allocateAndPut(triArea_new,
-                                       lb->triAreaLabel_preReloc,         pset);
+                                     TriL->triAreaLabel_preReloc,         pset);
       new_dw->allocateAndPut(triAreaAtNodes_new,
-                                       lb->triAreaAtNodesLabel_preReloc,  pset);
+                                     TriL->triAreaAtNodesLabel_preReloc,  pset);
       new_dw->allocateAndPut(triClay_new,
-                                       lb->triClayLabel_preReloc,         pset);
+                                     TriL->triClayLabel_preReloc,         pset);
       new_dw->allocateAndPut(triNormal_new,
-                                       lb->triNormalLabel_preReloc,       pset);
+                                     TriL->triNormalLabel_preReloc,       pset);
+      new_dw->allocateAndPut(triCemVecN0_new,
+                                    TriL->triCemVecN0VectorLabel_preReloc,pset);
+      new_dw->allocateAndPut(triCemVecN1_new,
+                                    TriL->triCemVecN1VectorLabel_preReloc,pset);
+      new_dw->allocateAndPut(triCemVecN2_new,
+                                    TriL->triCemVecN2VectorLabel_preReloc,pset);
 //    new_dw->allocateAndPut(triNode0TriIDs_new,
-//                                lb->triNode0TriangleIDsLabel_preReloc,  pset);
+//                                TriL->triNode0TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode1TriIDs_new,
-//                                lb->triNode1TriangleIDsLabel_preReloc,  pset);
+//                                TriL->triNode1TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode2TriIDs_new,
-//                                lb->triNode2TriangleIDsLabel_preReloc,  pset);
+//                                TriL->triNode2TriangleIDsLabel_preReloc,  pset);
 
-      triangle_ids_new.copyData(triangle_ids);
+      tri_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
+      triCemVecN0_new.copyData(triCemVecN0);
+      triCemVecN1_new.copyData(triCemVecN1);
+      triCemVecN2_new.copyData(triCemVecN2);
 //    triNode0TriIDs_new.copyData(triNode0TriIDs);
 //    triNode1TriIDs_new.copyData(triNode1TriIDs);
 //    triNode2TriIDs_new.copyData(triNode2TriIDs);
@@ -6134,17 +6157,17 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //      triInContact[tmo].resize(psetSize[tmo]);
 
       old_dw->get(tx0[tmo],            lb->pXLabel,                   pset0);
-      old_dw->get(triMidToN0Vec[tmo],  lb->triMidToN0VectorLabel,     pset0);
-      old_dw->get(triMidToN1Vec[tmo],  lb->triMidToN1VectorLabel,     pset0);
-      old_dw->get(triMidToN2Vec[tmo],  lb->triMidToN2VectorLabel,     pset0);
-      old_dw->get(triUseInPenalty[tmo],lb->triUseInPenaltyLabel,      pset0);
-      old_dw->get(triAreaAtNodes[tmo], lb->triAreaAtNodesLabel,       pset0);
-      old_dw->get(triangle_ids[tmo],   lb->triangleIDLabel,           pset0);
-      old_dw->get(triClay[tmo],        lb->triClayLabel,              pset0);
+      old_dw->get(triMidToN0Vec[tmo],  TriL->triMidToN0VectorLabel,   pset0);
+      old_dw->get(triMidToN1Vec[tmo],  TriL->triMidToN1VectorLabel,   pset0);
+      old_dw->get(triMidToN2Vec[tmo],  TriL->triMidToN2VectorLabel,   pset0);
+      old_dw->get(triUseInPenalty[tmo],TriL->triUseInPenaltyLabel,    pset0);
+      old_dw->get(triAreaAtNodes[tmo], TriL->triAreaAtNodesLabel,     pset0);
+      old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
+      old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
-//      new_dw->allocateAndPut(triInContact[tmo],lb->triInContactLabel, pset0);
+//      new_dw->allocateAndPut(triInContact[tmo],TriL->triInContactLabel,pset0);
 //      for(ParticleSubset::iterator iter0 = pset0->begin();
 //          iter0 != pset0->end(); iter0++){
 //        particleIndex idx0 = *iter0;
@@ -8049,7 +8072,7 @@ void SerialMPM::scheduleComputeNormalsTri(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
   t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->triNormalLabel,       triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triNormalLabel,     triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
   t->computes(lb->gSurfNormLabel,                    mpm_matls);
@@ -8103,7 +8126,7 @@ void SerialMPM::computeNormalsTri(const ProcessorGroup *,
       constParticleVariable<Point>  tx;
       constParticleVariable<Vector> triNormal;
       old_dw->get(tx,         lb->pXLabel,            pset);
-      old_dw->get(triNormal,  lb->triNormalLabel,     pset);
+      old_dw->get(triNormal,  TriL->triNormalLabel,   pset);
 
       for(ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); iter++){

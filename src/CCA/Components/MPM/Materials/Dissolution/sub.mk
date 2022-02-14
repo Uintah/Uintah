@@ -35,8 +35,8 @@ SRCS     += \
 	$(SRCDIR)/ContactStressDependent.cc   \
 	$(SRCDIR)/SaltPrecipitationModel.cc   \
 	$(SRCDIR)/QuartzOvergrowth.cc         \
-	$(SRCDIR)/NullDissolution.cc         \
-	$(SRCDIR)/DissolutionFactory.cc      \
-	$(SRCDIR)/CompositeDissolution.cc    \
+	$(SRCDIR)/NewQuartzOvergrowth.cc      \
+	$(SRCDIR)/NullDissolution.cc          \
+	$(SRCDIR)/DissolutionFactory.cc       \
+	$(SRCDIR)/CompositeDissolution.cc     \
 	$(SRCDIR)/Dissolution.cc
-#	$(SRCDIR)/DissolutionMaterialSpec.cc \

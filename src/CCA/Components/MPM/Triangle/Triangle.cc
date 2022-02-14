@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/Triangle/Triangle.h>
 #include <CCA/Components/MPM/Triangle/TriangleMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
+#include <CCA/Components/MPM/Core/TriangleLabel.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -38,6 +39,7 @@ using namespace std;
 //______________________________________________________________________
 Triangle::Triangle(TriangleMaterial* tm, MPMFlags* flags, MaterialManagerP& ss)
 {
+  d_Tl = scinew TriangleLabel();
   d_lb = scinew MPMLabel();
 
   d_flags = flags;
@@ -49,6 +51,7 @@ Triangle::Triangle(TriangleMaterial* tm, MPMFlags* flags, MaterialManagerP& ss)
 
 Triangle::~Triangle()
 {
+  delete d_Tl;
   delete d_lb;
 }
 //______________________________________________________________________
@@ -84,6 +87,10 @@ Triangle::createTriangles(TriangleMaterial* matl,
   string clayfilename = fileroot + ".clay";
   bool haveClay = false;
 
+  // Open cement attribute file
+  string cvtfilename = fileroot + ".cvt";
+  bool haveCVT = false;
+
   std::ifstream pts(ptsfilename.c_str());
   if (!pts ){
     throw ProblemSetupException(
@@ -103,6 +110,13 @@ Triangle::createTriangles(TriangleMaterial* matl,
    proc0cout << "No clay file "+clayfilename+" in createTriangles \n";
   } else {
    haveClay=true;
+  }
+
+  std::ifstream cvt(cvtfilename.c_str());
+  if (!cvt ){
+   proc0cout << "No cvt file "+cvtfilename+" in createTriangles \n";
+  } else {
+   haveCVT=true;
   }
 
   // Read in pts files
@@ -179,6 +193,18 @@ Triangle::createTriangles(TriangleMaterial* matl,
     clay.close();
   }
 
+  // Read in cvt file if it exists
+  vector<Point> CVT(numtri);
+  if(haveCVT){
+    double c1,c2,c3 = 0.0;
+    int numcvt = 0;
+    while (cvt >> c1 >> c2 >> c3) {
+      CVT[numcvt] = Point(c1,c2,c3);
+      numcvt++;
+    } // while lines in the pts file
+    cvt.close();
+  } // if haveCVT
+
   vector<int>       useInPen(numpts,1);
   vector<IntVector> useInPenVector(numtri,IntVector(99,99,99));
 
@@ -226,6 +252,15 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode0[pidx] = P0 - test;
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
+        if(haveCVT){
+          triangleCemVecNode0[pidx] = CVT[i0[i]] - P0;
+          triangleCemVecNode1[pidx] = CVT[i1[i]] - P1;
+          triangleCemVecNode2[pidx] = CVT[i2[i]] - P2;
+        } else {
+          triangleCemVecNode0[pidx] = Vector(0.);
+          triangleCemVecNode1[pidx] = Vector(0.);
+          triangleCemVecNode2[pidx] = Vector(0.);
+        }
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
 //        Vector C = P2-P1;
@@ -283,22 +318,28 @@ Triangle::allocateVariables(particleIndex numTriangles,
   ParticleSubset* subset =new_dw->createParticleSubset(numTriangles,dwi,patch);
 
   new_dw->allocateAndPut(triangle_pos,   d_lb->pXLabel,                 subset);
-  new_dw->allocateAndPut(triangleID,     d_lb->triangleIDLabel,         subset);
+  new_dw->allocateAndPut(triangleID,     d_Tl->triangleIDLabel,         subset);
   new_dw->allocateAndPut(triangleSize,   d_lb->pSizeLabel,              subset);
   new_dw->allocateAndPut(triangleDefGrad,d_lb->pDeformationMeasureLabel,subset);
   new_dw->allocateAndPut(triangleMidToNode0,
-                                         d_lb->triMidToN0VectorLabel,   subset);
+                                         d_Tl->triMidToN0VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode1,
-                                         d_lb->triMidToN1VectorLabel,   subset);
+                                         d_Tl->triMidToN1VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode2,
-                                         d_lb->triMidToN2VectorLabel,   subset);
+                                         d_Tl->triMidToN2VectorLabel,   subset);
+  new_dw->allocateAndPut(triangleCemVecNode0,
+                                         d_Tl->triCemVecN0VectorLabel,  subset);
+  new_dw->allocateAndPut(triangleCemVecNode1,
+                                         d_Tl->triCemVecN1VectorLabel,  subset);
+  new_dw->allocateAndPut(triangleCemVecNode2,
+                                         d_Tl->triCemVecN2VectorLabel,  subset);
   new_dw->allocateAndPut(triangleUseInPenalty,
-                                         d_lb->triUseInPenaltyLabel,    subset);
-  new_dw->allocateAndPut(triangleArea,   d_lb->triAreaLabel,            subset);
-  new_dw->allocateAndPut(triangleClay,   d_lb->triClayLabel,            subset);
-  new_dw->allocateAndPut(triangleNormal, d_lb->triNormalLabel,          subset);
+                                         d_Tl->triUseInPenaltyLabel,    subset);
+  new_dw->allocateAndPut(triangleArea,   d_Tl->triAreaLabel,            subset);
+  new_dw->allocateAndPut(triangleClay,   d_Tl->triClayLabel,            subset);
+  new_dw->allocateAndPut(triangleNormal, d_Tl->triNormalLabel,          subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
-                                         d_lb->triAreaAtNodesLabel,     subset);
+                                         d_Tl->triAreaAtNodesLabel,     subset);
 
   return subset;
 }
@@ -424,31 +465,37 @@ vector<const VarLabel* > Triangle::returnTriangleStatePreReloc()
 //
 void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
 {
-  d_triangle_state.push_back(d_lb->triangleIDLabel);
+  d_triangle_state.push_back(d_Tl->triangleIDLabel);
   d_triangle_state.push_back(d_lb->pSizeLabel);
   d_triangle_state.push_back(d_lb->pDeformationMeasureLabel);
   d_triangle_state.push_back(d_lb->pScaleFactorLabel);
-  d_triangle_state.push_back(d_lb->triMidToN0VectorLabel);
-  d_triangle_state.push_back(d_lb->triMidToN1VectorLabel);
-  d_triangle_state.push_back(d_lb->triMidToN2VectorLabel);
-  d_triangle_state.push_back(d_lb->triUseInPenaltyLabel);
-  d_triangle_state.push_back(d_lb->triAreaAtNodesLabel);
-  d_triangle_state.push_back(d_lb->triAreaLabel);
-  d_triangle_state.push_back(d_lb->triClayLabel);
-  d_triangle_state.push_back(d_lb->triNormalLabel);
+  d_triangle_state.push_back(d_Tl->triMidToN0VectorLabel);
+  d_triangle_state.push_back(d_Tl->triMidToN1VectorLabel);
+  d_triangle_state.push_back(d_Tl->triMidToN2VectorLabel);
+  d_triangle_state.push_back(d_Tl->triUseInPenaltyLabel);
+  d_triangle_state.push_back(d_Tl->triAreaAtNodesLabel);
+  d_triangle_state.push_back(d_Tl->triAreaLabel);
+  d_triangle_state.push_back(d_Tl->triClayLabel);
+  d_triangle_state.push_back(d_Tl->triNormalLabel);
+  d_triangle_state.push_back(d_Tl->triCemVecN0VectorLabel);
+  d_triangle_state.push_back(d_Tl->triCemVecN1VectorLabel);
+  d_triangle_state.push_back(d_Tl->triCemVecN2VectorLabel);
 
-  d_triangle_state_preReloc.push_back(d_lb->triangleIDLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triMidToN0VectorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triMidToN1VectorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triMidToN2VectorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triUseInPenaltyLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triAreaAtNodesLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triAreaLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triClayLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_lb->triNormalLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triMidToN0VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triMidToN1VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triMidToN2VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triUseInPenaltyLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triAreaAtNodesLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triAreaLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triClayLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN0VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN1VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN2VectorLabel_preReloc);
 }
 //__________________________________
 //
@@ -460,16 +507,19 @@ void Triangle::scheduleInitialize(const LevelP& level,
 
   t->computes(d_lb->pXLabel);
   t->computes(d_lb->pSizeLabel);
-  t->computes(d_lb->triangleIDLabel);
-  t->computes(d_lb->triMidToN0VectorLabel);
-  t->computes(d_lb->triMidToN1VectorLabel);
-  t->computes(d_lb->triMidToN2VectorLabel);
-  t->computes(d_lb->triUseInPenaltyLabel);
-  t->computes(d_lb->triAreaLabel);
-  t->computes(d_lb->triClayLabel);
-  t->computes(d_lb->triAreaAtNodesLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
-  t->computes(d_lb->triangleCountLabel);
+  t->computes(d_Tl->triangleIDLabel);
+  t->computes(d_Tl->triMidToN0VectorLabel);
+  t->computes(d_Tl->triMidToN1VectorLabel);
+  t->computes(d_Tl->triMidToN2VectorLabel);
+  t->computes(d_Tl->triUseInPenaltyLabel);
+  t->computes(d_Tl->triAreaLabel);
+  t->computes(d_Tl->triClayLabel);
+  t->computes(d_Tl->triAreaAtNodesLabel);
+  t->computes(d_Tl->triangleCountLabel);
+  t->computes(d_Tl->triCemVecN0VectorLabel);
+  t->computes(d_Tl->triCemVecN1VectorLabel);
+  t->computes(d_Tl->triCemVecN2VectorLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
 }
@@ -498,7 +548,7 @@ void Triangle::initialize(const ProcessorGroup*,
       createTriangles(triangle_matl, numTriangles,
                       patch, new_dw, filename);
     }
-    new_dw->put(sumlong_vartype(totalTriangles), d_lb->triangleCountLabel);
+    new_dw->put(sumlong_vartype(totalTriangles), d_Tl->triangleCountLabel);
 //    cout << "Total Triangles =  " << totalTriangles << endl;
   }
 }

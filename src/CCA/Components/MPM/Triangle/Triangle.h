@@ -45,6 +45,7 @@ namespace Uintah {
   class DataWarehouse;
   class MPMFlags;
   class TriangleMaterial;
+  class TriangleLabel;
   class MPMLabel;
   class ParticleSubset;
   class VarLabel;
@@ -94,9 +95,13 @@ namespace Uintah {
     ParticleVariable<Vector>  triangleAreaAtNodes;
     ParticleVariable<double>  triangleArea;
     ParticleVariable<double>  triangleClay;  // 0 - no clay, 1 - full clay
+    ParticleVariable<Vector>  triangleCemVecNode0;
+    ParticleVariable<Vector>  triangleCemVecNode1;
+    ParticleVariable<Vector>  triangleCemVecNode2;
     ParticleVariable<Vector>  triangleNormal;
     ParticleVariable<IntVector>  triangleUseInPenalty;
 
+    TriangleLabel* d_Tl;
     MPMLabel* d_lb;
     MPMFlags* d_flags;
     MaterialManagerP d_materialManager;

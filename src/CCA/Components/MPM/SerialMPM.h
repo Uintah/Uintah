@@ -52,7 +52,7 @@ class Dissolution;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
-class SDInterfaceModel;
+class TriangleLabel;
 
 /**************************************
 
@@ -93,7 +93,6 @@ public:
   Dissolution*     dissolutionModel;
   ThermalContact*  thermalContactModel;
   HeatConduction*  heatConductionModel;
-  SDInterfaceModel* d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:
   virtual double recomputeDelT(const double delT);
@@ -169,6 +168,8 @@ protected:
   friend class MPMArches;
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
+
+  TriangleLabel* TriL;
 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,

@@ -28,6 +28,7 @@
 #include <CCA/Components/MPM/Materials/Dissolution/ContactStressDependent.h>
 #include <CCA/Components/MPM/Materials/Dissolution/SaltPrecipitationModel.h>
 #include <CCA/Components/MPM/Materials/Dissolution/QuartzOvergrowth.h>
+#include <CCA/Components/MPM/Materials/Dissolution/NewQuartzOvergrowth.h>
 #include <CCA/Components/MPM/Materials/Dissolution/CompositeDissolution.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <Core/Malloc/Allocator.h>
@@ -82,6 +83,11 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
       dissolution_list->add(scinew QuartzOvergrowth(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
       flag->d_computeNormals=true;
+     }
+     else if (dis_type == "NewQuartzOvergrowth") {
+      dissolution_list->add(scinew NewQuartzOvergrowth(myworld,child,ss,lb));
+      flag->d_doingDissolution=true;
+      flag->d_computeNormals=false;
      }
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;

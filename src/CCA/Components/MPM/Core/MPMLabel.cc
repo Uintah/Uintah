@@ -500,10 +500,6 @@ MPMLabel::MPMLabel()
                                    sumlong_vartype::getTypeDescription());
 
   // Reduction variables
-  triangleCountLabel = VarLabel::create("triangleCount",
-                                   sumlong_vartype::getTypeDescription());
-
-  // Reduction variables
   tracerCountLabel = VarLabel::create("tracerCount",
                                    sumlong_vartype::getTypeDescription());
 
@@ -700,87 +696,12 @@ MPMLabel::MPMLabel()
   linesegIDLabel_preReloc = VarLabel::create("ls.linesegID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
-  triangleIDLabel = VarLabel::create("tri.triangleID",
-			ParticleVariable<long64>::getTypeDescription() );
-
-  triangleIDLabel_preReloc = VarLabel::create("tri.triangleID+",
-			ParticleVariable<long64>::getTypeDescription() );
-
   lsMidToEndVectorLabel = VarLabel::create("ls.MidToEndVector",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   lsMidToEndVectorLabel_preReloc = VarLabel::create("ls.MidToEndVector+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  triMidToN0VectorLabel = VarLabel::create("tri.MidToN0Vector",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triMidToN0VectorLabel_preReloc = VarLabel::create("tri.MidToN0Vector+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triMidToN1VectorLabel = VarLabel::create("tri.MidToN1Vector",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triMidToN1VectorLabel_preReloc = VarLabel::create("tri.MidToN1Vector+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triMidToN2VectorLabel = VarLabel::create("tri.MidToN2Vector",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triMidToN2VectorLabel_preReloc = VarLabel::create("tri.MidToN2Vector+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triUseInPenaltyLabel = VarLabel::create("tri.UseInPenalty",
-			ParticleVariable<IntVector>::getTypeDescription() );
-
-  triUseInPenaltyLabel_preReloc = VarLabel::create("tri.UseInPenalty+",
-			ParticleVariable<IntVector>::getTypeDescription() );
-
-  triAreaLabel        = VarLabel::create("tri.Area",
-			ParticleVariable<double>::getTypeDescription() );
-
-  triAreaLabel_preReloc = VarLabel::create("tri.Area+",
-			ParticleVariable<double>::getTypeDescription() );
-
-  triClayLabel        = VarLabel::create("tri.Clay",
-			ParticleVariable<double>::getTypeDescription() );
-
-  triClayLabel_preReloc = VarLabel::create("tri.Clay+",
-			ParticleVariable<double>::getTypeDescription() );
-
-  triAreaAtNodesLabel = VarLabel::create("tri.AreaAtNodes",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triAreaAtNodesLabel_preReloc = VarLabel::create("tri.AreaAtNodes+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triNormalLabel = VarLabel::create("tri.normal",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triNormalLabel_preReloc = VarLabel::create("tri.normal+",
-			ParticleVariable<Vector>::getTypeDescription() );
-#if 0
-  triNode0TriangleIDsLabel = VarLabel::create("tri.Node0TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode1TriangleIDsLabel = VarLabel::create("tri.Node1TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode2TriangleIDsLabel = VarLabel::create("tri.Node2TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode0TriangleIDsLabel_preReloc = VarLabel::create("tri.Node0TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode1TriangleIDsLabel_preReloc = VarLabel::create("tri.Node1TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode2TriangleIDsLabel_preReloc = VarLabel::create("tri.Node2TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triInContactLabel = VarLabel::create("tri.InContact",
-			ParticleVariable<int>::getTypeDescription() );
-#endif
   pModalIDLabel = VarLabel::create("p.modalID",
 			ParticleVariable<int>::getTypeDescription() );
 
@@ -874,35 +795,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(linesegIDLabel);
   VarLabel::destroy(linesegIDLabel_preReloc);
-  VarLabel::destroy(triangleIDLabel);
-  VarLabel::destroy(triangleIDLabel_preReloc);
   VarLabel::destroy(lsMidToEndVectorLabel);
   VarLabel::destroy(lsMidToEndVectorLabel_preReloc);
-  VarLabel::destroy(triMidToN0VectorLabel);
-  VarLabel::destroy(triMidToN0VectorLabel_preReloc);
-  VarLabel::destroy(triMidToN1VectorLabel);
-  VarLabel::destroy(triMidToN1VectorLabel_preReloc);
-  VarLabel::destroy(triMidToN2VectorLabel);
-  VarLabel::destroy(triMidToN2VectorLabel_preReloc);
-  VarLabel::destroy(triUseInPenaltyLabel);
-  VarLabel::destroy(triUseInPenaltyLabel_preReloc);
-  VarLabel::destroy(triAreaLabel);
-  VarLabel::destroy(triAreaLabel_preReloc);
-  VarLabel::destroy(triAreaAtNodesLabel);
-  VarLabel::destroy(triAreaAtNodesLabel_preReloc);
-  VarLabel::destroy(triNormalLabel);
-  VarLabel::destroy(triNormalLabel_preReloc);
-  VarLabel::destroy(triClayLabel);
-  VarLabel::destroy(triClayLabel_preReloc);
-#if 0
-  VarLabel::destroy(triNode0TriangleIDsLabel);
-  VarLabel::destroy(triNode1TriangleIDsLabel);
-  VarLabel::destroy(triNode2TriangleIDsLabel);
-  VarLabel::destroy(triNode0TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triNode1TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triNode2TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triInContactLabel);
-#endif
   VarLabel::destroy(pModalIDLabel);
   VarLabel::destroy(pModalIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
@@ -1002,7 +896,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(partCountLabel);
   VarLabel::destroy(tracerCountLabel);
   VarLabel::destroy(czCountLabel);
-  VarLabel::destroy(triangleCountLabel);
   VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
 
