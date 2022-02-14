@@ -207,7 +207,7 @@ NIGHTLYTESTS = [
 ]
 
 # Tests that are run during local regression testing
-LOCAL_TESTS = [
+LOCALTESTS = [
 ]
 
 # NO RMCRT due to the segfault on the MAC
@@ -221,13 +221,13 @@ DEBUG = [
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCAL_TESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
+#LIST: LOCALTESTS KOKKOS_TESTS RMCRT_TESTS PRODUCTION_TESTS_NO_COAL PRODUCTION_COAL_TESTS SWEEPS_TESTS NIGHTLYTESTS NO_RMCRT DEBUG BUILDBOTTESTS
 #__________________________________
 
 
 # returns the list
 def getTestList(me) :
-  if me == "LOCAL_TESTS":
+  if me == "LOCALTESTS":
     TESTS = RMCRT_TESTS + PRODUCTION_COAL_TESTS + PRODUCTION_TESTS_NO_COAL + KOKKOS_TESTS
   elif me == "KOKKOS_TESTS":
     TESTS = KOKKOS_TESTS
