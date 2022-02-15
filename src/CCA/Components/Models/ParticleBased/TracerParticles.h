@@ -78,6 +78,7 @@ namespace Uintah {
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
     VarLabel * nPPCLabel;         // number of particles in a cell
+    VarLabel * simTimeLabel;
 
     //__________________________________
     //  Variables that will be monitored
@@ -101,6 +102,7 @@ namespace Uintah {
     //__________________________________
     //  Region used for initialization
     //  and adding particles
+    //  This is NOT a geom_object but a geom_piece
     class Region {
     public:
       Region(GeometryPieceP piece, ProblemSpecP&);
@@ -109,7 +111,7 @@ namespace Uintah {
       int particlesPerCell          {8};     // particles per cell
       int particlesPerCellPerSecond {0};     // particles per cell per second
 
-      bool isInteriorRegion         {false}; // flag for particle injection
+      bool isInteriorRegion         {false};          // flag for particle injection
       std::map<const Patch* ,double> elapsedTime;     //  Elapsed time since particles were added
     };
 
@@ -120,8 +122,11 @@ namespace Uintah {
       std::string name;
       std::string fullName;
 
-      std::vector<Region*> initializeRegions;             // regions where initial particles are placed
+      std::vector<Region*> initializeRegions;   // regions where particles are initialized
       std::vector<Region*> injectionRegions;    // regions where particles are injected
+     
+      double timeStart;
+      double timeStop;
     };
 
     Tracer* d_tracer;
@@ -134,6 +139,7 @@ namespace Uintah {
     //__________________________________
     //
     unsigned int distributeParticles( const Patch   * patch,
+                                      const double    simTime,
                                       const double    delT,
                                       const std::vector<Region*> regions,
                                       regionPoints  & pPositions);
