@@ -37,6 +37,7 @@
 namespace Uintah {
   class VarLabel;
   class ICELabel;
+  class Patch;
 
 
   class TracerParticles : public ParticleModel {
@@ -55,7 +56,8 @@ namespace Uintah {
     virtual void scheduleInitialize(SchedulerP   &,
                                     const LevelP & level);
 
-    virtual void restartInitialize() {};
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level);
 
     virtual void scheduleComputeModelSources(SchedulerP   &,
                                              const LevelP & level);
@@ -76,6 +78,7 @@ namespace Uintah {
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
     VarLabel * nPPCLabel;         // number of particles in a cell
+    VarLabel * simTimeLabel;
 
     //__________________________________
     //  Variables that will be monitored
@@ -99,6 +102,7 @@ namespace Uintah {
     //__________________________________
     //  Region used for initialization
     //  and adding particles
+    //  This is NOT a geom_object but a geom_piece
     class Region {
     public:
       Region(GeometryPieceP piece, ProblemSpecP&);
@@ -106,8 +110,9 @@ namespace Uintah {
       GeometryPieceP piece;
       int particlesPerCell          {8};     // particles per cell
       int particlesPerCellPerSecond {0};     // particles per cell per second
-      double elapsedTime            {0};     //  Elapsed time since particles were added
-      bool isInteriorRegion         {false};
+
+      bool isInteriorRegion         {false};          // flag for particle injection
+      std::map<const Patch* ,double> elapsedTime;     //  Elapsed time since particles were added
     };
 
     //__________________________________
@@ -117,8 +122,11 @@ namespace Uintah {
       std::string name;
       std::string fullName;
 
-      std::vector<Region*> regions;
-      std::vector<Region*> interiorRegions;
+      std::vector<Region*> initializeRegions;   // regions where particles are initialized
+      std::vector<Region*> injectionRegions;    // regions where particles are injected
+     
+      double timeStart;
+      double timeStop;
     };
 
     Tracer* d_tracer;
@@ -131,6 +139,7 @@ namespace Uintah {
     //__________________________________
     //
     unsigned int distributeParticles( const Patch   * patch,
+                                      const double    simTime,
                                       const double    delT,
                                       const std::vector<Region*> regions,
                                       regionPoints  & pPositions);
@@ -143,6 +152,13 @@ namespace Uintah {
                             ParticleVariable<Vector>& pDisp,
                             ParticleVariable<long64>& pID,
                             CCVariable<int>         & nPPC );
+
+    void initializeRegions2( const Patch             *  patch,
+                             unsigned int               pIndx,
+                             regionPoints             & pPositions,
+                             std::vector<Region*>       regions,
+                             constCCVariable<double>  & Q_CC,
+                             ParticleVariable<double> & pQ  );
 
     void initialize(const ProcessorGroup  *,
                     const PatchSubset     * patches,
@@ -187,6 +203,7 @@ namespace Uintah {
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
     std::vector< std::shared_ptr< Qvar > >  d_Qvars;
+    bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
 
   };
 }

@@ -193,6 +193,7 @@
       <save label = "TotalMass"/>
       <save label = "TotalMomentum"/>
       <save label = "p.x" /> 
+      <save label = "p.scalar-f"/>
       <checkpoint cycle = "2" timestepInterval = "100"/>
    </DataArchiver>
 
@@ -361,6 +362,48 @@
             </interiorSources>
           </scalar>
         </PassiveScalar>
+      </Model>
+      
+      <!--____________________________________________________________________-->
+      <!--  Use tracer particles   -->    
+      <Model type="TracerParticles">
+        <TracerParticles>
+          <material>atmosphere</material>
+          
+          <timeStart>  0. </timeStart>
+          <timeStop>   100 </timeStop>
+          
+          <newVariables>
+            <CCVarLabel label="scalar-f"/>
+          </newVariables>
+          
+          <tracer name="f">
+            <initialization>
+              <geom_object>
+                <sphere label = "1"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <sphere label = "2"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+            </initialization>
+
+            <interiorSources>
+              <geom_object>
+                <sphere label = "1"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            
+              <geom_object>
+                <sphere label = "2"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            </interiorSources>
+
+          </tracer>
+        </TracerParticles>
       </Model>
     </Models>            
 </Uintah_specification>

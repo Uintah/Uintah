@@ -223,12 +223,12 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   if( exp_ps ) {
     d_withExpDecayModel = true;
     exp_ps->require( "c1", d_scalar->c1);
-    
+
     // The c2 coefficient type can be either a constant or read from a table
     ProblemSpecP c2_ps = exp_ps->findBlock("c2");
     std::string type = "";
     c2_ps->getAttribute( "type", name );
-    
+
     if( name == "variable"){    // read c2 from table
       d_decayCoef = variable;
       c2_ps->require( "filename", d_scalar->c2_filename );
@@ -237,11 +237,11 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
       d_decayCoef = constant;
       c2_ps->require( "value", d_scalar->c2);
     }
-    
+
     if( d_decayCoef == none ){
       throw ProblemSetupException("PassiveScalar: the scalar tag c2 must have either a constant value or a filename", __FILE__, __LINE__);
     }
-    
+
   }
 
   //__________________________________
@@ -323,17 +323,17 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   if(d_withExpDecayModel){
     ProblemSpecP exp_ps = scalar_ps->appendChild( "exponentialDecay" );
     exp_ps->appendElement( "c1", d_scalar->c1 );
-    
+
     // The c2 coefficient type can be either a constant or read from a table
     ProblemSpecP c2_ps = exp_ps->appendChild("c2");
-    
+
     if( d_decayCoef == variable){    // read c2 from table
       c2_ps->setAttribute( "type", "variable" );
       c2_ps->appendElement( "filename", d_scalar->c2_filename );
     }
     else{           // c2 is a constant
       c2_ps->setAttribute( "type", "constant" );
-      c2_ps->appendElement( "filename", d_scalar->c2 );
+      c2_ps->appendElement( "value", d_scalar->c2 );
     }
   }
 
@@ -376,18 +376,18 @@ void PassiveScalar::readTable( const Patch * patch,
 {
   static int count=1;
 
-  
+
   const std::string filename = d_scalar->c2_filename;
   std::ifstream ifs( filename.c_str() );
   if( !ifs ) {
     throw ProblemSetupException("ERROR: PassiveScalar::readTable: Unable to open the input file: " + filename, __FILE__, __LINE__);
   }
-  
+
   proc0cout_cmp(count, 1) << "________________________DataAnalysis: PassiveScalar\n"
                           << "  Coefficient c1: " << d_scalar->c1 << "\n"
                           << "  Reading in table ("<< filename <<") for variable coefficient c2\n"
                           << "__________________________________\n";
-  
+
   string line;            // row from the file
   int fpos = ifs.tellg(); // file fposition
 
@@ -402,50 +402,50 @@ void PassiveScalar::readTable( const Patch * patch,
 
   // rewind one line
   ifs.seekg( fpos );
-  
+
   int nCells_read = 0;
-  
-  double x_CC; 
+
+  double x_CC;
   double y_CC;
   double z_CC;
   double phi;
   std::string str;
-  
+
   //__________________________________
   //  read the rest of the file
   while ( std::getline( ifs, str, ',' ) ) {
     x_CC = std::stod( str );
-    
+
     std::getline( ifs, str, ',' );
     y_CC = std::stod( str );
-    
+
     std::getline( ifs, str, ',' );
     z_CC = std::stod( str );
-    
+
     getline( ifs, str );
     phi = std::stod( str );
-  
+
     Point pos( x_CC,y_CC,z_CC );
-    
+
     if(level->containsPointIncludingExtraCells(pos)){
       IntVector c = level->getCellIndex( pos );
-      
+
       if( patch->containsCell( c ) ){
         c2[c] = phi;
         nCells_read ++;
         //DOUTR( true, "x: " << x_CC << " y: " << y_CC << " z: " << z_CC << " cellIndex " << c << " phi: " << phi );
       }
-    } 
+    }
     else {
       ostringstream msg;
       msg << " ERROR: PassiveScalar::readTable: The coordinate ("<<pos<< ") is not contained on this level";
       throw ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-  }    
+  }
 
   // bulletproofing
   int patchNumCells = patch->getNumCells();
-  
+
   if ( patchNumCells != nCells_read ){
     ostringstream msg;
     msg << " ERROR: PassiveScalar::readTable: number of cells read ("<< nCells_read
@@ -463,18 +463,20 @@ void PassiveScalar::readTable( const Patch * patch,
 void PassiveScalar::scheduleInitialize(SchedulerP& sched,
                                        const LevelP& level)
 {
-  const string taskName = "PassiveScalar::scheduleInitialize_("+ d_scalar->fullName+")";
-  printSchedule(level,dout_models_ps,taskName);
+  const string schedName = "PassiveScalar::scheduleInitialize_("+ d_scalar->fullName+")";
+  printSchedule( level, dout_models_ps, schedName );
 
+
+  const string taskName = "PassiveScalar::initialize_("+ d_scalar->fullName+")";
   Task* t = scinew Task(taskName, this, &PassiveScalar::initialize);
 
   t->requires(Task::NewDW, Ilb->timeStepLabel );
-  
+
   if( d_withExpDecayModel ){
     t->computes( d_scalar->expDecayCoefLabel );
   }
   t->computes(d_scalar->Q_CCLabel);
-  
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 
 }
@@ -509,10 +511,10 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       CCVariable<double> c2;
       new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
       c2.initialize(0.0);
-      
+
       if (d_decayCoef == constant){
         c2.initialize( d_scalar->c2 );
-      } 
+      }
       else{
         readTable( patch, level, c2 );
       }
@@ -662,8 +664,10 @@ void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                             const LevelP& level,
                                                             const MaterialSet* /*ice_matls*/)
 {
-  const string taskName = "PassiveScalar::scheduleModifyThermoTransportProperties_("+ d_scalar->fullName+")";
-  printSchedule(level,dout_models_ps,taskName);
+  const string schedName = "PassiveScalar::scheduleModifyThermoTransportProperties("+ d_scalar->fullName+")";
+  printSchedule(level,dout_models_ps,schedName);
+
+  const string taskName = "PassiveScalar::modifyThermoTransportProperties("+ d_scalar->fullName+")";
 
   Task* t = scinew Task( taskName, this,&PassiveScalar::modifyThermoTransportProperties);
 
@@ -704,9 +708,10 @@ void PassiveScalar::computeSpecificHeat(CCVariable<double>& ,
 void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                                                 const LevelP& level)
 {
-  const string taskName = "PassiveScalar::scheduleComputeModelSources_("+ d_scalar->fullName+")";
-  printSchedule(level,dout_models_ps, taskName);
+  const string schedName = "PassiveScalar::scheduleComputeModelSources_("+ d_scalar->fullName+")";
+  printSchedule(level,dout_models_ps, schedName);
 
+  const string taskName = "PassiveScalar::computeModelSources_("+ d_scalar->fullName+")";
   Task* t = scinew Task( taskName, this,&PassiveScalar::computeModelSources);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -793,7 +798,7 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //  exponential decay
     if ( d_withExpDecayModel ){
-      
+
       constCCVariable<double> c2;
       old_dw->get( c2, d_scalar->expDecayCoefLabel, indx, patch, gn,0);
 

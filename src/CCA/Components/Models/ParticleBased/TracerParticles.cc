@@ -85,6 +85,7 @@ TracerParticles::TracerParticles(const ProcessorGroup  * myworld,
   pDispLabel_preReloc = VarLabel::create( "p.displacement+", d_Part_Vector );
   pIDLabel            = VarLabel::create( "p.particleID",    d_Part_long64 );
   pIDLabel_preReloc   = VarLabel::create( "p.particleID+",   d_Part_long64 );
+  simTimeLabel        = VarLabel::create( simTime_name, simTime_vartype::getTypeDescription() );
 
   d_oldLabels.push_back( pIDLabel_preReloc );
   d_oldLabels.push_back( pDispLabel_preReloc );
@@ -114,19 +115,20 @@ TracerParticles::~TracerParticles()
   VarLabel::destroy( pIDLabel );
   VarLabel::destroy( pIDLabel_preReloc );
   VarLabel::destroy( nPPCLabel ) ;
+  VarLabel::destroy( simTimeLabel );
 
   delete Ilb;
 
   // regions used during initialization
-  for(vector<Region*>::iterator iter = d_tracer->regions.begin();
-                                iter != d_tracer->regions.end(); iter++){
+  for(vector<Region*>::iterator iter = d_tracer->initializeRegions.begin();
+                                iter != d_tracer->initializeRegions.end(); iter++){
     Region* region = *iter;
     delete region;
   }
 
   // Interior regions
-  for(vector<Region*>::iterator iter = d_tracer->interiorRegions.begin();
-                                iter != d_tracer->interiorRegions.end(); iter++){
+  for(vector<Region*>::iterator iter = d_tracer->injectionRegions.begin();
+                                iter != d_tracer->injectionRegions.end(); iter++){
     Region* region = *iter;
     delete region;
   }
@@ -169,6 +171,9 @@ void TracerParticles::problemSetup( GridP&,
   DOUT(dout_models_tp, "Doing racerParticles::problemSetup" );
 
   ProblemSpecP TP_ps = d_params->findBlock("TracerParticles");
+
+  TP_ps->get( "modelPreviouslyInitialized", d_previouslyInitialized );
+
   d_matl = m_materialManager->parseAndLookupMaterial(TP_ps, "material");
 
   vector<int> m(1);
@@ -196,45 +201,53 @@ void TracerParticles::problemSetup( GridP&,
   d_tracer->name     = name;
   d_tracer->fullName = fullName;
 
+  TP_ps->getWithDefault( "timeStart", d_tracer->timeStart, 0.0);
+  TP_ps->getWithDefault( "timeStop",  d_tracer->timeStop, 9.e99);
+
   //__________________________________
-  //  Initialization: Read in the geometry objects for the scalar
+  //  Initialization: Read in the geometry pieces 
   ProblemSpecP init_ps = tracer_ps->findBlock("initialization");
 
-  if( !isRestart ){
+  if( !d_previouslyInitialized ){
 
-   for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); 
+                       geom_obj_ps != nullptr; 
+                       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-    vector<GeometryPieceP> pieces;
-    GeometryPieceFactory::create(geom_obj_ps, pieces);
+     vector<GeometryPieceP> pieces;
+     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-    GeometryPieceP mainpiece;
-    if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+     GeometryPieceP mainpiece;
+     if(pieces.size() == 0){
+       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+     }
+     else if(pieces.size() > 1){
+       mainpiece = scinew UnionGeometryPiece(pieces);
+     }
+     else {
+       mainpiece = pieces[0];
+     }
+
+       Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
+       d_tracer->initializeRegions.push_back( region );
     }
-    else if(pieces.size() > 1){
-      mainpiece = scinew UnionGeometryPiece(pieces);
-    }
-    else {
-      mainpiece = pieces[0];
-    }
-
-      Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
-      d_tracer->regions.push_back( region );
-   }
   }
 
   // bulletproofing
-  if( d_tracer->regions.size() == 0 && !isRestart) {
+  if( d_tracer->initializeRegions.size() == 0 && !isRestart) {
     throw ProblemSetupException("Variable: "+fullName +" does not have any initial value regions", __FILE__, __LINE__);
   }
 
   //__________________________________
-  //  Read in interior geometry objects for injecting a scalar in the domain
+  //  Read in interior geometry pieces for injecting a scalar in the domain
   ProblemSpecP srcs_ps = tracer_ps->findBlock("interiorSources");
 
   if( srcs_ps ) {
 
-    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); 
+                      geom_obj_ps != nullptr; 
+                      geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+                      
       vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
 
@@ -250,7 +263,7 @@ void TracerParticles::problemSetup( GridP&,
       }
 
       Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
-      d_tracer->interiorRegions.push_back( region );
+      d_tracer->injectionRegions.push_back( region );
     }
   }
 
@@ -329,7 +342,11 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
   model_ps->setAttribute( "type","TracerParticles" );
   ProblemSpecP tp_ps = model_ps->appendChild( "TracerParticles" );
 
-  tp_ps->appendElement( "material", d_matl->getName() );
+  tp_ps->appendElement( "modelPreviouslyInitialized", d_previouslyInitialized );
+
+  tp_ps->appendElement( "material",  d_matl->getName() );
+  tp_ps->appendElement( "timeStart", d_tracer->timeStart );
+  tp_ps->appendElement( "timeStop",  d_tracer->timeStop );
 
   //__________________________________
   //  CC variables
@@ -352,7 +369,7 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP init_ps = tracer_ps->appendChild( "initialization" );
 
   vector<Region*>::const_iterator iter;
-  for ( iter = d_tracer->regions.begin(); iter != d_tracer->regions.end(); iter++) {
+  for ( iter = d_tracer->initializeRegions.begin(); iter != d_tracer->initializeRegions.end(); iter++) {
     Region* region = *iter;
 
     ProblemSpecP geom_ps = init_ps->appendChild( "geom_object" );
@@ -364,11 +381,11 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
 
   //__________________________________
   //  regions for particle injection
-  if( d_tracer->interiorRegions.size() > 0 ){
+  if( d_tracer->injectionRegions.size() > 0 ){
     ProblemSpecP int_ps = tracer_ps->appendChild( "interiorSources" );
 
     vector<Region*>::const_iterator itr;
-    for ( iter = d_tracer->interiorRegions.begin(); iter != d_tracer->interiorRegions.end(); iter++) {
+    for ( iter = d_tracer->injectionRegions.begin(); iter != d_tracer->injectionRegions.end(); iter++) {
       Region* region = *iter;
 
       ProblemSpecP geom_ps = int_ps->appendChild("geom_object");
@@ -385,11 +402,13 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
 void TracerParticles::scheduleInitialize(SchedulerP   & sched,
                                          const LevelP & level)
 {
-  const string taskName = "TracerParticles::scheduleInitialize_("+ d_tracer->fullName+")";
-  printSchedule(level,dout_models_tp,taskName);
+  const string schedName = "TracerParticles::scheduleInitialize_("+ d_tracer->fullName+")";
+  printSchedule(level,dout_models_tp,schedName);
 
+  const string taskName = "TracerParticles::initialize_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::initialize);
 
+  t->requires( Task::OldDW, simTimeLabel );
   t->computes( nPPCLabel,  d_matl_mss );
   t->computes( pXLabel,    d_matl_mss );
   t->computes( pDispLabel, d_matl_mss );
@@ -403,6 +422,17 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
+
+//______________________________________________________________________
+//
+void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
+                                                const LevelP & level)
+{
+  if( !d_previouslyInitialized ){
+    scheduleInitialize( sched, level );
+  }
+}
+
 //______________________________________________________________________
 //   Function:  TracerParticles::countParticles
 //   Purpose:    Count the number of particles on a patch inside
@@ -410,11 +440,18 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
 //              - randomly lay down particles in each cell in each region
 //______________________________________________________________________
 unsigned int TracerParticles::distributeParticles( const Patch   * patch,
+                                                   const double    simTime,
                                                    const double    delT,
                                                    const std::vector<Region*> regions,
                                                    regionPoints  & pPositions)
 {
   unsigned int count = 0;
+
+  bool isItTime = (( simTime >= d_tracer->timeStart ) && ( simTime <= d_tracer->timeStop) );
+
+  if( !isItTime ){
+    return count;
+  }
 
   for( auto r_iter = regions.begin(); r_iter != regions.end(); r_iter++){
     Region* region = *r_iter;
@@ -437,14 +474,14 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
     // for interior regions compute PPC
     if( region->isInteriorRegion ) {
 
-      region->elapsedTime += delT;
-      double elapsedTime = region->elapsedTime;
+      region->elapsedTime[patch] += delT;
+      double elapsedTime = region->elapsedTime[patch];
 
       nParticlesPerCell = Uintah::RoundDown(region->particlesPerCellPerSecond * elapsedTime);
 
       // reset if particles are added
       if( nParticlesPerCell > 0 ){
-        region->elapsedTime = 0;
+        region->elapsedTime[patch] = 0;
       }
     }
 
@@ -503,6 +540,11 @@ void TracerParticles::initializeRegions( const Patch   * patch,
                                          ParticleVariable<long64>& pID,
                                          CCVariable<int>         & nPPC )
 {
+
+  if( pPositions.size() == 0 ){
+    return;
+  }
+
   //__________________________________
   //  Region loop
   for( vector<Region*>::iterator iter = regions.begin(); iter !=regions.end(); iter++){
@@ -531,7 +573,7 @@ void TracerParticles::initializeRegions( const Patch   * patch,
         continue;
       }
 
-      DOUTR( true, " initializeRegions: patch: " << patch->getID() << " pIdx: " << pIndx << " pos " << pos );
+      DOUTR( dout_models_tp, " initializeRegions: patch: " << patch->getID() << " pIdx: " << pIndx << " pos " << pos );
 
       pX[pIndx] = pos;
       pDisp[pIndx] = Vector(0);
@@ -564,9 +606,14 @@ void TracerParticles::initializeRegions( const Patch   * patch,
 void TracerParticles::initialize(const ProcessorGroup *,
                                  const PatchSubset    * patches,
                                  const MaterialSubset * matl_mss,
-                                 DataWarehouse        *,
+                                 DataWarehouse        * old_dw,
                                  DataWarehouse        * new_dw)
 {
+
+  simTime_vartype simTime;
+  new_dw->get( simTime, simTimeLabel );
+  d_previouslyInitialized = true;
+
   //__________________________________
   // Patches loop
   for(int p=0;p<patches->size();p++){
@@ -577,16 +624,25 @@ void TracerParticles::initialize(const ProcessorGroup *,
 
     //__________________________________
     // For each Region on this patch
+    //  - initialize timer
     //  - Laydown particles in each region.
     //  - return the positions of the particles
     //  - Count the number of particles
     //
+
+    for( auto r_iter = d_tracer->initializeRegions.begin();
+             r_iter != d_tracer->initializeRegions.end(); r_iter++){
+      Region* region = *r_iter;
+      region->elapsedTime[patch] = 0.0;
+    }
+
     regionPoints pPositions;
     unsigned int nParticles;
     const double ignore = -9;
     nParticles = TracerParticles::distributeParticles( patch,
+                                                       simTime,
                                                        ignore,
-                                                       d_tracer->regions,
+                                                       d_tracer->initializeRegions,
                                                        pPositions );
 
     //__________________________________
@@ -605,22 +661,18 @@ void TracerParticles::initialize(const ProcessorGroup *,
     new_dw->allocateAndPut( nPPC,  nPPCLabel, indx, patch );
     nPPC.initialize(0);
 
-    if (nParticles == 0 ) {
-      continue;
-    }
-
     int pIndx = 0;
 
-    initializeRegions(  patch, pIndx, pPositions, d_tracer->regions,
+    initializeRegions(  patch, pIndx, pPositions, d_tracer->initializeRegions,
                           pX,  pDisp, pID, nPPC );
 
     //__________________________________
-    //  The additional varialbs
+    //  The additional monitoring variables
     for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
       std::shared_ptr<Qvar> Q = d_Qvars[i];
 
       ParticleVariable<double> pQ;
-      new_dw->allocateAndPut( pQ, Q->pQLabel_preReloc, pset );
+      new_dw->allocateAndPut( pQ, Q->pQLabel, pset );
 
       for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -638,11 +690,12 @@ void TracerParticles::scheduleComputeModelSources(SchedulerP  & sched,
   const string taskName = "TracerParticles::scheduleComputeModelSources_("+ d_tracer->fullName+")";
   printSchedule(level,dout_models_tp, taskName);
 
-  sched_moveParticles(   sched, level );
-
   sched_setParticleVars( sched, level );
 
+  sched_moveParticles(   sched, level );
+
   sched_addParticles(    sched, level );
+
 }
 
 //______________________________________________________________________
@@ -656,13 +709,14 @@ void TracerParticles::sched_moveParticles(SchedulerP  & sched,
                                           const LevelP& level)
 {
 
-  const string schedName = "sched_moveParticles_("+ d_tracer->fullName+")";
+  const string schedName = "TracerParticles::sched_moveParticles_("+ d_tracer->fullName+")";
   printSchedule( level ,dout_models_tp, schedName);
 
   const string taskName = "TracerParticles::moveParticles_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::moveParticles);
 
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+  t->requires( Task::OldDW, simTimeLabel );
 
   t->requires( Task::OldDW, pXLabel,     d_matl_mss, d_gn );
   t->requires( Task::OldDW, pDispLabel,  d_matl_mss, d_gn );
@@ -757,11 +811,11 @@ void TracerParticles::moveParticles(const ProcessorGroup  *,
 void TracerParticles::sched_addParticles( SchedulerP  & sched,
                                           const LevelP& level)
 {
-  if ( d_tracer->interiorRegions.size() == 0 ){
+  if ( d_tracer->injectionRegions.size() == 0 ){
     return;
   }
 
-  const string schedName = "sched_addParticles_("+ d_tracer->fullName+")";
+  const string schedName = "TracerParticles::sched_addParticles_("+ d_tracer->fullName+")";
   printSchedule( level ,dout_models_tp, schedName);
 
   const string taskName = "TracerParticles::addParticles_("+ d_tracer->fullName+")";
@@ -774,6 +828,13 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   t->modifies( pDispLabel_preReloc, d_matl_mss );
   t->modifies( pIDLabel_preReloc,   d_matl_mss );
   t->computes( nPPCLabel,           d_matl_mss );
+
+  // ancillary variables
+  for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
+    std::shared_ptr<Qvar> Q = d_Qvars[i];
+    t->modifies( Q->pQLabel_preReloc,   d_matl_mss );
+  }
+
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -788,7 +849,9 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, Ilb->delTLabel, level);
+  simTime_vartype simTime;
+  old_dw->get( delT,    Ilb->delTLabel, level);
+  old_dw->get( simTime, simTimeLabel);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -806,8 +869,9 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
     unsigned int nParticles;
 
     nParticles = TracerParticles::distributeParticles( patch,
+                                                       simTime,
                                                        delT,
-                                                       d_tracer->interiorRegions,
+                                                       d_tracer->injectionRegions,
                                                        pPositions );
     //__________________________________
     //
@@ -847,12 +911,40 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
       pID_tmp[idx]   = pID[idx];
     }
 
-    initializeRegions(  patch, oldNumPar, pPositions, d_tracer->interiorRegions,
+    // update their values
+    initializeRegions(  patch, oldNumPar, pPositions, d_tracer->injectionRegions,
                         pX_tmp,  pDisp_tmp, pID_tmp, nPPC );
 
-     new_dw->put( pX_tmp,    pXLabel_preReloc,    true);
-     new_dw->put( pDisp_tmp, pDispLabel_preReloc, true);
-     new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
+
+    new_dw->put( pX_tmp,    pXLabel_preReloc,    true);
+    new_dw->put( pDisp_tmp, pDispLabel_preReloc, true);
+    new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
+
+    //__________________________________
+    //
+    // now take care on any ancillary variables
+    for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
+     std::shared_ptr<Qvar> Q = d_Qvars[i];
+
+     constCCVariable<double>  Q_CC;
+     old_dw->get( Q_CC, Q->CCVarLabel, matlIndx, patch,  d_gn, 0 );
+
+     ParticleVariable<double> pQ;
+     ParticleVariable<double> pQ_tmp;
+
+     new_dw->getModifiable( pQ,   Q->pQLabel_preReloc, pset );
+     new_dw->allocateTemporary( pQ_tmp,     pset );
+
+     for( unsigned int idx=0; idx<oldNumPar; ++idx ){
+       pQ_tmp[idx] = pQ[idx];
+     }
+
+     initializeRegions2(  patch, oldNumPar, pPositions,
+                          d_tracer->injectionRegions,
+                          Q_CC, pQ_tmp );
+
+     new_dw->put( pQ_tmp,  Q->pQLabel_preReloc, true);
+    }
   }
 }
 
@@ -864,13 +956,13 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
 void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
                                              const LevelP& level)
 {
-  const string schedName = "sched_setParticleVars_("+ d_tracer->fullName+")";
+  const string schedName = "TracerParticles::sched_setParticleVars_("+ d_tracer->fullName+")";
   printSchedule( level ,dout_models_tp, schedName);
 
   const string taskName = "TracerParticles::setParticleVars_("+ d_tracer->fullName+")";
   Task* t = scinew Task( taskName, this, &TracerParticles::setParticleVars);
 
-  t->requires( Task::NewDW, pXLabel_preReloc, d_matl_mss, d_gn, 0 );
+  t->requires( Task::OldDW, pXLabel, d_matl_mss, d_gn, 0 );
 
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
     std::shared_ptr<Qvar> Q = d_Qvars[i];
@@ -903,7 +995,7 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
     ParticleSubset* pset  = old_dw->getParticleSubset( matlIndx, patch );
 
     constParticleVariable<Point>  pX;
-    new_dw->get( pX, pXLabel_preReloc, pset );
+    old_dw->get( pX, pXLabel, pset );
 
     //__________________________________
     //
@@ -919,8 +1011,12 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
       for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        pQ[idx] = -9;
+
         IntVector cell;
         if ( !patch->findCell( pX[idx],cell ) ) {
+
+          DOUTR(true, " setParticleVars, pX: " << pX[idx] << " cell: " << cell << " patch: " << patch->getID() );
           continue;
         }
 
@@ -928,4 +1024,51 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
       }
     }  // Qvars loop
   }  // patches
+}
+
+
+
+//______________________________________________________________________
+//  function:  initializeRegions2
+//  purpose:   Set the values in the newly created particles
+//______________________________________________________________________
+void TracerParticles::initializeRegions2( const Patch             *  patch,
+                                          unsigned int               pIndx,
+                                          regionPoints             & pPositions,
+                                          std::vector<Region*>       regions,
+                                          constCCVariable<double>  & Q_CC,
+                                          ParticleVariable<double> & pQ_tmp  )
+{
+  //__________________________________
+  //  Region loop
+  for( vector<Region*>::iterator iter = regions.begin(); iter !=regions.end(); iter++){
+    Region* region = *iter;
+
+    // ignore if region isn't contained in the patch
+    GeometryPieceP piece = region->piece;
+    Box b2 = patch->getExtraBox();
+    Box b1 = piece->getBoundingBox();
+    Box b  = b1.intersect(b2);
+
+    if( b.degenerate() ) {
+      continue;
+    }
+
+    vector<Point>::const_iterator itr;
+    for(itr=pPositions[region].begin();itr!=pPositions[region].end(); ++itr){
+      const Point pos = *itr;
+
+      if (!patch->containsPoint( pos )) {
+        continue;
+      }
+
+      IntVector cell;
+      if ( !patch->findCell( pos,cell ) ) {
+        continue;
+      }
+
+      pQ_tmp[pIndx] = Q_CC[cell];;
+      pIndx++;
+    }  // particles
+  }  // regions
 }

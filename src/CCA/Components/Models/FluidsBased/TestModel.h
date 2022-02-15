@@ -76,9 +76,10 @@ WARNING
                                const bool isRestart);
       
     virtual void scheduleInitialize(SchedulerP&,
-                                        const LevelP& level);
+                                    const LevelP& level);
 
-    virtual void restartInitialize() {}
+    virtual void scheduleRestartInitialize(SchedulerP&,
+                                           const LevelP& level){};
       
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);

@@ -776,6 +776,16 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
   }
 
   //__________________________________
+  // Models Initialization
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator m_iter  = d_models.begin();
+                                          m_iter != d_models.end(); m_iter++){
+      ModelInterface* model = *m_iter;
+      model->scheduleRestartInitialize(sched, level);
+    }
+  }
+
+  //__________________________________
   // dataAnalysis
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
     AnalysisModule* am = *iter;

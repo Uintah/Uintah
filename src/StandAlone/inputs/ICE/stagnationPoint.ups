@@ -144,6 +144,12 @@
       <save label="temp_CC"/>
       <save label="scalar-f"/>
       <save label="scalar-f_src"/>
+
+      <save label="p.x"/>
+      <save label="p.displacement"/>
+      <save label="p.scalar-f"/>
+      <save label="p.press_CC"/>
+
       <save label="totalSum_scalar-f"/>
 
       <checkpoint timestepInterval="5" cycle="2"/>
@@ -333,6 +339,66 @@
 
           </scalar>
         </PassiveScalar>
+      </Model>
+      
+      <!--____________________________________________________________________-->
+      <!--  Use tracer particles   -->    
+      <Model type="TracerParticles">
+        <TracerParticles>
+          <material>atmosphere</material>
+          
+          <newVariables>
+            <CCVarLabel label="scalar-f"/>
+            <CCVarLabel label="press_CC"/>
+          </newVariables>
+          
+          <tracer name="f">
+            <initialization>
+              <geom_object>
+                <cylinder label = "fan_top"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_right"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_bottom"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_left"/>
+                <particlesPerCell> 8 </particlesPerCell>
+              </geom_object>
+            </initialization>
+
+            <interiorSources>
+              <geom_object>
+                <cylinder label = "fan_top"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            
+              <geom_object>
+                <cylinder label = "fan_right"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_bottom"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+              
+              <geom_object>
+                <cylinder label = "fan_left"/>
+                <particlesPerCellPerSecond> 5 </particlesPerCellPerSecond>
+              </geom_object>
+            </interiorSources>
+
+          </tracer>
+        </TracerParticles>
       </Model>
     </Models>      
    
