@@ -46,6 +46,7 @@ namespace Uintah {
   class MPMFlags;
   class TracerMaterial;
   class MPMLabel;
+  class TracerLabel;
   class ParticleSubset;
   class VarLabel;
 
@@ -87,6 +88,7 @@ namespace Uintah {
     ParticleVariable<long64> tracerID;
 
     MPMLabel* d_lb;
+    TracerLabel* d_TL;
     MPMFlags* d_flags;
     MaterialManagerP d_materialManager;
 

@@ -69,7 +69,7 @@ QuartzOvergrowth::~QuartzOvergrowth()
 void QuartzOvergrowth::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",                   "quartzOvergrowth");
+  dissolution_ps->appendElement("type",                   "QuartzOvergrowth");
   dissolution_ps->appendElement("masterModalID",          d_masterModalID);
   dissolution_ps->appendElement("GrowthRate_cmPerMY",     d_growthRate);
   dissolution_ps->appendElement("GrowthRateClay_cmPerMY", d_growthRateClay);

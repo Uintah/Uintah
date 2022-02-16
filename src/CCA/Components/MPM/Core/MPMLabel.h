@@ -52,7 +52,6 @@ namespace Uintah {
       const VarLabel* doMechLabel;
 
       const VarLabel* partCountLabel;
-      const VarLabel* tracerCountLabel;
       const VarLabel* czCountLabel;
       const VarLabel* TimeAveSpecificKELabel;
       
@@ -282,14 +281,11 @@ namespace Uintah {
       const VarLabel* czFailedLabel_preReloc; 
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
-      const VarLabel* tracerIDLabel; 
-      const VarLabel* tracerIDLabel_preReloc; 
       const VarLabel* linesegIDLabel; 
       const VarLabel* linesegIDLabel_preReloc; 
       const VarLabel* lsMidToEndVectorLabel; 
       const VarLabel* lsMidToEndVectorLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
-      const VarLabel* pCellNATracerIDLabel;
       const VarLabel* pModalIDLabel;
       const VarLabel* pModalIDLabel_preReloc;
 

@@ -499,10 +499,6 @@ MPMLabel::MPMLabel()
   partCountLabel = VarLabel::create("particleCount",
                                    sumlong_vartype::getTypeDescription());
 
-  // Reduction variables
-  tracerCountLabel = VarLabel::create("tracerCount",
-                                   sumlong_vartype::getTypeDescription());
-
   czCountLabel = VarLabel::create("czCount",
                                    sumlong_vartype::getTypeDescription());
 
@@ -684,12 +680,6 @@ MPMLabel::MPMLabel()
   czIDLabel_preReloc = VarLabel::create("cz.CZID+",
                         ParticleVariable<long64>::getTypeDescription() );
 
-  tracerIDLabel = VarLabel::create("t.tracerID",
-			ParticleVariable<long64>::getTypeDescription() );
-
-  tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
-			ParticleVariable<long64>::getTypeDescription() );
-
   linesegIDLabel = VarLabel::create("ls.linesegID",
 			ParticleVariable<long64>::getTypeDescription() );
 
@@ -711,10 +701,6 @@ MPMLabel::MPMLabel()
   // for assigning particle ids
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
-
-  pCellNATracerIDLabel =
-    VarLabel::create("cellNATracerID", 
-                                   CCVariable<short int>::getTypeDescription());
 
   bElBarLabel                = VarLabel::create("p.bElBar",
                              ParticleVariable<Matrix3>::getTypeDescription());
@@ -791,8 +777,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(czIDLabel);
   VarLabel::destroy(czIDLabel_preReloc);
-  VarLabel::destroy(tracerIDLabel);
-  VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(linesegIDLabel);
   VarLabel::destroy(linesegIDLabel_preReloc);
   VarLabel::destroy(lsMidToEndVectorLabel);
@@ -894,7 +878,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNumNearParticlesLabel);
 
   VarLabel::destroy(partCountLabel);
-  VarLabel::destroy(tracerCountLabel);
   VarLabel::destroy(czCountLabel);
   VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
@@ -922,7 +905,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalLocalizedParticleLabel);
   VarLabel::destroy(pCellNAPIDLabel);
   VarLabel::destroy(pCellNACZIDLabel);
-  VarLabel::destroy(pCellNATracerIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);

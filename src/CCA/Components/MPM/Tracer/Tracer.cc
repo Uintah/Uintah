@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/Tracer/TracerMaterial.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Core/TracerLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
@@ -38,6 +39,7 @@ Tracer::Tracer(TracerMaterial* tm, MPMFlags* flags,
                            MaterialManagerP& ss)
 {
   d_lb = scinew MPMLabel();
+  d_TL = scinew TracerLabel();
 
   d_flags = flags;
 
@@ -49,6 +51,7 @@ Tracer::Tracer(TracerMaterial* tm, MPMFlags* flags,
 Tracer::~Tracer()
 {
   delete d_lb;
+  delete d_TL;
 }
 //______________________________________________________________________
 ParticleSubset* 
@@ -110,7 +113,7 @@ Tracer::allocateVariables(particleIndex numTracers,
   ParticleSubset* subset = new_dw->createParticleSubset(numTracers,dwi,patch);
 
   new_dw->allocateAndPut(tracer_pos,     d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(tracerID,       d_lb->tracerIDLabel,       subset);
+  new_dw->allocateAndPut(tracerID,       d_TL->tracerIDLabel,       subset);
   
   return subset;
 }
@@ -171,8 +174,8 @@ vector<const VarLabel* > Tracer::returnTracerStatePreReloc()
 //
 void Tracer::registerPermanentTracerState(TracerMaterial* trmat)
 {
-  d_tracer_state.push_back(d_lb->tracerIDLabel);
-  d_tracer_state_preReloc.push_back(d_lb->tracerIDLabel_preReloc);
+  d_tracer_state.push_back(d_TL->tracerIDLabel);
+  d_tracer_state_preReloc.push_back(d_TL->tracerIDLabel_preReloc);
 }
 //__________________________________
 //
@@ -183,8 +186,8 @@ void Tracer::scheduleInitialize(const LevelP& level,
                   this, &Tracer::initialize);
 
   t->computes(d_lb->pXLabel);
-  t->computes(d_lb->tracerIDLabel);
-  t->computes(d_lb->tracerCountLabel);
+  t->computes(d_TL->tracerIDLabel);
+  t->computes(d_TL->tracerCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));
 }
@@ -213,7 +216,7 @@ void Tracer::initialize(const ProcessorGroup*,
       createTracers(tracer_matl, numTracers,
                     patch, new_dw, filename);
     }
-    new_dw->put(sumlong_vartype(totalTracers), d_lb->tracerCountLabel);
+    new_dw->put(sumlong_vartype(totalTracers), d_TL->tracerCountLabel);
     //cout << "Total Tracers " << totalTracers << endl;
   }
 }

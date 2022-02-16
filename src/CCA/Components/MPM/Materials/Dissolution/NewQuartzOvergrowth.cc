@@ -137,7 +137,6 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
 //    int dwi = mpm_matl->getDWIndex();
 
       double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
-//      double massAddedTotal=0.;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -152,12 +151,8 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
           double localSurfRate = dL_dt;
           massBurnRate[md][c] += rho[m]*localSurfRate*gSurfaceArea[md][c];
           dLdt[md][c] += localSurfRate;
-//          massAddedTotal+=massBurnRate[md][c];
         } // mass is present
       } // nodes
-//      MPMBoundCond bc;
-//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",dLdt[md],"gimp");
-//      bc.setBoundaryCondition(patch,dwi,"MassGrowth",massBurnRate[md],"gimp");
      } // endif a masterMaterial
     } // materials
   } // patches
@@ -183,6 +178,9 @@ void NewQuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
+  //t->requires(Task::OldDW, TriL->triCemVecN0Label,       Ghost::None);
+  //t->requires(Task::OldDW, TriL->triCemVecN1Label,       Ghost::None);
+  //t->requires(Task::OldDW, TriL->triCemVecN2Label,       Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
   t->modifies(lb->dLdtDissolutionLabel,  mss);

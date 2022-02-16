@@ -327,12 +327,9 @@ Triangle::allocateVariables(particleIndex numTriangles,
                                          d_Tl->triMidToN1VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode2,
                                          d_Tl->triMidToN2VectorLabel,   subset);
-  new_dw->allocateAndPut(triangleCemVecNode0,
-                                         d_Tl->triCemVecN0VectorLabel,  subset);
-  new_dw->allocateAndPut(triangleCemVecNode1,
-                                         d_Tl->triCemVecN1VectorLabel,  subset);
-  new_dw->allocateAndPut(triangleCemVecNode2,
-                                         d_Tl->triCemVecN2VectorLabel,  subset);
+  new_dw->allocateAndPut(triangleCemVecNode0, d_Tl->triCemVecN0Label,   subset);
+  new_dw->allocateAndPut(triangleCemVecNode1, d_Tl->triCemVecN1Label,   subset);
+  new_dw->allocateAndPut(triangleCemVecNode2, d_Tl->triCemVecN2Label,   subset);
   new_dw->allocateAndPut(triangleUseInPenalty,
                                          d_Tl->triUseInPenaltyLabel,    subset);
   new_dw->allocateAndPut(triangleArea,   d_Tl->triAreaLabel,            subset);
@@ -477,9 +474,9 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_Tl->triAreaLabel);
   d_triangle_state.push_back(d_Tl->triClayLabel);
   d_triangle_state.push_back(d_Tl->triNormalLabel);
-  d_triangle_state.push_back(d_Tl->triCemVecN0VectorLabel);
-  d_triangle_state.push_back(d_Tl->triCemVecN1VectorLabel);
-  d_triangle_state.push_back(d_Tl->triCemVecN2VectorLabel);
+  d_triangle_state.push_back(d_Tl->triCemVecN0Label);
+  d_triangle_state.push_back(d_Tl->triCemVecN1Label);
+  d_triangle_state.push_back(d_Tl->triCemVecN2Label);
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -493,9 +490,9 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_Tl->triAreaLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triClayLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN0VectorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN1VectorLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN2VectorLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN0Label_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN1Label_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN2Label_preReloc);
 }
 //__________________________________
 //
@@ -517,9 +514,9 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_Tl->triClayLabel);
   t->computes(d_Tl->triAreaAtNodesLabel);
   t->computes(d_Tl->triangleCountLabel);
-  t->computes(d_Tl->triCemVecN0VectorLabel);
-  t->computes(d_Tl->triCemVecN1VectorLabel);
-  t->computes(d_Tl->triCemVecN2VectorLabel);
+  t->computes(d_Tl->triCemVecN0Label);
+  t->computes(d_Tl->triCemVecN1Label);
+  t->computes(d_Tl->triCemVecN2Label);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
 }

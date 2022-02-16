@@ -25,6 +25,7 @@
 
 #include <CCA/Components/MPM/Core/MPMBoundCond.h>
 #include <CCA/Components/MPM/Core/TriangleLabel.h>
+#include <CCA/Components/MPM/Core/TracerLabel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/DamageModel.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/PlasticityModels/ErosionModel.h>
@@ -121,6 +122,7 @@ SerialMPM::SerialMPM( const ProcessorGroup* myworld,
   burialHistory       = scinew BurialHistory(/*myworld*/);
 
   TriL = scinew TriangleLabel();
+  TraL = scinew TracerLabel();
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
@@ -645,7 +647,7 @@ void SerialMPM::schedulePrintTracerCount(const LevelP& level,
 {
   Task* t = scinew Task("MPM::printTracerCount",
                         this, &SerialMPM::printTracerCount);
-  t->requires(Task::NewDW, lb->tracerCountLabel);
+  t->requires(Task::NewDW, TraL->tracerCountLabel);
   t->setType(Task::OncePerProc);
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "Tracer" ));
@@ -659,7 +661,7 @@ void SerialMPM::printTracerCount(const ProcessorGroup* pg,
                                  DataWarehouse* new_dw)
 {
   sumlong_vartype trcount;
-  new_dw->get(trcount, lb->tracerCountLabel);
+  new_dw->get(trcount, TraL->tracerCountLabel);
 
   if(pg->myRank() == 0){
    std::cout << "Created " << (long) trcount << " total tracers" << std::endl;
@@ -945,7 +947,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     d_tracerState_preReloc,
                                     lb->pXLabel,
                                     d_tracerState,
-                                    lb->tracerIDLabel, tracer_matls, 3);
+                                    TraL->tracerIDLabel, tracer_matls, 3);
  }
 
  if(flags->d_useLineSegments){
@@ -1695,10 +1697,10 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
   }
 
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
-  t->requires(Task::OldDW, lb->tracerIDLabel,      tracer_matls, gnone);
+  t->requires(Task::OldDW, TraL->tracerIDLabel,    tracer_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,           tracer_matls);
-  t->computes(lb->tracerIDLabel_preReloc,     tracer_matls);
+  t->computes(TraL->tracerIDLabel_preReloc,   tracer_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -1785,9 +1787,9 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN0VectorLabel, triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN1VectorLabel, triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN2VectorLabel, triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN0Label,       triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN1Label,       triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCemVecN2Label,       triangle_matls, gnone);
 //t->requires(Task::OldDW, TriL->triNode0TriangleIDsLabel,triangle_matls,gnone);
 //t->requires(Task::OldDW, TriL->triNode1TriangleIDsLabel,triangle_matls,gnone);
 //t->requires(Task::OldDW, TriL->triNode2TriangleIDsLabel,triangle_matls,gnone);
@@ -1804,9 +1806,9 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
-  t->computes(TriL->triCemVecN0VectorLabel_preReloc,     triangle_matls);
-  t->computes(TriL->triCemVecN1VectorLabel_preReloc,     triangle_matls);
-  t->computes(TriL->triCemVecN2VectorLabel_preReloc,     triangle_matls);
+  t->computes(TriL->triCemVecN0Label_preReloc,           triangle_matls);
+  t->computes(TriL->triCemVecN1Label_preReloc,           triangle_matls);
+  t->computes(TriL->triCemVecN2Label_preReloc,           triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -2038,8 +2040,8 @@ void SerialMPM::scheduleAddTracers(SchedulerP& sched,
 
   Task * t = scinew Task("MPM::addTracers", this, &SerialMPM::addTracers );
 
-  t->modifies(lb->tracerIDLabel_preReloc, tracer_matls);
-  t->modifies(lb->pXLabel_preReloc,       tracer_matls);
+  t->modifies(TraL->tracerIDLabel_preReloc, tracer_matls);
+  t->modifies(lb->pXLabel_preReloc,         tracer_matls);
 
   sched->addTask(t, patches, tracer_matls);
 }
@@ -4967,11 +4969,11 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       constParticleVariable<long64> tracer_ids;
       ParticleVariable<long64> tracer_ids_new;
 
-      old_dw->get(tx,          lb->pXLabel,                         pset);
-      old_dw->get(tracer_ids,  lb->tracerIDLabel,                   pset);
+      old_dw->get(tx,            lb->pXLabel,                         pset);
+      old_dw->get(tracer_ids,  TraL->tracerIDLabel,                   pset);
 
-      new_dw->allocateAndPut(tx_new,        lb->pXLabel_preReloc,       pset);
-      new_dw->allocateAndPut(tracer_ids_new,lb->tracerIDLabel_preReloc, pset);
+      new_dw->allocateAndPut(tx_new,          lb->pXLabel_preReloc,       pset);
+      new_dw->allocateAndPut(tracer_ids_new,TraL->tracerIDLabel_preReloc, pset);
 
       tracer_ids_new.copyData(tracer_ids);
 
@@ -5820,9 +5822,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triArea,         TriL->triAreaLabel,                  pset);
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
-      old_dw->get(triCemVecN0,     TriL->triCemVecN0VectorLabel,        pset);
-      old_dw->get(triCemVecN1,     TriL->triCemVecN1VectorLabel,        pset);
-      old_dw->get(triCemVecN2,     TriL->triCemVecN2VectorLabel,        pset);
+      old_dw->get(triCemVecN0,     TriL->triCemVecN0Label,              pset);
+      old_dw->get(triCemVecN1,     TriL->triCemVecN1Label,              pset);
+      old_dw->get(triCemVecN2,     TriL->triCemVecN2Label,              pset);
 //    old_dw->get(triNode0TriIDs,  TriL->triNode0TriangleIDsLabel,      pset);
 //    old_dw->get(triNode1TriIDs,  TriL->triNode1TriangleIDsLabel,      pset);
 //    old_dw->get(triNode2TriIDs,  TriL->triNode2TriangleIDsLabel,      pset);
@@ -5832,11 +5834,11 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       new_dw->allocateAndPut(tri_ids_new,  TriL->triangleIDLabel_preReloc,pset);
       new_dw->allocateAndPut(tF_new,lb->pDeformationMeasureLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN0Vec_new,
-                                     TriL->triMidToN0VectorLabel_preReloc,pset);
+                                    TriL->triMidToN0VectorLabel_preReloc, pset);
       new_dw->allocateAndPut(triMidToN1Vec_new,
-                                     TriL->triMidToN1VectorLabel_preReloc,pset);
+                                    TriL->triMidToN1VectorLabel_preReloc, pset);
       new_dw->allocateAndPut(triMidToN2Vec_new,
-                                     TriL->triMidToN2VectorLabel_preReloc,pset);
+                                    TriL->triMidToN2VectorLabel_preReloc, pset);
       new_dw->allocateAndPut(triUseInPenalty_new,
                                      TriL->triUseInPenaltyLabel_preReloc, pset);
       new_dw->allocateAndPut(triArea_new,
@@ -5848,11 +5850,11 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       new_dw->allocateAndPut(triNormal_new,
                                      TriL->triNormalLabel_preReloc,       pset);
       new_dw->allocateAndPut(triCemVecN0_new,
-                                    TriL->triCemVecN0VectorLabel_preReloc,pset);
+                                    TriL->triCemVecN0Label_preReloc,pset);
       new_dw->allocateAndPut(triCemVecN1_new,
-                                    TriL->triCemVecN1VectorLabel_preReloc,pset);
+                                    TriL->triCemVecN1Label_preReloc,pset);
       new_dw->allocateAndPut(triCemVecN2_new,
-                                    TriL->triCemVecN2VectorLabel_preReloc,pset);
+                                    TriL->triCemVecN2Label_preReloc,pset);
 //    new_dw->allocateAndPut(triNode0TriIDs_new,
 //                                TriL->triNode0TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode1TriIDs_new,
@@ -7402,8 +7404,8 @@ void SerialMPM::addTracers(const ProcessorGroup*,
 
       ParticleVariable<Point> px;
       ParticleVariable<long64> pids;
-      new_dw->getModifiable(px,       lb->pXLabel_preReloc,           pset);
-      new_dw->getModifiable(pids,     lb->tracerIDLabel_preReloc,     pset);
+      new_dw->getModifiable(px,         lb->pXLabel_preReloc,           pset);
+      new_dw->getModifiable(pids,     TraL->tracerIDLabel_preReloc,     pset);
 
       ParticleSubset* psetnew = 
                 new_dw->createParticleSubset(numNewTracers,dwi,patch);
@@ -7444,8 +7446,8 @@ void SerialMPM::addTracers(const ProcessorGroup*,
       is.close();
 
       // put back temporary data
-      new_dw->put(pxtmp,    lb->pXLabel_preReloc,             true);
-      new_dw->put(pidstmp,  lb->tracerIDLabel_preReloc,       true);
+      new_dw->put(pxtmp,      lb->pXLabel_preReloc,             true);
+      new_dw->put(pidstmp,  TraL->tracerIDLabel_preReloc,       true);
    }    // if doAuth && AddedNewParticles<1.0....
   }   // for patches
 //   flags->d_doAuthigenesis = false;

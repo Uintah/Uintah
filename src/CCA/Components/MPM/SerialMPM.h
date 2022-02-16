@@ -53,6 +53,7 @@ class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
 class TriangleLabel;
+class TracerLabel;
 
 /**************************************
 
@@ -170,6 +171,7 @@ protected:
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
 
   TriangleLabel* TriL;
+  TracerLabel* TraL;
 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
