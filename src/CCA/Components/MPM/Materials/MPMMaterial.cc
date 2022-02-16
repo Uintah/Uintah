@@ -155,6 +155,12 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
 
+  // Enable ability to activate materials when needed to save computation time
+  d_is_active=true;
+  ps->get("is_active", d_is_active);
+  d_activation_time=0.0;
+  ps->get("activation_time", d_activation_time);
+
   // This is used for the autocycleflux boundary conditions
   d_do_conc_reduction = false;
   ps->get("do_conc_reduction", d_do_conc_reduction);
@@ -258,6 +264,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("is_active",d_is_active);
+  mpm_ps->appendElement("activation_time",d_activation_time);
 
   d_cm->outputProblemSpec(mpm_ps);
   d_damageModel->outputProblemSpec(mpm_ps);
@@ -288,6 +296,8 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
+  d_is_active = mat->d_is_active;
+  d_activation_time = mat->d_activation_time;
 
   // Check to see which ParticleCreator object we need
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
@@ -388,6 +398,21 @@ void MPMMaterial::setIsRigid(const bool is_rigid)
 bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;
+}
+
+void MPMMaterial::setIsActive(const bool is_active)
+{
+  d_is_active=is_active;
+}
+
+bool MPMMaterial::getIsActive() const
+{
+  return d_is_active;
+}
+
+double MPMMaterial::getActivationTime() const
+{
+  return d_activation_time;
 }
 
 double MPMMaterial::getSpecificHeat() const

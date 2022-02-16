@@ -2254,7 +2254,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     Ghost::GhostType  gan = Ghost::AroundNodes;
 
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl =
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -2273,7 +2274,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
-//    old_dw->get(pColor,         lb->pColorLabel,         pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       if (flags->d_GEVelProj){
@@ -2318,12 +2318,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
-//    NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gTemperatureRate;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
-//    new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
@@ -2339,7 +2337,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
-//      gColor.initialize(0.0);
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
@@ -2371,7 +2368,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Need to compute the lumped global mass matrix and velocity
       // Vector from the individual mass matrix and velocity vector
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
-
+     if(mpm_matl->getIsActive()){
       Vector total_mom(0.0,0.0,0.0);
       double pSp_vol = 1./mpm_matl->getInitialDensity();
       //loop over all particles in the patch:
@@ -2467,6 +2464,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           }
         }
       } // End of particle loop
+
       for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
         IntVector c = *iter;
@@ -2477,7 +2475,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gvelocity[c]      /= gmass[c];
         gtempglobal[c]    += gTemperature[c];
         gTemperature[c]   /= gmass[c];
-//        gColor[c]         /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]        /= gmass[c];
       }
@@ -2509,6 +2506,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
       }
+     } // is material active
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2864,7 +2862,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       Matrix3 stressvol;
       Matrix3 stresspress;
 
-      if(!mpm_matl->getIsRigid()){
+      if(!mpm_matl->getIsRigid() && mpm_matl->getIsActive()){
         // for the non axisymmetric case:
         if(!flags->d_axisymmetric){
           for (ParticleSubset::iterator iter = pset->begin();
@@ -2967,7 +2965,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         MPMBoundCond bc;
         bc.setBoundaryCondition(patch,dwi, "Symmetric",
                                 internalforce, interp_type);
-      }
+      } // is not rigid and is active
     }
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
@@ -4211,6 +4209,16 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
+
+    // activate materials if it is their time
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = 
+                       (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      if(time >= mpm_matl->getActivationTime()){
+         mpm_matl->setIsActive(true);
+      }
+    }
 
     int index = -999;
     for(int i = 0; i<(int) d_IPTimes.size(); i++){

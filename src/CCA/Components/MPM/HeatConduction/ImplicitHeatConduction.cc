@@ -730,11 +730,9 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
       cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
-    IntVector lowIndex,highIndex;
-    if(d_flag->d_8or27==8){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
-    } else if(d_flag->d_8or27==27){
+    IntVector lowIndex = patch->getNodeLowIndex();
+    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    if(d_flag->d_8or27>=27){
       lowIndex = patch->getExtraNodeLowIndex();
       highIndex = patch->getExtraNodeHighIndex()+IntVector(1,1,1);
     }

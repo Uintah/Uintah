@@ -144,6 +144,10 @@ WARNING
    bool getIsRigid() const;
    void setIsRigid(const bool is_rigid);
 
+   bool getIsActive() const;
+   void setIsActive(const bool is_active);
+   double getActivationTime() const;
+
    double getSpecificHeat() const;
    double getThermalConductivity() const;
 
@@ -198,6 +202,10 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
+
+   // for insert particles
+   bool d_is_active;
+   double d_activation_time;
 
    // Parameters related to MPM Hydro-mechanical coupling
    double d_waterdensity, d_porosity, d_permeability, d_initial_porepressure;
