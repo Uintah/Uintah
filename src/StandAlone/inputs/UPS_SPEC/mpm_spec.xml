@@ -164,6 +164,8 @@
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
         <density                         spec="REQUIRED DOUBLE" />
+        <is_active                       spec="OPTIONAL BOOLEAN" />
+        <activation_time                 spec="OPTIONAL DOUBLE" />
 
 		  <!--Hydro mechanical coupling-->s
 		  <water_density spec="OPTIONAL DOUBLE 'positive'"/>
