@@ -81,7 +81,7 @@ WARNING
                                     const LevelP& level);
 
     virtual void scheduleRestartInitialize(SchedulerP&,
-                                           const LevelP& level){};
+                                           const LevelP& level);
 
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
@@ -107,37 +107,43 @@ WARNING
   private:
     ICELabel* Ilb;
 
-   void modifyThermoTransportProperties(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse* new_dw);
+   void modifyThermoTransportProperties(const ProcessorGroup  *,
+                                        const PatchSubset     * patches,
+                                        const MaterialSubset  *,
+                                        DataWarehouse         *,
+                                        DataWarehouse         * new_dw);
 
-    void initialize(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
+    void initialize(const ProcessorGroup  *,
+                    const PatchSubset     * patches,
+                    const MaterialSubset  * matls,
+                    DataWarehouse         *,
+                    DataWarehouse         * new_dw);
 
-    void computeModelSources(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);
+    void  restartInitialize(const ProcessorGroup *,
+                            const PatchSubset    * patches,
+                            const MaterialSubset *,
+                            DataWarehouse        * ,
+                            DataWarehouse        * new_dw);
 
-    void testConservation(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset*,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+    void computeModelSources(const ProcessorGroup *,
+                             const PatchSubset    * patches,
+                             const MaterialSubset *,
+                             DataWarehouse        * old_dw,
+                             DataWarehouse        * new_dw);
 
-    void errorEstimate(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matl,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw,
+    void testConservation(const ProcessorGroup  *,
+                          const PatchSubset     * patches,
+                          const MaterialSubset  *,
+                          DataWarehouse         * old_dw,
+                          DataWarehouse         * new_dw);
+
+    void errorEstimate(const ProcessorGroup * pg,
+                       const PatchSubset    * patches,
+                       const MaterialSubset * matl,
+                       DataWarehouse        * old_dw,
+                       DataWarehouse        * new_dw,
                        bool initial);
-                       
+
     void readTable( const Patch * patch,
                     const Level * level,
                     CCVariable<double>& c2 );
@@ -218,9 +224,9 @@ WARNING
     // global constants
     bool d_runConservationTask  {false};
     bool d_withExpDecayModel    {false};
-    
+
     enum decayCoef{ constant, variable, none};
-    decayCoef  d_decayCoef = none; 
+    decayCoef  d_decayCoef = none;
 
   };
 }

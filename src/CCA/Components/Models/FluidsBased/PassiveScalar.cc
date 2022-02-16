@@ -660,6 +660,60 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
+//
+void PassiveScalar::scheduleRestartInitialize(SchedulerP   & sched,
+                                                const LevelP & level)
+{
+  const string schedName = "PassiveScalar::scheduleRestartInitialize("+ d_scalar->fullName+")";
+  printSchedule( level, dout_models_ps, schedName );
+
+
+  const string taskName = "PassiveScalar::restartInitialize_("+ d_scalar->fullName+")";
+  Task* t = scinew Task(taskName, this, &PassiveScalar::restartInitialize);
+
+  if( d_withExpDecayModel ){
+    t->computes( d_scalar->expDecayCoefLabel );
+  }
+
+  sched->addTask(t, level->eachPatch(), d_matl_set);
+}
+
+//______________________________________________________________________
+void PassiveScalar::restartInitialize(const ProcessorGroup *,
+                                      const PatchSubset    * patches,
+                                      const MaterialSubset *,
+                                      DataWarehouse        * ,
+                                      DataWarehouse        * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    const Level* level = getLevel(patches);
+
+    const string msg = "Doing PassiveScalar::restartInitialize("+ d_scalar->fullName+")";
+    printTask(patches, patch, dout_models_ps, msg);
+
+    //__________________________________
+    //  Initialize coefficient used in exponential decay model
+    if( d_withExpDecayModel ){
+      int indx = d_matl->getDWIndex();
+
+      CCVariable<double> c2;
+      new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
+      c2.initialize(0.0);
+
+      if (d_decayCoef == constant){
+        c2.initialize( d_scalar->c2 );
+      }
+      else{
+        readTable( patch, level, c2 );
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//  Task:     ModifyThermoTransportProperties
+//  Purpose:  compute the diffusion coefficient
 void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                             const LevelP& level,
                                                             const MaterialSet* /*ice_matls*/)
