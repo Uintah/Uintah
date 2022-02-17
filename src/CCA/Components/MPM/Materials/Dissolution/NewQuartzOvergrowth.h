@@ -60,7 +60,6 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
       class NewQuartzOvergrowth : public Dissolution {
       private:
          

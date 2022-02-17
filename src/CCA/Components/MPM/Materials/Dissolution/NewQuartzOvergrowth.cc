@@ -178,9 +178,6 @@ void NewQuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
-  //t->requires(Task::OldDW, TriL->triCemVecN0Label,       Ghost::None);
-  //t->requires(Task::OldDW, TriL->triCemVecN1Label,       Ghost::None);
-  //t->requires(Task::OldDW, TriL->triCemVecN2Label,       Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
   t->modifies(lb->dLdtDissolutionLabel,  mss);

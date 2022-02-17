@@ -64,6 +64,37 @@ Tracer::createTracers(TracerMaterial* matl,
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numTracers,dwi,patch,new_dw);
 
+  // Dig out cement vertex data first
+  string fileroot;
+  size_t lastdot = filename.find_last_of(".");
+  if (lastdot == std::string::npos){
+    fileroot = filename;
+  } else {
+    fileroot = filename.substr(0, lastdot); 
+  }
+
+  // Open cement attribute file
+  string cvtfilename = fileroot + ".cvt";
+  bool haveCVT = false;
+
+  std::ifstream cvt(cvtfilename.c_str());
+  if (!cvt ){
+   proc0cout << "No cvt file "+cvtfilename+" in createTracers \n";
+  } else {
+   haveCVT=true;
+  }
+
+  // Read in cvt file if it exists
+  vector<Point> CVT;
+  if(haveCVT){
+    double c1,c2,c3 = 0.0;
+    int numcvt = 0;
+    while (cvt >> c1 >> c2 >> c3) {
+      CVT.push_back(Point(c1,c2,c3));
+      numcvt++;
+    } // while lines in the pts file
+    cvt.close();
+  } // if haveCVT
 
   if(filename!="") {
     std::ifstream is(filename.c_str());
@@ -75,6 +106,7 @@ Tracer::createTracers(TracerMaterial* matl,
     double p1,p2,p3;
     string line;
     particleIndex start = 0;
+    int lineNum = 0;
     while (getline(is, line)) {
      istringstream ss(line);
      string token;
@@ -93,8 +125,14 @@ Tracer::createTracers(TracerMaterial* matl,
        particleIndex pidx = start;
        tracer_pos[pidx]   = pos;
        tracerID[pidx] = tid;
+       if(haveCVT){
+         tracerCemVec[pidx] = CVT[lineNum] - Point(pos);
+       } else {
+         tracerCemVec[pidx] = Vector(0.);
+       }
        start++;
      }
+     lineNum++;
     }
     is.close();
   }
@@ -114,6 +152,7 @@ Tracer::allocateVariables(particleIndex numTracers,
 
   new_dw->allocateAndPut(tracer_pos,     d_lb->pXLabel,             subset);
   new_dw->allocateAndPut(tracerID,       d_TL->tracerIDLabel,       subset);
+  new_dw->allocateAndPut(tracerCemVec,   d_TL->tracerCemVecLabel,   subset);
   
   return subset;
 }
@@ -175,7 +214,9 @@ vector<const VarLabel* > Tracer::returnTracerStatePreReloc()
 void Tracer::registerPermanentTracerState(TracerMaterial* trmat)
 {
   d_tracer_state.push_back(d_TL->tracerIDLabel);
+  d_tracer_state.push_back(d_TL->tracerCemVecLabel);
   d_tracer_state_preReloc.push_back(d_TL->tracerIDLabel_preReloc);
+  d_tracer_state_preReloc.push_back(d_TL->tracerCemVecLabel_preReloc);
 }
 //__________________________________
 //
@@ -187,6 +228,7 @@ void Tracer::scheduleInitialize(const LevelP& level,
 
   t->computes(d_lb->pXLabel);
   t->computes(d_TL->tracerIDLabel);
+  t->computes(d_TL->tracerCemVecLabel);
   t->computes(d_TL->tracerCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Tracer"));

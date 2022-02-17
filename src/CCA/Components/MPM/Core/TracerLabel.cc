@@ -46,6 +46,12 @@ TracerLabel::TracerLabel()
   tracerIDLabel_preReloc = VarLabel::create("t.tracerID+",
 			ParticleVariable<long64>::getTypeDescription() );
 
+  tracerCemVecLabel = VarLabel::create("t.CemVec",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  tracerCemVecLabel_preReloc = VarLabel::create("t.CemVec+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pCellNATracerIDLabel =
     VarLabel::create("cellNATracerID", 
                                    CCVariable<short int>::getTypeDescription());
@@ -56,5 +62,7 @@ TracerLabel::~TracerLabel()
   VarLabel::destroy(tracerIDLabel);
   VarLabel::destroy(tracerIDLabel_preReloc);
   VarLabel::destroy(tracerCountLabel);
+  VarLabel::destroy(tracerCemVecLabel);
+  VarLabel::destroy(tracerCemVecLabel_preReloc);
   VarLabel::destroy(pCellNATracerIDLabel);
 }

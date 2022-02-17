@@ -480,6 +480,9 @@ MPMLabel::MPMLabel()
   dLdtDissolutionLabel  = VarLabel::create("dLdtDissolution",
                         NCVariable<double>::getTypeDescription());
                      
+  gCemVecLabel  = VarLabel::create("g.CemVec",
+                        NCVariable<Vector>::getTypeDescription());
+                     
   NodalWeightSumLabel  = VarLabel::create("NodalWeightSum",
                         NCVariable<double>::getTypeDescription());
 
@@ -873,6 +876,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
   VarLabel::destroy(dLdtDissolutionLabel);
+  VarLabel::destroy(gCemVecLabel);
   VarLabel::destroy(NodalWeightSumLabel);
   VarLabel::destroy(frictionalWorkLabel);
   VarLabel::destroy(gNumNearParticlesLabel);

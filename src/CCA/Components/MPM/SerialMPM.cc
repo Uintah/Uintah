@@ -834,6 +834,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           triangle_matls_sub,
                                                           all_matls);
   }
+  if(flags->d_useTracers && flags->d_doingDissolution) {
+    scheduleComputeGridCemVec(                sched, patches, mpm_matls_sub,
+                                                          tracer_matls_sub,
+                                                          all_matls);
+  }
 //  scheduleFindGrainCollisions(          sched, patches, matls);
   if(flags->d_computeNormals){
     if(flags->d_useTriangles){
@@ -1530,7 +1535,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
 
   t->requires(Task::NewDW, lb->massBurnFractionLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->NodalWeightSumLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->NodalWeightSumLabel,             gac,NGN);
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,                  gac,NGN);
   }
@@ -1698,9 +1703,11 @@ void SerialMPM::scheduleUpdateTracers(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->pXLabel,            tracer_matls, gnone);
   t->requires(Task::OldDW, TraL->tracerIDLabel,    tracer_matls, gnone);
+  t->requires(Task::OldDW, TraL->tracerCemVecLabel,tracer_matls, gnone);
 
-  t->computes(lb->pXLabel_preReloc,           tracer_matls);
-  t->computes(TraL->tracerIDLabel_preReloc,   tracer_matls);
+  t->computes(lb->pXLabel_preReloc,            tracer_matls);
+  t->computes(TraL->tracerIDLabel_preReloc,    tracer_matls);
+  t->computes(TraL->tracerCemVecLabel_preReloc,tracer_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -4901,8 +4908,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing updateTracers");
+    printTask(patches, patch,cout_doing, "Doing updateTracers");
 
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
@@ -4968,14 +4974,20 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
       ParticleVariable<Point> tx_new;
       constParticleVariable<long64> tracer_ids;
       ParticleVariable<long64> tracer_ids_new;
+      constParticleVariable<Vector> tracerCemVec;
+      ParticleVariable<Vector> tracerCemVec_new;
 
       old_dw->get(tx,            lb->pXLabel,                         pset);
       old_dw->get(tracer_ids,  TraL->tracerIDLabel,                   pset);
+      old_dw->get(tracerCemVec,TraL->tracerCemVecLabel,               pset);
 
       new_dw->allocateAndPut(tx_new,          lb->pXLabel_preReloc,       pset);
       new_dw->allocateAndPut(tracer_ids_new,TraL->tracerIDLabel_preReloc, pset);
+      new_dw->allocateAndPut(tracerCemVec_new,
+                                        TraL->tracerCemVecLabel_preReloc, pset);
 
       tracer_ids_new.copyData(tracer_ids);
+      tracerCemVec_new.copyData(tracerCemVec);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -5732,8 +5744,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing updateTriangles");
+    printTask(patches, patch,cout_doing, "Doing updateTriangles");
 
     ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
@@ -8073,7 +8084,6 @@ void SerialMPM::scheduleComputeNormalsTri(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
 
   t->requires(Task::OldDW, lb->pXLabel,              triangle_matls, gac, 2);
-  t->requires(Task::OldDW, lb->pSizeLabel,           triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triNormalLabel,     triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,      gac,NGN+3);
 
@@ -8152,6 +8162,105 @@ void SerialMPM::computeNormalsTri(const ProcessorGroup *,
   }     // patches
 }
 
+void SerialMPM::scheduleComputeGridCemVec(SchedulerP& sched,
+                                          const PatchSet* patches,
+                                          const MaterialSubset* mpm_matls,
+                                          const MaterialSubset* tracer_matls,
+                                          const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeGridCemVec");
+
+  Task* t=scinew Task("MPM::computeGridCemVec",
+                      this, &SerialMPM::computeGridCemVec);
+
+  Ghost::GhostType  gac = Ghost::AroundCells;
+
+  t->requires(Task::OldDW, lb->pXLabel,              tracer_matls, gac, 2);
+  t->requires(Task::OldDW, TraL->tracerCemVecLabel,  tracer_matls, gac, 2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,    gac,NGN+3);
+
+  t->computes(lb->gCemVecLabel,                    mpm_matls);
+
+  sched->addTask(t, patches, matls);
+}
+
+//______________________________________________________________________
+//
+void SerialMPM::computeGridCemVec(const ProcessorGroup *,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset * ,
+                                        DataWarehouse  * old_dw,
+                                        DataWarehouse  * new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,
+              "Doing computeGridCemVec");
+
+    ParticleInterpolator* interpolator=scinew LinearInterpolator(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    string interp_type = flags->d_interpolator_type;
+
+    Ghost::GhostType gan   = Ghost::AroundNodes;
+
+    unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
+    std::vector<NCVariable<Vector> >       gcemvec(numMPMMatls);
+    std::vector<NCVariable<double> >       SumS(numMPMMatls);
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl =
+                     (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
+
+      new_dw->allocateAndPut(gcemvec[m],    lb->gCemVecLabel,  dwi, patch);
+      new_dw->allocateTemporary(SumS[m],                            patch);
+      gcemvec[m].initialize(Vector(0.0,0.0,0.0));
+      SumS[m].initialize(0.0);
+    }
+
+    int numTraMatls=m_materialManager->getNumMatls("Tracer");
+    Matrix3 size; size.Identity();
+
+    for(int tmo = 0; tmo < numTraMatls; tmo++) {
+      TracerMaterial* t_matl = (TracerMaterial *) 
+                             m_materialManager->getMaterial("Tracer", tmo);
+      int dwi_tra = t_matl->getDWIndex();
+      int adv_matl = t_matl->getAssociatedMaterial();
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi_tra, patch,
+                                                        gan, 2, lb->pXLabel);
+      constParticleVariable<Point>  tx;
+      constParticleVariable<Vector> tracerCemVec;
+      old_dw->get(tx,               lb->pXLabel,             pset);
+      old_dw->get(tracerCemVec,   TraL->tracerCemVecLabel,   pset);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+           iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+         int nn = interpolator->findCellAndWeights(tx[idx], ni, S, size);
+         for (int k = 0; k < nn; k++) {
+           IntVector node = ni[k];
+           if(patch->containsNode(node)){
+             gcemvec[adv_matl][node] += tracerCemVec[idx]*S[k];
+             SumS[adv_matl][node]    += S[k];
+           }
+         }
+      } // triangles
+    }   // triangle materials
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        gcemvec[m][c] /= (SumS[m][c]+1.e-100);
+      } // Nodes
+    }   // MPM materials
+  }     // patches
+}
 //______________________________________________________________________
 //
 void SerialMPM::scheduleComputeLogisticRegression(SchedulerP   & sched,

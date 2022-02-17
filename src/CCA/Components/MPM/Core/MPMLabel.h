@@ -201,6 +201,7 @@ namespace Uintah {
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
       const VarLabel* dLdtDissolutionLabel; //for burn modeling
+      const VarLabel* gCemVecLabel;         //for overgrowth modeling
       const VarLabel* NodalWeightSumLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;

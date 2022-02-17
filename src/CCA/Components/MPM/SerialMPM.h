@@ -273,6 +273,12 @@ protected:
                                        DataWarehouse   * old_dw,
                                        DataWarehouse   * new_dw );
 
+  virtual void computeGridCemVec(const ProcessorGroup  *,
+                                 const PatchSubset     * patches,
+                                 const MaterialSubset  * ,
+                                       DataWarehouse   * old_dw,
+                                       DataWarehouse   * new_dw );
+
   virtual void computeLogisticRegression(const ProcessorGroup  *,
                                          const PatchSubset     * patches,
                                          const MaterialSubset  * ,
@@ -567,6 +573,12 @@ protected:
                                       const MaterialSet * matls );
 
   virtual void scheduleComputeNormalsTri(SchedulerP        & sched,
+                                         const PatchSet    * patches,
+                                         const MaterialSubset*,
+                                         const MaterialSubset*,
+                                         const MaterialSet * matls );
+
+  virtual void scheduleComputeGridCemVec(SchedulerP        & sched,
                                          const PatchSet    * patches,
                                          const MaterialSubset*,
                                          const MaterialSubset*,

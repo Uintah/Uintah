@@ -38,6 +38,8 @@ namespace Uintah {
       const VarLabel* tracerCountLabel;
       const VarLabel* tracerIDLabel; 
       const VarLabel* tracerIDLabel_preReloc; 
+      const VarLabel* tracerCemVecLabel; 
+      const VarLabel* tracerCemVecLabel_preReloc; 
       const VarLabel* pCellNATracerIDLabel;
     };
 } // End namespace Uintah
