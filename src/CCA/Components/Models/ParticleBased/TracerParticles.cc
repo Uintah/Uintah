@@ -495,7 +495,8 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
       if ( piece->inside(CC_pos,true) ){
 
         Point lower = CC_pos - dx_2;
-
+        mTwister.seed((c.x() + c.y() + c.z()));
+        
         for(int i=0; i<nParticlesPerCell; i++){
 
           if ( !b2.contains(CC_pos) ){
