@@ -15,7 +15,13 @@ Summary:
             interpolators, using the XDMF *.xmf file format, which can be visualized
             using tools like ParaView or VisIt.
 
-Usage:      python uda2xmf.py [-flages] <uda_directory>
+serial Usage:      python3 uda2xmf.py [-flags] <uda_directory>
+
+parallel Usage:    mpirun -np x python3 uda2xmf.py [-flags] <uda_directory>
+
+WARNING:  You must use the same MPI that was used to compile mpi4py.  On Debian
+Buster use mpirun.openmpi.
+
 
 Input:      Uintah *.uda directory
 Output:     XDMF *.xmf and HDF5 *.h5 files for visualization
@@ -27,11 +33,15 @@ Revisions:  YYMMDD    Author            Comments
             171201    Cody Herndon, Brian Phung, Ashley Spear Speed up of python code
             151201    Brian Leavy       Initial visualization of particle domains
 """
+
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    if rank == 0:
+      print("uda2xmf.py: You must use the same MPI library version when running the script in parallel.")
+      print("uda2xmf.py: MPI library Version: ",MPI.Get_library_version() )
 
 except ImportError:
     comm = None
@@ -1220,7 +1230,13 @@ class Uda_lightweight(Lightweight_container):
         timestep_elems = index_root.findall(".//timesteps/timestep")
 
         for ele in timestep_elems:
-            self.contents.append(Timestep_lightweight(ele, self.root_folder))
+
+            # ignore timestep 0
+            if ele.text != '0':
+              self.contents.append(Timestep_lightweight(ele, self.root_folder))
+
+            else:
+              print( "Ignoring timestep 0")
 
             if target_timestep:
                 if self.contents[-1].name not in target_timestep:
@@ -1413,6 +1429,7 @@ class Uda_lightweight(Lightweight_container):
 #______________________________________________________________________
 
 if __name__=="__main__":
+
     if rank == 0:
         parser = argparse.ArgumentParser()
 
@@ -1461,8 +1478,9 @@ if __name__=="__main__":
         ack = 0
 
         while len(items) > 0:
-            if items[0].verbose:
-                print("Parsing timestep "+items[0].name+" in thread "+str(rank))
+            #if items[0].verbose:
+            print("Parsing timestep "+items[0].name+" in thread "+str(rank))
+
             dataset = Uda_lightweight.generate_descriptor_parallel(items[0])
             comm.send(dataset, dest=0, tag=3)
             # poor man's semaphore
