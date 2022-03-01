@@ -276,14 +276,13 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
       IntVector c = *iter; 
       
       int alpha=alphaMaterial[c];
+      Point NodePos = patch->getNodePosition(c);
+      Vector r = NodePos - requested_origin.asPoint();
+      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity_star[d_material][c];
+      }
       if(alpha>=0){  // Only work on nodes where alpha!=-99
-        Point NodePos = patch->getNodePosition(c);
-        Vector r = NodePos - requested_origin.asPoint();
-        Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
-        if(rigid_velocity) {
-          rigid_vel = gvelocity_star[d_material][c];
-        }
-
         for(int  n = 0; n < numMatls; n++){
           if(!d_matls.requested(n)) continue;
           Vector new_vel = rigid_vel;
@@ -326,9 +325,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
           }  // if mass of both matls>0
         }    // for matls
       } else{  // alpha!=0
-        Point NodePos = patch->getNodePosition(c);
-        Vector r = NodePos - requested_origin.asPoint();
-        Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
         for(int  n = 0; n < numMatls; n++){
           if(n==d_material && gmass[n][c]>1.e-99){
             gvelocity_star[n][c] =  rigid_vel;
