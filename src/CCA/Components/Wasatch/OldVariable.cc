@@ -69,7 +69,7 @@ namespace WasatchCore {
           }
           matches.push_back(to_split.substr(0, pos+change_end));
           
-          to_split.erase(0, pos+1);
+          to_split.erase(0, pos+delimiter.size());
 
       }
       while (!to_split.empty());
@@ -86,20 +86,13 @@ namespace WasatchCore {
    */
   std::string construct_name(std::string old_name,std::string delimiter){
       std::string new_name;
-      std::vector<std::string> splitted_name = split(old_name,delimiter);
       // this part is used to avoid messing with "_old" suffix in existing code.
       // eventually this has to be changed to "_NM_0" 
       //----------------------------------------------------------------------------------------------------
-      if (splitted_name.back()!="old" && splitted_name[1]!="NM") new_name = old_name + delimiter + "old";
-      else if (splitted_name.back() =="old") new_name = splitted_name[0] + delimiter+"NM"+ delimiter + "1";
-      //----------------------------------------------------------------------------------------------------
-      else
-      {
-          splitted_name.back() = std::to_string(std::stoi(splitted_name.back())+1);
-          new_name = splitted_name[0];
-          for (int i = 1 ; i<splitted_name.size(); i++)
-              new_name += delimiter + splitted_name[i];
-      }
+      std::vector<std::string> splitted_name = split(old_name,"_NM_");
+      if (splitted_name.size()==2 ) new_name = splitted_name[0] + "_NM_" + std::to_string(std::stoi(splitted_name.back())+1);
+      else if (split(old_name,"_").back()=="old") new_name = split(old_name,"_old").at(0) + "_NM_1";
+      else new_name = old_name + "_old";
       return new_name;
   }
 
