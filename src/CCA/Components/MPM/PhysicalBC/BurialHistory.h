@@ -66,6 +66,9 @@ DESCRIPTION
         water_Saturation_pct    Water Saturation in percent
         UintahDissolutionTime   amount of Uintah time to spend in the
                                 dissolution portion of this level
+        QuartzGrowthVec_fr      Fraction of the total quartz overgrowth
+                                to take place at a given period in the burial
+                                history
         EndUponCompletion       bool, if true, then simulation exits
                                 at the end of the interval
 
@@ -200,6 +203,10 @@ WARNING
         return d_uintahDissolutionTime[index];
       }
 
+      inline double getQuartzGrowthVec_fr(int index) {
+        return d_quartzGrowthVec_fr[index];
+      }
+
    private:
       // Prevent copying
       BurialHistory(const BurialHistory&);
@@ -224,6 +231,7 @@ WARNING
       std::vector<double> d_sigma_V_bar;
       std::vector<double> d_waterSaturation_pct;
       std::vector<double> d_uintahDissolutionTime;
+      std::vector<double> d_quartzGrowthVec_fr;
       std::vector<bool>   d_endOnCompletion;
    };
 
