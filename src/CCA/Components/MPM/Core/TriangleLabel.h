@@ -47,12 +47,6 @@ namespace Uintah {
       const VarLabel* triMidToN1VectorLabel_preReloc; 
       const VarLabel* triMidToN2VectorLabel; 
       const VarLabel* triMidToN2VectorLabel_preReloc; 
-      const VarLabel* triCemVecN0Label; 
-      const VarLabel* triCemVecN0Label_preReloc; 
-      const VarLabel* triCemVecN1Label; 
-      const VarLabel* triCemVecN1Label_preReloc; 
-      const VarLabel* triCemVecN2Label; 
-      const VarLabel* triCemVecN2Label_preReloc; 
       const VarLabel* triUseInPenaltyLabel; 
       const VarLabel* triUseInPenaltyLabel_preReloc; 
       const VarLabel* triAreaLabel; 

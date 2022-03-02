@@ -87,7 +87,7 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      else if (dis_type == "NewQuartzOvergrowth") {
       dissolution_list->add(scinew NewQuartzOvergrowth(myworld,child,ss,lb));
       flag->d_doingDissolution=true;
-      flag->d_computeNormals=false;
+      flag->d_computeNormals=true;
      }
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;

@@ -68,7 +68,7 @@ NewQuartzOvergrowth::~NewQuartzOvergrowth()
 void NewQuartzOvergrowth::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",                  "newQuartzOvergrowth");
+  dissolution_ps->appendElement("type",                  "NewQuartzOvergrowth");
   dissolution_ps->appendElement("masterModalID",          d_masterModalID);
   dissolution_ps->appendElement("GrowthRate_cmPerMY",     d_growthRate);
 }
@@ -96,11 +96,13 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
     Ghost::GhostType  gnone = Ghost::None;
 
     // Retrieve necessary data from DataWarehouse
-    std::vector<constNCVariable<double> > gmass(numMatls),gvolume(numMatls);
+    std::vector<constNCVariable<double> > gmass(numMatls);
+    std::vector<constNCVariable<Vector> > gCemVec(numMatls);
     std::vector<constNCVariable<double> > gSurfaceArea(numMatls);
     std::vector<constNCVariable<Vector> > gContactForce(numMatls);
     std::vector<NCVariable<double> >  massBurnRate(numMatls);
     std::vector<NCVariable<double> >  dLdt(numMatls);
+    std::vector<NCVariable<Vector> >  gSurfNorm(numMatls);
     constNCVariable<double> NC_CCweight;
     std::vector<bool> masterMatls(numMatls);
     std::vector<double> rho(numMatls);
@@ -109,7 +111,7 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],     lb->gMassLabel,           dwi, patch, gnone, 0);
-      new_dw->get(gvolume[m],   lb->gVolumeLabel,         dwi, patch, gnone, 0);
+      new_dw->get(gCemVec[m],   lb->gCemVecLabel,         dwi, patch, gnone, 0);
       new_dw->get(gSurfaceArea[m],
                                 lb->gSurfaceAreaLabel,    dwi, patch, gnone, 0);
       new_dw->get(gContactForce[m],
@@ -118,6 +120,8 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
                                 lb->massBurnFractionLabel,dwi, patch);
       new_dw->getModifiable(dLdt[m],
                                 lb->dLdtDissolutionLabel, dwi, patch);
+      new_dw->getModifiable(gSurfNorm[m],
+                                lb->gSurfNormLabel,       dwi, patch);
 
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       rho[m] = mat->getInitialDensity();
@@ -129,29 +133,25 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
       }
     } // loop over matls to fill arrays
 
+
+    // Surface motion occurs in a direction that is not normal to the surface
+    // The mass added will be the projection of the surface area into the
+    // direction of the surface motion.
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
-//    MPMMaterial* mpm_matl = 
-//                      (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
-//    int dwi = mpm_matl->getDWIndex();
-
-      double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
+//      double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-
-        double sumMass=0.0;
-        for(int n = 0; n < numMatls; n++){
-            sumMass+=gmass[n][c]; 
-        }
 
         if(gmass[md][c] > 2.e-100 && gContactForce[md][c].length() < 1.e-8
                                   && NC_CCweight[c] < 0.2) {
 
-          double localSurfRate = dL_dt;
-          massBurnRate[md][c] += rho[m]*localSurfRate*gSurfaceArea[md][c];
-          dLdt[md][c] += localSurfRate;
+          double localSurfRate = 0.1*Dot(gCemVec[md][c],gSurfNorm[md][c]);
+          massBurnRate[md][c] -= rho[m]*localSurfRate*gSurfaceArea[md][c];
+          dLdt[md][c] -= 0.1*gCemVec[md][c].length();
         } // mass is present
+        gSurfNorm[md][c] = gCemVec[md][c]/(gCemVec[md][c].length() + 1.e-100);
       } // nodes
      } // endif a masterMaterial
     } // materials
@@ -174,13 +174,14 @@ void NewQuartzOvergrowth::addComputesAndRequiresMassBurnFrac(
 
   t->requires(Task::OldDW, lb->delTLabel );
   t->requires(Task::NewDW, lb->gMassLabel,               Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gCemVecLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gSurfaceAreaLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gLSContactForceLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,  Ghost::None);
 
   t->modifies(lb->massBurnFractionLabel, mss);
   t->modifies(lb->dLdtDissolutionLabel,  mss);
+  t->modifies(lb->gSurfNormLabel,        mss);
 
   sched->addTask(t, patches, ms);
 

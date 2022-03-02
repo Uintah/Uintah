@@ -834,11 +834,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           triangle_matls_sub,
                                                           all_matls);
   }
-  if(flags->d_useTracers && flags->d_doingDissolution) {
-    scheduleComputeGridCemVec(                sched, patches, mpm_matls_sub,
-                                                          tracer_matls_sub,
-                                                          all_matls);
-  }
 //  scheduleFindGrainCollisions(          sched, patches, matls);
   if(flags->d_computeNormals){
     if(flags->d_useTriangles){
@@ -848,6 +843,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     } else {
       scheduleComputeNormals(             sched, patches, matls);
     }
+  }
+  if(flags->d_useTracers && flags->d_doingDissolution) {
+    scheduleComputeGridCemVec(                sched, patches, mpm_matls_sub,
+                                                          tracer_matls_sub,
+                                                          all_matls);
   }
   if(flags->d_useLogisticRegression){
     scheduleComputeLogisticRegression(    sched, patches, matls);
@@ -1794,9 +1794,6 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN0Label,       triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN1Label,       triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triCemVecN2Label,       triangle_matls, gnone);
 //t->requires(Task::OldDW, TriL->triNode0TriangleIDsLabel,triangle_matls,gnone);
 //t->requires(Task::OldDW, TriL->triNode1TriangleIDsLabel,triangle_matls,gnone);
 //t->requires(Task::OldDW, TriL->triNode2TriangleIDsLabel,triangle_matls,gnone);
@@ -1813,9 +1810,6 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
-  t->computes(TriL->triCemVecN0Label_preReloc,           triangle_matls);
-  t->computes(TriL->triCemVecN1Label_preReloc,           triangle_matls);
-  t->computes(TriL->triCemVecN2Label_preReloc,           triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -4356,7 +4350,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration, gvelSPSSP;
       constNCVariable<double> gTemperatureRate, gTempStar;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
-      constNCVariable<Vector> gSurfNorm;
+      constNCVariable<Vector> gGrowthDir;
       constNCVariable<double> nodalWeightSum;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -4423,13 +4417,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         dTdt = dTdt_create;                         // reference created data
       }
 
+      // gSurfNormLabel may contain a growth direction that is not normal
       if(flags->d_computeNormals){
-        new_dw->get(gSurfNorm,     lb->gSurfNormLabel,       dwi,patch,gac,NGP);
+        new_dw->get(gGrowthDir,    lb->gSurfNormLabel,       dwi,patch,gac,NGP);
       } else{
         NCVariable<Vector> gSN_create;
         new_dw->allocateTemporary(gSN_create,                    patch,gac,NGP);
         gSN_create.initialize(Vector(0.));
-        gSurfNorm = gSN_create;                     // reference created data
+        gGrowthDir = gSN_create;                     // reference created data
       }
 
       new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
@@ -4472,7 +4467,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           vel      += gvelocity_star[node]  * S[k];
           velSSPSSP+= gvelSPSSP[node]       * S[k];
           acc      += gacceleration[node]   * S[k];
-          pSN      += gSurfNorm[node]       * S[k];
+          pSN      += gGrowthDir[node]      * S[k];
 
           tempRate += (gTemperatureRate[node] + dTdt[node]) * S[k];
         }
@@ -4501,10 +4496,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if (flags->d_doingDissolution){
           if(pSurf[idx]>=0.99 && burnFraction != 0.0){
             // Normalize particle surface normal
-            double pSNL=pSN.length();
-            if(pSNL > 0.0){
-               pSN = pSN/pSNL;
-            }
+            pSN /= (pSN.length() + 1.e-100);
             int maxDir = 0; double maxComp=fabs(pSN.x());
             for(int i = 1; i<3; i++){
               if(fabs(pSN[i])>maxComp){
@@ -5807,10 +5799,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<long64> triangle_ids;
       ParticleVariable<long64> tri_ids_new;
       constParticleVariable<Vector> triMidToN0Vec, triMidToN1Vec, triMidToN2Vec;
-      constParticleVariable<Vector> triCemVecN0, triCemVecN1, triCemVecN2;
       ParticleVariable<Vector> triMidToN0Vec_new, 
-                               triMidToN1Vec_new,triMidToN2Vec_new;
-      ParticleVariable<Vector> triCemVecN0_new, triCemVecN1_new,triCemVecN2_new;
+                               triMidToN1Vec_new, triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
       constParticleVariable<double> triArea, triClay;
@@ -5833,9 +5823,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triArea,         TriL->triAreaLabel,                  pset);
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
-      old_dw->get(triCemVecN0,     TriL->triCemVecN0Label,              pset);
-      old_dw->get(triCemVecN1,     TriL->triCemVecN1Label,              pset);
-      old_dw->get(triCemVecN2,     TriL->triCemVecN2Label,              pset);
 //    old_dw->get(triNode0TriIDs,  TriL->triNode0TriangleIDsLabel,      pset);
 //    old_dw->get(triNode1TriIDs,  TriL->triNode1TriangleIDsLabel,      pset);
 //    old_dw->get(triNode2TriIDs,  TriL->triNode2TriangleIDsLabel,      pset);
@@ -5860,12 +5847,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      TriL->triClayLabel_preReloc,         pset);
       new_dw->allocateAndPut(triNormal_new,
                                      TriL->triNormalLabel_preReloc,       pset);
-      new_dw->allocateAndPut(triCemVecN0_new,
-                                    TriL->triCemVecN0Label_preReloc,pset);
-      new_dw->allocateAndPut(triCemVecN1_new,
-                                    TriL->triCemVecN1Label_preReloc,pset);
-      new_dw->allocateAndPut(triCemVecN2_new,
-                                    TriL->triCemVecN2Label_preReloc,pset);
 //    new_dw->allocateAndPut(triNode0TriIDs_new,
 //                                TriL->triNode0TriangleIDsLabel_preReloc,  pset);
 //    new_dw->allocateAndPut(triNode1TriIDs_new,
@@ -5878,9 +5859,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
-      triCemVecN0_new.copyData(triCemVecN0);
-      triCemVecN1_new.copyData(triCemVecN1);
-      triCemVecN2_new.copyData(triCemVecN2);
 //    triNode0TriIDs_new.copyData(triNode0TriIDs);
 //    triNode1TriIDs_new.copyData(triNode1TriIDs);
 //    triNode2TriIDs_new.copyData(triNode2TriIDs);
@@ -8183,7 +8161,7 @@ void SerialMPM::scheduleComputeGridCemVec(SchedulerP& sched,
   t->requires(Task::OldDW, TraL->tracerCemVecLabel,  tracer_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,    gac,NGN+3);
 
-  t->computes(lb->gCemVecLabel,                    mpm_matls);
+  t->computes(lb->gCemVecLabel,                      mpm_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -8254,10 +8232,16 @@ void SerialMPM::computeGridCemVec(const ProcessorGroup *,
     }   // triangle materials
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = 
+                   (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      int dwi = mpm_matl->getDWIndex();
       for(NodeIterator iter =patch->getExtraNodeIterator();!iter.done();iter++){
         IntVector c = *iter;
         gcemvec[m][c] /= (SumS[m][c]+1.e-100);
       } // Nodes
+
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gcemvec[m],interp_type);
     }   // MPM materials
   }     // patches
 }

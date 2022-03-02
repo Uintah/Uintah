@@ -95,9 +95,6 @@ namespace Uintah {
     ParticleVariable<Vector>  triangleAreaAtNodes;
     ParticleVariable<double>  triangleArea;
     ParticleVariable<double>  triangleClay;  // 0 - no clay, 1 - full clay
-    ParticleVariable<Vector>  triangleCemVecNode0;
-    ParticleVariable<Vector>  triangleCemVecNode1;
-    ParticleVariable<Vector>  triangleCemVecNode2;
     ParticleVariable<Vector>  triangleNormal;
     ParticleVariable<IntVector>  triangleUseInPenalty;
 

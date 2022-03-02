@@ -146,11 +146,6 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
-        double sumMass=0.0;
-        for(int n = 0; n < numMatls; n++){
-            sumMass+=gmass[n][c]; 
-        }
-
         if(gmass[md][c] > 2.e-100 && gContactForce[md][c].length() < 1.e-8
                                   && NC_CCweight[c] < 0.2) {
 

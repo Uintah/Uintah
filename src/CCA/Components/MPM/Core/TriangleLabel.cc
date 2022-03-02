@@ -64,24 +64,6 @@ TriangleLabel::TriangleLabel()
   triMidToN2VectorLabel_preReloc = VarLabel::create("tri.MidToN2Vector+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  triCemVecN0Label = VarLabel::create("tri.CemVecN0",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triCemVecN0Label_preReloc = VarLabel::create("tri.CemVecN0+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triCemVecN1Label = VarLabel::create("tri.CemVecN1",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triCemVecN1Label_preReloc = VarLabel::create("tri.CemVecN1+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triCemVecN2Label = VarLabel::create("tri.CemVecN2",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  triCemVecN2Label_preReloc = VarLabel::create("tri.CemVecN2+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
   triUseInPenaltyLabel = VarLabel::create("tri.UseInPenalty",
 			ParticleVariable<IntVector>::getTypeDescription() );
 
@@ -146,12 +128,6 @@ TriangleLabel::~TriangleLabel()
   VarLabel::destroy(triMidToN1VectorLabel_preReloc);
   VarLabel::destroy(triMidToN2VectorLabel);
   VarLabel::destroy(triMidToN2VectorLabel_preReloc);
-  VarLabel::destroy(triCemVecN0Label);
-  VarLabel::destroy(triCemVecN0Label_preReloc);
-  VarLabel::destroy(triCemVecN1Label);
-  VarLabel::destroy(triCemVecN1Label_preReloc);
-  VarLabel::destroy(triCemVecN2Label);
-  VarLabel::destroy(triCemVecN2Label_preReloc);
   VarLabel::destroy(triUseInPenaltyLabel);
   VarLabel::destroy(triUseInPenaltyLabel_preReloc);
   VarLabel::destroy(triAreaLabel);

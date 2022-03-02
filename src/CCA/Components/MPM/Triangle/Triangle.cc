@@ -87,10 +87,6 @@ Triangle::createTriangles(TriangleMaterial* matl,
   string clayfilename = fileroot + ".clay";
   bool haveClay = false;
 
-  // Open cement attribute file
-  string cvtfilename = fileroot + ".cvt";
-  bool haveCVT = false;
-
   std::ifstream pts(ptsfilename.c_str());
   if (!pts ){
     throw ProblemSetupException(
@@ -110,13 +106,6 @@ Triangle::createTriangles(TriangleMaterial* matl,
    proc0cout << "No clay file "+clayfilename+" in createTriangles \n";
   } else {
    haveClay=true;
-  }
-
-  std::ifstream cvt(cvtfilename.c_str());
-  if (!cvt ){
-   proc0cout << "No cvt file "+cvtfilename+" in createTriangles \n";
-  } else {
-   haveCVT=true;
   }
 
   // Read in pts files
@@ -193,18 +182,6 @@ Triangle::createTriangles(TriangleMaterial* matl,
     clay.close();
   }
 
-  // Read in cvt file if it exists
-  vector<Point> CVT(numtri);
-  if(haveCVT){
-    double c1,c2,c3 = 0.0;
-    int numcvt = 0;
-    while (cvt >> c1 >> c2 >> c3) {
-      CVT[numcvt] = Point(c1,c2,c3);
-      numcvt++;
-    } // while lines in the pts file
-    cvt.close();
-  } // if haveCVT
-
   vector<int>       useInPen(numpts,1);
   vector<IntVector> useInPenVector(numtri,IntVector(99,99,99));
 
@@ -252,15 +229,6 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode0[pidx] = P0 - test;
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
-        if(haveCVT){
-          triangleCemVecNode0[pidx] = CVT[i0[i]] - P0;
-          triangleCemVecNode1[pidx] = CVT[i1[i]] - P1;
-          triangleCemVecNode2[pidx] = CVT[i2[i]] - P2;
-        } else {
-          triangleCemVecNode0[pidx] = Vector(0.);
-          triangleCemVecNode1[pidx] = Vector(0.);
-          triangleCemVecNode2[pidx] = Vector(0.);
-        }
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
 //        Vector C = P2-P1;
@@ -327,9 +295,6 @@ Triangle::allocateVariables(particleIndex numTriangles,
                                          d_Tl->triMidToN1VectorLabel,   subset);
   new_dw->allocateAndPut(triangleMidToNode2,
                                          d_Tl->triMidToN2VectorLabel,   subset);
-  new_dw->allocateAndPut(triangleCemVecNode0, d_Tl->triCemVecN0Label,   subset);
-  new_dw->allocateAndPut(triangleCemVecNode1, d_Tl->triCemVecN1Label,   subset);
-  new_dw->allocateAndPut(triangleCemVecNode2, d_Tl->triCemVecN2Label,   subset);
   new_dw->allocateAndPut(triangleUseInPenalty,
                                          d_Tl->triUseInPenaltyLabel,    subset);
   new_dw->allocateAndPut(triangleArea,   d_Tl->triAreaLabel,            subset);
@@ -474,9 +439,6 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_Tl->triAreaLabel);
   d_triangle_state.push_back(d_Tl->triClayLabel);
   d_triangle_state.push_back(d_Tl->triNormalLabel);
-  d_triangle_state.push_back(d_Tl->triCemVecN0Label);
-  d_triangle_state.push_back(d_Tl->triCemVecN1Label);
-  d_triangle_state.push_back(d_Tl->triCemVecN2Label);
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -490,9 +452,6 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_Tl->triAreaLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triClayLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN0Label_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN1Label_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triCemVecN2Label_preReloc);
 }
 //__________________________________
 //
@@ -514,9 +473,6 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_Tl->triClayLabel);
   t->computes(d_Tl->triAreaAtNodesLabel);
   t->computes(d_Tl->triangleCountLabel);
-  t->computes(d_Tl->triCemVecN0Label);
-  t->computes(d_Tl->triCemVecN1Label);
-  t->computes(d_Tl->triCemVecN2Label);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
 }
