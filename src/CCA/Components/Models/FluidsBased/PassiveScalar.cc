@@ -372,19 +372,19 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 // Read in a csv formatted file <x>,<y>,<z> value
 void PassiveScalar::readTable( const Patch * patch,
                                const Level * level,
+                               const std::string filename,
+                               const double c1,
                                CCVariable<double>& c2 )
 {
   static int count=1;
 
-
-  const std::string filename = d_scalar->c2_filename;
   std::ifstream ifs( filename.c_str() );
   if( !ifs ) {
     throw ProblemSetupException("ERROR: PassiveScalar::readTable: Unable to open the input file: " + filename, __FILE__, __LINE__);
   }
 
   proc0cout_cmp(count, 1) << "________________________DataAnalysis: PassiveScalar\n"
-                          << "  Coefficient c1: " << d_scalar->c1 << "\n"
+                          << "  Coefficient c1: " << c1 << "\n"
                           << "  Reading in table ("<< filename <<") for variable coefficient c2\n"
                           << "__________________________________\n";
 
@@ -516,7 +516,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         c2.initialize( d_scalar->c2 );
       }
       else{
-        readTable( patch, level, c2 );
+        readTable( patch, level, d_scalar->c2_filename, d_scalar->c1, c2 );
       }
     }
 
@@ -705,7 +705,7 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
         c2.initialize( d_scalar->c2 );
       }
       else{
-        readTable( patch, level, c2 );
+        readTable( patch, level, d_scalar->c2_filename, d_scalar->c1, c2 );
       }
     }
   }

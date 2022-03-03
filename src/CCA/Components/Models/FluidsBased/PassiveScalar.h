@@ -103,6 +103,13 @@ WARNING
 
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches);
+   
+   // create a static function so TracerParticles can call it. 
+   static void readTable( const Patch * patch,
+                          const Level * level,
+                          const std::string filename,
+                          const double c1,
+                          CCVariable<double>& c2 );
 
   private:
     ICELabel* Ilb;
@@ -144,9 +151,6 @@ WARNING
                        DataWarehouse        * new_dw,
                        bool initial);
 
-    void readTable( const Patch * patch,
-                    const Level * level,
-                    CCVariable<double>& c2 );
 
     PassiveScalar(const PassiveScalar&);
     PassiveScalar& operator=(const PassiveScalar&);

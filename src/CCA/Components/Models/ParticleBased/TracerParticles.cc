@@ -24,6 +24,7 @@
 
 #include <CCA/Components/ICE/Core/ICELabel.h>
 #include <CCA/Components/Models/ParticleBased/TracerParticles.h>
+#include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
 
 #include <Core/Math/MersenneTwister.h>
 #include <CCA/Ports/Scheduler.h>
@@ -49,13 +50,15 @@ using namespace Uintah;
 using std::string;
 using std::vector;
 using std::ostringstream;
+using std::cout;
+using std::endl;
 
 //______________________________________________________________________
 //To Do:
-//  -Add start and stop times.
-//  - Restart bug.  Allow model to be turned on any time.
 //  - Can only setVariables from old_DW
-//  - Must initialze particle variables after adding them.
+//  - Optimization:  Read in the variable decay coefficient from the passive scalar
+//    model if it's running.
+//
 #define proc0cout_eq(X,Y) if( isProc0_macro && X == Y) std::cout
 #define proc0cout_gt(X,Y) if( isProc0_macro && X >= Y) std::cout
 #define proc0cout_lt(X,Y) if( isProc0_macro && X <= Y) std::cout
@@ -205,31 +208,31 @@ void TracerParticles::problemSetup( GridP&,
   TP_ps->getWithDefault( "timeStop",  d_tracer->timeStop, 9.e99);
 
   //__________________________________
-  //  Initialization: Read in the geometry pieces 
+  //  Initialization: Read in the geometry pieces
   ProblemSpecP init_ps = tracer_ps->findBlock("initialization");
 
   if( !d_previouslyInitialized ){
 
-    for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); 
-                       geom_obj_ps != nullptr; 
+    for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object");
+                       geom_obj_ps != nullptr;
                        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-     vector<GeometryPieceP> pieces;
-     GeometryPieceFactory::create(geom_obj_ps, pieces);
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-     GeometryPieceP mainpiece;
-     if(pieces.size() == 0){
-       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-     }
-     else if(pieces.size() > 1){
-       mainpiece = scinew UnionGeometryPiece(pieces);
-     }
-     else {
-       mainpiece = pieces[0];
-     }
+      GeometryPieceP mainpiece;
+      if( pieces.size() == 0 ){
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      }
+      else if( pieces.size() > 1){
+        mainpiece = scinew UnionGeometryPiece(pieces);
+      }
+      else {
+        mainpiece = pieces[0];
+      }
 
-       Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
-       d_tracer->initializeRegions.push_back( region );
+      Region* region = scinew TracerParticles::Region(mainpiece, geom_obj_ps);
+      d_tracer->initializeRegions.push_back( region );
     }
   }
 
@@ -244,10 +247,10 @@ void TracerParticles::problemSetup( GridP&,
 
   if( srcs_ps ) {
 
-    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); 
-                      geom_obj_ps != nullptr; 
+    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object");
+                      geom_obj_ps != nullptr;
                       geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-                      
+
       vector<GeometryPieceP> pieces;
       GeometryPieceFactory::create(geom_obj_ps, pieces);
 
@@ -272,9 +275,9 @@ void TracerParticles::problemSetup( GridP&,
   ProblemSpecP vars_ps = TP_ps->findBlock("newVariables");
   if ( vars_ps ){
 
-    static int count=1;
+    static int cntr=1;
 
-    proc0cout_eq( count, 1 ) << "\n__________________________________TracerParticles\n";
+    proc0cout_eq( cntr, 1 ) << "\n__________________________________TracerParticles\n";
 
     for( ProblemSpecP label_spec = vars_ps->findBlock( "CCVarLabel" ); label_spec != nullptr; label_spec = label_spec->findNextBlock( "CCVarLabel" ) ) {
 
@@ -309,7 +312,7 @@ void TracerParticles::problemSetup( GridP&,
       std::string L2 = "p."+labelName;
       VarLabel* QLabel_preReloc   = VarLabel::create( L1, d_Part_double );
       VarLabel* QLabel            = VarLabel::create( L2, d_Part_double );
-      proc0cout_eq( count, 1 ) << "   Created labels (" << L1 << ") (" << L2 << ")\n";
+      proc0cout_eq( cntr, 1 ) << "   Created labels (" << L1 << ") (" << L2 << ")\n";
 
       //__________________________________
       //  populate the vector of particle variables
@@ -324,13 +327,103 @@ void TracerParticles::problemSetup( GridP&,
       d_oldLabels.push_back( QLabel_preReloc );
       d_newLabels.push_back( QLabel );
     }
-    proc0cout_eq( count, 1 ) << "__________________________________\n";
-    count ++;
-  } else {
+    cntr ++;
+  }
+  else {
     proc0cout << "\nTracerParticles:WARNING Couldn't find <Variables> tag.\n";
   }
-}
 
+  //__________________________________
+  //  create scalar particles whose value can decay exponentially
+  //  This is identical to what passiveScalar
+  for( ProblemSpecP scalar_ps = TP_ps->findBlock( "scalar" ); scalar_ps != nullptr; scalar_ps = scalar_ps->findNextBlock( "scalar" ) ) {
+    if ( scalar_ps ){
+
+      static int cntr=1;
+
+      std::string name {""};
+      scalar_ps->getAttribute( "name", name );
+      if ( name ==""){
+        throw ProblemSetupException("TracerParticles: the scalar tag must have a valid name  <scalar name=X>", __FILE__, __LINE__);
+      }
+
+      // create the labels associated with this scalar
+      auto S  = make_unique< scalar >();
+      std::string ln  = name;
+      std::string lnP = ln  +"+";
+
+      S->labelName        = ln;
+      S->label_preReloc   = VarLabel::create( lnP, d_Part_double );
+      S->label            = VarLabel::create( ln,  d_Part_double );
+
+      proc0cout_eq( cntr, 1 ) << "   Created labels (" << lnP << ") (" << ln << ")\n";
+
+      // labels needed for the relocation task
+      d_oldLabels.push_back( S->label_preReloc );
+      d_newLabels.push_back( S->label );
+
+      scalar_ps->require( "initialValue",  S->initialValue );
+
+      // container for preReloc label and initial value
+      std::pair< VarLabel*, double > map ( S->label_preReloc, S->initialValue );
+      S->label_value.insert( map );
+
+
+      //__________________________________
+      // exponential Decay
+      ProblemSpecP exp_ps = scalar_ps->findBlock("exponentialDecay");
+
+      if( exp_ps ) {
+
+                         // create labels associated with the exponental decay model
+        std::string L1 = name +"_expDecayCoef";
+        std::string L2 = name + "_totalDecay";
+        std::string L3 = L2 + "+";
+
+        S->expDecayCoefLabel = VarLabel::create( L1, CCVariable<double>::getTypeDescription());
+        S->totalDecayLabel          = VarLabel::create( L2, d_Part_double );
+        S->totalDecayLabel_preReloc = VarLabel::create( L3, d_Part_double );
+
+        // labels needed for the relocation task
+        d_oldLabels.push_back( S->totalDecayLabel_preReloc );
+        d_newLabels.push_back( S->totalDecayLabel );
+
+        // container for preReloc label and initial value
+        std::pair< VarLabel*, double > map ( S->totalDecayLabel_preReloc, 0.0 );
+        S->label_value.insert( map );
+
+
+        proc0cout_eq( cntr, 1 ) << "   Created labels (" << L1 << ") (" << L2 << ") (" << L3 <<")\n";
+
+        S->withExpDecayModel = true;
+        exp_ps->require( "c1", S->c1);
+
+        // The c2 coefficient type can be either a constant or read from a table
+        ProblemSpecP c2_ps = exp_ps->findBlock("c2");
+        std::string type = "";
+        c2_ps->getAttribute( "type", type );
+
+        if( type == "variable"){    // read c2 from table
+          S->decayCoefType = scalar::variable;
+          c2_ps->require( "filename", S->c2_filename );
+        }
+        else{           // c2 is a constant
+          S->decayCoefType = scalar::constant;
+          c2_ps->require( "value", S->c2);
+        }
+
+        if( S->decayCoefType == scalar::none ){
+          throw ProblemSetupException("TracerParticles: the tag c2 must have either a constant value or a filenaS", __FILE__, __LINE__);
+        }
+      }
+
+      d_scalars.push_back( move(S) );
+      proc0cout_eq( cntr, 1 ) << "__________________________________\n";
+      cntr ++;
+    }
+
+  }
+}
 
 //______________________________________________________________________
 //  Function:  TracerParticles::outputProblemSpec
@@ -361,6 +454,41 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
     }
   }
 
+  //__________________________________
+  //  scalars
+  if( d_scalars.size() > 0 ){
+
+    for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+      std::shared_ptr<scalar> S = d_scalars[i];
+
+      ProblemSpecP scalar_ps = tp_ps->appendChild( "scalar" );
+      scalar_ps->setAttribute( "name",S->labelName );
+
+      scalar_ps->appendElement( "initialValue", S->initialValue );
+
+
+      if (S->withExpDecayModel ){
+        ProblemSpecP exp_ps = scalar_ps->appendChild( "exponentialDecay" );
+        exp_ps->appendElement( "c1", S->c1 );
+
+                        // The c2 coefficient type can be either a constant or read from a table
+        ProblemSpecP c2_ps = exp_ps->appendChild("c2");
+
+                        // read c2 from table
+        if( S->decayCoefType == scalar::variable){
+          c2_ps->setAttribute( "type", "variable" );
+          c2_ps->appendElement( "filename", S->c2_filename );
+        }
+        else{           // c2 is a constant
+          c2_ps->setAttribute( "type", "constant" );
+          c2_ps->appendElement( "value", S->c2 );
+        }
+      }
+    }
+  }
+
+  //__________________________________
+  //
   ProblemSpecP tracer_ps = tp_ps->appendChild( "tracer" );
   tracer_ps->setAttribute( "name", d_tracer->name );
 
@@ -417,6 +545,18 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
     std::shared_ptr<Qvar> Q = d_Qvars[i];
     t->computes ( Q->pQLabel, d_matl_mss );
+  }
+
+  //__________________________________
+  //  scalars
+  for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+    std::shared_ptr<scalar> S = d_scalars[i];
+    t->computes( S->label, d_matl_mss );
+
+    if( S->withExpDecayModel ){
+      t->computes( S->expDecayCoefLabel, d_matl_mss );
+      t->computes( S->totalDecayLabel,   d_matl_mss );
+    }
   }
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -496,7 +636,7 @@ unsigned int TracerParticles::distributeParticles( const Patch   * patch,
 
         Point lower = CC_pos - dx_2;
         mTwister.seed((c.x() + c.y() + c.z()));
-        
+
         for(int i=0; i<nParticlesPerCell; i++){
 
           if ( !b2.contains(CC_pos) ){
@@ -615,6 +755,7 @@ void TracerParticles::initialize(const ProcessorGroup *,
   new_dw->get( simTime, simTimeLabel );
   d_previouslyInitialized = true;
 
+  const Level* level = getLevel(patches);
   //__________________________________
   // Patches loop
   for(int p=0;p<patches->size();p++){
@@ -680,6 +821,47 @@ void TracerParticles::initialize(const ProcessorGroup *,
         pQ[idx] = 0.0;
       }
     }  // Qvars loop
+
+
+    //__________________________________
+    //  particle scalars
+    for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+      std::shared_ptr<scalar> S = d_scalars[i];
+
+      ParticleVariable<double> pS;
+      new_dw->allocateAndPut( pS, S->label, pset );
+
+      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pS[idx] = S->initialValue;
+      }
+
+      //__________________________________
+      //  Initialize coefficient used in exponential decay model
+      if( S->withExpDecayModel ){
+        CCVariable<double> c2;
+
+        new_dw->allocateAndPut(c2, S->expDecayCoefLabel, indx, patch);
+        c2.initialize(0.0);
+
+                          // constant value
+        if ( S->decayCoefType == scalar::constant ){
+          c2.initialize( S->c2 );
+        }
+        else{             // read in from a file
+          PassiveScalar::readTable( patch, level, S->c2_filename, S->c1, c2 );
+        }
+
+                          // initialize quantities
+        ParticleVariable<double> pTotalDecay;
+        new_dw->allocateAndPut( pTotalDecay, S->totalDecayLabel, pset );
+
+        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pTotalDecay[idx] = 0.0;
+        }
+      }  // exp decay
+    }  // scalars loop
   }  // patches
 }
 
@@ -830,12 +1012,18 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   t->modifies( pIDLabel_preReloc,   d_matl_mss );
   t->computes( nPPCLabel,           d_matl_mss );
 
-  // ancillary variables
+                // CC variables
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
     std::shared_ptr<Qvar> Q = d_Qvars[i];
     t->modifies( Q->pQLabel_preReloc,   d_matl_mss );
   }
 
+                // scalar variables
+  for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+    std::shared_ptr<scalar> S = d_scalars[i];
+    t->modifies( S->label_preReloc,           d_matl_mss );
+    t->modifies( S->totalDecayLabel_preReloc, d_matl_mss );
+  }
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -913,7 +1101,8 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
     }
 
     // update their values
-    initializeRegions(  patch, oldNumPar, pPositions, d_tracer->injectionRegions,
+    initializeRegions(  patch, oldNumPar, pPositions, 
+                        d_tracer->injectionRegions,
                         pX_tmp,  pDisp_tmp, pID_tmp, nPPC );
 
 
@@ -922,8 +1111,8 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
     new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
 
     //__________________________________
-    //
-    // now take care on any ancillary variables
+    // Initialize the variables using CCVariables
+    // computed upstream
     for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
      std::shared_ptr<Qvar> Q = d_Qvars[i];
 
@@ -942,17 +1131,50 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
 
      initializeRegions2(  patch, oldNumPar, pPositions,
                           d_tracer->injectionRegions,
-                          Q_CC, pQ_tmp );
+                          Q_CC, -9, pQ_tmp );
 
      new_dw->put( pQ_tmp,  Q->pQLabel_preReloc, true);
     }
-  }
+
+    //__________________________________
+    // Initialize the scalar particle variables:
+    //  label_preReloc and totalDecayLabel_preReloc
+    for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+      std::shared_ptr<scalar> S = d_scalars[i];
+
+      std::multimap<VarLabel*, double>::iterator itr;
+      for (itr = S->label_value.begin(); itr != S->label_value.end(); ++itr) {
+
+        VarLabel* label_preReloc = itr->first;
+        double initialValue      = itr->second;
+
+        constCCVariable<double>  empty_CC;  // not used
+        ParticleVariable<double> pS;
+        ParticleVariable<double> pS_tmp;
+
+        new_dw->getModifiable(  pS, label_preReloc, pset );
+        new_dw->allocateTemporary( pS_tmp,  pset );
+
+        for( unsigned int idx=0; idx<oldNumPar; ++idx ){
+          pS_tmp[idx] = pS[idx];
+        }
+
+        initializeRegions2(  patch, oldNumPar, pPositions,
+                             d_tracer->injectionRegions,
+                             empty_CC, initialValue, pS_tmp );
+
+        new_dw->put( pS_tmp,  label_preReloc, true);
+
+      }
+    }  // scalar loop
+  }  //  patches
 }
 
 
 //______________________________________________________________________
 //  Task: setParticleVars
 //  Purpose:  set the particle quantities to the corresponding CCVariables
+//            and any particle scalar variables
 //______________________________________________________________________
 void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
                                              const LevelP& level)
@@ -972,6 +1194,23 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
     t->computes ( Q->pQLabel_preReloc, d_matl_mss );
   }
 
+  //__________________________________
+  // scalars: update if decay model is enabled
+  for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+    std::shared_ptr<scalar> S = d_scalars[i];
+
+    if ( S->withExpDecayModel ){
+      t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
+      t->requires( Task::OldDW, S->label,             d_matl_mss, d_gn, 0 );
+      t->requires( Task::OldDW, S->expDecayCoefLabel, d_matl_mss, d_gn, 0 );
+      t->requires( Task::OldDW, S->totalDecayLabel,   d_matl_mss, d_gn, 0 );
+
+      t->computes( S->totalDecayLabel_preReloc, d_matl_mss );
+      t->computes( S->expDecayCoefLabel,         d_matl_mss );
+      t->computes( S->label_preReloc,            d_matl_mss );
+    }
+  }
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -980,10 +1219,12 @@ void TracerParticles::sched_setParticleVars( SchedulerP  & sched,
 //
 void TracerParticles::setParticleVars(const ProcessorGroup  *,
                                       const PatchSubset     * patches,
-                                      const MaterialSubset  * ,
+                                      const MaterialSubset  * matls,
                                       DataWarehouse         * old_dw,
                                       DataWarehouse         * new_dw)
 {
+  const Level* level = getLevel(patches);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1024,6 +1265,56 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
         pQ[idx] = Q_CC[cell];
       }
     }  // Qvars loop
+
+
+    //__________________________________
+    // Update the particle scalar if decay model is enabled
+    for ( size_t i=0 ; i<d_scalars.size(); i++ ) {
+      std::shared_ptr<scalar> S = d_scalars[i];
+
+      if ( S->withExpDecayModel ){
+        delt_vartype delT;
+        old_dw->get( delT, Ilb->delTLabel, level);
+
+        constParticleVariable<double>  s_old;
+        constParticleVariable<double>  totalDecay_old;
+
+        ParticleVariable<double> s;
+        ParticleVariable<double> totalDecay;
+
+        old_dw->get( s_old,          S->label,           matlIndx, patch );
+        old_dw->get( totalDecay_old, S->totalDecayLabel, matlIndx, patch );
+
+        new_dw->allocateAndPut( s,          S->label_preReloc,            pset );
+        new_dw->allocateAndPut( totalDecay, S->totalDecayLabel_preReloc,  pset );
+
+                            // exponential decay coefficient
+        constCCVariable<double> c2;
+        old_dw->get( c2, S->expDecayCoefLabel, matlIndx, patch, d_gn,0);
+        new_dw->transferFrom( old_dw, S->expDecayCoefLabel, patches, matls );
+
+        const double c1 = S->c1;
+
+        //__________________________________
+        //
+        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+
+          s[idx]          = -9;
+          totalDecay[idx] = -9;
+
+          IntVector c;
+          if ( !patch->findCell( pX[idx],c ) ) {
+
+            DOUTR(true, " setParticleVars, pX: " << pX[idx] << " cell: " << c << " patch: " << patch->getID() );
+            continue;
+          }
+          double exposure = c2[c] * delT;
+          totalDecay[idx] = totalDecay_old[idx] + exposure;
+          s[idx]          = s_old[idx] * exp( -c1 * c2[c] * delT );
+        }
+      }
+    }
   }  // patches
 }
 
@@ -1038,6 +1329,7 @@ void TracerParticles::initializeRegions2( const Patch             *  patch,
                                           regionPoints             & pPositions,
                                           std::vector<Region*>       regions,
                                           constCCVariable<double>  & Q_CC,
+                                          const double               initialValue,
                                           ParticleVariable<double> & pQ_tmp  )
 {
   //__________________________________
@@ -1068,7 +1360,16 @@ void TracerParticles::initializeRegions2( const Patch             *  patch,
         continue;
       }
 
-      pQ_tmp[pIndx] = Q_CC[cell];;
+                  // set to the CC quantity
+      if( Q_CC.getDataSize() != 0 ){
+        pQ_tmp[pIndx] = Q_CC[cell];
+        std::cout << " Adding particle in cell: " << cell << " Value:  " << Q_CC[cell] << std::endl;
+      }
+      else{       // set to a constant
+        std::cout << " Adding scalar particle in cell: " << cell << " Value: " << initialValue << std::endl;
+        pQ_tmp[pIndx] = initialValue;
+      }
+
       pIndx++;
     }  // particles
   }  // regions
