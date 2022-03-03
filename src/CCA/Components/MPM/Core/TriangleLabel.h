@@ -55,6 +55,8 @@ namespace Uintah {
       const VarLabel* triAreaAtNodesLabel_preReloc; 
       const VarLabel* triNormalLabel; 
       const VarLabel* triNormalLabel_preReloc; 
+      const VarLabel* triMassDispLabel; 
+      const VarLabel* triMassDispLabel_preReloc; 
       const VarLabel* triClayLabel; 
       const VarLabel* triClayLabel_preReloc; 
 //      const VarLabel* triNode0TriangleIDsLabel;

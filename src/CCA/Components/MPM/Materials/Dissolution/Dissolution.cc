@@ -56,3 +56,9 @@ void Dissolution::setTimeConversionFactor(const double tcf)
   // microsecond) to a Ma.  i.e., if tcf=10, 1 microsecond = 10 Ma
   d_timeConversionFactor = tcf;
 }
+
+void Dissolution::setGrowthFractionRate(const double QGVF)
+{
+  // Rate at which the growth vector is achieved at this load level
+  d_growthFractionRate = QGVF;
+}

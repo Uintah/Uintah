@@ -89,10 +89,13 @@ WARNING
 
      virtual void setTimeConversionFactor(const double tcf);
 
+     virtual void setGrowthFractionRate(const double QGVF);
+
     protected:
      MPMLabel* lb;
      double d_temperature;
      double d_timeConversionFactor;
+     double d_growthFractionRate;
      std::string d_phase;
     };
 

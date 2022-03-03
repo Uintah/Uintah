@@ -93,28 +93,12 @@ TriangleLabel::TriangleLabel()
 
   triNormalLabel_preReloc = VarLabel::create("tri.normal+",
 			ParticleVariable<Vector>::getTypeDescription() );
-#if 0
-  triNode0TriangleIDsLabel = VarLabel::create("tri.Node0TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
 
-  triNode1TriangleIDsLabel = VarLabel::create("tri.Node1TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
+  triMassDispLabel = VarLabel::create("tri.massdisplacement",
+			ParticleVariable<double>::getTypeDescription() );
 
-  triNode2TriangleIDsLabel = VarLabel::create("tri.Node2TriangleIDs",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode0TriangleIDsLabel_preReloc = VarLabel::create("tri.Node0TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode1TriangleIDsLabel_preReloc = VarLabel::create("tri.Node1TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triNode2TriangleIDsLabel_preReloc = VarLabel::create("tri.Node2TriangleIDs+",
-			ParticleVariable<Stencil7>::getTypeDescription() );
-
-  triInContactLabel = VarLabel::create("tri.InContact",
-			ParticleVariable<int>::getTypeDescription() );
-#endif
+  triMassDispLabel_preReloc = VarLabel::create("tri.massdisplacement+",
+			ParticleVariable<double>::getTypeDescription() );
 }
 
 TriangleLabel::~TriangleLabel()
@@ -138,13 +122,6 @@ TriangleLabel::~TriangleLabel()
   VarLabel::destroy(triNormalLabel_preReloc);
   VarLabel::destroy(triClayLabel);
   VarLabel::destroy(triClayLabel_preReloc);
-#if 0
-  VarLabel::destroy(triNode0TriangleIDsLabel);
-  VarLabel::destroy(triNode1TriangleIDsLabel);
-  VarLabel::destroy(triNode2TriangleIDsLabel);
-  VarLabel::destroy(triNode0TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triNode1TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triNode2TriangleIDsLabel_preReloc);
-  VarLabel::destroy(triInContactLabel);
-#endif
+  VarLabel::destroy(triMassDispLabel);
+  VarLabel::destroy(triMassDispLabel_preReloc);
 }

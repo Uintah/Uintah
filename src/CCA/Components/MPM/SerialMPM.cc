@@ -1794,9 +1794,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
-//t->requires(Task::OldDW, TriL->triNode0TriangleIDsLabel,triangle_matls,gnone);
-//t->requires(Task::OldDW, TriL->triNode1TriangleIDsLabel,triangle_matls,gnone);
-//t->requires(Task::OldDW, TriL->triNode2TriangleIDsLabel,triangle_matls,gnone);
+  t->requires(Task::OldDW, TriL->triMassDispLabel,       triangle_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,                      triangle_matls);
   t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
@@ -1809,14 +1807,11 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triAreaLabel_preReloc,               triangle_matls);
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
+  t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
-
-//t->computes(TriL->triNode0TriangleIDsLabel_preReloc,    triangle_matls);
-//t->computes(TriL->triNode1TriangleIDsLabel_preReloc,    triangle_matls);
-//t->computes(TriL->triNode2TriangleIDsLabel_preReloc,    triangle_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -4076,6 +4071,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                          burialHistory->getUintahDissolutionTime(curBHIndex);
           double geoInterval = burialHistory->getTime_Ma(curBHIndex) - 
                          burialHistory->getTime_Ma(curBHIndex - 1);
+          double qtzGrowthVecF = 
+                         burialHistory->getQuartzGrowthVec_fr(curBHIndex);
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
  
@@ -4111,6 +4108,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            dissolutionModel->setTemperature(geoTemp_K);
            dissolutionModel->setPhase(flags->d_currentPhase);
            dissolutionModel->setTimeConversionFactor(geoInterval/uintahDisTime);
+           dissolutionModel->setGrowthFractionRate(qtzGrowthVecF/uintahDisTime);
           }
         }
         if(isProc0_macro){
@@ -5803,14 +5801,10 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                triMidToN1Vec_new, triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
-      constParticleVariable<double> triArea, triClay;
-      ParticleVariable<double>      triArea_new, triClay_new;
+      constParticleVariable<double> triArea, triClay, triMassDisp;
+      ParticleVariable<double>      triArea_new, triClay_new, triMassDisp_new;
       constParticleVariable<Vector> triAreaAtNodes;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
-//    ParticleVariable<Stencil7>    triNode0TriIDs_new, 
-//                                  triNode1TriIDs_new, triNode2TriIDs_new;
-//    constParticleVariable<Stencil7>  triNode0TriIDs, 
-//                                     triNode1TriIDs, triNode2TriIDs;
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
@@ -5823,9 +5817,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triArea,         TriL->triAreaLabel,                  pset);
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
-//    old_dw->get(triNode0TriIDs,  TriL->triNode0TriangleIDsLabel,      pset);
-//    old_dw->get(triNode1TriIDs,  TriL->triNode1TriangleIDsLabel,      pset);
-//    old_dw->get(triNode2TriIDs,  TriL->triNode2TriangleIDsLabel,      pset);
+      old_dw->get(triMassDisp,     TriL->triMassDispLabel,              pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
@@ -5845,23 +5837,17 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      TriL->triAreaAtNodesLabel_preReloc,  pset);
       new_dw->allocateAndPut(triClay_new,
                                      TriL->triClayLabel_preReloc,         pset);
+      new_dw->allocateAndPut(triMassDisp_new,
+                                     TriL->triMassDispLabel_preReloc,     pset);
       new_dw->allocateAndPut(triNormal_new,
                                      TriL->triNormalLabel_preReloc,       pset);
-//    new_dw->allocateAndPut(triNode0TriIDs_new,
-//                                TriL->triNode0TriangleIDsLabel_preReloc,  pset);
-//    new_dw->allocateAndPut(triNode1TriIDs_new,
-//                                TriL->triNode1TriangleIDsLabel_preReloc,  pset);
-//    new_dw->allocateAndPut(triNode2TriIDs_new,
-//                                TriL->triNode2TriangleIDsLabel_preReloc,  pset);
 
       tri_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
       triAreaAtNodes_new.copyData(triAreaAtNodes);
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
-//    triNode0TriIDs_new.copyData(triNode0TriIDs);
-//    triNode1TriIDs_new.copyData(triNode1TriIDs);
-//    triNode2TriIDs_new.copyData(triNode2TriIDs);
+      triMassDisp_new.copyData(triMassDisp);
 
       double totalsurfarea = 0.;
 
@@ -5875,6 +5861,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         P[0] = tx[idx] + triMidToN0Vec[idx];
         P[1] = tx[idx] + triMidToN1Vec[idx];
         P[2] = tx[idx] + triMidToN2Vec[idx];
+        // Keep track of how much of the triangle's motion is due to mass change
+        Vector surf[3] = {Vector(0.0),Vector(0.0),Vector(0.0)};
  
         // Loop over the vertices
         int deleteThisTriangle = 0;
@@ -5886,7 +5874,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           // Get the node indices that surround the point
           int NN = interpolator->findCellAndWeights(P[itv], ni, S, tsize[idx]);
           Vector vel(0.0,0.0,0.0);
-          Vector surf(0.0,0.0,0.0);
           double sumSk=0.0;
           Vector gSN(0.,0.,0.);
           // Accumulate the contribution from each surrounding vertex
@@ -5894,7 +5881,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             IntVector node = ni[k];
             vel   += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S[k];
             sumSk += gmass[adv_matl][node]*S[k];
-            surf  -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
+            surf[itv] -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
             gSN   += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
           }
@@ -5904,9 +5891,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             // influencing a vertex has mass on it.
             vel/=sumSk;
             P[itv] += vel*delT;
-            surf/=(gSN.length()+1.e-100);
-            P[itv] += surf*delT;
-            vertexVel[itv] = vel + surf;
+            surf[itv]/=(gSN.length()+1.e-100);
+            P[itv] += surf[itv]*delT;
+            vertexVel[itv] = vel + surf[itv];
             populatedVertex[itv] = 1.;
           } else {
 //          cout << "WARNING: " << triangle_ids[idx] << " of group " << adv_matl
@@ -5940,13 +5927,15 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 
         tx_new[idx] = (P[0]+P[1]+P[2])/3.;
         Vector triNorm = Cross(P[1]-P[0],P[2]-P[0]);
-        triArea_new[idx]=0.5*triNorm.length();
-        triNormal_new[idx]=triNorm;
+        double triNormLength = triNorm.length()+1.e-100;
+        triArea_new[idx]=0.5*triNormLength;
+        triNormal_new[idx]=triNorm/triNormLength;
+        triMassDisp_new[idx] += Dot(triNormal_new[idx],
+                                    (surf[0] + surf[1] + surf[2])*delT/3.);
 
         triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
         triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
         triMidToN2Vec_new[idx] = P[2] - tx_new[idx];
-
 #if 0
         // No point in updating size unless it is used.  Just carry forward.
         Vector r0 = P[1] - P[0];
@@ -6107,7 +6096,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 //    std::vector<std::vector<int> > triInContact(numLSMatls);
     Matrix3 size; size.Identity();
 
-    std::ofstream OSS;
+    //std::ofstream OSS;
+    FILE* fp;
     if(m_output->isOutputTimeStep()){
       timeStep_vartype timeStep;
       old_dw->get(timeStep, lb->timeStepLabel);
@@ -6117,12 +6107,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       ostringstream tname;
       tname << setw(5) << setfill('0') << timestep;
       string tnames = tname.str();
-//      string pPath = udaDir + "/t" + tnames;
       string pPath = udaDir + "/results_contacts";
       DIR *check = opendir(pPath.c_str());
       if ( check == nullptr ) {
-//        cout << Parallel::getMPIRank()
-//             << "results_contacts:Making directory " << pPath << endl;
         MKDIR( pPath.c_str(), 0777 );
       } else {
         closedir(check);
@@ -6132,8 +6119,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       pnum << patch->getID();
       string pnums = pnum.str();
       string fname = pPath + "/TriContact." + pnums + "." + tnames;
-//      cout << "fname  = " << fname  << endl;
-      OSS.open(fname.c_str());
+      //OSS.open(fname.c_str());
+      fp = fopen(fname.c_str(), "w");
     }
 
     for(int tmo = 0; tmo < numLSMatls; tmo++) {
@@ -6372,11 +6359,16 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // triangle_ids[tmo][idx0] is the triangle that is penetrating
                 // iu is the vertex of the penetrating triangle
                 // triangle_ids[tmi][vecIdx] is the penetrated triangle
-                OSS << tmo << " " << tmi << " " << " "
-                    << triangle_ids[tmo][idx0] << " "
-                    << triangle_ids[tmi][vecIdx] << " "
-                    << iu << " " << 0.5*totalArea <<  " "
-                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+                fprintf(fp,"%i %i %ld %ld %i %8.6f %8.6f\n",
+                        tmo, tmi,
+                        triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
+                        iu, 0.5*totalArea, triAreaAtNodes[tmo][idx0][iu]);
+
+//                OSS << tmo << " " << tmi << " " << " "
+//                    << triangle_ids[tmo][idx0] << " "
+//                    << triangle_ids[tmi][vecIdx] << " "
+//                    << iu << " " << 0.5*totalArea <<  " "
+//                    << triAreaAtNodes[tmo][idx0][iu] << endl;
               }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
@@ -6528,11 +6520,15 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 totalContactAreaTri += 0.5*totalArea;
 
                 if(m_output->isOutputTimeStep()){
-                OSS << tmo << " " << tmi << " " << " "
-                    << triangle_ids[tmo][idx0] << " "
-                    << triangle_ids[tmi][vecIdx] << " "
-                    << iu << " " << 0.5*totalArea <<  " "
-                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+                fprintf(fp,"%i %i %ld %ld %i %8.6f %8.6f\n",
+                        tmo, tmi,
+                        triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
+                        iu, 0.5*totalArea, triAreaAtNodes[tmo][idx0][iu]);
+//                OSS << tmo << " " << tmi << " " << " "
+//                    << triangle_ids[tmo][idx0] << " "
+//                    << triangle_ids[tmi][vecIdx] << " "
+//                    << iu << " " << 0.5*totalArea <<  " "
+//                    << triAreaAtNodes[tmo][idx0][iu] << endl;
                 }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;

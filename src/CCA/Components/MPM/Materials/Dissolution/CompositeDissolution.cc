@@ -98,3 +98,11 @@ CompositeDissolution::setTimeConversionFactor(double tcf)
       (*mit)->setTimeConversionFactor(tcf);
   }
 }
+
+void CompositeDissolution::setGrowthFractionRate(const double QGVF)
+{
+  // Rate at which the growth vector is achieved at this load level
+  for(list<Dissolution*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++){
+      (*mit)->setGrowthFractionRate(QGVF);
+  }
+}

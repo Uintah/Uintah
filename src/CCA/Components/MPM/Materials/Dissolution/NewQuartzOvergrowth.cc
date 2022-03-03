@@ -147,9 +147,10 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
         if(gmass[md][c] > 2.e-100 && gContactForce[md][c].length() < 1.e-8
                                   && NC_CCweight[c] < 0.2) {
 
-          double localSurfRate = 0.1*Dot(gCemVec[md][c],gSurfNorm[md][c]);
+          double localSurfRate = d_growthFractionRate
+                                    *Dot(gCemVec[md][c],gSurfNorm[md][c]);
           massBurnRate[md][c] -= rho[m]*localSurfRate*gSurfaceArea[md][c];
-          dLdt[md][c] -= 0.1*gCemVec[md][c].length();
+          dLdt[md][c] -= d_growthFractionRate*gCemVec[md][c].length();
         } // mass is present
         gSurfNorm[md][c] = gCemVec[md][c]/(gCemVec[md][c].length() + 1.e-100);
       } // nodes
