@@ -38,40 +38,40 @@
 #include "FieldSelection.h"
 
 namespace Uintah {
-  
+
   // produce scalar some field
   class ScalarDiag : public FieldDiag
   {
   public:
     virtual ~ScalarDiag();
-    
+
     virtual std::string name() const = 0;
-    
-    virtual void operator()(DataArchive * da, const Patch * patch, 
+
+    virtual void operator()(DataArchive * da, const Patch * patch,
                             const std::string & fieldname,
-                            int imat, int index, 
+                            int imat, int index,
                             NCVariable<double>  & values) const = 0;
-    
-    virtual void operator()(DataArchive * da, const Patch * patch, 
+
+    virtual void operator()(DataArchive * da, const Patch * patch,
                             const std::string & fieldname,
-                            int imat, int index, 
+                            int imat, int index,
                             CCVariable<double>  & values) const = 0;
-    
-    virtual void operator()(DataArchive * da, const Patch * patch, 
+
+    virtual void operator()(DataArchive * da, const Patch * patch,
                             const std::string & fieldname,
                             int imat, int index,
                             ParticleSubset * pset,
                             ParticleVariable<double>  & values) const = 0;
   };
-  
+
   int                numberOfScalarDiags(const Uintah::TypeDescription * fldtype);
   std::string        scalarDiagName     (const Uintah::TypeDescription * fldtype, int idiag);
   ScalarDiag const * createScalarDiag   (const Uintah::TypeDescription * fldtype, int idiag,
                                          const class TensorDiag * tensorpreop = 0);
-  
+
   void describeScalarDiags(std::ostream & os);
-  
-  std::list<ScalarDiag const *> createScalarDiags(const Uintah::TypeDescription * fldtype, 
+
+  std::list<ScalarDiag const *> createScalarDiags(const Uintah::TypeDescription * fldtype,
                                              const FieldSelection & fldselection,
                                              const class TensorDiag * tensorpreop = 0);
 }
