@@ -57,10 +57,17 @@ namespace Uintah {
     string filelistname = dirname+"/timelist";
 
     filelist_ = fopen(filelistname.c_str(),"w");
+    fprintf(filelist_, "%10s : %16s  : %20s\n","Timestep", "Time[sec]", "Directory");
     if (!filelist_) {
       cerr << "Can't open output file " << filelistname << endl;
       abort();
     }
+  }
+  //______________________________________________________________________
+  //
+  TextDumper::~TextDumper()
+  {
+    fclose(filelist_);
   }
   //______________________________________________________________________
   //
@@ -75,6 +82,7 @@ namespace Uintah {
     return scinew Step( da, dirName,
                        timestep, time, index, opts_, flds_);
   }
+
   //______________________________________________________________________
   //
   void
@@ -86,7 +94,8 @@ namespace Uintah {
   void
   TextDumper::finishStep(FieldDumper::Step * s)
   {
-    fprintf(filelist_, "%10d %16.8g  %20s\n", s->timestep_, s->time_, s->infostr().c_str());
+    fprintf(filelist_, "%10d : %16.8g  : %20s\n", s->timestep_, s->time_, s->infostr().c_str());
+    fflush(filelist_);
   }
 
   //______________________________________________________________________
@@ -116,15 +125,101 @@ namespace Uintah {
   //______________________________________________________________________
   //
   void
+  TextDumper::Step::storeGrid()
+  {
+    //    GridP grid = da_->queryGrid(time);
+    GridP grid = da_->queryGrid( index_ );
+
+    string fname = tsdir_+"/"+outdir_ + "grid.txt";
+    ofstream outfile = ofstream( fname.c_str(), ios::app);
+    outfile << " Number of levels     : " << grid->numLevels() << endl;
+
+    BBox b;
+    grid->getInteriorSpatialRange(b);
+    outfile << " Computational Domain : " << b << endl;
+
+    for(int l=0;l<=0;l++) { // FIXME: only first level
+      LevelP level = grid->getLevel(l);
+      level->getInteriorSpatialRange(b);
+
+      outfile << "#__________________________________L-" << l << endl;
+      outfile << " Has coarser level  : " << level->hasCoarserLevel() << endl;
+      outfile << " Has finer level    : " << level->hasFinerLevel() << endl;
+      outfile << " Is non-cubic level : " << level->isNonCubic() << endl;
+      outfile << " NumPatches         : " << level->numPatches() << endl;
+      outfile << " TotalCells         : " << level->totalCells() << endl;
+      outfile << " Level spatial range: " << b << endl;
+      outfile << " Cell spacing       : " << level->dCell() << endl;
+
+      IntVector low;
+      IntVector high;
+      level->findInteriorCellIndexRange(low, high);
+      outfile << " Interior cell range: " << low << "," << high << endl;
+
+      level->findInteriorNodeIndexRange(low, high);
+      outfile << " Interior node range: " << low << "," << high << endl;
+    }
+  }
+
+  //______________________________________________________________________
+  //
+  bool
+  TextDumper::Step::isValidType (const Uintah::TypeDescription * td)
+  {
+
+
+    bool value = true;
+    switch( td->getType() ){
+      case Uintah::TypeDescription::CCVariable:
+        break;
+      case Uintah::TypeDescription::NCVariable:
+        break;
+      case Uintah::TypeDescription::ParticleVariable:
+        break;
+      default:
+        {
+        value = false;
+        return value;
+        }
+    }
+
+    const Uintah::TypeDescription* subtype = td->getSubType();
+    switch( subtype->getType() ){
+      case Uintah::TypeDescription::double_type:
+        break;
+      case Uintah::TypeDescription::Vector:
+        break;
+      case Uintah::TypeDescription::Matrix3:
+        break;
+      default:
+        {
+        value = false;
+        return value;
+        }
+    }
+    return value;
+  }
+  //______________________________________________________________________
+  //
+  void
   TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
   {
+
+    if( !isValidType(td) ){
+      cout << "    Invalid variable type, not processing ("<< fieldname << ")\n";
+      return;
+    }
+    static int count=1;
+
     GridP grid = da_->queryGrid(index_);
 
     cout << "   " << fieldname << endl;
     const Uintah::TypeDescription* subtype = td->getSubType();
 
+    //__________________________________
+    //  count the number of matls
     int nmats = 0;
-    // count the materials
+
     for(int l=0;l<=0;l++) { // FIXME: only first level
       LevelP level = grid->getLevel(l);
 
@@ -144,6 +239,7 @@ namespace Uintah {
     TensorDiag const * tensor_preop = createTensorOp(flds_);
 
     //__________________________________
+    // find level extents
     // only support level 0 for now
     for(int l=0;l<=0;l++) {
       LevelP level = grid->getLevel(l);
@@ -192,52 +288,56 @@ namespace Uintah {
 
           // loop through requested diagnostics
           list<string> outdiags;
-          for(list<ScalarDiag const *>::const_iterator diagit(scalarDiagGens.begin());diagit!=scalarDiagGens.end();diagit++){
-            outdiags.push_back( (*diagit)->name() );
+          for(list<ScalarDiag const *>::const_iterator iter=scalarDiagGens.begin();iter!=scalarDiagGens.end();iter++){
+            outdiags.push_back( (*iter)->name() );
           }
 
-          for(list<VectorDiag const *>::const_iterator diagit(vectorDiagGens.begin());diagit!=vectorDiagGens.end();diagit++) {
-            outdiags.push_back( (*diagit)->name() );
+          for(list<VectorDiag const *>::const_iterator iter=vectorDiagGens.begin();iter!=vectorDiagGens.end();iter++) {
+            outdiags.push_back( (*iter)->name() );
           }
 
-          for(list<TensorDiag const *>::const_iterator diagit(tensorDiagGens.begin());diagit!=tensorDiagGens.end();diagit++){
-            outdiags.push_back( (*diagit)->name() );
+          for(list<TensorDiag const *>::const_iterator iter=tensorDiagGens.begin();iter!=tensorDiagGens.end();iter++){
+            outdiags.push_back( (*iter)->name() );
           }
 
+          //__________________________________
+          //  Open all the files and write a header
           map<string, ofstream *> outfiles;
+          map<string, string>     outFileNames;
           map<string, string>     outfieldnames;
 
-          for(list<string>::const_iterator dit(outdiags.begin());dit!=outdiags.end();dit++){
-              string outfieldname = fieldname;
+          for(list<string>::const_iterator iter=outdiags.begin();iter!=outdiags.end();iter++){
+            string diagName     = *iter;
+            string outfieldname = fieldname;
 
-              if(*dit!="value") {
-                outfieldname += "_";
-                outfieldname += *dit;
-              }
-              outfieldnames[*dit] = outfieldname;
-
-              string fname = fileName(outfieldname, matl, "txt");
-
-              outfiles[*dit];
-              if(opts_.tseries || timestep_==1) {
-                outfiles[*dit] = new ofstream( fname.c_str() );
-                *outfiles[*dit]
-                  << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
-              } else {
-                outfiles[*dit] = new ofstream( fname.c_str(), ios::app);
-                *outfiles[*dit] << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
-              }
+            if( diagName!="value" ) {
+              outfieldname += "_";
+              outfieldname += diagName;
             }
+
+            outfieldnames[diagName] = outfieldname;
+
+            string fname = fileName(outfieldname, matl, "txt");
+
+            outFileNames[diagName] = fname;
+
+            outfiles[diagName];
+            outfiles[diagName] = new ofstream( fname.c_str(), ios::app);
+            *outfiles[diagName] << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
+          }
 
           bool no_match = false;
 
           //__________________________________
           //                         DOUBLE
-          for(list<ScalarDiag const *>::const_iterator diagit(scalarDiagGens.begin());diagit!=scalarDiagGens.end();diagit++) {
+          for(list<ScalarDiag const *>::const_iterator diagit=scalarDiagGens.begin();diagit!=scalarDiagGens.end();diagit++) {
 
-              ofstream & outfile = *outfiles[(*diagit)->name()];
-              //cout << "   " << fileName(outfieldnames[(*diagit)->name()], matl, "txt") << endl;
+              string diagName = (*diagit)->name();
 
+              ofstream & outfile = *outfiles[diagName];
+              string outFileName = outFileNames[diagName];
+
+              outfile.setf(ios::scientific,ios::floatfield);
               outfile.precision(16);
 
               switch(td->getType()){
@@ -256,14 +356,13 @@ namespace Uintah {
                     Point pos = patch->cellPosition(c);
 
                     if(opts_.tseries) {
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << svals[c] << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << svals[c] << endl;
                   }
                 } break;
               case Uintah::TypeDescription::NCVariable:
@@ -281,14 +380,13 @@ namespace Uintah {
                     Point pos = patch->nodePosition(n);
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << svals[n] << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << svals[n] << endl;
                   }
                 } break;
               case Uintah::TypeDescription::ParticleVariable:
@@ -307,29 +405,37 @@ namespace Uintah {
                     Point p = pos[idx];
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << p(0) << " "
-                            << p(1) << " "
-                            << p(2) << " ";
-                    outfile << (svals[idx]) << " "
-                            << endl;
+                    outfile << p(0) << ","
+                            << p(1) << ","
+                            << p(2) << ",";
+                    outfile << (svals[idx]) << endl;
+
                   }
                 } break;
               default:
-                no_match = true;
+                {
+                  no_match = true;
+                  std::remove( outFileName.c_str() );
+                }
+
               } // td->getType() switch
 
             } // scalar diags
 
             //__________________________________
             //                       VECTOR
-            for(list<VectorDiag const *>::const_iterator diagit(vectorDiagGens.begin());diagit!=vectorDiagGens.end();diagit++) {
-              ofstream & outfile = *outfiles[(*diagit)->name()];
+            for(list<VectorDiag const *>::const_iterator diagit=vectorDiagGens.begin();diagit!=vectorDiagGens.end();diagit++) {
 
+              string diagName = (*diagit)->name();
+
+              ofstream & outfile = *outfiles[diagName];
+              string outFileName = outFileNames[diagName];
+
+              outfile.setf(ios::scientific,ios::floatfield);
               outfile.precision(16);
-              //cout << "   " << fileName(outfieldnames[(*diagit)->name()], matl, "txt") << endl;
 
               switch(td->getType()){
               case Uintah::TypeDescription::CCVariable:
@@ -346,15 +452,14 @@ namespace Uintah {
 
                     Point pos = patch->cellPosition(c);
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << vvals[c][0] << " "
-                            << vvals[c][1] << " "
-                            << vvals[c][2] << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << vvals[c][0] << ","
+                            << vvals[c][1] << ","
+                            << vvals[c][2] << endl;
                   }
                 } break;
               case Uintah::TypeDescription::NCVariable:
@@ -372,16 +477,15 @@ namespace Uintah {
                     Point pos = patch->nodePosition(n);
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << vvals[n][0] << " "
-                            << vvals[n][1] << " "
-                            << vvals[n][2] << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << vvals[n][0] << ","
+                            << vvals[n][1] << ","
+                            << vvals[n][2] << endl;
                   }
                 } break;
               case Uintah::TypeDescription::ParticleVariable:
@@ -401,31 +505,36 @@ namespace Uintah {
                     Point p = pos[idx];
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
-                    outfile << p(0) << " "
-                            << p(1) << " "
-                            << p(2) << " ";
-                    outfile << vvals[idx][0] << " "
-                            << vvals[idx][1] << " "
-                            << vvals[idx][2] << " "
-                            << endl;
+                    outfile << p(0) << ","
+                            << p(1) << ","
+                            << p(2) << ",";
+                    outfile << vvals[idx][0] << ","
+                            << vvals[idx][1] << ","
+                            << vvals[idx][2] << endl;
                   }
                 } break;
               default:
-                no_match = true;
+                {
+                  no_match = true;
+                  std::remove( outFileName.c_str() );
+                }
               } // td->getType() switch
 
             } // vector diag
 
 
-          //__________________________________
-          //                         MATRIX3
+            //__________________________________
+            //                         MATRIX3
 
-          for(list<TensorDiag const *>::const_iterator diagit(tensorDiagGens.begin());diagit!=tensorDiagGens.end();diagit++)
-            {
-              ofstream & outfile = *outfiles[(*diagit)->name()];
-              //cout << "   " << fileName(outfieldnames[(*diagit)->name()], matl, "txt") << endl;
+            for(list<TensorDiag const *>::const_iterator diagit=tensorDiagGens.begin();diagit!=tensorDiagGens.end();diagit++){
+              string diagName = (*diagit)->name();
+
+              ofstream & outfile = *outfiles[diagName];
+              string outFileName = outFileNames[diagName];
+
+              outfile.setf(ios::scientific,ios::floatfield);
               outfile.precision(16);
 
               switch(td->getType()){
@@ -444,21 +553,20 @@ namespace Uintah {
                     Point pos = patch->cellPosition(n);
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << tvals[n](0,0) << " "
-                            << tvals[n](0,1) << " "
-                            << tvals[n](0,2) << " "
-                            << tvals[n](1,0) << " "
-                            << tvals[n](1,1) << " "
-                            << tvals[n](1,2) << " "
-                            << tvals[n](2,0) << " "
-                            << tvals[n](2,1) << " "
-                            << tvals[n](2,2) << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << tvals[n](0,0) << ","
+                            << tvals[n](0,1) << ","
+                            << tvals[n](0,2) << ","
+                            << tvals[n](1,0) << ","
+                            << tvals[n](1,1) << ","
+                            << tvals[n](1,2) << ","
+                            << tvals[n](2,0) << ","
+                            << tvals[n](2,1) << ","
+                            << tvals[n](2,2) << endl;
                   }
                 } break;
               case Uintah::TypeDescription::NCVariable:
@@ -476,22 +584,21 @@ namespace Uintah {
                     Point pos = patch->nodePosition(n);
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << pos(0) << " "
-                            << pos(1) << " "
-                            << pos(2) << " ";
-                    outfile << tvals[n](0,0) << " "
-                            << tvals[n](0,1) << " "
-                            << tvals[n](0,2) << " "
-                            << tvals[n](1,0) << " "
-                            << tvals[n](1,1) << " "
-                            << tvals[n](1,2) << " "
-                            << tvals[n](2,0) << " "
-                            << tvals[n](2,1) << " "
-                            << tvals[n](2,2) << " "
-                            << endl;
+                    outfile << pos(0) << ","
+                            << pos(1) << ","
+                            << pos(2) << ",";
+                    outfile << tvals[n](0,0) << ","
+                            << tvals[n](0,1) << ","
+                            << tvals[n](0,2) << ","
+                            << tvals[n](1,0) << ","
+                            << tvals[n](1,1) << ","
+                            << tvals[n](1,2) << ","
+                            << tvals[n](2,0) << ","
+                            << tvals[n](2,1) << ","
+                            << tvals[n](2,2) << endl;
                   }
                 } break;
               case Uintah::TypeDescription::ParticleVariable:
@@ -510,35 +617,38 @@ namespace Uintah {
                     Point p = pos[idx];
 
                     if(opts_.tseries){
-                      outfile << time_ << " ";
+                      outfile << time_ << ",";
                     }
 
-                    outfile << p(0) << " "
-                            << p(1) << " "
-                            << p(2) << " ";
-                    outfile << tvals[idx](0,0) << " "
-                            << tvals[idx](0,1) << " "
-                            << tvals[idx](0,2) << " "
-                            << tvals[idx](1,0) << " "
-                            << tvals[idx](1,1) << " "
-                            << tvals[idx](1,2) << " "
-                            << tvals[idx](2,0) << " "
-                            << tvals[idx](2,1) << " "
-                            << tvals[idx](2,2) << " "
-                            << endl;
+                    outfile << p(0) << ","
+                            << p(1) << ","
+                            << p(2) << ",";
+                    outfile << tvals[idx](0,0) << ","
+                            << tvals[idx](0,1) << ","
+                            << tvals[idx](0,2) << ","
+                            << tvals[idx](1,0) << ","
+                            << tvals[idx](1,1) << ","
+                            << tvals[idx](1,2) << ","
+                            << tvals[idx](2,0) << ","
+                            << tvals[idx](2,1) << ","
+                            << tvals[idx](2,2) << endl;
                   }
                 } break;
               default:
-                no_match = true;
+                {
+                  no_match = true;
+                  std::remove( outFileName.c_str() );
+                }
               } // td->getType() switch
             } // tensor diag
 
-            for(map<string, ofstream *>::iterator fit(outfiles.begin());fit!=outfiles.end();fit++){
-              delete fit->second;
+            for(map<string, ofstream *>::iterator iter=outfiles.begin();iter!=outfiles.end();iter++){
+              delete iter->second;
             }
 
-          if (no_match){
+          if (no_match && count == 1){
             cerr << "WARNING: Unexpected type for " << td->getName() << " of " << subtype->getName() << endl;
+            count ++;
           }
         } // materials
       } // patches

@@ -81,7 +81,7 @@ namespace Uintah {
 
   private:
     DataArchive* da_;
-    std::string       basedir_;
+    std::string  basedir_;
   };
 }
 

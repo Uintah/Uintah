@@ -52,10 +52,13 @@ namespace Uintah {
   public:
     TextDumper(DataArchive * da, std::string basedir, const TextOpts & opts, const FieldSelection & flds);
 
+    ~TextDumper();
+
     std::string directoryExt() const { return "text"; }
 
     void addField( std::string fieldname,
                    const Uintah::TypeDescription * /*type*/);
+
 
     class Step : public FieldDumper::Step {
     public:
@@ -68,14 +71,17 @@ namespace Uintah {
            const FieldSelection & flds);
 
       std::string infostr() const { return tsdir_; }
-      void   storeGrid () {}
-      void   storeField(std::string fieldname, const Uintah::TypeDescription * type);
+
+      void storeGrid ();
+      void storeField(std::string fieldname, const Uintah::TypeDescription * type);
+
+      bool isValidType(const Uintah::TypeDescription * td);
 
     private:
-      DataArchive *        da_;
-      std::string          outdir_;
-      TextOpts             opts_;
-    const FieldSelection & flds_;
+      DataArchive *          da_;
+      std::string            outdir_;
+      TextOpts               opts_;
+      const FieldSelection & flds_;
     };
 
     //
@@ -83,7 +89,6 @@ namespace Uintah {
     void   finishStep(FieldDumper::Step * s);
 
   private:
-    std::ofstream          idxos_;
     TextOpts               opts_;
     const FieldSelection & flds_;
     FILE*                  filelist_;

@@ -76,7 +76,6 @@ namespace Uintah {
     void   finishStep(FieldDumper::Step * s);
   
   private:
-    std::ofstream idxos_;
     int           nbins_;
     double        range[2];
     FILE*         filelist_;
