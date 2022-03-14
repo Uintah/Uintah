@@ -4904,12 +4904,12 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-//    BBox domain;
-//    const Level* level = getLevel(patches);
-//    level->getInteriorSpatialRange(domain);
-//    Point dom_min = domain.min();
-//    Point dom_max = domain.max();
-//    IntVector periodic = level->getPeriodicBoundaries();
+    BBox domain;
+    const Level* level = getLevel(patches);
+    level->getInteriorSpatialRange(domain);
+    Point dom_min = domain.min();
+    Point dom_max = domain.max();
+    IntVector periodic = level->getPeriodicBoundaries();
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -5045,9 +5045,11 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 //        }
 
 
-#if 0
+#if 1
         // Check to see if a tracer has left the domain
         if(!domain.inside(tx_new[idx])){
+          //cout << "tx[idx] = " << tx[idx] << endl;
+          //cout << "tx_new[idx] = " << tx_new[idx] << endl;
           double epsilon = 1.e-15;
           static ProgressiveWarning warn("A tracer has moved outside the domain through an x boundary. Pushing it back in.  This is a ProgressiveWarning.",10);
           Point txn = tx_new[idx];
