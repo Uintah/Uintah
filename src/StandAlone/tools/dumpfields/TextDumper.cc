@@ -402,6 +402,10 @@ namespace Uintah {
 
                   ParticleVariable<double> svals;
                   (**diagit)(da_, patch, fieldname, matl, index_, pset, svals);
+                  
+                  bool pID_exists {false};
+                  ParticleVariable<long64> pID;
+                  pID_exists = da_->query( pID,"p.particleID", matl, patch, index_ );
 
                   for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
                     particleIndex idx = *iter;
@@ -415,6 +419,11 @@ namespace Uintah {
                     outfile << p(0) << ","
                             << p(1) << ","
                             << p(2) << ",";
+                    
+                    if( pID_exists ) {
+                      outfile << (pID[idx]) << ",";
+                    }
+                    
                     outfile << (svals[idx]) << endl;
 
                   }
@@ -502,6 +511,10 @@ namespace Uintah {
                   ParticleVariable<Vector> vvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, pset, vvals);
 
+                  bool pID_exists {false};
+                  ParticleVariable<long64> pID;
+                  pID_exists = da_->query( pID,"p.particleID", matl, patch, index_ );
+
                   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 
                     particleIndex idx = *iter;
@@ -514,6 +527,11 @@ namespace Uintah {
                     outfile << p(0) << ","
                             << p(1) << ","
                             << p(2) << ",";
+                    
+                    if( pID_exists ) {
+                      outfile << (pID[idx]) << ",";
+                    }
+                    
                     outfile << vvals[idx][0] << ","
                             << vvals[idx][1] << ","
                             << vvals[idx][2] << endl;
@@ -615,6 +633,10 @@ namespace Uintah {
                   ParticleVariable<Matrix3> tvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, pset, tvals);
 
+                  bool pID_exists {false};
+                  ParticleVariable<long64> pID;
+                  pID_exists = da_->query( pID,"p.particleID", matl, patch, index_ );
+
                   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
                     particleIndex idx = *iter;
 
@@ -627,6 +649,11 @@ namespace Uintah {
                     outfile << p(0) << ","
                             << p(1) << ","
                             << p(2) << ",";
+                    
+                    if( pID_exists ) {
+                      outfile << (pID[idx]) << ",";
+                    }
+                    
                     outfile << tvals[idx](0,0) << ","
                             << tvals[idx](0,1) << ","
                             << tvals[idx](0,2) << ","
