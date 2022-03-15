@@ -266,6 +266,7 @@ namespace Uintah {
       for(Level::const_patch_iterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
 
+        const int patchID = patch->getID();
         //__________________________________
         // loop over materials
         ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, index_);
@@ -323,7 +324,10 @@ namespace Uintah {
 
             outfiles[diagName];
             outfiles[diagName] = new ofstream( fname.c_str(), ios::app);
-            *outfiles[diagName] << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
+
+            if( patchID == 0 ){
+              *outfiles[diagName] << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
+            }
           }
 
           bool no_match = false;
