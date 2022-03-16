@@ -77,6 +77,8 @@ namespace Uintah {
 
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
+    VarLabel * pVelocityLabel;
+    VarLabel * pVelocityLabel_preReloc;
     VarLabel * nPPCLabel;         // number of particles in a cell
     VarLabel * simTimeLabel;
 
@@ -189,6 +191,7 @@ namespace Uintah {
                             std::vector<Region*> regions,
                             ParticleVariable<Point> & pX,
                             ParticleVariable<Vector>& pDisp,
+                            ParticleVariable<Vector>& pVelocity,
                             ParticleVariable<long64>& pID,
                             CCVariable<int>         & nPPC );
 

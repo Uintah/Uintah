@@ -86,15 +86,21 @@ TracerParticles::TracerParticles(const ProcessorGroup  * myworld,
 
   pDispLabel          = VarLabel::create( "p.displacement",  d_Part_Vector );
   pDispLabel_preReloc = VarLabel::create( "p.displacement+", d_Part_Vector );
+  
+  pVelocityLabel           = VarLabel::create( "p.velocity",      d_Part_Vector );
+  pVelocityLabel_preReloc  = VarLabel::create( "p.velocity+",     d_Part_Vector );
+  
   pIDLabel            = VarLabel::create( "p.particleID",    d_Part_long64 );
   pIDLabel_preReloc   = VarLabel::create( "p.particleID+",   d_Part_long64 );
   simTimeLabel        = VarLabel::create( simTime_name, simTime_vartype::getTypeDescription() );
 
   d_oldLabels.push_back( pIDLabel_preReloc );
   d_oldLabels.push_back( pDispLabel_preReloc );
+  d_oldLabels.push_back( pVelocityLabel_preReloc );
 
   d_newLabels.push_back( pIDLabel );
   d_newLabels.push_back( pDispLabel );
+  d_newLabels.push_back( pVelocityLabel );
 
   nPPCLabel = VarLabel::create("nPPC", CCVariable<int>::getTypeDescription() );
 
@@ -114,6 +120,9 @@ TracerParticles::~TracerParticles()
 
   VarLabel::destroy( pDispLabel );
   VarLabel::destroy( pDispLabel_preReloc );
+
+  VarLabel::destroy( pVelocityLabel );
+  VarLabel::destroy( pVelocityLabel_preReloc );
 
   VarLabel::destroy( pIDLabel );
   VarLabel::destroy( pIDLabel_preReloc );
@@ -536,11 +545,12 @@ void TracerParticles::scheduleInitialize(SchedulerP   & sched,
   const string taskName = "TracerParticles::initialize_("+ d_tracer->fullName+")";
   Task* t = scinew Task(taskName, this, &TracerParticles::initialize);
 
-  t->requires( Task::OldDW, simTimeLabel );
-  t->computes( nPPCLabel,  d_matl_mss );
-  t->computes( pXLabel,    d_matl_mss );
-  t->computes( pDispLabel, d_matl_mss );
-  t->computes( pIDLabel,   d_matl_mss );
+  t->requires( Task::OldDW,    simTimeLabel );
+  t->computes( nPPCLabel,      d_matl_mss );
+  t->computes( pXLabel,        d_matl_mss );
+  t->computes( pDispLabel,     d_matl_mss );
+  t->computes( pVelocityLabel, d_matl_mss );
+  t->computes( pIDLabel,       d_matl_mss );
 
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
     std::shared_ptr<Qvar> Q = d_Qvars[i];
@@ -678,6 +688,7 @@ void TracerParticles::initializeRegions( const Patch   * patch,
                                          std::vector<Region*> regions,
                                          ParticleVariable<Point> & pX,
                                          ParticleVariable<Vector>& pDisp,
+                                         ParticleVariable<Vector>& pVelocity,
                                          ParticleVariable<long64>& pID,
                                          CCVariable<int>         & nPPC )
 {
@@ -709,25 +720,26 @@ void TracerParticles::initializeRegions( const Patch   * patch,
         continue;
       }
 
-      IntVector cell_indx;
-      if ( !patch->findCell( pos,cell_indx ) ) {
+      IntVector cellIndx;
+      if ( !patch->findCell( pos,cellIndx ) ) {
         continue;
       }
 
       DOUTR( dout_models_tp, " initializeRegions: patch: " << patch->getID() << " pIdx: " << pIndx << " pos " << pos );
 
-      pX[pIndx] = pos;
-      pDisp[pIndx] = Vector(0);
+      pX[pIndx]        = pos;
+      pDisp[pIndx]     = Vector(0);
+      pVelocity[pIndx] = Vector(0.0);
 
-      ASSERT(cell_indx.x() <= 0xffff &&
-             cell_indx.y() <= 0xffff &&
-             cell_indx.z() <= 0xffff);
+      ASSERT(cellIndx.x() <= 0xffff &&
+             cellIndx.y() <= 0xffff &&
+             cellIndx.z() <= 0xffff);
 
-      long64 cellID = ((long64)cell_indx.x() << 16) |
-                      ((long64)cell_indx.y() << 32) |
-                      ((long64)cell_indx.z() << 48);
+      long64 cellID = ((long64)cellIndx.x() << 16) |
+                      ((long64)cellIndx.y() << 32) |
+                      ((long64)cellIndx.z() << 48);
 
-      int& my_nPPC = nPPC[cell_indx];
+      int& my_nPPC = nPPC[cellIndx];
 
       pID[pIndx] = (cellID | (long64) my_nPPC);
       ASSERT(my_nPPC < 0x7fff);
@@ -791,22 +803,24 @@ void TracerParticles::initialize(const ProcessorGroup *,
     //  allocate the particle variables
     ParticleVariable<Point>  pX;
     ParticleVariable<Vector> pDisp;
+    ParticleVariable<Vector> pVel;
     ParticleVariable<long64> pID;
     CCVariable<int>          nPPC;    // number of particles per cell
 
     int indx = d_matl->getDWIndex();
     ParticleSubset* pset = new_dw->createParticleSubset( nParticles, indx, patch );
 
-    new_dw->allocateAndPut( pX,    pXLabel,     pset );
-    new_dw->allocateAndPut( pDisp, pDispLabel,  pset );
-    new_dw->allocateAndPut( pID,   pIDLabel,    pset );
+    new_dw->allocateAndPut( pX,    pXLabel,        pset );
+    new_dw->allocateAndPut( pDisp, pDispLabel,     pset );
+    new_dw->allocateAndPut( pVel,  pVelocityLabel, pset );
+    new_dw->allocateAndPut( pID,   pIDLabel,       pset );
     new_dw->allocateAndPut( nPPC,  nPPCLabel, indx, patch );
     nPPC.initialize(0);
 
     int pIndx = 0;
 
     initializeRegions(  patch, pIndx, pPositions, d_tracer->initializeRegions,
-                          pX,  pDisp, pID, nPPC );
+                          pX,  pDisp, pVel, pID, nPPC );
 
     //__________________________________
     //  The additional monitoring variables
@@ -886,6 +900,7 @@ void TracerParticles::scheduleComputeModelSources(SchedulerP  & sched,
 //  Purpose:  Update the particles:
 //              - position
 //              - displacement
+//              - velocity
 //              - delete any particles outside the domain
 //______________________________________________________________________
 void TracerParticles::sched_moveParticles(SchedulerP  & sched,
@@ -901,15 +916,17 @@ void TracerParticles::sched_moveParticles(SchedulerP  & sched,
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
   t->requires( Task::OldDW, simTimeLabel );
 
-  t->requires( Task::OldDW, pXLabel,     d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pDispLabel,  d_matl_mss, d_gn );
-  t->requires( Task::OldDW, pIDLabel,    d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pXLabel,        d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pDispLabel,     d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pVelocityLabel, d_matl_mss, d_gn );
+  t->requires( Task::OldDW, pIDLabel,       d_matl_mss, d_gn );
 
   t->requires( Task::OldDW, Ilb->vel_CCLabel, d_matl_mss, d_gn );   // hardwired to use ICE's velocity
 
-  t->computes( pXLabel_preReloc,    d_matl_mss );
-  t->computes( pDispLabel_preReloc, d_matl_mss );
-  t->computes( pIDLabel_preReloc,   d_matl_mss );
+  t->computes( pXLabel_preReloc,        d_matl_mss );
+  t->computes( pDispLabel_preReloc,     d_matl_mss );
+  t->computes( pVelocityLabel_preReloc, d_matl_mss );
+  t->computes( pIDLabel_preReloc,       d_matl_mss );
 
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -937,10 +954,12 @@ void TracerParticles::moveParticles(const ProcessorGroup  *,
     //
     ParticleVariable<Point>  pX;
     ParticleVariable<Vector> pDisp;
+    ParticleVariable<Vector> pVel;
     ParticleVariable<long64> pID;
 
     constParticleVariable<Point>  pX_old;
     constParticleVariable<Vector> pDisp_old;
+    constParticleVariable<Vector> pVel_old;
     constParticleVariable<long64> pID_old;
     constCCVariable<Vector>       vel_CC;
 
@@ -951,11 +970,13 @@ void TracerParticles::moveParticles(const ProcessorGroup  *,
     old_dw->get( vel_CC,           Ilb->vel_CCLabel, matlIndx, patch, d_gn, 0);
     old_dw->get( pX_old,           pXLabel,              pset );
     old_dw->get( pDisp_old,        pDispLabel,           pset );
+    old_dw->get( pVel_old,         pVelocityLabel,       pset );
     old_dw->get( pID_old,          pIDLabel,             pset );
 
-    new_dw->allocateAndPut( pX,    pXLabel_preReloc,     pset );
-    new_dw->allocateAndPut( pDisp, pDispLabel_preReloc,  pset );
-    new_dw->allocateAndPut( pID,   pIDLabel_preReloc,    pset );
+    new_dw->allocateAndPut( pX,    pXLabel_preReloc,        pset );
+    new_dw->allocateAndPut( pDisp, pDispLabel_preReloc,     pset );
+    new_dw->allocateAndPut( pVel,  pVelocityLabel_preReloc, pset );
+    new_dw->allocateAndPut( pID,   pIDLabel_preReloc,       pset );
     pID.copyData( pID_old );
 
     BBox compDomain;
@@ -967,13 +988,14 @@ void TracerParticles::moveParticles(const ProcessorGroup  *,
     for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      IntVector cell_indx;
-      if ( !patch->findCell( pX_old[idx],cell_indx ) ) {
+      IntVector cellIndx;
+      if ( !patch->findCell( pX_old[idx],cellIndx ) ) {
         continue;
       }
 
-      pX[idx]    = pX_old[idx] + vel_CC[cell_indx]*delT;
+      pX[idx]    = pX_old[idx]     + vel_CC[cellIndx]*delT;
       pDisp[idx] = pDisp_old[idx]  + ( pX[idx] - pX_old[idx] );
+      pVel[idx]  = vel_CC[cellIndx];
 
       //__________________________________
       //  delete particles that are ouside the domain
@@ -1007,10 +1029,11 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   t->requires( Task::OldDW, Ilb->delTLabel, level.get_rep() );
   t->requires( Task::OldDW, nPPCLabel,     d_matl_mss, d_gn );
 
-  t->modifies( pXLabel_preReloc,    d_matl_mss );
-  t->modifies( pDispLabel_preReloc, d_matl_mss );
-  t->modifies( pIDLabel_preReloc,   d_matl_mss );
-  t->computes( nPPCLabel,           d_matl_mss );
+  t->modifies( pXLabel_preReloc,        d_matl_mss );
+  t->modifies( pDispLabel_preReloc,     d_matl_mss );
+  t->modifies( pVelocityLabel_preReloc, d_matl_mss );
+  t->modifies( pIDLabel_preReloc,       d_matl_mss );
+  t->computes( nPPCLabel,               d_matl_mss );
 
                 // CC variables
   for ( size_t i=0 ; i<d_Qvars.size(); i++ ) {
@@ -1075,40 +1098,47 @@ void TracerParticles::addParticles(const ProcessorGroup  *,
 
     ParticleVariable<Point>  pX;
     ParticleVariable<Vector> pDisp;
+    ParticleVariable<Vector> pVel;   
     ParticleVariable<long64> pID;
 
     ParticleSubset* pset  = old_dw->getParticleSubset( matlIndx, patch );
     unsigned int oldNumPar   = pset->addParticles( nParticles );
 
-    new_dw->getModifiable( pX,    pXLabel_preReloc,     pset );
-    new_dw->getModifiable( pDisp, pDispLabel_preReloc,  pset );
-    new_dw->getModifiable( pID,   pIDLabel_preReloc,    pset );
+    new_dw->getModifiable( pX,    pXLabel_preReloc,       pset );
+    new_dw->getModifiable( pDisp, pDispLabel_preReloc,    pset );
+    new_dw->getModifiable( pVel,  pVelocityLabel_preReloc,pset );
+    new_dw->getModifiable( pID,   pIDLabel_preReloc,      pset );
 
     //__________________________________
     //  Allocate temp variables and populate them
     ParticleVariable<Point>  pX_tmp;
     ParticleVariable<Vector> pDisp_tmp;
+    ParticleVariable<Vector> pVel_tmp;
     ParticleVariable<long64> pID_tmp;
 
     new_dw->allocateTemporary( pX_tmp,     pset );
     new_dw->allocateTemporary( pDisp_tmp,  pset );
+    new_dw->allocateTemporary( pVel_tmp,   pset );
     new_dw->allocateTemporary( pID_tmp,    pset );
 
     for( unsigned int idx=0; idx<oldNumPar; ++idx ){
       pX_tmp[idx]    = pX[idx];
       pDisp_tmp[idx] = pDisp[idx];
+      pVel_tmp[idx]  = pVel[idx];
       pID_tmp[idx]   = pID[idx];
     }
 
     // update their values
     initializeRegions(  patch, oldNumPar, pPositions, 
                         d_tracer->injectionRegions,
-                        pX_tmp,  pDisp_tmp, pID_tmp, nPPC );
+                        pX_tmp, pDisp_tmp, pVel_tmp,
+                        pID_tmp, nPPC );
 
 
-    new_dw->put( pX_tmp,    pXLabel_preReloc,    true);
-    new_dw->put( pDisp_tmp, pDispLabel_preReloc, true);
-    new_dw->put( pID_tmp,   pIDLabel_preReloc,   true);
+    new_dw->put( pX_tmp,    pXLabel_preReloc,        true);
+    new_dw->put( pDisp_tmp, pDispLabel_preReloc,     true);
+    new_dw->put( pVel_tmp,  pVelocityLabel_preReloc, true);
+    new_dw->put( pID_tmp,   pIDLabel_preReloc,       true);
 
     //__________________________________
     // Initialize the variables using CCVariables
