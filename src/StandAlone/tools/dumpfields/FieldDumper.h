@@ -30,58 +30,58 @@
 #include <string>
 
 namespace Uintah {
-  
-  class FieldDumper 
+
+  class FieldDumper
   {
   protected:
     FieldDumper(DataArchive * da, std::string basedir);
-    
+
     std::string dirName(double tval, int iset) const;
     std::string createDirectory();
-    
+
   public:
     virtual ~FieldDumper();
-    
+
     // extension for the output directory
     virtual std::string directoryExt() const = 0;
-    
+
     // add a new field
     virtual void addField(std::string fieldname, const Uintah::TypeDescription * type) = 0;
-    
+
     // dump a single step
     class Step {
-    protected:
-      Step(std::string tsdir, int timestep, double time, int index, bool nocreate=false);
-      
-      std::string fileName(std::string variable_name, std::string extension="") const;
-      std::string fileName(std::string variable_name, int materialNum, std::string extension="") const;
-      
-    public:
-      virtual ~Step();
-      
-      virtual std::string infostr() const = 0;
-      virtual void storeGrid() = 0;
-      virtual void storeField(std::string fieldname, const Uintah::TypeDescription * type) = 0;
-      
-    public: // FIXME: 
-      std::string tsdir_;
-      int    timestep_;
-      double time_;
-      int index_;
+      protected:
+        Step(std::string tsdir, int timestep, double time, int index, bool nocreate=false);
+
+        std::string fileName( std::string variable_name, std::string extension="") const;
+        std::string fileName( std::string variable_name, int materialNum, std::string extension="") const;
+
+      public:
+        virtual ~Step();
+
+        virtual std::string infostr() const = 0;
+        virtual void storeGrid() = 0;
+        virtual void storeField(std::string fieldname, const Uintah::TypeDescription * type) = 0;
+
+      public: // FIXME:
+        std::string tsdir_;
+        int     timestep_;
+        double  time_;
+        int     index_;
     };
     virtual Step * addStep(int timestep, double time, int index) = 0;
     virtual void finishStep(Step * step) = 0;
-    
+
     DataArchive * archive() const { return this->da_; }
-    
+
   private:
     static std::string mat_string(int mval);
     static std::string time_string(double tval);
-    static std::string step_string(int istep);
-    
+    static std::string timestep_string(int timestep);
+
   private:
     DataArchive* da_;
-    std::string       basedir_;
+    std::string  basedir_;
   };
 }
 

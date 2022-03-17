@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
@@ -8,7 +8,7 @@
    </Meta>
 
    <SimulationComponent type="mpmice" />
-    
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -18,9 +18,10 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.3         </timestep_multiplier>
+       <max_Timesteps>       100          </max_Timesteps>
    </Time>
-   
+
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -42,10 +43,10 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -65,10 +66,10 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -88,13 +89,13 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
@@ -111,10 +112,10 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -134,13 +135,13 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
@@ -157,10 +158,10 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-f"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-f_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "1"   label = "scalar-q"     var = "Neumann">
+        <BCType id = "1"   label = "scalar-q_CC"   var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
       </Face>
@@ -175,13 +176,15 @@
           <spacing>        [0.05,0.05,0.05]     </spacing>
        </Level>
     </Grid>
-   
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect_mpmice.uda</filebase>
       <outputTimestepInterval>10</outputTimestepInterval>
+<!--   <outputInterval>0.002</outputInterval> -->
+
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -197,24 +200,29 @@
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
-      <save label="p.scalar-q"/>
-      <save label="nPPC"/>
-
-      <save label="scalar-f"/>
-      <save label="scalar-f_src"/>
-      <save label="totalSum_scalar-f"/>
-      <save label="mean_scalar-f"/>
-      <save label="variance_scalar-f"/>
-
-      <save label="scalar-q"/>
-      <save label="scalar-q_src"/>
-      <save label="totalSum_scalar-q"/>
-      <save label="scalar-q_expDecayCoef"/>
-      <save label="mean_scalar-q"/>
-      <save label="variance_scalar-q"/>
       
+      <save label="p.scalar-q_CC"/>
+      
+      <save label="p.scalar" />
+      <save label="p.scalar_expDecayCoef" />
+      <save label="p.scalar_totalDecay" />
+   <!--   <save label="nPPC"/> -->
+
+      <save label="scalar-f_CC"/>
+      <save label="scalar-f_CC_src"/>
+      <save label="totalSum_scalar-f_CC"/>
+      <save label="mean_scalar-f_CC"/>
+      <save label="variance_scalar-f_CC"/>
+
+      <save label="scalar-q_CC"/>
+      <save label="scalar-q_CC_src"/>
+      <save label="totalSum_scalar-q_CC"/>
+      <save label="scalar-q_CC_expDecayCoef"/>
+      <save label="mean_scalar-q_CC"/>
+      <save label="variance_scalar-q_CC"/>
+
       <save label="TotalMass"/>
-      <checkpoint interval="0.0051" cycle="1"/>
+      <checkpoint timestepInterval="20" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -225,7 +233,7 @@
        <ICE>
         <advection type = "FirstOrder" />
         <ClampSpecificVolume>false</ClampSpecificVolume>
-      </ICE>        
+      </ICE>
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
@@ -233,7 +241,7 @@
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
@@ -281,7 +289,7 @@
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
-           <gamma>                      1.4             </gamma>           
+           <gamma>                      1.4             </gamma>
            <geom_object>
               <difference>
                 <box label="domain">
@@ -297,23 +305,23 @@
                <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
-      </ICE>       
-       
-      <exchange_properties> 
+      </ICE>
+
+      <exchange_properties>
          <exchange_coefficients>
               <momentum>               [1e10]         </momentum>
               <heat>                  [0.0]           </heat>
           </exchange_coefficients>
-      </exchange_properties> 
+      </exchange_properties>
     </MaterialProperties>
-    
+
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to advect a scalar around                -->
     <Models>
       <Model type="PassiveScalar">
         <PassiveScalar>
           <material>atmosphere</material>
-          <scalar name="f">
+          <scalar name="f_CC">
             <test_conservation> true   </test_conservation>
 
             <constants>
@@ -332,30 +340,29 @@
         </PassiveScalar>
       </Model>
       <!--__________________________________-->
-      
+
       <Model type="PassiveScalar">
         <PassiveScalar>
           <material>atmosphere</material>
-          <scalar name="q">
+          <scalar name="q_CC">
             <test_conservation> true   </test_conservation>
 
             <constants>
               <diffusivity>  0.0   </diffusivity>
               <decayRate>    0.0   </decayRate>
             </constants>
-            
+
             <exponentialDecay>
               <c1> 60 </c1>
-
-         <!--<c2 type="constant">
+<!--
+              <c2 type="constant">
                 <value> 1 </value>
-              </c2> -->
-              
+              </c2>
+-->
               <c2 type="variable">
                 <filename> inputs/MPMICE/testExpDecay_Coeff.csv  </filename>
               </c2>
-              
-              
+
             </exponentialDecay>
 
             <initialization>
@@ -373,13 +380,32 @@
       <Model type="TracerParticles">
         <TracerParticles>
           <material>atmosphere</material>
-          
+
           <timeStart>  0    </timeStart>
           <timeStop>   1000 </timeStop>
-          <newVariables>
-            <CCVarLabel label="scalar-q"/>
-          </newVariables>
           
+          <newVariables>
+            <CCVarLabel label="scalar-q_CC"/>
+          </newVariables>
+
+          <scalar name="p.scalar">
+            <initialValue> 1.0 </initialValue>
+
+            <exponentialDecay>
+              <c1> 60 </c1>
+<!--
+              <c2 type="constant">
+                <value> 1 </value>
+              </c2>
+-->
+              <c2 type="variable">
+                <filename> inputs/MPMICE/testExpDecay_Coeff.csv  </filename>
+              </c2>
+
+            </exponentialDecay>
+          </scalar>
+
+
           <tracer name="q">
             <initialization>
               <geom_object>
@@ -388,24 +414,24 @@
               </geom_object>
             </initialization>
 
-            <interiorSources>
+           <interiorSources>
               <geom_object>
                 <sphere label = "1">
                   <origin>[0.5, 0.5, 0.5  ]</origin>
                   <radius>0.1 </radius>
                 </sphere>
-                <particlesPerCellPerSecond> 100 </particlesPerCellPerSecond>
+                <particlesPerCellPerSecond> 1000 </particlesPerCellPerSecond>
               </geom_object>
             </interiorSources>
 
           </tracer>
         </TracerParticles>
       </Model>
-  
+
   </Models>
 <!--__________________________________ -->
   <DataAnalysis>
-  
+
     <Module name="planeAverage">
 
       <material>           atmosphere  </material>
@@ -416,8 +442,8 @@
       <planeOrientation>  XZ   </planeOrientation>
       <weight label= "mass_adv"/>
       <Variables>
-        <analyze label="scalar-f" weighting="nCells"/>
-        <analyze label="scalar-q" weighting="nCells"/>
+        <analyze label="scalar-f_CC" weighting="nCells"/>
+        <analyze label="scalar-q_CC" weighting="nCells"/>
       </Variables>
     </Module>
 
@@ -429,11 +455,11 @@
 
 
       <Variables>
-        <analyze label="scalar-f" />
-        <analyze label="scalar-q" />
+        <analyze label="scalar-f_CC" />
+        <analyze label="scalar-q_CC" />
       </Variables>
     </Module>
-    
+
     <Module name = "minMax">
         <material>        atmosphere     </material>
         <samplingFrequency> 1e10         </samplingFrequency>
@@ -448,7 +474,7 @@
           <analyze label="wvel_FCME" matl="1"/>
           <analyze label="g.velocity" matl="0"/>
         </Variables>
-      </Module>            
+      </Module>
     </DataAnalysis>
-       
+
 </Uintah_specification>

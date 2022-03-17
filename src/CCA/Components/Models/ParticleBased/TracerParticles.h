@@ -77,11 +77,13 @@ namespace Uintah {
 
     VarLabel * pDispLabel;
     VarLabel * pDispLabel_preReloc;
+    VarLabel * pVelocityLabel;
+    VarLabel * pVelocityLabel_preReloc;
     VarLabel * nPPCLabel;         // number of particles in a cell
     VarLabel * simTimeLabel;
 
     //__________________________________
-    //  Variables that will be monitored
+    //  Variables that will be used to set tracer particle values
     struct Qvar{
 
       Qvar(){};
@@ -96,6 +98,45 @@ namespace Uintah {
       {
         VarLabel::destroy( pQLabel_preReloc );
         VarLabel::destroy( pQLabel );
+      }
+    };
+    
+    //__________________________________
+    //  tracer value will be set via a decay model
+    //  This is used in conjunction with the passiveScalar model
+    struct scalar{
+
+      scalar(){};
+      
+      // for exponential decay model
+      enum decayCoef{ constant, variable, none};
+      decayCoef  decayCoefType = none;
+      
+      bool withExpDecayModel {false};
+      double  c1 {-9};
+      double  c2 {-9};
+      std::string c2_filename {"-9"};
+      
+      int matl;
+      double  initialValue {-9};
+      
+      std::string labelName;
+      VarLabel *  expDecayCoefLabel       {nullptr};
+      VarLabel *  totalDecayLabel_preReloc{nullptr};
+      VarLabel *  totalDecayLabel         {nullptr};
+      VarLabel *  label_preReloc {nullptr};
+      VarLabel *  label          {nullptr};
+
+      // container for preReloc label and initial value
+      std::multimap<VarLabel*, double> label_value;
+
+      ~scalar()
+      {
+        VarLabel::destroy( totalDecayLabel_preReloc);
+        VarLabel::destroy( totalDecayLabel);
+        VarLabel::destroy( label_preReloc );
+        VarLabel::destroy( label );
+        VarLabel::destroy( expDecayCoefLabel );
       }
     };
 
@@ -150,6 +191,7 @@ namespace Uintah {
                             std::vector<Region*> regions,
                             ParticleVariable<Point> & pX,
                             ParticleVariable<Vector>& pDisp,
+                            ParticleVariable<Vector>& pVelocity,
                             ParticleVariable<long64>& pID,
                             CCVariable<int>         & nPPC );
 
@@ -158,6 +200,7 @@ namespace Uintah {
                              regionPoints             & pPositions,
                              std::vector<Region*>       regions,
                              constCCVariable<double>  & Q_CC,
+                             const double               initialValue,
                              ParticleVariable<double> & pQ  );
 
     void initialize(const ProcessorGroup  *,
@@ -202,9 +245,10 @@ namespace Uintah {
     ProblemSpecP    d_params;
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
-    std::vector< std::shared_ptr< Qvar > >  d_Qvars;
-    bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
+    std::vector< std::shared_ptr< Qvar >>    d_Qvars;
+    std::vector< std::shared_ptr< scalar >>  d_scalars;
 
+    bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
   };
 }
 

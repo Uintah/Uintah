@@ -125,33 +125,47 @@ namespace Uintah {
     char ic_;
   };
 
+  //______________________________________________________________________
+  //
   class TensorMaxEigenvectDiag : public TensorToVectorDiag {
   public:
     TensorMaxEigenvectDiag() {}
+
     string name() const { return "maxeigenvect"; }
-    Vector reduce(const Matrix3 & v) const {
+
+    Vector reduce(const Matrix3 & v) const
+    {
       double e1, e2, e3;
       v.getEigenValues(e1, e2, e3);
       return v.getEigenVectors(e1, e1)[0];
     }
   };
-
+  //______________________________________________________________________
+  //
   class TensorMidEigenvectDiag : public TensorToVectorDiag {
   public:
     TensorMidEigenvectDiag() {}
+
     string name() const { return "mideigenvect"; }
-    Vector reduce(const Matrix3 & v) const {
+
+    Vector reduce(const Matrix3 & v) const
+    {
       double e1, e2, e3;
       v.getEigenValues(e1, e2, e3);
       return v.getEigenVectors(e2, e1)[1];
     }
   };
 
+  //______________________________________________________________________
+  //
   class TensorMinEigenvectDiag : public TensorToVectorDiag {
   public:
     TensorMinEigenvectDiag() {}
+
     string name() const { return "mineigenvect"; }
-    Vector reduce(const Matrix3 & v) const {
+
+    Vector reduce(const Matrix3 & v) const
+    {
       double e1, e2, e3;
       v.getEigenValues(e1, e2, e3);
       return v.getEigenVectors(e3, e1)[2];
@@ -159,7 +173,8 @@ namespace Uintah {
   };
 
   // --------------------------------------------------------------------------
-
+  //______________________________________________________________________
+  //
   class PreTensorToVectorDiag : public VectorDiag {
   public:
     PreTensorToVectorDiag(const TensorDiag * preop_, const TensorToVectorDiag * realdiag_)
@@ -169,58 +184,77 @@ namespace Uintah {
 
     std::string name() const { return preop->name()+"_"+realdiag->name(); }
 
+    //______________________________________________________________________
+    //
     void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
                     int imat, int index,
-                    NCVariable<Vector>  & res) const {
+                    NCVariable<Vector>  & res) const
+    {
       NCVariable<Matrix3> fullvals;
       (*preop)(da, patch, fieldname, imat, index, fullvals);
+
       res.allocate(fullvals.getLowIndex(), fullvals.getHighIndex());
+
       serial_for( fullvals.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->reduce(fullvals(i,j,k));
       });
     }
 
+    //______________________________________________________________________
+    //
     void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
                     int imat, int index,
-                    CCVariable<Vector>  & res) const {
+                    CCVariable<Vector>  & res) const
+    {
       NCVariable<Matrix3> fullvalues;
       (*preop)(da, patch, fieldname, imat, index, fullvalues);
+
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
+
       serial_for( fullvalues.range(), [&](int i, int j, int k) {
         res(i,j,k) = realdiag->reduce(fullvalues(i,j,k));
       });
     }
 
+    //______________________________________________________________________
+    //
     void operator()(DataArchive * da, const Patch * patch,
                     const std::string & fieldname,
                     int imat, int index,
                     ParticleSubset * pset,
-                    ParticleVariable<Vector> & res) const {
+                    ParticleVariable<Vector> & res) const
+    {
       ParticleVariable<Matrix3> fullvalues;
       fullvalues.allocate(pset);
+
       (*preop)(da, patch, fieldname, imat, index, pset, fullvalues);
       res.allocate(pset);
-      for(ParticleSubset::iterator pit(pset->begin());pit!=pset->end();pit++)
+
+      for(ParticleSubset::iterator pit(pset->begin());pit!=pset->end();pit++){
         res[*pit] = realdiag->reduce( fullvalues[*pit] );
+      }
     }
 
   private:
     const TensorDiag         * preop;
     const TensorToVectorDiag * realdiag;
   };
-  // --------------------------------------------------------------------------
-
+  //---------------------------------------------------------------------
+  //______________________________________________________________________
   typedef map<Uintah::TypeDescription::Type, vector<VectorDiag *> >     VDiagMap;
   typedef map<string, map<Uintah::TypeDescription::Type, VectorDiag*> > PreVDiagMap;
 
   VDiagMap    _vdiagtable;
   PreVDiagMap _vprediagtable;
 
+  //______________________________________________________________________
+  //
   void createVectorDiags() {
-    if(_vdiagtable.size()) return;
-
+    if(_vdiagtable.size()){
+      return;
+    }
     _vdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorValueDiag());
 
     // _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorCompDiag(0));
@@ -231,9 +265,13 @@ namespace Uintah {
     _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorMaxEigenvectDiag());
   }
 
-  void destroyVectorDiags() {
+  //______________________________________________________________________
+  //
+  void destroyVectorDiags()
+  {
     for(map<Uintah::TypeDescription::Type, vector<VectorDiag *> >::iterator tit(_vdiagtable.begin());
         tit!=_vdiagtable.end();tit++) {
+
       for(vector<VectorDiag *>::iterator dit(tit->second.begin());dit!=tit->second.end();dit++) {
         delete *dit;
       }
@@ -241,17 +279,24 @@ namespace Uintah {
     _vdiagtable.clear();
   }
 
+//______________________________________________________________________
+//
   void describeVectorDiags(ostream & os)
   {
     createVectorDiags();
-    if(_vdiagtable[Uintah::TypeDescription::Vector].size())
+    if(_vdiagtable[Uintah::TypeDescription::Vector].size()){
       os << "  Vector -> Vector" << endl;
+    }
+
     for(vector<VectorDiag *>::iterator dit(_vdiagtable[Uintah::TypeDescription::Vector].begin());
         dit!=_vdiagtable[Uintah::TypeDescription::Vector].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
-    if(_vdiagtable[Uintah::TypeDescription::Matrix3].size())
+
+    if(_vdiagtable[Uintah::TypeDescription::Matrix3].size()){
       os << "  Tensor -> Vector" << endl;
+    }
+
     for(vector<VectorDiag *>::iterator dit(_vdiagtable[Uintah::TypeDescription::Matrix3].begin());
         dit!=_vdiagtable[Uintah::TypeDescription::Matrix3].end();dit++) {
       os << "    " << (*dit)->name() << endl;
@@ -260,17 +305,27 @@ namespace Uintah {
 
   // --------------------------------------------------------------------------
 
-  int numberOfVectorDiags(const Uintah::TypeDescription * fldtype) {
+  int numberOfVectorDiags(const Uintah::TypeDescription * fldtype)
+  {
     createVectorDiags();
-    if(!_vdiagtable.count(fldtype->getSubType()->getType())) return 0;
+
+    if(!_vdiagtable.count(fldtype->getSubType()->getType())){
+      return 0;
+    }
     return _vdiagtable[fldtype->getSubType()->getType()].size();
   }
 
-  std::string vectorDiagName(const Uintah::TypeDescription * fldtype, int idiag) {
+  //______________________________________________________________________
+  //
+  std::string vectorDiagName(const Uintah::TypeDescription * fldtype, int idiag)
+  {
     createVectorDiags();
+
     return _vdiagtable[fldtype->getSubType()->getType()][idiag]->name();
   }
 
+  //______________________________________________________________________
+  //
   VectorDiag const * createVectorDiag(const Uintah::TypeDescription * fldtype, int idiag,
                                       const TensorDiag * tensorpreop)
   {
@@ -280,16 +335,20 @@ namespace Uintah {
     VectorDiag const * vdiag =  _vdiagtable[srctype][idiag];
 
     if(tensorpreop != 0 && srctype == Uintah::TypeDescription::Matrix3 ) {
-      if(!_vprediagtable[ tensorpreop->name() ].count(srctype) )
+
+      if(!_vprediagtable[ tensorpreop->name() ].count(srctype) ){
         _vprediagtable[tensorpreop->name()][srctype]=
           new PreTensorToVectorDiag( tensorpreop, dynamic_cast<const TensorToVectorDiag *>(vdiag) );
-
+      }
       return _vprediagtable[ tensorpreop->name() ][fldtype->getSubType()->getType()];
-    } else {
+    }
+    else {
       return vdiag;
     }
   }
 
+  //______________________________________________________________________
+  //
   list<Uintah::VectorDiag const *>
   createVectorDiags(const Uintah::TypeDescription * fldtype,
                     const Uintah::FieldSelection & fldselection,
@@ -297,12 +356,12 @@ namespace Uintah {
   {
     list<VectorDiag const *>  res;
     int ndiags = numberOfVectorDiags(fldtype);
-    for(int idiag=0;idiag<ndiags;idiag++)
-      {
-        if(fldselection.wantDiagnostic(vectorDiagName(fldtype, idiag))) {
-          res.push_back(createVectorDiag(fldtype, idiag, preop));
-        }
+
+    for(int idiag=0;idiag<ndiags;idiag++){
+      if(fldselection.wantDiagnostic(vectorDiagName(fldtype, idiag))) {
+        res.push_back(createVectorDiag(fldtype, idiag, preop));
       }
+    }
     return res;
   }
 

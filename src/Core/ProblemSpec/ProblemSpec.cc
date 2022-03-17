@@ -112,6 +112,67 @@ ProblemSpec::findBlock( const string & name ) const
   return nullptr;
 }
 
+
+//______________________________________________________________________
+//
+//  This function recursively searches through the xml tree for xmlNodes
+//  with the tagname and returns a vector of them.
+std::vector<xmlNode*> 
+ProblemSpec::recursiveFind_xmlNodes( std::vector<xmlNode*> nodesFound,
+                                     xmlNode      * a_node, 
+                                     const string & tagname,
+                                     const bool    isTopLevelNode ) const 
+{
+  
+  for (xmlNode * cur_node = a_node; cur_node; cur_node = cur_node->next){
+  
+    string nodeName((const char *)(cur_node->name));
+    bool isElementNode = (cur_node->type == XML_ELEMENT_NODE);
+    bool isTagName     = (nodeName == tagname);
+
+    if ( isElementNode && isTagName ){
+      nodesFound.push_back( cur_node );
+    }
+
+    xmlNode* child = cur_node->children;
+    if ( child != 0 ) {
+      if ( child->type == XML_ELEMENT_NODE ) {
+        nodesFound = recursiveFind_xmlNodes(nodesFound, child, tagname, false);
+      }
+    }
+
+    // Avoid looping over the siblings of top level node
+    if(isTopLevelNode){
+      break;
+    }
+  }
+  return nodesFound;
+}
+
+//______________________________________________________________________
+//  This function recursively searches through the xml tree for xmlNodes
+//  with the tagname and returns a vector ProblemSpecs.
+
+std::vector<ProblemSpecP> 
+ProblemSpec::findBlocksRecursive( const string & tagname ) const 
+{
+  std::vector<ProblemSpecP> results;
+  if (d_node == 0) {
+    return results;
+  }
+  
+  std::vector<xmlNode*> xmlNodeResults;
+  xmlNode * cur_node = d_node;
+  
+  xmlNodeResults = recursiveFind_xmlNodes( xmlNodeResults, cur_node, tagname, true );
+  
+  for( size_t i=0; i<xmlNodeResults.size(); i++){
+    ProblemSpecP ps = scinew ProblemSpec( xmlNodeResults[i], false );
+    results.push_back( ps );
+  }
+  return results;
+}
+
 //______________________________________________________________________
 //
 ProblemSpecP 
