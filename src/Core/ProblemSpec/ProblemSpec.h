@@ -151,6 +151,17 @@ public:
   //////////////////////////////////////////////////////////////
   // find the first child node with given node name
   ProblemSpecP findBlock( const std::string & name ) const;
+  
+  
+  std::vector<xmlNode*> 
+  recursiveFind_xmlNodes( std::vector<xmlNode*> nodesFound,
+                          xmlNode           *   a_node, 
+                          const std::string &   tagname,
+                          const bool            isTopLevelNode) const;
+
+  //////////
+  //  recursively find all nodes with the given  tagname
+  std::vector<ProblemSpecP> findBlocksRecursive( const std::string & name ) const;
 
   //////////
   // find the first child node with given node name and attribute 

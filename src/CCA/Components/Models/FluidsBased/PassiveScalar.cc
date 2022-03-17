@@ -205,7 +205,8 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 
   //__________________________________
   // Read in the constants for the scalar
-  scalar_ps->getWithDefault("test_conservation", d_runConservationTask, false);
+  scalar_ps->getWithDefault("test_conservation",   d_runConservationTask, false);
+  scalar_ps->getWithDefault("reinitializeDomain",  d_reinitializeDomain,  false);
 
   ProblemSpecP const_ps = scalar_ps->findBlock("constants");
   if(!const_ps) {
@@ -241,14 +242,31 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
     if( d_decayCoef == none ){
       throw ProblemSetupException("PassiveScalar: the scalar tag c2 must have either a constant value or a filename", __FILE__, __LINE__);
     }
+  }
 
+
+  //__________________________________
+  //  Read in all geometry objects in the <Material> node.
+  //  They may be referenenced.
+  if( d_reinitializeDomain ){
+
+    ProblemSpecP root_ps = d_params->getRootNode();
+    ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
+
+    std::vector<ProblemSpecP> geom_objs = mat_ps->findBlocksRecursive("geom_object");
+
+    for( size_t i=0; i<geom_objs.size(); i++){
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create( geom_objs[i], pieces );
+    }
   }
 
   //__________________________________
   //  Initialization: Read in the geometry objects for the scalar
-  ProblemSpecP init_ps = scalar_ps->findBlock("initialization");
 
-  if( !isRestart ){
+  if( !isRestart || d_reinitializeDomain ){
+
+    ProblemSpecP init_ps = scalar_ps->findBlock("initialization");
 
    for ( ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != nullptr; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
@@ -312,8 +330,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP scalar_ps = PS_ps->appendChild( "scalar" );
   scalar_ps->setAttribute( "name", d_scalar->name );
 
-  scalar_ps->appendElement( "test_conservation", d_runConservationTask );
-
+  scalar_ps->appendElement( "test_conservation",  d_runConservationTask );
+  scalar_ps->appendElement( "reinitializeDomain", d_reinitializeDomain );
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
   const_ps->appendElement( "decayRate",                d_scalar->decayRate );
@@ -383,7 +401,7 @@ void PassiveScalar::readTable( const Patch * patch,
     throw ProblemSetupException("ERROR: PassiveScalar::readTable: Unable to open the input file: " + filename, __FILE__, __LINE__);
   }
 
-  proc0cout_cmp(count, 1) << "________________________DataAnalysis: PassiveScalar\n"
+  proc0cout_cmp(count, 1) << "________________________PassiveScalar\n"
                           << "  Coefficient c1: " << c1 << "\n"
                           << "  Reading in table ("<< filename <<") for variable coefficient c2\n"
                           << "__________________________________\n";
@@ -667,15 +685,18 @@ void PassiveScalar::scheduleRestartInitialize(SchedulerP   & sched,
   const string schedName = "PassiveScalar::scheduleRestartInitialize("+ d_scalar->fullName+")";
   printSchedule( level, dout_models_ps, schedName );
 
-
-  const string taskName = "PassiveScalar::restartInitialize_("+ d_scalar->fullName+")";
-  Task* t = scinew Task(taskName, this, &PassiveScalar::restartInitialize);
-
-  if( d_withExpDecayModel ){
-    t->computes( d_scalar->expDecayCoefLabel );
+  // if reinitializing the domain
+  if( d_reinitializeDomain ){
+    scheduleInitialize( sched, level);
   }
+  else if( d_withExpDecayModel ){
+    const string taskName = "PassiveScalar::restartInitialize_("+ d_scalar->fullName+")";
+    Task* t = scinew Task(taskName, this, &PassiveScalar::restartInitialize);
 
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+    t->computes( d_scalar->expDecayCoefLabel );
+
+    sched->addTask(t, level->eachPatch(), d_matl_set);
+  }
 }
 
 //______________________________________________________________________

@@ -228,6 +228,7 @@ WARNING
     // global constants
     bool d_runConservationTask  {false};
     bool d_withExpDecayModel    {false};
+    bool d_reinitializeDomain   {false};
 
     enum decayCoef{ constant, variable, none};
     decayCoef  d_decayCoef = none;
