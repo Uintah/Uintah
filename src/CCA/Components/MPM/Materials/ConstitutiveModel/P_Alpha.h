@@ -74,6 +74,8 @@ namespace Uintah {
     const VarLabel* tempAlpha1Label_preReloc;
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
+    const VarLabel* pPlasticStrainLabel;
+    const VarLabel* pPlasticStrainLabel_preReloc;
 
   private:
     CMData d_initialData;
