@@ -100,26 +100,26 @@ namespace Uintah {
         VarLabel::destroy( pQLabel );
       }
     };
-    
+
     //__________________________________
     //  tracer value will be set via a decay model
     //  This is used in conjunction with the passiveScalar model
     struct scalar{
 
       scalar(){};
-      
+
       // for exponential decay model
       enum decayCoef{ constant, variable, none};
       decayCoef  decayCoefType = none;
-      
+
       bool withExpDecayModel {false};
       double  c1 {-9};
       double  c2 {-9};
       std::string c2_filename {"-9"};
-      
+
       int matl;
       double  initialValue {-9};
-      
+
       std::string labelName;
       VarLabel *  expDecayCoefLabel       {nullptr};
       VarLabel *  totalDecayLabel_preReloc{nullptr};
@@ -165,7 +165,7 @@ namespace Uintah {
 
       std::vector<Region*> initializeRegions;   // regions where particles are initialized
       std::vector<Region*> injectionRegions;    // regions where particles are injected
-     
+
       double timeStart;
       double timeStop;
     };
@@ -185,29 +185,51 @@ namespace Uintah {
                                       const std::vector<Region*> regions,
                                       regionPoints  & pPositions);
 
-    void initializeRegions( const Patch   * patch,
-                            unsigned int    pIndx,
-                            regionPoints  & pPositions,
-                            std::vector<Region*> regions,
-                            ParticleVariable<Point> & pX,
-                            ParticleVariable<Vector>& pDisp,
-                            ParticleVariable<Vector>& pVelocity,
-                            ParticleVariable<long64>& pID,
-                            CCVariable<int>         & nPPC );
+    void initializeCoreVariables( const Patch   * patch,
+                                  unsigned int    pIndx,
+                                  regionPoints  & pPositions,
+                                  std::vector<Region*> regions,
+                                  ParticleVariable<Point> & pX,
+                                  ParticleVariable<Vector>& pDisp,
+                                  ParticleVariable<Vector>& pVelocity,
+                                  ParticleVariable<long64>& pID,
+                                  CCVariable<int>         & nPPC );
 
-    void initializeRegions2( const Patch             *  patch,
-                             unsigned int               pIndx,
-                             regionPoints             & pPositions,
-                             std::vector<Region*>       regions,
-                             constCCVariable<double>  & Q_CC,
-                             const double               initialValue,
-                             ParticleVariable<double> & pQ  );
+    void initializeRemainingVars( ParticleSubset * pset,
+                                  const Patch    * patch,
+                                  const int        indx,
+                                  DataWarehouse  * new_dw);
 
-    void initialize(const ProcessorGroup  *,
-                    const PatchSubset     * patches,
-                    const MaterialSubset  * matls,
-                    DataWarehouse         *,
-                    DataWarehouse         * new_dw);
+    void initializeRegions( const Patch             *  patch,
+                            unsigned int               pIndx,
+                            regionPoints             & pPositions,
+                            std::vector<Region*>       regions,
+                            constCCVariable<double>  & Q_CC,
+                            const double               initialValue,
+                            ParticleVariable<double> & pQ  );
+
+
+
+    void initializeTask(const ProcessorGroup  *,
+                        const PatchSubset     * patches,
+                        const MaterialSubset  * matls,
+                        DataWarehouse         *,
+                        DataWarehouse         * new_dw);
+
+    void restartInitializeTask(const ProcessorGroup  *,
+                               const PatchSubset     * patches,
+                               const MaterialSubset  * matls,
+                               DataWarehouse         *,
+                               DataWarehouse         * new_dw);
+
+    void sched_restartInitializeHACK( SchedulerP&,
+                                      const LevelP& level);
+
+    void restartInitializeHACK( const ProcessorGroup  *,
+                                const PatchSubset     * patches,
+                                const MaterialSubset  * matls,
+                                DataWarehouse         *,
+                                DataWarehouse         * new_dw){};
 
     void sched_moveParticles(SchedulerP  & sched,
                              const LevelP& level);
@@ -249,6 +271,7 @@ namespace Uintah {
     std::vector< std::shared_ptr< scalar >>  d_scalars;
 
     bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
+    bool d_reinitializeDomain    {false};            // to erase the previous particles and start over
   };
 }
 
