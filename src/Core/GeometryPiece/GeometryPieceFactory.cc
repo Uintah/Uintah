@@ -421,6 +421,22 @@ GeometryPieceFactory::resetFactory()
   m_allInsidePointsMap.clear();
 }
 
+//______________________________________________________________________
+//  searches the named pieces for the label
+bool
+GeometryPieceFactory::geometryPieceExists( std::string label )
+{
+  bool doesExist {false};
+  
+  std::map<std::string,GeometryPieceP>::iterator it;
+  it = m_namedPieces.find( label );
+
+  if( it != m_namedPieces.end() ){
+    doesExist = true;
+  }
+  return doesExist;
+}
+
 //------------------------------------------------------------------
 
 void

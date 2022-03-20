@@ -48,6 +48,9 @@ namespace Uintah {
     // a component that is being switched to happens to be a 'copy' of a previous component).
     static void resetFactory();
 
+    // does the named geometry piece already exist in the map
+    static bool geometryPieceExists( std::string label );
+
     // Runs through all the GeometryPiece that have been created and
     // sets their flag for first time output.  This should be done at
     // the beginning of any output of a problemspec.
