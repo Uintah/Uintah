@@ -90,6 +90,9 @@
       <TracerParticles        spec="OPTIONAL NO_DATA">
         <modelPreviouslyInitialized
                               spec="OPTIONAL BOOLEAN"/>
+        <reinitializeDomain
+                              spec="OPTIONAL BOOLEAN"/> 
+       
         <material             spec="OPTIONAL STRING"/>
         
         <timeStart            spec="OPTIONAL DOUBLE 'positive'"/>
@@ -415,6 +418,7 @@
                                          attribute1="name REQUIRED STRING" >
 
           <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <reinitializeDomain          spec="OPTIONAL BOOLEAN"/>
 
           <constants                   spec="OPTIONAL NO_DATA" >
             <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
