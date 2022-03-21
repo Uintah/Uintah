@@ -1871,6 +1871,8 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
+  t->requires(Task::NewDW, TriL->triMassDispLabel_preReloc,
+                                                       triangle_matls, gac, 2);
   t->requires(Task::NewDW, lb->gMassLabel,             mpm_matls,   gac,NGN+3);
 
   t->computes(lb->gLSContactForceLabel,                mpm_matls);
@@ -6093,12 +6095,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<double> >     triClay(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
+    std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
 //    std::vector<std::vector<int> > triInContact(numLSMatls);
     Matrix3 size; size.Identity();
 
-    //std::ofstream OSS;
     FILE* fp;
     if(m_output->isOutputTimeStep()){
       timeStep_vartype timeStep;
@@ -6121,7 +6123,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       pnum << patch->getID();
       string pnums = pnum.str();
       string fname = pPath + "/TriContact." + pnums + "." + tnames;
-      //OSS.open(fname.c_str());
       fp = fopen(fname.c_str(), "w");
     }
 
@@ -6144,6 +6145,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triAreaAtNodes[tmo], TriL->triAreaAtNodesLabel,     pset0);
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
+      new_dw->get(triMassDisp[tmo],    TriL->triMassDispLabel_preReloc,pset0);
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
@@ -6361,16 +6363,15 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // triangle_ids[tmo][idx0] is the triangle that is penetrating
                 // iu is the vertex of the penetrating triangle
                 // triangle_ids[tmi][vecIdx] is the penetrated triangle
-                fprintf(fp,"%i %i %ld %ld %i %8.6f %8.6f\n",
-                        tmo, tmi,
-                        triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
-                        iu, 0.5*totalArea, triAreaAtNodes[tmo][idx0][iu]);
-
-//                OSS << tmo << " " << tmi << " " << " "
-//                    << triangle_ids[tmo][idx0] << " "
-//                    << triangle_ids[tmi][vecIdx] << " "
-//                    << iu << " " << 0.5*totalArea <<  " "
-//                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+                Vector tang = triMidToN0Vec[tmi][vecIdx]
+                             /triMidToN0Vec[tmi][vecIdx].length();
+                fprintf(fp,"%i %i %i %i %ld %ld %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %i %8.6f %8.6f %8.6f\n",
+                tmo, tmi, adv_matl0, adv_matl1,
+                triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
+                tx0[tmi][vecIdx].x(), tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
+                triTriNormal[i].x(), triTriNormal[i].y(), triTriNormal[i].z(),
+                tang.x(), tang.y(), tang.z(), iu, 0.5*totalArea,
+                triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
               }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
@@ -6522,15 +6523,15 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 totalContactAreaTri += 0.5*totalArea;
 
                 if(m_output->isOutputTimeStep()){
-                fprintf(fp,"%i %i %ld %ld %i %8.6f %8.6f\n",
-                        tmo, tmi,
-                        triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
-                        iu, 0.5*totalArea, triAreaAtNodes[tmo][idx0][iu]);
-//                OSS << tmo << " " << tmi << " " << " "
-//                    << triangle_ids[tmo][idx0] << " "
-//                    << triangle_ids[tmi][vecIdx] << " "
-//                    << iu << " " << 0.5*totalArea <<  " "
-//                    << triAreaAtNodes[tmo][idx0][iu] << endl;
+                  Vector tang = triMidToN0Vec[tmi][vecIdx]
+                               /triMidToN0Vec[tmi][vecIdx].length();
+                  fprintf(fp,"%i %i %i %i %ld %ld %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %i %8.6f %8.6f %8.6f\n",
+                 tmo, tmi, adv_matl0, adv_matl1,
+                 triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
+                 tx0[tmi][vecIdx].x(),tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
+                 triTriNormal[i].x(), triTriNormal[i].y(), triTriNormal[i].z(),
+                 tang.x(), tang.y(), tang.z(), iu, 0.5*totalArea,
+                 triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
                 }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
