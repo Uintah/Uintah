@@ -248,16 +248,28 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   //__________________________________
   //  Read in all geometry objects in the <Material> node.
   //  They may be referenenced.
+  
+  //__________________________________
+  //  Read in all geometry objects/pieces in the <Material> node of the ups file.
+  //  Needed since the user may referec
   if( d_reinitializeDomain ){
 
     ProblemSpecP root_ps = d_params->getRootNode();
     ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
 
+    // find all of the geom_objects 
     std::vector<ProblemSpecP> geom_objs = mat_ps->findBlocksRecursive("geom_object");
 
+    // create geom piece if needed
     for( size_t i=0; i<geom_objs.size(); i++){
-      vector<GeometryPieceP> pieces;
-      GeometryPieceFactory::create( geom_objs[i], pieces );
+
+      ProblemSpecP geo_obj_ps = geom_objs[i];
+
+      if( GeometryPieceFactory::geometryPieceExists( geo_obj_ps ) < 0 ){
+
+        vector<GeometryPieceP> pieces;
+        GeometryPieceFactory::create( geo_obj_ps, pieces );
+      }
     }
   }
 

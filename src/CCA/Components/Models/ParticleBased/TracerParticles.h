@@ -70,6 +70,7 @@ namespace Uintah {
     // remove this once C++14 is adopted
     template<typename T, typename ...Args>
     std::unique_ptr<T> make_unique( Args&& ...args );
+    enum modifiesComputes{ modifiesVar, computesVar};
 
     //__________________________________
     // labels
@@ -84,9 +85,9 @@ namespace Uintah {
 
     //__________________________________
     //  Variables that will be used to set tracer particle values
-    struct Qvar{
+    struct cloneVar{
 
-      Qvar(){};
+      cloneVar(){};
 
       int matl;
       std::string CCVarName;
@@ -94,7 +95,7 @@ namespace Uintah {
       VarLabel *  pQLabel_preReloc{nullptr};
       VarLabel *  pQLabel         {nullptr};
 
-      ~Qvar()
+      ~cloneVar()
       {
         VarLabel::destroy( pQLabel_preReloc );
         VarLabel::destroy( pQLabel );
@@ -195,10 +196,16 @@ namespace Uintah {
                                   ParticleVariable<long64>& pID,
                                   CCVariable<int>         & nPPC );
 
-    void initializeRemainingVars( ParticleSubset * pset,
-                                  const Patch    * patch,
-                                  const int        indx,
-                                  DataWarehouse  * new_dw);
+    void initializeCloneVars( ParticleSubset * pset,
+                              const Patch    * patch,
+                              const int        indx,
+                              DataWarehouse  * new_dw );
+                              
+    void initializeScalarVars( ParticleSubset * pset,
+                               const Patch    * patch,
+                               const int        indx,
+                               DataWarehouse  * new_dw,
+                               const modifiesComputes which);
 
     void initializeRegions( const Patch             *  patch,
                             unsigned int               pIndx,
@@ -267,9 +274,10 @@ namespace Uintah {
     ProblemSpecP    d_params;
     Ghost::GhostType  d_gn  = Ghost::None;
     Ghost::GhostType  d_gac = Ghost::AroundCells;
-    std::vector< std::shared_ptr< Qvar >>    d_Qvars;
-    std::vector< std::shared_ptr< scalar >>  d_scalars;
-
+    std::vector< std::shared_ptr< cloneVar >>    d_cloneVars;
+    std::vector< std::shared_ptr< scalar >>      d_scalars;
+    
+    
     bool d_previouslyInitialized {false};            // this is set in a checkpoint and checked in ProblemSetup
     bool d_reinitializeDomain    {false};            // to erase the previous particles and start over
   };
