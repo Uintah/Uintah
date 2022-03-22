@@ -482,7 +482,6 @@ GeometryPieceFactory::geometryPieceExists(const ProblemSpecP & ps,
     GeometryPieceP referencedPiece = m_namedPieces[ go_label ];
 
     if( referencedPiece.get_rep() != nullptr  ) {
-      DOUTR( true, " geometryPieceExists()    nFoundPieces += 1" );
       nFoundPieces += 1;
       continue;
     }

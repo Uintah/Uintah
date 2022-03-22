@@ -307,7 +307,7 @@ void TracerParticles::problemSetup( GridP&,
 
   //__________________________________
   //  CCVariable values to be copied
-  ProblemSpecP vars_ps = TP_ps->findBlock("newVariables");
+  ProblemSpecP vars_ps = TP_ps->findBlock("cloneVariables");
   if ( vars_ps ){
 
     static int cntr=1;
@@ -343,8 +343,8 @@ void TracerParticles::problemSetup( GridP&,
 
       //__________________________________
       // define particle quantity label names
-      std::string L1 = "p."+labelName+"+";
-      std::string L2 = "p."+labelName;
+      std::string L1 = "p.clone-"+labelName+"+";
+      std::string L2 = "p.clone-"+labelName;
       VarLabel* QLabel_preReloc   = VarLabel::create( L1, d_Part_double );
       VarLabel* QLabel            = VarLabel::create( L2, d_Part_double );
       proc0cout_eq( cntr, 1 ) << "   Created labels (" << L1 << ") (" << L2 << ")\n";
@@ -480,7 +480,7 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
   //__________________________________
   //  Clone of CC variables
   if( d_cloneVars.size() > 0 ){
-    ProblemSpecP nv_ps = tp_ps->appendChild( "newVariables" );
+    ProblemSpecP nv_ps = tp_ps->appendChild( "cloneVariables" );
 
     for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {
       std::shared_ptr<cloneVar> Q = d_cloneVars[i];
@@ -1322,7 +1322,7 @@ void TracerParticles::sched_addParticles( SchedulerP  & sched,
   t->modifies( pDispLabel_preReloc,     d_matl_mss );
   t->modifies( pVelocityLabel_preReloc, d_matl_mss );
   t->modifies( pIDLabel_preReloc,       d_matl_mss );
-  t->computes( nPPCLabel,               d_matl_mss );
+  t->modifies( nPPCLabel,               d_matl_mss );
 
                 // Clone of CC variables
   for ( size_t i=0 ; i<d_cloneVars.size(); i++ ) {

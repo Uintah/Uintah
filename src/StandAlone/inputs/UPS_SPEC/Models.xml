@@ -98,9 +98,9 @@
         <timeStart            spec="OPTIONAL DOUBLE 'positive'"/>
         <timeStop             spec="OPTIONAL DOUBLE 'positive'"/>
 
-        <newVariables         spec="OPTIONAL NO_DATA">
+        <cloneVariables         spec="OPTIONAL NO_DATA">
           <CCVarLabel         spec="MULTIPLE NO_DATA" attribute1="label REQUIRED STRING" />
-        </newVariables>
+        </cloneVariables>
 
         <scalar               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" > 
