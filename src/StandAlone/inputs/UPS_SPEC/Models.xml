@@ -112,6 +112,7 @@
               <value          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>         
               <filename       spec="REQUIRED STRING"            need_applies_to="type variable"/>         
             </c2>
+            <c3               spec="OPTIONAL DOUBLE"/>
           </exponentialDecay>
         </scalar>
 
@@ -433,6 +434,7 @@
               <value                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>
               <filename                spec="REQUIRED STRING"            need_applies_to="type variable"/>
             </c2>
+            <c3                        spec="OPTIONAL DOUBLE"/>
           </exponentialDecay>
 
           <initialization              spec="REQUIRED NO_DATA" >

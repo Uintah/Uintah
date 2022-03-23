@@ -355,6 +355,7 @@
 
             <exponentialDecay>
               <c1> 60 </c1>
+              <c3> 1e-5 </c3>
 <!--
               <c2 type="constant">
                 <value> 1 </value>

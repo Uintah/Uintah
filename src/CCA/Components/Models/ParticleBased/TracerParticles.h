@@ -116,6 +116,7 @@ namespace Uintah {
       bool withExpDecayModel {false};
       double  c1 {-9};
       double  c2 {-9};
+      double  c3 {-9};
       std::string c2_filename {"-9"};
 
       int matl;

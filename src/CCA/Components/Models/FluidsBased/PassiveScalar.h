@@ -108,7 +108,6 @@ WARNING
    static void readTable( const Patch * patch,
                           const Level * level,
                           const std::string filename,
-                          const double c1,
                           CCVariable<double>& c2 );
 
   private:
@@ -219,6 +218,7 @@ WARNING
       // for exponential decay model
       double  c1 {-9};
       double  c2 {-9};
+      double  c3 {-9};
       std::string c2_filename {"-9"};
     };
 

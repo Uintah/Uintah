@@ -431,7 +431,8 @@ void TracerParticles::problemSetup( GridP&,
         proc0cout_eq( cntr, 1 ) << "   Created labels (" << L1 << ") (" << L2 << ") (" << L3 <<")\n";
 
         S->withExpDecayModel = true;
-        exp_ps->require( "c1", S->c1);
+        exp_ps->require(        "c1", S->c1);
+        exp_ps->getWithDefault( "c3", S->c3, 0.0 );
 
         // The c2 coefficient type can be either a constant or read from a table
         ProblemSpecP c2_ps = exp_ps->findBlock("c2");
@@ -519,6 +520,7 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
           c2_ps->setAttribute( "type", "constant" );
           c2_ps->appendElement( "value", S->c2 );
         }
+        exp_ps->appendElement( "c3", S->c3 );
       }
     }
   }
@@ -898,6 +900,13 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
       //__________________________________
       //  Initialize coefficient used in exponential decay model
       if( S->withExpDecayModel ){
+      
+        int id = patch->getID();
+
+        proc0cout_eq(id, 0)
+                << "________________________TracerParticles\n"
+                << "  Coefficient c1: " << S->c1 << "\n";        
+      
         CCVariable<double> c2;
         new_dw->allocateAndPut( c2, S->expDecayCoefLabel, indx, patch, d_gn, 0);
 
@@ -906,11 +915,17 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
                           // constant value
         if ( S->decayCoefType == scalar::constant ){
           c2.initialize( S->c2 );
+          proc0cout_eq(id, 0)
+              << "  Coefficient c2: " << S->c2 << "\n";
         }
         else{             // read in from a file
           const Level* level = patch->getLevel();
-          PassiveScalar::readTable( patch, level, S->c2_filename, S->c1, c2 );
+          PassiveScalar::readTable( patch, level, S->c2_filename, c2 );
         }
+        
+        proc0cout_eq(id, 0)
+              << "  Coefficient c3: " << S->c3 << "\n"
+              << "__________________________________\n";
 
                           // initialize quantities
         ParticleVariable<double> pTotalDecay;
@@ -945,6 +960,12 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
       //__________________________________
       //  Initialize coefficient used in exponential decay model
       if( S->withExpDecayModel ){
+        int id = patch->getID();
+
+        proc0cout_eq(id, 0)
+                << "________________________TracerParticles\n"
+                << "  Coefficient c1: " << S->c1 << "\n";      
+      
         CCVariable<double> c2;
 
         new_dw->getModifiable( c2, S->expDecayCoefLabel, indx, patch, d_gn, 0);
@@ -953,11 +974,16 @@ void TracerParticles::initializeScalarVars( ParticleSubset * pset,
                           // constant value
         if ( S->decayCoefType == scalar::constant ){
           c2.initialize( S->c2 );
+          proc0cout_eq( id, 0)
+              << "  Coefficient c2: " << S->c2 << "\n";
         }
         else{             // read in from a file
           const Level* level = patch->getLevel();
-          PassiveScalar::readTable( patch, level, S->c2_filename, S->c1, c2 );
+          PassiveScalar::readTable( patch, level, S->c2_filename, c2 );
         }
+        proc0cout_eq(id, 0)
+              << "  Coefficient c3: " << S->c3 << "\n"
+              << "__________________________________\n";
 
                           // initialize quantities
         ParticleVariable<double> pTotalDecay;
@@ -1616,6 +1642,7 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
         new_dw->transferFrom( old_dw, S->expDecayCoefLabel, patches, matls );
 
         const double c1 = S->c1;
+        const double c3 = S->c3;
 
         //__________________________________
         //
@@ -1633,7 +1660,7 @@ void TracerParticles::setParticleVars(const ProcessorGroup  *,
           }
           double exposure = c2[c] * delT;
           totalDecay[idx] = totalDecay_old[idx] + exposure;
-          s[idx]          = s_old[idx] * exp( -c1 * c2[c] * delT );
+          s[idx]          = s_old[idx] * exp( -(c1 * c2[c] + c3) * delT );
         }
       }
     }
