@@ -6365,7 +6365,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // triangle_ids[tmi][vecIdx] is the penetrated triangle
                 Vector tang = triMidToN0Vec[tmi][vecIdx]
                              /triMidToN0Vec[tmi][vecIdx].length();
-                fprintf(fp,"%i %i %i %i %ld %ld %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %i %8.6f %8.6f %8.6f\n",
+                fprintf(fp,"%i %i %i %i %ld %ld %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.ef %i %8.6e %8.6e %8.6e\n",
                 tmo, tmi, adv_matl0, adv_matl1,
                 triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
                 tx0[tmi][vecIdx].x(), tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
@@ -6525,7 +6525,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 if(m_output->isOutputTimeStep()){
                   Vector tang = triMidToN0Vec[tmi][vecIdx]
                                /triMidToN0Vec[tmi][vecIdx].length();
-                  fprintf(fp,"%i %i %i %i %ld %ld %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %8.6f %i %8.6f %8.6f %8.6f\n",
+                 fprintf(fp,"%i %i %i %i %ld %ld %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.ef %i %8.6e %8.6e %8.6e\n",
                  tmo, tmi, adv_matl0, adv_matl1,
                  triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
                  tx0[tmi][vecIdx].x(),tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
