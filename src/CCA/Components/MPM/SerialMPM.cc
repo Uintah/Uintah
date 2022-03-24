@@ -6381,6 +6381,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                  triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
                  iu, 0.5*totalArea,
                  triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
+                 fflush(fp);
               }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
@@ -6537,6 +6538,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                  triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
                  iu, 0.5*totalArea,
                  triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
+                 fflush(fp);
                 }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
@@ -6670,6 +6672,9 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     }
 #endif
     delete interpolator;
+    if(m_output->isOutputTimeStep()){
+      fclose(fp);
+    }
   } // patches
 }
 
