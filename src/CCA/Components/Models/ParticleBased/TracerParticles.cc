@@ -646,6 +646,8 @@ void TracerParticles::sched_restartInitializeHACK( SchedulerP   & sched,
 
 //______________________________________________________________________
 //    Task:  schedule restartInitialize
+//           Only execute this if the domain was not previously initialized
+//           or the user requests that the domain should be reinitialized
 void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
                                                 const LevelP & level)
 {
@@ -654,6 +656,10 @@ void TracerParticles::scheduleRestartInitialize(SchedulerP   & sched,
   //  if the user turned on the model in a checkpoint
   if( !d_previouslyInitialized ){
     scheduleInitialize( sched, level );
+    return;
+  }
+
+  if( !d_reinitializeDomain ){
     return;
   }
 

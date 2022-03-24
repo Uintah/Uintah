@@ -354,10 +354,11 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
     ProblemSpecP exp_ps = scalar_ps->appendChild( "exponentialDecay" );
     exp_ps->appendElement( "c1", d_scalar->c1 );
 
-    // The c2 coefficient type can be either a constant or read from a table
+                    // The c2 coefficient type can be either a constant or read from a table
     ProblemSpecP c2_ps = exp_ps->appendChild("c2");
 
-    if( d_decayCoef == variable){    // read c2 from table
+                    // read c2 from table
+    if( d_decayCoef == variable){    
       c2_ps->setAttribute( "type", "variable" );
       c2_ps->appendElement( "filename", d_scalar->c2_filename );
     }
@@ -365,9 +366,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
       c2_ps->setAttribute( "type", "constant" );
       c2_ps->appendElement( "value", d_scalar->c2 );
     }
-    c2_ps->appendElement( "c3", d_scalar->c3 );
+    exp_ps->appendElement( "c3", d_scalar->c3 );
   }
-
 
   //__________________________________
   //  initialization regions
