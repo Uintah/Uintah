@@ -6376,15 +6376,11 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 // triangle_ids[tmo][idx0] is the triangle that is penetrating
                 // iu is the vertex of the penetrating triangle
                 // triangle_ids[tmi][vecIdx] is the penetrated triangle
-                Vector tang = triMidToN0Vec[tmi][vecIdx]
-                             /triMidToN0Vec[tmi][vecIdx].length();
-                fprintf(fp,"%i %i %i %i %ld %ld %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.ef %i %8.6e %8.6e %8.6e\n",
-                tmo, tmi, adv_matl0, adv_matl1,
-                triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
-                tx0[tmi][vecIdx].x(), tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
-                triTriNormal[i].x(), triTriNormal[i].y(), triTriNormal[i].z(),
-                tang.x(), tang.y(), tang.z(), iu, 0.5*totalArea,
-                triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
+                 fprintf(fp,"%i %i %i %i %ld %ld %i %8.6e %8.6e %8.6e\n",
+                 tmo, tmi, adv_matl0, adv_matl1,
+                 triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
+                 iu, 0.5*totalArea,
+                 triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
               }
 
 //                cout << "triAreaAtNodes[" << tmo << "][" << idx0 << "][" << iu << "] = " << triAreaAtNodes[tmo][idx0][iu] << endl;
@@ -6536,14 +6532,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 totalContactAreaTri += 0.5*totalArea;
 
                 if(m_output->isOutputTimeStep()){
-                  Vector tang = triMidToN0Vec[tmi][vecIdx]
-                               /triMidToN0Vec[tmi][vecIdx].length();
-                 fprintf(fp,"%i %i %i %i %ld %ld %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.6e %8.ef %i %8.6e %8.6e %8.6e\n",
+                 fprintf(fp,"%i %i %i %i %ld %ld %i %8.6e %8.6e %8.6e\n",
                  tmo, tmi, adv_matl0, adv_matl1,
                  triangle_ids[tmo][idx0], triangle_ids[tmi][vecIdx],
-                 tx0[tmi][vecIdx].x(),tx0[tmi][vecIdx].y(),tx0[tmi][vecIdx].z(),
-                 triTriNormal[i].x(), triTriNormal[i].y(), triTriNormal[i].z(),
-                 tang.x(), tang.y(), tang.z(), iu, 0.5*totalArea,
+                 iu, 0.5*totalArea,
                  triAreaAtNodes[tmo][idx0][iu], triMassDisp[tmi][vecIdx]);
                 }
 
