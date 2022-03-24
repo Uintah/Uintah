@@ -1872,8 +1872,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
   if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, TriL->triMassDispLabel_preReloc,
-                                                       triangle_matls, gac, 2);
+    t->requires(Task::OldDW, TriL->triMassDispLabel,   triangle_matls, gac, 2);
   }
 
   t->requires(Task::NewDW, lb->gMassLabel,             mpm_matls,   gac,NGN+3);
@@ -6149,7 +6148,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
       if (flags->d_doingDissolution) {
-        new_dw->get(triMassDisp[tmo],  TriL->triMassDispLabel_preReloc,pset0);
+        old_dw->get(triMassDisp[tmo],  TriL->triMassDispLabel,        pset0);
       } else {
         ParticleVariable<double>   triMassDisp_tmp;
         new_dw->allocateTemporary(triMassDisp_tmp,  pset0);
