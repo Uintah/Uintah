@@ -44,7 +44,8 @@ CUDA_ENABLED_SRCS =              \
      BoundaryConditionsParabolic \
      BoundaryConditionsPowerLaw  \
      BoundaryConditionsGaussian \
-     BoundaryConditionsPrimvar 
+     BoundaryConditionsPrimvar \
+     BoundaryConditionsTimeLinear
 
 ifeq ($(HAVE_CUDA),yes)
 
