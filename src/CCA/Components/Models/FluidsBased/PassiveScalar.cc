@@ -343,7 +343,7 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   scalar_ps->setAttribute( "name", d_scalar->name );
 
   scalar_ps->appendElement( "test_conservation",  d_runConservationTask );
-  scalar_ps->appendElement( "reinitializeDomain", d_reinitializeDomain );
+  scalar_ps->appendElement( "reinitializeDomain", "false" );              // the user must manually override 
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
   const_ps->appendElement( "decayRate",                d_scalar->decayRate );

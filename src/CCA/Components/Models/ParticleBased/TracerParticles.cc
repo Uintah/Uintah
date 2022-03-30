@@ -472,7 +472,7 @@ void TracerParticles::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP tp_ps = model_ps->appendChild( "TracerParticles" );
 
   tp_ps->appendElement( "modelPreviouslyInitialized", d_previouslyInitialized );
-  tp_ps->appendElement("reinitializeDomain",          d_reinitializeDomain );
+  tp_ps->appendElement("reinitializeDomain",          "false" );                    // The user must manually overide in checkpoint
 
   tp_ps->appendElement( "material",  d_matl->getName() );
   tp_ps->appendElement( "timeStart", d_tracer->timeStart );
