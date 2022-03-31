@@ -202,6 +202,8 @@ public:
                                               ,       IntVector       low  = IntVector(0, 0, 0)
                                               ,       IntVector       high = IntVector(0, 0, 0)
                                               );
+                                              
+  virtual void deleteParticleSubset(  ParticleSubset*   pset );
 
   virtual void saveParticleSubset(       ParticleSubset * psubset
                                  ,       int              matlIndex
@@ -774,6 +776,14 @@ private:
                              );
 
   void insertPSetRecord(       psetDBType     & subsetDB
+                       , const Patch          * patch
+                       ,       IntVector        low
+                       ,       IntVector        high
+                       ,       int              matlIndex
+                       ,       ParticleSubset * psubset
+                       );
+                       
+  void deletePSetRecord(       psetDBType     & subsetDB
                        , const Patch          * patch
                        ,       IntVector        low
                        ,       IntVector        high

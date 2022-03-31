@@ -159,6 +159,9 @@ public:
                                                  int matlIndex, const Patch*,
                                                  IntVector low = IntVector(0,0,0),
                                                  IntVector high = IntVector(0,0,0) ) = 0;
+  
+  virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
+  
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),

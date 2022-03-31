@@ -223,7 +223,8 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
 
   if( exp_ps ) {
     d_withExpDecayModel = true;
-    exp_ps->require( "c1", d_scalar->c1);
+    exp_ps->require(        "c1", d_scalar->c1);
+    exp_ps->getWithDefault( "c3", d_scalar->c3, 0.0 );
 
     // The c2 coefficient type can be either a constant or read from a table
     ProblemSpecP c2_ps = exp_ps->findBlock("c2");
@@ -244,20 +245,31 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
     }
   }
 
-
   //__________________________________
   //  Read in all geometry objects in the <Material> node.
   //  They may be referenenced.
+
+  //__________________________________
+  //  Read in all geometry objects/pieces in the <Material> node of the ups file.
+  //  Needed since the user may referec
   if( d_reinitializeDomain ){
 
     ProblemSpecP root_ps = d_params->getRootNode();
     ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );
 
+    // find all of the geom_objects
     std::vector<ProblemSpecP> geom_objs = mat_ps->findBlocksRecursive("geom_object");
 
+    // create geom piece if needed
     for( size_t i=0; i<geom_objs.size(); i++){
-      vector<GeometryPieceP> pieces;
-      GeometryPieceFactory::create( geom_objs[i], pieces );
+
+      ProblemSpecP geo_obj_ps = geom_objs[i];
+
+      if( GeometryPieceFactory::geometryPieceExists( geo_obj_ps ) < 0 ){
+
+        vector<GeometryPieceP> pieces;
+        GeometryPieceFactory::create( geo_obj_ps, pieces );
+      }
     }
   }
 
@@ -331,7 +343,7 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   scalar_ps->setAttribute( "name", d_scalar->name );
 
   scalar_ps->appendElement( "test_conservation",  d_runConservationTask );
-  scalar_ps->appendElement( "reinitializeDomain", d_reinitializeDomain );
+  scalar_ps->appendElement( "reinitializeDomain", "false" );              // the user must manually override 
 
   ProblemSpecP const_ps = scalar_ps->appendChild( "constants" );
   const_ps->appendElement( "decayRate",                d_scalar->decayRate );
@@ -342,10 +354,11 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
     ProblemSpecP exp_ps = scalar_ps->appendChild( "exponentialDecay" );
     exp_ps->appendElement( "c1", d_scalar->c1 );
 
-    // The c2 coefficient type can be either a constant or read from a table
+                    // The c2 coefficient type can be either a constant or read from a table
     ProblemSpecP c2_ps = exp_ps->appendChild("c2");
 
-    if( d_decayCoef == variable){    // read c2 from table
+                    // read c2 from table
+    if( d_decayCoef == variable){    
       c2_ps->setAttribute( "type", "variable" );
       c2_ps->appendElement( "filename", d_scalar->c2_filename );
     }
@@ -353,8 +366,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
       c2_ps->setAttribute( "type", "constant" );
       c2_ps->appendElement( "value", d_scalar->c2 );
     }
+    exp_ps->appendElement( "c3", d_scalar->c3 );
   }
-
 
   //__________________________________
   //  initialization regions
@@ -391,7 +404,6 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 void PassiveScalar::readTable( const Patch * patch,
                                const Level * level,
                                const std::string filename,
-                               const double c1,
                                CCVariable<double>& c2 )
 {
   static int count=1;
@@ -401,10 +413,9 @@ void PassiveScalar::readTable( const Patch * patch,
     throw ProblemSetupException("ERROR: PassiveScalar::readTable: Unable to open the input file: " + filename, __FILE__, __LINE__);
   }
 
-  proc0cout_cmp(count, 1) << "________________________PassiveScalar\n"
-                          << "  Coefficient c1: " << c1 << "\n"
-                          << "  Reading in table ("<< filename <<") for variable coefficient c2\n"
-                          << "__________________________________\n";
+  proc0cout_cmp(patch->getID(), 0)
+        << "  Reading in table ("<< filename <<") for variable coefficient c2\n";
+
 
   string line;            // row from the file
   int fpos = ifs.tellg(); // file fposition
@@ -526,16 +537,29 @@ void PassiveScalar::initialize(const ProcessorGroup*,
     //__________________________________
     //  Initialize coefficient used in exponential decay model
     if( d_withExpDecayModel ){
+
+      int id = patch->getID();
+
+      proc0cout_cmp( id, 0)
+              << "________________________PassiveScalar\n"
+              << "  Coefficient c1: " << d_scalar->c1 << "\n";
+
       CCVariable<double> c2;
       new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
       c2.initialize(0.0);
 
       if (d_decayCoef == constant){
         c2.initialize( d_scalar->c2 );
+        proc0cout_cmp( id, 0)
+              << "  Coefficient c2: " << d_scalar->c2 << "\n";
       }
       else{
-        readTable( patch, level, d_scalar->c2_filename, d_scalar->c1, c2 );
+        readTable( patch, level, d_scalar->c2_filename, c2 );
       }
+
+       proc0cout_cmp( id, 0)
+              << "  Coefficient c3: " << d_scalar->c3 << "\n"
+              << "__________________________________\n";
     }
 
     //__________________________________
@@ -717,6 +741,12 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
     //  Initialize coefficient used in exponential decay model
     if( d_withExpDecayModel ){
       int indx = d_matl->getDWIndex();
+      int id   = patch->getID();
+
+      proc0cout_cmp( id, 0)
+              << "________________________PassiveScalar\n"
+              << "  Coefficient c1: " << d_scalar->c1 << "\n";
+              
 
       CCVariable<double> c2;
       new_dw->allocateAndPut(c2, d_scalar->expDecayCoefLabel, indx, patch);
@@ -724,10 +754,16 @@ void PassiveScalar::restartInitialize(const ProcessorGroup *,
 
       if (d_decayCoef == constant){
         c2.initialize( d_scalar->c2 );
+        proc0cout_cmp( id, 0)
+              << "  Coefficient c2: " << d_scalar->c2 << "\n";
       }
       else{
-        readTable( patch, level, d_scalar->c2_filename, d_scalar->c1, c2 );
+        readTable( patch, level, d_scalar->c2_filename, c2 );
       }
+      
+      proc0cout_cmp( id, 0)
+              << "  Coefficient c3: " << d_scalar->c3 << "\n"
+              << "__________________________________\n";
     }
   }
 }
@@ -880,17 +916,19 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       new_dw->transferFrom( old_dw, d_scalar->expDecayCoefLabel, patches, matls );
 
       const double c1 = d_scalar->c1;
+      const double c3 = d_scalar->c3;
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        f_src[c]  = f_old[c] * exp(-c1 * c2[c] * delT ) - f_old[c];
+        f_src[c]  = f_old[c] * exp(-(c1 * c2[c] + c3)* delT ) - f_old[c];
 #if 0
         if( c == IntVector(3,3,3) ){
           cout << " ExponentialDecay: " << d_scalar->fullName <<endl;
           cout << "\n f_old: " << f_old[c]
                << "\n c1:    " << c1
                << "\n c2[c]: " << c2[c]
-               << "\n exp(): " << exp (-c1 * c2[c] * delT )
+               << "\n c3:    " << c3
+               << "\n exp(): " << exp (-(c1 * c2[c] + c3) * delT )
                << "\n fsrc:  " << f_src[c] << endl;
         }
 #endif

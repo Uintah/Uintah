@@ -90,14 +90,17 @@
       <TracerParticles        spec="OPTIONAL NO_DATA">
         <modelPreviouslyInitialized
                               spec="OPTIONAL BOOLEAN"/>
+        <reinitializeDomain
+                              spec="OPTIONAL BOOLEAN"/> 
+       
         <material             spec="OPTIONAL STRING"/>
         
         <timeStart            spec="OPTIONAL DOUBLE 'positive'"/>
         <timeStop             spec="OPTIONAL DOUBLE 'positive'"/>
 
-        <newVariables         spec="OPTIONAL NO_DATA">
+        <cloneVariables         spec="OPTIONAL NO_DATA">
           <CCVarLabel         spec="MULTIPLE NO_DATA" attribute1="label REQUIRED STRING" />
-        </newVariables>
+        </cloneVariables>
 
         <scalar               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" > 
@@ -109,6 +112,7 @@
               <value          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>         
               <filename       spec="REQUIRED STRING"            need_applies_to="type variable"/>         
             </c2>
+            <c3               spec="OPTIONAL DOUBLE"/>
           </exponentialDecay>
         </scalar>
 
@@ -415,6 +419,7 @@
                                          attribute1="name REQUIRED STRING" >
 
           <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <reinitializeDomain          spec="OPTIONAL BOOLEAN"/>
 
           <constants                   spec="OPTIONAL NO_DATA" >
             <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
@@ -429,6 +434,7 @@
               <value                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constant"/>
               <filename                spec="REQUIRED STRING"            need_applies_to="type variable"/>
             </c2>
+            <c3                        spec="OPTIONAL DOUBLE"/>
           </exponentialDecay>
 
           <initialization              spec="REQUIRED NO_DATA" >

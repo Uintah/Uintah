@@ -1183,6 +1183,27 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex   numParticles
 
   return psubset;
 }
+//______________________________________________________________________
+//  Delete the particle subset from the 
+void
+OnDemandDataWarehouse::deleteParticleSubset( ParticleSubset*  pset )
+{
+  IntVector low        = pset->getLow();
+  IntVector high       = pset->getHigh();
+  const Patch*  patch  = pset->getPatch();
+  int matlIndex        = pset->getMatlIndex();
+
+  if (g_dw_get_put_dbg.active()) {
+    std::stringstream mesg;
+    mesg << " DW ID " << getID() << " deleteParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+         << " (" << low << ", " << high << ") size: " << pset->numParticles() << "\n";
+    DOUTR(true, mesg.str());
+  }
+
+  ASSERT(!patch->isVirtual());
+
+  deletePSetRecord( m_pset_db, patch, low, high, matlIndex, pset );
+}
 
 //______________________________________________________________________
 //
@@ -1260,6 +1281,41 @@ OnDemandDataWarehouse::insertPSetRecord(       psetDBType     & subsetDB
     psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
     subsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, psubset));
     psubset->addReference();
+  }
+}
+//______________________________________________________________________
+//    Delete a particleSubset record from the data base
+void
+OnDemandDataWarehouse::deletePSetRecord(       psetDBType     & subsetDB
+                                       , const Patch          * patch
+                                       ,       IntVector        low
+                                       ,       IntVector        high
+                                       ,       int              matlIndex
+                                       ,       ParticleSubset * psubset
+                                       )
+{
+
+#if SCI_ASSERTION_LEVEL >= 1
+  ParticleSubset* subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
+  if (subset == nullptr) {
+    if (d_myworld->myRank() == 0) {
+      DOUTR( true, "  No particle set found: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high );
+      printParticleSubsets();
+    }
+    SCI_THROW(InternalError("Particle set was not found for deletiion", __FILE__, __LINE__));
+  }
+#endif
+
+  {
+    psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
+
+    psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
+    
+    subsetDB.erase(key);
+
+    if(psubset && psubset->removeReference()) {
+      delete psubset;
+    }
   }
 }
 //______________________________________________________________________

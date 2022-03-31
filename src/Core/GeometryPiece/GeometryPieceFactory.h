@@ -44,9 +44,12 @@ namespace Uintah {
                                     std::vector<GeometryPieceP>& objs);
 
     // Clears out the saved geometry piece information...  In theory, this should
-    // only be called by (and necessary for) the Switcher component (and only if 
+    // only be called by (and necessary for) the Switcher component (and only if
     // a component that is being switched to happens to be a 'copy' of a previous component).
     static void resetFactory();
+
+    // does the geometry piece already exist in the map
+    static int geometryPieceExists( const ProblemSpecP & ps, const bool isTopLevel=true );
 
     // Runs through all the GeometryPiece that have been created and
     // sets their flag for first time output.  This should be done at
@@ -54,7 +57,7 @@ namespace Uintah {
     static void resetGeometryPiecesOutput();
 
     /*
-     *  \brief Returns a map of all the named geometry pieces. This maps the geometry name to the 
+     *  \brief Returns a map of all the named geometry pieces. This maps the geometry name to the
      GeometryPiece.
      */
     const static std::map<std::string,GeometryPieceP>& getNamedGeometryPieces();
@@ -64,9 +67,9 @@ namespace Uintah {
      pre-processing step.
      */
     static void findInsidePoints(const Uintah::Patch* const patch);
-    
+
     /*
-     *  \brief Finds and returns a reference to a vector that contains the points inside the 
+     *  \brief Finds and returns a reference to a vector that contains the points inside the
      geomPieceName on the specified patch. The points are of type Uintah::Point.
      If no points are found, then an empty vector is store. If points were already
      found by previous call, then this returns a reference to the points that were already found
@@ -99,7 +102,7 @@ namespace Uintah {
      */
     static bool foundInsidePoints(const std::string geomName, const int patchID);
   };
-  
+
 } // End namespace Uintah
 
 #endif /* __GEOMETRY_PIECE_FACTORY_H__ */

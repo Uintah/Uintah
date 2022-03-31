@@ -147,8 +147,8 @@
 
       <save label="p.x"/>
       <save label="p.displacement"/>
-      <save label="p.scalar-f"/>
-      <save label="p.press_CC"/>
+      <save label="p.clone-scalar-f"/>
+      <save label="p.clone-press_CC"/>
 
       <save label="totalSum_scalar-f"/>
 
@@ -347,10 +347,10 @@
         <TracerParticles>
           <material>atmosphere</material>
           
-          <newVariables>
+          <cloneVariables>
             <CCVarLabel label="scalar-f"/>
             <CCVarLabel label="press_CC"/>
-          </newVariables>
+          </cloneVariables>
           
           <tracer name="f">
             <initialization>
