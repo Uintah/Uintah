@@ -5459,9 +5459,11 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
         }   // loop over nodes returned by interpolator
         for (set<IntVector>::iterator it1 = nodeList.begin();
                                       it1!= nodeList.end();  it1++){
-          ParticleList[m][*it1][ParticleList[m][*it1][399]]=idx;
-          ParticleList[m][*it1][399]++;
-          NumParticlesOnNode[*it1]++;
+          if(ParticleList[m][*it1][399] < 399){
+            ParticleList[m][*it1][ParticleList[m][*it1][399]]=idx;
+            ParticleList[m][*it1][399]++;
+            NumParticlesOnNode[*it1]++;
+          }
         }
         nodeList.clear();
       }    // Loop over Particles
