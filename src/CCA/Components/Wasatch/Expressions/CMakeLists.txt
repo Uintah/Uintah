@@ -9,6 +9,7 @@ add_subdirectory( TarAndSoot )
 add_subdirectory( Turbulence )
 
 set( WASATCH_SRC ${WASATCH_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorDisk.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/BasicExprBuilder.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/CellType.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/ConvectiveFlux.cc

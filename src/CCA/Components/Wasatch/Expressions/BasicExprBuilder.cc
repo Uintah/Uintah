@@ -42,6 +42,7 @@
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/GeometryBased.h>
 #include <CCA/Components/Wasatch/Expressions/FanModel.h>
+#include <CCA/Components/Wasatch/Expressions/ActuatorDisk.h>
 #include <CCA/Components/Wasatch/Expressions/TargetValueSource.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
@@ -954,6 +955,16 @@ namespace WasatchCore{
       typedef typename LinearBC<FieldT>::Builder Builder;
       builders.push_back( scinew Builder( tag, indepVarTag, slope, intercept ) );
     }
+
+    else if( params->findBlock("LinearFunctionTime") ){
+      double slope, intercept;
+      Uintah::ProblemSpecP valParams = params->findBlock("LinearFunctionTime");
+      valParams->getAttribute("slope",slope);
+      valParams->getAttribute("intercept",intercept);
+      const Expr::Tag ttag =  parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename TimeLinearBC<FieldT>::Builder Builder;
+      builders.push_back( scinew Builder( tag, ttag, slope, intercept ) );
+    }
     
     else if( params->findBlock("ParabolicFunction") ){
       double a=0.0, b=0.0, c=0.0, x0=0.0, h=0.0;
@@ -1260,6 +1271,95 @@ namespace WasatchCore{
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
       }
     }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++
+    // parse and build Actuator Disk Models
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("ActuatorDisk");
+        exprParams != nullptr;
+        exprParams = exprParams->findNextBlock("ActuatorDisk") ){
+
+      // get the name of this fan model
+      std::string fanName;
+      exprParams->getAttribute("name",fanName);
+
+      // get payload information
+      double payload = 0.0;
+      int numRotors = 0;
+      double radius = 0.0;
+      exprParams->getAttribute("payload", payload);
+      exprParams->getAttribute("rotors", numRotors);
+      exprParams->getAttribute("radius",radius); 
+      
+      // get the the thrust direction (only supports hover)
+      std::vector<double> thrustDirection;
+      exprParams->get("ThrustDirection", thrustDirection);
+
+      
+      // now obtain all relevant momentum names and tags so that we can add the fan source accordingly
+      Uintah::ProblemSpecP momentumSpec  = parser->findBlock("MomentumEquations");
+      std::string xmomname, ymomname, zmomname;
+      const Uintah::ProblemSpecP doxmom = momentumSpec->get( "X-Momentum", xmomname );
+      const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
+      const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
+
+      // get the geometry of the fan
+      std::multimap <Uintah::GeometryPieceP, double > geomObjectsMap;
+      double outsideValue = 0.0;
+      std::vector<Uintah::GeometryPieceP> geomObjects;
+      Uintah::GeometryPieceFactory::create(exprParams->findBlock("geom_object"),geomObjects);
+      double insideValue = 1.0;
+      geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue)); // set a value inside the geometry object
+      
+      const TagNames tNames = TagNames::self();
+      OldVariable& oldVar = OldVariable::self();
+      
+      if( doxmom ){
+        typedef XVolField FieldT;
+        const double thrustdir = thrustDirection[0];
+        // declare fan source term tag
+        const Expr::Tag fanSourceTag(fanName + "_source_x", Expr::STATE_NONE);
+        
+        // now create an XVOL geometry expression using GeometryBased
+        const Expr::Tag volFracTag(fanName+"_location_x",Expr::STATE_NONE);
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
+        
+        // now create the xmomentum source term
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename ActuatorDisk<FieldT>::Builder(fanSourceTag, volFracTag, payload, numRotors, thrustdir, radius));
+        
+      }
+      
+      if( doymom ){
+        typedef YVolField FieldT;
+        const double thrustdir =thrustDirection[1];
+
+        // declare fan source term tag
+        const Expr::Tag fanSourceTag(fanName + "_source_y", Expr::STATE_NONE);
+        
+        // now create a YVOL geometry expression using GeometryBased
+        const Expr::Tag volFracTag(fanName+"_location_y",Expr::STATE_NONE);
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
+        
+        // now create the ymomentum source term
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename ActuatorDisk<FieldT>::Builder(fanSourceTag, volFracTag, payload, numRotors, thrustdir, radius));
+        
+      }
+      
+      if( dozmom ){
+        typedef ZVolField FieldT;
+        const double thrustdir =thrustDirection[2];
+        // declare fan source term tag
+        const Expr::Tag fanSourceTag(fanName + "_source_z", Expr::STATE_NONE);
+        
+        // now create a ZVOL geometry expression using GeometryBased
+        const Expr::Tag volFracTag(fanName+"_location_z",Expr::STATE_NONE);
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
+        
+        // now create the zmomentum source term
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename ActuatorDisk<FieldT>::Builder(fanSourceTag, volFracTag, payload, numRotors, thrustdir, radius));
+        
+      }
+    }
+
 
     //________________________________________
     // parse and build TargetValueSource Models
