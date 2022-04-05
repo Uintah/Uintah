@@ -41,6 +41,7 @@ CUDA_ENABLED_SRCS :=      \
      Dilatation           \
      ExprAlgebra          \
      FanModel             \
+     ActuatorDisk         \
      MomentumPartialRHS   \
      MomentumRHS          \
      MonolithicRHS        \

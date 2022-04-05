@@ -119,6 +119,45 @@ namespace WasatchCore{
     void evaluate();
   };
 
+//------------------------------------------------------------------------------------------------
+  template< typename FieldT >
+  class TimeLinearBC : public BoundaryConditionBase<FieldT>
+  {
+    typedef typename SpatialOps::SingleValueField TimeField;
+
+    DECLARE_FIELD(TimeField, t_)
+    const double a_, b_;
+
+    TimeLinearBC( const Expr::Tag& ttag,
+                  const double a,
+                  const double b )
+    : a_(a), b_(b)
+    {
+      t_ = this->template create_field_request<TimeField>(ttag);
+      this->set_gpu_runnable(true);
+    }
+  public:
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::Tag ttag_;
+      const double a_, b_;
+    public:
+      Builder( const Expr::Tag& resultTag,
+               const Expr::Tag& ttag,
+               const double a,
+               const double b )
+    : ExpressionBuilder(resultTag),
+      ttag_(ttag),
+      a_(a), b_(b)
+    {}
+      inline Expr::ExpressionBase* build() const{ return new TimeLinearBC(ttag_, a_, b_); }
+    };
+
+    ~TimeLinearBC(){};
+    void evaluate();
+
+  };
+
   //-------------------------------------------------------------------------------------------------
   /**
    *  \class 	ParabolicBC
@@ -700,7 +739,7 @@ namespace WasatchCore{
 #define APPLY_CONSTANT_BC(f, BCVALUE)                                                              \
   {                                                                                               \
   if( this->isStaggeredNormal_ && this->bcTypeEnum_ != WasatchCore::NEUMANN ){                            \
-    masked_assign ( STAGGERED_MASK, f, bcValue_ );                                              \
+    masked_assign ( STAGGERED_MASK, f, BCVALUE );                                              \
   } else {                                                                                      \
     if (this->setInExtraCellsOnly_)                                                             \
     {                                                                                           \
