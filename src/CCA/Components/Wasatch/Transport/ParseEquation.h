@@ -104,14 +104,16 @@ namespace WasatchCore{
   std::vector<EqnTimestepAdaptorBase*>
   parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters turbParams,
-                            const bool useAdaptiveDt,
+                            const bool useStabledt,
                             const bool doParticles,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
                             Uintah::MaterialManagerP& materialManager,
                             WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
-                            std::set<std::string>& persistentFields );
+                            std::set<std::string>& persistentFields,
+                           const std::string timeIntegratorName,
+                           std::list<std::string>& stableTimestepNames);
 
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,

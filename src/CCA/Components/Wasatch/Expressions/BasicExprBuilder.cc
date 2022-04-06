@@ -1557,6 +1557,29 @@ namespace WasatchCore{
             builder = scinew Builder(tag, srcTag);
             break;
           }
+          case SVOL : {
+            
+            switch( get_field_type(fieldType) ){ // this is the destination field type of the postprocessing expresion
+              case XVOL : {
+                typedef InterpolateExpression<SVolField, XVolField>::Builder Builder;
+                builder = scinew Builder(tag, srcTag);
+                break;
+              }
+            
+              case YVOL : {
+                typedef InterpolateExpression<SVolField, YVolField>::Builder Builder;
+                builder = scinew Builder(tag, srcTag);
+                break;
+              }
+              case ZVOL : {
+                typedef InterpolateExpression<SVolField, ZVolField>::Builder Builder;
+                builder = scinew Builder(tag, srcTag);
+                break;
+              }
+            }
+            break;
+          }
+
           case PARTICLE : {
             typedef InterpolateParticleExpression<SVolField>::Builder Builder;
             Uintah::ProblemSpecP pInfoSpec = valParams->findBlock("ParticleInfo");

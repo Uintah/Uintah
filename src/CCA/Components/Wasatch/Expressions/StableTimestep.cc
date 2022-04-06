@@ -2,7 +2,7 @@
 //  StableTimestep.cc
 //  uintah-xcode-aurora
 //
-//  Created by Tony Saad on 6/10/13.
+//  Created by Tony Saad on 6/18/13.
 //
 //
 
@@ -32,7 +32,8 @@ StableTimestep( const Expr::Tag& rhoTag,
             const Expr::Tag& puTag,
             const Expr::Tag& pvTag,
             const Expr::Tag& pwTag,
-            const Expr::Tag& csoundTag)
+            const Expr::Tag& csoundTag,
+            const std::string timeIntegratorName)
 : Expr::Expression<SpatialOps::SingleValueField>(),
   invDx_(1.0),
   invDy_(1.0),
@@ -43,7 +44,8 @@ StableTimestep( const Expr::Tag& rhoTag,
   isViscous_( viscTag != Expr::Tag() ),
   doParticles_(puTag != Expr::Tag() && pvTag != Expr::Tag() && pwTag != Expr::Tag() ),
   isCompressible_(csoundTag != Expr::Tag()),
-  is3dconvdiff_( doX_ && doY_ && doZ_ && isViscous_ )
+  is3dconvdiff_( doX_ && doY_ && doZ_ && isViscous_ ),
+  timeIntegratorName_(timeIntegratorName)
 {
   rho_ = create_field_request<SVolField>(rhoTag);
   if (isViscous_)  visc_ = create_field_request<SVolField>(viscTag);
@@ -116,30 +118,69 @@ evaluate()
   SVolField& c = *c_;
   if(isCompressible_) c <<= abs(csound_->field_ref());
   else c <<= 0.0;
-  
-  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
-  if (!doX_) *tmp <<= 0.0;
-  if (doX_)  *tmp <<=        ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) * invDx_ + *kinVisc_ * invDx_ * invDx_; // u/dx + nu/dx2
-  if (doY_)  *tmp <<= *tmp + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) * invDy_ + *kinVisc_ * invDy_ * invDy_; // v/dy + nu/dy2
-  if (doZ_)  *tmp <<= *tmp + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) * invDz_ + *kinVisc_ * invDz_ * invDz_; // w/dz + nu/dz2
-  *tmp <<= 1.0 / *tmp;
-  if (doParticles_) {
-    SpatialOps::SpatFldPtr<SingleValueField> minPDt_ = SpatialOps::SpatialFieldStore::get<SingleValueField>( result ); // particle dt
-    SingleValueField& minPDt = *minPDt_;
-  
-    SpatialOps::SpatFldPtr<ParticleField> tmpP = SpatialOps::SpatialFieldStore::get<ParticleField>( pu_->field_ref() );
-    if (!doX_) *tmpP <<= 0.0;
-    if (doX_)  *tmpP <<=         abs(pu_->field_ref()) * invDx_; // u_particle/dx
-    if (doY_)  *tmpP <<= *tmpP + abs(pv_->field_ref()) * invDy_; // v_particle/dy
-    if (doZ_)  *tmpP <<= *tmpP + abs(pw_->field_ref()) * invDz_; // w_particle/dz
     
-    *tmpP <<= 1.0 / *tmpP;
-    
-    minPDt <<= field_min(*tmpP);
-    result <<= min( minPDt, field_min_interior(*tmp) );
-  } else {
-    result <<= field_min_interior(*tmp);
+  const double dx = 1.0/invDx_;
+  const double dy = 1.0/invDy_;
+  const double dz = 1.0/invDz_;
+  
+  //----------------------------------------------------------------------
+
+  // computing the timestep based on the inner and outer rules for central adavection and central diffusion.
+  //----------------------------------------------------------------------
+  
+  
+  SpatialOps::SpatFldPtr<SVolField> innerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  SpatialOps::SpatFldPtr<SVolField> outerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  // inner rule:
+  // Inner Rule
+  if (!doX_) *innerdt <<= 0.0;
+  if (doX_)  *innerdt <<=             *kinVisc_ / dx / dx;
+  if (doY_)  *innerdt <<= *innerdt +  *kinVisc_ / dy / dy;
+  if (doZ_)  *innerdt <<= *innerdt +  *kinVisc_ / dz / dz;
+
+  if (timeIntegratorName_ == "FE") {
+    *innerdt <<= 0.5 / *innerdt;
+
+    // Outer Rule
+    if (!doX_) *outerdt <<= 0.0;
+    if (doX_)  *outerdt <<=        ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) * ( (*x2SInterp_)( abs(u_->field_ref()) ) + c );
+    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) * ( (*y2SInterp_)( abs(v_->field_ref()) ) + c );
+    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) * ( (*z2SInterp_)( abs(w_->field_ref()) ) + c );
+    *outerdt <<= 2.0 * *kinVisc_ / *outerdt;
+  } else if (timeIntegratorName_ == "RK2SSP") {
+    // Inner Rule
+    *innerdt <<= 0.5 / *innerdt;
+
+    // Outer Rule
+    if (!doX_) *outerdt <<= 0.0;
+    if (doX_)  *outerdt <<=       0.420168*( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx * pow( ((*x2SInterp_)( abs(u_->field_ref())) + c ) * dx / *kinVisc_, 1.0/3.0);
+    if (doY_)  *outerdt <<= *outerdt + 0.420168*( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) /dy * pow( ((*y2SInterp_)( abs(v_->field_ref())) + c ) * dy / *kinVisc_, 1.0/3.0);
+    if (doZ_)  *outerdt <<= *outerdt + 0.420168*( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) /dz * pow( ((*z2SInterp_)( abs(w_->field_ref())) + c ) * dz / *kinVisc_, 1.0/3.0);
+    *outerdt <<= 1.0 / *outerdt;
+  }else if (timeIntegratorName_ == "RK3SSP") {
+    // Inner Rule
+    *innerdt <<= 0.628931 / *innerdt;
+
+    // Outer Rule
+    if (!doX_) *outerdt <<= 0.0;
+    if (doX_)  *outerdt <<=            ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) * invDx_;
+    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) * invDy_;
+    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) * invDz_;
+    *outerdt <<= 1.732 / *outerdt;
   }
+  
+  SpatialOps::SpatFldPtr<SingleValueField> tmp = SpatialOps::SpatialFieldStore::get<SingleValueField>( result );
+
+  *tmp <<= 333333333.0;
+  *tmp <<= field_min_interior(*outerdt);
+  const double dtouter = (*tmp)[0];
+  SpatialOps::SpatFldPtr<SVolField> minInnerField = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  
+  *tmp <<= 999999999.0;
+  *tmp <<= field_min_interior(*innerdt);
+  const double dtinner = (*tmp)[0];
+  result <<= min(*tmp, field_min_interior(*outerdt));
+
 //  }
 }
 
@@ -155,7 +196,8 @@ Builder::Builder( const Expr::Tag& resultTag,
                  const Expr::Tag& puTag,
                  const Expr::Tag& pvTag,
                  const Expr::Tag& pwTag,
-                 const Expr::Tag& csoundTag)
+                 const Expr::Tag& csoundTag,
+                 const std::string timeIntegratorName)
 : ExpressionBuilder( resultTag ),
 rhoTag_( rhoTag ),
 viscTag_( viscTag ),
@@ -165,7 +207,8 @@ wTag_( wTag ),
 puTag_(puTag),
 pvTag_(pvTag),
 pwTag_(pwTag),
-csoundTag_(csoundTag)
+csoundTag_(csoundTag),
+timeIntegratorName_(timeIntegratorName)
 {}
 
 //--------------------------------------------------------------------
@@ -174,7 +217,7 @@ Expr::ExpressionBase*
 StableTimestep<Vel1T,Vel2T,Vel3T>::
 Builder::build() const
 {
-  return new StableTimestep( rhoTag_,viscTag_,uTag_,vTag_,wTag_, puTag_, pvTag_, pwTag_, csoundTag_ );
+  return new StableTimestep( rhoTag_,viscTag_,uTag_,vTag_,wTag_, puTag_, pvTag_, pwTag_, csoundTag_, timeIntegratorName_ );
 }
 
 //==========================================================================

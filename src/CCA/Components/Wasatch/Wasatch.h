@@ -292,6 +292,8 @@ namespace WasatchCore{
     void disable_wasatch_material(){ buildWasatchMaterial_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
+    bool useStabledt_;
+    std::list<std::string>& stable_timestep_names(){return stableTimestepNames_;}
     const std::set<std::string>& persistent_fields() const{ return persistentFields_; }
     std::set<std::string>& persistent_fields(){ return persistentFields_; }
     
@@ -363,7 +365,7 @@ namespace WasatchCore{
 
     std::list< const TaskInterface*  > taskInterfaceList_;
     std::map< int, const Uintah::PatchSet* > patchesForOperators_;
-
+    std::list<std::string> stableTimestepNames_;
     static FlowTreatment flowTreatment_;
     static bool needPressureSolve_;
     static bool hasDualTime_;

@@ -39,7 +39,7 @@ namespace WasatchCore{
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
                                       const bool useAdaptiveDt,
-                                      GraphCategories& gc );
+                                      GraphCategories& gc, std::string timeIntegratorName );
 
 }// namespace WasatchCore
 

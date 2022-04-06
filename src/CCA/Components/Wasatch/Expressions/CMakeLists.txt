@@ -43,5 +43,8 @@ set( WASATCH_SRC ${WASATCH_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/TargetValueSource.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/TestNestedExpression.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/TimeAdvance.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/CourantNumber.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/CellReynoldsNumber.cc                
+        ${CMAKE_CURRENT_SOURCE_DIR}/StableTimestepForEq.cc                        
         PARENT_SCOPE
     )

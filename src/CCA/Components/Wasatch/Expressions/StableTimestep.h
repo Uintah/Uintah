@@ -28,7 +28,7 @@ class StableTimestep
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
   const bool doX_, doY_, doZ_, isViscous_, doParticles_, isCompressible_;
   const bool is3dconvdiff_;
-  
+  const std::string timeIntegratorName_;
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, SVolField >::type X2SOpT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, SVolField >::type Y2SOpT;
@@ -53,7 +53,8 @@ class StableTimestep
               const Expr::Tag& puTag,
               const Expr::Tag& pvTag,
               const Expr::Tag& pwTag,
-              const Expr::Tag& csoundTag);
+              const Expr::Tag& csoundTag,
+              const std::string timeIntegratorName);
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -71,12 +72,14 @@ public:
              const Expr::Tag& puTag,
              const Expr::Tag& pvTag,
              const Expr::Tag& pwTag,
-             const Expr::Tag& csoundTag);
+             const Expr::Tag& csoundTag,
+             const std::string timeIntegratorName);
 
     Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, puTag_, pvTag_, pwTag_, csoundTag_;
+    const std::string timeIntegratorName_;
   };
 
   ~StableTimestep();

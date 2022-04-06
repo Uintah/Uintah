@@ -53,7 +53,8 @@ namespace WasatchCore{
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
                                       const bool useAdaptiveDt,
-                                      GraphCategories& gc )
+                                      GraphCategories& gc,
+                                     const std::string timeIntegratorName)
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -259,6 +260,7 @@ namespace WasatchCore{
     //
     // ADD ADAPTIVE TIMESTEPPING in case it was not parsed in the momentum equations
     if( useAdaptiveDt ){
+      proc0cout << "Warning: Adaptive Timestepping is currently not working in Wasatch simulations with particles. Please choose a fixed timestep size.";
       // if no stabletimestep expression has been registered, then register one. otherwise return.
       if( !factory.have_entry(TagNames::self().stableTimestep) ){
 
@@ -286,12 +288,12 @@ namespace WasatchCore{
         if (isCompressible){
           stabDtID = factory.register_expression(scinew StableTimestep<SVolField,SVolField,SVolField>::Builder( TagNames::self().stableTimestep,
                                                                                                                                         densityTag, viscTag,
-                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, TagNames::self().soundspeed ),true );
+                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, TagNames::self().soundspeed, timeIntegratorName ),true );
         } else {
           const Expr::Tag soundspeedTag = isCompressible ? TagNames::self().soundspeed : Expr::Tag();
           stabDtID = factory.register_expression(scinew StableTimestep<XVolField,YVolField,ZVolField>::Builder( TagNames::self().stableTimestep,
                                                                                                                                         densityTag, viscTag,
-                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, Expr::Tag() ),true );
+                                                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, Expr::Tag(), timeIntegratorName ),true );
           
         }
                                             
@@ -307,10 +309,10 @@ namespace WasatchCore{
   //----------------------------------------------------------------------------
   // explicit template instantiation
   template std::vector<EqnTimestepAdaptorBase*>
-  parse_particle_transport_equations<SVolField,SVolField,SVolField>( Uintah::ProblemSpecP, Uintah::ProblemSpecP, const bool, GraphCategories& );
+  parse_particle_transport_equations<SVolField,SVolField,SVolField>( Uintah::ProblemSpecP, Uintah::ProblemSpecP, const bool, GraphCategories&, const std::string timeIntegratorName );
 
   template std::vector<EqnTimestepAdaptorBase*>
-  parse_particle_transport_equations<XVolField,YVolField,ZVolField>( Uintah::ProblemSpecP, Uintah::ProblemSpecP, const bool, GraphCategories& );
+  parse_particle_transport_equations<XVolField,YVolField,ZVolField>( Uintah::ProblemSpecP, Uintah::ProblemSpecP, const bool, GraphCategories&, const std::string timeIntegratorName );
   //----------------------------------------------------------------------------
 
 }// namespace WasatchCore
