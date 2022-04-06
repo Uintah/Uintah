@@ -1,5 +1,18 @@
 <Uintah_Include>
 
+   <ParticleBC     spec="OPTIONAL NO_DATA" children1="ONE_OF(CHILD Wall, Inlet)">
+     <!-- spec for particle wall boundary -->
+     <Wall                   spec="OPTIONAL NO_DATA" attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+       <Restitution          spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+     </Wall>
+
+     <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+     <Inlet                  spec="OPTIONAL NO_DATA">
+       <ParticlesPerSecond   spec="OPTIONAL DOUBLE"/>
+     </Inlet>
+   </ParticleBC>
+
+
   <CommonTags>
     <!-- 
         Re-opening the Uintah CommonTags block to add in some tags
@@ -1106,6 +1119,7 @@
       <ConvectiveInterpMethod  spec="OPTIONAL NO_DATA"
                               attribute1="method REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE, CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" />
       <ComputeMassResidual    spec="OPTIONAL NO_DATA" />
+      <ComputeCourantNumbers  spec="OPTIONAL NO_DATA" />      
       <ComputeKE              spec="OPTIONAL NO_DATA"
                               attribute1="total OPTIONAL BOOLEAN"
                               attribute2="output OPTIONAL BOOLEAN" />

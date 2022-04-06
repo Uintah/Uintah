@@ -1,21 +1,20 @@
-#ifndef StableTimestep_Expr_h
-#define StableTimestep_Expr_h
+#ifndef StableTimestepForEq_Expr_h
+#define StableTimestepForEq_Expr_h
 
 #include <expression/Expression.h>
 #include <spatialops/structured/FVStaggered.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 /**
- *  \class 	StableTimestep
+ *  \class 	StableTimestepForEq
  *  \author 	Tony Saad
- *  \date 	 June 2013
+ *  \date 	 March 2022
  *  \ingroup	Expressions
  *
- *  \brief Calculates a stable timestep based on the momemntum equations using
- common CFD criteria.
+ *  \brief Calculates a stable timestep for each transport equation. These stable timesteps are subsequently collected and the min is taken at the end.
  *
  */
 template< typename Vel1T, typename Vel2T, typename Vel3T >
-class StableTimestep
+class StableTimestepForEq
  : public Expr::Expression<SpatialOps::SingleValueField>
 {
   typedef SVolField FieldT;
@@ -26,7 +25,7 @@ class StableTimestep
   DECLARE_FIELDS(ParticleField, pu_, pv_, pw_)
 
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
-  const bool doX_, doY_, doZ_, isViscous_, doParticles_, isCompressible_;
+  const bool doX_, doY_, doZ_, isViscous_, isCompressible_;
   const bool is3dconvdiff_;
   const std::string timeIntegratorName_;
   
@@ -45,14 +44,11 @@ class StableTimestep
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
 
-  StableTimestep( const Expr::Tag& rhoTag,
+  StableTimestepForEq( const Expr::Tag& rhoTag,
               const Expr::Tag& viscTag,
               const Expr::Tag& uTag,
               const Expr::Tag& vTag,
               const Expr::Tag& wTag,
-              const Expr::Tag& puTag,
-              const Expr::Tag& pvTag,
-              const Expr::Tag& pwTag,
               const Expr::Tag& csoundTag,
               const std::string timeIntegratorName);
 public:
@@ -69,22 +65,19 @@ public:
              const Expr::Tag& uTag,
              const Expr::Tag& vTag,
              const Expr::Tag& wTag,
-             const Expr::Tag& puTag,
-             const Expr::Tag& pvTag,
-             const Expr::Tag& pwTag,
              const Expr::Tag& csoundTag,
              const std::string timeIntegratorName);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, puTag_, pvTag_, pwTag_, csoundTag_;
+    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, csoundTag_;
     const std::string timeIntegratorName_;
   };
 
-  ~StableTimestep();
+  ~StableTimestepForEq();
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
-#endif // StableTimestep_Expr_h
+#endif // StableTimestepForEq_Expr_h

@@ -56,6 +56,9 @@
 //-- includes for the expressions built here --//
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
+#include <CCA/Components/Wasatch/Expressions/StableTimestepForEq.h>
+#include <CCA/Components/Wasatch/Expressions/CourantNumber.h>
+#include <CCA/Components/Wasatch/Expressions/CellReynoldsNumber.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
@@ -623,14 +626,16 @@ namespace WasatchCore{
   std::vector<EqnTimestepAdaptorBase*>
   parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters turbParams,
-                            const bool useAdaptiveDt,
+                            const bool useStabledt,
                             const bool doParticles,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
                             Uintah::MaterialManagerP& materialManager,
                             WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
-                            std::set<std::string>& persistentFields )
+                            std::set<std::string>& persistentFields,
+                            const std::string timeIntegratorName,
+                            std::list<std::string>& stableTimestepNames)
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -905,7 +910,7 @@ namespace WasatchCore{
 
     //
     // ADD ADAPTIVE TIMESTEPPING
-    if( useAdaptiveDt ){
+    if( useStabledt ){
       const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
@@ -922,22 +927,60 @@ namespace WasatchCore{
         pvTag = Expr::Tag(pvname,Expr::STATE_DYNAMIC);
         pwTag = Expr::Tag(pwname,Expr::STATE_DYNAMIC);
       }
+      
       Expr::ExpressionID stabDtID;
+      std::string stbldtMom = "dtMomentum";
+      stableTimestepNames.push_back(stbldtMom);
+      
       if (isCompressible) {
-        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep<SVolField,SVolField,SVolField>::Builder( TagNames::self().stableTimestep,
+        
+        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<SVolField,SVolField,SVolField>::Builder( Expr::Tag(stbldtMom,Expr::STATE_NONE),
                                                                                                                                                             densityTag,
                                                                                                                                                             viscTag,
-                                                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, TagNames::self().soundspeed ), true);
+                                                                                                                                                            xVelTag,yVelTag,zVelTag, TagNames::self().soundspeed, timeIntegratorName ), true);
 
       } else {
-        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep<XVolField,YVolField,ZVolField>::Builder( TagNames::self().stableTimestep,
+        stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<XVolField,YVolField,ZVolField>::Builder( Expr::Tag(stbldtMom,Expr::STATE_NONE),
                                                                                                                                                             densityTag,
                                                                                                                                                             viscTag,
-                                                                                                                                                            xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag, Expr::Tag() ), true);
+                                                                                                                                                            xVelTag,yVelTag,zVelTag, Expr::Tag(),timeIntegratorName ), true);
+        
 
       }
       // force this onto the graph.
       solnGraphHelper->rootIDs.insert( stabDtID );
+
+      
+      if( momentumSpec->findBlock("ComputeCourantNumbers") ){
+        if (doxvel) {
+          Expr::ExpressionID CrxID =solnGraphHelper->exprFactory->register_expression(scinew CourantNumber<XVolField>::Builder(Expr::Tag("Crx", Expr::STATE_NONE),  xVelTag, TagNames::self().dt,"xdir"), true);
+          solnGraphHelper->rootIDs.insert( CrxID );
+          
+          const Expr::TagList reynoldsTags = tag_list(Expr::Tag("Rex", Expr::STATE_NONE), Expr::Tag("RexSquared", Expr::STATE_NONE));
+          Expr::ExpressionID RexID =solnGraphHelper->exprFactory->register_expression(scinew CellReynoldsNumber<XVolField>::Builder(reynoldsTags, xVelTag, viscTag,"xdir"), true);
+          solnGraphHelper->rootIDs.insert( RexID );
+
+        }
+        if (doyvel){
+          Expr::ExpressionID CryID =solnGraphHelper->exprFactory->register_expression(scinew CourantNumber<YVolField>::Builder(Expr::Tag("Cry", Expr::STATE_NONE), yVelTag, TagNames::self().dt,"ydir"), true);
+          solnGraphHelper->rootIDs.insert( CryID );
+          
+          const Expr::TagList reynoldsTags = tag_list(Expr::Tag("Rey", Expr::STATE_NONE), Expr::Tag("ReySquared", Expr::STATE_NONE));
+
+          Expr::ExpressionID ReyID =solnGraphHelper->exprFactory->register_expression(scinew CellReynoldsNumber<YVolField>::Builder(reynoldsTags, yVelTag, viscTag,"ydir"), true);
+          solnGraphHelper->rootIDs.insert( ReyID );
+        }
+        if(dozvel){
+          Expr::ExpressionID CrzID =solnGraphHelper->exprFactory->register_expression(scinew CourantNumber<ZVolField>::Builder( Expr::Tag("Crz", Expr::STATE_NONE), zVelTag, TagNames::self().dt,"zdir"), true);
+          solnGraphHelper->rootIDs.insert( CrzID );
+          
+          const Expr::TagList reynoldsTags = tag_list(Expr::Tag("Rez", Expr::STATE_NONE), Expr::Tag("RezSquared", Expr::STATE_NONE));
+
+          Expr::ExpressionID RezID =solnGraphHelper->exprFactory->register_expression(scinew CellReynoldsNumber<ZVolField>::Builder( reynoldsTags, zVelTag, viscTag,"zdir"), true);
+          solnGraphHelper->rootIDs.insert( RezID );
+        }
+      }
+ 
     }
 
     //

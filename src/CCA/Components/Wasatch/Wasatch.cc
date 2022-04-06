@@ -94,6 +94,8 @@
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
+#include <CCA/Components/Wasatch/Expressions/CourantNumber.h>
+#include <CCA/Components/Wasatch/Expressions/CellReynoldsNumber.h>
 #include <CCA/Components/Wasatch/Expressions/TestNestedExpression.h>
 
 #ifdef HAVE_POKITT
@@ -412,7 +414,7 @@ namespace WasatchCore{
     uintahSpec->findBlock("Time")->require("delt_min", deltMin);
     uintahSpec->findBlock("Time")->require("delt_max", deltMax);
     uintahSpec->findBlock("Time")->getWithDefault( "delt_init", deltInit, deltMax );
-    const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
+    useStabledt_ = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
     
     // Multithreading in ExprLib and SpatialOps
     if( wasatchSpec_->findBlock("FieldParallelThreadCount") ){
@@ -720,14 +722,15 @@ namespace WasatchCore{
           // note - parse_momentum_equations returns a vector of equation adaptors
           const EquationAdaptors adaptors = parse_momentum_equations( wasatchSpec_,
                                                                       turbParams,
-                                                                      useAdaptiveDt,
+                                                                      useStabledt_,
                                                                       doParticles_,
                                                                       densityTag,
                                                                       graphCategories_,
                                                                       *m_solver,
                                                                       m_materialManager,
                                                                       *dualTimeMatrixInfo_,
-                                                                      persistentFields_ );
+                                                                      persistentFields_,
+                                                                     timeIntName, stableTimestepNames_);
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -935,11 +938,11 @@ namespace WasatchCore{
     if( particleEqnSpec ){
       try{
         if( flow_treatment() == COMPRESSIBLE ){
-          const EquationAdaptors adaptors = parse_particle_transport_equations<SVolField,SVolField,SVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          const EquationAdaptors adaptors = parse_particle_transport_equations<SVolField,SVolField,SVolField>( particleEqnSpec, wasatchSpec_, useStabledt_, graphCategories_, timeIntName);
           adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
         }
         else {
-          const EquationAdaptors adaptors = parse_particle_transport_equations<XVolField,YVolField,ZVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          const EquationAdaptors adaptors = parse_particle_transport_equations<XVolField,YVolField,ZVolField>( particleEqnSpec, wasatchSpec_, useStabledt_, graphCategories_, timeIntName);
           adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
         }
       }
@@ -1238,13 +1241,19 @@ namespace WasatchCore{
       
       const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
       const TagNames& tagNames = TagNames::self();
-      const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
+//      const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
       // since the StableDT expression is only registered on the time_advance graph,
       // make the necessary checks before adding a requires for that
 
       if( timeStep > 0 ){
-        if( useStableDT ){
-          task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
+        if( useStabledt_ ){
+          std::list<std::string>& allStableDts = stable_timestep_names();
+          std::list<std::string>::iterator it;
+          
+          for (it = allStableDts.begin(); it != allStableDts.end(); ++it){
+            
+            task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(*it),  Uintah::Ghost::None, 0);
+          }
         }
       }
                   
@@ -1923,16 +1932,23 @@ namespace WasatchCore{
     
     const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
     const TagNames& tagNames = TagNames::self();
-    const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
+
     if( timeStep > 0 ){
-      if( useStableDT ){
+      if( useStabledt_ ){
         //__________________
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
           // grab the stable timestep value calculated by the StableDT expression
           Uintah::PerPatch<double> tempDtP;
-          newDW->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
-          val = std::min( val, tempDtP.get() );
+          // loop over all stable dts for each equation and find the min of all dts
+          // all stable dts are stored in the variable stableTimestepNames_
+          std::list<std::string>& allStableDts = stable_timestep_names();
+          std::list<std::string>::iterator it;
+          for (it = allStableDts.begin(); it != allStableDts.end(); ++it){
+            newDW->get(tempDtP, Uintah::VarLabel::find(*it), 0, patches->get(ip));
+            val = std::min( val, tempDtP.get() );
+          }
+
         }
       }
       else {
@@ -1943,7 +1959,7 @@ namespace WasatchCore{
       }
     }
     
-    if( useStableDT ){
+    if( useStabledt_ ){
       newDW->put(Uintah::delt_vartype(val),getDelTLabel(),
                  Uintah::getLevel(patches) );
     }

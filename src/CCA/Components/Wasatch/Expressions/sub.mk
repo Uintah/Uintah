@@ -79,6 +79,9 @@ SRCS += \
         $(SRCDIR)/DORadSolver.cc          \
         $(SRCDIR)/RadPropsEvaluator.cc    \
         $(SRCDIR)/StableTimestep.cc       \
+        $(SRCDIR)/StableTimestepForEq.cc       \
+        $(SRCDIR)/CourantNumber.cc       \
+        $(SRCDIR)/CellReynoldsNumber.cc       \
         $(SRCDIR)/Reduction.cc            \
         $(SRCDIR)/ReductionBase.cc        \
         $(SRCDIR)/Coordinate.cc           \
