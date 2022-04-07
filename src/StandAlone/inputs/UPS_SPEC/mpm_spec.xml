@@ -182,6 +182,7 @@
                <!-- Threshold     -->      
           <failure_mean         spec="REQUIRED DOUBLE 'positive'"     need_applies_to="type Threshold"/>
           <failure_std          spec="OPTIONAL DOUBLE 'positive'"     need_applies_to="type Threshold"/>
+          <failure_seed          spec="OPTIONAL DOUBLE"               need_applies_to="type Threshold"/>
           <failure_distrib      spec="REQUIRED STRING 'constant, weibull, gauss'" 
                                                                       need_applies_to="type Threshold"/>
           <failure_criteria     spec="REQUIRED STRING 'MaximumPrincipalStress MaximumPrincipalStrain MohrColoumb'" 
