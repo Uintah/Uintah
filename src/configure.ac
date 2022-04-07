@@ -3068,7 +3068,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$with_lapack" != "no" -a "$HAVE_LAPCK" != "yes"; then
+if test "$with_lapack" != "no" -a "$HAVE_LAPACK" != "yes"; then
 
   # if HAVE_LAPACK is yes at this point, then atlas/mkl has been found and we
   # don't want to check for it here.
