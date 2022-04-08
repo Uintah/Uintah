@@ -221,6 +221,21 @@ protected:
 
   void scheduleInitializePressureBCs(const LevelP& level, SchedulerP&);
 
+  void scheduleRestartInitializeHACK( SchedulerP   & sched,
+                                      const LevelP & level);
+
+  void restartInitializeHACK( const ProcessorGroup  *,
+                              const PatchSubset     * patches,
+                              const MaterialSubset  * matls,
+                              DataWarehouse         *,
+                              DataWarehouse         * new_dw){};
+
+  void restartInitializeTask(const ProcessorGroup *,
+                             const PatchSubset    * patches,
+                             const MaterialSubset * ,
+                             DataWarehouse        * ,
+                             DataWarehouse        * new_dw);
+
   void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
