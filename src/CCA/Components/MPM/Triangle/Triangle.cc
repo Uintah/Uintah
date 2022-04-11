@@ -230,7 +230,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
         triangleMassDisp[pidx]   = 0.0;
-        triangleMultiMat[pidx]   = 1;
+        triangleMultiMat[pidx]   = IntVector(1,1,1);
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
 //        Vector C = P2-P1;

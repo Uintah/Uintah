@@ -101,10 +101,10 @@ TriangleLabel::TriangleLabel()
 			ParticleVariable<double>::getTypeDescription() );
 
   triMultiMatLabel = VarLabel::create("tri.multimat",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<IntVector>::getTypeDescription() );
 
   triMultiMatLabel_preReloc = VarLabel::create("tri.multimat+",
-			ParticleVariable<int>::getTypeDescription() );
+			ParticleVariable<IntVector>::getTypeDescription() );
 }
 
 TriangleLabel::~TriangleLabel()
