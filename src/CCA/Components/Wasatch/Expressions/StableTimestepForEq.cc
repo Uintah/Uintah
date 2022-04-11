@@ -29,19 +29,18 @@ StableTimestepForEq( const Expr::Tag& rhoTag,
             const Expr::Tag& csoundTag,
             const std::string timeIntegratorName)
 : Expr::Expression<SpatialOps::SingleValueField>(),
-  invDx_(1.0),
-  invDy_(1.0),
-  invDz_(1.0),
+  dx_(1.0),
+  dy_(1.0),
+  dz_(1.0),
   doX_( uTag != Expr::Tag() ),
   doY_( vTag != Expr::Tag() ),
   doZ_( wTag != Expr::Tag() ),
-  isViscous_( viscTag != Expr::Tag() ),
   isCompressible_(csoundTag != Expr::Tag()),
-  is3dconvdiff_( doX_ && doY_ && doZ_ && isViscous_ ),
+  is3dconvdiff_( doX_ && doY_ && doZ_),
   timeIntegratorName_(timeIntegratorName)
 {
   rho_ = create_field_request<SVolField>(rhoTag);
-  if (isViscous_)  visc_ = create_field_request<SVolField>(viscTag);
+  visc_ = create_field_request<SVolField>(viscTag);
   if (doX_)  u_ = create_field_request<Vel1T>(uTag);
   if (doY_)  v_ = create_field_request<Vel2T>(vTag);
   if (doZ_)  w_ = create_field_request<Vel3T>(wTag);
@@ -65,17 +64,17 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if (doX_) {
     x2SInterp_ = opDB.retrieve_operator<X2SOpT>();
     gradXOp_   = opDB.retrieve_operator<GradXT>();
-    invDx_ = std::abs( gradXOp_->coefs().get_coef(1) ); //high coefficient
+    dx_ = 1.0 / std::abs( gradXOp_->coefs().get_coef(1) ); //high coefficient
   }
   if (doY_) {
     y2SInterp_ = opDB.retrieve_operator<Y2SOpT>();
     gradYOp_   = opDB.retrieve_operator<GradYT>();
-    invDy_ = std::abs( gradYOp_->coefs().get_coef(1) ); //high coefficient
+    dy_ = 1.0 / std::abs( gradYOp_->coefs().get_coef(1) ); //high coefficient
   }
   if (doZ_) {
     z2SInterp_ = opDB.retrieve_operator<Z2SOpT>();
     gradZOp_   = opDB.retrieve_operator<GradZT>();
-    invDz_ = std::abs( gradZOp_->coefs().get_coef(1) ); //high coefficient
+    dz_ = 1.0 / std::abs( gradZOp_->coefs().get_coef(1) ); //high coefficient
   }
 }
 
@@ -99,29 +98,24 @@ evaluate()
 //  else{
   const SVolField& rho = rho_->field_ref();
   SpatialOps::SpatFldPtr<SVolField> kinVisc_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
-  if (isViscous_) *kinVisc_ <<= visc_->field_ref() / rho;
-  else            *kinVisc_ <<= 0.0;
+  *kinVisc_ <<= visc_->field_ref() / rho;
   
   SpatialOps::SpatFldPtr<SVolField> c_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
   SVolField& c = *c_;
   if(isCompressible_) c <<= abs(csound_->field_ref());
   else c <<= 0.0;
-    
-  const double dx = 1.0/invDx_;
-  const double dy = 1.0/invDy_;
-  const double dz = 1.0/invDz_;
-  
   
   SpatialOps::SpatFldPtr<SVolField> innerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
   SpatialOps::SpatFldPtr<SVolField> outerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
   
   // inner rule:
   if (!doX_) *innerdt <<= 0.0;
-  if (doX_)  *innerdt <<=             *kinVisc_ / dx / dx;
-  if (doY_)  *innerdt <<= *innerdt +  *kinVisc_ / dy / dy;
-  if (doZ_)  *innerdt <<= *innerdt +  *kinVisc_ / dz / dz;
+  if (doX_)  *innerdt <<=             *kinVisc_ / dx_ / dx_;
+  if (doY_)  *innerdt <<= *innerdt +  *kinVisc_ / dy_ / dy_;
+  if (doZ_)  *innerdt <<= *innerdt +  *kinVisc_ / dz_ / dz_;
 
   if (timeIntegratorName_ == "FE") {
+    // Inner Rule
     *innerdt <<= 0.5 / *innerdt;
 
     // Outer Rule
@@ -137,9 +131,9 @@ evaluate()
 
     // Outer Rule
     if (!doX_) *outerdt <<= 0.0;
-    if (doX_)  *outerdt <<=       0.420168*( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx * pow( ((*x2SInterp_)( abs(u_->field_ref())) + c ) * dx / *kinVisc_, 1.0/3.0);
-    if (doY_)  *outerdt <<= *outerdt + 0.420168*( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) /dy * pow( ((*y2SInterp_)( abs(v_->field_ref())) + c ) * dy / *kinVisc_, 1.0/3.0);
-    if (doZ_)  *outerdt <<= *outerdt + 0.420168*( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) /dz * pow( ((*z2SInterp_)( abs(w_->field_ref())) + c ) * dz / *kinVisc_, 1.0/3.0);
+    if (doX_)  *outerdt <<=       0.420168*( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx_ * pow( ((*x2SInterp_)( abs(u_->field_ref())) + c ) * dx_ / *kinVisc_, 1.0/3.0);
+    if (doY_)  *outerdt <<= *outerdt + 0.420168*( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) /dy_ * pow( ((*y2SInterp_)( abs(v_->field_ref())) + c ) * dy_ / *kinVisc_, 1.0/3.0);
+    if (doZ_)  *outerdt <<= *outerdt + 0.420168*( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) /dz_ * pow( ((*z2SInterp_)( abs(w_->field_ref())) + c ) * dz_ / *kinVisc_, 1.0/3.0);
     *outerdt <<= 1.0 / *outerdt;
     
   }else if (timeIntegratorName_ == "RK3SSP") {
@@ -148,9 +142,9 @@ evaluate()
 
     // Outer Rule
     if (!doX_) *outerdt <<= 0.0;
-    if (doX_)  *outerdt <<=            ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) * invDx_;
-    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) * invDy_;
-    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) * invDz_;
+    if (doX_)  *outerdt <<=            ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx_;
+    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) / dy_;
+    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) / dz_;
     *outerdt <<= 1.732 / *outerdt;
   }
 

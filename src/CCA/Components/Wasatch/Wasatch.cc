@@ -686,7 +686,7 @@ namespace WasatchCore{
                                                   densityTag,
                                                   graphCategories_,
                                                   *dualTimeMatrixInfo_,
-                                                  persistentFields_ ) );
+                                                  persistentFields_,useStabledt_,timeIntName, stableTimestepNames_ ) );
     }
 
     //
