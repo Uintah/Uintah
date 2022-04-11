@@ -1809,6 +1809,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
   t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
+  t->computes(TriL->triMultiMatLabel_preReloc,           triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -1871,6 +1872,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triMultiMatLabel,     triangle_matls, gac, 2);
   if (flags->d_doingDissolution) {
     t->requires(Task::OldDW, TriL->triMassDispLabel,   triangle_matls, gac, 2);
   }
@@ -5757,12 +5759,12 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     std::vector<constNCVariable<Vector> > gSurfNorm(numMPMMatls);
     std::vector<bool> PistonMaterial(numMPMMatls);
 
-    constNCVariable<Vector>  gvelocityglobal;
+//    constNCVariable<Vector>  gvelocityglobal;
     constNCVariable<double>  gmassglobal;
     new_dw->get(gmassglobal,  lb->gMassLabel,
            m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
-    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
-           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
+//    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
+//           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
@@ -5811,6 +5813,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       ParticleVariable<double>      triArea_new, triClay_new, triMassDisp_new;
       constParticleVariable<Vector> triAreaAtNodes;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
+      ParticleVariable<int>         triMultiMat;
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
@@ -5847,6 +5850,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      TriL->triMassDispLabel_preReloc,     pset);
       new_dw->allocateAndPut(triNormal_new,
                                      TriL->triNormalLabel_preReloc,       pset);
+      new_dw->allocateAndPut(triMultiMat,
+                                     TriL->triMultiMatLabel_preReloc,     pset);
 
       tri_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
@@ -5861,6 +5866,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
+
+        triMultiMat[idx]=0;
 
         Point P[3];
         // Update the positions of the triangle vertices
@@ -5890,6 +5897,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             surf[itv] -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
             gSN   += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
+            if(gmass[adv_matl][node] <= 0.95*gmassglobal[node]){
+              triMultiMat[idx]=1;
+            }
           }
 
           if(sumSk > 1.e-90){
@@ -6098,6 +6108,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
+    std::vector<constParticleVariable<int> >        triMultiMat(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
 //    std::vector<std::vector<int> > triInContact(numLSMatls);
@@ -6147,6 +6158,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triAreaAtNodes[tmo], TriL->triAreaAtNodesLabel,     pset0);
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
+      old_dw->get(triMultiMat[tmo],    TriL->triMultiMatLabel,        pset0);
       if (flags->d_doingDissolution) {
         old_dw->get(triMassDisp[tmo],  TriL->triMassDispLabel,        pset0);
       } else {
@@ -6230,22 +6242,22 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       }   // only do this if a dissolution problem
 
       for(int tmi = tmo+1; tmi < numLSMatls; tmi++) {
-        TriangleMaterial* t_matl1 = (TriangleMaterial *) 
-                              m_materialManager->getMaterial("Triangle",tmi);
-        int adv_matl1 = t_matl1->getAssociatedMaterial();
+       TriangleMaterial* t_matl1 = (TriangleMaterial *) 
+                             m_materialManager->getMaterial("Triangle",tmi);
+       int adv_matl1 = t_matl1->getAssociatedMaterial();
 
-        if(adv_matl0==adv_matl1 || 
-           (PistonMaterial[adv_matl0] && PistonMaterial[adv_matl1])){
-          continue;
-        }
+       if(adv_matl0==adv_matl1 || 
+          (PistonMaterial[adv_matl0] && PistonMaterial[adv_matl1])){
+         continue;
+       }
 
-        ParticleSubset* pset1 = psetvec[tmi];
+       ParticleSubset* pset1 = psetvec[tmi];
 
-        int numPar_pset1 = pset1->numParticles();
+       int numPar_pset1 = pset1->numParticles();
 
-        double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
-                         (stiffness[adv_matl0] + stiffness[adv_matl1]);
-        K_l*=timefactor;
+       double K_l = 10.*(stiffness[adv_matl0] * stiffness[adv_matl1])/
+                        (stiffness[adv_matl0] + stiffness[adv_matl1]);
+       K_l*=timefactor;
 
        if(numPar_pset1 > 0){
 
@@ -6256,6 +6268,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
         for(ParticleSubset::iterator iter0 = pset0->begin();
             iter0 != pset0->end(); iter0++){
           particleIndex idx0 = *iter0;
+
+         if(triMultiMat[tmo][idx0] > 0){
 
          for(int iu = 0; iu < 3; iu++){
 
@@ -6281,8 +6295,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
           for(ParticleSubset::iterator iter1 = pset1->begin();
               iter1 != pset1->end(); iter1++){
             particleIndex idx1 = *iter1;
-//            int ii = idx1;
-//            triInContact[tmi][ii]=-1;
+           if(triMultiMat[tmi][idx1] > 0){
             // AP is a vector from the test point px0 
             // to the centroid of the test triangle
             Vector AP = px0 - tx0[tmi][idx1];
@@ -6306,6 +6319,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 triInPlane.push_back(inPlane);
               }    // Point px0 overlaps plane of current triangle
             }  // point is in the neighborhood
+           }
           } // inner loop over triangles
 
           // Sort the triangles according to triSep.
@@ -6654,6 +6668,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
             } // loop over other nearby triangles
           }  // If multiple overlaps, but penetration point not in triangles
          } // loop over the three vertices of the triangle
+         }
         } //  Outer loop over triangles
        }  // if num particles in the inner pset is > 0
       } // inner loop over triangle materials

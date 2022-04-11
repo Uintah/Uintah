@@ -230,6 +230,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
         triangleMassDisp[pidx]   = 0.0;
+        triangleMultiMat[pidx]   = 1;
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
 //        Vector C = P2-P1;
@@ -304,6 +305,8 @@ Triangle::allocateVariables(particleIndex numTriangles,
   new_dw->allocateAndPut(triangleMassDisp,d_Tl->triMassDispLabel,       subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
                                          d_Tl->triAreaAtNodesLabel,     subset);
+  new_dw->allocateAndPut(triangleMultiMat,
+                                         d_Tl->triMultiMatLabel,   subset);
 
   return subset;
 }
@@ -442,6 +445,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_Tl->triClayLabel);
   d_triangle_state.push_back(d_Tl->triNormalLabel);
   d_triangle_state.push_back(d_Tl->triMassDispLabel);
+  d_triangle_state.push_back(d_Tl->triMultiMatLabel);
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -456,6 +460,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_Tl->triClayLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMassDispLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triMultiMatLabel_preReloc);
 }
 //__________________________________
 //
@@ -475,7 +480,10 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_Tl->triUseInPenaltyLabel);
   t->computes(d_Tl->triAreaLabel);
   t->computes(d_Tl->triClayLabel);
+  t->computes(d_Tl->triNormalLabel);
   t->computes(d_Tl->triAreaAtNodesLabel);
+  t->computes(d_Tl->triMassDispLabel);
+  t->computes(d_Tl->triMultiMatLabel);
   t->computes(d_Tl->triangleCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));
