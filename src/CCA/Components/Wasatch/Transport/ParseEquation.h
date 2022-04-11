@@ -68,7 +68,10 @@ namespace WasatchCore{
                          const Expr::Tag densityTag,
                          GraphCategories& gc,
                          WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
-                         std::set<std::string>& persistentFields );
+                         std::set<std::string>& persistentFields,
+                        const bool useStabledt,
+                        const std::string timeIntegratorName,
+                        std::list<std::string>& stableTimestepNames);
 
   /**
    *  \brief Build the momentum equation specified by "params"

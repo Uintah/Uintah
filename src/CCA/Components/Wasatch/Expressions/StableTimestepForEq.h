@@ -22,10 +22,9 @@ class StableTimestepForEq
   DECLARE_FIELD(Vel1T, u_)
   DECLARE_FIELD(Vel2T, v_)
   DECLARE_FIELD(Vel3T, w_)
-  DECLARE_FIELDS(ParticleField, pu_, pv_, pw_)
 
-  double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
-  const bool doX_, doY_, doZ_, isViscous_, isCompressible_;
+  double dx_, dy_, dz_;
+  const bool doX_, doY_, doZ_, isCompressible_;
   const bool is3dconvdiff_;
   const std::string timeIntegratorName_;
   

@@ -88,7 +88,10 @@ namespace WasatchCore{
                                                  const Expr::Tag densityTag,
                                                  GraphCategories& gc,
                                                  WasatchCore::DualTimeMatrixInfo& dualTimeMatrixInfo,
-                                                 std::set<std::string>& persistentFields )
+                                                 std::set<std::string>& persistentFields,
+                                                 const bool useStabledt,
+                                                 const std::string timeIntegratorName,
+                                                 std::list<std::string>& stableTimestepNames)
   {
     EqnTimestepAdaptorBase* adaptor = nullptr;
     EquationBase* transeqn = nullptr;
@@ -114,7 +117,64 @@ namespace WasatchCore{
                                        turbParams,
                                        persistentFields );
       adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
+      if (useStabledt)
+      {
+        const bool hasMomentum = wasatchParams->findBlock("MomentumEquations");
+        if (hasMomentum){
+          Uintah::ProblemSpecP diffFluxParams=scalarEqnParams->findBlock("DiffusiveFlux");
+          Expr::Tag diffTag;
+          Expr::Tag totalDiffTag("total_diffusion_" + ScalarTransEqn::get_solnvar_name( scalarEqnParams ), Expr::STATE_NONE);
+          
+          if( diffFluxParams->findAttribute("coefficient") ){
+            double coef;
+            diffTag = Expr::Tag("constant_diff_tag" + ScalarTransEqn::get_solnvar_name( scalarEqnParams ), Expr::STATE_NONE);
+            diffFluxParams->getAttribute("coefficient",coef);
+            gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(diffTag,coef) );
+          }
+          else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
+            diffTag = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+          }
+          
+          const bool isTurbulent = wasatchParams->findBlock("Turbulence");
+          if(isTurbulent){
+            
+            Expr::TagList srcFieldTagList;
+            srcFieldTagList.push_back(diffTag);
+            srcFieldTagList.push_back(TagNames::self().turbulentdiffusivity);
+                    
+            // for now, only support parsing for fields of same type.  In the future,
+            // we could extend parsing support for differing source field types.
+            typedef ExprAlgebra<SVolField> AlgExpr;
+            gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew AlgExpr::Builder( totalDiffTag, srcFieldTagList, AlgExpr::SUM ));
+            
+          }
+          
+          Expr::ExpressionID stabDtID;
+          std::string stbldtScalar = "dt" + ScalarTransEqn::get_solnvar_name( scalarEqnParams );
+          stableTimestepNames.push_back(stbldtScalar);
 
+          Uintah::ProblemSpecP momentumParams = wasatchParams->findBlock("MomentumEquations");
+          std::string xvelname, yvelname, zvelname;
+          const Uintah::ProblemSpecP doxvel = momentumParams->get( "X-Velocity", xvelname );
+          const Uintah::ProblemSpecP doyvel = momentumParams->get( "Y-Velocity", yvelname );
+          const Uintah::ProblemSpecP dozvel = momentumParams->get( "Z-Velocity", zvelname );
+
+          const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
+          const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
+          const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
+          
+          GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION  ];
+          stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<XVolField,YVolField,ZVolField>::Builder( Expr::Tag(stbldtScalar,Expr::STATE_NONE),
+                                                                                                                                           densityTag,
+                                                                                                                                           isTurbulent ? totalDiffTag : diffTag,
+                                                                                                                                           xVelTag, yVelTag, zVelTag, Expr::Tag(), timeIntegratorName ), true);
+
+          // force this onto the graph.
+          solnGraphHelper->rootIDs.insert( stabDtID );
+
+        }
+      }
+      
       dualTimeMatrixInfo.add_scalar_equation( transeqn->solution_variable_tag(), transeqn->rhs_tag() );
 
     }
