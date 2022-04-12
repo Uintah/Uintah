@@ -59,7 +59,7 @@ usage()
   echo "    Paste two uintah.dat files together removing the first column use:"
   echo "           paste.sh -f 1.dat -f 2.dat -r 2- -o combined.dat"
   echo ""
-  echo "    Paste three lineextra output files removing the x,y,z coordinates use:"
+  echo "    Paste three lineextract output files removing the x,y,z coordinates use:"
   echo "           paste.sh -f temperature.txt -f density.txt -f pressure.txt -r 4- -o combined.txt"
   
   
@@ -86,7 +86,6 @@ main()
   LONG="delimiter:,file:,help,output:,range:"
   options=$( getopt --name "paste.sh" --options=$SHORT  --longoptions=$LONG -- "$@" )
 
-  echo $options
   if [ $? -ne 0 ] || [ $# -eq 0 ] ; then
     echo "Incorrect option provided"
     usage
@@ -105,6 +104,7 @@ main()
         ;;
       -h|--help)
         usage
+        exit 1
         ;;
       -f|--file)
         shift
