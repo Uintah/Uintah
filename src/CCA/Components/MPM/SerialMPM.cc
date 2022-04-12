@@ -517,17 +517,58 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
 }
 //______________________________________________________________________
+//    Task:  On a restart if the values are going to be modified there must first
+//           be computes( label ) before it can be modified.  This is a hack and a problem
+//           with the infrastructure.
+void SerialMPM::scheduleRestartInitializeHACK( SchedulerP   & sched,
+                                               const LevelP & level)
+{
+  const string schedName = "SerialMPM::sched_restartInitializeHACK";
+  printSchedule(level, cout_doing, schedName);
+
+  const string taskName = "SerialMPM::restartInitializeHACK";
+  Task* t = scinew Task(taskName, this, &SerialMPM::restartInitializeHACK);
+
+  t->computes( lb->pTemperatureLabel  );
+  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
+}
+
+
+
+//______________________________________________________________________
 //
 void SerialMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
+
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->restartInitialize();
+    }
+  }
+
+#if 0
+  scheduleRestartInitializeHACK( sched, level );
+
+  Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
+                        &SerialMPM::restartInitializeTask);
+
+  t->modifies( lb->pTemperatureLabel );
+  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
+#endif
 }
+
+
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
             phase, but get wiped clean when you restart
 _____________________________________________________________________*/
 void SerialMPM::restartInitialize()
 {
+#if 0
   cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
 
   if(d_analysisModules.size() != 0){
@@ -538,6 +579,7 @@ void SerialMPM::restartInitialize()
       am->restartInitialize();
     }
   }
+#endif
 }
 
 //______________________________________________________________________
@@ -2150,6 +2192,45 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 }
+
+//______________________________________________________________________
+//  Task:  SerialMPM::restartInitializeTask
+//  Purpose:  Modify variables on a restart.  You MUST schedule a
+//            computes<label> in the restartInitializeHACK.
+//______________________________________________________________________
+void SerialMPM::restartInitializeTask(const ProcessorGroup *,
+                                      const PatchSubset    * patches,
+                                      const MaterialSubset * ,
+                                      DataWarehouse        * old_dw,
+                                      DataWarehouse        * new_dw)
+{
+  //__________________________________
+  // Patches loop
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    const string msg = "Doing SerialMPM::restartInitializeTask";
+    printTask(patches, patch, cout_doing, msg);
+
+    unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+    for(unsigned int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl =
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset  = new_dw->getParticleSubset( dwi, patch );
+
+      ParticleVariable<double> pTemperature;
+      new_dw->getModifiable(pTemperature,   lb->pTemperatureLabel,   pset);
+
+      ParticleSubset::iterator iter;
+      for (iter = pset->begin(); iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pTemperature[idx] = 310;
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 //
 void SerialMPM::readPrescribedDeformations(string filename)
