@@ -5897,7 +5897,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             surf[itv] -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
             gSN   += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
-            if(gmass[adv_matl][node] <= 0.80*gmassglobal[node]){
+            if(gmass[adv_matl][node] <= 0.70*gmassglobal[node]){
               triMultiMat[idx](itv)=1;
             }
           }
@@ -6295,9 +6295,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
           for(ParticleSubset::iterator iter1 = pset1->begin();
               iter1 != pset1->end(); iter1++){
             particleIndex idx1 = *iter1;
-           if(triMultiMat[tmi][idx1](0) + 
-              triMultiMat[tmi][idx1](1) +
-              triMultiMat[tmi][idx1](2) == 3){
             // AP is a vector from the test point px0 
             // to the centroid of the test triangle
             Vector AP = px0 - tx0[tmi][idx1];
@@ -6321,7 +6318,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                 triInPlane.push_back(inPlane);
               }    // Point px0 overlaps plane of current triangle
             }  // point is in the neighborhood
-           }
           } // inner loop over triangles
 
           // Sort the triangles according to triSep.
