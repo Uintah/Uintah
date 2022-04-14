@@ -163,7 +163,6 @@ WARNING
       VarLabel* diffusionCoefLabel;
 
       std::vector<Region*> regions;
-      double f_stoic;
       double diff_coeff;
       int  initialize_diffusion_knob;
     };

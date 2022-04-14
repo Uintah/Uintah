@@ -176,7 +176,6 @@
         <scalar               spec="OPTIONAL NO_DATA"
                                 attribute1="name REQUIRED STRING" >
           <constants          spec="OPTIONAL NO_DATA">
-            <f_stoichometric  spec="REQUIRED DOUBLE '0,1'"/>
             <diffusivity      spec="REQUIRED DOUBLE 'positive'"/>
             <rho_A            spec="REQUIRED DOUBLE 'positive'"/>
             <rho_B            spec="REQUIRED DOUBLE 'positive'"/>
@@ -186,8 +185,8 @@
             <R_B              spec="REQUIRED DOUBLE 'positive'"/>
             <thermalCond_A    spec="REQUIRED DOUBLE 'positive'"/>
             <thermalCond_B    spec="REQUIRED DOUBLE 'positive'"/>
-            <viscosity_A      spec="REQUIRED DOUBLE 'positive'"/>
-            <viscosity_B      spec="REQUIRED DOUBLE 'positive'"/>
+            <dynamic_viscosity_A        spec="REQUIRED DOUBLE 'positive'"/>
+            <dynamic_viscosity_B        spec="REQUIRED DOUBLE 'positive'"/>
             <initialize_diffusion_knob  spec="REQUIRED DOUBLE 'positive'"/>
           </constants>
           <geom_object          spec="MULTIPLE" />

@@ -145,29 +145,25 @@ BinaryProperties::problemSetup( GridP &, const bool isRestart )
     throw ProblemSetupException("BinaryProperties: Couldn't find constants tag", __FILE__, __LINE__);
   }
 
-  const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,    -9);
-
   const_ps->getWithDefault("rho_A",         d_rho_A,         -9);
   const_ps->getWithDefault("rho_B",         d_rho_B,        -9);
   const_ps->getWithDefault("cv_A",          d_cv_A,          -9);
   const_ps->getWithDefault("cv_B",          d_cv_B,         -9);
   const_ps->getWithDefault("R_A",           d_R_A,           -9);
   const_ps->getWithDefault("R_B",           d_R_B,          -9);
-  const_ps->getWithDefault("thermalCond_A", d_thermalCond_A,  0);
+  const_ps->getWithDefault("thermalCond_A", d_thermalCond_A, 0);
   const_ps->getWithDefault("thermalCond_B", d_thermalCond_B, 0);
-  const_ps->getWithDefault("viscosity_A",   d_viscosity_A,    0);
-  const_ps->getWithDefault("viscosity_B",   d_viscosity_B,   0);
-  const_ps->getWithDefault("diffusivity",    d_scalar->diff_coeff, -9);
+  const_ps->getWithDefault("dynamic_viscosity_A",   d_viscosity_A,   0);
+  const_ps->getWithDefault("dynamic_viscosity_B",   d_viscosity_B,   0);
+  const_ps->getWithDefault("diffusivity",           d_scalar->diff_coeff, -9);
   const_ps->getWithDefault("initialize_diffusion_knob",
                             d_scalar->initialize_diffusion_knob,   0);
 
-  if( d_scalar->f_stoic == -9 ||
-      d_rho_A   == -9  || d_rho_B == -9 ||
+  if( d_rho_A   == -9  || d_rho_B == -9 ||
       d_cv_A    == -9  || d_cv_B  == -9 ||
       d_R_A     == -9  || d_R_B   == -9  ) {
     ostringstream warn;
     warn << " ERROR BinaryProperties: Input variable(s) not specified \n"
-         << "\n f_stoichometric  "<< d_scalar->f_stoic
          << "\n diffusivity      "<< d_scalar->diff_coeff
          << "\n rho_A            "<< d_rho_A
          << "\n rho_B            "<< d_rho_B

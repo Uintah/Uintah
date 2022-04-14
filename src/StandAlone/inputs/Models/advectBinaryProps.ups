@@ -268,7 +268,6 @@
           <material>BackgroundGas</material>
           <scalar name="f">
             <constants>
-              <f_stoichometric>          0.06207  </f_stoichometric>
               <diffusivity>              0.0      </diffusivity>
               <initialize_diffusion_knob>  0      </initialize_diffusion_knob>
               <rho_A>            1.178471737613   </rho_A>
@@ -279,8 +278,8 @@
               <R_B>               2077.03         </R_B>
               <thermalCond_A>     0.0             </thermalCond_A>
               <thermalCond_B>     0.0             </thermalCond_B>
-              <viscosity_A>       0.0             </viscosity_A>
-              <viscosity_B>       0.0             </viscosity_B>
+              <dynamic_viscosity_A> 0.0          </dynamic_viscosity_A>
+              <dynamic_viscosity_B> 0.0          </dynamic_viscosity_B>
             </constants>
             <geom_object>
               <difference>
