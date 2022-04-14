@@ -51,7 +51,7 @@ ifeq ($(BUILD_ICE),yes)
        $(SRCDIR)/Mixing.cc             \
        $(SRCDIR)/NonAdiabaticTable.cc  \
        $(SRCDIR)/PassiveScalar.cc      \
-       $(SRCDIR)/SimpleRxn.cc          \
+       $(SRCDIR)/BinaryProperties.cc   \
        $(SRCDIR)/MassMomEng_src.cc
 
 #       $(SRCDIR)/Mixing2.cc
