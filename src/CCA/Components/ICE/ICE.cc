@@ -1335,7 +1335,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP           & sched,
 {
   if(d_models.size() != 0){
 
-    printSchedule( level, m_ice_tasks, "  ICE::scheduleUpdateVolumeFraction" );
+    printSchedule( level, m_ice_tasks, " ICE::scheduleUpdateVolumeFraction" );
 
     Task* task = scinew Task("ICE::updateVolumeFraction",
                        this, &ICE::updateVolumeFraction);
@@ -2103,7 +2103,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup  *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_ice_tasks, "ICE::actuallyInitialize" );
+    printTask(patches, patch, m_ice_tasks, "ICE::actuallyComputeStableTimestep" );
 
     Vector dx = patch->dCell();
     double delX = dx.x();
@@ -2520,8 +2520,6 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup *,
                                           DataWarehouse         * /*old_dw*/,
                                           DataWarehouse         * new_dw)
 {
-  proc0cout << " ICE::Initialization adding hydrostatic pressure adjustment " << endl;
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -3753,7 +3751,7 @@ void ICE::computePressFC(const ProcessorGroup *,
 }
 
 /* _____________________________________________________________________
- Task:      ICE::zeroModelMassExchange
+ Task:      ICE::zeroModelSources
  Purpose:   This function initializes the mass exchange quantities to
             zero.  These quantities are subsequently modified by the
             models
@@ -3767,7 +3765,7 @@ void ICE::zeroModelSources(const ProcessorGroup   *,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch, m_ice_tasks, "ICE:zeroModelSources" );
+    printTask(patches, patch, m_ice_tasks, "ICE::zeroModelSources" );
 
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
