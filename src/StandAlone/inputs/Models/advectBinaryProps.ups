@@ -2,7 +2,7 @@
 
 
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
@@ -10,7 +10,7 @@
    </Meta>
 
    <SimulationComponent type="ice" />
-   
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -24,21 +24,21 @@
        <!--<max_Timesteps>     1           </max_Timesteps> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
-   
+
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
-                            <value> 0. </value> 
-        </BCType> 
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
         <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0" 
-                           label = "Temperature"  var = "Neumann"> 
+        <BCType id = "0"
+                           label = "Temperature"  var = "Neumann">
                             <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
@@ -48,12 +48,12 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>                
+                              <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -68,7 +68,7 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -88,9 +88,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
@@ -102,13 +102,13 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "z-">
@@ -122,13 +122,13 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side = "z+">
@@ -142,13 +142,13 @@
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"   label = "scalar-f"     var = "Neumann">
-                              <value> 0.0 </value>       
+                              <value> 0.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -161,12 +161,12 @@
               <resolution>   [20,20,20] </resolution>
            </Box>
        </Level>
-    </Grid>    
+    </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>advectSimpleRxn.uda</filebase>
+      <filebase>advectBinaryProperties.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FCME"/>
@@ -180,13 +180,13 @@
       <save label="vel_CC"/>
       <save label="viscosity"/>
       <save label="specific_heat"/>
-      <save label="gamma"/> 
+      <save label="gamma"/>
       <save label="thermalCond"/>
       <save label= "scalar-f"/>
       <save label="temp_CC"/>
    </DataArchiver>
 
-    
+
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -198,7 +198,7 @@
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00         </knob_for_speedSound>
         </TimeStepControl>
-        
+
         <ImplicitSolver>
            <max_outer_iterations>          20    </max_outer_iterations>
            <outer_iteration_tolerance>     1e-8  </outer_iteration_tolerance>
@@ -220,67 +220,67 @@
             <skip>           0       </skip>
             <jump>           0       </jump>
            </Parameters>
-          </ImplicitSolver> 
-      </ICE>        
+          </ImplicitSolver>
+      </ICE>
     </CFD>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-    
+
     <!--____________________________________________________________________-->
     <!--      material Properties and Initial Conditions                    -->
-    <!--____________________________________________________________________-->                      
+    <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
          <material name = "BackgroundGas">
-           <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>     0.0                  </dynamic_viscosity>
-           <thermal_conductivity>  0.0                  </thermal_conductivity>
-           <specific_heat>      716.5                   </specific_heat>
-           <gamma>              1.4                     </gamma>
+           <EOS type = "ideal_gas">                </EOS>
+           <dynamic_viscosity>     0.0             </dynamic_viscosity>
+           <thermal_conductivity>  0.0             </thermal_conductivity>
+           <specific_heat>      716.5              </specific_heat>
+           <gamma>              1.4                </gamma>
            <geom_object>
                 <box label="wholeDomain">
-                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
-                    <max>       [ 6.0, 6.0, 6.0 ]       </max>
+                    <min>       [ 0.0, 0.0, 0.0 ]  </min>
+                    <max>       [ 6.0, 6.0, 6.0 ]  </max>
                 </box>
-               <res>                 [2,2,2]            </res>
-               <velocity>      [1.,0.,0.]               </velocity>
-               <density>       1.178471737613           </density>
-               <pressure>      101325.0                 </pressure>     
-               <temperature>   300.0                    </temperature>
+               <res>                 [2,2,2]       </res>
+               <velocity>      [1.,0.,0.]          </velocity>
+               <density>       1.178471737613      </density>
+               <pressure>      101325.0            </pressure>
+               <temperature>   300.0               </temperature>
            </geom_object>
          </material>
-      </ICE>       
-    </MaterialProperties>  
-    
-    
+      </ICE>
+    </MaterialProperties>
+
+
     <!--____________________________________________________________________-->
     <!--      Model Specification                                           -->
-    <!--____________________________________________________________________--> 
+    <!--____________________________________________________________________-->
     <Models>
-      <Model type="SimpleRxn">
-        <SimpleRxn>
+      <Model type="BinaryProperties">
+        <BinaryProperties>
           <material>BackgroundGas</material>
           <scalar name="f">
             <constants>
-              <f_stoichometric>          0.06207   </f_stoichometric>
-              <diffusivity>              0.0       </diffusivity>
-              <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
-              <rho_air>            1.178471737613  </rho_air>
-              <rho_fuel>           0.162527864325  </rho_fuel>
-              <cv_air>               716.5         </cv_air>
-              <cv_fuel>              3115.6        </cv_fuel>
-              <R_air>                287.0         </R_air>
-              <R_fuel>               2077.03       </R_fuel>
-              <thermalCond_air>     0.0            </thermalCond_air>
-              <thermalCond_fuel>    0.0            </thermalCond_fuel>  
-              <viscosity_air>       0.0            </viscosity_air>
-              <viscosity_fuel>      0.0            </viscosity_fuel>       
+              <f_stoichometric>          0.06207  </f_stoichometric>
+              <diffusivity>              0.0      </diffusivity>
+              <initialize_diffusion_knob>  0      </initialize_diffusion_knob>
+              <rho_A>            1.178471737613   </rho_A>
+              <rho_B>            0.162527864325   </rho_B>
+              <cv_A>              716.5           </cv_A>
+              <cv_B>              3115.6          </cv_B>
+              <R_A>               287.0           </R_A>
+              <R_B>               2077.03         </R_B>
+              <thermalCond_A>     0.0             </thermalCond_A>
+              <thermalCond_B>     0.0             </thermalCond_B>
+              <viscosity_A>       0.0             </viscosity_A>
+              <viscosity_B>       0.0             </viscosity_B>
             </constants>
             <geom_object>
               <difference>
@@ -297,7 +297,7 @@
               <scalar>    1.00   </scalar>
             </geom_object>
           </scalar>
-        </SimpleRxn>
+        </BinaryProperties>
       </Model>
-    </Models>    
+    </Models>
 </Uintah_specification>

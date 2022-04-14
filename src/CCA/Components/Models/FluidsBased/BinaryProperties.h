@@ -23,8 +23,8 @@
  */
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
-#define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
+#ifndef Packages_Uintah_CCA_Components_Examples_BinaryProperties_h
+#define Packages_Uintah_CCA_Components_Examples_BinaryProperties_h
 
 #include <CCA/Components/Models/FluidsBased/FluidsBasedModel.h>
 
@@ -45,99 +45,100 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   SimpleRxn
-   
-   SimpleRxn simulation
+   BinaryProperties
+
+   BinaryProperties simulation
 
 GENERAL INFORMATION
 
-   SimpleRxn.h
+   BinaryProperties.h
 
    Todd Harman
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   
+
+
 KEYWORDS
-   SimpleRxn
+   BinaryProperties
 
 DESCRIPTION
-   Long description...
-  
+   This model will vary the material properties in a single matl ICE
+   simulation using a simple binary mixture fraction approach.  This
+   is mainly for debugging.
 WARNING
-  
+
 ****************************************/
 
-  class SimpleRxn :public FluidsBasedModel {
+  class BinaryProperties :public FluidsBasedModel {
   public:
-    SimpleRxn(const ProcessorGroup* myworld,
+    BinaryProperties(const ProcessorGroup* myworld,
               const MaterialManagerP& materialManager,
               const ProblemSpecP& params);
-    
-    virtual ~SimpleRxn();
 
-    virtual void outputProblemSpec(ProblemSpecP& ps);
-    
+    virtual ~BinaryProperties();
+
+    virtual void outputProblemSpec(ProblemSpecP& ps){};
+
     virtual void problemSetup(GridP& grid,
                                const bool isRestart);
-    
+
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level);
 
     virtual void scheduleRestartInitialize(SchedulerP&,
                                            const LevelP& level){};
-      
+
     virtual void scheduleComputeStableTimeStep(SchedulerP&,
                                                const LevelP& level);
-                                  
+
     virtual void scheduleComputeModelSources(SchedulerP&,
                                              const LevelP& level);
-                                            
+
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
                                                          const MaterialSet*);
-    
+
     virtual void computeSpecificHeat(CCVariable<double>&,
                                      const Patch*,
                                      DataWarehouse*,
                                      const int);
-    
+
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
-    
+
     virtual void scheduleTestConservation(SchedulerP&,
                                           const PatchSet* patches);
   private:
     ICELabel* Ilb;
-                                                
-    void modifyThermoTransportProperties(const ProcessorGroup*, 
-                                         const PatchSubset* patches,        
-                                         const MaterialSubset*,             
-                                         DataWarehouse*,                    
-                                         DataWarehouse* new_dw);             
-    
-    void initialize(const ProcessorGroup*, 
+
+    void modifyThermoTransportProperties(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse*,
+                                         DataWarehouse* new_dw);
+
+    void initialize(const ProcessorGroup*,
                     const PatchSubset* patches,
-                    const MaterialSubset* matls, 
-                    DataWarehouse*, 
+                    const MaterialSubset* matls,
+                    DataWarehouse*,
                     DataWarehouse* new_dw);
-                                   
-    void computeModelSources(const ProcessorGroup*, 
+
+    void computeModelSources(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
-                             
-    void testConservation(const ProcessorGroup*, 
+
+    void testConservation(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);                          
+                          DataWarehouse* new_dw);
     //__________________________________
-    SimpleRxn(const SimpleRxn&);
-    SimpleRxn& operator=(const SimpleRxn&);
+    BinaryProperties(const BinaryProperties&);
+    BinaryProperties& operator=(const BinaryProperties&);
 
     ProblemSpecP d_params {nullptr};
 
@@ -158,40 +159,34 @@ WARNING
       std::string name;
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
-      VarLabel* scalar_source_CCLabel;
+      VarLabel* source_CCLabel;
       VarLabel* diffusionCoefLabel;
-      
+
       std::vector<Region*> regions;
       double f_stoic;
       double diff_coeff;
       int  initialize_diffusion_knob;
     };
-    
+
     // general labels
-    class SimpleRxnLabel {
+    class BinaryPropertiesLabel {
     public:
-      VarLabel* lastProbeDumpTimeLabel;
       VarLabel* sum_scalar_fLabel;
     };
-    
-    SimpleRxnLabel* Slb;
+
+    BinaryPropertiesLabel* Slb;
     Scalar* d_scalar;
-    double d_rho_air;
-    double d_rho_fuel;
-    double d_cv_air;
-    double d_cv_fuel;
-    double d_R_air;
-    double d_R_fuel;
-    double d_thermalCond_air;
-    double d_thermalCond_fuel;
-    double d_viscosity_air;
-    double d_viscosity_fuel;
-    
-    std::vector<Vector> d_probePts;
-    std::vector<std::string> d_probePtsNames;
-    bool d_usingProbePts;
+    double d_rho_A;
+    double d_rho_B;
+    double d_cv_A;
+    double d_cv_B;
+    double d_R_A;
+    double d_R_B;
+    double d_thermalCond_A;
+    double d_thermalCond_B;
+    double d_viscosity_A;
+    double d_viscosity_B;
     bool d_test_conservation;
-    double d_probeFreq;
   };
 }
 
