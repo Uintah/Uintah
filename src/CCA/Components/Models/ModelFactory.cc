@@ -31,7 +31,7 @@
 #  include <CCA/Components/Models/FluidsBased/Mixing.h>
 #  include <CCA/Components/Models/FluidsBased/AdiabaticTable.h>
 #  include <CCA/Components/Models/FluidsBased/PassiveScalar.h>
-#  include <CCA/Components/Models/FluidsBased/SimpleRxn.h>
+#  include <CCA/Components/Models/FluidsBased/BinaryProperties.h>
 #  include <CCA/Components/Models/FluidsBased/TestModel.h>
 #  include <CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #  include <CCA/Components/Models/FluidsBased/MassMomEng_src.h>
@@ -96,8 +96,8 @@ ModelFactory::makeModels( const ProcessorGroup   * myworld,
 
 #if !defined( NO_ICE )
     // ICE turned on
-    else if(type == "SimpleRxn") {
-      d_models.push_back(scinew SimpleRxn(myworld, materialManager, model_ps));
+    else if(type == "BinaryProperties") {
+      d_models.push_back(scinew BinaryProperties(myworld, materialManager, model_ps));
     }
     else if(type == "AdiabaticTable") {
       d_models.push_back(scinew AdiabaticTable(myworld, materialManager, model_ps));
