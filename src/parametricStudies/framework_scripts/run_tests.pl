@@ -127,9 +127,9 @@ my $nTest = 0;
 foreach my $test_dom ($doc->findnodes('/start/Test')) {
 
   my $test_title  = cleanStr( $test_dom->findvalue('Title') );
-  my $test_ups    = $ups_basename."_$test_title".".ups";
+  my $test_ups    = $test_title.".ups";
   my $test_output = "out.".$test_title;
-  my $uda         = $ups_basename."_$test_title".".uda";
+  my $uda         = $test_title.".uda";
 
   #__________________________________
   # change the uda filename in each ups file
