@@ -57,8 +57,8 @@ NewQuartzOvergrowth::NewQuartzOvergrowth(const ProcessorGroup* myworld,
   // Constructor
   d_materialManager = d_sS;
   lb = Mlb;
-  ps->require("masterModalID",             d_masterModalID);
-  ps->require("GrowthRate_cmPerMY",        d_growthRate);
+  ps->require("masterModalID",          d_masterModalID);
+  ps->require("CrystalPressure",        d_crystalPressure);
 }
 
 NewQuartzOvergrowth::~NewQuartzOvergrowth()
@@ -68,9 +68,9 @@ NewQuartzOvergrowth::~NewQuartzOvergrowth()
 void NewQuartzOvergrowth::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP dissolution_ps = ps->appendChild("dissolution");
-  dissolution_ps->appendElement("type",                  "NewQuartzOvergrowth");
-  dissolution_ps->appendElement("masterModalID",          d_masterModalID);
-  dissolution_ps->appendElement("GrowthRate_cmPerMY",     d_growthRate);
+  dissolution_ps->appendElement("type",              "NewQuartzOvergrowth");
+  dissolution_ps->appendElement("masterModalID",      d_masterModalID);
+  dissolution_ps->appendElement("CrystalPressure",    d_crystalPressure);
 }
 
 void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
@@ -140,7 +140,6 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
     for(int m=0; m < numMatls; m++){
      if(masterMatls[m]){
       int md=m;
-//      double dL_dt      =  -d_growthRate*3.1536e19*d_timeConversionFactor;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -154,7 +153,7 @@ void NewQuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
 //                                  && NC_CCweight[c] < 0.2) {
 //        if(gmass[md][c] > 2.e-100 && dotForceCemVec >= 0.0
 //                                  && NC_CCweight[c] < 0.2) {
-        if(gmass[md][c] > 2.e-100 && normtrac <= 10.0
+        if(gmass[md][c] > 2.e-100 && normtrac <= d_crystalPressure
                                   && NC_CCweight[c] < 0.2) {
           double localSurfRate = d_growthFractionRate
                                     *Dot(gCemVec[md][c],gSurfNorm[md][c]);

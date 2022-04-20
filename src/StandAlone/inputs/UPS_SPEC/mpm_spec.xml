@@ -204,6 +204,7 @@
         <Temperature                     spec="OPTIONAL DOUBLE 'positive'" />
         <GrowthRate_cmPerMY              spec="OPTIONAL DOUBLE 'positive'" />
         <GrowthRateClay_cmPerMY          spec="OPTIONAL DOUBLE 'positive'" />
+        <CrystalPressure                 spec="REQUIRED DOUBLE 'positive'" />
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <type                            spec="REQUIRED STRING 'null, contactStressDependent, contactStressIndependent, saltPrecipitationModel, NewQuartzOvergrowth, QuartzOvergrowth'" />
         <masterModalID                   spec="REQUIRED INTEGER" />

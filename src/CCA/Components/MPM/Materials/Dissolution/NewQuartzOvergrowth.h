@@ -70,8 +70,8 @@ WARNING
 
         MaterialManagerP    d_materialManager;
 
-        // Growth rate
-        double d_growthRate;
+        // Crystal pressure (pressure above which overgrowth won't take place)
+        double d_crystalPressure;
         // master material
         int    d_masterModalID;
 
