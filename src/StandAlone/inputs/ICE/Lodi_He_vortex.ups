@@ -2,12 +2,12 @@
 
 
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
        <title>none</title>
-   </Meta>    
+   </Meta>
 
    <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
@@ -27,13 +27,13 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      
+
       <LODI>
         <press_infinity>  101267.2      </press_infinity>
         <sigma>           0.27          </sigma>
         <material>    BackgroundGas     </material>
       </LODI>
- 
+
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "LODI">
                               <value> 0.0 </value>
@@ -73,7 +73,7 @@
         <BCType id = "0"   label = "scalar-f"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-      </Face>   
+      </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "LODI">
                               <value> 0.0 </value>
@@ -137,7 +137,7 @@
               <resolution>   [60,60,1]             </resolution>
            </Box>
        </Level>
-    </Grid>    
+    </Grid>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
@@ -156,7 +156,7 @@
       <save label="TotalMass"/>
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
-   
+
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -172,13 +172,13 @@
                 <strength>   10        </strength>
                 <radius>     0.5       </radius>
               </vortex>
-          </vortices> 
+          </vortices>
         </customInitialization>
-      </ICE>        
+      </ICE>
     </CFD>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>[0,-9.81,0]</gravity>
        <reference_pressure> 101325.0  </reference_pressure>
@@ -191,11 +191,11 @@
          <material name = "BackgroundGas">
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>      true                </isSurroundingMatl>
-           
-           <dynamic_viscosity>      0.0                 </dynamic_viscosity>     
-           <thermal_conductivity>   0.0                 </thermal_conductivity>  
-           <specific_heat>          716.5               </specific_heat>         
-           <gamma>                  1.4                 </gamma>                 
+
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          716.5               </specific_heat>
+           <gamma>                  1.4                 </gamma>
 
            <geom_object>
               <difference>
@@ -212,7 +212,7 @@
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,10.0,0.0]      </velocity>
               <density>       1.178471737613           </density>
-              <pressure>      101325.0                 </pressure>     
+              <pressure>      101325.0                 </pressure>
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
@@ -220,35 +220,34 @@
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,10.0,0.0]      </velocity>
               <density>        0.162527864325          </density>
-              <pressure>      101325.0                 </pressure>     
+              <pressure>      101325.0                 </pressure>
               <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-      </ICE>       
-       
+      </ICE>
+
 
     </MaterialProperties>
     <!--____________________________________________________________________-->
     <Models>
-       <Model type = "SimpleRxn">
-        <SimpleRxn>
+       <Model type = "BinaryProperties">
+        <BinaryProperties>
           <material>BackgroundGas</material>
            <scalar name = "f">
              <test_conservation>       true            </test_conservation>
              <constants>
-               <f_stoichometric>          0.06207   </f_stoichometric>
                <diffusivity>              0.0       </diffusivity>
                <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
-               <rho_air>            1.178471737613  </rho_air>
-               <rho_fuel>           0.162527864325  </rho_fuel>
-               <cv_air>               716.5         </cv_air>
-               <cv_fuel>              3115.6        </cv_fuel>
-               <R_air>                287.0         </R_air>
-               <R_fuel>               2077.03       </R_fuel>
-               <thermalCond_air>      0.0           </thermalCond_air>
-               <thermalCond_fuel>     0.0           </thermalCond_fuel>  
-               <viscosity_air>        0.0           </viscosity_air>
-               <viscosity_fuel>       0.0           </viscosity_fuel>
+               <rho_A>              1.178471737613  </rho_A>
+               <rho_B>              0.162527864325  </rho_B>
+               <cv_A>               716.5           </cv_A>
+               <cv_B>               3115.6          </cv_B>
+               <R_A>                287.0           </R_A>
+               <R_B>                2077.03         </R_B>
+               <thermalCond_A>      0.0             </thermalCond_A>
+               <thermalCond_B>      0.0             </thermalCond_B>
+               <dynamic_viscosity_A>0.0             </dynamic_viscosity_A>
+               <dynamic_viscosity_B>0.0             </dynamic_viscosity_B>
              </constants>
              <geom_object>
                <difference>
@@ -262,7 +261,7 @@
                <scalar>    1.00   </scalar>
              </geom_object>
           </scalar>
-        </SimpleRxn>
-      </Model> 
-    </Models> 
+        </BinaryProperties>
+      </Model>
+    </Models>
 </Uintah_specification>
