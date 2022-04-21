@@ -2535,30 +2535,6 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup *,
 
     hydrostaticPressureAdjustment(patch, rho_micro, press_CC);
 
-    //__________________________________
-    //  Adjust Temp field if g != 0
-    //  so fields are thermodynamically consistent
-    unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
-
-    for (unsigned int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-      int indx = ice_matl->getDWIndex();
-
-      constCCVariable<double> gamma;
-      constCCVariable<double> cv;
-      CCVariable<double> Temp;
-
-      new_dw->get( gamma, lb->gammaLabel,         indx,patch,m_gn,0 );
-      new_dw->get( cv,    lb->specific_heatLabel, indx,patch,m_gn,0 );
-
-      new_dw->getModifiable( Temp,     lb->temp_CCLabel,       indx, patch );
-      new_dw->getModifiable( rho_micro,lb->rho_micro_CCLabel,  indx, patch );
-
-      Patch::FaceType dummy = Patch::invalidFace; // This is a dummy variable
-      ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
-                                         press_CC, gamma, cv,
-                                         rho_micro, Temp, dummy );
-    }
   }
 }
 
