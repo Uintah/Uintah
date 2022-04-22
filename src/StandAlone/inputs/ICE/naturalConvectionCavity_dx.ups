@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!--______________________________________________________________________
+#
+#  Input file to reproduces the results in the reference.  
+# The domain length was computed using the script:
+# cavityFlowParameters.m
+#
+#  Note you have to let the problems run for a long time for them to reach steady state.
+# Reference:'
+#   Varakos, G., Mitsoulis, E., and Assimacopoulos, D.
+#   Natural Convection Flow In A Square Cavity Revisited: Laminar and Turbulent Models With Wall Functions
+#   International Journal for Numerical Methods in Fluids, Vol 18, 695-719, 1994
+______________________________________________________________________-->
 
 
 
@@ -20,7 +32,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-   <!--    <max_Timesteps>      3          </max_Timesteps> -->
+       <max_Timesteps>      50          </max_Timesteps>
        <max_delt_increase>    1        </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
@@ -107,7 +119,7 @@
        </Level>
     </Grid>
     
-    <!--  Ra     upper
+    <!--  Ra                             upper
      1.000000e+03      [8.411751e-03, 8.411751e-03, 8.762240e-05] 
      1.000000e+04      [1.812255e-02, 1.812255e-02, 1.887766e-04] 
      1.000000e+05      [3.904383e-02, 3.904383e-02, 4.067065e-04] 
@@ -119,9 +131,11 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>Ra_1e6_96^2.uda</filebase>
-  
-      <outputInterval>1</outputInterval>
+      <filebase>Ra_1e6_96.uda</filebase>
+       
+      <outputTimestepInterval> 10 </outputTimestepInterval>
+       
+  <!--<outputInterval>1</outputInterval> -->
       
       <save label="vel_CC"/>
       <save label="press_CC"/>
@@ -129,6 +143,8 @@
       <save label="rho_CC"/>
       <save label="temp_CC"/>
       <save label="vorticity"/>
+      
+      <checkpoint timestepInterval="25" cycle="1"/>
    </DataArchiver>
 
 
