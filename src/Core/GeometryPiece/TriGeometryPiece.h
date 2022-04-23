@@ -136,7 +136,6 @@ WARNING
          void readPoints(const std::string& file);
          void readTri(   const std::string& file);
          void makePlanes();
-//         void makeTriBoxes();
          void insideTriangle( Point& p, 
                               int i, 
                               int& NCS, 
@@ -147,10 +146,8 @@ WARNING
          std::vector<Point>     d_points;
          std::vector<IntVector> d_tri;
          std::vector<Plane>     d_planes;
-//         std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;
-
       };
 
 } // End namespace Uintah

@@ -31,10 +31,13 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Grid/DbgOutput.h>
 #include <fstream>
 
 using namespace Uintah;
 using namespace std;
+static DebugStream cout_doing("MPM", false);
 
 //______________________________________________________________________
 Triangle::Triangle(TriangleMaterial* tm, MPMFlags* flags, MaterialManagerP& ss)
@@ -492,16 +495,16 @@ void Triangle::scheduleInitialize(const LevelP& level,
 //__________________________________
 //
 void Triangle::initialize(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* triangle_matls,
-                             DataWarehouse* ,
-                             DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* triangle_matls,
+                          DataWarehouse* ,
+                          DataWarehouse* new_dw)
 {
   particleIndex totalTriangles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    //printTask(patches,patch,cout_doing,"Doing initialize for Triangles\t");
+    printTask(patches,patch,cout_doing,"Doing initialize for Triangles\t");
 
     for(int m=0;m<triangle_matls->size();m++){
       TriangleMaterial* triangle_matl = 

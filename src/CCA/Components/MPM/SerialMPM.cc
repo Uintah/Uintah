@@ -582,7 +582,7 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
 _____________________________________________________________________*/
 void SerialMPM::restartInitialize()
 {
-  cout<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
+  proc0cout<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
@@ -2919,22 +2919,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gColor[c]         /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]        /= gmass[c];
-      }
-
-      if(m==flags->d_containerMaterial){
-        Vector dxCell = patch->dCell();
-        double contRad=flags->d_containerRadius;
-        double contRho=mpm_matl->getInitialDensity();
-        for(NodeIterator iter=patch->getNodeIterator();
-                         !iter.done();iter++){
-          IntVector c = *iter;
-          Point NP = patch->getNodePosition(c);
-          if(NP.x()*NP.x() + NP.y()*NP.y() >= contRad*contRad){
-            gvolume[c]=dxCell.x()*dxCell.y()*dxCell.z();
-            gmass[c]=gvolume[c]*contRho;
-            gColor[c]=((double) m);
-          }
-        }
       }
 
       // Apply boundary conditions to the temperature and velocity (if symmetry)

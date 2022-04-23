@@ -107,7 +107,6 @@ TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
 #ifdef USE_PLANES
   d_planes = copy.d_planes;
 #endif
-//  d_boxes = copy.d_boxes;
 
   d_grid = scinew UniformGrid(*copy.d_grid);
 
@@ -131,7 +130,6 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
   d_planes.clear();
 #endif
 
-//  d_boxes.clear();
 
   delete d_grid;
 
@@ -142,7 +140,6 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
 #ifdef USE_PLANES
   d_planes = rhs.d_planes;
 #endif
-//  d_boxes = rhs.d_boxes;
 
   d_grid = scinew UniformGrid(*rhs.d_grid);
 
@@ -447,29 +444,6 @@ TriGeometryPiece::makePlanes()
     d_planes.push_back(plane);
   }
 
-}
-#endif
-
-#if 0
-//______________________________________________________________________
-//
-
-void
-TriGeometryPiece::makeTriBoxes()
-{
-  for (int i = 0; i < (int) d_tri.size(); i++) {
-    Point pt[3];
-    IntVector tri = d_tri[i];
-    pt[0] = d_points[tri.x()];
-    pt[1] = d_points[tri.y()];
-    pt[2] = d_points[tri.z()];
-    
-    Point min = Min( Min( pt[0],pt[1] ), Min( pt[1],pt[2] ) );
-    Point max = Max( Max( pt[0],pt[1] ), Max( pt[1],pt[2] ) );
-    Box box(min,max);
-    
-    d_boxes.push_back(box);
-  }
 }
 #endif
 
