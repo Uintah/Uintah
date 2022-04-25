@@ -98,6 +98,10 @@ WARNING
          virtual void addComputesAndRequiresIntegrated(SchedulerP & sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls) = 0;
+
+         // Enable setting material attributes (isRigid, needsNormals, etc)
+         // based on the chosen contact model
+         virtual void setContactMaterialAttributes();
          
       protected:
          MPMLabel* lb;

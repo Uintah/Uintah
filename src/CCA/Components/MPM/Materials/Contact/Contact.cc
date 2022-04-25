@@ -34,3 +34,7 @@ Contact::Contact(const ProcessorGroup* myworld, MPMLabel* Mlb, MPMFlags* MFlag, 
 Contact::~Contact()
 {
 }
+
+void Contact::setContactMaterialAttributes()
+{
+}

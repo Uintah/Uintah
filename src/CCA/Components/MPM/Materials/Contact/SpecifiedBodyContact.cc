@@ -24,6 +24,7 @@
 
 // SpecifiedBodyContact.cc
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -115,6 +116,13 @@ SpecifiedBodyContact::~SpecifiedBodyContact()
 {
 }
 
+void SpecifiedBodyContact::setContactMaterialAttributes()
+{
+  MPMMaterial* mpm_matl = 
+         (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
+  mpm_matl->setIsRigid(true);
+}
+
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
@@ -175,9 +183,10 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+ cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact"
+      << endl;
+#if 0
  if(d_oneOrTwoStep==2){
-  // const double simTime = d_materialManager->getElapsedSimTime();
-  
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
@@ -189,7 +198,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls);
     std::vector<     NCVariable<Vector> > gvelocity(numMatls);
@@ -197,19 +205,18 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->get(gmass[m],           lb->gMassLabel,     dwi, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,     dwi, patch);
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+      new_dw->get(gmass[m],           lb->gMassLabel, dwi, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m],   lb->gVelocityLabel,     dwi, patch);
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi, patch);
     }
     
     // three ways to get velocity 
     //   if > stop time, always use stop velocity
     //   if we have a specified profile, use value from the velocity profile
     //   otherwise, apply rigid velocity to all cells that share a rigid body.
-    //
-    
+
     bool  rigid_velocity = true;
-    Vector requested_velocity( 0.0, 0.0, 0.0 );
+    Vector requested_velocity(0.0, 0.0, 0.0);
     if(simTime>d_stop_time) {
       requested_velocity = d_vel_after_stop;
       rigid_velocity = false;
@@ -217,19 +224,20 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       requested_velocity = findVelFromProfile(simTime);
       rigid_velocity  = false;
     }
-    
+
     // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-      IntVector c = *iter; 
+      IntVector c = *iter;
+
+      Vector rigid_vel = requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity[d_material][c];
+      }
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
-        Vector rigid_vel = requested_velocity;
-        if(rigid_velocity) {
-          rigid_vel = gvelocity[d_material][c];
-          if(n==d_material) continue; // compatibility with old mode, where rigid velocity doesnt change material 0
-        }
+        if(!d_matls.requested(n)) continue;
 
-       // set each velocity component being modified to a new velocity
+        // set each velocity component being modified to a new velocity
         Vector new_vel( gvelocity[n][c] );
         if(d_direction[0]) new_vel.x( rigid_vel.x() );
         if(d_direction[1]) new_vel.y( rigid_vel.y() );
@@ -239,10 +247,11 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
         if(!compare(gmass[d_material][c],0.)){
           gvelocity[n][c] = new_vel;
         }
-      }
-    }
-  }
+      } // loop over matls
+    }   // loop over nodes
+  }     // loop over patches
  }   // if d_oneOrTwoStep
+#endif
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
@@ -252,9 +261,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
-  // set velocity to appropriate vel
-  // const double simTime = d_materialManager->getElapsedSimTime(); // FIXME: + dt ?
-    
   simTime_vartype simTime;
   old_dw->get(simTime, lb->simulationTimeLabel);
 
@@ -267,7 +273,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<Vector> > gvelocity(numMatls);
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
-  constNCVariable<Vector>                    gsurfnorm;
+  constNCVariable<Vector>               gsurfnorm;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -286,9 +292,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     // Compute the normals for the rigid material
-   if(d_NormalOnly){
-     new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
-   } // if(d_NormalOnly)
+    if(d_NormalOnly){
+      new_dw->get(gsurfnorm, lb->gSurfNormLabel, d_material, patch, gnone, 0);
+    } // if(d_NormalOnly)
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -308,29 +314,19 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
 
-      Point nodePos = patch->getNodePosition(c);
-      Vector outnorm = nodePos.asVector() - Vector(0.,nodePos.y(),0.);
-      double length = outnorm.length();
-      if(length>0.0){
-        outnorm/=outnorm.length();
-      } else {
-        outnorm=Vector(0.0);
-      }
-
       // Determine nodal volume
       double totalNodalVol=0.0;
       for(int  n = 0; n < numMatls; n++){
         totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
       }
 
-      for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
-        Vector rigid_vel = requested_velocity;
-        if(rigid_velocity) {
-          rigid_vel = gvelocity_star[d_material][c];
-          if(n==d_material){
-             continue; // compatibility with rigid motion, doesnt affect matl 0
-          }
-        }
+      Vector rigid_vel = requested_velocity;
+      if(rigid_velocity) {
+        rigid_vel = gvelocity_star[d_material][c];
+      }
+
+      for(int  n = 0; n < numMatls; n++){
+        if(!d_matls.requested(n)) continue;
 
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){
@@ -340,8 +336,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
             Vector normal_normaldV = normal*normalDeltaVel;
             new_vel = gvelocity_star[n][c] - normal_normaldV;
           }
-        }
-        else{
+        } else{
           new_vel = gvelocity_star[n][c];
           if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
           if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
@@ -353,9 +348,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           //Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
-         if(n==0){
-          reaction_force -= Dot(outnorm, ginternalForce[n][c])*Vector(1,0,0);
-         }
+          reaction_force  -= ginternalForce[n][c];
         }  // if
       }    // for matls
     }      // for Node Iterator
