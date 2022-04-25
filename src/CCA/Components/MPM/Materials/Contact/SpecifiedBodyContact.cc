@@ -211,7 +211,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
- cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact" 
+ cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact"
       << endl;
 #if 0
  if(d_oneOrTwoStep==2){
@@ -225,7 +225,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
 
     // Retrieve necessary data from DataWarehouse
     std::vector<constNCVariable<double> > gmass(numMatls);
@@ -260,9 +259,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       rigid_velocity  = false;
     }
 
-//    Point origin = Point(0.,0.,0.);
-//    Vector omega = Vector(0.,0.,1.);
-
     // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
@@ -275,7 +271,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       }
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
-//        if(n==d_material) continue; 
         if(!d_matls.requested(n)) continue;
 
         // set each velocity component being modified to a new velocity
@@ -362,7 +357,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
-      
+
       // Determine nodal volume
       double totalNodalVol=0.0;
       for(int  n = 0; n < numMatls; n++){
@@ -377,10 +372,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       }
 
       for(int  n = 0; n < numMatls; n++){
-//          if(n==d_material){
-//             continue;
-//          }
         if(!d_matls.requested(n)) continue;
+
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){
           Vector normal = gsurfnorm[c];
@@ -398,7 +391,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
         if (!compare(gmass[d_material][c], 0.)
         && (totalNodalVol/cell_vol) > d_vol_const){
-          Vector old_vel = gvelocity_star[n][c];
+          //Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
           reaction_force[n]  -= ginternalForce[n][c];
