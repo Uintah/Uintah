@@ -180,12 +180,9 @@ void Salt::computeStressTensor(const PatchSubset* patches,
   old_dw->get(simTimeVar, lb->simulationTimeLabel);
   double simTime = simTimeVar;
 
-  // Scale has units of years                 // 3.1536e13 us = 1 year
-  //double Scale = (simTime - 284.)*3.1536e9;  
-//  double Scale = (simTime - 284.02477415265162)*1e6;
+  // 3.1536e13 us = 1 year
   double S1 = d_initialData.S1;
   double TiMB = d_initialData.TiMB;
-//  double Scale = (simTime - TiMB)*(simTime-TiMB)*S1;
   double Scale = (simTime-TiMB)*S1;
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
@@ -199,7 +196,6 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     double sqrtThreeHalves = sqrt(1.5);
 
     Vector dx = patch->dCell();
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
