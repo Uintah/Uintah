@@ -99,6 +99,10 @@ namespace Uintah {
     ParticleVariable<double>  triangleMassDisp;
     ParticleVariable<IntVector>  triangleUseInPenalty;
     ParticleVariable<IntVector>  triangleMultiMat;
+    ParticleVariable<Matrix3>    triangleNearbyMats;
+    ParticleVariable<IntVector>  triangleNearbyMatsN0;
+    ParticleVariable<IntVector>  triangleNearbyMatsN1;
+    ParticleVariable<IntVector>  triangleNearbyMatsN2;
 
     TriangleLabel* d_Tl;
     MPMLabel* d_lb;

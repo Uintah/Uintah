@@ -1784,10 +1784,10 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
              m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
   t->requires(Task::OldDW, lb->pXLabel,                  triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,               triangle_matls, gnone);
-  t->requires(Task::OldDW, TriL->triangleIDLabel,         triangle_matls,gnone);
-  t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,   triangle_matls,gnone);
-  t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,   triangle_matls,gnone);
-  t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,   triangle_matls,gnone);
+  t->requires(Task::OldDW, TriL->triangleIDLabel,        triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triMidToN0VectorLabel,  triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triMidToN1VectorLabel,  triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triMidToN2VectorLabel,  triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,
                                                          triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triUseInPenaltyLabel,   triangle_matls, gnone);
@@ -1810,6 +1810,10 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
   t->computes(TriL->triMultiMatLabel_preReloc,           triangle_matls);
+  t->computes(TriL->triNearbyMatsLabel_preReloc,         triangle_matls);
+//  t->computes(TriL->triNearbyMatsN0Label_preReloc,       triangle_matls);
+//  t->computes(TriL->triNearbyMatsN1Label_preReloc,       triangle_matls);
+//  t->computes(TriL->triNearbyMatsN2Label_preReloc,       triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -1873,6 +1877,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triMultiMatLabel,     triangle_matls, gac, 2);
+  t->requires(Task::OldDW, TriL->triNearbyMatsLabel,   triangle_matls, gac, 2);
   if (flags->d_doingDissolution) {
     t->requires(Task::OldDW, TriL->triMassDispLabel,   triangle_matls, gac, 2);
   }
@@ -5798,6 +5803,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<Vector> triAreaAtNodes;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
       ParticleVariable<IntVector>   triMultiMat;
+//      ParticleVariable<IntVector>   triNearbyMatsN0,triNearbyMatsN1,triNearbyMatsN2;
+      ParticleVariable<Matrix3>     triNearbyMats;
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
@@ -5836,6 +5843,15 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      TriL->triNormalLabel_preReloc,       pset);
       new_dw->allocateAndPut(triMultiMat,
                                      TriL->triMultiMatLabel_preReloc,     pset);
+      new_dw->allocateAndPut(triNearbyMats,
+                                   TriL->triNearbyMatsLabel_preReloc,   pset);
+//      new_dw->allocateAndPut(triNearbyMatsN0,
+//                                   TriL->triNearbyMatsN0Label_preReloc,   pset);
+//      new_dw->allocateAndPut(triNearbyMatsN1,
+//                                   TriL->triNearbyMatsN1Label_preReloc,   pset);
+//      new_dw->allocateAndPut(triNearbyMatsN2,
+//                                   TriL->triNearbyMatsN2Label_preReloc,   pset);
+
 
       tri_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
@@ -5866,6 +5882,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         Vector vertexVel[3];
         double populatedVertex[3]={0.,0.,0.};
         double DisPrecip = 0.;  // Dissolving if > 0, precipitating if < 0.
+        IntVector negnn(-99,-99,-99);
+        IntVector matls[3]={negnn,negnn,negnn};
 
         for(int itv = 0; itv < 3; itv++){
           // Get the node indices that surround the point
@@ -5873,6 +5891,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           Vector vel(0.0,0.0,0.0);
           double sumSk=0.0;
           Vector gSN(0.,0.,0.);
+          vector< std::pair <double,int> > matlMass(numMPMMatls);
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
@@ -5883,6 +5902,19 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             DisPrecip += dLdt[adv_matl][node]*S[k];
             if(gmass[adv_matl][node] <= 0.70*gmassglobal[node]){
               triMultiMat[idx](itv)=1;
+            }
+          }
+          if(triUseInPenalty[idx](itv)==1){
+            for (int k = 0; k < NN; k++) {
+              IntVector node = ni[k];
+              for(int m=0;m<numMPMMatls;m++){
+                 matlMass[m].first = gmass[m][node]*S[k];
+                 matlMass[m].second = m;
+              }
+              sort(matlMass.begin(), matlMass.end());
+              matls[itv]=IntVector(matlMass[1].second,  
+                                   matlMass[2].second,  
+                                   matlMass[3].second);
             }
           }
 
@@ -5896,12 +5928,24 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             vertexVel[itv] = vel + surf[itv];
             populatedVertex[itv] = 1.;
           } else {
-//          cout << "WARNING: " << triangle_ids[idx] << " of group " << adv_matl
-//               << " is not getting any nodal input." << endl; 
-//          cout << "Vertex position is " << P[itv] << endl;
             deleteThisTriangle++;
           }
         } // loop over vertices
+
+        triNearbyMats[idx](0,0)=matls[0].x();
+        triNearbyMats[idx](0,1)=matls[0].y();
+        triNearbyMats[idx](0,2)=matls[0].z();
+        triNearbyMats[idx](1,0)=matls[1].x();
+        triNearbyMats[idx](1,1)=matls[1].y();
+        triNearbyMats[idx](1,2)=matls[1].z();
+        triNearbyMats[idx](2,0)=matls[2].x();
+        triNearbyMats[idx](2,1)=matls[2].y();
+        triNearbyMats[idx](2,2)=matls[2].z();
+
+//        cout << "triNearbyMats = " << triNearbyMats[idx] << endl;
+//        triNearbyMatsN0[idx]=matls[0];
+//        triNearbyMatsN1[idx]=matls[1];
+//        triNearbyMatsN2[idx]=matls[2];
 
         if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
           totalsurfarea+=triArea[idx];
@@ -6093,6 +6137,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
     std::vector<constParticleVariable<IntVector> >  triMultiMat(numLSMatls);
+    std::vector<constParticleVariable<Matrix3> >    triNearbyMats(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
 //    std::vector<std::vector<int> > triInContact(numLSMatls);
@@ -6143,6 +6188,8 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
       old_dw->get(triMultiMat[tmo],    TriL->triMultiMatLabel,        pset0);
+      old_dw->get(triNearbyMats[tmo],  TriL->triNearbyMatsLabel,      pset0);
+
       if (flags->d_doingDissolution) {
         old_dw->get(triMassDisp[tmo],  TriL->triMassDispLabel,        pset0);
       } else {
@@ -6256,7 +6303,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
          for(int iu = 0; iu < 3; iu++){
 
           if(triUseInPenalty[tmo][idx0](iu)==0 || 
-             triMultiMat[tmo][idx0](iu) == 0){
+             triMultiMat[tmo][idx0](iu) == 0 ||
+            ((int) triNearbyMats[tmo][idx0](iu,0) != adv_matl1 &&
+             (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1 &&
+             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)){
             continue;
           }
 

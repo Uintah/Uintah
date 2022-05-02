@@ -105,6 +105,30 @@ TriangleLabel::TriangleLabel()
 
   triMultiMatLabel_preReloc = VarLabel::create("tri.multimat+",
 			ParticleVariable<IntVector>::getTypeDescription() );
+
+  triNearbyMatsLabel = VarLabel::create("tri.nearbymats",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+
+  triNearbyMatsLabel_preReloc = VarLabel::create("tri.nearbymats+",
+			ParticleVariable<Matrix3>::getTypeDescription() );
+
+//  triNearbyMatsN0Label = VarLabel::create("tri.nearbymatsN0",
+//			ParticleVariable<IntVector>::getTypeDescription() );
+
+//  triNearbyMatsN0Label_preReloc = VarLabel::create("tri.nearbymatsN0+",
+//			ParticleVariable<IntVector>::getTypeDescription() );
+
+//  triNearbyMatsN1Label = VarLabel::create("tri.nearbymatsN1",
+//			ParticleVariable<IntVector>::getTypeDescription() );
+
+//  triNearbyMatsN1Label_preReloc = VarLabel::create("tri.nearbymatsN1+",
+//			ParticleVariable<IntVector>::getTypeDescription() );
+
+//  triNearbyMatsN2Label = VarLabel::create("tri.nearbymatsN2",
+//			ParticleVariable<IntVector>::getTypeDescription() );
+
+//  triNearbyMatsN2Label_preReloc = VarLabel::create("tri.nearbymatsN2+",
+//			ParticleVariable<IntVector>::getTypeDescription() );
 }
 
 TriangleLabel::~TriangleLabel()
@@ -132,4 +156,12 @@ TriangleLabel::~TriangleLabel()
   VarLabel::destroy(triMassDispLabel_preReloc);
   VarLabel::destroy(triMultiMatLabel);
   VarLabel::destroy(triMultiMatLabel_preReloc);
+  VarLabel::destroy(triNearbyMatsLabel);
+  VarLabel::destroy(triNearbyMatsLabel_preReloc);
+//  VarLabel::destroy(triNearbyMatsN0Label);
+//  VarLabel::destroy(triNearbyMatsN0Label_preReloc);
+//  VarLabel::destroy(triNearbyMatsN1Label);
+//  VarLabel::destroy(triNearbyMatsN1Label_preReloc);
+//  VarLabel::destroy(triNearbyMatsN2Label);
+//  VarLabel::destroy(triNearbyMatsN2Label_preReloc);
 }
