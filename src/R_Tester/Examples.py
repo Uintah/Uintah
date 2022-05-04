@@ -132,7 +132,7 @@ DEBUGTESTS   =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: BASETESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS KOKKOSTESTS Poisson3_Tests BUILDBOTTESTS
+#LIST: LOCALTESTS FLOATTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS THREADEDTESTS DOMAINTESTS KOKKOSTESTS Poisson3_Tests BUILDBOTTESTS
 #__________________________________
 
 
