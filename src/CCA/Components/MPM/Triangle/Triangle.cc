@@ -233,11 +233,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
         triangleMassDisp[pidx]   = 0.0;
-        triangleMultiMat[pidx]   = IntVector(1,1,1);
         triangleNearbyMats[pidx] = Matrix3(-99);
-//        triangleNearbyMatsN0[pidx] = IntVector(-99,-99,-99);
-//        triangleNearbyMatsN1[pidx] = IntVector(-99,-99,-99);
-//        triangleNearbyMatsN1[pidx] = IntVector(-99,-99,-99);
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
 //        Vector C = P2-P1;
@@ -312,16 +308,8 @@ Triangle::allocateVariables(particleIndex numTriangles,
   new_dw->allocateAndPut(triangleMassDisp,d_Tl->triMassDispLabel,       subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
                                          d_Tl->triAreaAtNodesLabel,     subset);
-  new_dw->allocateAndPut(triangleMultiMat,
-                                         d_Tl->triMultiMatLabel,        subset);
   new_dw->allocateAndPut(triangleNearbyMats,
                                          d_Tl->triNearbyMatsLabel,      subset);
-//  new_dw->allocateAndPut(triangleNearbyMatsN0,
-//                                       d_Tl->triNearbyMatsN0Label,    subset);
-//  new_dw->allocateAndPut(triangleNearbyMatsN1,
-//                                       d_Tl->triNearbyMatsN1Label,    subset);
-//  new_dw->allocateAndPut(triangleNearbyMatsN2,
-//                                       d_Tl->triNearbyMatsN2Label,    subset);
 
   return subset;
 }
@@ -460,11 +448,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_Tl->triClayLabel);
   d_triangle_state.push_back(d_Tl->triNormalLabel);
   d_triangle_state.push_back(d_Tl->triMassDispLabel);
-  d_triangle_state.push_back(d_Tl->triMultiMatLabel);
   d_triangle_state.push_back(d_Tl->triNearbyMatsLabel);
-//  d_triangle_state.push_back(d_Tl->triNearbyMatsN0Label);
-//  d_triangle_state.push_back(d_Tl->triNearbyMatsN1Label);
-//  d_triangle_state.push_back(d_Tl->triNearbyMatsN2Label);
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -479,11 +463,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_Tl->triClayLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMassDispLabel_preReloc);
-  d_triangle_state_preReloc.push_back(d_Tl->triMultiMatLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNearbyMatsLabel_preReloc);
-//  d_triangle_state_preReloc.push_back(d_Tl->triNearbyMatsN0Label_preReloc);
-//  d_triangle_state_preReloc.push_back(d_Tl->triNearbyMatsN1Label_preReloc);
-//  d_triangle_state_preReloc.push_back(d_Tl->triNearbyMatsN2Label_preReloc);
 }
 //__________________________________
 //
@@ -506,11 +486,7 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_Tl->triNormalLabel);
   t->computes(d_Tl->triAreaAtNodesLabel);
   t->computes(d_Tl->triMassDispLabel);
-  t->computes(d_Tl->triMultiMatLabel);
   t->computes(d_Tl->triNearbyMatsLabel);
-//  t->computes(d_Tl->triNearbyMatsN0Label);
-//  t->computes(d_Tl->triNearbyMatsN1Label);
-//  t->computes(d_Tl->triNearbyMatsN2Label);
   t->computes(d_Tl->triangleCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("Triangle"));

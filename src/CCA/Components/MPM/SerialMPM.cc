@@ -1769,9 +1769,11 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
                       this, &SerialMPM::updateTriangles);
 
   t->requires(Task::OldDW, lb->delTLabel );
+  t->requires(Task::OldDW, lb->timeStepLabel);
 
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
+
   t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
   t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
   t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
@@ -1795,6 +1797,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triMassDispLabel,       triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triNearbyMatsLabel,     triangle_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,                      triangle_matls);
   t->computes(lb->pSizeLabel_preReloc,                   triangle_matls);
@@ -1809,11 +1812,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
   t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
-  t->computes(TriL->triMultiMatLabel_preReloc,           triangle_matls);
   t->computes(TriL->triNearbyMatsLabel_preReloc,         triangle_matls);
-//  t->computes(TriL->triNearbyMatsN0Label_preReloc,       triangle_matls);
-//  t->computes(TriL->triNearbyMatsN1Label_preReloc,       triangle_matls);
-//  t->computes(TriL->triNearbyMatsN2Label_preReloc,       triangle_matls);
 
   // Reduction Variable
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -1876,7 +1875,6 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triangleIDLabel,      triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,  triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triClayLabel,         triangle_matls, gac, 2);
-  t->requires(Task::OldDW, TriL->triMultiMatLabel,     triangle_matls, gac, 2);
   t->requires(Task::OldDW, TriL->triNearbyMatsLabel,   triangle_matls, gac, 2);
   if (flags->d_doingDissolution) {
     t->requires(Task::OldDW, TriL->triMassDispLabel,   triangle_matls, gac, 2);
@@ -4973,6 +4971,7 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
 
       tracer_ids_new.copyData(tracer_ids);
       tracerCemVec_new.copyData(tracerCemVec);
+      tx_new.copyData(tx);
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -5001,44 +5000,48 @@ void SerialMPM::updateTracers(const ProcessorGroup*,
           tx_new[idx] = tx[idx] + vel*delT;
           tx_new[idx] += (surf/(gSN.length()+1.e-100))*delT;
         } else {
-            // This is the "just in case" instance that none of the nodes
-            // influencing a vertex has mass on it.  In this case, use an
-            // interpolator with a larger footprint
-            ParticleInterpolator* cpdiInterp=scinew cpdiInterpolator(patch);
-            vector<IntVector> ni_cpdi(cpdiInterp->size());
-            vector<double> S_cpdi(cpdiInterp->size());
-            Matrix3 size; size.Identity();
-            int N = cpdiInterp->findCellAndWeights(tx[idx],ni_cpdi,S_cpdi,size);
-            vel  = Vector(0.0,0.0,0.0);
-            surf = Vector(0.0,0.0,0.0);
-            sumSk= 0.0;
-            for (int k = 0; k < N; k++) {
-             IntVector node = ni_cpdi[k];
-              vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
-              sumSk+= gmass[adv_matl][node]*S_cpdi[k];
-              surf -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S_cpdi[k];
-            }
+          // This is the "just in case" instance that none of the nodes
+          // influencing a vertex has mass on it.  In this case, use an
+          // interpolator with a larger footprint
+          ParticleInterpolator* cpdiInterp=scinew cpdiInterpolator(patch);
+          vector<IntVector> ni_cpdi(cpdiInterp->size());
+          vector<double> S_cpdi(cpdiInterp->size());
+          Matrix3 size; size.Identity();
+          int N = cpdiInterp->findCellAndWeights(tx[idx],ni_cpdi,S_cpdi,size);
+          vel  = Vector(0.0,0.0,0.0);
+          surf = Vector(0.0,0.0,0.0);
+          sumSk= 0.0;
+          for (int k = 0; k < N; k++) {
+           IntVector node = ni_cpdi[k];
+            vel  += gvelocity[adv_matl][node]*gmass[adv_matl][node]*S_cpdi[k];
+            sumSk+= gmass[adv_matl][node]*S_cpdi[k];
+            surf -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S_cpdi[k];
+          }
+          delete cpdiInterp;
+
+          if(sumSk > 1.e-90){
             vel/=sumSk;
             tx_new[idx] = tx[idx] + vel*delT;
             tx_new[idx] += (surf/(gSN.length()+1.e-100))*delT;
-
-            delete cpdiInterp;
+          } else {
+            // This is the rare "just in case" instance that none of the nodes
+            // influencing a tracer has mass on it.  In this case, use the
+            // "center of mass" velocity to move the vertex
+            double sumSkCoM=0.0;
+            Vector velCoM(0.0,0.0,0.0);
+            for (int k = 0; k < NN; k++) {
+              IntVector node = ni[k];
+              sumSkCoM += gmassglobal[node]*S[k];
+              velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
+            }
+            velCoM/=sumSkCoM;
+            tx_new[idx] = tx[idx] + velCoM*delT;
+            if(sumSkCoM< 1.e-90){
+              cout << "Group = " << adv_matl 
+                   << ", tracer_id = " << tracer_ids[idx] << endl;
+            }
           }
-//        } else {
-//          // This is the rare "just in case" instance that none of the nodes
-//          // influencing a tracer has mass on it.  In this case, use the
-//          // "center of mass" velocity to move the vertex
-//          double sumSkCoM=0.0;
-//          Vector velCoM(0.0,0.0,0.0);
-//          for (int k = 0; k < NN; k++) {
-//            IntVector node = ni[k];
-//            sumSkCoM += gmassglobal[node]*S[k];
-//            velCoM   += gvelocityglobal[node]*gmassglobal[node]*S[k];
-//          }
-//          velCoM/=sumSkCoM;
-//          tx_new[idx] = tx[idx] + velCoM*delT;
-//        }
-
+        }
 
 #if 1
         // Check to see if a tracer has left the domain
@@ -5741,6 +5744,15 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
     Ghost::GhostType  gac = Ghost::AroundCells;
 
+    timeStep_vartype timeStep;
+    old_dw->get(timeStep, lb->timeStepLabel);
+    int timestep = timeStep;
+
+    // Should we make this an input file parameter?
+    int interval=10;
+
+    int doit=timestep%interval;
+
     unsigned int numMPMMatls=m_materialManager->getNumMatls("MPM");
     std::vector<constNCVariable<Vector> > gvelocity(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
@@ -5801,10 +5813,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       constParticleVariable<double> triArea, triClay, triMassDisp;
       ParticleVariable<double>      triArea_new, triClay_new, triMassDisp_new;
       constParticleVariable<Vector> triAreaAtNodes;
+      constParticleVariable<Matrix3> triNearbyMats;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
-      ParticleVariable<IntVector>   triMultiMat;
-//      ParticleVariable<IntVector>   triNearbyMatsN0,triNearbyMatsN1,triNearbyMatsN2;
-      ParticleVariable<Matrix3>     triNearbyMats;
+      ParticleVariable<Matrix3>     triNearbyMats_new;
 
       old_dw->get(tx,              lb->pXLabel,                         pset);
       old_dw->get(tsize,           lb->pSizeLabel,                      pset);
@@ -5818,6 +5829,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
       old_dw->get(triMassDisp,     TriL->triMassDispLabel,              pset);
+      old_dw->get(triNearbyMats,   TriL->triNearbyMatsLabel,            pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
       new_dw->allocateAndPut(tsize_new,      lb->pSizeLabel_preReloc,     pset);
@@ -5841,17 +5853,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                      TriL->triMassDispLabel_preReloc,     pset);
       new_dw->allocateAndPut(triNormal_new,
                                      TriL->triNormalLabel_preReloc,       pset);
-      new_dw->allocateAndPut(triMultiMat,
-                                     TriL->triMultiMatLabel_preReloc,     pset);
-      new_dw->allocateAndPut(triNearbyMats,
-                                   TriL->triNearbyMatsLabel_preReloc,   pset);
-//      new_dw->allocateAndPut(triNearbyMatsN0,
-//                                   TriL->triNearbyMatsN0Label_preReloc,   pset);
-//      new_dw->allocateAndPut(triNearbyMatsN1,
-//                                   TriL->triNearbyMatsN1Label_preReloc,   pset);
-//      new_dw->allocateAndPut(triNearbyMatsN2,
-//                                   TriL->triNearbyMatsN2Label_preReloc,   pset);
-
+      new_dw->allocateAndPut(triNearbyMats_new,
+                                   TriL->triNearbyMatsLabel_preReloc,     pset);
 
       tri_ids_new.copyData(triangle_ids);
       tF_new.copyData(tF);
@@ -5859,6 +5862,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       triUseInPenalty_new.copyData(triUseInPenalty);
       triClay_new.copyData(triClay);
       triMassDisp_new.copyData(triMassDisp);
+      triNearbyMats_new.copyData(triNearbyMats);
 
       double totalsurfarea = 0.;
 
@@ -5866,8 +5870,6 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
-        triMultiMat[idx]=IntVector(0,0,0);
 
         Point P[3];
         // Update the positions of the triangle vertices
@@ -5900,21 +5902,21 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             surf[itv] -= dLdt[adv_matl][node]*gSurfNorm[adv_matl][node]*S[k];
             gSN   += gSurfNorm[adv_matl][node]*S[k];
             DisPrecip += dLdt[adv_matl][node]*S[k];
-            if(gmass[adv_matl][node] <= 0.70*gmassglobal[node]){
-              triMultiMat[idx](itv)=1;
-            }
           }
-          if(triUseInPenalty[idx](itv)==1){
-            for (int k = 0; k < NN; k++) {
-              IntVector node = ni[k];
-              for(int m=0;m<numMPMMatls;m++){
-                 matlMass[m].first = gmass[m][node]*S[k];
-                 matlMass[m].second = m;
+          
+          if(doit==1){
+            if(triUseInPenalty[idx](itv)==1){
+              for (int k = 0; k < NN; k++) {
+                IntVector node = ni[k];
+                for(int m=0;m<numMPMMatls;m++){
+                   matlMass[m].first = gmass[m][node]*S[k];
+                   matlMass[m].second = m;
+                }
+                sort(matlMass.begin(), matlMass.end());
+                matls[itv]=IntVector(matlMass[1].second,  
+                                     matlMass[2].second,  
+                                     matlMass[3].second);
               }
-              sort(matlMass.begin(), matlMass.end());
-              matls[itv]=IntVector(matlMass[1].second,  
-                                   matlMass[2].second,  
-                                   matlMass[3].second);
             }
           }
 
@@ -5932,20 +5934,17 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           }
         } // loop over vertices
 
-        triNearbyMats[idx](0,0)=matls[0].x();
-        triNearbyMats[idx](0,1)=matls[0].y();
-        triNearbyMats[idx](0,2)=matls[0].z();
-        triNearbyMats[idx](1,0)=matls[1].x();
-        triNearbyMats[idx](1,1)=matls[1].y();
-        triNearbyMats[idx](1,2)=matls[1].z();
-        triNearbyMats[idx](2,0)=matls[2].x();
-        triNearbyMats[idx](2,1)=matls[2].y();
-        triNearbyMats[idx](2,2)=matls[2].z();
-
-//        cout << "triNearbyMats = " << triNearbyMats[idx] << endl;
-//        triNearbyMatsN0[idx]=matls[0];
-//        triNearbyMatsN1[idx]=matls[1];
-//        triNearbyMatsN2[idx]=matls[2];
+        if(doit==1){
+          triNearbyMats_new[idx](0,0)=matls[0].x();
+          triNearbyMats_new[idx](0,1)=matls[0].y();
+          triNearbyMats_new[idx](0,2)=matls[0].z();
+          triNearbyMats_new[idx](1,0)=matls[1].x();
+          triNearbyMats_new[idx](1,1)=matls[1].y();
+          triNearbyMats_new[idx](1,2)=matls[1].z();
+          triNearbyMats_new[idx](2,0)=matls[2].x();
+          triNearbyMats_new[idx](2,1)=matls[2].y();
+          triNearbyMats_new[idx](2,2)=matls[2].z();
+        }
 
         if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
           totalsurfarea+=triArea[idx];
@@ -5954,7 +5953,8 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         // Handle the triangles that have vertices that are not near nodes with mass
         if(deleteThisTriangle==3){
           cout << "NOTICE: Deleting " << triangle_ids[idx] << " of group " << adv_matl
-               << " because none of its vertices are getting any nodal input." << endl; 
+               << " at position " << tx[idx] << " because none of its vertices are getting any nodal input." << endl; 
+          
           delset->addParticle(idx);
         } else if(deleteThisTriangle>0){
           Vector velMean(0.);
@@ -6136,7 +6136,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
-    std::vector<constParticleVariable<IntVector> >  triMultiMat(numLSMatls);
     std::vector<constParticleVariable<Matrix3> >    triNearbyMats(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
@@ -6187,7 +6186,6 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       old_dw->get(triAreaAtNodes[tmo], TriL->triAreaAtNodesLabel,     pset0);
       old_dw->get(triangle_ids[tmo],   TriL->triangleIDLabel,         pset0);
       old_dw->get(triClay[tmo],        TriL->triClayLabel,            pset0);
-      old_dw->get(triMultiMat[tmo],    TriL->triMultiMatLabel,        pset0);
       old_dw->get(triNearbyMats[tmo],  TriL->triNearbyMatsLabel,      pset0);
 
       if (flags->d_doingDissolution) {
@@ -6302,8 +6300,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
          for(int iu = 0; iu < 3; iu++){
 
-          if(triUseInPenalty[tmo][idx0](iu)==0 || 
-             triMultiMat[tmo][idx0](iu) == 0 ||
+          if(triUseInPenalty[tmo][idx0](iu)==0 ||
             ((int) triNearbyMats[tmo][idx0](iu,0) != adv_matl1 &&
              (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1 &&
              (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)){
