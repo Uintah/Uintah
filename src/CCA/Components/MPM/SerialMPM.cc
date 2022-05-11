@@ -5908,16 +5908,16 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             if(triUseInPenalty[idx](itv)==1){
               for (int k = 0; k < NN; k++) {
                 IntVector node = ni[k];
-                for(int m=0;m<numMPMMatls;m++){
-                   matlMass[m].first = gmass[m][node]*S[k];
+                for(unsigned int m = 0; m < numMPMMatls; m++){
+                   matlMass[m].first += gmass[m][node]*S[k];
                    matlMass[m].second = m;
                 }
-                sort(matlMass.begin(), matlMass.end());
-                matls[itv]=IntVector(matlMass[1].second,  
-                                     matlMass[2].second,  
-                                     matlMass[3].second);
-              }
-            }
+              } // loop over grid nodes
+              sort(matlMass.rbegin(), matlMass.rend());
+              matls[itv]=IntVector(matlMass[1].second,  
+                                   matlMass[2].second,  
+                                   matlMass[3].second);
+            }   // if a vertex to be used in penalty contact
           }
 
           if(sumSk > 1.e-90){
