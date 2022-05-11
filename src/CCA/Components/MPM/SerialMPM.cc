@@ -5894,6 +5894,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           double sumSk=0.0;
           Vector gSN(0.,0.,0.);
           vector< std::pair <double,int> > matlMass(numMPMMatls);
+          for(unsigned int m = 0; m < numMPMMatls; m++){
+             matlMass[m].first=0.0;
+          }
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < NN; k++) {
             IntVector node = ni[k];
@@ -5904,7 +5907,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             DisPrecip += dLdt[adv_matl][node]*S[k];
           }
           
-#if 0
+#if 1
           if(doit==1){
             if(triUseInPenalty[idx](itv)==1){
               for (int k = 0; k < NN; k++) {
@@ -5915,9 +5918,14 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                 }
               } // loop over grid nodes
               sort(matlMass.rbegin(), matlMass.rend());
-              matls[itv]=IntVector(matlMass[1].second,  
-                                   matlMass[2].second,  
-                                   matlMass[3].second);
+//              if(ls==0 && (tri_ids_new[idx]>15300 && tri_ids_new[idx]<15835)){
+//               for(unsigned int m = 0; m < numMPMMatls; m++){
+//                cout << "matlMass[" << m << "] = " << matlMass[m].second << " " << matlMass[m].first << endl;
+//               }
+//              }
+              matls[itv]=IntVector(matlMass[0].second,  
+                                   matlMass[1].second,  
+                                   matlMass[2].second);
             }   // if a vertex to be used in penalty contact
           }
 #endif
@@ -5936,7 +5944,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           }
         } // loop over vertices
 
-#if 0
+#if 1
         if(doit==1){
           triNearbyMats_new[idx](0,0)=matls[0].x();
           triNearbyMats_new[idx](0,1)=matls[0].y();
@@ -6304,10 +6312,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
          for(int iu = 0; iu < 3; iu++){
 
-          if(triUseInPenalty[tmo][idx0](iu)==0 /*||
+          if(triUseInPenalty[tmo][idx0](iu)==0 ||
             ((int) triNearbyMats[tmo][idx0](iu,0) != adv_matl1 &&
              (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1 &&
-             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)*/){
+             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)){
             continue;
           }
 
