@@ -5904,6 +5904,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
             DisPrecip += dLdt[adv_matl][node]*S[k];
           }
           
+#if 0
           if(doit==1){
             if(triUseInPenalty[idx](itv)==1){
               for (int k = 0; k < NN; k++) {
@@ -5919,6 +5920,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                    matlMass[3].second);
             }   // if a vertex to be used in penalty contact
           }
+#endif
 
           if(sumSk > 1.e-90){
             // This is the normal condition, when at least one of the nodes
@@ -5934,6 +5936,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           }
         } // loop over vertices
 
+#if 0
         if(doit==1){
           triNearbyMats_new[idx](0,0)=matls[0].x();
           triNearbyMats_new[idx](0,1)=matls[0].y();
@@ -5945,6 +5948,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
           triNearbyMats_new[idx](2,1)=matls[2].y();
           triNearbyMats_new[idx](2,2)=matls[2].z();
         }
+#endif
 
         if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
           totalsurfarea+=triArea[idx];
@@ -6300,10 +6304,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
          for(int iu = 0; iu < 3; iu++){
 
-          if(triUseInPenalty[tmo][idx0](iu)==0 ||
+          if(triUseInPenalty[tmo][idx0](iu)==0 /*||
             ((int) triNearbyMats[tmo][idx0](iu,0) != adv_matl1 &&
              (int) triNearbyMats[tmo][idx0](iu,1) != adv_matl1 &&
-             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)){
+             (int) triNearbyMats[tmo][idx0](iu,2) != adv_matl1)*/){
             continue;
           }
 
