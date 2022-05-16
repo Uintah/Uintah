@@ -148,6 +148,21 @@
       <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
+    <file                     spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <name                   spec="OPTIONAL STRING" />
+      <var                    spec="MULTIPLE STRING" />
+      <format                 spec="OPTIONAL STRING" />
+      <usePFS                 spec="OPTIONAL BOOLEAN"/>
+    </file>
+
+    <image                    spec="OPTIONAL NO_DATA" >                               <!-- used by StandAlone/tools/pfs/pfs2.cc -->
+      <name                   spec="REQUIRED STRING" />
+      <res                    spec="OPTIONAL VECTOR" />
+      <threshold              spec="OPTIONAL MULTIPLE_DOUBLES" />
+    </image>
+
+
     <torus                    spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <center                 spec="REQUIRED VECTOR" />
@@ -244,8 +259,8 @@
     </tri>
 
     <line_segment             spec="OPTIONAL NO_DATA"
-                              attribute1="label    OPTIONAL STRING"
-                              children1="ALL_OR_NONE_OF( CHILD name )" >
+                                attribute1="label    OPTIONAL STRING"
+                                children1="ALL_OR_NONE_OF( CHILD name )" >
       <name                   spec="OPTIONAL STRING" />
     </line_segment>
 
@@ -297,6 +312,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <file                   spec="MULTIPLE" />
       <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
@@ -354,21 +370,8 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
       <polyhedron             spec="MULTIPLE" />
-
-      <file                    spec="OPTIONAL NO_DATA"
-                                attribute1="label    OPTIONAL STRING" >
-        <name                 spec="OPTIONAL STRING" />
-        <var                  spec="MULTIPLE STRING" />
-        <format               spec="OPTIONAL STRING" />
-        <usePFS               spec="OPTIONAL BOOLEAN"/>
-      </file>
-
-      <image                  spec="OPTIONAL NO_DATA" >
-        <name                 spec="REQUIRED STRING" />
-        <res                  spec="OPTIONAL VECTOR" />
-        <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
-      </image>
-
+      <file                   spec="MULTIPLE" />
+      <image                  spec="MULTIPLE" />
       <res                     spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity                spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
       <level                   spec="OPTIONAL INTEGER"/>
@@ -521,13 +524,13 @@
     <timestep_multiplier     spec="REQUIRED DOUBLE  'positive'" />
 
     <!-- The maximum delta T can increase as a percent over the previous value,
-	 optionally one can output or checkpoint if the value is exceeded -->
+         optionally one can output or checkpoint if the value is exceeded -->
     <max_delt_increase       spec="OPTIONAL DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
     <!-- The maximum delta T for the initial simulation time until
-	 initial_delt_range is reached.
-	 optionally one can output or checkpoint if the value is exceeded -->
+         initial_delt_range is reached.
+         optionally one can output or checkpoint if the value is exceeded -->
     <delt_init               spec="OPTIONAL DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
@@ -535,12 +538,12 @@
     <initial_delt_range      spec="OPTIONAL DOUBLE  'positive'" />
 
     <!-- The minimum delta T value,
-	 optionally one can output or checkpoint if the value is exceeded -->
+         optionally one can output or checkpoint if the value is exceeded -->
     <delt_min                spec="REQUIRED DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
     <!-- The maximum delta T value,
-	 optionally one can output or checkpoint if the value is exceeded -->
+         optionally one can output or checkpoint if the value is exceeded -->
     <delt_max                spec="REQUIRED DOUBLE  'positive'"
                              attribute1="    output OPTIONAL STRING 'false, true'"
                              attribute2="checkpoint OPTIONAL STRING 'false, true'" />
@@ -935,7 +938,7 @@
   <!-- image or preprocessing specs     -->
   <PreprocessTools        spec="OPTIONAL NO_DATA" >
     <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
-      <image              spec="REQUIRED STRING" />
+      <image_filename     spec="REQUIRED STRING" />
       <ppc                spec="REQUIRED VECTOR 'positive'" />
       <res                spec="REQUIRED VECTOR 'positive'" />
       <outputBasename     spec="REQUIRED STRING" />
