@@ -80,67 +80,58 @@ size_t
 Variable::emit(       OutputContext & oc
               , const IntVector     & l
               , const IntVector     & h
-              , const std::string   & compressionModeHint
+              , const std::string   & compressionMode
               )
 {
   bool use_gzip = false;
-  bool used_gzip = false;
-  if (compressionModeHint == "gzip") {
+
+  if (compressionMode == "gzip") {
     use_gzip = true;
   }
-  else if (compressionModeHint != "" && compressionModeHint != "none") {
+  else if (compressionMode != "" && compressionMode != "none") {
     std::cout << "Invalid Compression Mode - throwing exception...\n";
-    SCI_THROW(InvalidCompressionMode(compressionModeHint, "", __FILE__, __LINE__));
+    SCI_THROW(InvalidCompressionMode(compressionMode, "", __FILE__, __LINE__));
   }
-
-  used_gzip = use_gzip;
 
   std::ostringstream outstream;
-  emitNormal(outstream, l, h, oc.varnode, oc.outputDoubleAsFloat);
+  emitNormal( outstream, l, h, oc.varnode, oc.outputDoubleAsFloat );
 
-  std::string preGzip = outstream.str();
-  std::string buffer;  // trying to avoid copying the strings back and forth
-  std::string* writeoutString = &preGzip;
+  std::string sourceString = outstream.str();
+  std::string bufferString;  // trying to avoid copying the strings back and forth
+  std::string* writeString = &sourceString;
 
   if (use_gzip) {
-    writeoutString = gzipCompress(&preGzip, &buffer);
-    if (writeoutString != &buffer) {
-      used_gzip = false;  // gzip wasn't better, so it wasn't used
-    }
+    writeString = gzipCompress( &sourceString, &bufferString );
   }
 
-  errno = -1;
-  const char* writebuffer = (*writeoutString).c_str();
-  size_t writebufferSize = (*writeoutString).size();
-  if (writebufferSize > 0) {
-    ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
 
-    if (s != (long)writebufferSize) {
-      std::cerr << "\nVariable::emit - write system call failed writing to " << oc.filename << " with errno " << errno << ": "
-                << strerror(errno) << std::endl;
-      std::cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
+  //__________________________________
+  //  Write the buffer
+  errno = -1;
+  const char* writeBuffer = (*writeString).c_str();
+  size_t writeBufferSize  = (*writeString).size();
+
+
+  if ( writeBufferSize > 0 ) {
+    ssize_t s = ::write( oc.fd, writeBuffer, writeBufferSize );
+
+    if ( s != (long)writeBufferSize ) {
+      std::cerr << "\nERROR Variable::emit - write system call failed writing to (" << oc.filename << ") with errno "
+                << errno << ": " << strerror(errno) << std::endl;
+      std::cerr << " * Write buffer size: (" << writeBufferSize << "), but actually wrote buffer size:(" << s << ")\n\n";
 
       SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
     }
-    oc.cur += writebufferSize;
+    oc.cur += writeBufferSize;
   }
 
-  std::string compressionMode = compressionModeHint;
-  if (used_gzip != use_gzip) {
-    // compression mode string changes
-    if (used_gzip) {
-      compressionMode = "gzip";
-    }
-    else {
-      compressionMode = "";
-    }
-  }
-
-  if (compressionMode != "" && compressionMode != "none") {
+  //__________________________________
+  //write <compression> gzip </compression> to xml file
+  if (use_gzip) {
     oc.varnode->appendElement("compression", compressionMode);
   }
 
-  return writebufferSize;
+  return writeBufferSize;
 }
 
 //______________________________________________________________________
@@ -153,13 +144,13 @@ Variable::readPIDX( const unsigned char * pidx_buffer
                   )
 {
   // I don't know if there's a better way to create a istringstream directly from unsigned char*  -Todd
-  
+
   // Create a string from pidx_buffer:
   std::string strBuffer( pidx_buffer, pidx_buffer + pidx_bufferSize );
 
   // Create an istringstream from the string:
   std::istringstream instream( strBuffer );
-  
+
   // Push the istringstream into an Array3 variable:
   readNormal( instream, swapBytes );
 
@@ -179,41 +170,48 @@ Variable::emitPIDX(       PIDXOutputContext & /* oc */
 }
 #endif
 
+
 //______________________________________________________________________
 //
 std::string*
-Variable::gzipCompress( std::string* pUncompressed
-                      , std::string* pBuffer
+Variable::gzipCompress( std::string* source_str
+                      , std::string* dest_str
                       )
 {
-  unsigned long uncompressedSize = pUncompressed->size();
+  unsigned long source_size = source_str->size();
 
   // follows compress guidelines: 1% more than source size + 12 (round up, so use + 13).
-  unsigned long compressBufsize = uncompressedSize * 101 / 100 + 13;
+  unsigned long dest_size = source_size * 101 / 100 + 13;
 
-  pBuffer->resize(compressBufsize + sizeof(ssize_t));
-  char* buf = const_cast<char*>(pBuffer->c_str());  // casting from const
-  buf += sizeof(ssize_t);  // the first part will give the size of the uncompressed data
 
-  if (compress((Bytef*)buf, &compressBufsize, (const Bytef*)pUncompressed->c_str(), uncompressedSize) != Z_OK)
-    std::cerr << "compress failed in Uintah::Variable::gzipCompress\n";
+  dest_str->resize( dest_size + sizeof(ssize_t) );          // increase the size and fill with "\000"
 
-  pBuffer->resize(compressBufsize + sizeof(ssize_t));
-  if (pBuffer->size() > uncompressedSize) {
-    // gzip made it worse -- forget that (this should rarely, if ever, happen, but just in case)
-    pBuffer->erase();  // the other buffer isn't needed, erase it to save space
-    return pUncompressed;
+  char* dest_buf = const_cast<char*>( dest_str->c_str() );  // casting from const
+
+  dest_buf += sizeof(ssize_t);                              // the first part will give the size of the source data
+
+                                                            // compress
+  int result = compress((Bytef*)dest_buf, &dest_size, (const Bytef*)source_str->c_str(), source_size);
+
+
+  if ( result != Z_OK ){
+    printf("compress error result is %d\n", result);
+    throw InternalError("ERROR Uintah::Variable::gzipCompress.   compression failed.", __FILE__, __LINE__);
   }
-  else {
-    // write out the uncompressed size to the first part of the buffer
-    char* pbyte = (char*)(&uncompressedSize);
-    for (int i = 0; i < (int)sizeof(ssize_t); i++, pbyte++) {
-      (*pBuffer)[i] = *pbyte;
-    }
-    pUncompressed->erase(); // the original buffer isn't needed, erase it to save space
 
-    return pBuffer;
+                                  // Add the source size to the first part of the dest_str
+                                  // The source size is needed during decompress()
+  dest_str->resize( dest_size + sizeof(ssize_t) );
+
+  char* pbyte = (char*)(&source_size);
+
+  for (int i = 0; i < (int)sizeof(ssize_t); i++, pbyte++) {
+    (*dest_str)[i] = *pbyte;
   }
+
+  source_str->erase();         // the original dest_str isn't needed, erase it to save space
+
+  return dest_str;
 }
 
 //______________________________________________________________________
@@ -289,9 +287,10 @@ Variable::read(       InputContext & ic
       char* buffer = (char*)bufferStr.c_str();
 
       int result = uncompress((Bytef*)buffer, &uncompressed_size, (const Bytef*)compressed_data, compressed_datasize);
-      if (result != Z_OK) {
+
+      if ( result != Z_OK ) {
         printf("Uncompress error result is %d\n", result);
-        throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
+        throw InternalError("ERROR Uintah::Variable::read.   Call to uncompress() failed.", __FILE__, __LINE__);
       }
 
       uncompressedData = &bufferStr;
