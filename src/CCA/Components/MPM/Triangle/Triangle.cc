@@ -233,6 +233,7 @@ Triangle::createTriangles(TriangleMaterial* matl,
         triangleMidToNode1[pidx] = P1 - test;
         triangleMidToNode2[pidx] = P2 - test;
         triangleMassDisp[pidx]   = 0.0;
+        triangleCementThickness[pidx]   = 0.0;
         triangleNearbyMats[pidx] = Matrix3(-99);
 //        Vector A = P1-P0;
 //        Vector B = P2-P0;
@@ -306,6 +307,8 @@ Triangle::allocateVariables(particleIndex numTriangles,
   new_dw->allocateAndPut(triangleClay,   d_Tl->triClayLabel,            subset);
   new_dw->allocateAndPut(triangleNormal, d_Tl->triNormalLabel,          subset);
   new_dw->allocateAndPut(triangleMassDisp,d_Tl->triMassDispLabel,       subset);
+  new_dw->allocateAndPut(triangleCementThickness,
+                                          d_Tl->triCementThicknessLabel,subset);
   new_dw->allocateAndPut(triangleAreaAtNodes,
                                          d_Tl->triAreaAtNodesLabel,     subset);
   new_dw->allocateAndPut(triangleNearbyMats,
@@ -449,6 +452,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state.push_back(d_Tl->triNormalLabel);
   d_triangle_state.push_back(d_Tl->triMassDispLabel);
   d_triangle_state.push_back(d_Tl->triNearbyMatsLabel);
+  d_triangle_state.push_back(d_Tl->triCementThicknessLabel);
 
   d_triangle_state_preReloc.push_back(d_Tl->triangleIDLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
@@ -464,6 +468,7 @@ void Triangle::registerPermanentTriangleState(TriangleMaterial* lsmat)
   d_triangle_state_preReloc.push_back(d_Tl->triNormalLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triMassDispLabel_preReloc);
   d_triangle_state_preReloc.push_back(d_Tl->triNearbyMatsLabel_preReloc);
+  d_triangle_state_preReloc.push_back(d_Tl->triCementThicknessLabel_preReloc);
 }
 //__________________________________
 //
@@ -486,6 +491,7 @@ void Triangle::scheduleInitialize(const LevelP& level,
   t->computes(d_Tl->triNormalLabel);
   t->computes(d_Tl->triAreaAtNodesLabel);
   t->computes(d_Tl->triMassDispLabel);
+  t->computes(d_Tl->triCementThicknessLabel);
   t->computes(d_Tl->triNearbyMatsLabel);
   t->computes(d_Tl->triangleCountLabel);
 

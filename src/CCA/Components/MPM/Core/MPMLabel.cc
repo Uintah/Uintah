@@ -405,6 +405,9 @@ MPMLabel::MPMLabel()
   gSurfaceClayLabel = VarLabel::create( "g.surfaceclay",
                    NCVariable<double>::getTypeDescription() );
 
+  gSurfaceCementLabel = VarLabel::create( "g.surfacecement",
+                   NCVariable<double>::getTypeDescription() );
+
   gNormTractionLabel = VarLabel::create( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
@@ -840,6 +843,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gVelocityStarLabel);
   VarLabel::destroy(gSurfaceAreaLabel);
   VarLabel::destroy(gSurfaceClayLabel);
+  VarLabel::destroy(gSurfaceCementLabel);
   VarLabel::destroy(gNormTractionLabel);
   VarLabel::destroy(gNormTractionF0Label);
   VarLabel::destroy(gNormTractionF1Label);

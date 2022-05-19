@@ -100,6 +100,12 @@ TriangleLabel::TriangleLabel()
   triMassDispLabel_preReloc = VarLabel::create("tri.massdisplacement+",
 			ParticleVariable<double>::getTypeDescription() );
 
+  triCementThicknessLabel = VarLabel::create("tri.cementthickness",
+			ParticleVariable<double>::getTypeDescription() );
+
+  triCementThicknessLabel_preReloc = VarLabel::create("tri.cementthickness+",
+			ParticleVariable<double>::getTypeDescription() );
+
   triNearbyMatsLabel = VarLabel::create("tri.nearbymats",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
@@ -129,6 +135,7 @@ TriangleLabel::~TriangleLabel()
   VarLabel::destroy(triClayLabel);
   VarLabel::destroy(triClayLabel_preReloc);
   VarLabel::destroy(triMassDispLabel);
+  VarLabel::destroy(triCementThicknessLabel);
   VarLabel::destroy(triMassDispLabel_preReloc);
   VarLabel::destroy(triNearbyMatsLabel);
   VarLabel::destroy(triNearbyMatsLabel_preReloc);

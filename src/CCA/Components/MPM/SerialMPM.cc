@@ -1797,6 +1797,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triAreaAtNodesLabel,    triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triClayLabel,           triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triMassDispLabel,       triangle_matls, gnone);
+  t->requires(Task::OldDW, TriL->triCementThicknessLabel,triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triNearbyMatsLabel,     triangle_matls, gnone);
 
   t->computes(lb->pXLabel_preReloc,                      triangle_matls);
@@ -1811,6 +1812,7 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   t->computes(TriL->triAreaAtNodesLabel_preReloc,        triangle_matls);
   t->computes(TriL->triClayLabel_preReloc,               triangle_matls);
   t->computes(TriL->triMassDispLabel_preReloc,           triangle_matls);
+  t->computes(TriL->triCementThicknessLabel_preReloc,    triangle_matls);
   t->computes(TriL->triNormalLabel_preReloc,             triangle_matls);
   t->computes(TriL->triNearbyMatsLabel_preReloc,         triangle_matls);
 
@@ -1878,6 +1880,8 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   t->requires(Task::OldDW, TriL->triNearbyMatsLabel,   triangle_matls, gac, 2);
   if (flags->d_doingDissolution) {
     t->requires(Task::OldDW, TriL->triMassDispLabel,   triangle_matls, gac, 2);
+    t->requires(Task::OldDW, TriL->triCementThicknessLabel,
+                                                       triangle_matls, gac, 2);
   }
 
   t->requires(Task::NewDW, lb->gMassLabel,             mpm_matls,   gac,NGN+3);
@@ -1887,6 +1891,7 @@ void SerialMPM::scheduleComputeTriangleForces(SchedulerP& sched,
   if (flags->d_doingDissolution) {
     t->computes(lb->gSurfaceAreaLabel,                 mpm_matls);
     t->computes(lb->gSurfaceClayLabel,                 mpm_matls);
+    t->computes(lb->gSurfaceCementLabel,               mpm_matls);
   }
 //  t->computes(TriL->triInContactLabel,                triangle_matls);
 
@@ -5810,8 +5815,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
                                triMidToN1Vec_new, triMidToN2Vec_new;
       constParticleVariable<IntVector> triUseInPenalty;
       ParticleVariable<IntVector>      triUseInPenalty_new;
-      constParticleVariable<double> triArea, triClay, triMassDisp;
+      constParticleVariable<double> triArea, triClay, triMassDisp, triCemThick;
       ParticleVariable<double>      triArea_new, triClay_new, triMassDisp_new;
+      ParticleVariable<double>      triCemThick_new;
       constParticleVariable<Vector> triAreaAtNodes;
       constParticleVariable<Matrix3> triNearbyMats;
       ParticleVariable<Vector>      triAreaAtNodes_new, triNormal_new;
@@ -5829,6 +5835,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       old_dw->get(triAreaAtNodes,  TriL->triAreaAtNodesLabel,           pset);
       old_dw->get(triClay,         TriL->triClayLabel,                  pset);
       old_dw->get(triMassDisp,     TriL->triMassDispLabel,              pset);
+      old_dw->get(triCemThick,     TriL->triCementThicknessLabel,       pset);
       old_dw->get(triNearbyMats,   TriL->triNearbyMatsLabel,            pset);
 
       new_dw->allocateAndPut(tx_new,         lb->pXLabel_preReloc,        pset);
@@ -5836,23 +5843,25 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       new_dw->allocateAndPut(tri_ids_new,  TriL->triangleIDLabel_preReloc,pset);
       new_dw->allocateAndPut(tF_new,lb->pDeformationMeasureLabel_preReloc,pset);
       new_dw->allocateAndPut(triMidToN0Vec_new,
-                                    TriL->triMidToN0VectorLabel_preReloc, pset);
+                                  TriL->triMidToN0VectorLabel_preReloc,   pset);
       new_dw->allocateAndPut(triMidToN1Vec_new,
-                                    TriL->triMidToN1VectorLabel_preReloc, pset);
+                                  TriL->triMidToN1VectorLabel_preReloc,   pset);
       new_dw->allocateAndPut(triMidToN2Vec_new,
-                                    TriL->triMidToN2VectorLabel_preReloc, pset);
+                                  TriL->triMidToN2VectorLabel_preReloc,   pset);
       new_dw->allocateAndPut(triUseInPenalty_new,
-                                     TriL->triUseInPenaltyLabel_preReloc, pset);
+                                   TriL->triUseInPenaltyLabel_preReloc,   pset);
       new_dw->allocateAndPut(triArea_new,
-                                     TriL->triAreaLabel_preReloc,         pset);
+                                   TriL->triAreaLabel_preReloc,           pset);
       new_dw->allocateAndPut(triAreaAtNodes_new,
-                                     TriL->triAreaAtNodesLabel_preReloc,  pset);
+                                   TriL->triAreaAtNodesLabel_preReloc,    pset);
       new_dw->allocateAndPut(triClay_new,
-                                     TriL->triClayLabel_preReloc,         pset);
+                                   TriL->triClayLabel_preReloc,           pset);
       new_dw->allocateAndPut(triMassDisp_new,
-                                     TriL->triMassDispLabel_preReloc,     pset);
+                                   TriL->triMassDispLabel_preReloc,       pset);
+      new_dw->allocateAndPut(triCemThick_new,
+                                   TriL->triCementThicknessLabel_preReloc,pset);
       new_dw->allocateAndPut(triNormal_new,
-                                     TriL->triNormalLabel_preReloc,       pset);
+                                   TriL->triNormalLabel_preReloc,         pset);
       new_dw->allocateAndPut(triNearbyMats_new,
                                    TriL->triNearbyMatsLabel_preReloc,     pset);
 
@@ -5863,6 +5872,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
       triClay_new.copyData(triClay);
       triMassDisp_new.copyData(triMassDisp);
       triNearbyMats_new.copyData(triNearbyMats);
+      triCemThick_new.copyData(triCemThick);
 
       double totalsurfarea = 0.;
 
@@ -5986,8 +5996,9 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         double triNormLength = triNorm.length()+1.e-100;
         triArea_new[idx]=0.5*triNormLength;
         triNormal_new[idx]=triNorm/triNormLength;
-        triMassDisp_new[idx] += Dot(triNormal_new[idx],
-                                    (surf[0] + surf[1] + surf[2])*delT/3.);
+        double tMD = Dot(triNormal_new[idx],(surf[0]+surf[1]+surf[2])*delT/3.);
+        triMassDisp_new[idx] += tMD;
+        triCemThick_new[idx] += std::max(0.0, tMD);
 
         triMidToN0Vec_new[idx] = P[0] - tx_new[idx];
         triMidToN1Vec_new[idx] = P[1] - tx_new[idx];
@@ -6103,6 +6114,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
     std::vector<NCVariable<double> > SurfClay(numMPMMatls);
+    std::vector<NCVariable<double> > SurfCeme(numMPMMatls);
     std::vector<NCVariable<int> > InContactMatl(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
     std::vector<bool> PistonMaterial(numMPMMatls);
@@ -6124,9 +6136,12 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
       if (flags->d_doingDissolution) {
         new_dw->allocateAndPut(SurfArea[m], lb->gSurfaceAreaLabel,   dwi,patch);
         new_dw->allocateAndPut(SurfClay[m], lb->gSurfaceClayLabel,   dwi,patch);
+        new_dw->allocateAndPut(SurfCeme[m], lb->gSurfaceCementLabel, dwi,patch);
         SurfArea[m].initialize(0.0);
         SurfClay[m].initialize(0.0);
+        SurfCeme[m].initialize(0.0);
       }
+
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+3);
 //      sumTriForce[m]=Vector(0.0);
@@ -6148,6 +6163,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
     std::vector<constParticleVariable<IntVector> >  triUseInPenalty(numLSMatls);
     std::vector<constParticleVariable<Vector> >     triAreaAtNodes(numLSMatls);
     std::vector<constParticleVariable<double> >     triMassDisp(numLSMatls);
+    std::vector<constParticleVariable<double> >     triCemThick(numLSMatls);
     std::vector<constParticleVariable<Matrix3> >    triNearbyMats(numLSMatls);
     std::vector<ParticleSubset*> psetvec;
     std::vector<int> psetSize(numLSMatls);
@@ -6202,6 +6218,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
 
       if (flags->d_doingDissolution) {
         old_dw->get(triMassDisp[tmo],  TriL->triMassDispLabel,        pset0);
+        old_dw->get(triCemThick[tmo],  TriL->triCementThicknessLabel, pset0);
       } else {
         ParticleVariable<double>   triMassDisp_tmp;
         new_dw->allocateTemporary(triMassDisp_tmp,  pset0);
@@ -6212,6 +6229,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
         }
         triMassDisp[tmo]=triMassDisp_tmp;
       }
+
       triMidToNodeVec[tmo].push_back(triMidToN0Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN1Vec[tmo]);
       triMidToNodeVec[tmo].push_back(triMidToN2Vec[tmo]);
@@ -6265,10 +6283,10 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
            for (int k = 0; k < nn; k++) {
              IntVector node = ni[k];
              if(patch->containsNode(node)) {
-               SurfArea[adv_matl0][node] += thirdTriArea*S[k]
-                                           *gmass[adv_matl0][node]/totMass;
-               SurfClay[adv_matl0][node] += thirdTriArea*triClay[tmo][idx0]*S[k]
-                                           *gmass[adv_matl0][node]/totMass;
+               double sArea = thirdTriArea*S[k]*gmass[adv_matl0][node]/totMass;
+               SurfArea[adv_matl0][node] += sArea;
+               SurfClay[adv_matl0][node] += sArea*triClay[tmo][idx0];
+               SurfCeme[adv_matl0][node] += sArea*triCemThick[tmo][idx0];
              }
            }
          }
@@ -6279,6 +6297,7 @@ void SerialMPM::computeTriangleForces(const ProcessorGroup*,
                        !iter.done();iter++){
          IntVector c = *iter;
          SurfClay[adv_matl0][c]/=(SurfArea[adv_matl0][c]+1.e-100);
+         SurfCeme[adv_matl0][c]/=(SurfArea[adv_matl0][c]+1.e-100);
        } // loop over all nodes
       }   // only do this if a dissolution problem
 

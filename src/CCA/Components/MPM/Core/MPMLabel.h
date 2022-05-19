@@ -177,6 +177,7 @@ namespace Uintah {
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gSurfaceAreaLabel;
       const VarLabel* gSurfaceClayLabel;
+      const VarLabel* gSurfaceCementLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gNormTractionF0Label;
       const VarLabel* gNormTractionF1Label;

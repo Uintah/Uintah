@@ -75,6 +75,7 @@ WARNING
         double d_Vm;
         double d_R;
         double d_StressThresh;
+        double d_maxCemThickness;  // Diss doesn't occur for thicker overgrowth
         double d_Ao;
         double d_Ea;
         double d_Ao_clay; // Modified value in the presence of clay
