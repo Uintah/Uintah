@@ -3,7 +3,7 @@
 #______________________________________________________________________
 # Print a message to stderr and exit with error code 1
 
-end_die () 
+end_die ()
 {
   if [[ -n "$1" ]]; then
     echo -e "\n\n$1" 1>&2
@@ -14,7 +14,7 @@ end_die ()
 #______________________________________________________________________
 # Print a message to stderr and exit with error code 1 if command not found.
 
-commandExists () 
+commandExists ()
 {
   which "$1" >& /dev/null
 
@@ -33,5 +33,19 @@ isInteger()
       return 0
   else
       return 1
+  fi
+}
+#______________________________________________________________________
+#  remove the directory either immediately or through an at job
+function cleanUp()
+{
+  echo -e "\nThe directory (${1}) will be removed (${2}."
+
+  if [[ ${2} == "now" ]]; then
+    /bin/rm -rf ${1}
+  fi
+
+  if [[ ${2} != "now" ]]; then
+    echo "/bin/rm -rf ${1}" |  at -v now "${2}"
   fi
 }

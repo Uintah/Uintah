@@ -43,7 +43,7 @@ PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom,
   }
   d_endCapName = "";
 
-  for( ProblemSpecP fileData = polyData->findBlock("file"); fileData != nullptr; fileData = fileData->findNextBlock( "file" ) ) {
+  for( ProblemSpecP fileData = polyData->findBlock("filename"); fileData != nullptr; fileData = fileData->findNextBlock( "filename" ) ) {
     
     string fileName;
     fileData->get(fileName);
@@ -71,10 +71,10 @@ PolynomialData::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP pd_ps = ps->appendChild("polynomial_data");
   for( vector<std::string>::const_iterator itr = d_fileNames.begin(); itr != d_fileNames.end(); itr++ ) {
-    pd_ps->appendElement("file",*itr);
+    pd_ps->appendElement("filename",*itr);
   }
   if (d_endCapName != "") {
-    pd_ps->appendElement( "file", d_endCapName );
+    pd_ps->appendElement( "filename", d_endCapName );
   }
 
 }

@@ -21,7 +21,7 @@
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DeleteGeometryObjects              spec="OPTIONAL BOOLEAN" />
       <DoPressureStabilization            spec="OPTIONAL BOOLEAN" />
-	  <DoCapDensity                       spec="OPTIONAL BOOLEAN" />
+      <DoCapDensity                       spec="OPTIONAL BOOLEAN" />
       <DoDefGradAveraging                 spec="OPTIONAL BOOLEAN" /> 
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
@@ -63,7 +63,7 @@
       <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" />  <!-- default value is true -->
       <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
       <delT_increase_factor               spec="OPTIONAL DOUBLE" />
-      <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
+      <RunMMSProblem                      spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
       <do_auto_cycle_bc                   spec="OPTIONAL BOOLEAN" />
       <auto_cycle_use_minmax              spec="OPTIONAL BOOLEAN" />
@@ -71,12 +71,12 @@
       <auto_cycle_min                     spec="OPTIONAL DOUBLE" />
       <with_gauss_solver                  spec="OPTIONAL BOOLEAN" />
 
-		<!-- Hydro mechanical coupling -->
-		<coupled_flow_analysis spec="OPTIONAL BOOLEAN" />
-		<water_damping_coef spec="OPTIONAL DOUBLE" />
-		<solid_damping_coef spec="OPTIONAL DOUBLE" />
-		<PorePressureFilter spec="OPTIONAL BOOLEAN" />
-		
+      <!-- Hydro mechanical coupling -->
+      <coupled_flow_analysis              spec="OPTIONAL BOOLEAN" />
+      <water_damping_coef                 spec="OPTIONAL DOUBLE" />
+      <solid_damping_coef                 spec="OPTIONAL DOUBLE" />
+      <PorePressureFilter                 spec="OPTIONAL BOOLEAN" />
+                
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -90,7 +90,7 @@
             </time_point>
           </load_curve>
           <polynomial_data        spec="REQUIRED NO_DATA" >
-            <file                 spec="MULTIPLE STRING" />
+            <filename             spec="MULTIPLE STRING" />
           </polynomial_data>
         </arches_heat_flux>
         <force                    spec="MULTIPLE NO_DATA" >
@@ -167,12 +167,12 @@
         <is_active                       spec="OPTIONAL BOOLEAN" />
         <activation_time                 spec="OPTIONAL DOUBLE" />
 
-		  <!--Hydro mechanical coupling-->s
-		  <water_density spec="OPTIONAL DOUBLE 'positive'"/>
-		  <porosity spec="OPTIONAL DOUBLE 'positive'"/>
-		  <permeability spec="OPTIONAL DOUBLE 'positive'"/>
-		  <initial_pore_pressure spec="OPTIONAL DOUBLE"/>
-		  
+                  <!--Hydro mechanical coupling-->s
+                  <water_density spec="OPTIONAL DOUBLE 'positive'"/>
+                  <porosity spec="OPTIONAL DOUBLE 'positive'"/>
+                  <permeability spec="OPTIONAL DOUBLE 'positive'"/>
+                  <initial_pore_pressure spec="OPTIONAL DOUBLE"/>
+                  
         <include href="constitutive_models.xml" />
         <!--__________________________________-->
         <!-- Damage models -->

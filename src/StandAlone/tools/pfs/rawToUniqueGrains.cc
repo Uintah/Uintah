@@ -83,7 +83,7 @@ intensities > 0 and maps that intensity to a mpm matl.
 ups file specification:
   <PreprocessTools>
     <rawToUniqueGrains>
-      <image>  simple_sugar_mock_blob3d_unique_grains.raw  </image>
+      <image_filename>  simple_sugar_mock_blob3d_unique_grains.raw  </image_filename>
       <ppc>      [1,1,1]       </ppc>
       <res>    [154,252,1]     </res>
       <outputBasename>   points/16bit_grains    </outputBasename>
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
-    raw_ps->require("image",          imgname ); 
+    raw_ps->require("image_filename", imgname ); 
     raw_ps->require("ppc",            ppc);
     raw_ps->require("res",            res);
     raw_ps->require("outputBasename", f_name);
