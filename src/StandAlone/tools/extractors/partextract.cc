@@ -88,6 +88,8 @@ void printParticleVariables(DataArchive* da, int mat,
                             unsigned long time_step_upper,
                             unsigned long time_step_inc,
                             bool include_position_output);
+void printPositionsOnly(DataArchive* da, int mat);
+
 void computeEquivStress(const Matrix3& sig, double& sigeqv);
 void computePressure(const Matrix3& sig, double& press);
 void computeEquivStrain(const Matrix3& F, double& epseqv);
@@ -108,6 +110,7 @@ main( int argc, char** argv )
   int mat = -1;
   bool do_partvar=false;
 //  bool do_partid=false;
+  bool do_position_only = false;
   bool do_part_stress = false;
   bool do_part_pressure = false;
   bool do_part_strain = false;
@@ -145,6 +148,9 @@ main( int argc, char** argv )
       particleVariable.push_back(argv[++i]);
       if (particleVariable[particleVariable.size()-1][0] == '-') 
         usage("-partvar <particle variable name>", argv[0]);
+    } else if(s == "-positiononly"){
+      do_position_only=true;
+      particleVariable.push_back(argv[++i]);
     } else if(s == "-partid"){
 //      do_partid=true;
       string id = argv[++i];
@@ -255,13 +261,17 @@ main( int argc, char** argv )
       } else {
         getParticleStrains(da,mat, particleID,"all",     time_step_lower,time_step_upper);
       }
-    } 
+    }
 
     // Print a particular particle variable
     if (do_partvar) {
       printParticleVariables(da, mat, particleVariable, particleID, 
                              time_step_lower, time_step_upper, time_step_inc,
                              include_position_output);
+    }
+    // Print a particular particle variable
+    if (do_position_only) {
+      printPositionsOnly(da, mat);
     }
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
@@ -981,6 +991,67 @@ void printParticleVariables(DataArchive* da,
       } // end of patch loop
     } // end of level loop
   } // end of time step loop
+}
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Print particle positions only
+//
+////////////////////////////////////////////////////////////////////////////
+void printPositionsOnly(DataArchive* da, int mat)
+{
+  // Check if the particle variable is available
+  vector<int> num_matls;
+  vector<const Uintah::TypeDescription*> types;
+//  da->queryVariables( vars, num_matls, types );
+
+  ostringstream matFN;
+  matFN << mat;
+  string   output_file_name = "pos." + matFN.str() + ".pts";
+  ofstream output(output_file_name.c_str());
+
+  // set defaults for output stream
+  output.setf(ios::scientific,ios::floatfield);
+  output.precision(16);
+
+  // Make sure other variables requested are in the saved data
+  // Now that the variables have been found, get the data for all 
+  // available time steps from the data archive
+
+  int matl = mat;
+
+  // Loop thru all time steps and store the volume and variable (stress/strain)
+//  for(unsigned long t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
+//    double time = times[t];
+    int t=0;
+    GridP grid = da->queryGrid(t);
+
+    // Loop thru all the levels
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+
+      // Loop thru all the patches
+      Level::const_patch_iterator iter = level->patchesBegin(); 
+      int patchIndex = 0;
+      for(; iter != level->patchesEnd(); iter++){
+        const Patch* patch = *iter;
+        ++patchIndex; 
+
+        // Find the name of the variable
+        ParticleVariable<Point> pos;
+        da->query(pos, "p.x", matl, patch, t);
+        ParticleSubset* pset = pos.getParticleSubset();
+        if(pset->numParticles() > 0){
+         ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            output <<        pos[*iter].x()
+                   << " " << pos[*iter].y()
+                   << " " << pos[*iter].z() << endl;
+          } // end of loop over particles
+        } // if pset not empty
+      } // end of patch loop
+    } // end of level loop
+//  } // end of time step loop
 }
 
 void computeEquivStress(const Matrix3& stress, double& sigeff)
