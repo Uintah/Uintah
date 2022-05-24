@@ -1846,6 +1846,7 @@ void SerialMPM::scheduleComputeLineSegmentForces(SchedulerP& sched,
 
   t->computes(lb->gLSContactForceLabel,              mpm_matls);
   t->computes(lb->gSurfaceAreaLabel,                 mpm_matls);
+  t->computes(lb->gInContactMatlLabel,               mpm_matls);
 
   sched->addTask(t, patches, matls);
 }
@@ -5315,6 +5316,7 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     std::vector<NCVariable<Vector> > LSContForce(numMPMMatls);
     std::vector<NCVariable<double> > SurfArea(numMPMMatls);
+    std::vector<NCVariable<int> > InContactMatl(numMPMMatls);
     std::vector<constNCVariable<double> > gmass(numMPMMatls);
     std::vector<double> stiffness(numMPMMatls);
     for(unsigned int m = 0; m < numMPMMatls; m++){
@@ -5327,10 +5329,13 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
 
       new_dw->allocateAndPut(LSContForce[m],lb->gLSContactForceLabel,dwi,patch);
       new_dw->allocateAndPut(SurfArea[m],   lb->gSurfaceAreaLabel,   dwi,patch);
+      new_dw->allocateAndPut(InContactMatl[m],
+                                            lb->gInContactMatlLabel, dwi,patch);
       new_dw->get(gmass[m],                 lb->gMassLabel,          dwi,patch,
                                                                      gac,NGN+2);
       LSContForce[m].initialize(Vector(0.0));
       SurfArea[m].initialize(1.0e-100);
+      InContactMatl[m].initialize(-99);
     }
 
     int numLSMatls=m_materialManager->getNumMatls("LineSegment");
@@ -5521,6 +5526,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1A*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                }
@@ -5551,6 +5558,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1B*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                }
@@ -5628,6 +5637,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                             * gmass[adv_matl0][node]/totMass0;
                   LSContForce[adv_matl1][node] += tForce1A*S[k]
                                             * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                }
                 }
               }
@@ -5686,6 +5697,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1A*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                }
@@ -5716,6 +5729,8 @@ void SerialMPM::computeLineSegmentForces(const ProcessorGroup*,
                                              * gmass[adv_matl0][node]/totMass0;
                    LSContForce[adv_matl1][node] += tForce1B*S[k]
                                              * gmass[adv_matl1][node]/totMass1;
+                   InContactMatl[adv_matl0][node] = adv_matl1;
+                   InContactMatl[adv_matl1][node] = adv_matl0;
 //                 }
                  }
                }
