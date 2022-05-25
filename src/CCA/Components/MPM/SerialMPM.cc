@@ -1447,20 +1447,38 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   //__________________________________
   //  reduction variables
+  //  Create reductionMatlSubSet that includes all mpm matls
+  // and the global matl.  Needed to output per matl reduction variables
+  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
+  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+
+  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  reduction_mss->add( global_mss->get(0) );
+
+  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
+
+  if( nMatls > 1 ){  // ignore for single matl problems
+    for (unsigned int m = 0; m < nMatls; m++ ) {
+      reduction_mss->add( mpm_mss->get(m) );
+    }
+  }
+
+  reduction_mss->addReference();
+
   if(flags->d_reductionVars->momentum){
-    t->computes(lb->TotalMomentumLabel);
+    t->computes(lb->TotalMomentumLabel, reduction_mss);
   }
   if(flags->d_reductionVars->KE){
-    t->computes(lb->KineticEnergyLabel);
+    t->computes(lb->KineticEnergyLabel, reduction_mss);
   }
   if(flags->d_reductionVars->thermalEnergy){
-    t->computes(lb->ThermalEnergyLabel);
+    t->computes(lb->ThermalEnergyLabel, reduction_mss);
   }
   if(flags->d_reductionVars->centerOfMass){
-    t->computes(lb->CenterOfMassPositionLabel);
+    t->computes(lb->CenterOfMassPositionLabel, reduction_mss);
   }
   if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel);
+    t->computes(lb->TotalMassLabel, reduction_mss);
   }
 
   // debugging scalar
@@ -1471,7 +1489,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   // Carry Forward particle refinement flag
   if(flags->d_refineParticles){
-    t->requires(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
+    t->requires(Task::OldDW, lb->pRefinedLabel,  Ghost::None);
     t->computes(             lb->pRefinedLabel_preReloc);
   }
 
@@ -1486,6 +1504,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   // The task will have a reference to z_matl
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
+
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
+  }
 }
 
 void SerialMPM::scheduleComputeParticleGradients(SchedulerP& sched,
@@ -2884,7 +2906,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                           m_materialManager->getAllInOneMatls()->get(0), patch);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
@@ -2967,13 +2989,13 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
               }
             }
           }
-        } else { 
+        } else {
           // for the axisymmetric case
           for (ParticleSubset::iterator iter = pset->begin();
                iter != pset->end();
                iter++){
             particleIndex idx = *iter;
-  
+
             int NN =
               interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
                                                      d_S,psize[idx]);
@@ -3030,10 +3052,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             for (int j = projlow.y(); j<projhigh.y(); j++) {
               for (int k = projlow.z(); k<projhigh.z(); k++) {
                 IntVector ijk(i,j,k);
-  
+
                 // flip sign so that pushing on boundary gives positive force
                 bndyForce[iface] -= internalforce[ijk];
-  
+
                 double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
                 for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
                  bndyTraction[iface][ic]+=gstress[ijk](ic,jc)*norm[jc]*nodearea;
@@ -3665,18 +3687,26 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
 
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+
     // DON'T MOVE THESE!!!
-    double thermal_energy = 0.0;
-    double totalmass = 0;
-    Vector CMX(0.0,0.0,0.0);
-    Vector totalMom(0.0,0.0,0.0);
-    double ke=0;
+    vector<double> kineticEng( numMPMMatls, 0.0 );
+    vector<double> totalMass( numMPMMatls, 0.0 );
+    vector<double> thermalEng( numMPMMatls, 0.0 );
+    vector<Vector> totalMom( numMPMMatls, Vector(0.0,0.0,0.0) );
+    vector<Vector> CMX( numMPMMatls, Vector(0.0,0.0,0.0) );
+
+    double allMatls_kineticEng = 0.0;
+    double allMatls_totalMass  = 0.0;
+    double allMatls_thermalEng = 0.0;
+    Vector allMatls_totalMom(0.0,0.0,0.0);
+    Vector allMatls_CMX(0.0,0.0,0.0);
 
     double totalConc    =   0.0;
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
-    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
@@ -3876,11 +3906,29 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
           }
 
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
+          //__________________________________
+          // reduction variables
+
+          Vector centerOfMass = (pxnew[idx]*pmass[idx]).asVector();
+          CMX[m]        += centerOfMass;
+          allMatls_CMX  += centerOfMass;
+
+          double thermalEngy   = pTemperature[idx] * pmass[idx] * Cp;
+          thermalEng[m]       += thermalEngy;
+          allMatls_thermalEng += thermalEngy;
+
+          double ke            = .5*pmass[idx]*pvelnew[idx].length2();
+          kineticEng[m]       += ke;
+          allMatls_kineticEng += ke;
+
+          Vector mom         = pvelnew[idx]*pmass[idx];
+          allMatls_totalMom += mom;
+          totalMom[m]       += mom;
+
+          double mass        = pmass[idx];
+          totalMass[m]       += mass;
+          allMatls_totalMass += mass;
+
         }
       } else {  // Not XPIC(2)
         // Loop over particles
@@ -3947,11 +3995,28 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             }
           }
 
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelnew[idx].length2();
-          CMX         = CMX + (pxnew[idx]*pmass[idx]).asVector();
-          totalMom   += pvelnew[idx]*pmass[idx];
-          totalmass  += pmass[idx];
+          //__________________________________
+          // reduction variables
+
+          Vector centerOfMass = (pxnew[idx]*pmass[idx]).asVector();
+          CMX[m]        += centerOfMass;
+          allMatls_CMX  += centerOfMass;
+
+          double thermalEngy   = pTemperature[idx] * pmass[idx] * Cp;
+          thermalEng[m]       += thermalEngy;
+          allMatls_thermalEng += thermalEngy;
+
+          double ke            = .5*pmass[idx]*pvelnew[idx].length2();
+          kineticEng[m]       += ke;
+          allMatls_kineticEng += ke;
+
+          Vector mom = pvelnew[idx]*pmass[idx];
+          allMatls_totalMom += mom;
+          totalMom[m]       += mom;
+
+          double mass = pmass[idx];
+          totalMass[m]       += mass;
+          allMatls_totalMass += mass;
         }
       } // use XPIC(2) or not
 
@@ -3980,21 +4045,37 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     //__________________________________
     //  reduction variables
-    if(flags->d_reductionVars->mass){
-      new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
+    if( flags->d_reductionVars->mass ){
+      new_dw->put( sum_vartype(allMatls_totalMass),  lb->TotalMassLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<double>( totalMass, lb->TotalMassLabel, new_dw );
     }
-    if(flags->d_reductionVars->momentum){
-      new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
+
+    if( flags->d_reductionVars->momentum ){
+      new_dw->put( sumvec_vartype(allMatls_totalMom), lb->TotalMomentumLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<Vector>( totalMom,   lb->TotalMomentumLabel, new_dw );
     }
-    if(flags->d_reductionVars->KE){
-      new_dw->put(sum_vartype(ke),             lb->KineticEnergyLabel);
+
+    if( flags->d_reductionVars->KE ){
+      new_dw->put( sum_vartype(allMatls_kineticEng),  lb->KineticEnergyLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<double>( kineticEng, lb->KineticEnergyLabel, new_dw );
     }
-    if(flags->d_reductionVars->thermalEnergy){
-      new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+
+    if( flags->d_reductionVars->thermalEnergy ){
+      new_dw->put( sum_vartype(allMatls_thermalEng),  lb->ThermalEnergyLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<double>( thermalEng, lb->ThermalEnergyLabel, new_dw );
+
     }
+
     if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+      new_dw->put(sumvec_vartype(allMatls_CMX), lb->CenterOfMassPositionLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<Vector>( CMX,  lb->CenterOfMassPositionLabel, new_dw );
     }
+
     delete interpolator;
   }
 }
@@ -4294,7 +4375,7 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
     // activate materials if it is their time
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = 
+      MPMMaterial* mpm_matl =
                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       if(time >= mpm_matl->getActivationTime()){
          mpm_matl->setIsActive(true);
@@ -5550,7 +5631,7 @@ void SerialMPM::computeLogisticRegression(const ProcessorGroup *,
       }    // Loop over Particles
     }  // Loop over materials
 
-    // Do an additional check to make sure that nodes identified as 
+    // Do an additional check to make sure that nodes identified as
     // multi-material have multiple materials with particles contributing
     // If not, set alphaMaterial back to -99
     for(NodeIterator iter =patch->getNodeIterator();!iter.done();iter++){

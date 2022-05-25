@@ -55,6 +55,12 @@ namespace Uintah {
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
+    //__________________________________
+    //  utility 
+    template<class T>
+    void put_sum_vartype( std::vector<T>   reductionVar,
+                          const VarLabel * label,
+                          DataWarehouse  * new_dw);
 
     // Used by the switcher
     virtual void setupForSwitching() {
@@ -63,7 +69,6 @@ namespace Uintah {
       d_particleState_preReloc.clear();
     }
 
-  public:
     // Particle state
     std::vector<std::vector<const VarLabel* > > d_particleState;
     std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
@@ -81,7 +86,7 @@ namespace Uintah {
     MPMLabel* lb {nullptr};
 
   private:
-    MPMFlags*             d_flags       = nullptr;
+    MPMFlags* d_flags = nullptr;
     
   protected:
     //! so all components can know how many particle ghost cells to ask for
