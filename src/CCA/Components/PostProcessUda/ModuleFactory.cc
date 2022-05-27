@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
-#include <CCA/Components/PostProcessUda/statistics.h>
 #include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -69,12 +68,9 @@ ModuleFactory::create(const ProblemSpecP& prob_spec,
       
       std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
-      module = attributes["type"];
+      module = attributes["name"];
 
-      if ( module == "statistics" ) {
-        modules.push_back ( scinew postProcess::statistics( module_ps, materialManager, dataArchiver, dataArchive) );
-      }
-      else if ( module == "spatioTemporalAvg" ) {
+      if ( module == "spatioTemporalAvg" ) {
         modules.push_back ( scinew postProcess::spatioTemporalAvg( module_ps, materialManager, dataArchiver, dataArchive) );
       }
       else if ( module == "reduceUda" ) {

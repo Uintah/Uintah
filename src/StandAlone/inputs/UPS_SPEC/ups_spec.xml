@@ -784,28 +784,25 @@
   <!--______________________________________________________________________-->
   <PostProcess                          spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="type REQUIRED STRING 'statistics, spatioTemporalAvg, reduceUda" >
+                                          attribute1="name REQUIRED STRING 'spatioTemporalAvg, reduceUda" >
 
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="type statistics, spatioTemporalAvg"/>
-      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="type statistics, spatioTemporalAvg"/>
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="type statistics, spatioTemporalAvg">
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name spatioTemporalAvg"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name spatioTemporalAvg"/>
+      <monitorCell                      spec="OPTIONAL VECTOR"  need_applies_to="name spatioTemporalAvg"/>
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name spatioTemporalAvg">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"
                                           attribute2="matl  OPTIONAL STRING"
                                           attribute3="level OPTIONAL STRING" />
       </Variables>
-
-      <!--statistics ____________________________________-->
-      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="type statistics" />
-
       <!--spatioTemporalAvg _____________________________-->
-      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"  need_applies_to="type spatioTemporalAvg" />
-      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="type spatioTemporalAvg" />
-      <TemporalAvg                     spec="REQUIRED NO_DATA" need_applies_to="type spatioTemporalAvg" attribute1="OnOff REQUIRED STRING ">
+      <domain                          spec="OPTIONAL STRING 'everywhere interior, boundaries'"  
+                                                               need_applies_to="name spatioTemporalAvg" />
+      <avgBoxCells                     spec="REQUIRED VECTOR"  need_applies_to="name spatioTemporalAvg" />
+      <TemporalAvg                     spec="REQUIRED NO_DATA" need_applies_to="name spatioTemporalAvg" attribute1="OnOff REQUIRED STRING ">
         <baseTimestep                  spec="REQUIRED DOUBLE 'positive'"/>
       </TemporalAvg>
     </Module>

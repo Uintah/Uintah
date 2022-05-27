@@ -36,7 +36,6 @@ SRCS += \
 	$(SRCDIR)/PostProcessUda.cc       \
 	$(SRCDIR)/Module.cc               \
 	$(SRCDIR)/ModuleFactory.cc        \
-	$(SRCDIR)/statistics.cc           \
        $(SRCDIR)/spatioTemporalAvg.cc
 
 PSELIBS := \

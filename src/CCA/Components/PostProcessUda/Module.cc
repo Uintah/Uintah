@@ -81,9 +81,9 @@ void Module::readTimeStartStop(const ProblemSpecP & ps,
 
   if ( startTime < d_udaTimes[0] ){
     std::ostringstream warn;
-    warn << "  ERROR:PostProcess: The startTime (" << startTime
-         << ") must be greater than the time at timestep 1 (" << d_udaTimes[0] << ")";
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    warn << "  Warning:PostProcess: The startTime (" << startTime
+         << ") must be greater than the time at timestep 1 (" << d_udaTimes[0] << ")\n";
+    proc0cout << warn.str();
   }
 }
 
