@@ -84,8 +84,11 @@ statistics::~statistics()
     if( d_doHigherOrderStats ){
       VarLabel::destroy( Q.Qsum3_Label );
       VarLabel::destroy( Q.Qmean3_Label );
+      VarLabel::destroy( Q.Qskewness_Label );
+      
       VarLabel::destroy( Q.Qsum4_Label );
       VarLabel::destroy( Q.Qmean4_Label );
+      VarLabel::destroy( Q.Qkurtosis_Label );
     }
   }
 
