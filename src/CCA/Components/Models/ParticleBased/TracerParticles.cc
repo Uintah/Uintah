@@ -218,6 +218,14 @@ void TracerParticles::problemSetup( GridP&,
   TP_ps->getWithDefault( "timeStart", d_tracer->timeStart, 0.0);
   TP_ps->getWithDefault( "timeStop",  d_tracer->timeStop, 9.e99);
 
+
+  //__________________________________
+  //  bulletproofing
+
+  if( !m_output->isLabelSaved( "p.particleID" ) ){
+    throw ProblemSetupException("TracerParticles: ERROR you must add <save label=\"p.particleID\"/> to the ups file", __FILE__, __LINE__);
+  }
+
   //__________________________________
   //  Read in all geometry objects/pieces in the <Material> node of the ups file.
   //  Needed since the user may referec
