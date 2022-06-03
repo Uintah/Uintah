@@ -149,7 +149,7 @@
       <save label="p.displacement"/>
       <save label="p.clone-scalar-f"/>
       <save label="p.clone-press_CC"/>
-
+      <save label="p.particleID"/>
       <save label="totalSum_scalar-f"/>
 
       <checkpoint timestepInterval="5" cycle="2"/>
