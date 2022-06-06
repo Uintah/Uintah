@@ -35,7 +35,7 @@ from helpers.modUPS import modUPS
 
 
 NIGHTLYTESTS = [  ("ice_perf_32KPatches",  "icePerf_32KPatches.ups",            10, "All", ["do_performance_test"]),
-                  ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )
+                 # ("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )
                ]
 
 LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "All", ["no_memoryTest"]),
@@ -45,7 +45,7 @@ LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "All", []),     # Cannot use exact comparison since the load balancer generates fuzz in the dat files.  It's non deterministic.
              ]
 
-DEBUGTESTS =[]
+DEBUGTESTS =[("PostProcessUda",       "N/A",                               8,  "All", [ "postProcessUda", "exactComparison"] )]
 
 #__________________________________
 # The following list is parsed by the local RT script
