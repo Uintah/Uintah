@@ -26,6 +26,8 @@
 #include <CCA/Components/PostProcessUda/ModuleFactory.h>
 #include <Core/Exceptions/InternalError.h>
 
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
+
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Util/DOUT.hpp>
 #include <iomanip>
@@ -54,10 +56,15 @@ PostProcessUda::~PostProcessUda()
   }
 
   if(d_Modules.size() != 0){
-    vector<Module*>::iterator iter;
-    for( iter  = d_Modules.begin();iter != d_Modules.end(); iter++){
+    for( auto iter  = d_Modules.begin();iter != d_Modules.end(); iter++){
       delete *iter;
     }
+  }
+  
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->releaseComponents();
+    delete am;
   }
 }
 //______________________________________________________________________
@@ -127,32 +134,46 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "\n";
 
   //__________________________________
-  //  create the analysis modules
+  //  create the PostProcess analysis modules
   d_Modules = ModuleFactory::create(prob_spec, m_materialManager, m_output, d_dataArchive);
 
-  vector<Module*>::iterator iter;
-  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
+  for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++) {
     Module* m = *iter;
     m->problemSetup();
   }
 
+  //__________________________________
+  //  Set up data OnTheFly analysis modules
+  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
+                                                    m_materialManager,
+                                                    prob_spec);
+
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
+    AnalysisModule* am = *iter;
+    std::vector<std::vector<const VarLabel* > > dummy;
+
+    am->setComponents( dynamic_cast<ApplicationInterface*>( this ) );
+    am->problemSetup(prob_spec, restart_ps, grid, dummy, dummy);
+  }
+
+
   // Adjust the time state - done after it is read. If the values are
   // zero they will be ignored when checked.
-  m_delTOverrideRestart  = 0;
-  m_delTInitialMax       = 0;
-  m_delTInitialRange     = 0;
+  ApplicationCommon::setDelTOverrideRestart( 0 );
+  ApplicationCommon::setDelTInitialMax(      0 );
+  ApplicationCommon::setDelTInitialRange(    0 );
   
-  m_delTMin              = 0;
-  m_delTMax              = 0;
-  m_delTMultiplier       = 1.0;
-  m_delTMaxIncrease      = 0;
+  ApplicationCommon::setDelTMin( 0 );
+  ApplicationCommon::setDelTMax( 0 );
+  ApplicationCommon::setDelTMultiplier( 1.0 );
+  ApplicationCommon::setDelTMaxIncrease( 0.0 );
   
-  m_simTime              = 0;
-  m_simTimeMax           = d_udaTimes[d_udaTimes.size()-1];
-  m_simTimeEndAtMax      = false;
-  m_simTimeClampToOutput = false;
+  ApplicationCommon::setSimTime(          d_udaTimes[0] );
+  ApplicationCommon::setSimTimeMax(       d_udaTimes[d_udaTimes.size()-1] );
+  ApplicationCommon::setSimTimeEndAtMax(  false );
+  ApplicationCommon::setSimTimeClampToOutput( false );
 
-  m_timeStepsMax         = d_udaTimes.size();
+  ApplicationCommon::setTimeStepsMax( d_udaTimes.size() );
 }
 
 //______________________________________________________________________
@@ -164,10 +185,18 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
   Dir fromDir( d_udaDir );
   m_output->postProcessUdaSetup( fromDir );
 
-  vector<Module*>::iterator iter;
-  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
+  //__________________________________
+  //    PostProcess modules
+  for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
     m->scheduleInitialize( sched, level );
+  }
+  
+  //__________________________________
+  //    OnTheFly dataAnalysis
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleInitialize( sched, level );
   }
 }
 
@@ -178,10 +207,18 @@ void  PostProcessUda::scheduleTimeAdvance( const LevelP& level,
 {
   sched_readDataArchive( level, sched );
 
-  vector<Module*>::iterator iter;
-  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
+  //__________________________________
+  //    PostProcess analysis
+  for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
     m->scheduleDoAnalysis( sched, level);
+  }
+  
+  //__________________________________
+  //    OnTheFly analysis
+  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
+    AnalysisModule* am = *iter;
+    am->scheduleDoAnalysis( sched, level);
   }
 }
 
@@ -273,9 +310,8 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
 
   int old_dw_timestep = NOTUSED;
   bool isSet    = false;
-  
-  vector<Module*>::iterator iter;
-  for( iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
+
+  for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
     Module* m = *iter;
     int tmp = m->getTimestep_OldDW();
 
@@ -295,32 +331,27 @@ void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
   
   proc0cout << "    Reading data archive " << endl;
 
+
+  const Level * level = getLevel(patches);
+  const GridP grid    = level->getGrid();
+    
   if( old_dw_timestep != NOTUSED && udaTimestep >= old_dw_timestep && udaTimestep > 1){
-    
-/*`==========TESTING==========*/
-    GridP myGrid = d_dataArchive->queryGrid(old_dw_timestep); 
-    
-    if( !( *myGrid.get_rep() == *d_oldGrid.get_rep() ) ){
-      proc0cout << "    myGrid != d_oldGrid" << endl;
-    }
-    
-    
-    myGrid = d_oldGrid;
-/*===========TESTING==========`*/
     
    proc0cout << "    OLD_DW  ";
    old_dw->unfinalize();
-   d_dataArchive->postProcess_ReadUda(pg, old_dw_timestep, myGrid, patches, old_dw, m_loadBalancer);
+   d_dataArchive->postProcess_ReadUda(pg, old_dw_timestep, grid, patches, old_dw, m_loadBalancer);
    old_dw->refinalize();
   }
 
   // new dw
   proc0cout << "    NEW_DW\n";
-  d_dataArchive->postProcess_ReadUda(pg, d_simTimestep, d_oldGrid, patches, new_dw, m_loadBalancer);
+  d_dataArchive->postProcess_ReadUda(pg, d_simTimestep, grid, patches, new_dw, m_loadBalancer);
   d_simTimestep++;
-//  new_dw->print();
 
   proc0cout << "    __________________________________ " << endl;
+  
+  // new_dw->print();
+  // old_dw->print();
 }
 
 
@@ -387,7 +418,8 @@ double PostProcessUda::getInitialTime()
 {
   if (d_udaTimes.size() <= 1){
     return 0;
-  }else {
+  }
+  else {
     return d_udaTimes[0];
   }
 }
@@ -396,14 +428,14 @@ double PostProcessUda::getInitialTime()
 //  If the number of materials on a level changes or if the grid
 //  has changed then call for a recompile
 bool
-PostProcessUda::needRecompile( const GridP  & /* grid */ )
+PostProcessUda::needRecompile( const GridP& currentGrid )
 {
-  bool recompile = d_gridChanged;
-  d_gridChanged = false;   // reset flag
 
-  int numLevels = d_oldGrid->numLevels();
+#if 0  // is this needed --Todd
+  int numLevels = currentGrid->numLevels();
   vector<int> level_numMatls( numLevels );
-
+  d_numMatls = level_numMatls;
+  
   for (int L = 0; L < numLevels; L++) {
     level_numMatls[L] = d_dataArchive->queryNumMaterials(*d_oldGrid->getLevel(L)->patchesBegin(), d_simTimestep);
 
@@ -411,31 +443,29 @@ PostProcessUda::needRecompile( const GridP  & /* grid */ )
       recompile = true;
     }
   }
+#endif  
 
-  d_numMatls = level_numMatls;
-
-/*`==========TESTING==========*/
-  recompile = true;      // recompile the taskgraph every timestep
+  bool recompile = true;  // recompile the taskgraph every timestep
                          // If the number of saved variables changes or the number of matls on a level then
                          // you need to recompile.
-/*===========TESTING==========`*/
   return recompile;
 }
 
 //______________________________________________________________________
 // called by the SimulationController once per timestep
-GridP PostProcessUda::getGrid()
+GridP PostProcessUda::getGrid( const GridP& currentGrid)
 {
   GridP newGrid = d_dataArchive->queryGrid(d_simTimestep);
 
-  if (d_oldGrid == nullptr || !(*newGrid.get_rep() == *d_oldGrid.get_rep())) {
-    d_gridChanged = true;
-    d_oldGrid = newGrid;
+  if (currentGrid == nullptr || !(*newGrid.get_rep() == *currentGrid.get_rep())) {
+  
     m_loadBalancer->possiblyDynamicallyReallocate(newGrid, true);
     proc0cout << "    Grid has changed \n";
+    return newGrid;
   } 
   else{
     proc0cout << "    Grid has not changed \n";
+    return currentGrid;
   }
-  return d_oldGrid;
+  return nullptr;
 }

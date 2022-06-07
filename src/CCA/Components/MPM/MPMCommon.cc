@@ -153,3 +153,32 @@ void MPMCommon::updateStress_DamageErosionModels(const ProcessorGroup *,
     }
   }
 }
+
+//______________________________________________________________________
+//  Utilities
+//    Put a std::vector of reduction variables into the new_dw
+template< class T>
+void MPMCommon::put_sum_vartype( std::vector<T>  reductionVars,
+                                 const VarLabel * label,
+                                 DataWarehouse  * new_dw )
+{
+  unsigned int numMatls = reductionVars.size();
+
+  if( numMatls > 1){    // ignore for single matl problems
+
+    for (unsigned int m = 0; m < numMatls ; m++ ) {
+      MPMMaterial* matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+      int dwi = matl->getDWIndex();
+
+      typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+
+      new_dw->put( sumVartype(reductionVars[m]),  label, nullptr, dwi);
+    }
+  }
+}
+//__________________________________
+//
+// Explicit template instantiations:
+
+template void MPMCommon::put_sum_vartype( std::vector<double> rv ,const VarLabel * l, DataWarehouse  * dw);
+template void MPMCommon::put_sum_vartype( std::vector<Vector> rv ,const VarLabel * l, DataWarehouse  * dw);

@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/PostProcessUda/Module.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <vector>
 
 namespace Uintah {
@@ -78,7 +79,7 @@ namespace Uintah {
 
     double getInitialTime();
 
-    GridP getGrid();
+    GridP getGrid(const GridP & currentGrid);
   //______________________________________________________________________
   //
   private:
@@ -115,19 +116,18 @@ namespace Uintah {
                     
     enum {NOTUSED = -9};
     std::string            d_udaDir;
-    bool                   d_gridChanged;
 
     std::vector<int>       d_udaTimesteps;
     std::vector<int>       d_numMatls;
     std::vector<double>    d_udaTimes;
     std::vector<VarLabel*> d_udaSavedLabels;
 
-    GridP                  d_oldGrid;
     DataArchive          * d_dataArchive = nullptr;
 
     int                    d_simTimestep = 0;
 
-    std::vector<Module*> d_Modules;
+    std::vector<Module*>         d_Modules;             // postProcess modules
+    std::vector<AnalysisModule*> d_analysisModules;     // OnTheFly modules
   };
 } // End namespace Uintah
 

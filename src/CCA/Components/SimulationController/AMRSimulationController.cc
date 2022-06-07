@@ -352,7 +352,7 @@ AMRSimulationController::run()
     // from postProcessUda and needs to be done before
     // advanceDataWarehouse is called.
     if (m_post_process_uda) {
-      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid();
+      m_current_gridP = static_cast<PostProcessUda*>(m_application)->getGrid( m_current_gridP );
     }
 
     // After one step (either time step or initialization) and the
