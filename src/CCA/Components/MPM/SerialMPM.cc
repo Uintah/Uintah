@@ -2524,9 +2524,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                 pConc_Ext -= Dot(pConcGrad[idx],pointOffset);
               }
               double massWeight = pmass[idx]*S[k];
-              gHydrostaticStress[node]  += pHydroStress             * massWeight;
-              gConcentration[node]      += pConc_Ext                * massWeight;
-              gExtScalarFlux[node]      += pExternalScalarFlux[idx] * massWeight;
+              gHydrostaticStress[node]  += pHydroStress             *massWeight;
+              gConcentration[node]      += pConc_Ext                *massWeight;
+              gExtScalarFlux[node]      += pExternalScalarFlux[idx] *massWeight;
             }
           }
         }
@@ -5262,7 +5262,6 @@ void SerialMPM::computeNormals(const ProcessorGroup *,
   unsigned int numMPMMatls = m_materialManager->getNumMatls( "MPM" );
   std::vector<constNCVariable<double> >  gmass(numMPMMatls);
   std::vector<NCVariable<Point> >        gposition(numMPMMatls);
-  std::vector<NCVariable<Vector> >       gvelocity(numMPMMatls);
   std::vector<NCVariable<Vector> >       gsurfnorm(numMPMMatls);
   std::vector<NCVariable<double> >       gnormtraction(numMPMMatls);
   std::vector<NCVariable<Matrix3> >      gstress(numMPMMatls);

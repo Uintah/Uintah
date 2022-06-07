@@ -306,7 +306,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   // Retrieve necessary data from DataWarehouse
   std::vector<constNCVariable<double> > gmass(numMatls);
   std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
-  std::vector<constNCVariable<Vector> > gvelocity(numMatls);
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   constNCVariable<Vector>               gsurfnorm;
