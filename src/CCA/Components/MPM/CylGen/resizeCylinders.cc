@@ -31,9 +31,6 @@
 
 using namespace std;
 
-bool isCylInsideRVE(double partDia, double RVEsize,
-                       double xCent, double yCent);
-
 bool isCylCenterInsideRVE(double RVEsize,
                           double xCent, double yCent);
 
@@ -43,35 +40,22 @@ bool doesCylIntersectOthers(double partDia, vector<double> diaLocs,
                             vector<double> xLocs,
                             vector<double> yLocs, int &i_this);
 
-void printCylLocs(vector<vector<double> > xLocs,
-                     vector<vector<double> > yLocs,
-                     vector<vector<double> > diaLocs,
-                     int n_bins, const double RVEsize, double diam_max);
+void printCylLocs(vector<double> xLocs,
+                  vector<double> yLocs,
+                  vector<double> diaLocs);
 
 int main()
 {
 
   // Parameters for user to change - BEGIN
   double RVEsize = 0.1;
-  // If you just want to specify a minimum and maximum grain size and
-  // have a distribution in between, you only need to change diam_min, diam_max
-  // and n_sizes.
-  // diam_min is the minimum grain diameter
-  double diam_min = 0.000625;
-  // diam_max is the maximum grain diameter
   double diam_max = 0.011250;
-  // How many sizes of grains do you want to us
-  int n_sizes = 10;
+
   // Parameters for user to change - END IF AN EQUAL SIZE DISTRIBUTION IS O.K.
-  //  If you want to specify the distribution more carefully, see below.
 
   // Part of optimizing the search for intersections
   int n_bins = RVEsize/diam_max;
   cout << "n_bins = " << n_bins << endl;
-
-  double bin_width = RVEsize/((double) n_bins);
-
-  double RVE_area   =  (RVEsize*RVEsize);
 
   //Store the locations in n_bins separate vectors, so we have a smaller region
   //to search for intersections
@@ -85,8 +69,9 @@ int main()
   if(!source){
     cerr << "File " << infile_name << " can't be opened." << endl;
   }
-  double x,y,r,d;
+  double x,y,r;
 
+  // Read in original cylinder description
   int outOfRVE=0;
   while(source >> x >> y >> r){
     if(isCylCenterInsideRVE(RVEsize,x,y)){
@@ -103,9 +88,10 @@ int main()
   double total_cyl_area_new  = 0.0;
   cout << xLocs.size() << endl;
 
+  // Loop over all cylinders
   int numInts=0;
   for(int i = 0;i<xLocs.size();i++){
-    d = diaLocs[i];
+    double d = diaLocs[i];
     total_cyl_area_orig+= 0.25*M_PI*(d*d);;
     int i_this = i;
     double gap=9.e99;
@@ -132,40 +118,11 @@ int main()
   cout << "Total cylinder area new  = " << total_cyl_area_new  << endl;
   cout << "New Maximum Diameter = " << diam_max << endl;
 
-  vector<vector<double> > xbinLocs(n_bins);
-  vector<vector<double> > ybinLocs(n_bins);
-  vector<vector<double> > dbinLocs(n_bins);
-
-  for(int i = 0; i<xLocs.size(); i++){
-    int index = (xLocs[i]/RVEsize)*((double) n_bins);
-    xbinLocs[index].push_back(xLocs[i]);
-    ybinLocs[index].push_back(yLocs[i]);
-    dbinLocs[index].push_back(diaLocs[i]);
-  }
-
-  printCylLocs(xbinLocs,ybinLocs,dbinLocs,n_bins,RVEsize,diam_max);
+  printCylLocs(xLocs, yLocs, diaLocs);
 
 }
 
-bool isCylInsideRVE(double partDia, double RVEsize,
-                       double xCent, double yCent)
-{
-
-    // Find if the particle fits in the box
-    double rad = 0.5*partDia;
-    double xMinPartBox = xCent-rad;
-    double xMaxPartBox = xCent+rad;
-    double yMinPartBox = yCent-rad;
-    double yMaxPartBox = yCent+rad;
-    if (xMinPartBox >= 0.0 && xMaxPartBox <= RVEsize &&
-        yMinPartBox >= 0.0 && yMaxPartBox <= RVEsize) {
-      return true;
-    }
-    return false;
-}
-
-bool isCylCenterInsideRVE(double RVEsize,
-                          double xCent, double yCent)
+bool isCylCenterInsideRVE(double RVEsize, double xCent, double yCent)
 {
 
     // Find if the particle center is in the box
@@ -203,9 +160,8 @@ bool doesCylIntersectOthers(double partDia, vector<double> diaLocs,
   return false;
 }
 
-void printCylLocs(vector<vector<double> > xLocs, vector<vector<double> > yLocs,
-                  vector<vector<double> > diaLocs,
-                  int n_bins, const double RVEsize, double diam_max)
+void printCylLocs(vector<double> xLocs, vector<double> yLocs,
+                  vector<double> diaLocs)
 {
   //Open file to receive cyl descriptions
   string outfile_name = "Test2D.RS.xml";
@@ -219,14 +175,12 @@ void printCylLocs(vector<vector<double> > xLocs, vector<vector<double> > yLocs,
   dest << "<union>\n\n";
 
   int cylcount = 0;
-  for(int k=0;k<n_bins;k++){
-    for(unsigned int i = 0; i<xLocs[k].size(); i++){
-         dest << "    <cylinder label = \"" << cylcount++ << "\">\n";
-         dest << "       <top>[" << xLocs[k][i] << ", " << yLocs[k][i] << ", " << 10000 << "]</top>\n";
-         dest << "       <bottom>[" << xLocs[k][i] << ", " << yLocs[k][i] << ", " << -10000.0 << "]</bottom>\n";
-         dest << "       <radius>" << 0.5*diaLocs[k][i] << "</radius>\n";
-         dest << "    </cylinder>\n";
-    }
+  for(unsigned int i = 0; i<xLocs.size(); i++){
+    dest << "    <cylinder label = \"" << cylcount++ << "\">\n";
+    dest << "       <top>[" << xLocs[i] << ", " << yLocs[i] << ", " << 10000 << "]</top>\n";
+    dest << "       <bottom>[" << xLocs[i] << ", " << yLocs[i] << ", " << -10000.0 << "]</bottom>\n";
+    dest << "       <radius>" << 0.5*diaLocs[i] << "</radius>\n";
+    dest << "    </cylinder>\n";
   }
 
   dest << "</union>\n\n";
@@ -240,9 +194,7 @@ void printCylLocs(vector<vector<double> > xLocs, vector<vector<double> > yLocs,
 
   dest2.precision(15);
 
-  for(int k=0;k<n_bins;k++){
-   for(unsigned int i = 0; i<xLocs[k].size(); i++){
-       dest2 <<  xLocs[k][i] << " " << yLocs[k][i] << " " << 0.5*diaLocs[k][i] << "\n";
-   }
+  for(unsigned int i = 0; i<xLocs.size(); i++){
+    dest2 <<  xLocs[i] << " " << yLocs[i] << " " << 0.5*diaLocs[i] << "\n";
   }
 }
