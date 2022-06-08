@@ -25,10 +25,10 @@ using namespace std;
 int main(int argc, char** argv)
 {
   // Now the piston
-  double xmin_block=0.0;
-  double xmax_block=0.1;
+  double xmin_block= 0.00+1.e-5;
+  double xmax_block= 0.10-1.e-5;
   double ymin_block= 0.10+1.e-5;
-  double ymax_block= 0.11-1.e-5;
+  double ymax_block= 0.12-1.e-5;
   double dx_tr=0.0005;
 
 #if 0
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
                </box>
 #endif
 
-  ofstream outp("LineSegmentsPiston.txt");
+  ofstream outp("LineSegments/LineSegmentsPiston.txt");
   vector<double> xpos, ypos;
 
   // Left face
