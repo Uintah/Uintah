@@ -10,11 +10,11 @@ if( $#argv < 1 ) then
   echo "   To use:"
   echo ""
   echo "   mkdir <masterUda>"
-  echo "   cd <masterUda> "
-  echo "   makeMasterUda_index.csh ../uda.000 ../uda.001 ../uda.00N"
+  echo "   makeMasterUda_index.csh uda.000  uda.001 uda.00N"
   exit(1)
 endif
 
+set masterUda = "masterUda"
 set rootPath = `dirname $0`
 
 if ( -l $0 ) then
@@ -23,7 +23,7 @@ endif
 
 set path = ($rootPath $path)
 
-echo $path
+#echo $path
 set udas = ($argv[*])    # make sure you remove the last / from any entry
 
 #__________________________________
@@ -43,6 +43,7 @@ foreach X ($udas[*])
   # does each uda exist
   if (! -e $X ) then
     echo "ERROR: makeMasterUda: can't find the uda $X"
+    `pwd`
     exit
   endif
   
@@ -115,13 +116,13 @@ echo ""
 echo "---------------------------------------"
 echo "Creating the base index file from the $udas[1]"
 
-cat $udas[1]/index.xml | sed /"timestep "/d > index.tmp
+cat $udas[1]/index.xml | sed /"timestep "/d > "$masterUda/index.tmp"
 
 # remove   </timesteps> & </Uintah_DataArchive>
-sed /"\/timesteps"/,/"\/Uintah_DataArchive"/d <index.tmp > index.xml
+sed /"\/timesteps"/,/"\/Uintah_DataArchive"/d <"$masterUda/index.tmp" > "$masterUda/index.xml"
 
 # add the list of timesteps to index.xml
-makeCombinedIndex.sh "$udas" >> index.xml
+makeCombinedIndex.sh "$udas" >> "$masterUda/index.xml"
 
 # generate all gidx
 if($io_type == "PIDX") then
@@ -130,12 +131,12 @@ if($io_type == "PIDX") then
 endif
 
 # put the xml tags back
-echo  "  </timesteps>" >> index.xml
-echo  "</Uintah_DataArchive>" >> index.xml
+echo  "  </timesteps>" >> "$masterUda/index.xml"
+echo  "</Uintah_DataArchive>" >> "$masterUda/index.xml"
 
 #__________________________________
 # cleanup
-/bin/rm -rf ~/.scratch index.tmp
+/bin/rm -rf ~/.scratch "$masterUda/index.tmp"
 exit
 
 
