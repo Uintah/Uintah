@@ -1774,16 +1774,16 @@ void SerialMPM::scheduleUpdateTriangles(SchedulerP& sched,
   Ghost::GhostType gac   = Ghost::AroundCells;
   Ghost::GhostType gnone = Ghost::None;
 
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+1);
-  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+1);
-  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+1);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,   mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->gMassLabel,           mpm_matls,     gac,NGN+2);
+  t->requires(Task::NewDW, lb->dLdtDissolutionLabel, mpm_matls,     gac,NGN+2);
   if (flags->d_doingDissolution) {
-    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+1);
+    t->requires(Task::NewDW, lb->gSurfNormLabel,     mpm_matls,     gac,NGN+2);
   }
   t->requires(Task::NewDW, lb->gMassLabel,
-             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+2);
   t->requires(Task::NewDW, lb->gVelocityLabel,
-             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+1);
+             m_materialManager->getAllInOneMatls(),Task::OutOfDomain,gac,NGN+2);
   t->requires(Task::OldDW, lb->pXLabel,                  triangle_matls, gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,               triangle_matls, gnone);
   t->requires(Task::OldDW, TriL->triangleIDLabel,        triangle_matls, gnone);
@@ -5763,23 +5763,23 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
 //    constNCVariable<Vector>  gvelocityglobal;
     constNCVariable<double>  gmassglobal;
     new_dw->get(gmassglobal,  lb->gMassLabel,
-           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
+           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+2);
 //    new_dw->get(gvelocityglobal,  lb->gVelocityLabel,
 //           m_materialManager->getAllInOneMatls()->get(0), patch, gac, NGN+1);
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl=(MPMMaterial*) 
                                      m_materialManager->getMaterial("MPM",m);
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+1);
-      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+1);
-      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+1);
+      new_dw->get(gvelocity[m], lb->gVelocityStarLabel,  dwi, patch, gac,NGN+2);
+      new_dw->get(gmass[m],     lb->gMassLabel,          dwi, patch, gac,NGN+2);
+      new_dw->get(dLdt[m],      lb->dLdtDissolutionLabel,dwi, patch, gac,NGN+2);
       PistonMaterial[m] = mpm_matl->getIsPistonMaterial();
 
       if (flags->d_doingDissolution){
-        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+1);
+        new_dw->get(gSurfNorm[m],lb->gSurfNormLabel,     dwi, patch, gac,NGN+2);
       } else{
         NCVariable<Vector> gSN_create;
-        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+1);
+        new_dw->allocateTemporary(gSN_create,                 patch, gac,NGN+2);
         gSN_create.initialize(Vector(0.));
         gSurfNorm[m] = gSN_create;                     // reference created data
       }
