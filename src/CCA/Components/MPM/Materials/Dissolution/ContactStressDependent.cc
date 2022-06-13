@@ -201,8 +201,8 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
           double normtrac_ave = -1.*(gContactForce[md][c].length() + 
                                      gContactForce[inContactMatl][c].length())
                                       /surfArea;
-          if( gSurfaceArea[md][c] > 1.e-3*area &&
-              gSurfaceArea[inContactMatl][c] > 1.e-3*area &&
+          if( gSurfaceArea[md][c] > 1.e-1*area &&
+              gSurfaceArea[inContactMatl][c] > 1.e-1*area &&
              -normtrac_ave > d_StressThresh){   // Compressive stress is neg
             double rho = gmass[md][c]/gvolume[md][c];
             double stressDiff = (-normtrac_ave - d_StressThresh);
@@ -217,11 +217,14 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
             if(localSurfRate > limit){
                slowBurn = limit/localSurfRate;
             }
-            dLdt[md][c] += localSurfRate*slowBurn;
+            double areaRatio = gSurfaceArea[md][c]/area;
+            dLdt[md][c] += localSurfRate*slowBurn*areaRatio;
 
-            massBurnRate[md][c] += localSurfRate*rho*slowBurn;
+            massBurnRate[md][c] += localSurfRate*rho*slowBurn
+                                 * gSurfaceArea[md][c]*areaRatio;
 
 //           cout << "c = " << c << endl;
+//           cout << "dLdt = " << dLdt[md][c] << endl;
 //           cout << "gContactForce[md][c] = " << gContactForce[md][c] << endl;
 //           cout << "gContactForce[inContactMatl][c] = " 
 //                <<  gContactForce[inContactMatl][c] << endl;
