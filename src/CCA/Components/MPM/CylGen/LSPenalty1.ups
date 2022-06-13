@@ -28,6 +28,7 @@
      <save label = "g.mass"/>
      <save label = "g.lscontactforce"/>
      <save label = "ls.linesegID" />
+     <save label = "ls.MidToEndVector" />
      <save label = "p.scalefactor" />
      <save label = "BndyForce_xminus"/>
      <save label = "BndyForce_xplus"/>
