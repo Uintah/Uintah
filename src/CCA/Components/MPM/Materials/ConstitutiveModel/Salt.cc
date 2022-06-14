@@ -60,7 +60,7 @@ Salt::Salt(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("B1",d_initialData.B1);
   ps->require("B2",d_initialData.B2);
   ps->require("D",d_initialData.D);
-  ps->getWithDefault("S1",d_initialData.S1,1.);
+  ps->getWithDefault("S1",d_initialData.S1,0.);
   ps->getWithDefault("TiMB",d_initialData.TiMB,0.0);
 
   initializeLocalMPMLabels();
@@ -184,6 +184,9 @@ void Salt::computeStressTensor(const PatchSubset* patches,
   double S1 = d_initialData.S1;
   double TiMB = d_initialData.TiMB;
   double Scale = (simTime-TiMB)*S1;
+  if(S1==0.){
+    Scale = 1.0;
+  }
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
@@ -246,7 +249,7 @@ void Salt::computeStressTensor(const PatchSubset* patches,
     double Dam= d_initialData.D;
 
     // limit the viscoplastic strain rate
-    double epsDotMax = 0.1/delT;
+    double epsDotMax = 0.001/delT;
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -280,8 +283,8 @@ void Salt::computeStressTensor(const PatchSubset* patches,
       Matrix3  tensorS = stressOld - P_old*Identity;
 
       // Compute trial deviatoric stress based, assuming elastic behavior
-//      Matrix3  trialS  = tensorS + DPrime*(2*G*delT);
-      Matrix3  trialS = tensorS;
+      Matrix3  trialS  = tensorS + DPrime*(2*G*delT);
+//      Matrix3  trialS = tensorS;
 
       Vector  eigVal;
       Matrix3 eigVec;
