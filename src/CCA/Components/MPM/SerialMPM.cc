@@ -4271,17 +4271,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     double totalmass  = 0;
-    sum_vartype OTM;
-    old_dw->get(OTM, lb->TotalMassLabel);
-    double oldTotalMass   = OTM;
     SoleVariable< double > OIMSV;
+    if(flags->d_reductionVars->mass){
+      sum_vartype OTM;
+      old_dw->get(OTM, lb->TotalMassLabel);
+      double oldTotalMass   = OTM;
 
-    old_dw->get( OIMSV, lb->InitialMassSVLabel);
+      old_dw->get( OIMSV, lb->InitialMassSVLabel);
 
-    if(timestep<=2){
-     proc0cout << "timestep = " << timestep 
-               << ", oldTotalMass = " << oldTotalMass << endl;
-     OIMSV = oldTotalMass;
+      if(timestep<=2){
+       proc0cout << "timestep = " << timestep 
+                 << ", oldTotalMass = " << oldTotalMass << endl;
+       OIMSV = oldTotalMass;
+      }
     }
 
     double dissolvedmass = 0;
