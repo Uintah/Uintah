@@ -1,0 +1,105 @@
+1.  Compile:
+
+ g++ -O3 -o cylgen cylgen.cc
+ g++ -O3 -o resizeCylinders resizeCylinders.cc
+ g++ -O3 -o makeGroups makeGroups.cc
+ g++ -O3 -o MakeLineSegmentsCircle MakeLineSegmentsCircle.cc
+ g++ -O3 -o MakeLineSegmentsPiston MakeLineSegmentsPiston.cc
+
+TODO:  Create a makefile or just a shell script to execute all these commands at once.
+
+2.  Run "cylgen".  If you wish to change anything such as the domain size, random number seed, or size distribution, you will need to edit cylgen.cc and then
+recompile.  The output from this will be Test2D.xml and Position_Radius.txt.
+TODO:  Use the argument list to make the parameters of cylgen command line
+arguments, rather than compile time configurable inputs.
+
+3.  To maximize the filled area of the cylinders, you need to run "resizeCylinders" until the reported "Total cylinder area new" stops changing (much).  "resizeCylinders" reads in "Position_Radius.txt" and the output is "Position_Radius.RS.txt".  So, to run it multiple times, you need to:
+
+> resizeCylinders
+> mv Position_Radius.RS.txt Position_Radius.txt
+> resizeCylinders
+> mv Position_Radius.RS.txt Position_Radius.txt
+	.
+	.
+	.
+
+repeat until "Total cylinder area new" is changing in the 3rd or 4th significant
+digit.  Make sure that the last step is the "mv ..." command so that Position_Radius.txt has the latest output.
+TODO:  Wrap all of the code in "resizeCylinders" in a while loop that continues until the change in Total cylinder area is less than 0.1%.
+
+4.  Run "makeGroups".  This will divide the cylinders described in Position_Radius.txt into groups of spatially separated cylinders, i.e., any cylinders in the same group will be separated by at least the amount given by minsep.  This will generate multiple files, Test2D.0.xml, Test2D.1.xml, etc., and Position_Radius.0.txt, Position_Radius.1.txt, etc.
+TODO:  Make "minsep" an optional command line argument, with the current default
+
+5.  >mkdir LineSegments
+
+6. Run "MakeLineSegmentsCircle".  This will take in the "Position_Radius.N.txt" files and create a series of 200 line segments around the circumference of each circle.  These are saved in a series of files in the LineSegments directory.  It also created a LineSegmentsCircle.xml file that points to all of these that we'll also use.  Note that if the domain size is changed, "topOfCylinders" may need to be changed as well, and the code recompiled.  TODO:  Rather than creating 200 line segments for every circle, make the number of LS per circle depend on the circumference.  Smaller circles need few line segments.  TODO:  use command line argument list for topOfCylinder input, with a default to the current value.
+
+7. Run "MakeLineSegmentsPiston"  This will create a file in the LineSegments directory that consists of a series of line segments that surround a piston that is described at the top of the file.
+TODO:  make the inputs command line arguments, including the offset as a separate input (1.e-5 currently) 
+
+8.  Copy LSPenalty1.ups to your workspace.  This file may need to be modified as follows:
+
+A.  There is a <material> ... </material> section for each group.  If the preceding steps have created more groups, copy/paste as needed, and modify to refer to the correct "Test2D.N.xml" file.  Be sure to modify the "color" field as well.  If fewer groups are created, you can delete as needed.  Also, if groups are added/deleted, be sure to modify the color and associated_material for the piston, as appropriate.
+
+B. If more materials are added/subtracted, modify the "materials" field in the contact section to as appropriate.  Every material number should be represented, both cylinders and piston.
+
+9. You want to run Uintah on the input file.  Assuming that you have a home
+directory called "Cyberstone2", do:
+
+> ln -s ~/Cyberstone2/Uintah/opt/StandAlone/sus .
+> ln -s ~/Cyberstone2/Uintah/opt/StandAlone/puda .
+
+"sus" stands for "StandAlone Uintah Simulation" and is the executable that you
+will use to carry out simulations
+
+"puda" stands for "Parse Uintah Data" and is a tool for postprocessing the data
+that Uintah generates.
+
+10.  Use Uintah to run the simulation by doing:
+
+> mpirun -np 16 sus LSPenalty1.ups >& LSP1.out.000 &
+
+This will run the simulation on 16 cores.  Currently, a single simulation takes about 18 hours of wall clock time, but we may be able to speed this up.  This
+will generate a data directory called "LSP1.uda.000".
+
+11.  As the simulation is running, we can start to look at the data in VisIt.
+VisIt tutorial to be given in person.  It is always a good practice to at least look at the first timestep output to make sure the initial state looks right.
+
+12.  As a first step in postprocessing, do:
+
+> cd LSP1.uda.000
+
+> puda -DOP -matl 5 -dir -2 LSP1.uda.000
+
+This uses the "depth of penetration" (DOP) option for puda.  This determines the
+particle that has moved the farthest in the -y direction (-dir -2) for each saved timestep.  The data are saved in a file called "Time_DOP.dat".
+
+13.  This directory contains a file called "inplot".  Open inplot in an editor
+and make sure that all of the instances of "uda" refer to the simulation you
+just ran, in this case, it would be LSP1.uda.000.  This file is used to help us
+analyze the data from the simulation.  Specifically, it will generate plots of
+pressure on the upper and lower y faces, and force on the x and z faces.
+Finally, it will show a plot of the location of the bottom of the piston.  To
+generate these plots, do:
+
+>gnuplot inplot
+
+and hit enter to proceed to the next plot.
+
+14.  We, we need to determine the values for force on the x and z faces,
+and the location of the piston.  While there is probably a better way (and you
+are free to make one), for now, we will just "eyeball" the force levels and
+place a line at each level, adjusting as need.  Same with the piston levels.
+
+See the values used for the x-forces as an example.
+
+15.  Tabulate the following data, preferably in a spreadsheet of your creation:
+
+Y-Stress    X-Force     Z-Force    Piston_Bottom   X-Stress  Z-Stress
+
+Column 1 comes from the burial history, columns 2-4 from the exercise in
+step 14 above.  Column 5 is the X-Force divided by the area of the X-face, so:
+X-Stress = X-Force/(0.005*Piston_Bottom).  Column 6 is:
+Z-Stress = Z-Force/(0.1*Piston_Bottom)
+
+We will use those to compute bulk and shear moduli later.
