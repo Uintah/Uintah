@@ -36,8 +36,9 @@
      <save label = "BndyForce_zminus"/>
      <save label = "BndyForce_zplus"/>
      <save label = "KineticEnergy"/>
-     <save label = "PistonMass"/>
      <save label = "TimeAveSpecificKE" />
+     <save label = "PistonMass" />
+     <save label = "TotalMass" />
      <checkpoint cycle="2" interval="5.0" />
    </DataArchiver>
 
@@ -52,6 +53,7 @@
        <use_linesegments>         true  </use_linesegments>
        <boundary_traction_faces>  [xplus, xminus, zplus, yminus, zminus]
                                              </boundary_traction_faces>
+       <KEMaterial>                    5 </KEMaterial>
     </MPM>
 
     <PhysicalConstants>

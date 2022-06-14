@@ -43,6 +43,9 @@ A.  There is a <material> ... </material> section for each group.  If the preced
 
 B. If more materials are added/subtracted, modify the "materials" field in the contact section to as appropriate.  Every material number should be represented, both cylinders and piston.
 
+C. The KEMaterial should refer to the material number of the piston.
+Keep in mind that materials index from 0.  i.e., if there is only one material, it will be material 0.
+
 9. You want to run Uintah on the input file.  Assuming that you have a home
 directory called "Cyberstone2", do:
 
