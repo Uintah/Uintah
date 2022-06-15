@@ -4072,22 +4072,39 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                          burialHistory->getTime_Ma(curBHIndex - 1);
           double qtzGrowthVecF = 
                          burialHistory->getQuartzGrowthVec_fr(curBHIndex);
+
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
- 
           if(flags->d_currentPhase=="hold" ||
              flags->d_currentPhase=="dissolution"){
             double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
+            double holdEndTime   = pbc->getLoadCurve()->getTime(curLCIndex+1);
+            double startTimeGeo = burialHistory->getTime_Ma(curBHIndex);
+            double endTimeGeo   = burialHistory->getTime_Ma(curBHIndex-1);
+            double uintahTime = 1.;
+            if(flags->d_currentPhase=="dissolution"){
+             uintahTime = uintahDisTime;
+            } else {
+             uintahTime = holdEndTime - holdStartTime;
+            }
+            geoTime_MYa = startTimeGeo 
+                        + ((endTimeGeo-startTimeGeo)/uintahTime)
+                                            *(time - holdStartTime);
+            geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
+          } else if(flags->d_currentPhase=="ramp") {
+            double rampStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
+            double rampEndTime   = pbc->getLoadCurve()->getTime(curLCIndex+1);
             double startTemp = burialHistory->getTemperature_K(curBHIndex);
             double endTemp   = burialHistory->getTemperature_K(curBHIndex-1);
-            geoTemp_K = startTemp + ((endTemp-startTemp)/uintahDisTime)
-                                    *(time-holdStartTime);
-          } else if(flags->d_currentPhase=="ramp") {
-            geoTemp_K   = burialHistory->getTemperature_K(curBHIndex-1);
+            geoTemp_K = startTemp 
+                      + ((endTemp-startTemp)/(rampEndTime - rampStartTime))
+                                                    *(time - rampStartTime);
+            geoTime_MYa = burialHistory->getTime_Ma(curBHIndex-1);
           } else if(flags->d_currentPhase=="settle"){
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
-          }
-          geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
+            geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
+          } 
+
           bool EOC    = burialHistory->getEndOnCompletion(curBHIndex);
           if(EOC && flags->d_currentPhase=="ramp" && outputStep){
             proc0cout << "Stopping per burial history specification" << endl;
