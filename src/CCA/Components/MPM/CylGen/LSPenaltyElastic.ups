@@ -18,7 +18,7 @@
    </Time>
 
    <DataArchiver>
-     <filebase>LSP1.uda</filebase>
+     <filebase>LSPElastic.uda</filebase>
      <outputInterval>5.0e-1</outputInterval>
      <save label = "p.x"/>
      <save label = "p.color"/>
@@ -30,7 +30,6 @@
      <save label = "ls.linesegID" />
      <save label = "ls.MidToEndVector" />
      <save label = "p.scalefactor" />
-     <save label = "p.plasticStrain" />
      <save label = "BndyForce_xminus"/>
      <save label = "BndyForce_xplus"/>
      <save label = "BndyForce_yminus"/>
@@ -65,12 +64,9 @@
         <MPM>
             <material name = "quartz_grains">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
@@ -86,12 +82,9 @@
 
             <material name = "quartz_grains">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
@@ -107,12 +100,9 @@
 
             <material name = "quartz_grains">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
@@ -128,12 +118,9 @@
 
             <material name = "quartz_grains">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
@@ -149,12 +136,9 @@
 
             <material name = "quartz_grains">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
@@ -170,12 +154,9 @@
 
             <material name = "Piston">
                 <density>2.2e6</density>
-                <constitutive_model type = "comp_neo_hook_plastic">
+                <constitutive_model type = "comp_neo_hook">
                   <bulk_modulus>       3.7e5       </bulk_modulus>
                   <shear_modulus>      3.1e5       </shear_modulus>
-                  <yield_stress>       4.8e2        </yield_stress>
-                  <hardening_modulus>  3.7e3        </hardening_modulus>
-                  <alpha>              0.0          </alpha>
                 </constitutive_model>
                 <thermal_conductivity>1.4e-7</thermal_conductivity>
                 <specific_heat>670.e-8</specific_heat>
