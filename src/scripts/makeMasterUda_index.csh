@@ -134,6 +134,16 @@ endif
 echo  "  </timesteps>" >> "$masterUda/index.xml"
 echo  "</Uintah_DataArchive>" >> "$masterUda/index.xml"
 
+
+#__________________________________
+#  prepend the udas with "../"
+#  This assumes that the udas are in the parent
+#  directory above masterUda  
+
+sed -i 's#<timestep href="#<timestep href="..\/#g' "$masterUda/index.xml"
+
+
+
 #__________________________________
 # cleanup
 /bin/rm -rf ~/.scratch "$masterUda/index.tmp"
