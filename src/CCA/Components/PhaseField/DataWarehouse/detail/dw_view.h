@@ -201,16 +201,16 @@ private: // METHODS
         if ( use_ghosts )
         {
             if ( dw->exists ( m_label, m_material, patch ) )
-                dw->getModifiable ( *var, m_label, m_material, patch, GT, GN );
+                dw->getModifiable( *var, m_label, m_material, patch, GT, GN );
             else
-                dw->allocateAndPut ( *var, m_label, m_material, patch, GT, GN );
+                dw->allocateAndPut( *var, m_label, m_material, patch, GT, GN );
         }
         else
         {
             if ( dw->exists ( m_label, m_material, patch ) )
-                dw->getModifiable ( *var, m_label, m_material, patch, Ghost::None, 0 );
+                dw->getModifiable( *var, m_label, m_material, patch, Ghost::None, 0 );
             else
-                dw->allocateAndPut ( *var, m_label, m_material, patch, Ghost::None, 0 );
+                dw->allocateAndPut( *var, m_label, m_material, patch, Ghost::None, 0 );
         }
         return var;
     }
