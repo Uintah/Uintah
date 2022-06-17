@@ -1718,7 +1718,7 @@ OnDemandDataWarehouse::getParticleVariable( const VarLabel       * label
   }
   else {
     SCI_THROW(
-        InternalError("getParticleVariable (Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__) );
+        InternalError("getParticleVariable( Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__) );
   }
 }
 
