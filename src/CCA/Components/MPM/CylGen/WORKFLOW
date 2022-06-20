@@ -16,6 +16,7 @@ arguments, rather than compile time configurable inputs.
 3.  To maximize the filled area of the cylinders, you need to run "resizeCylinders" 
 
 > resizeCylinders
+> mv Position_Radius.RS.txt Position_Radius.txt
 
 4.  Run "makeGroups".  This will divide the cylinders described in Position_Radius.txt into groups of spatially separated cylinders, i.e., any cylinders in the same group will be separated by at least the amount given by minsep.  This will generate multiple files, Test2D.0.xml, Test2D.1.xml, etc., and Position_Radius.0.txt, Position_Radius.1.txt, etc.
 TODO:  Make "minsep" an optional command line argument, with the current default
