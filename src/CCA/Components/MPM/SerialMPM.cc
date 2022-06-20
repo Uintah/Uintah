@@ -4510,9 +4510,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempNew[idx]    = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
         if (flags->d_doingDissolution){
-          if(pSurf[idx]>=0.99 && burnFraction != 0.0){
+          double pSNL = pSN.length();
+          if(pSurf[idx]>=0.99 && burnFraction != 0.0 && pSNL > 0.){
             // Normalize particle surface normal
-            pSN /= (pSN.length() + 1.e-100);
+            pSN /= (pSNL + 1.e-100);
             int maxDir = 0; double maxComp=fabs(pSN.x());
             for(int i = 1; i<3; i++){
               if(fabs(pSN[i])>maxComp){
@@ -4536,13 +4537,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               pSNdotL[i] = fabs(Dot(pSN,L[i]));
             }
 
-            double dL1overdL0 = pSNdotL[maxDirP1]/pSNdotL[maxDir];
-            double dL2overdL0 = pSNdotL[maxDirP2]/pSNdotL[maxDir];
+            double dL1overdL0 = pSNdotL[maxDirP1]/(pSNdotL[maxDir]+1.e-100);
+            double dL2overdL0 = pSNdotL[maxDirP2]/(pSNdotL[maxDir]+1.e-100);
 
             dL[maxDir] = deltaMassFrac*(Ll[0]*Ll[1]*Ll[2])/
                                        (Ll[maxDirP1]*Ll[maxDirP2] 
                                  + dL1overdL0*Ll[maxDir]*Ll[maxDirP2] 
-                                 + dL2overdL0*Ll[maxDir]*Ll[maxDirP1]);
+                                 + dL2overdL0*Ll[maxDir]*Ll[maxDirP1] 
+                                 + 1.e-100);
 
             dL[maxDirP1] = dL1overdL0*dL[maxDir];
             dL[maxDirP2] = dL2overdL0*dL[maxDir];

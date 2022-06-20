@@ -136,6 +136,7 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
     constNCVariable<double> NC_CCweight;
     std::vector<bool> masterMatls(numMatls);
     std::vector<double> rho(numMatls);
+    std::vector<bool> pistonMatl(numMatls);
     old_dw->get(NC_CCweight,  lb->NC_CCweightLabel, 0, patch, gnone, 0);
 
     for(int m=0;m<matls->size();m++){
@@ -154,6 +155,7 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
 
       MPMMaterial* mat=(MPMMaterial *) d_materialManager->getMaterial("MPM", m);
       rho[m] = mat->getInitialDensity();
+      pistonMatl[m] = mat->getIsPistonMaterial();
       if(mat->getModalID()==d_masterModalID){
         mat->setNeedSurfaceParticles(true);
         masterMatls[m]=true;
@@ -170,19 +172,21 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
       // layer of material accreting to the free surfaces
       double VolumePerArea = MassPerArea/rho[m];
 
-      double dL_dt =  -VolumePerArea/delT *(1.0 + 10000.*MassDiffFrac);
+      double dL_dt =  -VolumePerArea/delT *(1.0 + 1000.*MassDiffFrac);
 //      cout << "VolumePerArea = " << VolumePerArea << endl;
 //      cout << "dL_dt = " << dL_dt << endl;
 //      double rate = 0.33*MassBurnFrac*dL_dt*area;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
-        double sumMass=0.0;
+        double sumPMass=0.0;
         for(int n = 0; n < numMatls; n++){
-            sumMass+=gmass[n][c]; 
+          if(pistonMatl[n]){
+           sumPMass+=gmass[n][c]; 
+          }
         }
 
-        if(gmass[md][c] > 2.e-100 && gmass[md][c] == sumMass 
+        if(gmass[md][c] > 2.e-100 && sumPMass < 1.e-99 
                                   && NC_CCweight[c] < 0.2) {
 
             massBurnRate[md][c] += 0.5*rho[m]*dL_dt*gSurfaceArea[md][c];
