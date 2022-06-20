@@ -189,7 +189,6 @@ CohesiveZone::countCohesiveZones(const Patch* patch, const string filename)
     double f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
     int mt,mb;
     while(is >> f1 >> f2 >> f3 >> f4 >> f5 >> f6 >> f7 >> f8 >> f9 >> f10 >> mb >> mt){
-      //cout << f1 << " " << f2 << " " << f3 << endl;
       if(patch->containsPoint(Point(f1,f2,f3))){
         sum++;
       }
@@ -275,14 +274,6 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->czIDLabel);
   t->computes(d_lb->czCountLabel);
   t->computes(d_lb->pCellNACZIDLabel,zeroth_matl);
-
-//  vector<int> m(1);
-//  m[0] = czmat->getDWIndex();
-//  MaterialSet* cz_matl_set = scinew MaterialSet();
-//  cz_matl_set->addAll(m);
-//  cz_matl_set->addReference();
-
-//  sched->addTask(t, level->eachPatch(), cz_matl_set);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("CZ"));
 
