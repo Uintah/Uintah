@@ -11,15 +11,6 @@
 
 // >resizeCylinder
 
-// Note that this can be run successively (with diminishing returns) by
-// moving the output from this program (Position_Radius.RS.txt) to the
-// filename of the original distribution (Position_Radius.txt) and rerunning.
-
-// i.e.
-
-//  mv Position_Radius.RS.txt Position_Radius.txt
-
-// >resizeCylinder
 
 #include <stdlib.h>
 #include <stdio.h>
