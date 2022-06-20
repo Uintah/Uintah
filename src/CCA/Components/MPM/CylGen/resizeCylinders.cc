@@ -49,16 +49,10 @@ int main()
 
   // Parameters for user to change - BEGIN
   double RVEsize = 0.1;
-  double diam_max = 0.011250;
+  double diam_max = 0.01250;
 
   // Parameters for user to change - END IF AN EQUAL SIZE DISTRIBUTION IS O.K.
 
-  // Part of optimizing the search for intersections
-  int n_bins = RVEsize/diam_max;
-  cout << "n_bins = " << n_bins << endl;
-
-  //Store the locations in n_bins separate vectors, so we have a smaller region
-  //to search for intersections
   vector<double> xLocs;
   vector<double> yLocs;
   vector<double> diaLocs;
@@ -84,39 +78,64 @@ int main()
     }
   }
 
-  double total_cyl_area_orig = 0.0;
-  double total_cyl_area_new  = 0.0;
+  /*Omar additions
+   *adding a double to represent the change in cyl area
+   initialize orig and change as high numbers such that the while loop starts
+   change orig to 0 when starting to avoid adding to large number
+   int initialized to count number of runs and prevent excessive runs
+   */
+  double total_cyl_area_old = 0.0;
+  double total_cyl_area_new = 0.0;
+  double total_cyl_area_change = 8.0e10;
+  double areaChangeFraction = 1.0;
+  int resizeCount = 0;
+  int maxResizeAttempts = 10;
   cout << xLocs.size() << endl;
 
-  // Loop over all cylinders
-  int numInts=0;
-  for(int i = 0;i<xLocs.size();i++){
-    double d = diaLocs[i];
-    total_cyl_area_orig+= 0.25*M_PI*(d*d);;
-    int i_this = i;
-    double gap=9.e99;
+  //Resize cylinders until the area change is less that 0.1%
+//  while ((total_cyl_area_change/total_cyl_area_orig) > .001 && 
+  while (areaChangeFraction > .001 && resizeCount < maxResizeAttempts) {
 
-    bool cylsIntersect = doesCylIntersectOthers(d, diaLocs, gap,
-                                                xLocs[i],yLocs[i],
-                                                xLocs,yLocs,i_this);
+    // Loop over all cylinders
+    int numInts=0;
+    for(int i = 0;i<xLocs.size();i++){
+      double d = diaLocs[i];
+      total_cyl_area_old+= 0.25*M_PI*(d*d);;
+      int i_this = i;
+      double gap=9.e99;
 
-    if(cylsIntersect){
-      numInts++;
+      bool cylsIntersect = doesCylIntersectOthers(d, diaLocs, gap,
+                                                  xLocs[i],yLocs[i],
+                                                  xLocs,yLocs,i_this);
+
+      if(cylsIntersect){
+        numInts++;
+      }
+      if(gap>9.e90){
+        gap = 0.0;
+      }
+      diaLocs[i] += 0.95*gap;
+      d = diaLocs[i];
+      diam_max=max(diam_max,d);
+      total_cyl_area_new+= 0.25*M_PI*(d*d);;
     }
-    if(gap>9.e90){
-      gap = 0.0;
-    }
-    diaLocs[i] += 0.95*gap;
-    d = diaLocs[i];
-    diam_max=max(diam_max,d);
-    total_cyl_area_new+= 0.25*M_PI*(d*d);;
-  }
 
-  cout << "numInts = " << numInts << endl;
-  cout << "Cylinders out of RVE = " << outOfRVE << endl;
-  cout << "Total cylinder area orig = " << total_cyl_area_orig << endl;
-  cout << "Total cylinder area new  = " << total_cyl_area_new  << endl;
-  cout << "New Maximum Diameter = " << diam_max << endl;
+    // set change to difference of areas
+    total_cyl_area_change = total_cyl_area_new - total_cyl_area_old; 
+    areaChangeFraction = total_cyl_area_change/total_cyl_area_old;
+    resizeCount++; //add one to count
+
+    cout << "numInts = " << numInts << endl;
+    cout << "Cylinders out of RVE = " << outOfRVE << endl;
+    cout << "Total cylinder area old = " << total_cyl_area_old << endl;
+    cout << "Total cylinder area new  = " << total_cyl_area_new  << endl;
+    cout << "Total cylinder area change = " << total_cyl_area_change << endl;
+    cout << "Area change fraction = " << areaChangeFraction << endl;
+    cout << "Number of Resizes = " << resizeCount << endl;
+    cout << "New Maximum Diameter = " << diam_max << endl;
+    total_cyl_area_new = 0.;
+    total_cyl_area_old = 0.;
+  } // while
 
   printCylLocs(xLocs, yLocs, diaLocs);
 

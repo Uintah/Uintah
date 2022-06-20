@@ -15,7 +15,6 @@ done
 # Next for material 1
 m=1
 istart=40
-#iend=75
 iend=$((istart+35))
 k=$((iend-istart))
 for ((i=istart; i<=iend; i=i+1))

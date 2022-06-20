@@ -10,7 +10,7 @@
      <temperature_K> 423.15 </temperature_K>
      <depth_m> 4670.9 </depth_m>
      <fluidOverPressure_bar> 33.8 </fluidOverPressure_bar>
-     <effectiveStress_bar> 250.0 </effectiveStress_bar>
+     <effectiveStress_bar> 350.0 </effectiveStress_bar>
      <waterSaturation_pct> 1000 </waterSaturation_pct>
      <fluidPressure_bar> 514.7618 </fluidPressure_bar>
      <UintahDissolutionTime> 0.0 </UintahDissolutionTime>

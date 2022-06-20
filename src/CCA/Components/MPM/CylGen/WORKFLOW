@@ -13,19 +13,9 @@ recompile.  The output from this will be Test2D.xml and Position_Radius.txt.
 TODO:  Use the argument list to make the parameters of cylgen command line
 arguments, rather than compile time configurable inputs.
 
-3.  To maximize the filled area of the cylinders, you need to run "resizeCylinders" until the reported "Total cylinder area new" stops changing (much).  "resizeCylinders" reads in "Position_Radius.txt" and the output is "Position_Radius.RS.txt".  So, to run it multiple times, you need to:
+3.  To maximize the filled area of the cylinders, you need to run "resizeCylinders" 
 
 > resizeCylinders
-> mv Position_Radius.RS.txt Position_Radius.txt
-> resizeCylinders
-> mv Position_Radius.RS.txt Position_Radius.txt
-	.
-	.
-	.
-
-repeat until "Total cylinder area new" is changing in the 3rd or 4th significant
-digit.  Make sure that the last step is the "mv ..." command so that Position_Radius.txt has the latest output.
-TODO:  Wrap all of the code in "resizeCylinders" in a while loop that continues until the change in Total cylinder area is less than 0.1%.
 
 4.  Run "makeGroups".  This will divide the cylinders described in Position_Radius.txt into groups of spatially separated cylinders, i.e., any cylinders in the same group will be separated by at least the amount given by minsep.  This will generate multiple files, Test2D.0.xml, Test2D.1.xml, etc., and Position_Radius.0.txt, Position_Radius.1.txt, etc.
 TODO:  Make "minsep" an optional command line argument, with the current default
