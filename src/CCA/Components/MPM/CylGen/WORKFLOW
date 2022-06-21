@@ -1,3 +1,8 @@
+Below are the individual steps for running the cylinder compression simulations.
+Steps 1-6 can be carried out all at once by running createSampleShell.sh from
+the command line.  It is worth going through these steps individually at least
+once to be familiar with what is being done.  
+
 1.  Compile:
 
  g++ -O3 -o cylgen cylgen.cc
@@ -5,8 +10,6 @@
  g++ -O3 -o makeGroups makeGroups.cc
  g++ -O3 -o MakeLineSegmentsCircle MakeLineSegmentsCircle.cc
  g++ -O3 -o MakeLineSegmentsPiston MakeLineSegmentsPiston.cc
-
-TODO:  Create a makefile or just a shell script to execute all these commands at once.
 
 2.  Run "cylgen".  If you wish to change anything such as the domain size, random number seed, or size distribution, you will need to edit cylgen.cc and then
 recompile.  The output from this will be Test2D.xml and Position_Radius.txt.
@@ -23,12 +26,22 @@ TODO:  Make "minsep" an optional command line argument, with the current default
 
 5.  >mkdir LineSegments
 
-6. Run "MakeLineSegmentsCircle".  This will take in the "Position_Radius.N.txt" files and create a series of 200 line segments around the circumference of each circle.  These are saved in a series of files in the LineSegments directory.  It also created a LineSegmentsCircle.xml file that points to all of these that we'll also use.  Note that if the domain size is changed, "topOfCylinders" may need to be changed as well, and the code recompiled.  TODO:  Rather than creating 200 line segments for every circle, make the number of LS per circle depend on the circumference.  Smaller circles need few line segments.  TODO:  use command line argument list for topOfCylinder input, with a default to the current value.
+6. Either:
+
+Run "MakeLineSegmentsCircle".  This will take in the "Position_Radius.N.txt" files and create a series of 200 line segments around the circumference of each circle.  These are saved in a series of files in the LineSegments directory.  It also created a LineSegmentsCircle.xml file that points to all of these that we'll also use.  Note that if the domain size is changed, "topOfCylinders" may need to be changed as well, and the code recompiled.  
+
+Or:
+
+Run "MakeLineSegmentsCircleVar".  This will take in the "Position_Radius.N.txt" files and create a series of 200 line segments around the circumference of the largest circle, and will create proportionally fewer around smaller circles.
+ These are saved in a series of files in the LineSegments directory.  It also created a LineSegmentsCircle.xml file that points to all of these that we'll also use.  Note that if the domain size is changed, "topOfCylinders" may need to be changed as well, and the code recompiled.  Also, the largest circle diameter is
+hard coded (maxDiameter) and should be changed if the parameters of cylgen are changed.
+
+TODO:  use command line argument list for topOfCylinder input, with a default to the current value.  Same for maxDiameter.
 
 7. Run "MakeLineSegmentsPiston"  This will create a file in the LineSegments directory that consists of a series of line segments that surround a piston that is described at the top of the file.
 TODO:  make the inputs command line arguments, including the offset as a separate input (1.e-5 currently) 
 
-8.  Copy LSPenalty1.ups to your workspace.  This file may need to be modified as follows:
+8.  Copy LSPenaltyElastic.ups to your workspace.  This file may need to be modified as follows:
 
 A.  There is a <material> ... </material> section for each group.  If the preceding steps have created more groups, copy/paste as needed, and modify to refer to the correct "Test2D.N.xml" file.  Be sure to modify the "color" field as well.  If fewer groups are created, you can delete as needed.  Also, if groups are added/deleted, be sure to modify the color and associated_material for the piston, as appropriate.
 
