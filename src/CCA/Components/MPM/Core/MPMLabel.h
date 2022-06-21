@@ -53,6 +53,7 @@ namespace Uintah {
 
       const VarLabel* partCountLabel;
       const VarLabel* czCountLabel;
+      const VarLabel* lineSegmentCountLabel;
       const VarLabel* TimeAveSpecificKELabel;
       
       // Heat flux from fire

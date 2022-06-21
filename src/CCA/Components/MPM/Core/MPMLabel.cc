@@ -508,6 +508,9 @@ MPMLabel::MPMLabel()
   czCountLabel = VarLabel::create("czCount",
                                    sumlong_vartype::getTypeDescription());
 
+  lineSegmentCountLabel = VarLabel::create("lineSegmentCount",
+                                   sumlong_vartype::getTypeDescription());
+
   TimeAveSpecificKELabel = VarLabel::create("TimeAveSpecificKE",
                                    max_vartype::getTypeDescription());
 
@@ -887,6 +890,7 @@ MPMLabel::~MPMLabel()
 
   VarLabel::destroy(partCountLabel);
   VarLabel::destroy(czCountLabel);
+  VarLabel::destroy(lineSegmentCountLabel);
   VarLabel::destroy(TimeAveSpecificKELabel);
   VarLabel::destroy(doMechLabel);
 

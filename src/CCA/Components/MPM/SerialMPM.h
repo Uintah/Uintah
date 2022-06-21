@@ -119,6 +119,8 @@ public:
   
   void schedulePrintTriangleCount(const LevelP& level, SchedulerP& sched);
   
+  void schedulePrintLineSegmentCount(const LevelP& level, SchedulerP& sched);
+  
   void schedulePrintTracerCount(const LevelP& level, SchedulerP& sched);
   
   void schedulePrintCZCount(const LevelP& level, SchedulerP& sched);
@@ -196,6 +198,12 @@ protected:
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
+
+  void printLineSegmentCount(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
 
   void printTracerCount(const ProcessorGroup*,
                         const PatchSubset* patches,

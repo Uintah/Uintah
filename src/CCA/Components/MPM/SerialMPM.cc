@@ -554,6 +554,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
                               m_materialManager->getMaterial("LineSegment", 0);
    LineSegment* ls = ls_matl->getLineSegment();
    ls->scheduleInitialize(level, sched, m_materialManager);
+
+   schedulePrintLineSegmentCount(level, sched);
   }
 
   int numTriangleM = m_materialManager->getNumMatls("Triangle");
@@ -604,6 +606,41 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
   t->setType(Task::OncePerProc);
   sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
                  m_materialManager->allMaterials( "MPM" ));
+}
+
+//______________________________________________________________________
+void SerialMPM::schedulePrintLineSegmentCount(const LevelP& level,
+                                           SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printLineSegmentCount",
+                        this, &SerialMPM::printLineSegmentCount);
+  t->requires(Task::NewDW, lb->lineSegmentCountLabel);
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, m_loadBalancer->getPerProcessorPatchSet(level),
+                 m_materialManager->allMaterials( "LineSegment" ));
+}
+
+//______________________________________________________________________
+void SerialMPM::printLineSegmentCount(const ProcessorGroup* pg,
+                                   const PatchSubset*,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{
+  sumlong_vartype trcount;
+  new_dw->get(trcount, lb->lineSegmentCountLabel);
+
+  if(pg->myRank() == 0){
+   std::cout << "Created " << (long) trcount << " total line segments" << std::endl;
+  }
+
+  //__________________________________
+  //  bulletproofing
+  if(trcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero line segments were created.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
 }
 
 //______________________________________________________________________

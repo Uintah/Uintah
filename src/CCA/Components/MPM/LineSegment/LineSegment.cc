@@ -281,6 +281,7 @@ void LineSegment::scheduleInitialize(const LevelP& level,
   t->computes(d_lb->linesegIDLabel);
   t->computes(d_lb->lsMidToEndVectorLabel);
   t->computes(d_lb->pDeformationMeasureLabel);
+  t->computes(d_lb->lineSegmentCountLabel);
 
   sched->addTask(t, level->eachPatch(), mm->allMaterials("LineSegment"));
 }
@@ -309,6 +310,7 @@ void LineSegment::initialize(const ProcessorGroup*,
       createLineSegments(lineseg_matl, numLineSegments,
                     patch, new_dw, filename);
     }
-    cout << "Total Line Segments " << totalLineSegments << endl;
+    new_dw->put(sumlong_vartype(totalLineSegments),d_lb->lineSegmentCountLabel);
+    //cout << "Total Line Segments " << totalLineSegments << endl;
   }
 }
