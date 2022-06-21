@@ -79,6 +79,14 @@ int main()
   vector<double> CZy;
   vector<double> CZtm;
   vector<double> CZbm;
+  vector<double> CZarea;
+  vector<double> CZnx;
+  vector<double> CZny;
+//  vector<double> CZnz;
+  vector<double> CZtx;
+  vector<double> CZty;
+//  vector<double> CZtz;
+  double width = 0.005;
 
   for(int i = 0; i < numGroups; i++){
     cout << "working on group " << i << endl;
@@ -92,14 +100,35 @@ int main()
             CZy.push_back(0.5*(yLS[i][k]+yLS[j][l]));
             CZtm.push_back(i);
             CZbm.push_back(j);
+            double CZlength = sqrt(LSvx[i][k]*LSvx[i][k]+LSvy[i][k]*LSvy[i][k]);
+            double CZArea = width*CZlength;
+            CZarea.push_back(CZArea);
+            // Tangent vector is normalized LS midToEnd vector
+            CZtx.push_back(LSvx[i][k]/CZlength);
+            CZty.push_back(LSvy[i][k]/CZlength);
+            //CZtz.push_back(0.0);
+            // Normal vector is tangent vector crossed into V=(0.0,0.0,1.0)
+            CZnx.push_back(LSvy[i][k]/CZlength);
+            CZny.push_back(-1.*LSvx[i][k]/CZlength);
+            //CZnz.push_back(0.0);
           }
         }
       }
     }
   }
 
+  // output columns are:
+  // 1-3, x,y,z position
+  // 4    area
+  // 5-7  normal components
+  // 8-10 tangential components
+  // 9    bottom material
+  // 10   top material
   for(int i = 0; i < CZx.size(); i++){
-    dest << CZtm[i] << " " << CZbm[i] << " " << CZx[i] << " " << CZy[i] << " " << endl;
+    dest << CZx[i]  << " " << CZy[i]  << " 0.0 " << CZarea[i] << " "
+         << CZnx[i] << " " << CZny[i] << " 0.0 "
+         << CZtx[i] << " " << CZty[i] << " 0.0 "
+         << CZbm[i] << " " << CZtm[i] << endl;
   }
 
 #if 0
