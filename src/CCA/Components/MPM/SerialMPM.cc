@@ -506,7 +506,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
   for(unsigned int m = 0; m < numCZM; m++){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial( "CZ", m);
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
     CohesiveZone* ch = cz_matl->getCohesiveZone();
     ch->scheduleInitialize(level, sched, cz_matl);
   }
@@ -514,12 +514,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if (flags->d_deleteGeometryObjects) {
     scheduleDeleteGeometryObjects(level, sched);
   }
-
 }
+
 //______________________________________________________________________
-//    Task:  On a restart if the values are going to be modified there must first
-//           be computes( label ) before it can be modified.  This is a hack and a problem
-//           with the infrastructure.
+//  Task:  On a restart if the values are going to be modified there must first
+//         be computes( label ) before it can be modified.  This is a hack and
+//         a problem with the infrastructure.
 void SerialMPM::scheduleRestartInitializeHACK( SchedulerP   & sched,
                                                const LevelP & level)
 {
@@ -530,9 +530,8 @@ void SerialMPM::scheduleRestartInitializeHACK( SchedulerP   & sched,
   Task* t = scinew Task(taskName, this, &SerialMPM::restartInitializeHACK);
 
   t->computes( lb->pTemperatureLabel  );
-  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
+  sched->addTask(t, level->eachPatch(), m_materialManager->allMaterials("MPM"));
 }
-
 
 
 //______________________________________________________________________
@@ -559,8 +558,17 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
   t->modifies( lb->pTemperatureLabel );
   sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 #endif
-}
 
+#if 0
+  unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
+  for(unsigned int m = 0; m < numCZM; m++){
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
+    CohesiveZone* ch = cz_matl->getCohesiveZone();
+    ch->scheduleInitialize(level, sched, cz_matl);
+  }
+#endif
+
+}
 
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
@@ -791,12 +799,12 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeParticleGradients(       sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleFinalParticleUpdate(            sched, patches, matls);
-  scheduleInsertParticles(                    sched, patches, matls);
+  scheduleInsertParticles(                sched, patches, matls);
   if(flags->d_computeScaleFactor){
-    scheduleComputeParticleScaleFactor(       sched, patches, matls);
+    scheduleComputeParticleScaleFactor(   sched, patches, matls);
   }
   if(flags->d_refineParticles){
-    scheduleAddParticles(                     sched, patches, matls);
+    scheduleAddParticles(                 sched, patches, matls);
   }
 
   if(d_analysisModules.size() != 0){
@@ -808,10 +816,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     }
   }
 
-
- SerialMPM::scheduleParticleRelocation(       sched, level,  matls,
-                                                             cz_matls);
-
+ SerialMPM::scheduleParticleRelocation(   sched, level,  matls, cz_matls);
 
   //__________________________________
   //  on the fly analysis
@@ -860,8 +865,8 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
     // update the labels
     int numLabels = cohesiveZoneTasks->d_cohesiveZoneState_preReloc.size();
     for( int i=0; i<numLabels; i++){
-      old_labels.push_back( cohesiveZoneTasks->d_cohesiveZoneState_preReloc[i] );
-      new_labels.push_back( cohesiveZoneTasks->d_cohesiveZoneState[i] );
+      old_labels.push_back(cohesiveZoneTasks->d_cohesiveZoneState_preReloc[i]);
+      new_labels.push_back(cohesiveZoneTasks->d_cohesiveZoneState[i] );
     }
   }
 
@@ -871,7 +876,6 @@ void SerialMPM::scheduleParticleRelocation( SchedulerP        & sched,
   MaterialSet* newMatlSet = scinew MaterialSet();
   newMatlSet->addSubset( new_mss );
   newMatlSet->addReference();
-
 
   sched->scheduleParticleRelocation(level,
                                     lb->pXLabel_preReloc,
