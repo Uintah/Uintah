@@ -331,7 +331,7 @@ void CohesiveZoneTasks::updateCohesiveZones(const ProcessorGroup*,
 
     unsigned int numCZMatls=d_materialManager->getNumMatls( "CZ" );
     for(unsigned int m = 0; m < numCZMatls; m++){
-      CZMaterial* cz_matl = (CZMaterial*) d_materialManager->getMaterial( "CZ",  m );
+      CZMaterial* cz_matl=(CZMaterial*) d_materialManager->getMaterial("CZ",m);
       int dwi = cz_matl->getDWIndex();
 
       // Not populating the delset, but we need this to satisfy Relocate
