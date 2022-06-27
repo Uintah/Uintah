@@ -1,0 +1,20 @@
+#!/bin/bash
+#______________________________________________________________________
+# Script that reports any missing movie frames between frameLo and frameHi
+# in the current directory.  This is used in conjunction with makeMovie_slurm
+#
+
+frameLo=1
+frameHi=1440
+increment=1
+
+for start in $( seq $frameLo $increment $frameHi ); do
+
+  fname=$(printf 'movie.%04d.png' "$start")
+
+  if [[ ! -f "$fname" ]]; then
+    echo "  $fname is missing"
+  fi
+
+done
+exit
