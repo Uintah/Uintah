@@ -319,13 +319,13 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   materialProblemSetup(restart_mat_ps,flags, isRestart);
 
-  cohesiveZoneProblemSetup(restart_mat_ps, flags);
-
   tracerProblemSetup(restart_mat_ps, flags);
 
   lineSegmentProblemSetup(restart_mat_ps, flags);
 
   triangleProblemSetup(restart_mat_ps, flags);
+
+  cohesiveZoneProblemSetup(restart_mat_ps, flags);
 
   dissolutionModel = 
                   DissolutionFactory::create(UintahParallelComponent::d_myworld,
@@ -528,15 +528,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
 
-  int numCZM = m_materialManager->getNumMatls( "CZ" );
-  if(numCZM>0){
-    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", 0);
-    CohesiveZone* cz = cz_matl->getCohesiveZone();
-    cz->scheduleInitialize(level, sched, m_materialManager);
-
-    schedulePrintCZCount(level, sched);
-  }
-
   int numTracerM = m_materialManager->getNumMatls("Tracer");
   if(numTracerM>0){
    TracerMaterial* tracer_matl = (TracerMaterial *)
@@ -568,6 +559,15 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
    schedulePrintTriangleCount(level, sched);
   }
 
+  int numCZM = m_materialManager->getNumMatls( "CZ" );
+  if(numCZM>0){
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ", 0);
+    CohesiveZone* cz = cz_matl->getCohesiveZone();
+    cz->scheduleInitialize(level, sched, m_materialManager);
+
+    schedulePrintCZCount(level, sched);
+  }
+
   if (flags->d_deleteGeometryObjects) {
     scheduleDeleteGeometryObjects(level, sched);
   }
@@ -577,7 +577,16 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 void SerialMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
+#if 0
+  unsigned int numCZM = m_materialManager->getNumMatls( "CZ" );
+  for(unsigned int m = 0; m < numCZM; m++){
+    CZMaterial* cz_matl = (CZMaterial*) m_materialManager->getMaterial("CZ",m);
+    CohesiveZone* ch = cz_matl->getCohesiveZone();
+    ch->scheduleInitialize(level, sched, m_materialManager);
+  }
+#endif
 }
+
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
             phase, but get wiped clean when you restart
