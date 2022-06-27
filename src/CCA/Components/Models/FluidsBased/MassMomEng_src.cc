@@ -318,9 +318,15 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
 
-          Point p = patch->cellPosition(c);
+          Point p_lo = patch->nodePosition(c);     // bottom cell corner
+          Point p_hi = p_lo + dx;                  // upper cell corner
+          
+          bool isInside = ( region->piece->inside(p_lo) || 
+                            region->piece->inside(p_hi) );
 
-          if ( vol_frac[c] > 0.001 && region->piece->inside(p)) {
+          if ( vol_frac[c] > 0.001 && isInside ) {
+          
+            //DOUTR( true, "passed conditional  p" << p << " p_hi: " << p_hi );
 
             const double mass_old = rho_CC_old[c] * cellVol;
 
