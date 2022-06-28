@@ -169,6 +169,7 @@ void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","mass_momentum_energy_src");
   ProblemSpecP mme_src_ps = model_ps->appendChild("MassMomEng_src");
+  mme_src_ps->appendElement( "material",d_matl->getName() );
   //__________________________________
   //  initialization regions
   ProblemSpecP srcs_ps = mme_src_ps->appendChild( "sources" );
@@ -252,7 +253,6 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
 
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
-  double dt = delT;
 
   int indx = d_matl->getDWIndex();
   double totalMass_src = 0.0;
