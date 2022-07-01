@@ -63,6 +63,8 @@ UCNHVar::UCNHVar(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
      throw ProblemSetupException("**ERROR** No variable properties specified.",
                                   __FILE__, __LINE__);
   }
+  double bulk_mod_max = 0.0;
+  double shear_mod_max = 0.0;
   for( ProblemSpecP varProp = properties->findBlock("entry");
        varProp != nullptr;
        varProp = varProp->findNextBlock("entry") ) {
@@ -81,7 +83,11 @@ UCNHVar::UCNHVar(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
      d_Shear.push_back(G);
      d_FlowStress.push_back(Y);
      d_Hardening.push_back(H);
+     bulk_mod_max  = max(K, bulk_mod_max);
+     shear_mod_max = max(K, shear_mod_max);
   }
+  d_initialData.Bulk=bulk_mod_max;
+  d_initialData.tauDev=shear_mod_max;
   if(d_Color.size() < 2){
      cout << "d_Color.size() = " << d_Color.size() << endl;
      throw ProblemSetupException("**ERROR** Need at least two entries in Var model..",
@@ -89,9 +95,6 @@ UCNHVar::UCNHVar(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   }
 
   d_useModifiedEOS = false;
-//  ps->require("bulk_modulus",         d_initialData.Bulk);
-//  ps->require("shear_modulus",        d_initialData.tauDev);
-//  ps->get("useModifiedEOS",           d_useModifiedEOS);
   d_8or27=Mflag->d_8or27;
 
   //__________________________________
@@ -99,10 +102,6 @@ UCNHVar::UCNHVar(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   ps->getWithDefault("usePlasticity", d_usePlasticity, plas);
 
   if(d_usePlasticity) {
-//    ps->getWithDefault("alpha",       d_initialData.Alpha,0.0);
-//    ps->require("yield_stress",       d_initialData.FlowStress);
-//    ps->require("hardening_modulus",  d_initialData.K);
-
     getYieldStressDistribution(ps);
 
     createPlasticityLabels();
@@ -167,26 +166,17 @@ void UCNHVar::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps->setAttribute("type","UCNHVar");
   }
 
-  cm_ps->appendElement("bulk_modulus",             d_initialData.Bulk);
-  cm_ps->appendElement("shear_modulus",            d_initialData.tauDev);
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
 
-  // Plasticity
-  if(d_usePlasticity) {
-    cm_ps->appendElement("yield_stress",           d_initialData.FlowStress);
-    cm_ps->appendElement("hardening_modulus",      d_initialData.K);
-    cm_ps->appendElement("alpha",                  d_initialData.Alpha);
-    cm_ps->appendElement("yield_distrib",          d_yield.dist);
-    if (d_yield.dist == "uniform") {
-      cm_ps->appendElement("yield_range",          d_yield.range);
-      cm_ps->appendElement("yield_seed",           d_yield.seed);
-    }
-  }
-  cm_ps->appendElement("useInitialStress",         d_useInitialStress);
-
-  if (d_useInitialStress) {
-    cm_ps->appendElement("initial_pressure", d_init_pressure);
+  ProblemSpecP lc_ps = ps->appendChild("variable_properties");
+  for (int i = 0; i<(int)d_Color.size();i++) {
+    ProblemSpecP time_ps = lc_ps->appendChild("entry");
+    time_ps->appendElement("color",            d_Color[i]);
+    time_ps->appendElement("bulk_modulus",     d_Bulk[i]);
+    time_ps->appendElement("shear_modulus",    d_Shear[i]);
+    time_ps->appendElement("yield_stress",     d_FlowStress[i]);
+    time_ps->appendElement("hardening_modulus",d_Hardening[i]);
   }
 }
 //______________________________________________________________________
@@ -327,7 +317,7 @@ void UCNHVar::initializeCMData(const Patch* patch,
       //cout << "   seed = " << unique_seed << " first rand = " << (*randGen)() << endl;
       for(ParticleSubset::iterator iterPlas = pset->begin();
                                    iterPlas != pset->end(); iterPlas++){
-        pPlasticStrain[*iterPlas] = d_initialData.Alpha;
+        pPlasticStrain[*iterPlas] = 0.;
         double rand = (*randGen)();
         pYieldStress[*iterPlas] = d_initialData.FlowStress
                                 + (2*rand-1)*d_yield.range;
@@ -337,7 +327,7 @@ void UCNHVar::initializeCMData(const Patch* patch,
     } else {
       for(ParticleSubset::iterator iterPlas = pset->begin();
                                    iterPlas != pset->end(); iterPlas++){
-        pPlasticStrain[*iterPlas] = d_initialData.Alpha;
+        pPlasticStrain[*iterPlas] = 0.0;
         pYieldStress[*iterPlas]   = d_initialData.FlowStress;
         bElBar[*iterPlas]         = Identity;
       }
@@ -354,8 +344,8 @@ void UCNHVar::initializeCMData(const Patch* patch,
 // Scheduling Functions //
 //////////////////////////
 void UCNHVar::addComputesAndRequires(Task* task,
-                                      const MPMMaterial* matl,
-                                      const PatchSet* patches) const
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -371,21 +361,17 @@ void UCNHVar::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
+  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
+  task->requires( Task::OldDW, d_lb->pColorLabel,        matlset, gnone);
 
   // Plasticity
   if(d_usePlasticity) {
-  
     task->requires(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
     task->requires(Task::OldDW, pYieldStressLabel,     matlset, gnone);
     task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
     task->computes(pPlasticStrainLabel_preReloc,       matlset);
     task->computes(pYieldStressLabel_preReloc,         matlset);
     task->computes(bElBarLabel_preReloc,               matlset);
-  }
-
-  if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
   }
 
   // Universal
@@ -565,11 +551,11 @@ void UCNHVar::computeStressTensor(const PatchSubset* patches,
   Matrix3 Identity; Identity.Identity();
 
   // Grab initial data
-  double shear    = d_initialData.tauDev;
-  double bulk     = d_initialData.Bulk;
-  double rho_orig = matl->getInitialDensity();
+  double shear    = 0.0;
+  double bulk     = 0.0;
   double flow     = 0.0;
   double K        = 0.0;
+  double rho_orig = matl->getInitialDensity();
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
@@ -584,14 +570,13 @@ void UCNHVar::computeStressTensor(const PatchSubset* patches,
 
     // Get particle info and patch info
     int dwi              = matl->getDWIndex();
-//    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                      gan, 0, lb->pXLabel);
     Vector dx            = patch->dCell();
 
     // Particle and grid data universal to model type
     // Old data containers
-    constParticleVariable<double>  pMass, pVolume_new;
+    constParticleVariable<double>  pMass, pVolume_new, pColor;
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Vector>  pVelocity;
@@ -620,14 +605,11 @@ void UCNHVar::computeStressTensor(const PatchSubset* patches,
 
       pPlasticStrain.copyData(pPlasticStrain_old);
       pYieldStress.copyData(pYieldStress_old);
-
-      // Copy initial data
-      flow  = d_initialData.FlowStress;
-      K     = d_initialData.K;
     }
 
     // Universal Gets
     old_dw->get(pMass,               lb->pMassLabel,               pset);
+    old_dw->get(pColor,              lb->pColorLabel,              pset);
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pLocalizedOld,       d_lb->pLocalizedMPMLabel,     pset);
@@ -645,6 +627,12 @@ void UCNHVar::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+
+      CMData props = findPropertiesFromColor(pColor[idx]);
+      bulk  = props.Bulk;
+      shear = props.tauDev;
+      flow  = props.FlowStress;
+      K     = props.K;
 
       Matrix3 pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       double Jinc         = pDefGradInc.Determinant();

@@ -80,7 +80,6 @@ namespace Uintah {
       // For Plasticity
       double FlowStress;
       double K;
-      double Alpha;
     };
 
     struct YieldDistribution {
@@ -247,6 +246,37 @@ namespace Uintah {
                                              const unsigned int numNewPartNeeded,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
+
+     inline CMData findPropertiesFromColor(double color){
+
+       CMData props;
+       int n_entries = static_cast<int>(d_Color.size());
+       if (color >= d_Color[n_entries-1]){
+          props.Bulk       = d_Bulk[n_entries-1];
+          props.tauDev     = d_Shear[n_entries-1];
+          props.FlowStress = d_FlowStress[n_entries-1];
+          props.K          = d_Hardening[n_entries-1];
+          return props;
+       }
+
+       for (int ii = 1; ii < n_entries; ++ii) {
+        if (color <= d_Color[ii]) {
+          double s = (d_Color[ii]-color)/(d_Color[ii]-d_Color[ii-1]);
+          props.Bulk       = d_Bulk[ii-1]*s + d_Bulk[ii]*(1.0-s);
+          props.tauDev     = d_Shear[ii-1]*s + d_Shear[ii]*(1.0-s);
+          props.FlowStress = d_FlowStress[ii-1]*s + d_FlowStress[ii]*(1.0-s);
+          props.K          = d_Hardening[ii-1]*s + d_Hardening[ii]*(1.0-s);
+          return props;
+         }
+       }
+
+       props.Bulk       = d_Bulk[0];
+       props.tauDev     = d_Shear[0];
+       props.FlowStress = d_FlowStress[0];
+       props.K          = d_Hardening[0];
+       return props;
+     }
+
 
   private:
     
