@@ -89,14 +89,14 @@ sbatch_header()
 {
 cat << EOF > batch.slrm
 #!/bin/bash
-#SBATCH --nodes $nNodes
+
 #SBATCH --ntasks $nProcs
 #SBATCH --partition $partition
 #SBATCH --account $bank
 #SBATCH --time $time
 #SBATCH --job-name $jobName
 #SBATCH --output "out.$jobName"
-#SBATCH --exclude=ash253
+##SBATCH --exclude=ash253
 EOF
 }
 
@@ -116,12 +116,9 @@ cat << EOF >> batch.slrm
   -fps 10 \\
   -ignoresessionengines \\
   -par \
-  -l  sbatch/mpirun\
-  -p  $partition \
-  -b  $bank \
-  -n  $jobName \
-  -nn $nNodes \
+  -l  mpirun\
   -np $nProcs\\
+  -launch localhost \\
   -source $sourceUda \\
   -output $outputDir/movie.  \\
   -sessionfile $sessionFile
