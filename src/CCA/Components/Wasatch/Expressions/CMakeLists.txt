@@ -22,9 +22,11 @@ set( WASATCH_SRC ${WASATCH_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/FanModel.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/MomentumPartialRHS.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/MomentumRHS.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/MomHat.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/MonolithicRHS.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/PoissonExpression.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/Pressure.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/PressureGuess.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/PressureSource.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/PrimVar.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/RadiationSource.cc
@@ -42,7 +44,8 @@ set( WASATCH_SRC ${WASATCH_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/TabPropsHeatLossEvaluator.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/TargetValueSource.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/TestNestedExpression.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/TimeAdvance.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/TimeAdvance.cc 
+        ${CMAKE_CURRENT_SOURCE_DIR}/TimeAdvanceMomentum.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/CourantNumber.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/CellReynoldsNumber.cc                
         ${CMAKE_CURRENT_SOURCE_DIR}/StableTimestepForEq.cc                        

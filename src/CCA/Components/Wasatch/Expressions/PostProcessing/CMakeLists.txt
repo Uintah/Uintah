@@ -5,5 +5,6 @@ set( WASATCH_SRC ${WASATCH_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/KineticEnergy.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/VelocityMagnitude.cc
         ${CMAKE_CURRENT_SOURCE_DIR}/Vorticity.cc
+        ${CMAKE_CURRENT_SOURCE_DIR}/InstantaneousPressure.cc
         PARENT_SCOPE
     )
