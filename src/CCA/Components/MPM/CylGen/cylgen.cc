@@ -220,7 +220,8 @@ int main()
     double num_extra_bins_d = (sizes[i]+diam_max)/(2.0*bin_width);
     int num_extra_bins = (int) num_extra_bins_d + 1;
     cout << "NEB = " << num_extra_bins_d << " " << num_extra_bins << endl;
-    while(total_cyl_VF < TVFS[i] && total_intersections < 20000000){
+    while(total_cyl_VF < TVFS[i] && total_intersections < 20000000
+                                 && intersected < 30000000){
      // Get two random numbers for the x and y and scale by RVE size
      double xCent = drand48()*RVEsize;
      double yCent = drand48()*RVEsize;
