@@ -54,19 +54,20 @@ class MomHat
     typedef typename SpatialOps::SVolField PFieldT;
     typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<FieldT, DirT>::Gradient, PFieldT, FieldT >::type Grad;
 
+    const bool hasIntrusion_;
 
-    DECLARE_FIELDS(FieldT, rhsPart_,momN_)
+    DECLARE_FIELDS(FieldT, rhsPart_,momN_, volfrac_)
     DECLARE_FIELDS(SingleValue, dt_, rkstage_, timestep_)
     
     const WasatchCore::TimeIntegrator* timeIntInfo_;
     const Grad* gradOp_;
 
-    MomHat(const Expr::Tag& partRHS,const Expr::Tag& momN);
+    MomHat(const Expr::Tag& partRHS,const Expr::Tag& momN, const Expr::Tag& volFracTag);
     
 public:
     class Builder : public Expr::ExpressionBuilder
     {
-        const Expr::Tag pressuret_, rhspartt_, momNt_;
+        const Expr::Tag pressuret_, rhspartt_, momNt_, volFract_;
     public:
         /**
          *  \param result the result of this expression
@@ -77,7 +78,8 @@ public:
          */
         Builder( const Expr::Tag& result,
                 const Expr::Tag& partRHS,
-                const Expr::Tag& momN);
+                const Expr::Tag& momN,
+                const Expr::Tag& volFracTag);
 
         ~Builder(){}
         Expr::ExpressionBase* build() const;

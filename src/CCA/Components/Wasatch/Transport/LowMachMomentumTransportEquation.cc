@@ -231,7 +231,8 @@ namespace WasatchCore{
 
     const Expr::ExpressionID momHatId = factory.register_expression( new momHat( momHatTag_,
                                                                         rhs_part_tag(this->solnVarName_),
-                                                                        mom_tag(this->solnVarName_,true)) );
+                                                                        mom_tag(this->solnVarName_,true),
+                                                                        volFracTag) );
     // graphHelper.rootIDs.insert(momHatId); // temporarly
     factory.cleave_from_parents( momHatId  );
     factory.cleave_from_children( momHatId  );
@@ -240,6 +241,7 @@ namespace WasatchCore{
     int approx_order=0;
     if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK2SSP") approx_order=1;
     else if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK3SSP") approx_order=2;
+    WasatchCore::Wasatch::set_old_dt_num(approx_order);
 
     OldVariable& oldVar = OldVariable::self();
   

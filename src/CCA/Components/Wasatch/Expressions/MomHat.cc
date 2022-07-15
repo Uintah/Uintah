@@ -34,8 +34,10 @@
 template< typename FieldT, typename DirT>
 MomHat<FieldT, DirT>::
 MomHat(const Expr::Tag& partRHSTag,
-       const Expr::Tag& momNTag)
-: Expr::Expression<FieldT>()
+       const Expr::Tag& momNTag,
+       const Expr::Tag& volFracTag)
+: Expr::Expression<FieldT>(),
+  hasIntrusion_(volFracTag != Expr::Tag())
 {
     this->set_gpu_runnable( true );
     const Expr::Tag dtTag = WasatchCore::TagNames::self().dt;
@@ -44,6 +46,8 @@ MomHat(const Expr::Tag& partRHSTag,
     rkstage_ = this->template create_field_request<SingleValue>(rksTag);
     momN_ = this->template create_field_request<FieldT>(momNTag);
     rhsPart_ = this->template create_field_request<FieldT>(partRHSTag);
+    
+    if( hasIntrusion_ )  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
@@ -89,7 +93,8 @@ evaluate()
                     ( rkStage == 2.0,  a2*momN + b2*(result + dt*rhsPart) ) 
                     ( rkStage == 3.0,  a3*momN + b3*(result + dt*rhsPart) ) 
                     ( 0.0 ); // should never get here. 
-    // }
+    
+    if( hasIntrusion_ ) result <<= volfrac_->field_ref() * result;
         
 }
 
@@ -98,10 +103,12 @@ template< typename FieldT, typename DirT>
 MomHat<FieldT, DirT>::
 Builder::Builder(const Expr::Tag& result,
                  const Expr::Tag& partRHS,
-                 const Expr::Tag& momN)
+                 const Expr::Tag& momN,
+                 const Expr::Tag& volFracTag)
 : ExpressionBuilder(result),
 rhspartt_( partRHS ),
-momNt_(momN)
+momNt_(momN),
+volFract_(volFracTag)
 {}
 //--------------------------------------------------------------------
 
@@ -109,7 +116,7 @@ template< typename FieldT, typename DirT>
 Expr::ExpressionBase*
 MomHat<FieldT, DirT>::Builder::build() const
 {
-    return new MomHat<FieldT, DirT>(rhspartt_, momNt_);
+    return new MomHat<FieldT, DirT>(rhspartt_, momNt_,volFract_);
 }
 
 //--------------------------------------------------------------------
