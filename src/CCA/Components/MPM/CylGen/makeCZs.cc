@@ -30,7 +30,7 @@ int main()
 {
   // Parameters for user to change - BEGIN
   int numGroups = 5;  // 0 - 4
-  int numfiles[5] = {33,35,37,29,9};
+  int numfiles[5] = {34,36,38,30,10};
 
   vector<double> xLS[numGroups];
   vector<double> yLS[numGroups];
@@ -48,7 +48,7 @@ int main()
 
   // Read in all of the line segments store by group in STL vectors
   for(int i = 0; i < numGroups; i++){
-    for(int j = 0; j <= numfiles[i]; j++){
+    for(int j = 0; j < numfiles[i]; j++){
       stringstream group, file;
       string  g,f;
       group << i;

@@ -86,6 +86,7 @@ Tracer::createTracers(TracerMaterial* matl,
 
   // Read in cvt file if it exists
   vector<Point> CVT;
+  int CVTFileLength = 0;
   if(haveCVT){
     double c1,c2,c3 = 0.0;
     int numcvt = 0;
@@ -94,6 +95,7 @@ Tracer::createTracers(TracerMaterial* matl,
       numcvt++;
     } // while lines in the pts file
     cvt.close();
+    CVTFileLength = CVT.size();
   } // if haveCVT
 
   if(filename!="") {
@@ -133,6 +135,10 @@ Tracer::createTracers(TracerMaterial* matl,
        start++;
      }
      lineNum++;
+     if(haveCVT && lineNum > CVTFileLength){
+      throw ProblemSetupException("ERROR CVT file "+filename+" has fewer entries than the tracers file \n",
+                                  __FILE__, __LINE__);
+     }
     }
     is.close();
   }
