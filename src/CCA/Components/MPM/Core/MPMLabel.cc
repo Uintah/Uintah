@@ -535,6 +535,9 @@ MPMLabel::MPMLabel()
   DissolvedMassLabel = VarLabel::create( "DissolvedMass",
                                  sum_vartype::getTypeDescription() );
 
+  AddedMassLabel = VarLabel::create( "AddedMass",
+                                 sum_vartype::getTypeDescription() );
+
   PistonMassLabel = VarLabel::create( "PistonMass",
                                  sum_vartype::getTypeDescription() );
 
@@ -902,6 +905,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalMassLabel);
   VarLabel::destroy(InitialMassSVLabel);
   VarLabel::destroy(DissolvedMassLabel);
+  VarLabel::destroy(AddedMassLabel);
   VarLabel::destroy(PistonMassLabel);
   VarLabel::destroy(TotalSurfaceAreaLabel);
   VarLabel::destroy(TotalVolumeDeformedLabel);

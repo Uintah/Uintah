@@ -472,6 +472,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->DissolvedMassLabel);
+  t->computes(lb->AddedMassLabel);
   t->computes(lb->TotalMassLabel);
   t->computes(lb->InitialMassSVLabel);
   t->computes(lb->TotalSurfaceAreaLabel);
@@ -1607,6 +1608,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->TotalMassLabel);
     t->computes(lb->InitialMassSVLabel);
     t->computes(lb->DissolvedMassLabel);
+    t->computes(lb->AddedMassLabel);
     t->computes(lb->PistonMassLabel);
   }
   if(flags->d_reductionVars->volDeformed){
@@ -2655,6 +2657,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   }
   new_dw->put(sum_vartype(0.0), lb->KineticEnergyLabel);
   new_dw->put(sum_vartype(0.0), lb->DissolvedMassLabel);
+  new_dw->put(sum_vartype(0.0), lb->AddedMassLabel);
   new_dw->put(sum_vartype(0.0), lb->TotalMassLabel);
   new_dw->put(sum_vartype(0.0), lb->TotalSurfaceAreaLabel);
   SoleVariable<double> IMSV = 0.0;
@@ -4341,6 +4344,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     double dissolvedmass = 0;
+    double addedmass = 0;
     double pistonmass = 0;
     Vector CMX(0.0,0.0,0.0);
     Vector totalMom(0.0,0.0,0.0);
@@ -4614,6 +4618,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalmass  += pmass[idx];
         }
         dissolvedmass  += Max(0., (pmass[idx] - pmassNew[idx]));
+        addedmass      += Max(0., (pmassNew[idx] - pmass[idx]));
         pistonmass += pmass[idx]*useInKECalc[m];
       }
 
@@ -4645,6 +4650,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     if(flags->d_reductionVars->mass){
       new_dw->put(sum_vartype(totalmass),      lb->TotalMassLabel);
       new_dw->put(sum_vartype(dissolvedmass),  lb->DissolvedMassLabel);
+      new_dw->put(sum_vartype(addedmass),      lb->AddedMassLabel);
       new_dw->put(sum_vartype(pistonmass),     lb->PistonMassLabel);
       new_dw->put(OIMSV,                       lb->InitialMassSVLabel);
     }
@@ -6041,6 +6047,7 @@ void SerialMPM::updateTriangles(const ProcessorGroup*,
         }
 #endif
 
+//        if(/*DisPrecip <=0 &&*/ !PistonMaterial[adv_matl]){
         if(DisPrecip <=0 && !PistonMaterial[adv_matl]){
           totalsurfarea+=triArea[idx];
         }

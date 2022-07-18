@@ -215,6 +215,7 @@ namespace Uintah {
       const VarLabel* TotalMassLabel;
       const VarLabel* InitialMassSVLabel;
       const VarLabel* DissolvedMassLabel;
+      const VarLabel* AddedMassLabel;
       const VarLabel* PistonMassLabel;
       const VarLabel* TotalSurfaceAreaLabel;
       const VarLabel* AddedParticlesLabel;
