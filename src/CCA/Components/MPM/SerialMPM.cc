@@ -550,14 +550,30 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
     }
   }
 
+
+
+/*`==========TESTING==========*/
+Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
+                      &SerialMPM::restartInitializeTask);
+
+  const PatchSet* patches = level->eachPatch();
+  unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
+
+  for(unsigned int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addReinitializeComputesAndRequires(t, mpm_matl, patches);
+  }
+
+
+/*===========TESTING==========`*/
+
+
 #if 0
+  // to modify the particle temperature
   scheduleRestartInitializeHACK( sched, level );
-
-  Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
-                        &SerialMPM::restartInitializeTask);
-
   t->modifies( lb->pTemperatureLabel );
-  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 #endif
 
 #if 0
@@ -569,6 +585,7 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
   }
 #endif
 
+  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 }
 
 /* _____________________________________________________________________
@@ -2240,9 +2257,18 @@ void SerialMPM::restartInitializeTask(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, msg);
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl =
-                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+
+/*`==========TESTING==========*/
+      if( cm->d_reinitializeCMData ){
+        cm->reinitializeCMData(patch, mpm_matl, new_dw);
+      }
+/*===========TESTING==========`*/
+
+#if 0  // used to modify the particle temperature.
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset  = new_dw->getParticleSubset( dwi, patch );
 
@@ -2254,6 +2280,7 @@ void SerialMPM::restartInitializeTask(const ProcessorGroup *,
         particleIndex idx = *iter;
         pTemperature[idx] = 310;
       }
+#endif
     }
   }
 }

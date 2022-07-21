@@ -63,6 +63,8 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
   ps->get("useModifiedEOS",           d_useModifiedEOS);
+
+  ps->getWithDefault( "reinitializeCMData", d_reinitializeCMData, false );
   d_8or27=Mflag->d_8or27;
 
   //__________________________________
@@ -138,6 +140,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps->setAttribute("type","UCNH");
   }
 
+  cm_ps->appendElement("reinitializeCMData",       false );
   cm_ps->appendElement("bulk_modulus",             d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",            d_initialData.tauDev);
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
@@ -265,7 +268,7 @@ void UCNH::initializeCMData(const Patch* patch,
                                      0.0, DefDiagonal,         0.0,
                                      0.0,         0.0, DefDiagonal);
 
-      for (ParticleSubset::iterator iter = pset->begin(); 
+      for (ParticleSubset::iterator iter = pset->begin();
                                     iter != pset->end(); ++iter) {
         particleIndex idx = *iter;
         pDefGrad[idx] = defGradInitial;
@@ -314,13 +317,55 @@ void UCNH::initializeCMData(const Patch* patch,
       }
     }
   }
-  
+
   // If not implicit, compute timestep
   if(!(flag->d_integrator == MPMFlags::Implicit)) {
     // End by computing the stable timestep
     computeStableTimeStep(patch, matl, new_dw);
   }
 }
+
+
+/*`==========TESTING==========*/
+//______________________________________________________________________
+//
+void UCNH::reinitializeCMData(const Patch* patch,
+                              const MPMMaterial* matl,
+                              DataWarehouse* new_dw)
+{
+  Matrix3 Identity;
+  Identity.Identity();
+  Matrix3 zero(0.0);
+
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<Matrix3> pDefGrad;
+  ParticleVariable<Matrix3> pStress;
+
+  new_dw->getModifiable(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+  new_dw->getModifiable(pStress,     lb->pStressLabel,             pset);
+
+  Matrix3 stressInitial(d_init_pressure,             0.0,             0.0,
+                                    0.0, d_init_pressure,             0.0,
+                                    0.0,             0.0, d_init_pressure);
+
+  double rho_orig = matl->getInitialDensity();
+  double rho_cur  = computeDensity(rho_orig, d_init_pressure);
+  double DefDiagonal = cbrt(rho_cur/rho_orig);
+
+  Matrix3 defGradInitial(DefDiagonal,         0.0,         0.0,
+                                 0.0, DefDiagonal,         0.0,
+                                 0.0,         0.0, DefDiagonal);
+
+  for (ParticleSubset::iterator iter = pset->begin();
+                                iter != pset->end(); ++iter) {
+    particleIndex idx = *iter;
+    pDefGrad[idx] = defGradInitial;
+    pStress[idx]  = stressInitial;
+  }
+}
+/*===========TESTING==========`*/
+
 //______________________________________________________________________
 // Scheduling Functions //
 //////////////////////////
@@ -346,7 +391,7 @@ void UCNH::addComputesAndRequires(Task* task,
 
   // Plasticity
   if(d_usePlasticity) {
-  
+
     task->requires(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
     task->requires(Task::OldDW, pYieldStressLabel,     matlset, gnone);
     task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
@@ -402,6 +447,21 @@ void UCNH::addInitialComputesAndRequires(Task* task,
     task->computes(bElBarLabel,         matlset);
   }
 }
+
+/*`==========TESTING==========*/
+//______________________________________________________________________
+//
+void UCNH::addReinitializeComputesAndRequires(Task* task,
+                                              const MPMMaterial* matl,
+                                              const PatchSet*) const
+{
+  if( d_reinitializeCMData ){
+    const MaterialSubset* matlset = matl->thisMaterial();
+    task->computes(lb->pDeformationMeasureLabel,  matlset );
+    task->computes(lb->pStressLabel,              matlset );
+  }
+}
+/*===========TESTING==========`*/
 
 //______________________________________________________________________
 //
@@ -586,7 +646,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                       pPlasticStrainLabel_preReloc,     pset);
       new_dw->allocateAndPut(pYieldStress,
                                       pYieldStressLabel_preReloc,       pset);
-      new_dw->allocateAndPut(bElBar_new,  
+      new_dw->allocateAndPut(bElBar_new,
                                       bElBarLabel_preReloc,             pset);
 
       pPlasticStrain.copyData(pPlasticStrain_old);
@@ -1032,7 +1092,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constParticleVariable<int>     pLocalizedOld;
-  
+
   constNCVariable<Vector>        gDisp;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -1216,7 +1276,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           double e = (U + W)*pVolume_new[idx]/J;
           se += e;
         }
-     
+
       } // end loop over particles
       if (flag->d_reductionVars->accStrainEnergy ||
           flag->d_reductionVars->strainEnergy) {
