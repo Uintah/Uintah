@@ -252,7 +252,7 @@ void PassiveScalar::problemSetup(GridP&, const bool isRestart)
   //__________________________________
   //  Read in all geometry objects/pieces in the <Material> node of the ups file.
   //  Needed since the user may referec
-  if( d_reinitializeDomain ){
+  if( isRestart || d_reinitializeDomain ){
 
     ProblemSpecP root_ps = d_params->getRootNode();
     ProblemSpecP mat_ps = root_ps->findBlockWithOutAttribute( "MaterialProperties" );

@@ -169,6 +169,7 @@ void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","mass_momentum_energy_src");
   ProblemSpecP mme_src_ps = model_ps->appendChild("MassMomEng_src");
+  mme_src_ps->appendElement( "material",d_matl->getName() );
   //__________________________________
   //  initialization regions
   ProblemSpecP srcs_ps = mme_src_ps->appendChild( "sources" );
@@ -252,7 +253,6 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
 
   delt_vartype delT;
   old_dw->get(delT, Ilb->delTLabel,getLevel(patches));
-  double dt = delT;
 
   int indx = d_matl->getDWIndex();
   double totalMass_src = 0.0;
@@ -318,9 +318,15 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
 
-          Point p = patch->cellPosition(c);
+          Point p_lo = patch->nodePosition(c);     // bottom cell corner
+          Point p_hi = p_lo + dx;                  // upper cell corner
+          
+          bool isInside = ( region->piece->inside(p_lo) || 
+                            region->piece->inside(p_hi) );
 
-          if ( vol_frac[c] > 0.001 && region->piece->inside(p)) {
+          if ( vol_frac[c] > 0.001 && isInside ) {
+          
+            //DOUTR( true, "passed conditional  p" << p << " p_hi: " << p_hi );
 
             const double mass_old = rho_CC_old[c] * cellVol;
 
