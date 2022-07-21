@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title> Units are in micrograms, cm and microseconds
+       </title>
+   </Meta>
+
+   <SimulationComponent type="sfmpm" />
+
+   <Time>
+       <maxTime>800.0e-3</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00000001</delt_min>
+       <delt_max>0.1</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>TwoDisksAndPlate2M.uda</filebase>
+       <outputInterval>1.0e-2</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.externalforce"/>
+       <save label = "p.color"/>
+       <save label = "p.stress"/>
+       <save label = "p.velocity"/>
+       <save label = "p.displacement"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.particleID"/>
+       <save label = "p.surfgrad"/>
+       <save label = "g.surf"/>
+       <save label = "g.surfgrad"/>
+       <save label = "p.scalefactor"/>
+       <save label = "g.massF0"/>
+       <save label = "g.massF1"/>
+       <save label = "g.velocityF0"/>
+       <save label = "g.velocityF1"/>
+       <save label = "g.internalforceF0"/>
+       <save label = "g.internalforceF1"/>
+       <save label = "p.surface"/>
+       <save label = "g.mass"/>
+<!--
+       <save label = "g.stressFS"/>
+-->
+
+       <checkpoint cycle = "2" interval = "100.0"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit       </time_integrator>
+       <interpolator>   gimp      </interpolator>
+       <withColor>      true           </withColor>
+       <XPIC2>          false          </XPIC2>
+       <use_load_curves> false          </use_load_curves>
+       <artificial_damping_coeff> 0.0  </artificial_damping_coeff>
+       <DoPressureStabilization> false </DoPressureStabilization>
+       <DoExplicitHeatConduction> false </DoExplicitHeatConduction>
+<!--
+       <boundary_traction_faces>[zminus]</boundary_traction_faces>
+-->
+       <computeColinearNormals> false </computeColinearNormals>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material name="frictionlayer">
+              <density>1.0e4</density>
+              <constitutive_model type="comp_neo_hook"> 
+                 <bulk_modulus>1.e8</bulk_modulus>
+                 <shear_modulus>5.e7</shear_modulus>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                 <box label = "piston">
+                  <min>[-.1, -.4, .0825]</min>
+                  <max>[ .1,  .4, .11]</max>
+                 </box>
+               <res>[2,1,2]</res>
+               <velocity>[0.0,0.0, 0.0]</velocity>
+               <temperature>300</temperature>
+               <color>             1               </color>
+              </geom_object>
+           </material>
+
+           <material name="frictionlayer">
+              <density>1.0e4</density>
+              <constitutive_model type="comp_neo_hook"> 
+                 <bulk_modulus>5.e7</bulk_modulus>
+                 <shear_modulus>2.5e7</shear_modulus>
+<!--
+                 <bulk_modulus>2.e7</bulk_modulus>
+                 <shear_modulus>1.e7</shear_modulus>
+-->
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+               <union>
+                 <cylinder label = "thread1.2">
+                  <bottom>[.04,-.4,.06]</bottom>
+                  <top>   [.04, .4,.06]</top>
+                  <radius> .02 </radius>
+                 </cylinder>
+                 <cylinder label = "thread1.1">
+                  <bottom>[.04,-.4,.02]</bottom>
+                  <top>   [.04, .4,.02]</top>
+                  <radius> .02 </radius>
+                 </cylinder>
+               </union>
+               <res>[2,1,2]</res>
+               <velocity>[0.0,0.0,0]</velocity>
+               <temperature>300     </temperature>
+               <color>      2       </color>
+              </geom_object>
+           </material>
+<!--
+           <contact>
+             <type>friction</type>
+             <mu> 0.4 </mu>
+             <separation_factor> 1.2 </separation_factor>
+             <volume_constraint> 0.1 </volume_constraint>
+           </contact>
+-->
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Velocity" var = "Dirichlet">
+                    <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Velocity" var = "Neumann">
+                    <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0, 0.0,   0.0]</lower>
+              <upper>[0.08,0.005, 0.12]</upper>
+              <resolution> [16,1,24]  </resolution>
+              <patches>    [1,1,2]    </patches>
+              <extraCells> [1,1,1]    </extraCells>
+           </Box>
+       </Level>
+    </Grid>
+
+    <PhysicalBC>
+     <MPM>
+      <pressure>
+        <geom_object>
+          <box label = "piston">
+           <min>[.0, .0,   .1099] </min>
+           <max>[.08,.005, .1101] </max>
+          </box>
+        </geom_object>
+        <load_curve>
+          <id>1</id>
+          <time_point>
+            <time>  0.0   </time>
+            <load> -100.0 </load>
+          </time_point>
+          <time_point>
+            <time>  100.0e-3    </time>
+            <load>  -1.0e5  </load>
+          </time_point>
+          <time_point>
+            <time>  200.0e-3    </time>
+            <load>  -1.0e6  </load>
+          </time_point>
+          <time_point>
+            <time>  300.0e-3  </time>
+            <load>  -1.0e6  </load>
+          </time_point>
+          <time_point>
+            <time>  400.0e-3  </time>
+            <load>  -1.0e6  </load>
+          </time_point>
+          <time_point>
+            <time>  800.0e-3  </time>
+            <load>  -0.0      </load>
+          </time_point>
+          <time_point>
+            <time>  1000.0e-3  </time>
+            <load>  1000.0     </load>
+          </time_point>
+        </load_curve>
+      </pressure>
+     </MPM>
+    </PhysicalBC>
+</Uintah_specification>

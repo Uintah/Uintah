@@ -1163,7 +1163,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
-  if(d_flags->d_useLogisticRegression){
+  if(d_flags->d_useLogisticRegression || d_flags->d_SingleFieldMPM){
     particle_state.push_back(d_lb->pSurfLabel);
     particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
   }
