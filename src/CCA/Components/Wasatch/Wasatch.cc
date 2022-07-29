@@ -2023,8 +2023,6 @@ namespace WasatchCore{
           }
           Expr::Tag beginning_tag = *old_dt_taglist_.begin();
           old_delt_[beginning_tag.name()] = dt_temp.get();
-          // mkaram: need to find a way to limit extreme differences between subsequent timesteps
-          //         to avoid any instability caused by the pressure guess (due to large values of betas) 
         }
       }
       else {
