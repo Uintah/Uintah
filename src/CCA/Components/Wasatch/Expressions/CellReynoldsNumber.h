@@ -17,7 +17,7 @@ template< typename VelT >
 class CellReynoldsNumber
  : public Expr::Expression<SpatialOps::SVolField>
 {
-  DECLARE_FIELD(VelT, vel_)
+  DECLARE_FIELD(VelT, rhovel_)
   DECLARE_FIELD (SVolField, visc_)
   
   double h_;
@@ -34,7 +34,7 @@ class CellReynoldsNumber
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
 
-  CellReynoldsNumber( const Expr::Tag& velTag,
+  CellReynoldsNumber( const Expr::Tag& rhovelTag,
                       const Expr::Tag& viscosityTag,
                       const std::string& direction);
 public:
@@ -46,14 +46,14 @@ public:
      *  @param resultTag the tag for the value that this expression computes
      */
     Builder( const Expr::TagList& resultTags,
-             const Expr::Tag& velTag,
+             const Expr::Tag& rhovelTag,
              const Expr::Tag& viscosityTag,
              const std::string direction);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag velTag_, viscosityTag_;
+    const Expr::Tag rhovelTag_, viscosityTag_;
     const std::string direction_;
   };
 

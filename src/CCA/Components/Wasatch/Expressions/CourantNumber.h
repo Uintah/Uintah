@@ -18,8 +18,9 @@ class CourantNumber
  : public Expr::Expression<SpatialOps::SVolField>
 {
   typedef SVolField FieldT;
-  DECLARE_FIELD(VelT, vel_)
-  
+  DECLARE_FIELD(FieldT, rho_)
+  DECLARE_FIELD(VelT, rhovel_)
+
   typedef typename SpatialOps::SingleValueField TimeField;
   DECLARE_FIELD (TimeField, dt_)
   
@@ -37,7 +38,8 @@ class CourantNumber
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
 
-  CourantNumber(  const Expr::Tag& velTag,
+  CourantNumber(const Expr::Tag& rhoTag,
+                const Expr::Tag& rhovelTag,
                 const Expr::Tag& dtTag,
                 const std::string& direction);
 public:
@@ -49,14 +51,15 @@ public:
      *  @param resultTag the tag for the value that this expression computes
      */
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& velTag,
+             const Expr::Tag& rhoTag,
+             const Expr::Tag& rhovelTag,
              const Expr::Tag& timeTag,
              const std::string direction);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag velTag_, dtTag_;
+    const Expr::Tag rhoTag_, rhovelTag_, dtTag_;
     const std::string direction_;
   };
 
