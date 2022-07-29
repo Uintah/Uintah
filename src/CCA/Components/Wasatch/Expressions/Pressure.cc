@@ -110,12 +110,21 @@ Pressure::Pressure( const std::string& pressureName,
   if (hasIntrusion_)    volfrac_ = create_field_request<SVolField>(volfractag);
 
   std::string timeIntegratorName = WasatchCore::Wasatch::get_timeIntegratorName();
+
+  // set the value of the projection control parameters d_i
+  std::vector<bool> d_i{true}; // the default case is for FE
+  if (WasatchCore::Wasatch::using_pressure_guess())
+  {
+    d_i[0] = !WasatchCore::Wasatch::guess_stage_1();
+    d_i.push_back(!WasatchCore::Wasatch::guess_stage_2());
+  } 
+
   if (timeIntegratorName =="FE")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new FEScheduler,{true});  
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new FEScheduler,d_i);  
   else if (timeIntegratorName =="RK2SSP")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK21Scheduler,{!WasatchCore::Wasatch::guess_stage_1()}); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK21Scheduler,d_i); 
   else if (timeIntegratorName =="RK3SSP")
-      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK311Scheduler,{!WasatchCore::Wasatch::guess_stage_1(),!WasatchCore::Wasatch::guess_stage_2()}); 
+      pressure_scheduler_helper_ = new RKPressureSchedulerHelper(new RK311Scheduler,d_i); 
 }
 
 //--------------------------------------------------------------------

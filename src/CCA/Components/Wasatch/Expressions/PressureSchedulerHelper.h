@@ -31,7 +31,6 @@
 #ifndef PRESSURE_SCHEDULER_HELPER
 #define PRESSURE_SCHEDULER_HELPER
 
-#include<iostream>
 #include<vector>
 
 #include <Core/Grid/Task.h>
@@ -141,7 +140,7 @@ class FEScheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 1"<<std::endl;
+        //scheduling stage 1
         do_schedule_var = true;
         use_new_dw_var = true;
         is_first_solve_var = true;
@@ -169,7 +168,7 @@ class RK20Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"no pressure solve at stage 1"<<std::endl;
+        //no pressure solve at stage 1
         do_schedule_var = false;
         use_new_dw_var = false;
         is_first_solve_var = false;
@@ -177,7 +176,7 @@ class RK20Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 2"<<std::endl;
+        //scheduling stage 2
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = true;
@@ -192,7 +191,7 @@ class RK21Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 1"<<std::endl;
+        //scheduling stage 1
         do_schedule_var = true;
         use_new_dw_var = false; // Uintah::Task::OldDW
         is_first_solve_var = true;
@@ -200,7 +199,7 @@ class RK21Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 2"<<std::endl;
+        //scheduling stage 2
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
@@ -223,7 +222,7 @@ class RK300Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"no pressure solve at stage 1"<<std::endl;
+        //no pressure solve at stage 1
         do_schedule_var = false;
         use_new_dw_var = false;
         is_first_solve_var = false;
@@ -231,14 +230,14 @@ class RK300Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"no pressure solve at stage 2"<<std::endl;
+        //no pressure solve at stage 2
         do_schedule_var = false;
         use_new_dw_var = false;
         is_first_solve_var = false;
     }
     void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 3"<<std::endl;
+        //scheduling stage 3
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = true;
@@ -249,7 +248,7 @@ class RK310Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 1"<<std::endl;
+        //scheduling stage 1
         do_schedule_var = true;
         use_new_dw_var = false; // Uintah::Task::OldDW
         is_first_solve_var = true;
@@ -257,14 +256,14 @@ class RK310Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"no pressure solve at stage 2"<<std::endl;
+        //no pressure solve at stage 2
         do_schedule_var = false;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
     }
     void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 3"<<std::endl;
+        //scheduling stage 3
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
@@ -275,7 +274,7 @@ class RK301Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"no pressure solve at stage 1"<<std::endl;
+        //no pressure solve at stage 1
         do_schedule_var = false;
         use_new_dw_var = false; // Uintah::Task::OldDW
         is_first_solve_var = false;
@@ -283,14 +282,14 @@ class RK301Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 2"<<std::endl;
+        //scheduling stage 2
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = true;
     }
     void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 3"<<std::endl;
+        //scheduling stage 3
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
@@ -301,7 +300,7 @@ class RK311Scheduler : public RKPressureSchedulerInterface{
     public:
     void schedule_stage_1(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 1"<<std::endl;
+        //scheduling stage 1
         do_schedule_var = true;
         use_new_dw_var = false; // Uintah::Task::OldDW
         is_first_solve_var = true;
@@ -309,14 +308,14 @@ class RK311Scheduler : public RKPressureSchedulerInterface{
 
     void schedule_stage_2(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 2"<<std::endl;
+        //scheduling stage 2
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
     }
     void schedule_stage_3(bool& do_schedule_var, bool& use_new_dw_var, bool& is_first_solve_var)
     {
-        std::cout<<"scheduling stage 3"<<std::endl;
+        //scheduling stage 3
         do_schedule_var = true;
         use_new_dw_var = true; // Uintah::Task::NewDW
         is_first_solve_var = false;
