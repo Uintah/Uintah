@@ -142,9 +142,12 @@ namespace WasatchCore {
   Expr::TagList get_old_var_taglist(const Expr::Tag& varTag, int num)
   {
     Expr::TagList oldVarTags;
-    oldVarTags.push_back(create_old_var_tag(varTag,false));
-    for (int i = 1; i<num; i++)
-        oldVarTags.push_back(create_old_var_tag(oldVarTags[i-1],false));
+    if (num>0)
+    {
+      oldVarTags.push_back(create_old_var_tag(varTag,false));
+      for (int i = 1; i<num; i++)
+          oldVarTags.push_back(create_old_var_tag(oldVarTags[i-1],false));
+    }
     return oldVarTags;
   }
 
