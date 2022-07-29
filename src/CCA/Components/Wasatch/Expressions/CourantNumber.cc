@@ -21,13 +21,14 @@
 
 template< typename VelT>
 CourantNumber<VelT>::
-CourantNumber(const Expr::Tag& velTag, const Expr::Tag& dtTag, const std::string& direction)
+CourantNumber(const Expr::Tag& rhoTag,const Expr::Tag& rhovelTag, const Expr::Tag& dtTag, const std::string& direction)
 : Expr::Expression<SpatialOps::SVolField>(),
   h_(1.0),
   direction_(direction)
 {
-  vel_ = create_field_request<VelT>(velTag);
-    dt_ = create_field_request<TimeField>(dtTag);
+  rho_ = create_field_request<SVolField>(rhoTag);
+  rhovel_ = create_field_request<VelT>(rhovelTag);
+  dt_ = create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------
@@ -68,19 +69,25 @@ evaluate()
 {
   using namespace SpatialOps;
   SpatialOps::SVolField& result = this->value();
+  const SVolField& rho = rho_->field_ref();
+
+  SpatialOps::SpatFldPtr<SVolField> vel_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  *vel_ <<= (*interpVelT2SVolOp_)( abs(rhovel_->field_ref()) )/ rho;
   
-  result <<=(*interpVelT2SVolOp_)( abs(vel_->field_ref()) ) * dt_->field_ref() / h_;
+  result <<=  abs(*vel_) * dt_->field_ref() / h_;
 }
 
 //--------------------------------------------------------------------
 template< typename VelT>
 CourantNumber<VelT>::
 Builder::Builder( const Expr::Tag& resultTag,
-                 const Expr::Tag& velTag,
+                 const Expr::Tag& rhoTag, 
+                 const Expr::Tag& rhovelTag,
                  const Expr::Tag& dtTag,
                  const std::string direction)
 : ExpressionBuilder( resultTag ),
-velTag_( velTag ),
+rhoTag_ (rhoTag),
+rhovelTag_( rhovelTag ),
 dtTag_( dtTag ),
 direction_(direction)
 {}
@@ -91,7 +98,7 @@ Expr::ExpressionBase*
 CourantNumber<VelT>::
 Builder::build() const
 {
-  return new CourantNumber( velTag_, dtTag_, direction_ );
+  return new CourantNumber(rhoTag_, rhovelTag_, dtTag_, direction_ );
 }
 
 //==========================================================================

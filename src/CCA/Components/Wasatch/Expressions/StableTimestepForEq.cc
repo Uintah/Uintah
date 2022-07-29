@@ -12,7 +12,7 @@
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
+#include <CCA/Components/Wasatch/TagNames.h>
 // ###################################################################
 //
 //                          Implementation
@@ -23,28 +23,32 @@ template< typename Vel1T, typename Vel2T, typename Vel3T >
 StableTimestepForEq<Vel1T,Vel2T,Vel3T>::
 StableTimestepForEq( const Expr::Tag& rhoTag,
             const Expr::Tag& viscTag,
-            const Expr::Tag& uTag,
-            const Expr::Tag& vTag,
-            const Expr::Tag& wTag,
+            const Expr::Tag& rhouTag,
+            const Expr::Tag& rhovTag,
+            const Expr::Tag& rhowTag,
             const Expr::Tag& csoundTag,
             const std::string timeIntegratorName)
 : Expr::Expression<SpatialOps::SingleValueField>(),
   dx_(1.0),
   dy_(1.0),
   dz_(1.0),
-  doX_( uTag != Expr::Tag() ),
-  doY_( vTag != Expr::Tag() ),
-  doZ_( wTag != Expr::Tag() ),
+  doX_( rhouTag != Expr::Tag() ),
+  doY_( rhovTag != Expr::Tag() ),
+  doZ_( rhowTag != Expr::Tag() ),
   isCompressible_(csoundTag != Expr::Tag()),
   is3dconvdiff_( doX_ && doY_ && doZ_),
   timeIntegratorName_(timeIntegratorName)
 {
   rho_ = create_field_request<SVolField>(rhoTag);
   visc_ = create_field_request<SVolField>(viscTag);
-  if (doX_)  u_ = create_field_request<Vel1T>(uTag);
-  if (doY_)  v_ = create_field_request<Vel2T>(vTag);
-  if (doZ_)  w_ = create_field_request<Vel3T>(wTag);
+  if (doX_)  rhou_ = create_field_request<Vel1T>(rhouTag);
+  if (doY_)  rhov_ = create_field_request<Vel2T>(rhovTag);
+  if (doZ_)  rhow_ = create_field_request<Vel3T>(rhowTag);
   if(isCompressible_) csound_ = create_field_request<SVolField>(csoundTag);
+  
+  const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;
+  rkStage_ = create_field_request<TimeField>(rkst);
+
 }
 
 //--------------------------------------------------------------------
@@ -87,6 +91,14 @@ evaluate()
   using namespace SpatialOps;
   SpatialOps::SingleValueField& result = this->value();
   
+  const TimeField& rkStage = rkStage_->field_ref();
+  if ( (timeIntegratorName_ == "RK2SSP") && (rkStage[0] == 1.0) ){
+    return;
+  }
+  if (timeIntegratorName_ == "RK3SSP" && (rkStage[0] == 1.0 || rkStage[0]==2.0) ){
+    return;
+  }
+
   // jcs we need to switch to this once we have field_min_interior fixed.  This expression would then be ready for gpu.
 //  if( is3dconvdiff_ ){
 //    result <<= field_min_interior( 1.0 / (
@@ -105,6 +117,15 @@ evaluate()
   if(isCompressible_) c <<= abs(csound_->field_ref());
   else c <<= 0.0;
   
+  SpatialOps::SpatFldPtr<SVolField> u_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  if (doX_) *u_ <<= (*x2SInterp_)( abs(rhou_->field_ref()) )/ rho + c;
+  
+  SpatialOps::SpatFldPtr<SVolField> v_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  if (doY_) *v_ <<= (*y2SInterp_)( abs(rhov_->field_ref()) )/ rho + c;
+  
+  SpatialOps::SpatFldPtr<SVolField> w_ = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  if (doZ_) *w_ <<= (*z2SInterp_)( abs(rhow_->field_ref()) )/ rho + c;
+  
   SpatialOps::SpatFldPtr<SVolField> innerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
   SpatialOps::SpatFldPtr<SVolField> outerdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
   
@@ -120,9 +141,9 @@ evaluate()
 
     // Outer Rule
     if (!doX_) *outerdt <<= 0.0;
-    if (doX_)  *outerdt <<=        ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) * ( (*x2SInterp_)( abs(u_->field_ref()) ) + c );
-    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) * ( (*y2SInterp_)( abs(v_->field_ref()) ) + c );
-    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) * ( (*z2SInterp_)( abs(w_->field_ref()) ) + c );
+    if (doX_)  *outerdt <<=        *u_ * *u_;
+    if (doY_)  *outerdt <<= *outerdt + *v_ * *v_;
+    if (doZ_)  *outerdt <<= *outerdt + *w_ * *w_;
     *outerdt <<= 2.0 * *kinVisc_ / *outerdt;
     
   } else if (timeIntegratorName_ == "RK2SSP") {
@@ -131,9 +152,9 @@ evaluate()
 
     // Outer Rule
     if (!doX_) *outerdt <<= 0.0;
-    if (doX_)  *outerdt <<=       0.420168*( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx_ * pow( ((*x2SInterp_)( abs(u_->field_ref())) + c ) * dx_ / *kinVisc_, 1.0/3.0);
-    if (doY_)  *outerdt <<= *outerdt + 0.420168*( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) /dy_ * pow( ((*y2SInterp_)( abs(v_->field_ref())) + c ) * dy_ / *kinVisc_, 1.0/3.0);
-    if (doZ_)  *outerdt <<= *outerdt + 0.420168*( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) /dz_ * pow( ((*z2SInterp_)( abs(w_->field_ref())) + c ) * dz_ / *kinVisc_, 1.0/3.0);
+    if (doX_)  *outerdt <<=            0.420168* *u_ / dx_ * pow( *u_ * dx_ / *kinVisc_, 1.0/3.0);
+    if (doY_)  *outerdt <<= *outerdt + 0.420168* *v_ / dy_ * pow( *v_ * dy_ / *kinVisc_, 1.0/3.0);
+    if (doZ_)  *outerdt <<= *outerdt + 0.420168* *w_ / dz_ * pow( *w_ * dz_ / *kinVisc_, 1.0/3.0);
     *outerdt <<= 1.0 / *outerdt;
     
   }else if (timeIntegratorName_ == "RK3SSP") {
@@ -142,9 +163,9 @@ evaluate()
 
     // Outer Rule
     if (!doX_) *outerdt <<= 0.0;
-    if (doX_)  *outerdt <<=            ( (*x2SInterp_)( abs(u_->field_ref()) ) + c ) / dx_;
-    if (doY_)  *outerdt <<= *outerdt + ( (*y2SInterp_)( abs(v_->field_ref()) ) + c ) / dy_;
-    if (doZ_)  *outerdt <<= *outerdt + ( (*z2SInterp_)( abs(w_->field_ref()) ) + c ) / dz_;
+    if (doX_)  *outerdt <<=            *u_ / dx_;
+    if (doY_)  *outerdt <<= *outerdt + *v_ / dy_;
+    if (doZ_)  *outerdt <<= *outerdt + *w_ / dz_;
     *outerdt <<= 1.732 / *outerdt;
   }
 
@@ -160,17 +181,17 @@ StableTimestepForEq<Vel1T,Vel2T,Vel3T>::
 Builder::Builder( const Expr::Tag& resultTag,
                  const Expr::Tag& rhoTag,
                  const Expr::Tag& viscTag,
-                 const Expr::Tag& uTag,
-                 const Expr::Tag& vTag,
-                 const Expr::Tag& wTag,
+                 const Expr::Tag& rhouTag,
+                 const Expr::Tag& rhovTag,
+                 const Expr::Tag& rhowTag,
                  const Expr::Tag& csoundTag,
                  const std::string timeIntegratorName)
 : ExpressionBuilder( resultTag ),
 rhoTag_( rhoTag ),
 viscTag_( viscTag ),
-uTag_( uTag ),
-vTag_( vTag ),
-wTag_( wTag ),
+rhouTag_( rhouTag ),
+rhovTag_( rhovTag ),
+rhowTag_( rhowTag ),
 csoundTag_(csoundTag),
 timeIntegratorName_(timeIntegratorName)
 {}
@@ -181,7 +202,7 @@ Expr::ExpressionBase*
 StableTimestepForEq<Vel1T,Vel2T,Vel3T>::
 Builder::build() const
 {
-  return new StableTimestepForEq( rhoTag_,viscTag_,uTag_,vTag_,wTag_, csoundTag_, timeIntegratorName_ );
+  return new StableTimestepForEq( rhoTag_,viscTag_,rhouTag_,rhovTag_,rhowTag_, csoundTag_, timeIntegratorName_ );
 }
 
 //==========================================================================

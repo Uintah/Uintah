@@ -20,12 +20,12 @@
 
 template< typename VelT>
 CellReynoldsNumber<VelT>::
-CellReynoldsNumber(const Expr::Tag& velTag, const Expr::Tag& viscosityTag, const std::string& direction)
+CellReynoldsNumber(const Expr::Tag& rhovelTag, const Expr::Tag& viscosityTag, const std::string& direction)
 : Expr::Expression<SpatialOps::SVolField>(),
   h_(1.0),
   direction_(direction)
 {
-  vel_ = create_field_request<VelT>(velTag);
+  rhovel_ = create_field_request<VelT>(rhovelTag);
   visc_ = create_field_request<SVolField>(viscosityTag);
 }
 
@@ -75,7 +75,7 @@ evaluate()
   SVolField& cellReynolds = *results[0];
   SVolField& cellReynoldsSquared = *results[1];
   
-  cellReynolds <<=(*interpVelT2SVolOp_)( abs(vel_->field_ref()) ) * h_ / visc_->field_ref();
+  cellReynolds <<=(*interpVelT2SVolOp_)( abs(rhovel_->field_ref()) ) * h_ / visc_->field_ref();
   
   cellReynoldsSquared <<= pow(cellReynolds,2);
 }
@@ -84,11 +84,11 @@ evaluate()
 template< typename VelT>
 CellReynoldsNumber<VelT>::
 Builder::Builder( const Expr::TagList& resultTags,
-                 const Expr::Tag& velTag,
+                 const Expr::Tag& rhovelTag,
                  const Expr::Tag& viscosityTag,
                  const std::string direction)
 : ExpressionBuilder( resultTags ),
-velTag_( velTag ),
+rhovelTag_( rhovelTag ),
 viscosityTag_( viscosityTag ),
 direction_(direction)
 {}
@@ -99,7 +99,7 @@ Expr::ExpressionBase*
 CellReynoldsNumber<VelT>::
 Builder::build() const
 {
-  return new CellReynoldsNumber( velTag_, viscosityTag_, direction_ );
+  return new CellReynoldsNumber( rhovelTag_, viscosityTag_, direction_ );
 }
 
 //==========================================================================

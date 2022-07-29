@@ -19,10 +19,13 @@ class StableTimestepForEq
 {
   typedef SVolField FieldT;
   DECLARE_FIELDS(SVolField, rho_, visc_, csound_)
-  DECLARE_FIELD(Vel1T, u_)
-  DECLARE_FIELD(Vel2T, v_)
-  DECLARE_FIELD(Vel3T, w_)
-
+  DECLARE_FIELD(Vel1T, rhou_)
+  DECLARE_FIELD(Vel2T, rhov_)
+  DECLARE_FIELD(Vel3T, rhow_)
+  
+  typedef SpatialOps::SingleValueField TimeField;
+  DECLARE_FIELDS(TimeField, rkStage_)
+  
   double dx_, dy_, dz_;
   const bool doX_, doY_, doZ_, isCompressible_;
   const bool is3dconvdiff_;
@@ -45,9 +48,9 @@ class StableTimestepForEq
 
   StableTimestepForEq( const Expr::Tag& rhoTag,
               const Expr::Tag& viscTag,
-              const Expr::Tag& uTag,
-              const Expr::Tag& vTag,
-              const Expr::Tag& wTag,
+              const Expr::Tag& rhouTag,
+              const Expr::Tag& rhovTag,
+              const Expr::Tag& rhowTag,
               const Expr::Tag& csoundTag,
               const std::string timeIntegratorName);
 public:
@@ -61,16 +64,16 @@ public:
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& rhoTag,
              const Expr::Tag& viscTag,
-             const Expr::Tag& uTag,
-             const Expr::Tag& vTag,
-             const Expr::Tag& wTag,
+             const Expr::Tag& rhouTag,
+             const Expr::Tag& rhovTag,
+             const Expr::Tag& rhowTag,
              const Expr::Tag& csoundTag,
              const std::string timeIntegratorName);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, csoundTag_;
+    const Expr::Tag rhoTag_, viscTag_, rhouTag_, rhovTag_, rhowTag_, csoundTag_;
     const std::string timeIntegratorName_;
   };
 
