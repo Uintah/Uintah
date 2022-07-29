@@ -47,7 +47,6 @@
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-#include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
 #include <CCA/Components/Wasatch/DualTimeMatrixManager.h>
 
