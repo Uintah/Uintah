@@ -116,6 +116,7 @@ bool WasatchCore::Wasatch::use_pressure_guess_ = false;
 bool WasatchCore::Wasatch::use_guess_stage_1_ = false;
 bool WasatchCore::Wasatch::use_guess_stage_2_ = false;
 int WasatchCore::Wasatch::lowCostTimestepRecompile_ = 0;
+int WasatchCore::Wasatch::old_dt_val_needed_ = 0;
 
 namespace WasatchCore{
 
@@ -230,6 +231,8 @@ namespace WasatchCore{
     Uintah::VarLabel::destroy(tLabel_);
     Uintah::VarLabel::destroy(tStepLabel_);
     Uintah::VarLabel::destroy(rkStageLabel_);
+    for (auto& label: perPatch_old_dt_labels_)
+      Uintah::VarLabel::destroy(label.second);
   }
 
   //--------------------------------------------------------------------
@@ -1010,6 +1013,19 @@ namespace WasatchCore{
     // process any reduction variables specified through the input file
     //
     ReductionHelper::self().parse_reduction_spec( wasatchSpec_ );
+
+
+    // create old dt varlabels and tagnames
+    //--------------------------------------
+    old_dt_taglist_ = get_old_var_taglist(TagNames::self().dt, get_old_dt_num());
+    const Uintah::TypeDescription* perPatchTD = Uintah::PerPatch<double>::getTypeDescription();
+    for (const auto& tag : old_dt_taglist_)
+      if (perPatch_old_dt_labels_.find(tag.name())==perPatch_old_dt_labels_.end())
+      {
+        std::cout<<tag.name()<<"\n";
+        perPatch_old_dt_labels_[tag.name()] = Uintah::VarLabel::create(tag.name(), perPatchTD );
+        old_delt_[tag.name()] = 0.0;
+      }
   }
 
   //--------------------------------------------------------------------
@@ -1754,6 +1770,11 @@ namespace WasatchCore{
       timeTags.push_back( TagNames::self().dt     );
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
+
+      // add the old timestep sizes to the wasatch expression
+      for (const auto& tag : old_dt_taglist_)
+        timeTags.push_back(tag);
+
       typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  PlcHolder;
       timeID = exprFactory.register_expression(scinew PlcHolder::Builder(timeTags));
     }
@@ -1787,12 +1808,18 @@ namespace WasatchCore{
         updateCurrentTimeTask->computes( tLabel_       );
         updateCurrentTimeTask->computes( tStepLabel_   );
         updateCurrentTimeTask->computes( rkStageLabel_ );
+        // compute the perpatch old_dt values
+        for (const auto& tag : old_dt_taglist_)
+          updateCurrentTimeTask->computes( perPatch_old_dt_labels_[tag.name()] );
       }
       else {
         updateCurrentTimeTask->modifies( dtLabel_      );
         updateCurrentTimeTask->modifies( tLabel_       );
         updateCurrentTimeTask->modifies( tStepLabel_   );
         updateCurrentTimeTask->modifies( rkStageLabel_ );
+        // compute the perpatch old_dt values
+        for (const auto& tag : old_dt_taglist_)
+          updateCurrentTimeTask->modifies( perPatch_old_dt_labels_[tag.name()] );
       }
       
       sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
@@ -1844,6 +1871,13 @@ namespace WasatchCore{
       newDW->put( tstep,   tStepLabel_,   0, patch );
       newDW->put( time,    tLabel_,       0, patch );
       newDW->put( rkstage, rkStageLabel_, 0, patch );
+      // put the perpatch old_dt values in the newDW
+      // in order to be accessed by the time Expression 
+      for (auto& tag : old_dt_taglist_)
+      {
+        perPatchT old_dt_val     (old_delt_[tag.name()]);
+        newDW->put( old_dt_val, perPatch_old_dt_labels_[tag.name()], 0, patch );
+      }
     }
   }
   
@@ -1971,6 +2005,26 @@ namespace WasatchCore{
             val = std::min( val, tempDtP.get() );
           }
 
+        }
+        // compute the old_dt values only when useStabledt_ is used
+        Uintah::delt_vartype dt_temp(0);
+        oldDW->get(dt_temp,getDelTLabel());
+        if (old_dt_taglist_!=Expr::TagList())
+        {
+          for (auto it =old_dt_taglist_.begin(); it != old_dt_taglist_.end(); it++ )
+          {
+            if (it+1 != old_dt_taglist_.end() )
+            {
+              Expr::Tag current_tag = *it;
+              Expr::Tag next_tag = *(it +1);
+              double temp_val = old_delt_[next_tag.name()];
+              old_delt_[next_tag.name()] = old_delt_[current_tag.name()];
+            }
+          }
+          Expr::Tag beginning_tag = *old_dt_taglist_.begin();
+          old_delt_[beginning_tag.name()] = dt_temp.get();
+          // mkaram: need to find a way to limit extreme differences between subsequent timesteps
+          //         to avoid any instability caused by the pressure guess (due to large values of betas) 
         }
       }
       else {

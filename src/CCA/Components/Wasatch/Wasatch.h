@@ -337,7 +337,10 @@ namespace WasatchCore{
     static void set_guess_stage_2(const bool& use_guess){use_guess_stage_2_ = use_guess;}
     static bool guess_stage_1(){return use_guess_stage_1_;}
     static bool guess_stage_2(){return use_guess_stage_2_;}
-    
+    // old_dt values needed
+    static void set_old_dt_num(const int& num){old_dt_val_needed_= std::max(old_dt_val_needed_,num);}
+    static int get_old_dt_num(){return old_dt_val_needed_;}
+
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
@@ -396,12 +399,17 @@ namespace WasatchCore{
     static bool use_guess_stage_1_;
     static bool use_guess_stage_2_;
     static int lowCostTimestepRecompile_;
+    static int old_dt_val_needed_;
     
     Uintah::SchedulerP subsched_; // needed for dualtime
     bool dualTime_;
     bool compileDualTimeSched_;
     
     Uintah::VarLabel *dtLabel_, *tLabel_, *tStepLabel_, *rkStageLabel_;
+    // used when old_dt values are needed
+    std::map<std::string,Uintah::VarLabel *> perPatch_old_dt_labels_;
+    std::map<std::string,double> old_delt_;
+    Expr::TagList old_dt_taglist_;
     
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
