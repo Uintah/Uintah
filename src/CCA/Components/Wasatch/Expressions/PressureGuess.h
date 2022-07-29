@@ -26,7 +26,6 @@
 #define PRESSURE_GUESS
 
 #include <vector>
-#include <iostream>
 
 //-- Boost --//
 #include <boost/shared_ptr.hpp>
@@ -51,7 +50,8 @@
  *         intermediate stages of Low-Cost Runge-Kutta integrators 
  *         (for now it is used only for incompressible flow).
  * 
- * This expression relies on pseudo-pressures from previous time levels.
+ * This expression relies on pseudo-pressures from previous time levels,
+ * and on previous timestep sizes when used with adaptive timestepping.
  */
 
 
@@ -67,10 +67,12 @@ class PressureGuess
 
   const int numtimesteps_; 
   Expr::TagList oldPressureTags_;
+  Expr::TagList oldDtTags_;
 
   
 //   DECLARE_FIELDS(PFieldT, pressure_NM_0_);
-  DECLARE_FIELDS(TimeField, rkStage_)
+  DECLARE_FIELDS(TimeField, rkStage_, dt_)
+  DECLARE_VECTOR_OF_FIELDS(TimeField, old_dts_)
   DECLARE_VECTOR_OF_FIELDS( PFieldT, old_pressure_Fields_ ) 
 
   const WasatchCore::TimeIntegrator* timeIntInfo_;
@@ -114,7 +116,9 @@ class PressureApproximationsInterface{
      * 
      */
 public:
+    typedef SpatialOps::SingleValueField TimeField; 
     typedef boost::shared_ptr<const Expr::FieldRequest<SpatialOps::SpatialField<SpatialOps::SVol> > > fieldRequestPtr;
+    typedef boost::shared_ptr<const Expr::FieldRequest<SpatialOps::SpatialField<SpatialOps::SingleValue> > > timeFieldRequestPtr;
 
     virtual ~PressureApproximationsInterface(){}
     /**
@@ -124,8 +128,8 @@ public:
      * @param old_pressure_Fields  vector with all the field requests for all the old pressure values required
      * @param timeIntInfo pointer to the time integrator information
      */
-    virtual void compute_approximation_stage_1(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields,const WasatchCore::TimeIntegrator* timeIntInfo)  = 0;
-    virtual void compute_approximation_stage_2(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields,const WasatchCore::TimeIntegrator* timeIntInfo)  = 0;
+    virtual void compute_approximation_stage_1(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields, std::vector<timeFieldRequestPtr> old_dt_values, const WasatchCore::TimeIntegrator* timeIntInfo)  = 0;
+    virtual void compute_approximation_stage_2(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields, std::vector<timeFieldRequestPtr> old_dt_values, const WasatchCore::TimeIntegrator* timeIntInfo)  = 0;
 };
 
 class PressureApproximationsHelper{
@@ -134,6 +138,7 @@ private:
 public:
     typedef SpatialOps::SingleValueField TimeField;
     typedef boost::shared_ptr<const Expr::FieldRequest<SpatialOps::SpatialField<SpatialOps::SVol> > > fieldRequestPtr;
+    typedef boost::shared_ptr<const Expr::FieldRequest<SpatialOps::SpatialField<SpatialOps::SingleValue> > > timeFieldRequestPtr;
 
     PressureApproximationsHelper(PressureApproximationsInterface * pressureApproximation = nullptr): pressureApproximation_(pressureApproximation){}
     ~PressureApproximationsHelper(){delete pressureApproximation_;}
@@ -151,13 +156,14 @@ public:
      * @param old_pressure_Fields vector with all the field requests for all the old pressure values required
      * @param timeIntInfo pointer to the time integrator information
      */
-    void compute_approximation(const TimeField& RKStage, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields,const WasatchCore::TimeIntegrator* timeIntInfo) 
+    void compute_approximation(timeFieldRequestPtr& RKStage, timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> old_pressure_Fields, std::vector<timeFieldRequestPtr> old_dt_values,const WasatchCore::TimeIntegrator* timeIntInfo) 
     {   
-        const double& rkStage_val = *RKStage.begin();
+        const TimeField& rkstage_val = RKStage->field_ref();
+        const double& rkStage_val = rkstage_val[0];
         if (rkStage_val==1)
-            pressureApproximation_->compute_approximation_stage_1(pressureGuessValue,old_pressure_Fields,timeIntInfo);
+            pressureApproximation_->compute_approximation_stage_1(dt, pressureGuessValue,old_pressure_Fields,old_dt_values,timeIntInfo);
         else if (rkStage_val==2)
-            pressureApproximation_->compute_approximation_stage_2(pressureGuessValue,old_pressure_Fields,timeIntInfo);
+            pressureApproximation_->compute_approximation_stage_2(dt, pressureGuessValue,old_pressure_Fields,old_dt_values,timeIntInfo);
     }
 };
 
@@ -169,12 +175,13 @@ public:
 class RK2Approx: public PressureApproximationsInterface{
 
     public:
-    void compute_approximation_stage_1(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields,const WasatchCore::TimeIntegrator* timeIntInfo)  {
+    void compute_approximation_stage_1(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields, std::vector<timeFieldRequestPtr> old_dt_values,const WasatchCore::TimeIntegrator* timeIntInfo)  {
         // std::cout<<"pressure guess field request vector size: "<<oldPressureFields.size()<<std::endl;
         const SVolField& pn = oldPressureFields[0]->field_ref();
+        //not impacted by adaptive timestepping 
         pressureGuessValue <<= pn;
     }
-    void compute_approximation_stage_2(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields,const WasatchCore::TimeIntegrator* timeIntInfo)  {
+    void compute_approximation_stage_2(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields, std::vector<timeFieldRequestPtr> old_dt_values,const WasatchCore::TimeIntegrator* timeIntInfo)  {
         const SVolField& pn = oldPressureFields[0]->field_ref();
         pressureGuessValue <<= 0.0;
     }
@@ -184,22 +191,48 @@ class RK2Approx: public PressureApproximationsInterface{
 class RK3Approx: public PressureApproximationsInterface{
 
     public:
-    void compute_approximation_stage_1(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields,const WasatchCore::TimeIntegrator* timeIntInfo)  {
-
+    void compute_approximation_stage_1(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields, std::vector<timeFieldRequestPtr> old_dt_values,const WasatchCore::TimeIntegrator* timeIntInfo)  {        
+        
+        const TimeField& current_dt = dt->field_ref();
+        const TimeField& dt_n = old_dt_values[0]->field_ref();
+        const TimeField& dt_nm1 = old_dt_values[1]->field_ref();
         const SVolField& pn = oldPressureFields[0]->field_ref();
         const SVolField& pnm1 = oldPressureFields[1]->field_ref();
 
-        pressureGuessValue <<= (3*pn-pnm1)/2.0 ;
+        const double beta_m1 = (dt_n[0]<=1e-20)? 1 :   dt_n[0] /current_dt[0];
+        const double beta_m2 = (dt_nm1[0]<=1e-20)? 1 : dt_nm1[0]/current_dt[0]; 
+
+        // std::cout<<"stage 1 betas: beta_m1 = " << beta_m1 <<" beta_m2 = " << beta_m2 <<"\n";
+        // std::cout<<"stage 1 dts: dt_n = " << dt_n[0] <<" dt_nm1 = " << dt_nm1[0] <<"\n";
+
+        // adaptive timestepping
+        pressureGuessValue <<=  (2 - beta_m2/(beta_m2 + beta_m1)) * pn - (beta_m1/(beta_m2 + beta_m1)) * pnm1;
+
+        // constant timestep size
+        // pressureGuessValue <<= (3*pn-pnm1)/2.0 ;
     }
-    void compute_approximation_stage_2(SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields,const WasatchCore::TimeIntegrator* timeIntInfo)  {
+    void compute_approximation_stage_2(timeFieldRequestPtr& dt, SVolField& pressureGuessValue, std::vector<fieldRequestPtr> oldPressureFields, std::vector<timeFieldRequestPtr> old_dt_values,const WasatchCore::TimeIntegrator* timeIntInfo)  {
         // integrator's coefficients
         const WasatchCore::TimeIntegrator& timeintinfo = *timeIntInfo;
         const double b2 = timeintinfo.beta[1];
 
+        const TimeField& current_dt = dt->field_ref();
+        const TimeField& dt_n = old_dt_values[0]->field_ref();
+        const TimeField& dt_nm1 = old_dt_values[1]->field_ref();
         const SVolField& pn = oldPressureFields[0]->field_ref();
         const SVolField& pnm1 = oldPressureFields[1]->field_ref();
 
-        pressureGuessValue <<= 2.0 * b2 * (3*pn-pnm1)/2.0  +  b2 * (pn-pnm1);
+        const double beta_m1 = (dt_n[0]<=1e-20)? 1 :   dt_n[0] /current_dt[0];
+        const double beta_m2 = (dt_nm1[0]<=1e-20)? 1 : dt_nm1[0]/current_dt[0]; 
+        
+        // std::cout<<"stage 2 betas: beta_m1 = " << beta_m1 <<" beta_m2 = " << beta_m2 <<"\n";
+        // std::cout<<"stage 2 dts: dt_n = " << dt_n[0] <<" dt_nm1 = " << dt_nm1[0] <<"\n";
+
+        // adaptive timestepping
+        pressureGuessValue <<= /* 2 * b2 * p_n */  2.0 * b2 * ((2 - beta_m2/(beta_m2 + beta_m1)) * pn - (beta_m1/(beta_m2 + beta_m1)) * pnm1)  + /* b2 * p_n'*/ b2*(2/(beta_m2 + beta_m1) * (pn-pnm1));
+        
+        // constant timestep size
+        // pressureGuessValue <<= 2.0 * b2 * (3*pn-pnm1)/2.0  +  b2 * (pn-pnm1);
     }
 };
 

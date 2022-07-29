@@ -29,9 +29,6 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/FVStaggered.h>
-#include <CCA/Components/Wasatch/TagNames.h>
-
-#include <iostream>
 
 PressureGuess::PressureGuess(const int order)
 :Expr::Expression<SpatialOps::SVolField>(),
@@ -39,16 +36,16 @@ numtimesteps_(order)
 {
   this->set_gpu_runnable( true );
   const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;
+  const Expr::Tag dtt = WasatchCore::TagNames::self().dt; 
   const Expr::Tag pressuret = WasatchCore::TagNames::self().pressure;
   oldPressureTags_= WasatchCore::get_old_var_taglist(pressuret, order);
+  oldDtTags_= WasatchCore::get_old_var_taglist(WasatchCore::TagNames::self().dt, WasatchCore::Wasatch::get_old_dt_num());
 
   rkStage_ = create_field_request<TimeField>(rkst);
+  dt_= create_field_request<TimeField>(dtt);
   create_field_vector_request<PFieldT>( oldPressureTags_, old_pressure_Fields_ );
-  // for (Expr::TagList::iterator iTag = oldPressureTags_.begin(); iTag != oldPressureTags_.end(); ++iTag)
-  // {
-  //       old_pressure_Fields_.push_back(create_field_request<PFieldT>(*iTag));
-  //       std::cout<<"oldpressureTags: "<<iTag->name()<<std::endl;
-  // }
+  create_field_vector_request<TimeField>( oldDtTags_, old_dts_ );
+
   std::string integName = WasatchCore::Wasatch::get_timeIntegratorName();
   if (integName == "RK2SSP")
         pressure_approximation_helper_ = new PressureApproximationsHelper(new RK2Approx);
@@ -76,7 +73,7 @@ PressureGuess::evaluate()
 {
   SpatialOps::SVolField& pressureGuessValue = this->value();
   if (WasatchCore::Wasatch::low_cost_integ_recompiled())
-    pressure_approximation_helper_->compute_approximation(rkStage_->field_ref(), pressureGuessValue, old_pressure_Fields_, timeIntInfo_); 
+    pressure_approximation_helper_->compute_approximation(rkStage_, dt_, pressureGuessValue, old_pressure_Fields_, old_dts_, timeIntInfo_); 
   else 
     pressureGuessValue <<= 0.0;
 }
