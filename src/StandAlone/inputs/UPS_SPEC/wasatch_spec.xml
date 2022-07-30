@@ -1131,7 +1131,8 @@
     </TarAndSootEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
-      
+      <FixedCourantSum        spec="OPTIONAL NO_DATA"
+                              attribute1="value REQUIRED DOUBLE" />
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
       <UsingPressureGuess     spec="OPTIONAL NO_DATA" 

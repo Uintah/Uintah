@@ -1029,10 +1029,23 @@ namespace WasatchCore{
           if (!d1 && d2 ) outerRuleMultiplier = 0.90;  // RK301
           if (!d1 && !d2) outerRuleMultiplier = 0.20;  // RK300
         }
+
+        double fixedCourant=0.0; 
+        Uintah::ProblemSpecP fixedCourantSpec = momentumSpec->findBlock("FixedCourantSum");
+        if (fixedCourantSpec)
+          fixedCourantSpec->getAttribute("value",fixedCourant);
+
         stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<XVolField,YVolField,ZVolField>::Builder( Expr::Tag(stbldtMom,Expr::STATE_NONE),
-                                                                                                                                                            densityTag,
-                                                                                                                                                            viscTag,
-                                                                                                                                                            xMomTagNp1,yMomTagNp1,zMomTagNp1, Expr::Tag(),timeIntegratorName,outerRuleMultiplier ), true);
+                                                                                                                                         densityTag,
+                                                                                                                                         viscTag,
+                                                                                                                                         xMomTagNp1,
+                                                                                                                                         yMomTagNp1,
+                                                                                                                                         zMomTagNp1,
+                                                                                                                                         Expr::Tag(),
+                                                                                                                                         timeIntegratorName,
+                                                                                                                                         outerRuleMultiplier,
+                                                                                                                                         fixedCourant )
+                                                                                                                                         , true);
         
 
       }

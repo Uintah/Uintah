@@ -30,7 +30,7 @@ class StableTimestepForEq
   const bool doX_, doY_, doZ_, isCompressible_;
   const bool is3dconvdiff_;
   const std::string timeIntegratorName_;
-  const double multiplier_;
+  const double multiplier_, courantVal_;
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, SVolField >::type X2SOpT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, SVolField >::type Y2SOpT;
@@ -54,7 +54,8 @@ class StableTimestepForEq
               const Expr::Tag& rhowTag,
               const Expr::Tag& csoundTag,
               const std::string timeIntegratorName,
-              const double multiplier=1);
+              const double multiplier=1,
+              const double courantVal=0.0);
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -71,14 +72,15 @@ public:
              const Expr::Tag& rhowTag,
              const Expr::Tag& csoundTag,
              const std::string timeIntegratorName,
-             const double multiplier=1);
+             const double multiplier=1,
+             const double courantVal=0.0);
 
     Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag rhoTag_, viscTag_, rhouTag_, rhovTag_, rhowTag_, csoundTag_;
     const std::string timeIntegratorName_;
-    const double multiplier_;
+    const double multiplier_, courantVal_;
   };
 
   ~StableTimestepForEq();
