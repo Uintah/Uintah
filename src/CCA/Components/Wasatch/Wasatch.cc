@@ -1022,7 +1022,7 @@ namespace WasatchCore{
     for (const auto& tag : old_dt_taglist_)
       if (perPatch_old_dt_labels_.find(tag.name())==perPatch_old_dt_labels_.end())
       {
-        std::cout<<tag.name()<<"\n";
+        // std::cout<<tag.name()<<"\n";
         perPatch_old_dt_labels_[tag.name()] = Uintah::VarLabel::create(tag.name(), perPatchTD );
         old_delt_[tag.name()] = 0.0;
       }

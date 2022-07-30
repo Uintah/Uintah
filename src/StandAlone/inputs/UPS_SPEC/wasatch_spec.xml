@@ -1136,7 +1136,8 @@
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
       <UsingPressureGuess     spec="OPTIONAL NO_DATA" 
                               attribute1="stage-1 OPTIONAL BOOLEAN"  
-                              attribute2="stage-2 OPTIONAL BOOLEAN" /> <!-- stage-1 and stage-2 default to false-->
+                              attribute2="stage-2 OPTIONAL BOOLEAN"
+                              attribute3="outer-rule-multiplier OPTIONAL DOUBLE" /> <!-- stage-1 and stage-2 default to false-->
       <ConvectiveInterpMethod  spec="OPTIONAL NO_DATA"
                               attribute1="method REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE, CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" />
       <ComputeMassResidual    spec="OPTIONAL NO_DATA" />

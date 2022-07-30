@@ -1016,10 +1016,23 @@ namespace WasatchCore{
                                                                                                                                                             xMomTagNp1,yMomTagNp1,zMomTagNp1, TagNames::self().soundspeed, timeIntegratorName ), true);
 
       } else {
+        
+        double outerRuleMultiplier = 1;
+        Uintah::ProblemSpecP usingPressureGuessSpec = momentumSpec->findBlock("UsingPressureGuess");
+        if (usingPressureGuessSpec)
+          usingPressureGuessSpec->getAttribute("outer-rule-multiplier",outerRuleMultiplier);
+        if (timeIntegratorName=="RK3SSP" && (abs(outerRuleMultiplier - 1.0)<= 1e-15))
+        {
+          bool d1 = !WasatchCore::Wasatch::guess_stage_1();
+          bool d2 = !WasatchCore::Wasatch::guess_stage_2();
+          if (d1 && !d2 ) outerRuleMultiplier = 0.45;  // RK310
+          if (!d1 && d2 ) outerRuleMultiplier = 0.90;  // RK301
+          if (!d1 && !d2) outerRuleMultiplier = 0.20;  // RK300
+        }
         stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<XVolField,YVolField,ZVolField>::Builder( Expr::Tag(stbldtMom,Expr::STATE_NONE),
                                                                                                                                                             densityTag,
                                                                                                                                                             viscTag,
-                                                                                                                                                            xMomTagNp1,yMomTagNp1,zMomTagNp1, Expr::Tag(),timeIntegratorName ), true);
+                                                                                                                                                            xMomTagNp1,yMomTagNp1,zMomTagNp1, Expr::Tag(),timeIntegratorName,outerRuleMultiplier ), true);
         
 
       }
