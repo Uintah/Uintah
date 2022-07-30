@@ -105,7 +105,7 @@ void ContactStressDependent::computeMassBurnFraction(const ProcessorGroup*,
    int numMatls = d_materialManager->getNumMatls("MPM");
    ASSERTEQ(numMatls, matls->size());
 
-  if(d_phase=="dissolution"){
+  if(d_phase=="dissolution" || d_phase=="dissolution_and_precipitation"){
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();

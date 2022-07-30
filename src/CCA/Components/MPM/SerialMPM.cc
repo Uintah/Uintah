@@ -4114,9 +4114,11 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         }
         if(burialHistory != nullptr){
           curBHIndex = pbc->getLoadCurve()->getBHIndex(curLCIndex);
-//          cout << "curBHIndex = " << curBHIndex << endl;
+          //cout << "curBHIndex = " << curBHIndex << endl;
           double uintahDisTime = 
                          burialHistory->getUintahDissolutionTime(curBHIndex);
+          double uintahPrecipTime = 
+                         burialHistory->getUintahPrecipitationTime(curBHIndex);
           double geoInterval = burialHistory->getTime_Ma(curBHIndex) - 
                          burialHistory->getTime_Ma(curBHIndex - 1);
           double qtzGrowthVecF = 
@@ -4125,14 +4127,19 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           // The following is to get an interpolated temperature out
           // of the burial history for use in the dissolution model
           if(flags->d_currentPhase=="hold" ||
-             flags->d_currentPhase=="dissolution"){
+             flags->d_currentPhase=="dissolution" || 
+             flags->d_currentPhase=="precipitation" || 
+             flags->d_currentPhase=="dissolution_and_precipitation"){
             double holdStartTime = pbc->getLoadCurve()->getTime(curLCIndex);
             double holdEndTime   = pbc->getLoadCurve()->getTime(curLCIndex+1);
             double startTimeGeo = burialHistory->getTime_Ma(curBHIndex);
             double endTimeGeo   = burialHistory->getTime_Ma(curBHIndex-1);
             double uintahTime = 1.;
-            if(flags->d_currentPhase=="dissolution"){
+            if(flags->d_currentPhase=="dissolution" ||
+               flags->d_currentPhase=="dissolution_and_precipitation"){
              uintahTime = uintahDisTime;
+            } else if (flags->d_currentPhase=="precipitation"){
+             uintahTime = uintahPrecipTime;
             } else {
              uintahTime = holdEndTime - holdStartTime;
             }
@@ -4152,7 +4159,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           } else if(flags->d_currentPhase=="settle"){
             geoTemp_K   = burialHistory->getTemperature_K(curBHIndex);
             geoTime_MYa = burialHistory->getTime_Ma(curBHIndex);
-          } 
+          }
 
           bool EOC    = burialHistory->getEndOnCompletion(curBHIndex);
           if(EOC && flags->d_currentPhase=="ramp" && outputStep){
@@ -4504,11 +4511,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // For problems not involving dissolution, or during phases of the
       // dissolution simulation where dissolution isn't happening, XPIC is
       // carried out as normal.
-      if((flags->d_XPIC2 && !(flags->d_currentPhase=="dissolution" && 
-                              flags->d_doingDissolution)) ||
+      if((flags->d_XPIC2 && !((flags->d_currentPhase=="dissolution" ||
+                               flags->d_currentPhase==
+                                              "dissolution_and_precipitation" ||
+                               flags->d_currentPhase=="precipitation") &&
+                               flags->d_doingDissolution)) ||
          (flags->d_XPIC2 && 
-          flags->d_currentPhase=="dissolution" && flags->d_doingDissolution 
-                                        && timestep%10==1)){
+         (flags->d_currentPhase=="dissolution" ||
+          flags->d_currentPhase=="dissolution_and_precipitation" ||
+          flags->d_currentPhase=="precipitation") &&
+          flags->d_doingDissolution && timestep%10==1)){
         useXPIC=true;
       }
 

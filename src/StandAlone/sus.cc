@@ -78,7 +78,7 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include <svn_info.h>
+#include <git_info.h>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -135,7 +135,7 @@ static void quit(const std::string& msg = "")
   if (msg != "") {
     std::cerr << msg << "\n";
   }
-  
+
   Uintah::Parallel::finalizeManager();
   Parallel::exitAll(2);
 }
@@ -146,7 +146,7 @@ static void usage( const std::string& message,
                    const std::string& progname )
 {
   start();
-  
+
   if (Uintah::Parallel::getMPIRank() == 0) {
     std::cerr << "\n";
     if (badarg != "") {
@@ -169,15 +169,16 @@ static void usage( const std::string& message,
     std::cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     std::cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
     std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
+    std::cerr << "-gitDiff             : runs git diff <src/...../Packages/Uintah \n";
+    std::cerr << "-gitStatus           : runs git status & git log -1 <src/...../Packages/Uintah \n";
     std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
     std::cerr << "-postProcessUda      : Passes variables in an uda through post processing tasks, computing new variables and creating a new uda.\n";
     std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
     std::cerr << "-t <timestep>        : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
-    std::cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
-    std::cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
     std::cerr << "-copy                : Copy from old uda when restarting\n";
     std::cerr << "-move                : Move from old uda when restarting\n";
     std::cerr << "-nocopy              : Default: Don't copy or move old uda timestep when restarting\n";
+    std::cerr << "-version             : Display git and configure information.\n";
     std::cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     std::cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
@@ -196,6 +197,54 @@ static void usage( const std::string& message,
   quit();
 }
 
+//______________________________________________________________________
+//
+void display_git_info( const bool show_gitDiff,
+                       const bool show_gitStatus )
+{
+  // Run git commands Uintah
+  std::cout << "git branch:"  << GIT_BRANCH << "\n";
+  std::cout << "git date:   " << GIT_DATE << "\n";
+  std::cout << "git hash:   " << GIT_HASH << "\n";
+
+  if ( show_gitDiff || show_gitStatus ) {
+    std::cout << "____GIT___________________________________________________\n";
+    std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
+
+    if (show_gitDiff) {
+      std::string cmd = "cd " + sdir + "; git --no-pager diff  --no-color --minimal";
+      std::cout << "\n__________________________________git diff\n";
+      std::system(cmd.c_str());
+    }
+
+    if (show_gitStatus) {
+      std::string cmd = "cd " + sdir + "; git status  --branch --short";
+      std::cout << "\n___________________________git status --branch --short\n";
+      std::system(cmd.c_str());
+
+      cmd = "cd " + sdir + "; git log -1  --format=\"%ad %an %H\" | cat";
+      std::cout << "\n__________________________________git log -1\n";
+      std::system(cmd.c_str());
+    }
+    std::cout << "____GIT___________________________________________________\n";
+  }
+}
+
+//______________________________________________________________________
+//  Display the configure command
+
+void display_config_info(const bool show_configCmd)
+{
+  if ( show_configCmd ){
+
+    std::string odir = std::string(sci_getenv("SCIRUN_OBJDIR"));
+    std::string cmd = "cd " + odir + "; sed -n '7'p config.log ";
+    std::cout << "\n__________________________________Configure Command\n";
+    std::system(cmd.c_str());
+    std::cout << "\n__________________________________\n";
+
+  }
+}
 
 void sanityChecks()
 {
@@ -242,14 +291,16 @@ int main( int argc, char *argv[], char *env[] )
   /*
    * Default values
    */
+
   bool   emit_graphs         = false;
   bool   local_filesystem    = false;
-  bool   restart             = false;
   bool   postProcessUda      = false;
-  bool   do_svnDiff          = false;
-  bool   do_svnStat          = false;
+  bool   restart             = false;
   bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
+  bool   show_configCmd      = false;
+  bool   show_gitDiff        = false;
+  bool   show_gitStatus      = false;
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
 
@@ -413,11 +464,11 @@ int main( int argc, char *argv[], char *env[] )
       }
       layout = IntVector(ii, jj, kk);
     }
-    else if (arg == "-svnDiff") {
-      do_svnDiff = true;
+    else if (arg == "-gitDiff") {
+      show_gitDiff = true;
     }
-    else if (arg == "-svnStat") {
-      do_svnStat = true;
+    else if (arg == "-gitStatus") {
+      show_gitStatus = true;
     }
     else if (arg == "-validate") {
       onlyValidateUps = true;
@@ -500,7 +551,7 @@ int main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
+
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, nullptr, true );
 
@@ -572,28 +623,13 @@ int main( int argc, char *argv[], char *env[] )
 
       std::cout << "Date:    " << time_string;  // has its own newline
       std::cout << "Machine: " << name << "\n";
-      std::cout << "SVN: " << SVN_REVISION << "\n";
-      std::cout << "SVN: " << SVN_DATE << "\n";
-      std::cout << "SVN: " << SVN_URL << "\n";
       std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       std::cout << "CFLAGS: " << CFLAGS << "\n";
+//    std::cout << "CXXFLAGS: " << CXXFLAGS << "\n";
 
-      // Run svn commands on Packages/Uintah 
-      if (do_svnDiff || do_svnStat) {
-        std::cout << "____SVN_____________________________________________________________\n";
-        std::string sdir = std::string(sci_getenv("SCIRUN_SRCDIR"));
-        if (do_svnDiff) {
-          std::string cmd = "svn diff --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
-        }
-        if (do_svnStat) {
-          std::string cmd = "svn info  --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
-          cmd = "svn stat -u  --username anonymous --password \"\" " + sdir;
-          std::system(cmd.c_str());
-        }
-        std::cout << "____SVN_______________________________________________________________\n";
-      }
+      display_git_info( show_gitDiff, show_gitStatus);
+
+      display_config_info( show_configCmd );
     }
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );

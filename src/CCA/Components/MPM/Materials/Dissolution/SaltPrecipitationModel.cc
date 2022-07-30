@@ -96,8 +96,7 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
    delt_vartype delT;
    old_dw->get(delT, lb->delTLabel, getLevel(patches) );
 
-  if(d_phase=="dissolution"){
-//  if(time>delT){
+  if(d_phase=="precipitation" || d_phase=="dissolution_and_precipitation"){
    // Get the dissolved mass and free surface area from previous timestep
    sum_vartype DM, TSA, CTM;
    SoleVariable <double> OIMSV;
@@ -106,7 +105,6 @@ void SaltPrecipitationModel::computeMassBurnFraction(const ProcessorGroup*,
    old_dw->get(TSA,  lb->TotalSurfaceAreaLabel);
    old_dw->get(OIMSV,lb->InitialMassSVLabel);
    double DisMass = DM;
-//   double DisMass = 0.0001;
    double TotalSurfArea = TSA;
    double OrigTotalMassSV = OIMSV;
    double CurTotalMass = CTM;

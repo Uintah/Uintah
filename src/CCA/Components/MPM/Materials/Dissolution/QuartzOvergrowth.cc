@@ -90,7 +90,7 @@ void QuartzOvergrowth::computeMassBurnFraction(const ProcessorGroup*,
 //   string interp_type = flags->d_interpolator_type;
 
 //  proc0cout << "phase = " << d_phase << endl;
-  if(d_phase=="dissolution"){
+  if(d_phase=="precipitation" || d_phase=="dissolution_and_precipitation"){
 
    for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

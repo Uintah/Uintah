@@ -62,24 +62,26 @@ int BurialHistory::populate(ProblemSpecP& ps)
      double effStress = 0.0;
      double waterSat  = 0.0;
      double UDT       = 0.0;
+     double UPT       = 0.0;
      double QGVf      = 0.0;
      double sigma_h   = 0.0;
      double sigma_H   = 0.0;
      double sigma_V   = 0.0;
      bool   EOC       = false;
-     timePoint->require("time_Ma",                      time);
-     timePoint->require("temperature_K",                temp);
-     timePoint->require("effectiveStress_bar",          effStress);
-     timePoint->getWithDefault("depth_m",               depth,   1.0);
-     timePoint->getWithDefault("fluidOverPressure_bar", fluidOP, 0.0);
-     timePoint->getWithDefault("fluidPressure_bar",     fluidP,  0.0);
-     timePoint->getWithDefault("waterSaturation_pct",   waterSat,0.0);
-     timePoint->getWithDefault("UintahDissolutionTime", UDT,     0.0);
-     timePoint->getWithDefault("QuartzGrowthVec_fr",    QGVf,    0.0);
-     timePoint->getWithDefault("sigma_h_bar",           sigma_h, 0.0);
-     timePoint->getWithDefault("sigma_H_bar",           sigma_H, 0.0);
-     timePoint->getWithDefault("sigma_V_bar",           sigma_V, 0.0);
-     timePoint->getWithDefault("EndOnCompletion",       EOC,     false);
+     timePoint->require("time_Ma",                       time);
+     timePoint->require("temperature_K",                 temp);
+     timePoint->require("effectiveStress_bar",           effStress);
+     timePoint->getWithDefault("depth_m",                depth,   1.0);
+     timePoint->getWithDefault("fluidOverPressure_bar",  fluidOP, 0.0);
+     timePoint->getWithDefault("fluidPressure_bar",      fluidP,  0.0);
+     timePoint->getWithDefault("waterSaturation_pct",    waterSat,0.0);
+     timePoint->getWithDefault("UintahDissolutionTime",  UDT,     0.0);
+     timePoint->getWithDefault("UintahPrecipitationTime",UPT,     0.0);
+     timePoint->getWithDefault("QuartzGrowthVec_fr",     QGVf,    0.0);
+     timePoint->getWithDefault("sigma_h_bar",            sigma_h, 0.0);
+     timePoint->getWithDefault("sigma_H_bar",            sigma_H, 0.0);
+     timePoint->getWithDefault("sigma_V_bar",            sigma_V, 0.0);
+     timePoint->getWithDefault("EndOnCompletion",        EOC,     false);
 
      d_time_Ma.push_back(time);
      d_depth_m.push_back(depth);
@@ -89,6 +91,7 @@ int BurialHistory::populate(ProblemSpecP& ps)
      d_effectiveStress_bar.push_back(effStress);
      d_waterSaturation_pct.push_back(waterSat);
      d_uintahDissolutionTime.push_back(UDT);
+     d_uintahPrecipitationTime.push_back(UPT);
      d_quartzGrowthVec_fr.push_back(QGVf);
      d_sigma_h_bar.push_back(sigma_h);
      d_sigma_H_bar.push_back(sigma_H);
@@ -121,6 +124,8 @@ void BurialHistory::outputProblemSpec(ProblemSpecP& ps)
     time_ps->appendElement("effectiveStress_bar",  d_effectiveStress_bar[i]);
     time_ps->appendElement("waterSaturation_pct",  d_waterSaturation_pct[i]);
     time_ps->appendElement("UintahDissolutionTime",d_uintahDissolutionTime[i]);
+    time_ps->appendElement("UintahPrecipitationTime",
+                                                  d_uintahPrecipitationTime[i]);
     time_ps->appendElement("QuartzGrowthVec_fr",   d_quartzGrowthVec_fr[i]);
     time_ps->appendElement("EndOnCompletion",      d_endOnCompletion[i]);
     time_ps->appendElement("sigma_h",              d_sigma_h_bar[i]);

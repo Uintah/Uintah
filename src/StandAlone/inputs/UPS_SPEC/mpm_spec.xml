@@ -104,6 +104,7 @@
         <sigma_V_bar           spec="OPTIONAL DOUBLE" />
         <waterSaturation_pct   spec="REQUIRED DOUBLE" />
         <UintahDissolutionTime spec="OPTIONAL DOUBLE" />
+        <UintahPrecipitationTime spec="OPTIONAL DOUBLE" />
         <QuartzGrowthVec_fr    spec="OPTIONAL DOUBLE" />
         <EndOnCompletion       spec="OPTIONAL BOOLEAN" />
       </time_point>

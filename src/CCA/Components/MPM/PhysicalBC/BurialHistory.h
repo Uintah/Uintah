@@ -203,6 +203,10 @@ WARNING
         return d_uintahDissolutionTime[index];
       }
 
+      inline double getUintahPrecipitationTime(int index) {
+        return d_uintahPrecipitationTime[index];
+      }
+
       inline double getQuartzGrowthVec_fr(int index) {
         return d_quartzGrowthVec_fr[index];
       }
@@ -231,6 +235,7 @@ WARNING
       std::vector<double> d_sigma_V_bar;
       std::vector<double> d_waterSaturation_pct;
       std::vector<double> d_uintahDissolutionTime;
+      std::vector<double> d_uintahPrecipitationTime;
       std::vector<double> d_quartzGrowthVec_fr;
       std::vector<bool>   d_endOnCompletion;
    };

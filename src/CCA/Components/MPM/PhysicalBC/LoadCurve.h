@@ -182,7 +182,8 @@ WARNING
      loadCurve->require("id", d_id);
      loadCurve->getWithDefault("material", d_matl, -99);
      loadCurve->getWithDefault("use_burial_history", d_UBH, false);
-     loadCurve->getWithDefault("burial_history_entry", d_BHE, "effectiveStress_bar");
+     loadCurve->getWithDefault("burial_history_entry", d_BHE,
+                                            "effectiveStress_bar");
      if(d_UBH){
       ProblemSpecP root = ps->getRootNode();
       ProblemSpecP TimeBlock = root->findBlock("Time");
@@ -200,14 +201,16 @@ WARNING
         burHist->getWithDefault("hold_time",                  hold_time,   1.0);
         burHist->getWithDefault("stableKE",                   stableKE,    2.0e-6);
         std::vector<double> time_Ma;
-        std::vector<double> effectiveStress_bar;
+        std::vector<double> Stress_bar;
         std::vector<double> UintahDissolutionTime;
+        std::vector<double> UintahPrecipitationTime;
         for( ProblemSpecP timePoint = burHist->findBlock("time_point");
             timePoint != nullptr;
             timePoint = timePoint->findNextBlock("time_point") ) {
           double time      = 0.0;
           double Stress    = 0.0;
           double UDT       = 0.0;
+          double UPT       = 0.0;
           timePoint->require("time_Ma",                 time);
           if(d_BHE == "effectiveStress_bar"){
             timePoint->require("effectiveStress_bar",   Stress);
@@ -222,11 +225,13 @@ WARNING
             timePoint->require("sigma_V_bar",           Stress);
             proc0cout << "d_BHe = " << d_BHE << std::endl;
           }
-          timePoint->getWithDefault("UintahDissolutionTime", UDT, 0);
+          timePoint->getWithDefault("UintahDissolutionTime",   UDT, 0);
+          timePoint->getWithDefault("UintahPrecipitationTime", UPT, 0);
 
           time_Ma.push_back(time);
-          effectiveStress_bar.push_back(Stress);
+          Stress_bar.push_back(Stress);
           UintahDissolutionTime.push_back(UDT);
+          UintahPrecipitationTime.push_back(UPT);
         }
         int CI = 0;
         burHist->getWithDefault("current_index", CI, time_Ma.size()-1);
@@ -235,7 +240,7 @@ WARNING
 
         // Fill up the load curve based on burial history data
         d_time.push_back(uintahTime);
-        d_load.push_back(-effectiveStress_bar[CI]*p_c_f);
+        d_load.push_back(-Stress_bar[CI]*p_c_f);
         d_maxKE.push_back(maxKE);
         d_BHIndex.push_back(CI);
         for(int i=CI-1;i>=0;i--){
@@ -243,7 +248,7 @@ WARNING
           d_phaseType.push_back("ramp");
           uintahTime+=ramp_time;
           d_time.push_back(uintahTime);
-          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+          d_load.push_back(-Stress_bar[i]*p_c_f);
           d_maxKE.push_back(maxKE);
           d_BHIndex.push_back(i);
 
@@ -251,31 +256,78 @@ WARNING
           d_phaseType.push_back("settle");
           uintahTime+=settle_time;
           d_time.push_back(uintahTime);
-          d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+          d_load.push_back(-Stress_bar[i]*p_c_f);
           d_maxKE.push_back(stableKE);
           d_BHIndex.push_back(i);
 
           // hold or dissolution phase
-          if(UintahDissolutionTime[i] > 0.){
+          if(UintahDissolutionTime[i] > 0. && UintahPrecipitationTime[i]>0.){
+            if(UintahDissolutionTime[i] == UintahPrecipitationTime[i]){
+             d_phaseType.push_back("dissolution_and_precipitation");
+             uintahTime+=UintahDissolutionTime[i];
+             d_time.push_back(uintahTime);
+             d_load.push_back(-Stress_bar[i]*p_c_f);
+             d_maxKE.push_back(maxKE);
+             d_BHIndex.push_back(i);
+            } else { // The times aren't equal (might be nearly so) do do them
+                     // sequentially
+             if(UintahDissolutionTime[i] < UintahPrecipitationTime[i]){
+              // First do the precipitation, then the dissolution
+              d_phaseType.push_back("precipitation");
+              uintahTime+=UintahPrecipitationTime[i];
+              d_time.push_back(uintahTime);
+              d_load.push_back(-Stress_bar[i]*p_c_f);
+              d_maxKE.push_back(maxKE);
+              d_BHIndex.push_back(i);
+
+              d_phaseType.push_back("dissolution");
+              uintahTime+=UintahDissolutionTime[i];
+              d_time.push_back(uintahTime);
+              d_load.push_back(-Stress_bar[i]*p_c_f);
+              d_maxKE.push_back(maxKE);
+              d_BHIndex.push_back(i);
+             }
+             if(UintahDissolutionTime[i] > UintahPrecipitationTime[i]){
+              // First do the precipitation, then the dissolution
+              d_phaseType.push_back("dissolution");
+              uintahTime+=UintahDissolutionTime[i];
+              d_time.push_back(uintahTime);
+              d_load.push_back(-Stress_bar[i]*p_c_f);
+              d_maxKE.push_back(maxKE);
+              d_BHIndex.push_back(i);
+
+              d_phaseType.push_back("precipitation");
+              uintahTime+=UintahPrecipitationTime[i];
+              d_time.push_back(uintahTime);
+              d_load.push_back(-Stress_bar[i]*p_c_f);
+              d_maxKE.push_back(maxKE);
+              d_BHIndex.push_back(i);
+             }
+            }
+          } else if(UintahDissolutionTime[i] > 0.){
             d_phaseType.push_back("dissolution");
             uintahTime+=UintahDissolutionTime[i];
             d_time.push_back(uintahTime);
-            d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+            d_load.push_back(-Stress_bar[i]*p_c_f);
+            d_maxKE.push_back(maxKE);
+            d_BHIndex.push_back(i);
+          } else if(UintahPrecipitationTime[i] > 0.){
+            d_phaseType.push_back("precipitation");
+            uintahTime+=UintahPrecipitationTime[i];
+            d_time.push_back(uintahTime);
+            d_load.push_back(-Stress_bar[i]*p_c_f);
             d_maxKE.push_back(maxKE);
             d_BHIndex.push_back(i);
           } else {
             d_phaseType.push_back("hold");
             uintahTime+=hold_time;
             d_time.push_back(uintahTime);
-            d_load.push_back(-effectiveStress_bar[i]*p_c_f);
+            d_load.push_back(-Stress_bar[i]*p_c_f);
             d_maxKE.push_back(maxKE);
             d_BHIndex.push_back(i);
           }
         }
         d_phaseType.push_back("hold");
-//      for(unsigned int i=0;i<d_time.size();i++){
-//        std::cout << "d_BHIndex[" << i << "] = " << d_BHIndex[i] << std::endl;
-//      }
       }
      } else {
        for( ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
