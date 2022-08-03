@@ -1750,9 +1750,11 @@ DataArchiver::writeto_xml_files( const GridP& grid )
       for (unsigned j = 0; j < savelist.size(); ++j) {
         string variableSection = savelist[j] == &m_checkpointGlobalLabels ? "globals" : "variables";
         ProblemSpecP vs = indexDoc->findBlock( variableSection );
+
         if( vs == nullptr ) {
           vs = indexDoc->appendChild(variableSection.c_str());
         }
+
         for (unsigned k = 0; k < savelist[j]->size(); ++k) {
           const VarLabel * var   = (*savelist[j])[k].label;
           bool             found = false;
@@ -2630,7 +2632,7 @@ DataArchiver::indexAddGlobals()
   // from timestep to timestep
   static bool wereGlobalsAdded = false;
 
-  if (m_writeMeta && !wereGlobalsAdded) {
+  if (m_writeMeta && !wereGlobalsAdded && !m_saveGlobalLabels.empty() ) {
     wereGlobalsAdded = true;
 
     // add saved global (reduction/sole) variables to index.xml

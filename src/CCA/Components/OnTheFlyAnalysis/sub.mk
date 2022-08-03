@@ -46,6 +46,7 @@ SRCS += \
         $(SRCDIR)/momentumAnalysis.cc      \
         $(SRCDIR)/planeAverage.cc          \
         $(SRCDIR)/planeExtract.cc          \
+        $(SRCDIR)/spatialAvg.cc            \
         $(SRCDIR)/statistics.cc            \
         $(SRCDIR)/turbulentFluxes.cc
 

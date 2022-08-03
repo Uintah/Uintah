@@ -63,9 +63,9 @@ WARNING
 ****************************************/
   class statistics : public AnalysisModule {
   public:
-    statistics(const ProcessorGroup* myworld,
+    statistics(const ProcessorGroup*  myworld,
                const MaterialManagerP materialManager,
-               const ProblemSpecP& module_spec);
+               const ProblemSpecP&    module_spec);
 
     statistics();
 

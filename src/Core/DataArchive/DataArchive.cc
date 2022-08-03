@@ -70,6 +70,7 @@ using namespace Uintah;
 
 bool        DataArchive::d_types_initialized = false;
 DebugStream DataArchive::dbg( "DataArchive", "DataArchive", "Data archive debug stream", false );
+vector<double> DataArchive::m_emptyVectorD = {};
 
 //______________________________________________________________________
 //
@@ -261,7 +262,8 @@ DataArchive::queryProcessors( unsigned int & nProcs )
 //
 void
 DataArchive::queryTimesteps( vector<int>    & index,
-                             vector<double> & times )
+                             vector<double> & times,
+                             vector<double>  & oldDelTs/*m_emptyVectorD*/ )
 {
   Timers::Simple timer;
   timer.start();
@@ -295,16 +297,19 @@ DataArchive::queryTimesteps( vector<int>    & index,
             throw InternalError( "DataArchive::queryTimesteps:timestep href not found", __FILE__, __LINE__ );
           }
 
-          int          timestepNumber;
-          double       currentTime;
+          int      timestepNumber;
+          double   currentTime;
+          double   delT;
+
           // Usually '.../timestep.xml'
           string       ts_path_and_filename = d_filebase + "/" + tsfile;
           ProblemSpecP timestepDoc = 0;
 
           string::size_type deliminator_index = tsfile.find("/");
           string tnumber( tsfile, 0, deliminator_index );
+
           // Usually '.../grid.xml'
-          string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
+          string  grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
 
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
@@ -315,19 +320,21 @@ DataArchive::queryTimesteps( vector<int>    & index,
             // This block will read delt and time info from the index.xml file instead of
             // opening every single timestep.xml file to get this information
             istringstream timeVal( attributes["time"] );
+            istringstream delTVal( attributes["oldDelt"] );
             istringstream timestepVal( ts_doc.getNodeValue() );
 
-            timeVal >> currentTime;
+            timeVal     >> currentTime;
+            delTVal     >> delT;
             timestepVal >> timestepNumber;
 
-            if( !timeVal || !timestepVal ) {
+            if( !timeVal || !timestepVal | !delTVal ) {
               printf( "WARNING: DataArchive.cc: stringstream failed...\n" );
             }
-
           }
 
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
+          d_ts_oldDelTs.push_back( delT );
           d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
         }
       } // end while
@@ -335,8 +342,9 @@ DataArchive::queryTimesteps( vector<int>    & index,
     d_lock.unlock();
   }
 
-  index = d_ts_indices;
-  times = d_ts_times;
+  index    = d_ts_indices;
+  times    = d_ts_times;
+  oldDelTs = d_ts_oldDelTs;
 
   dbg << "DataArchive::queryTimesteps completed in " << timer().seconds()
       << " seconds\n";

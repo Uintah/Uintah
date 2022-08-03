@@ -30,6 +30,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/planeAverage.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/statistics.h>
+#include <CCA/Components/OnTheFlyAnalysis/spatialAvg.h>
 #include <CCA/Components/OnTheFlyAnalysis/turbulentFluxes.h>
 
 #include <sci_defs/uintah_defs.h>
@@ -72,14 +73,24 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
                               const MaterialManagerP materialManager,
                               const ProblemSpecP& prob_spec)
 {
-  std::string module("");
+  // the factory can use either of these xml tags
+  ProblemSpecP base_ps;
   ProblemSpecP da_ps = prob_spec->findBlock("DataAnalysis");
+  ProblemSpecP pp_ps = prob_spec->findBlock("PostProcess");
+
+  if( da_ps ){
+    base_ps = da_ps;
+  } 
+  else{
+    base_ps = pp_ps;
+  }
+
 
   std::vector<AnalysisModule*> modules;
 
-  if (da_ps) {
+  if (base_ps) {
 
-    for( ProblemSpecP module_ps = da_ps->findBlock( "Module" );
+    for( ProblemSpecP module_ps = base_ps->findBlock( "Module" );
                       module_ps != nullptr;
                       module_ps = module_ps->findNextBlock( "Module" ) ) {
 
@@ -89,10 +100,13 @@ AnalysisModuleFactory::create(const ProcessorGroup* myworld,
 
       std::map<std::string, std::string> attributes;
       module_ps->getAttributes(attributes);
-      module = attributes["name"];
+      std::string module = attributes["name"];
 
       if ( module == "statistics" ) {
         modules.push_back( scinew statistics(          myworld, materialManager, module_ps) );
+      }
+      else if ( module == "spatialAvg" ) {
+        modules.push_back( scinew spatialAvg(          myworld, materialManager, module_ps) );
       }
       else if ( module == "lineExtract" ) {
         modules.push_back(scinew lineExtract(          myworld, materialManager, module_ps ) );
