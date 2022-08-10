@@ -71,7 +71,6 @@ SRCS   += \
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
-       $(SRCDIR)/Diamm.cc                      \
        $(SRCDIR)/HypoElasticFortran.cc         \
        $(SRCDIR)/Kayenta.cc
 endif
