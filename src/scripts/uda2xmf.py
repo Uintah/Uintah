@@ -484,6 +484,7 @@ class Domain_calculators():
     corners_per_particle['cpti'] = 4
     corners_per_particle['linear'] = 8
     corners_per_particle['cpdi'] = 8
+    corners_per_particle['fast_cpdi'] = 8
     corners_per_particle['gimp'] = 8
 
     @staticmethod
@@ -612,6 +613,7 @@ class Domain_factory():
     _interpolator['cpti'] = Domain_calculators._calculate_cpti_domain
     _interpolator['linear'] = Domain_calculators._calculate_gimp_domain
     _interpolator['cpdi'] = Domain_calculators._calculate_gimp_domain
+    _interpolator['fast_cpdi'] = Domain_calculators._calculate_gimp_domain
     _interpolator['gimp'] = Domain_calculators._calculate_gimp_domain
 
     @staticmethod
@@ -1001,7 +1003,7 @@ class Timestep_lightweight(Lightweight_container):
 
             for i, element in enumerate(domain[0][1]):
                 # CPTI/CPDI
-                if self.interpolator == 'cpti' or self.interpolator == 'cpdi':
+                if self.interpolator == 'cpti' or self.interpolator == 'cpdi'or self.interpolator == 'fast_cpdi':
                     # pack rvectors with scalefactors
                     # scalefactor vectors passed as a len=9 array
                     scale = domain[1][1][i]
