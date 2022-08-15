@@ -244,11 +244,6 @@ namespace WasatchCore{
                                     Uintah::SchedulerP& sched );
 
     /**
-     *  \brief Set up things that need to be done on a restart
-     */
-    void restartInitialize();
-
-    /**
      *  \brief Set up the Uintah::Task that will calculate the timestep.
      */
     void scheduleComputeStableTimeStep( const Uintah::LevelP& level,

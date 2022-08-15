@@ -496,8 +496,6 @@ AMRSimulationController::doInitialTimeStep()
                                                  m_loadBalancer->getPerProcessorPatchSet(m_current_gridP),
                                                  m_scheduler );
 
-    m_application->restartInitialize();
-
     for (int i = m_current_gridP->numLevels() - 1; i >= 0; i--) {
       m_application->scheduleRestartInitialize( m_current_gridP->getLevel(i), m_scheduler );
     }

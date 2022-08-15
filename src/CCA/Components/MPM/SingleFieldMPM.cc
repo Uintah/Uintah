@@ -464,23 +464,6 @@ void SingleFieldMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
 }
-/* _____________________________________________________________________
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
-_____________________________________________________________________*/
-void SingleFieldMPM::restartInitialize()
-{
-  cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
-}
 
 //______________________________________________________________________
 void SingleFieldMPM::schedulePrintParticleCount(const LevelP& level,
