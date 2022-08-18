@@ -541,16 +541,6 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
-
-
 
 /*`==========TESTING==========*/
 Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
@@ -586,26 +576,6 @@ Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
 #endif
 
   sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
-}
-
-/* _____________________________________________________________________
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
-_____________________________________________________________________*/
-void SerialMPM::restartInitialize()
-{
-#if 0
-  cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
-#endif
 }
 
 //______________________________________________________________________

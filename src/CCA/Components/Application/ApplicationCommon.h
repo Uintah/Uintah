@@ -125,12 +125,6 @@ WARNING
     // Used by the switcher
     virtual void setupForSwitching() {}
 
-    // restartInitialize() is called once and only once if and when a
-    // simulation is restarted.  This allows the simulation component
-    // to handle initializations that are necessary when a simulation
-    // is restarted.
-    virtual void restartInitialize() {}
-
     // Get the task graph the application wants to execute. Returns an
     // index into the scheduler's list of task graphs.
     virtual void setTaskGraphIndex( int index ) { m_taskGraphIndex = index; }

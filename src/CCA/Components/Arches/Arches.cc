@@ -243,12 +243,6 @@ Arches::scheduleRestartInitialize( const LevelP& level,
 
 //--------------------------------------------------------------------------------------------------
 void
-Arches::restartInitialize()
-{
-}
-
-//--------------------------------------------------------------------------------------------------
-void
 Arches::scheduleComputeStableTimeStep(const LevelP& level,
                                       SchedulerP& sched)
 {

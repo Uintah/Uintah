@@ -527,13 +527,6 @@ void statistics::restartInitialize(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-//
-void
-statistics::restartInitialize()
-{
-}
-
-//______________________________________________________________________
 //  output the starting timestep for each variable
 //  The user can turn add variables on restarts
 void

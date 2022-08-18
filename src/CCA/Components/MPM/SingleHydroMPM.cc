@@ -574,27 +574,6 @@ void SingleHydroMPM::scheduleRestartInitialize(const LevelP& level,
     }
 }
 
-/* _____________________________________________________________________
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
-_____________________________________________________________________*/
-void SingleHydroMPM::restartInitialize()
-{
-    if (cout_doing.active())
-        cout_doing << "Doing restartInitialize \t\t\t SingleHydroMPM" << endl;
-
-    d_mpm->restartInitialize();
-
-    if (d_analysisModules.size() != 0) {
-        vector<AnalysisModule*>::iterator iter;
-        for (iter = d_analysisModules.begin();
-            iter != d_analysisModules.end(); iter++) {
-            AnalysisModule* am = *iter;
-            am->restartInitialize();
-        }
-    }
-}
-
 //______________________________________________________________________
 void SingleHydroMPM::schedulePrintParticleCount(const LevelP& level,
                                            SchedulerP& sched)

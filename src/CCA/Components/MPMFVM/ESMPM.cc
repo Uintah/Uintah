@@ -174,14 +174,6 @@ void ESMPM::scheduleRestartInitialize(const LevelP& level, SchedulerP& sched)
   d_amrmpm->scheduleRestartInitialize(level, sched);
 }
 
-void ESMPM::restartInitialize()
-{
-  if(cout_doing.active())
-    cout_doing << "Doing restartInitialize \t\t\t ESMPM" << std::endl;
-
-  d_amrmpm->restartInitialize();
-}
-
 void ESMPM::scheduleComputeStableTimeStep(const LevelP& level, SchedulerP& sched)
 {
   d_amrmpm->scheduleComputeStableTimeStep(level, sched);

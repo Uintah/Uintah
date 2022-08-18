@@ -106,8 +106,6 @@ public:
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
-  virtual void restartInitialize();
-
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
   
   void scheduleTotalParticleCount(SchedulerP& sched,
