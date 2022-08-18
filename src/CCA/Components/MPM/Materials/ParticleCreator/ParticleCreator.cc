@@ -907,9 +907,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   // class to do the counting
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
+    Vector dX = patch->dCell();
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
-    sgp->setCellSize(patch->dCell());
+    sgp->setCellSize(dX);
     if(fgp){
       fgp->setCpti(d_useCPTI);
       fgp->readPoints(patch->getID());
@@ -1018,7 +1019,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
             double permittivity = permittivities->at(ii);
             vars.d_object_permittivity[obj].push_back(permittivity);
           }
-        } 
+        }
       }  // patch contains cell
     }
     //sgp->deletePoints();
