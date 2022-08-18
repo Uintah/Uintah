@@ -1685,13 +1685,14 @@ SerialMPM::scheduleComputeParticleScaleFactor(       SchedulerP  & sched,
     return;
   }
 
-  printSchedule( patches, cout_doing, "MPM::scheduleComputeParticleScaleFactor" );
+  printSchedule( patches, cout_doing,"MPM::scheduleComputeParticleScaleFactor");
 
-  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, &SerialMPM::computeParticleScaleFactor );
+  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, 
+                          &SerialMPM::computeParticleScaleFactor );
 
-  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None );
-  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None );
-  t->computes( lb->pScaleFactorLabel_preReloc );
+  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,               Ghost::None);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, Ghost::None);
+  t->computes(lb->pScaleFactorLabel_preReloc );
 
   sched->addTask( t, patches, matls );
 }
@@ -4927,11 +4928,12 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing MPM::computeParticleScaleFactor");
+    printTask(patches,patch,cout_doing,"Doing MPM::computeParticleScaleFactor");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                       (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
