@@ -111,6 +111,17 @@ void SlipExch::outputProblemSpec(ProblemSpecP & matl_ps )
 }
 
 //______________________________________________________________________
+//
+void SlipExch::sched_initialize( SchedulerP&,
+                                 const LevelP& level)
+{
+  printSchedule( level, dbgExch, "SlipExch::sched_initialize" );
+  const MaterialSet* ice_matls = d_matlManager->allMaterials( "ICE" );
+  const MaterialSet* mpm_matls = d_matlManager->allMaterials( "MPM" );
+  const MaterialSet* all_matls = d_matlManager->allMaterials();
+}
+
+//______________________________________________________________________
 //  These tasks are called before semi-implicit pressure solve.
 //  All computed variables live in the parent NewDW
 void SlipExch::sched_PreExchangeTasks(SchedulerP           & sched,

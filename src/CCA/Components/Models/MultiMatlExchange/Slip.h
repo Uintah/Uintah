@@ -53,6 +53,9 @@ namespace ExchangeModels{
 
     virtual void outputProblemSpec(ProblemSpecP & prob_spec );
 
+    virtual void sched_initialize( SchedulerP&,
+                                   const LevelP& level);
+
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,
                                         const MaterialSubset * ice_matls,
