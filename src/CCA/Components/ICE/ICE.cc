@@ -715,6 +715,11 @@ void ICE::scheduleInitialize(const LevelP & level,
     m_solver->scheduleInitialize(level,sched, ice_matls);
   }
 
+
+  //__________________________________
+  //  Exchange Model
+  d_exchModel->sched_initialize( sched, level );
+
   //__________________________________
   //  Wall shear stress model initialization
   if( d_WallShearStressModel ){
