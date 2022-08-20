@@ -60,6 +60,7 @@ SingleVelContact::SingleVelContact(const ProcessorGroup* myworld,
   flag = MFlag;
   d_oneOrTwoStep = 2;
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
+  ps->getWithDefault("ExcludeMaterial", d_excludeMatl, -999);
 }
 
 SingleVelContact::~SingleVelContact()
@@ -70,6 +71,8 @@ void SingleVelContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type","single_velocity");
+  contact_ps->appendElement("OneOrTwoStep",      d_oneOrTwoStep);
+  contact_ps->appendElement("ExcludeMaterial",   d_excludeMatl);
   d_matls.outputProblemSpec(contact_ps);
 }
 
@@ -109,10 +112,15 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
         }
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       // Set each field's velocity equal to the center of mass velocity
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int n = 0; n < numMatls; n++) {
-        if(d_matls.requested(n)) {
+        if(d_matls.requested(n) && excludeMass < 1.e-99) {
           gvelocity[n][c] = centerOfMassVelocity;
         }
       }
@@ -163,10 +171,15 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
         }
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       // Set each field's velocity equal to the center of mass velocity
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int  n = 0; n < numMatls; n++){
-        if(d_matls.requested(n)) {
+        if(d_matls.requested(n) && excludeMass < 1.e-99) {
           Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
           gvelocity_star[n][c] = centerOfMassVelocity;
         }
