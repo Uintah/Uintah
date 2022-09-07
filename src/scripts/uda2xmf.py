@@ -442,10 +442,10 @@ class Variable_data_factory:
         @return a numpy array of the data
         """
         if not endian_flag:
-            if Variable_data_factory.endianness is "little-endian":
+            if Variable_data_factory.endianness == "little-endian":
                 endian_flag = "<"
 
-            elif Variable_data_factory.endianness is "big-endian":
+            elif Variable_data_factory.endianness == "big-endian":
                 endian_flag = ">"
 
             else:
@@ -787,8 +787,6 @@ class Patch_lightweight(Lightweight_container):
         super(Patch_lightweight, self).__init__()
 
         self.pid = int(patch_element.find(".//id").text)
-        p_num = str(self.pid).zfill(5)
-#        self.name = "p"+p_num
         self.proc = int(patch_element.find(".//proc").text)
 
 #        self.low_index = ast.literal_eval(patch_element.find(".//lowIndex").text)
@@ -974,7 +972,7 @@ class Timestep_lightweight(Lightweight_container):
             if name == "p.scalefactor":
                 scalefactors.append(element)
 
-        if len(scalefactors) is 0:
+        if len(scalefactors) == 0:
             for centroid in centroids:
                 domains.append(( centroid, ("",[]) ))
 
@@ -1093,14 +1091,14 @@ class Timestep_lightweight(Lightweight_container):
 
         for element in datasets:
             if element[0] not in paths:
-                if len(element[1]) is not 0:
+                if len(element[1]) != 0:
                     paths.append(element[0])
                     path_data.append(element[1])
 
             else:
                 index = paths.index(element[0])
 
-                if len(element[1]) is not 0:
+                if len(element[1]) != 0:
                     path_data[index] = np.append(path_data[index], element[1], 0)
 
         return (paths, path_data)
@@ -1148,7 +1146,6 @@ class Timestep_lightweight(Lightweight_container):
         topo_data.attrib["Precision"] = "8"
 
         topo_data.text = topo_data_path
-        topo_shape = h5_handle[h5_path+path[0]].shape
         topo_data.attrib["Dimensions"] = str(topo_data_element.shape[0])+" "+str(topo_data_element.shape[1])
 
 
@@ -1195,7 +1192,7 @@ class Uda_lightweight(Lightweight_container):
         if os.path.isdir(root_folder):
             self.root_folder = root_folder
 
-            if self.root_folder[-1] is not "/":
+            if self.root_folder[-1] != "/":
                 self.root_folder += "/"
 
             read_error = self._read_input()
@@ -1368,7 +1365,6 @@ class Uda_lightweight(Lightweight_container):
 
     @staticmethod
     def generate_descriptor_parallel(item):
-        result = []
 
         item.parse()
 
@@ -1413,8 +1409,6 @@ class Uda_lightweight(Lightweight_container):
         @param xmf_handle the handle of the opened xmf file
         @return xml root node
         """
-        h5_path = self.name+"/"
-        h5_root = h5_filename+":"+h5_path
 
         root = ET.Element("Xdmf")
         root.attrib["Version"] = "2.0"
