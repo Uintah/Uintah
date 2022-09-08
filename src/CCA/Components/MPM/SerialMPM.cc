@@ -4180,7 +4180,8 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            dissolutionModel->setTemperature(geoTemp_K);
            dissolutionModel->setPhase(flags->d_currentPhase);
            dissolutionModel->setTimeConversionFactor(geoInterval/uintahDisTime);
-           dissolutionModel->setGrowthFractionRate(qtzGrowthVecF/uintahDisTime);
+           dissolutionModel->setGrowthFractionRate(
+                                                qtzGrowthVecF/uintahPrecipTime);
           }
         }
         if(isProc0_macro){
