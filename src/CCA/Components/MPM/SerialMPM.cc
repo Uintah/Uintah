@@ -2643,7 +2643,8 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get the arrays of particle values to be changed
@@ -2663,25 +2664,27 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity,    lb->gVelocityLabel,   dwi,patch,gac,NGP);
 
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
+      if(!mpm_matl->getIsRigid()){
+        // Loop over particles
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
 
-        // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                  psize[idx]);
-        // Accumulate the contribution from each surrounding vertex
-        Vector vel(0.0,0.0,0.0);
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel      += gvelocity[node]  * S[k];
+          // Get the node indices that surround the cell
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                    psize[idx]);
+          // Accumulate the contribution from each surrounding vertex
+          Vector vel(0.0,0.0,0.0);
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel      += gvelocity[node]  * S[k];
+          }
+          pvelSSPlus[idx]    = vel;
         }
-        pvelSSPlus[idx]    = vel;
-      }
-    }
+      }  // only do this if the material is not rigid
+    }  // loop over materials
     delete interpolator;
-  }
+  } // loop over patches
 }
 
 void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
@@ -2704,7 +2707,8 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -2727,28 +2731,31 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
       gvelSPSSP.initialize(Vector(0,0,0));
 
-      // Loop over particles
-      for (ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        int NN =
-           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
-        Vector pmom = pvelSSPlus[idx]*pmass[idx];
+      if(!mpm_matl->getIsRigid()){
+        // Loop over particles
+        for (ParticleSubset::iterator iter = pset->begin();
+             iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          int NN =
+             interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+          Vector pmom = pvelSSPlus[idx]*pmass[idx];
 
-        IntVector node;
-        for(int k = 0; k < NN; k++) {
-          node = ni[k];
-          if(patch->containsNode(node)) {
-            gvelSPSSP[node] += pmom * S[k];
+          IntVector node;
+          for(int k = 0; k < NN; k++) {
+            node = ni[k];
+            if(patch->containsNode(node)) {
+              gvelSPSSP[node] += pmom * S[k];
+            }
           }
-        }
-      } // End of particle loop
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        gvelSPSSP[c] /= gmass[c];
-      }
-    }
+        } // End of particle loop
+
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                         !iter.done();iter++){
+          IntVector c = *iter;
+          gvelSPSSP[c] /= gmass[c];
+        }  // loop over nodes
+      }  // only do if not a rigid material
+    } // loop over materials
     delete interpolator;
   }
 }
@@ -3835,7 +3842,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
 
-      if(flags->d_XPIC2){
+      if(flags->d_XPIC2 && !mpm_matl->getIsRigid()){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
