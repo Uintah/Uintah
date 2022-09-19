@@ -681,6 +681,8 @@ SimulationController::ReportStats(const ProcessorGroup*,
     auto hrs  =  duration_cast<hours>(mins);             // min -> hrs
     mins     -=  duration_cast<minutes>(hrs);
     
+    int hrs_setw = std::fmax( 2 , floor( log10(hrs.count()) ) );           // hrs can be a large number
+    
     message << std::left
             << "Timestep "      << std::setw(8)  << m_application->getTimeStep()
             << "Time="          << std::setw(12) << m_application->getSimTime()
@@ -689,7 +691,7 @@ SimulationController::ReportStats(const ProcessorGroup*,
 //          << "Net Wall Time=" << std::setw(10) << timeStepTime.seconds()
             << "EMA="           << std::setw(12) << m_wall_timers.ExpMovingAverage().seconds()
             << std::right
-            << "ETC="           << std::setfill('0') << std::setw(2) << hrs.count()  << ":" 
+            << "ETC="           << std::setfill('0') << std::setw(hrs_setw) << hrs.count()  << ":" 
                                 << std::setfill('0') << std::setw(2) << mins.count() << ":" 
                                 << std::setfill('0') << std::setw(2) << secs.count() << "  "
             << std::left;
