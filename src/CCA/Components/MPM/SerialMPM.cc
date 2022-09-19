@@ -38,6 +38,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -1989,6 +1990,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
                                lb->pExternalForceCorner4Label, pset);
       }
       int nofPressureBCs = 0;
+      int nofTorqueBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         if (bcs_type == "Pressure") {
@@ -2035,7 +2037,39 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
             } // if pLoadCurveID...
            } // Loop over elements of the loadCurveID IntVector
           }  // loop over particles
-        }   // if pressure loop
+        } else if (bcs_type == "Torque") {
+          // Get the material points per load curve
+          sumlong_vartype numPart = 0;
+          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                      0, nofPressureBCs++);
+
+          // Save the material points per load curve in the PressureBC object
+          TorqueBC* tbc =
+            dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          tbc->numMaterialPoints(numPart);
+
+          if (cout_dbg.active())
+          cout_dbg << "    Load Curve = "
+                   << nofPressureBCs << " Num Particles = " << numPart << endl;
+
+          // Calculate the force per particle at t = 0.0
+          double torquePerPart = tbc->torquePerParticle(time);
+
+          // Loop through the patches and calculate the force vector
+          // at each particle
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce[idx] = Vector(0.,0.,0.);
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofPressureBCs) {
+               pExternalForce[idx] += tbc->getForceVector(px[idx],
+                                                          torquePerPart,time);
+            } // if pLoadCurveID...
+           } // Loop over elements of the loadCurveID IntVector
+          }  // loop over particles
+        }  // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
   }      // patch loop
