@@ -66,7 +66,6 @@ namespace Uintah {
                                     const GridP            & grid );
 
     virtual bool needRecompile( const GridP& grid );
-    virtual void restartInitialize();
 
     virtual double recomputeDelT( const double delT );
 

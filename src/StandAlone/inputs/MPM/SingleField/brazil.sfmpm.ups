@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Brazilian Test</title>
+       <info>No info yet </info>
+   </Meta>
+
+   <SimulationComponent type="sfmpm" />
+
+   <Time>
+       <maxTime>200.0 </maxTime>
+<!--
+       <maxTime>0.03</maxTime>
+-->
+       <initTime>0.0</initTime>
+       <delt_min>0.000000004</delt_min>
+       <delt_max>0.04</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+       <filebase>BrazilSF.uda</filebase>
+       <outputInterval>1.0</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "BndyForce_yminus"/>
+       <save label = "p.x"/>
+       <save label = "p.epsf" levels = "-1"/>
+       <save label = "p.localizedMPM" levels = "-1"/>
+       <save label = "p.velocity"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.color"/>
+       <save label = "p.particleID"/>
+       <save label = "p.stress"/>
+       <save label = "p.surface"/>
+<!--
+       <save label = "p.externalforce"/>
+       <save label = "massBurnFraction"/>
+       <save label = "p.volume"/>
+       <save label = "p.loadCurveID"/>
+       <save label = "g.surfnorm"/>
+-->
+       <checkpoint cycle = "2" interval = "200.0"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator> explicit  </time_integrator>
+       <interpolator>    gimp </interpolator>
+       <use_load_curves> false     </use_load_curves>
+       <XPIC2>           false     </XPIC2>
+       <withColor>       true      </withColor>
+       <boundary_traction_faces>[yminus]</boundary_traction_faces>
+       <DoExplicitHeatConduction> false </DoExplicitHeatConduction>
+<!--
+       <artificial_damping_coeff> 1.0  </artificial_damping_coeff>
+-->
+       <DoPressureStabilization>  false </DoPressureStabilization>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0.0,0.0,0.0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+        <material name = "Piston" >
+           <include href="QuartzElastic.xml" />
+           <geom_object>
+             <box label="top">
+               <min>[ -.1, 0.52, -.05] </min>
+               <max>[ 0.6, 0.58, 0.05] </max>
+             </box>
+             <res>[2,2,1]</res>
+             <velocity>[0.0,-2.0e-5,0.0]</velocity>
+             <temperature>10</temperature>
+             <color>-2</color>
+           </geom_object>
+        </material>
+
+        <material name="grain_0">
+           <include href="QuartzBrittle.xml" />
+           <geom_object>
+             <cylinder label = "gp1">
+               <bottom>[0.25,0.24,-.05]</bottom>
+               <top>[   0.25,0.24,0.05]</top>
+               <radius> 0.24 </radius>
+             </cylinder>
+             <res>[2,2,1]</res>
+             <velocity>[0.0,0.0,0]</velocity>
+             <temperature>12</temperature>
+             <color>             0               </color>
+           </geom_object>
+        </material>
+
+        <material name = "Slab" >
+           <include href="QuartzElastic.xml" />
+           <geom_object>
+             <box label="slab">
+               <min>[ -.1, 0.48, -.05] </min>
+               <max>[ 0.6, 0.52, 0.05] </max>
+             </box>
+             <res>[2,2,1]</res>
+             <velocity>[0.0,-2.0e-5,0.0]</velocity>
+             <temperature>10</temperature>
+             <color>-2</color>
+           </geom_object>
+        </material>
+
+<!--
+        <contact>
+          <type>specified</type>
+          <materials>[0,1]</materials>
+          <direction>[0,1,0]</direction>
+          <mu> 0.8 </mu>
+          <volume_constraint>0.1</volume_constraint>
+          <separation_factor>0.9</separation_factor>
+        </contact>
+-->
+
+       </MPM>
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "y-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "y+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "z-">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+          <Face side = "z+">
+            <BCType id="all" label="Symmetric" var="symmetry"> </BCType>
+          </Face>
+       </BoundaryConditions>
+       <Level>
+         <Box label="1">
+            <lower>[ -.04,  0.0, 0.0]</lower>
+            <upper>[ 0.54,  0.6, 0.02]</upper>
+            <resolution>[29,30,1]</resolution>
+            <patches>[2,2,1]</patches>
+            <extraCells>[1,1,1]</extraCells>
+         </Box>
+       </Level>
+    </Grid>
+
+<!--
+    <PhysicalBC>
+     <MPM>
+      <pressure>
+        <geom_object>
+         <box label="y+face">
+           <min>[ -.1, 0.699, 0.0] </min>
+           <max>[ 0.6, 0.701, 0.05]</max>
+         </box>
+        </geom_object>
+        <load_curve>
+          <id>1</id>
+          <time_point>
+            <time>0.0</time>
+            <load>-0.1</load>
+            <maxKE>0.0001</maxKE>
+          </time_point>
+          <time_point>
+            <time>500.0</time>
+            <load>-500</load>
+            <maxKE>2e-6</maxKE>
+          </time_point>
+          <time_point>
+            <time>1000.0</time>
+            <load>-500</load>
+            <maxKE>2e-6</maxKE>
+          </time_point>
+        </load_curve>
+      </pressure>
+     </MPM>
+    </PhysicalBC>
+-->
+</Uintah_specification>

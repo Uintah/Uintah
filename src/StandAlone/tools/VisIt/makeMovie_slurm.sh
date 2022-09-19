@@ -50,15 +50,18 @@ main()
   declare -g sessionFile="/uufs/chpc.utah.edu/common/home/harman-group3/harman/RZero/JPMC_confRoom/v01.0.1/volVis/volVis.session"
   declare -g outputDir="/uufs/chpc.utah.edu/common/home/harman-group3/harman/RZero/JPMC_confRoom/v01.0.1/volVis"
   declare -g sourceUda="/uufs/chpc.utah.edu/common/home/harman-group3/harman/RZero/JPMC_confRoom/v01.0.1/masterUda/index.xml"
-  declare -g nNodes=1
   declare -g nProcs=20
   declare -g time=4:00:00
   declare -g geometry=1952x780
   declare -g partition=smithp-ash
   declare -g bank=smithp-ash-cs
-  declare -g desc=v01
+  declare -g desc=volVis
   declare -g start=0
 
+
+  maxUdaFrames=$( (grep -c oldDelt "$sourceUda" ) )
+  echo "Number of frames in the sourceUda: $maxUdaFrames"
+  
   if [[ (! -f "$sourceUda") || (! -f "$sessionFile") ]]; then
     echo "ERROR: the sourceUda or session file was not found"
     exit
@@ -69,6 +72,14 @@ main()
    for (( start=frameLo; start<frameHi; start+=increment )); do
 
     declare -g end=$((start+increment))
+    
+    # bulletproofing
+    if [ $end -gt $maxUdaFrames ]; then
+      echo "WARNING:  The uda $sourceUda does not contain $end timesteps. Now clamping...."
+      end=$maxUdaFrames
+      increment=1000
+    fi
+
     declare -g jobName="movie-$desc-$start-$end"
 
     sbatch_header
@@ -89,14 +100,14 @@ sbatch_header()
 {
 cat << EOF > batch.slrm
 #!/bin/bash
-#SBATCH --nodes $nNodes
+
 #SBATCH --ntasks $nProcs
 #SBATCH --partition $partition
 #SBATCH --account $bank
 #SBATCH --time $time
 #SBATCH --job-name $jobName
 #SBATCH --output "out.$jobName"
-#SBATCH --exclude=ash253
+##SBATCH --exclude=ash253
 EOF
 }
 
@@ -116,12 +127,9 @@ cat << EOF >> batch.slrm
   -fps 10 \\
   -ignoresessionengines \\
   -par \
-  -l  sbatch/mpirun\
-  -p  $partition \
-  -b  $bank \
-  -n  $jobName \
-  -nn $nNodes \
+  -l  mpirun\
   -np $nProcs\\
+  -launch localhost \\
   -source $sourceUda \\
   -output $outputDir/movie.  \\
   -sessionfile $sessionFile

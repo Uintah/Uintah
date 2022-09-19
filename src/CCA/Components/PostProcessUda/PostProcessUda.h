@@ -74,11 +74,6 @@ namespace Uintah {
     virtual void scheduleRefine                ( const PatchSet*, SchedulerP& ){};
     virtual void scheduleRefineInterface       ( const LevelP& , SchedulerP& , bool, bool){};
 
-
-    double getMaxTime();
-
-    double getInitialTime();
-
     GridP getGrid(const GridP & currentGrid);
   //______________________________________________________________________
   //
@@ -102,28 +97,21 @@ namespace Uintah {
                          DataWarehouse* /*old_dw*/,
                          DataWarehouse* new_dw);
 
-    void finalizeTimestep(const ProcessorGroup*,
-                          const PatchSubset*,
-                          const MaterialSubset*,
-                          DataWarehouse*,
-                          DataWarehouse* );
-
     void doAnalysis(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
-                    
-    enum {NOTUSED = -9};
+
     std::string            d_udaDir;
 
     std::vector<int>       d_udaTimesteps;
     std::vector<int>       d_numMatls;
     std::vector<double>    d_udaTimes;
+    std::vector<double>    d_udaDelT;
     std::vector<VarLabel*> d_udaSavedLabels;
 
     DataArchive          * d_dataArchive = nullptr;
-
     int                    d_simTimestep = 0;
 
     std::vector<Module*>         d_Modules;             // postProcess modules

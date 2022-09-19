@@ -41,6 +41,5 @@ SRCS     += \
         $(SRCDIR)/Hooke.F          \
         $(SRCDIR)/Kayenta_calcs.F  \
         $(SRCDIR)/MIGUtilsF.F      \
-        $(SRCDIR)/MIGUtils.cc      \
-        $(SRCDIR)/diamm.F
+        $(SRCDIR)/MIGUtils.cc
 

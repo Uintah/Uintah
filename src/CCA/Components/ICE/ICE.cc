@@ -715,6 +715,11 @@ void ICE::scheduleInitialize(const LevelP & level,
     m_solver->scheduleInitialize(level,sched, ice_matls);
   }
 
+
+  //__________________________________
+  //  Exchange Model
+  d_exchModel->sched_initialize( sched, level );
+
   //__________________________________
   //  Wall shear stress model initialization
   if( d_WallShearStressModel ){
@@ -791,23 +796,7 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
     AnalysisModule* am = *iter;
     am->scheduleRestartInitialize( sched, level);
   }
-
-}
-/* _____________________________________________________________________
- Task:      ICE::restartInitialize--
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
-_____________________________________________________________________*/
-void ICE::restartInitialize()
-{
-  DOUTR( m_ice_tasks, " ICE:;restartInitialize ");
-  //__________________________________
-  //  dataAnalysis
-  for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
-    AnalysisModule* am = *iter;
-    am->restartInitialize();
-  }
-
+  
   //__________________________________
   // ICE: Material specific flags
   unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
@@ -834,7 +823,6 @@ void ICE::restartInitialize()
                                 __FILE__, __LINE__);
   }
 }
-
 /* _____________________________________________________________________
  Task:    scheduleComputeStableTimeStep--
  Purpose: Scheduling for task that computes the stable timestep.

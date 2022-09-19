@@ -82,8 +82,6 @@ namespace Uintah {
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level) = 0;
 
-    virtual void restartInitialize() = 0;
-
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level) = 0;
 

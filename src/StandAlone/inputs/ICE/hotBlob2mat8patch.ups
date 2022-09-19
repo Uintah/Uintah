@@ -218,7 +218,11 @@
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
+<<<<<<< HEAD
          <material name="hotAir">
+=======
+         <material name="hotGas">
+>>>>>>> 4a5f0968c24b52d7dd164d2383d54f446e31dc8c
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>

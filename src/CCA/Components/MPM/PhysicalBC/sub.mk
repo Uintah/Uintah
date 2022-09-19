@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/HydrostaticBC.cc         \
 	$(SRCDIR)/ForceBC.cc               \
 	$(SRCDIR)/PressureBC.cc            \
+	$(SRCDIR)/TorqueBC.cc              \
 	$(SRCDIR)/ScalarFluxBC.cc          \
 	$(SRCDIR)/HeatFluxBC.cc            \
 	$(SRCDIR)/FluxBCModel.cc           \

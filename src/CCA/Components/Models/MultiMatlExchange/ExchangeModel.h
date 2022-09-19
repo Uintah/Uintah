@@ -53,6 +53,9 @@ namespace Uintah {
     virtual void problemSetup(const ProblemSpecP & prob_spec ) = 0;
     
     virtual void outputProblemSpec(ProblemSpecP & prob_spec ) = 0;
+
+    virtual void sched_initialize( SchedulerP&,
+                                   const LevelP& level) = 0;
   
     virtual void sched_PreExchangeTasks(SchedulerP           & sched,
                                         const PatchSet       * patches,     

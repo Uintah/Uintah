@@ -22,26 +22,24 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
-#define Packages_Uintah_CCA_Components_PostProcessUda_spatioTemporalAvg_h
-
-#include <CCA/Components/PostProcessUda/Module.h>
+#ifndef Packages_Uintah_CCA_Components_OnTheFlyAnalysis_spatialAvg_h
+#define Packages_Uintah_CCA_Components_OnTheFlyAnalysis_spatialAvg_h
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/LevelP.h>
 
 namespace Uintah{
-namespace postProcess{
 
 /**************************************
 
 CLASS
-   spatioTemporalAvg
+   spatialAvg
 
 GENERAL INFORMATION
 
-   spatioTemporalAvg.h
+   spatialAvg.h
 
    Todd Harman
    Department of Mechanical Engineering
@@ -49,46 +47,52 @@ GENERAL INFORMATION
 
 
 KEYWORDS
-   spatioTemporalAvg
+   spatialAvg
 
 DESCRIPTION
-   Computes spatial,temporal averages for CCVariable<double,float,Vector>
+   Computes spatial averages for CCVariable<double,float,Vector>
 
 
 WARNING
 
 ****************************************/
-  class spatioTemporalAvg : public Module {
+  class spatialAvg : public AnalysisModule {
   public:
-    spatioTemporalAvg(ProblemSpecP    & prob_spec,
-                      MaterialManagerP& materialManager,
-                      Output          * dataArchiver,
-                      DataArchive     * dataArchive);
+    spatialAvg(const ProcessorGroup*  myworld,
+               const MaterialManagerP materialManager,
+               const ProblemSpecP&    module_spec);
 
-    spatioTemporalAvg(); 
+    spatialAvg();
 
-    virtual ~spatioTemporalAvg();
+    virtual ~spatialAvg();
 
-    virtual void problemSetup();
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              const ProblemSpecP& restart_prob_spec,
+                              GridP& grid,
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc);
+    
+    virtual void outputProblemSpec( ProblemSpecP& ps){};
 
     virtual void scheduleInitialize(SchedulerP   & sched,
                                     const LevelP & level);
+    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
 
     virtual void scheduleDoAnalysis(SchedulerP   & sched,
                                     const LevelP & level);
 
     void scheduleDoAnalysis_preReloc(SchedulerP   & sched,
                                      const LevelP & level) {};
-                                     
-    virtual int getTimestep_OldDW();
 
-    std::string getName(){ return "spatioTemporalAvg"; };
+    std::string getName(){ return "spatialAvg"; };
 
   private:
 
     //__________________________________
     //  container to hold each variable to compute stats
-    struct Qstats{
+    struct QavgVar{
       int matl;
       VarLabel* Q_Label;
       VarLabel* avgLabel;
@@ -96,32 +100,10 @@ WARNING
 
       const Uintah::TypeDescription* subtype;
 
-      // Code for keeping track of which timestep
-      int timestep;
-      bool isSet;
-
-      void initializeTimestep(){
-        timestep = 0;
-        isSet    = false;
-      }
-
-      int getStart(){
-        return timestep;
-      }
-
-      // only set the timestep once
-      void setStart( const int me) {
-        if(isSet == false){
-          timestep = me;
-          isSet   = true;
-        }
-      }
-
       void print(){
         const std::string name = Q_Label->getName();
-        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << " startTimestep: " << timestep <<"\n";
+        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName()  <<"\n";
       };
-
     };
 
     //__________________________________
@@ -144,12 +126,12 @@ WARNING
                             DataWarehouse * new_dw,
                             const PatchSubset* patches,
                             const Patch   * patch,
-                            Qstats        & Q);
+                            QavgVar        & Q);
     template <class T>
     void computeAvg( DataWarehouse  * old_dw,
                      DataWarehouse  * new_dw,
                      const Patch    * patch,
-                     Qstats         & Q);
+                     QavgVar         & Q);
 
     template <class T>
     void computeTimeAverage( const Patch         * patch,
@@ -166,32 +148,45 @@ WARNING
                 CCVariable<T>       & Qvariance,
                 IntVector           & avgBoxCells,
                 CellIterator        & iter);
-  
+
     template <class T>
     void allocateAndZeroLabels( DataWarehouse * new_dw,
                                 const Patch   * patch,
-                                Qstats        & Q);              
-                          
+                                QavgVar        & Q);
+
+    template <class T>
+    void allocateAndZero( DataWarehouse  * new_dw,
+                          const VarLabel * label,
+                          const int        matl,
+                          const Patch    * patch );
+
     enum Domain {EVERYWHERE, INTERIOR, BOUNDARIES};
     //__________________________________
     // global constants
-    const VarLabel* m_simulationTimeLabel;
-    const VarLabel* m_timeStepLabel;
-
     double    d_startTime  = 0;
     double    d_stopTime   = DBL_MAX;
-    bool      d_doTemporalAvg = false;
-    int       d_baseTimestep  = NOTUSED;           // timestep used in computing time averages
-    
+
     Domain    d_compDomain = EVERYWHERE;            // domain to compute averages
     IntVector d_monitorCell = IntVector(-9,-9,-9);  // Cell to output
     IntVector d_avgBoxCells;                        // number of cells to average over.
-    std::vector< Qstats >  d_Qstats;
+    std::vector< QavgVar >  d_QavgVars;
 
-    ProblemSpecP        d_prob_spec;
-    MaterialSet       * d_matlSet = nullptr;
-    LoadBalancer  * d_lb      = nullptr;
+    MaterialSet          * d_matlSet = {nullptr};
+    const MaterialSubset * d_matSubSet  {nullptr};
+    
+    //__________________________________
+    //
+    class proc0patch0cout {
+      public:
+        proc0patch0cout( const int nTimesPerTimestep);
+                              
+        void print(const Patch * patch,
+                   std::ostringstream& msg);
+      private:
+        int d_count             =0;        
+        int d_nTimesPerTimestep =0;        
+    
+    };
   };
-}
 }
 #endif

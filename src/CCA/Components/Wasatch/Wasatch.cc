@@ -1115,14 +1115,7 @@ namespace WasatchCore{
   void Wasatch::scheduleRestartInitialize( const Uintah::LevelP& level,
                                            Uintah::SchedulerP& sched )
   {
-    if( needPressureSolve_ ) m_solver->scheduleRestartInitialize(level, sched, materials_);
-  }
-
-  //--------------------------------------------------------------------
-  
-  void Wasatch::restartInitialize()
-  {
-    isRestarting_ = true;
+     isRestarting_ = true;
 
     // Accessing the m_materialManager->allMaterials( "Wasatch" ) must
     // be done after problemSetup. The material manager will create
@@ -1134,6 +1127,8 @@ namespace WasatchCore{
         particlesHelper_->set_materials(get_wasatch_materials());
       }
     } 
+    
+    if( needPressureSolve_ ) m_solver->scheduleRestartInitialize(level, sched, materials_);
   }
 
   //--------------------------------------------------------------------

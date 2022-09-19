@@ -58,6 +58,7 @@ SRCS   += \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
+        $(SRCDIR)/UCNHVar.cc                   \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/SoilFoam.cc                   \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \
@@ -70,7 +71,6 @@ SRCS   += \
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
-       $(SRCDIR)/Diamm.cc                      \
        $(SRCDIR)/HypoElasticFortran.cc         \
        $(SRCDIR)/Kayenta.cc
 endif

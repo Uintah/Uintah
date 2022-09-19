@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-//  UCNH.h
+//  UCNHVar.h
 //  class ConstitutiveModel ConstitutiveModel data type -- 3D -
 //  holds ConstitutiveModel
 //  information for the FLIP technique:
@@ -31,23 +31,23 @@
 //      Usage:
 
 
-#ifndef __UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
-#define __UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
+#ifndef __UNIFIED_NEOHOOK_VAR_CONSTITUTIVE_MODEL_H__
+#define __UNIFIED_NEOHOOK_VAR_CONSTITUTIVE_MODEL_H__
 
 namespace Uintah {
   // Structures for Plasticitity
 
-struct UCNHStateData {
+struct UCNHVarStateData {
     double Alpha;
   };
   class TypeDescription;
-  const TypeDescription* fun_getTypeDescription(UCNHStateData*);
+  const TypeDescription* fun_getTypeDescription(UCNHVarStateData*);
 }
 
 #include <Core/Util/Endian.h>
 
 namespace Uintah {
-  inline void swapbytes( Uintah::UCNHStateData& d)
+  inline void swapbytes( Uintah::UCNHVarStateData& d)
   { swapbytes(d.Alpha); }
 } // namespace Uintah
 
@@ -61,10 +61,10 @@ namespace Uintah {
 #include <vector>
 
 namespace Uintah {
-  // Classes needed by UCNH
+  // Classes needed by UCNHVar
   class TypeDescription;
 
-  class UCNH : public ConstitutiveModel, public ImplicitCM {
+  class UCNHVar : public ConstitutiveModel, public ImplicitCM {
 
   ///////////////
   // Variables //
@@ -80,7 +80,6 @@ namespace Uintah {
       // For Plasticity
       double FlowStress;
       double K;
-      double Alpha;
     };
 
     struct YieldDistribution {
@@ -94,7 +93,7 @@ namespace Uintah {
 
     const VarLabel* pDeformRateLabel;
     const VarLabel* pDeformRateLabel_preReloc;
-
+    
 
     // Plasticity Requirements //
     /////////////////////////////
@@ -116,6 +115,14 @@ namespace Uintah {
     double d_tensile_cutoff;  // Fraction of the cohesion at which
                               // tensile failure occurs
 
+    // Private Data
+    // Load curve information 
+    std::vector<double> d_Color;
+    std::vector<double> d_Bulk;
+    std::vector<double> d_Shear;
+    std::vector<double> d_FlowStress;
+    std::vector<double> d_Hardening;
+
     //__________________________________
     //  Plasticity
     bool d_usePlasticity;
@@ -135,23 +142,23 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    UCNH& operator=(const UCNH &cm);
+    UCNHVar& operator=(const UCNHVar &cm);
 
     // Plasticity requirements
     //friend const TypeDescription* fun_getTypeDescriptiont(StateData*);
 
   public:
     // constructor
-    UCNH(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
+    UCNHVar(ProblemSpecP& ps, MPMFlags* flag, bool plas, bool dam);
 
     // specifcy what to output from the constitutive model to an .xml file
     virtual void outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag = true);
 
     // clone
-    UCNH* clone();
+    UCNHVar* clone();
 
     // destructor
-    virtual ~UCNH();
+    virtual ~UCNHVar();
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
@@ -162,12 +169,6 @@ namespace Uintah {
     virtual void initializeCMData(const Patch* patch,
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
-
-/*`==========TESTING==========*/
-    virtual void reinitializeCMData(const Patch* patch,
-                                    const MPMMaterial* matl,
-                                    DataWarehouse* new_dw);
-/*===========TESTING==========`*/
 
 
     // Scheduling Functions //
@@ -185,10 +186,6 @@ namespace Uintah {
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
-
-    virtual void addReinitializeComputesAndRequires(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet* patches) const;
 
 
     // Compute Functions //
@@ -250,11 +247,42 @@ namespace Uintah {
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw);
 
-  private:
+     inline CMData findPropertiesFromColor(double color){
 
+       CMData props;
+       int n_entries = static_cast<int>(d_Color.size());
+       if (color >= d_Color[n_entries-1]){
+          props.Bulk       = d_Bulk[n_entries-1];
+          props.tauDev     = d_Shear[n_entries-1];
+          props.FlowStress = d_FlowStress[n_entries-1];
+          props.K          = d_Hardening[n_entries-1];
+          return props;
+       }
+
+       for (int ii = 1; ii < n_entries; ++ii) {
+        if (color <= d_Color[ii]) {
+          double s = (d_Color[ii]-color)/(d_Color[ii]-d_Color[ii-1]);
+          props.Bulk       = d_Bulk[ii-1]*s + d_Bulk[ii]*(1.0-s);
+          props.tauDev     = d_Shear[ii-1]*s + d_Shear[ii]*(1.0-s);
+          props.FlowStress = d_FlowStress[ii-1]*s + d_FlowStress[ii]*(1.0-s);
+          props.K          = d_Hardening[ii-1]*s + d_Hardening[ii]*(1.0-s);
+          return props;
+         }
+       }
+
+       props.Bulk       = d_Bulk[0];
+       props.tauDev     = d_Shear[0];
+       props.FlowStress = d_FlowStress[0];
+       props.K          = d_Hardening[0];
+       return props;
+     }
+
+
+  private:
+    
     void getYieldStressDistribution(ProblemSpecP& ps);
 
-    void setYieldStressDistribution(const UCNH* cm);
+    void setYieldStressDistribution(const UCNHVar* cm);
 
     void createPlasticityLabels();
 
@@ -295,4 +323,4 @@ namespace Uintah {
   };
 } // End namespace Uintah
 
-#endif  // __UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__
+#endif  // __UNIFIED_NEOHOOK_VAR_CONSTITUTIVE_MODEL_H__

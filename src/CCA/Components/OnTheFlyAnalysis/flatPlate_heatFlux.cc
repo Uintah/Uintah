@@ -196,10 +196,6 @@ void flatPlate_heatFlux::initialize(const ProcessorGroup*,
 {
 }
 
-void flatPlate_heatFlux::restartInitialize()
-{
-}
-
 //______________________________________________________________________
 void flatPlate_heatFlux::scheduleDoAnalysis(SchedulerP& sched,
                                             const LevelP& level)

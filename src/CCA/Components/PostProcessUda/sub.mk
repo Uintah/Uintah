@@ -35,8 +35,7 @@ SRCDIR := CCA/Components/PostProcessUda
 SRCS += \
 	$(SRCDIR)/PostProcessUda.cc       \
 	$(SRCDIR)/Module.cc               \
-	$(SRCDIR)/ModuleFactory.cc        \
-       $(SRCDIR)/spatioTemporalAvg.cc
+	$(SRCDIR)/ModuleFactory.cc
 
 PSELIBS := \
 	CCA/Components/Application \

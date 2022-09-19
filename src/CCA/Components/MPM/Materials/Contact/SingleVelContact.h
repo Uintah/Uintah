@@ -83,6 +83,7 @@ WARNING
          SingleVelContact& operator=(const SingleVelContact &con);
          
          MaterialManagerP    d_materialManager;
+         int                 d_excludeMatl;
          
       public:
          // Constructor

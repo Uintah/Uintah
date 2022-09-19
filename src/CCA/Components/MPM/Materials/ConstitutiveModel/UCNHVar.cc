@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNH.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNHVar.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
@@ -55,16 +55,46 @@ using namespace Uintah;
 //
 //______________________________________________________________________
 //
-UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
+UCNHVar::UCNHVar(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 : ConstitutiveModel(Mflag), ImplicitCM()
 {
+  ProblemSpecP properties = ps->findBlock("variable_properties");
+  if (!properties){
+     throw ProblemSetupException("**ERROR** No variable properties specified.",
+                                  __FILE__, __LINE__);
+  }
+  double bulk_mod_max = 0.0;
+  double shear_mod_max = 0.0;
+  for( ProblemSpecP varProp = properties->findBlock("entry");
+       varProp != nullptr;
+       varProp = varProp->findNextBlock("entry") ) {
+     double C = 0.0;
+     double K = 0.0;
+     double G = 0.0;
+     double Y = 0.0;
+     double H = 0.0;
+     varProp->require("color",              C);
+     varProp->require("bulk_modulus",       K);
+     varProp->require("shear_modulus",      G);
+     varProp->require("yield_stress",       Y);
+     varProp->require("hardening_modulus",  H);
+     d_Color.push_back(C);
+     d_Bulk.push_back(K);
+     d_Shear.push_back(G);
+     d_FlowStress.push_back(Y);
+     d_Hardening.push_back(H);
+     bulk_mod_max  = max(K, bulk_mod_max);
+     shear_mod_max = max(K, shear_mod_max);
+  }
+  d_initialData.Bulk=bulk_mod_max;
+  d_initialData.tauDev=shear_mod_max;
+  if(d_Color.size() < 2){
+     cout << "d_Color.size() = " << d_Color.size() << endl;
+     throw ProblemSetupException("**ERROR** Need at least two entries in Var model..",
+                                  __FILE__, __LINE__);
+  }
 
   d_useModifiedEOS = false;
-  ps->require("bulk_modulus",         d_initialData.Bulk);
-  ps->require("shear_modulus",        d_initialData.tauDev);
-  ps->get("useModifiedEOS",           d_useModifiedEOS);
-
-  ps->getWithDefault( "reinitializeCMData", d_reinitializeCMData, false );
   d_8or27=Mflag->d_8or27;
 
   //__________________________________
@@ -72,10 +102,6 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   ps->getWithDefault("usePlasticity", d_usePlasticity, plas);
 
   if(d_usePlasticity) {
-    ps->getWithDefault("alpha",       d_initialData.Alpha,0.0);
-    ps->require("yield_stress",       d_initialData.FlowStress);
-    ps->require("hardening_modulus",  d_initialData.K);
-
     getYieldStressDistribution(ps);
 
     createPlasticityLabels();
@@ -93,7 +119,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
 
 //______________________________________________________________________
 //  Labels needed for plasticity Models
-void UCNH::createPlasticityLabels()
+void UCNHVar::createPlasticityLabels()
 {
   const TypeDescription* P_dbl =ParticleVariable<double>::getTypeDescription();
   const TypeDescription* P_mat3=ParticleVariable<Matrix3>::getTypeDescription();
@@ -109,7 +135,7 @@ void UCNH::createPlasticityLabels()
 
 //______________________________________________________________________
 //
-void UCNH::getYieldStressDistribution(ProblemSpecP& ps)
+void UCNHVar::getYieldStressDistribution(ProblemSpecP& ps)
 {
   d_yield.dist   = "constant";
   d_yield.range  = 0.0;  // yield stress = FlowStress +- range
@@ -123,7 +149,7 @@ void UCNH::getYieldStressDistribution(ProblemSpecP& ps)
 }
 //______________________________________________________________________
 //
-void UCNH::setYieldStressDistribution(const UCNH* cm)
+void UCNHVar::setYieldStressDistribution(const UCNHVar* cm)
 {
   d_yield.dist   = cm->d_yield.dist;
   d_yield.range  = cm->d_yield.range;
@@ -132,46 +158,36 @@ void UCNH::setYieldStressDistribution(const UCNH* cm)
 
 //______________________________________________________________________
 //
-void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
+void UCNHVar::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","UCNH");
+    cm_ps->setAttribute("type","UCNHVar");
   }
 
-  cm_ps->appendElement("reinitializeCMData",       false );
-  cm_ps->appendElement("bulk_modulus",             d_initialData.Bulk);
-  cm_ps->appendElement("shear_modulus",            d_initialData.tauDev);
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
 
-  // Plasticity
-  if(d_usePlasticity) {
-    cm_ps->appendElement("yield_stress",           d_initialData.FlowStress);
-    cm_ps->appendElement("hardening_modulus",      d_initialData.K);
-    cm_ps->appendElement("alpha",                  d_initialData.Alpha);
-    cm_ps->appendElement("yield_distrib",          d_yield.dist);
-    if (d_yield.dist == "uniform") {
-      cm_ps->appendElement("yield_range",          d_yield.range);
-      cm_ps->appendElement("yield_seed",           d_yield.seed);
-    }
-  }
-  cm_ps->appendElement("useInitialStress",         d_useInitialStress);
-
-  if (d_useInitialStress) {
-    cm_ps->appendElement("initial_pressure", d_init_pressure);
+  ProblemSpecP lc_ps = ps->appendChild("variable_properties");
+  for (int i = 0; i<(int)d_Color.size();i++) {
+    ProblemSpecP time_ps = lc_ps->appendChild("entry");
+    time_ps->appendElement("color",            d_Color[i]);
+    time_ps->appendElement("bulk_modulus",     d_Bulk[i]);
+    time_ps->appendElement("shear_modulus",    d_Shear[i]);
+    time_ps->appendElement("yield_stress",     d_FlowStress[i]);
+    time_ps->appendElement("hardening_modulus",d_Hardening[i]);
   }
 }
 //______________________________________________________________________
 //
-UCNH* UCNH::clone()
+UCNHVar* UCNHVar::clone()
 {
-  return scinew UCNH(*this);
+  return scinew UCNHVar(*this);
 }
 //______________________________________________________________________
 //
-UCNH::~UCNH()
+UCNHVar::~UCNHVar()
 {
   // Plasticity Deletes
   if(d_usePlasticity) {
@@ -185,10 +201,10 @@ UCNH::~UCNH()
 }
 //______________________________________________________________________
 //
-void UCNH::carryForward(const PatchSubset* patches,
-                        const MPMMaterial* matl,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw)
+void UCNHVar::carryForward(const PatchSubset* patches,
+                            const MPMMaterial* matl,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -228,9 +244,9 @@ void UCNH::carryForward(const PatchSubset* patches,
 }
 //______________________________________________________________________
 //
-void UCNH::initializeCMData(const Patch* patch,
-                            const MPMMaterial* matl,
-                            DataWarehouse* new_dw)
+void UCNHVar::initializeCMData(const Patch* patch,
+                                const MPMMaterial* matl,
+                                DataWarehouse* new_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -268,7 +284,7 @@ void UCNH::initializeCMData(const Patch* patch,
                                      0.0, DefDiagonal,         0.0,
                                      0.0,         0.0, DefDiagonal);
 
-      for (ParticleSubset::iterator iter = pset->begin();
+      for (ParticleSubset::iterator iter = pset->begin(); 
                                     iter != pset->end(); ++iter) {
         particleIndex idx = *iter;
         pDefGrad[idx] = defGradInitial;
@@ -301,7 +317,7 @@ void UCNH::initializeCMData(const Patch* patch,
       //cout << "   seed = " << unique_seed << " first rand = " << (*randGen)() << endl;
       for(ParticleSubset::iterator iterPlas = pset->begin();
                                    iterPlas != pset->end(); iterPlas++){
-        pPlasticStrain[*iterPlas] = d_initialData.Alpha;
+        pPlasticStrain[*iterPlas] = 0.;
         double rand = (*randGen)();
         pYieldStress[*iterPlas] = d_initialData.FlowStress
                                 + (2*rand-1)*d_yield.range;
@@ -311,67 +327,25 @@ void UCNH::initializeCMData(const Patch* patch,
     } else {
       for(ParticleSubset::iterator iterPlas = pset->begin();
                                    iterPlas != pset->end(); iterPlas++){
-        pPlasticStrain[*iterPlas] = d_initialData.Alpha;
+        pPlasticStrain[*iterPlas] = 0.0;
         pYieldStress[*iterPlas]   = d_initialData.FlowStress;
         bElBar[*iterPlas]         = Identity;
       }
     }
   }
-
+  
   // If not implicit, compute timestep
   if(!(flag->d_integrator == MPMFlags::Implicit)) {
     // End by computing the stable timestep
     computeStableTimeStep(patch, matl, new_dw);
   }
 }
-
-
-/*`==========TESTING==========*/
-//______________________________________________________________________
-//
-void UCNH::reinitializeCMData(const Patch* patch,
-                              const MPMMaterial* matl,
-                              DataWarehouse* new_dw)
-{
-  Matrix3 Identity;
-  Identity.Identity();
-  Matrix3 zero(0.0);
-
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-  ParticleVariable<Matrix3> pDefGrad;
-  ParticleVariable<Matrix3> pStress;
-
-  new_dw->getModifiable(pDefGrad,    lb->pDeformationMeasureLabel, pset);
-  new_dw->getModifiable(pStress,     lb->pStressLabel,             pset);
-
-  Matrix3 stressInitial(d_init_pressure,             0.0,             0.0,
-                                    0.0, d_init_pressure,             0.0,
-                                    0.0,             0.0, d_init_pressure);
-
-  double rho_orig = matl->getInitialDensity();
-  double rho_cur  = computeDensity(rho_orig, d_init_pressure);
-  double DefDiagonal = cbrt(rho_cur/rho_orig);
-
-  Matrix3 defGradInitial(DefDiagonal,         0.0,         0.0,
-                                 0.0, DefDiagonal,         0.0,
-                                 0.0,         0.0, DefDiagonal);
-
-  for (ParticleSubset::iterator iter = pset->begin();
-                                iter != pset->end(); ++iter) {
-    particleIndex idx = *iter;
-    pDefGrad[idx] = defGradInitial;
-    pStress[idx]  = stressInitial;
-  }
-}
-/*===========TESTING==========`*/
-
 //______________________________________________________________________
 // Scheduling Functions //
 //////////////////////////
-void UCNH::addComputesAndRequires(Task* task,
-                                  const MPMMaterial* matl,
-                                  const PatchSet* patches) const
+void UCNHVar::addComputesAndRequires(Task* task,
+                                     const MPMMaterial* matl,
+                                     const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -387,11 +361,11 @@ void UCNH::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel,  matlset, gnone);
+  task->requires( Task::OldDW, d_lb->pLocalizedMPMLabel, matlset, gnone);
+  task->requires( Task::OldDW, d_lb->pColorLabel,        matlset, gnone);
 
   // Plasticity
   if(d_usePlasticity) {
-
     task->requires(Task::OldDW, pPlasticStrainLabel,   matlset, gnone);
     task->requires(Task::OldDW, pYieldStressLabel,     matlset, gnone);
     task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
@@ -400,20 +374,16 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(bElBarLabel_preReloc,               matlset);
   }
 
-  if(flag->d_with_color) {
-    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
-  }
-
   // Universal
   task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, gnone);
 }
 //______________________________________________________________________
 //
-void UCNH::addComputesAndRequires(Task* task,
-                                  const MPMMaterial* matl,
-                                  const PatchSet* patches,
-                                  const bool recurse,
-                                  const bool SchedParent) const
+void UCNHVar::addComputesAndRequires(Task* task,
+                                      const MPMMaterial* matl,
+                                      const PatchSet* patches,
+                                      const bool recurse,
+                                      const bool SchedParent) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -435,9 +405,9 @@ void UCNH::addComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void UCNH::addInitialComputesAndRequires(Task* task,
-                                         const MPMMaterial* matl,
-                                         const PatchSet*) const
+void UCNHVar::addInitialComputesAndRequires(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   // Plasticity
@@ -448,28 +418,13 @@ void UCNH::addInitialComputesAndRequires(Task* task,
   }
 }
 
-/*`==========TESTING==========*/
 //______________________________________________________________________
 //
-void UCNH::addReinitializeComputesAndRequires(Task* task,
-                                              const MPMMaterial* matl,
-                                              const PatchSet*) const
-{
-  if( d_reinitializeCMData ){
-    const MaterialSubset* matlset = matl->thisMaterial();
-    task->computes(lb->pDeformationMeasureLabel,  matlset );
-    task->computes(lb->pStressLabel,              matlset );
-  }
-}
-/*===========TESTING==========`*/
-
-//______________________________________________________________________
-//
-void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
-                             const double p_ref,
-                             double& dp_drho, double& cSquared,
-                             const MPMMaterial* matl,
-                             double temperature)
+void UCNHVar::computePressEOSCM(const double rho_cur,double& pressure,
+                                 const double p_ref,
+                                 double& dp_drho, double& cSquared,
+                                 const MPMMaterial* matl,
+                                 double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -499,11 +454,11 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
 }
 //______________________________________________________________________
 // The "CM" versions use the pressure-volume relationship of the CNH model
-double UCNH::computeRhoMicroCM(double pressure,
-                               const double p_ref,
-                               const MPMMaterial* matl,
-                               double temperature,
-                               double rho_guess)
+double UCNHVar::computeRhoMicroCM(double pressure,
+                                   const double p_ref,
+                                   const MPMMaterial* matl,
+                                   double temperature,
+                                   double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -540,9 +495,9 @@ double UCNH::computeRhoMicroCM(double pressure,
 }
 //______________________________________________________________________
 //
-void UCNH::computeStableTimeStep(const Patch* patch,
-                                  const MPMMaterial* matl,
-                                  DataWarehouse* new_dw)
+void UCNHVar::computeStableTimeStep(const Patch* patch,
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -586,21 +541,21 @@ void UCNH::computeStableTimeStep(const Patch* patch,
 }
 //______________________________________________________________________
 //
-void UCNH::computeStressTensor(const PatchSubset* patches,
-                                const MPMMaterial* matl,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void UCNHVar::computeStressTensor(const PatchSubset* patches,
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
   // Constants
   double onethird = (1.0/3.0), sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity; Identity.Identity();
 
   // Grab initial data
-  double shear    = d_initialData.tauDev;
-  double bulk     = d_initialData.Bulk;
-  double rho_orig = matl->getInitialDensity();
+  double shear    = 0.0;
+  double bulk     = 0.0;
   double flow     = 0.0;
   double K        = 0.0;
+  double rho_orig = matl->getInitialDensity();
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
@@ -615,14 +570,13 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
     // Get particle info and patch info
     int dwi              = matl->getDWIndex();
-//    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                      gan, 0, lb->pXLabel);
     Vector dx            = patch->dCell();
 
     // Particle and grid data universal to model type
     // Old data containers
-    constParticleVariable<double>  pMass, pVolume_new;
+    constParticleVariable<double>  pMass, pVolume_new, pColor;
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Vector>  pVelocity;
@@ -646,19 +600,16 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                       pPlasticStrainLabel_preReloc,     pset);
       new_dw->allocateAndPut(pYieldStress,
                                       pYieldStressLabel_preReloc,       pset);
-      new_dw->allocateAndPut(bElBar_new,
+      new_dw->allocateAndPut(bElBar_new,  
                                       bElBarLabel_preReloc,             pset);
 
       pPlasticStrain.copyData(pPlasticStrain_old);
       pYieldStress.copyData(pYieldStress_old);
-
-      // Copy initial data
-      flow  = d_initialData.FlowStress;
-      K     = d_initialData.K;
     }
 
     // Universal Gets
     old_dw->get(pMass,               lb->pMassLabel,               pset);
+    old_dw->get(pColor,              lb->pColorLabel,              pset);
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pLocalizedOld,       d_lb->pLocalizedMPMLabel,     pset);
@@ -676,6 +627,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+
+      CMData props = findPropertiesFromColor(pColor[idx]);
+      bulk  = props.Bulk;
+      shear = props.tauDev;
+      flow  = props.FlowStress;
+      K     = props.K;
 
       Matrix3 pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       double Jinc         = pDefGradInc.Determinant();
@@ -698,7 +655,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx]  << " which has mass "
              << pMass[idx] << endl;
-        throw InvalidValue("**ERROR**:Negative Jacobian in UCNH",
+        throw InvalidValue("**ERROR**:Negative Jacobian in UCNHVar",
                             __FILE__, __LINE__);
       }
 
@@ -800,12 +757,12 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 }
 //______________________________________________________________________
 //
-void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
-                                       const MPMMaterial* matl,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       Solver* solver,
-                                       const bool )
+void UCNHVar::computeStressTensorImplicit(const PatchSubset* patches,
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw,
+                                           Solver* solver,
+                                           const bool )
 
 {
   // Constants
@@ -1041,15 +998,15 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
 
 //______________________________________________________________________
 //
-double UCNH::getCompressibility()
+double UCNHVar::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
 
 //______________________________________________________________________
 //
-void UCNH::addParticleState(std::vector<const VarLabel*>& from,
-                            std::vector<const VarLabel*>& to)
+void UCNHVar::addParticleState(std::vector<const VarLabel*>& from,
+                                std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   // Plasticity
@@ -1065,10 +1022,10 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
 
 //______________________________________________________________________
 //
-void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+void UCNHVar::computeStressTensorImplicit(const PatchSubset* patches,
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
   // Constants
   double onethird = (1.0/3.0);
@@ -1092,7 +1049,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<Matrix3> pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constParticleVariable<int>     pLocalizedOld;
-
+  
   constNCVariable<Vector>        gDisp;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -1211,7 +1168,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         if (!(J > 0.0)) {
           cerr << getpid() << " " << idx << " "
                << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-          throw ParameterNotFound("**ERROR**:UCNH", __FILE__, __LINE__);
+          throw ParameterNotFound("**ERROR**:UCNHVar", __FILE__, __LINE__);
         }
 
         // Compute the deformed volume
@@ -1276,7 +1233,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
           double e = (U + W)*pVolume_new[idx]/J;
           se += e;
         }
-
+     
       } // end loop over particles
       if (flag->d_reductionVars->accStrainEnergy ||
           flag->d_reductionVars->strainEnergy) {
@@ -1289,11 +1246,11 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
 //______________________________________________________________________
 //
 /*! Compute tangent stiffness matrix */
-void UCNH::computeTangentStiffnessMatrix(const Matrix3& sigdev,
-                                          const double&  mubar,
-                                          const double&  J,
-                                          const double&  bulk,
-                                          double D[6][6])
+void UCNHVar::computeTangentStiffnessMatrix(const Matrix3& sigdev,
+                                             const double&  mubar,
+                                             const double&  J,
+                                             const double&  bulk,
+                                             double D[6][6])
 {
   double twth = 2.0/3.0;
   double frth = 2.0*twth;
@@ -1327,13 +1284,13 @@ void UCNH::computeTangentStiffnessMatrix(const Matrix3& sigdev,
 
 //______________________________________________________________________
 /*! Compute K matrix */
-void UCNH::computeStiffnessMatrix(const double B[6][24],
-                                   const double Bnl[3][24],
-                                   const double D[6][6],
-                                   const Matrix3& sig,
-                                   const double& vol_old,
-                                   const double& vol_new,
-                                   double Kmatrix[24][24])
+void UCNHVar::computeStiffnessMatrix(const double B[6][24],
+                                      const double Bnl[3][24],
+                                      const double D[6][6],
+                                      const Matrix3& sig,
+                                      const double& vol_old,
+                                      const double& vol_new,
+                                      double Kmatrix[24][24])
 {
 
   // Kmat = B.transpose()*D*B*volold
@@ -1371,8 +1328,8 @@ void UCNH::computeStiffnessMatrix(const double B[6][24],
 }
 //______________________________________________________________________
 //
-void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
-                       double Kgeo[24][24]) const
+void UCNHVar::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
+                          double Kgeo[24][24]) const
 {
   double t1, t10, t11, t12, t13, t14, t15, t16, t17;
   double t18, t19, t2, t20, t21, t22, t23, t24, t25;
@@ -2052,9 +2009,9 @@ void UCNH::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
 }
 //______________________________________________________________________
 //
-void UCNH::addSplitParticlesComputesAndRequires(Task* task,
-                                                const MPMMaterial* matl,
-                                                const PatchSet* patches)
+void UCNHVar::addSplitParticlesComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patches)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -2062,15 +2019,15 @@ void UCNH::addSplitParticlesComputesAndRequires(Task* task,
 }
 //______________________________________________________________________
 //
-void UCNH::splitCMSpecificParticleData(const Patch* patch,
-                                       const int dwi,
-                                       const int fourOrEight,
-                                       ParticleVariable<int> &prefOld,
-                                       ParticleVariable<int> &prefNew,
-                                       const unsigned int oldNumPar,
-                                       const unsigned int numNewPartNeeded,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw)
+void UCNHVar::splitCMSpecificParticleData(const Patch* patch,
+                                           const int dwi,
+                                           const int fourOrEight,
+                                           ParticleVariable<int> &prefOld,
+                                           ParticleVariable<int> &prefNew,
+                                           const unsigned int oldNumPar,
+                                           const unsigned int numNewPartNeeded,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
   // THIS IS NOT DONE, MORE WORK NEEDED FOR INELASTIC CASES!!!
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2125,8 +2082,8 @@ void UCNH::splitCMSpecificParticleData(const Patch* patch,
 }
 //______________________________________________________________________
 //
-double UCNH::computeDensity(const double& rho_orig,
-                            const double& pressure)
+double UCNHVar::computeDensity(const double& rho_orig,
+                                const double& pressure)
 {
   double bulk =  d_initialData.Bulk;
   double numer1 = bulk*bulk + pressure*pressure;
@@ -2142,11 +2099,11 @@ double UCNH::computeDensity(const double& rho_orig,
 }
 //______________________________________________________________________
 //
-void UCNH::computePressure(const double& rho_orig,
-                           const double& rho_cur,
-                           double& pressure,
-                           double& dp_drho,
-                           double& csquared)
+void UCNHVar::computePressure(const double& rho_orig,
+                               const double& rho_cur,
+                               double& pressure,
+                               double& dp_drho,
+                               double& csquared)
 {
   double bulk =  d_initialData.Bulk;
   double J = rho_orig/rho_cur;
@@ -2160,19 +2117,19 @@ namespace Uintah {
   /*
 static MPI_Datatype makeMPI_CMData()
   {
-    ASSERTEQ(sizeof(UCNH::double), sizeof(double)*0);
+    ASSERTEQ(sizeof(UCNHVar::double), sizeof(double)*0);
     MPI_Datatype mpitype;
     Uintah::MPI::Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
     Uintah::MPI::Type_commit(&mpitype);
     return mpitype;
   }
 
-  const TypeDescription* fun_getTypeDescription(UCNH::double*)
+  const TypeDescription* fun_getTypeDescription(UCNHVar::double*)
   {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-                                  "UCNH::double",
+                                  "UCNHVar::double",
                                   true, &makeMPI_CMData);
     }
     return td;

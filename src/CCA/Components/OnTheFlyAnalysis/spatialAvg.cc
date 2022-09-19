@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/PostProcessUda/spatioTemporalAvg.h>
+#include <CCA/Components/OnTheFlyAnalysis/spatialAvg.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
@@ -51,7 +51,7 @@
   <save label="avg_variance_vel_CC"/>
 
   <PostProcess>
-    <Module type = "spatioTemporalAvg">
+    <Module type = "spatialAvg">
       <timeStart>   2e-9     </timeStart>
       <timeStop>   100       </timeStop>
       <material>    Air      </material>
@@ -68,63 +68,60 @@
 ______________________________________________________________________*/
 
 using namespace Uintah;
-using namespace postProcess;
 using namespace std;
 
-static DebugStream dbg("POSTPROCESS_SPATIOTEMPORALAVG", false);
+Dout dout_OTF_spatialAvg("spatialAvg",     "OnTheFlyAnalysis", "Task scheduling and execution.", false);
+
 //______________________________________________________________________
-spatioTemporalAvg::spatioTemporalAvg(ProblemSpecP    & module_spec,
-                                     MaterialManagerP& materialManager,
-                                     Output          * dataArchiver,
-                                     DataArchive     * dataArchive)
-  : Module(module_spec, materialManager, dataArchiver, dataArchive)
-{
-  d_prob_spec = module_spec;
-
-  // Time Step
-  m_timeStepLabel = VarLabel::create(timeStep_name, timeStep_vartype::getTypeDescription());
-
-  // Simulation Time
-  m_simulationTimeLabel = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());
-}
+spatialAvg::spatialAvg( const ProcessorGroup*  myworld,
+                        const MaterialManagerP materialManager,
+                        const ProblemSpecP&    module_spec )
+  : AnalysisModule(myworld, materialManager, module_spec)
+{}
 
 //______________________________________________________________________
 //
-spatioTemporalAvg::~spatioTemporalAvg()
+spatialAvg::~spatialAvg()
 {
-  dbg << " Doing: destorying spatioTemporalAvg " << endl;
+
+  DOUTR(dout_OTF_spatialAvg, "Doing destructor statistics");
+
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
 
-  // delete each Qstats label
-  for (unsigned int i =0 ; i < d_Qstats.size(); i++) {
-    Qstats& Q = d_Qstats[i];
+  // delete each QavgVar label
+  for (unsigned int i =0 ; i < d_QavgVars.size(); i++) {
+    QavgVar& Q = d_QavgVars[i];
     VarLabel::destroy( Q.avgLabel );
     VarLabel::destroy( Q.varianceLabel );
   }
-
-  VarLabel::destroy(m_timeStepLabel);
-  VarLabel::destroy(m_simulationTimeLabel);
 }
 
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
-void spatioTemporalAvg::problemSetup()
+void spatialAvg::problemSetup(const ProblemSpecP &,
+                              const ProblemSpecP & restart_prob_spec,
+                              GridP & grid,
+                              std::vector<std::vector<const VarLabel* > > &PState,
+                              std::vector<std::vector<const VarLabel* > > &PState_preReloc)
 {
-  dbg << "Doing problemSetup \t\t\t\tspatioTemporalAvg" << endl;
+  DOUTR(dout_OTF_spatialAvg, "Doing spatialAvg::problemSetup");
 
-  proc0cout << "__________________________________ Post Process module: spatioTemporalAvg" << endl;
-  proc0cout << "         Computing spatial Temporal average for all of the variables listed"<< endl;
+
+  int numMatls  = m_materialManager->getNumMatls();
+
+  proc0cout << "__________________________________Data Analysis module: spatialAvg" << endl;
+  proc0cout << "         Computing spatial average for all of the variables listed"<< endl;
 
   //__________________________________
   //  region to average over
-  d_prob_spec->require("avgBoxCells", d_avgBoxCells );
+  m_module_spec->require("avgBoxCells", d_avgBoxCells );
 
   //__________________________________
   //  domain
   string ans = "null";
-  d_prob_spec->get( "domain", ans );
+  m_module_spec->get( "domain", ans );
 
   ans = string_toupper(ans);
   if ( ans == "EVERYWHERE" ){
@@ -142,48 +139,63 @@ void spatioTemporalAvg::problemSetup()
 
   //__________________________________
   //  Parse ups for time variables and matlSet
-  readTimeStartStop(d_prob_spec, d_startTime, d_stopTime);
+  m_module_spec->require("timeStart",  d_startTime);
+  m_module_spec->require("timeStop",   d_stopTime);
 
-
-  d_matlSet = scinew MaterialSet();
-  map<string,int> Qmatls;
-
-  createMatlSet( d_prob_spec, d_matlSet, Qmatls );
-  proc0cout << "  StartTime: " << d_startTime << " stopTime: "<< d_stopTime << " " << *d_matlSet << endl;
-
-  //__________________________________
-  //  
-  ProblemSpecP temp_ps = d_prob_spec->findBlock("TemporalAvg");
-  
-  map<string,string> attribute;
-  temp_ps->getAttributes(attribute);
-  if ( attribute["OnOff"] == "on" ){
-    d_doTemporalAvg = true;
-    temp_ps->require( "baseTimestep", d_baseTimestep );
-    proc0cout << "  Temporal Average:  baseTimestep: " << d_baseTimestep << endl;
+  // Start time < stop time
+  if(d_startTime > d_stopTime ){
+    throw ProblemSetupException("\n ERROR:spatialAvg: startTime > stopTime. \n", __FILE__, __LINE__);
   }
   
+  proc0cout << "  StartTime: " << d_startTime << " stopTime: "<< d_stopTime << endl;
 
   // debugging
-  d_prob_spec->get("monitorCell", d_monitorCell);
+  m_module_spec->get("monitorCell", d_monitorCell);
+
+  //__________________________________
+  // find the material to extract data from.
+  Material* matl = nullptr;
+
+  if(m_module_spec->findBlock("material") ){
+    matl = m_materialManager->parseAndLookupMaterial(m_module_spec, "material");
+  }
+  else {
+    throw ProblemSetupException("ERROR:AnalysisModule:spatialAvg: Missing <material> tag. \n", __FILE__, __LINE__);
+  }
+
+  int defaultMatl = matl->getDWIndex();
+
+  vector<int> m;
+  m.push_back( defaultMatl );
 
   //__________________________________
   //  Read in variables label names
-   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+   ProblemSpecP vars_ps = m_module_spec->findBlock("Variables");
   if (!vars_ps){
-    throw ProblemSetupException("spatioTemporalAvg: Couldn't find <Variables> tag", __FILE__, __LINE__);
+    throw ProblemSetupException("spatialAvg: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
 
   for( ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != nullptr; var_spec = var_spec->findNextBlock("analyze") ) {
     map<string,string> attribute;
     var_spec->getAttributes(attribute);
 
+    //__________________________________
+    //  Read in the optional material index from the variables that may be different
+    //  from the default index and construct the material set
+    int matl = defaultMatl;
+    if (attribute["matl"].empty() == false){
+      matl = atoi(attribute["matl"].c_str());
+    }
+    
+    // bulletproofing
+    if(matl < 0 || matl > numMatls){
+      throw ProblemSetupException("spatialAvg: problemSetup: Invalid material index specified for a variable", __FILE__, __LINE__);
+    }
+    m.push_back(matl);
+    
     // What is the label name and does it exist?
     string name = attribute["label"];
-    VarLabel* label = VarLabel::find(name);
-    if(label == nullptr){
-      throw ProblemSetupException("spatioTemporalAvg label not found: " + name , __FILE__, __LINE__);
-    }
+    VarLabel* label = VarLabel::find( name, "ERROR spatialAvg::problemSetup <analyze>");
 
     //__________________________________
     // Only CCVariable doubles, floats and Vectors for now
@@ -195,55 +207,59 @@ void spatioTemporalAvg::problemSetup()
           subtype->getType() != TypeDescription::float_type &&
           subtype->getType() != TypeDescription::Vector ) ) {
       ostringstream warn;
-      warn << "ERROR:Module:spatioTemporalAvg: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
+      warn << "ERROR:Module:spatialAvg: ("<<label->getName() << " " << td->getName() << " ) has not been implemented\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
 
     //__________________________________
     // create the labels for this variable
-    Qstats Q;
-    Q.matl    = Qmatls[name];
+    QavgVar Q;
+    Q.matl    = matl;
     Q.Q_Label = label;
     Q.subtype = subtype;
-    Q.initializeTimestep();          // initialize the start timestep = 0;
 
-    Q.avgLabel      = VarLabel::create( "avg_" + name,     td);
-    Q.varianceLabel = VarLabel::create( "avg_variance_" + name, td);
-    d_Qstats.push_back( Q );
+    Q.avgLabel      = VarLabel::create( "spatialAvg_" + name,     td);
+    Q.varianceLabel = VarLabel::create( "spatialAvg_variance_" + name, td);
+    d_QavgVars.push_back( Q );
 
     //__________________________________
     //  bulletproofing
-    std::string variance = "spatioTemporalAvg_variance_"+ name;
+    std::string variance = "spatialAvg_variance_"+ name;
     ostringstream mesg;
     mesg << "";
-    if( !d_dataArchiver->isLabelSaved( variance ) ){
+    if( !m_output->isLabelSaved( variance ) ){
       mesg << variance;
     }
 
     if( mesg.str() != "" ){
       ostringstream warn;
-      warn << "WARNING:  You've activated the postProcess:spatioTemporalAvg module but your not saving the variable(s) ("
+      warn << "WARNING:  You've activated the  AnalysisModule:spatialAvg module but your not saving the variable(s) ("
            << mesg.str() << ")";
       proc0cout << warn.str() << endl;
     }
   }
-  proc0cout << "__________________________________ Post Process module: spatioTemporalAvg" << endl;
+  
+  //__________________________________
+  //  create the matl set
+  d_matlSet = scinew MaterialSet();
+  d_matlSet->addAll_unique(m);
+  d_matlSet->addReference();
+  d_matSubSet = d_matlSet->getUnion();
+  proc0cout << "__________________________________ Data Analysis module: spatialAvg" << endl;
 
 }
 
 //______________________________________________________________________
-void spatioTemporalAvg::scheduleInitialize(SchedulerP   & sched,
-                                           const LevelP & level)
+void spatialAvg::scheduleInitialize(SchedulerP   & sched,
+                                    const LevelP & level)
 {
-  printSchedule( level,dbg,"spatioTemporalAvg::scheduleInitialize" );
+  printSchedule( level, dout_OTF_spatialAvg, "spatialAvg::scheduleInitialize" );
 
-  d_lb = sched->getLoadBalancer();
+  Task* t = scinew Task("spatialAvg::initialize",
+                   this,&spatialAvg::initialize);
 
-  Task* t = scinew Task("spatioTemporalAvg::initialize",
-                   this,&spatioTemporalAvg::initialize);
-
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    const Qstats Q = d_Qstats[i];
+  for ( unsigned int i =0 ; i < d_QavgVars.size(); i++ ) {
+    const QavgVar Q = d_QavgVars[i];
     t->computes ( Q.avgLabel );
     t->computes ( Q.varianceLabel );
   }
@@ -252,18 +268,18 @@ void spatioTemporalAvg::scheduleInitialize(SchedulerP   & sched,
 
 //______________________________________________________________________
 //
-void spatioTemporalAvg::initialize(const ProcessorGroup  *,
-                                   const PatchSubset     * patches,
-                                   const MaterialSubset  *,
-                                   DataWarehouse         *,
-                                   DataWarehouse         * new_dw)
+void spatialAvg::initialize(const ProcessorGroup  *,
+                            const PatchSubset     * patches,
+                            const MaterialSubset  *,
+                            DataWarehouse         *,
+                            DataWarehouse         * new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing spatioTemporalAvg::initialize");
+    printTask(patches, patch,dout_OTF_spatialAvg,"Doing spatialAvg::initialize");
 
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+    for ( unsigned int i =0 ; i < d_QavgVars.size(); i++ ) {
+      QavgVar& Q = d_QavgVars[i];
 
       switch(Q.subtype->getType()) {
 
@@ -280,7 +296,7 @@ void spatioTemporalAvg::initialize(const ProcessorGroup  *,
           break;
         }
         default: {
-          throw InternalError("spatioTemporalAvg: invalid data type", __FILE__, __LINE__);
+          throw InternalError("spatialAvg: invalid data type", __FILE__, __LINE__);
         }
       }
     }  // loop over Qstat
@@ -289,21 +305,21 @@ void spatioTemporalAvg::initialize(const ProcessorGroup  *,
 
 //______________________________________________________________________
 //
-void spatioTemporalAvg::scheduleDoAnalysis(SchedulerP   & sched,
-                                           const LevelP & level)
+void spatialAvg::scheduleDoAnalysis(SchedulerP   & sched,
+                                    const LevelP & level)
 {
-  printSchedule( level,dbg,"spatioTemporalAvg::scheduleDoAnalysis" );
+  printSchedule( level,dout_OTF_spatialAvg,"spatialAvg::scheduleDoAnalysis" );
 
-  Task* t = scinew Task("spatioTemporalAvg::doAnalysis",
-                   this,&spatioTemporalAvg::doAnalysis);
+  Task* t = scinew Task("spatialAvg::doAnalysis",
+                   this,&spatialAvg::doAnalysis);
 
   t->requires( Task::OldDW, m_timeStepLabel);
   t->requires( Task::OldDW, m_simulationTimeLabel);
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    Qstats Q = d_Qstats[i];
+  for ( unsigned int i =0 ; i < d_QavgVars.size(); i++ ) {
+    QavgVar Q = d_QavgVars[i];
 
     // define the matl subset for this variable
     MaterialSubset* matSubSet = scinew MaterialSubset();
@@ -323,20 +339,20 @@ void spatioTemporalAvg::scheduleDoAnalysis(SchedulerP   & sched,
 }
 
 //______________________________________________________________________
-// Compute the spatioTemporalAvg for each variable the user requested
-void spatioTemporalAvg::doAnalysis(const ProcessorGroup * pg,
-                                   const PatchSubset    * patches,
-                                   const MaterialSubset * ,
-                                   DataWarehouse        * old_dw,
-                                   DataWarehouse        * new_dw)
+// Compute the spatialAvg for each variable the user requested
+void spatialAvg::doAnalysis(const ProcessorGroup * pg,
+                            const PatchSubset    * patches,
+                            const MaterialSubset * ,
+                            DataWarehouse        * old_dw,
+                            DataWarehouse        * new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,dbg,"Doing spatioTemporalAvg::doAnalysis");
+    printTask(patches, patch, dout_OTF_spatialAvg, "Doing spatialAvg::doAnalysis");
 
-    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-      Qstats& Q = d_Qstats[i];
+    for ( unsigned int i =0 ; i < d_QavgVars.size(); i++ ) {
+      QavgVar& Q = d_QavgVars[i];
 
       switch(Q.subtype->getType()) {
 
@@ -353,31 +369,31 @@ void spatioTemporalAvg::doAnalysis(const ProcessorGroup * pg,
           break;
         }
         default: {
-          throw InternalError("spatioTemporalAvg: invalid data type", __FILE__, __LINE__);
+          throw InternalError("spatialAvg: invalid data type", __FILE__, __LINE__);
         }
       }
-    }  // qstats loop
+    }  // QavgVar loop
   }  // patches
 }
 
 //______________________________________________________________________
 //  computeAvgWrapper:
 template <class T>
-void spatioTemporalAvg::computeAvgWrapper( DataWarehouse     * old_dw,
-                                           DataWarehouse     * new_dw,
-                                           const PatchSubset * patches,
-                                           const Patch       * patch,
-                                           Qstats& Q)
+void spatialAvg::computeAvgWrapper( DataWarehouse     * old_dw,
+                                    DataWarehouse     * new_dw,         
+                                    const PatchSubset * patches,        
+                                    const Patch       * patch,          
+                                    QavgVar& Q)                          
 {
   simTime_vartype simTime;
   old_dw->get( simTime, m_simulationTimeLabel );
   
   if(simTime < d_startTime || simTime > d_stopTime){
-    //proc0cout << " IGNORING------------DataAnalysis: spatioTemporalAvg" << endl;
+    //proc0cout << " IGNORING------------DataAnalysis: spatialAvg" << endl;
     allocateAndZeroLabels< T >( new_dw, patch, Q );
   }
   else {
-    //proc0cout << " Computing------------DataAnalysis: spatioTemporalAvg" << endl;
+    //proc0cout << " Computing------------DataAnalysis: spatialAvg" << endl;
 
     computeAvg< T >(old_dw, new_dw, patch, Q);
   }
@@ -388,31 +404,23 @@ void spatioTemporalAvg::computeAvgWrapper( DataWarehouse     * old_dw,
 //______________________________________________________________________
 //
 template <class T>
-void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
-                                    DataWarehouse  * new_dw,
-                                    const Patch    * patch,
-                                    Qstats& Q)
+void spatialAvg::computeAvg( DataWarehouse  * old_dw,
+                             DataWarehouse  * new_dw,
+                             const Patch    * patch,
+                             QavgVar& Q)
 {
   timeStep_vartype timeStep;
   old_dw->get( timeStep, m_timeStepLabel );
   timeStep = timeStep -1;  
   
-  static proc0patch0cout mesg( d_Qstats.size() );
+  static proc0patch0cout mesg( d_QavgVars.size() );
   ostringstream msg;
-  msg <<"    spatioTemporalAvg::computeAvg( "<< Q.Q_Label->getName() << " )\n";
+  msg <<"    spatialAvg::computeAvg( "<< Q.Q_Label->getName() << " )\n";
   mesg.print(patch, msg );
   
   //__________________________________
   
   const int matl = Q.matl;
-
-  constCCVariable<T> Qvar_old;
- 
-  if ( d_doTemporalAvg ){
-    old_dw->get ( Qvar_old, Q.Q_Label, matl, patch, Ghost::None, 0 );
-  }
-  
-  bool doComputeTimeAverage = ( d_doTemporalAvg && timeStep > (unsigned int) d_baseTimestep );
   
   constCCVariable<T> Qvar;
   new_dw->get ( Qvar,     Q.Q_Label, matl, patch, Ghost::None, 0 );
@@ -432,11 +440,7 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
   if (d_compDomain == EVERYWHERE || d_compDomain == INTERIOR ){
 
     CellIterator iter = patch->getCellIterator();
-
-    if( doComputeTimeAverage ){
-      computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg, timeStep);
-    }
-    spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, d_avgBoxCells, iter);
+    spatialAvg::query( patch, Qvar, Qavg, Qvariance, d_avgBoxCells, iter);
   }
 
   //__________________________________
@@ -454,12 +458,8 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
       avgPanelCells[pDir] = 1;
 
       CellIterator iter = patch->getFaceIterator( face, Patch::ExtraMinusEdgeCells );
-      
-      if( doComputeTimeAverage ){
-        computeTimeAverage<T>( patch, iter, Qvar, Qvar_old, Qavg, timeStep);
-      }
-      
-      spatioTemporalAvg::query( patch, Qvar, Qavg, Qvariance, avgPanelCells, iter);
+
+      spatialAvg::query( patch, Qvar, Qavg, Qvariance, avgPanelCells, iter);
 
     }  // face loop
   }
@@ -482,40 +482,12 @@ void spatioTemporalAvg::computeAvg( DataWarehouse  * old_dw,
 //______________________________________________________________________
 //
 template <class T>
-void spatioTemporalAvg::computeTimeAverage( const Patch         * patch,
-                                            CellIterator        & iter,
-                                            constCCVariable< T >& Qvar,
-                                            constCCVariable< T >& Qvar_old,
-                                            CCVariable< T >     & Qavg,
-                                            const int           & timeStep )
-{
-  T deltaTime = T( d_udaTimes[timeStep] - d_udaTimes[d_baseTimestep] );
-
-#if 0
-  static proc0patch0cout mesg( 1 );
-  ostringstream msg;
-  msg << " timeStep: " << timeStep << " udaTime: " << d_udaTimes[timeStep]
-      << " d_baseTimestep: " << d_baseTimestep << " baseTime: " << d_udaTimes[d_baseTimestep]
-      << " deltaTime: " << deltaTime << endl;
-  mesg.print(patch, msg );
-#endif
-
-  for (;!iter.done();iter++){
-    IntVector c = *iter;
-    Qavg[c] = ( Qvar[c] - Qvar_old[c] )/deltaTime;
-  }
-}
-
-
-//______________________________________________________________________
-//
-template <class T>
-void spatioTemporalAvg::query( const Patch         * patch,
-                               constCCVariable< T >& Qvar,
-                               CCVariable< T >     & Qavg,
-                               CCVariable< T >     & Qvariance,
-                               IntVector           & avgBoxCells,
-                               CellIterator        & iter)
+void spatialAvg::query( const Patch         * patch,
+                        constCCVariable< T >& Qvar,
+                        CCVariable< T >     & Qavg,
+                        CCVariable< T >     & Qvariance,
+                        IntVector           & avgBoxCells,
+                        CellIterator        & iter)
 {
   IntVector lo = iter.begin();
   IntVector hi = iter.end();
@@ -565,19 +537,55 @@ void spatioTemporalAvg::query( const Patch         * patch,
 //______________________________________________________________________
 //  allocateAndZero  averaged
 template <class T>
-void spatioTemporalAvg::allocateAndZeroLabels( DataWarehouse * new_dw,
+void spatialAvg::allocateAndZeroLabels( DataWarehouse * new_dw,
                                                const Patch   * patch,
-                                               Qstats        & Q )
+                                               QavgVar        & Q )
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.avgLabel,      matl, patch );
   allocateAndZero<T>( new_dw, Q.varianceLabel, matl, patch );
 }
 
+//______________________________________________________________________
+//  allocateAndZero
+template <class T>
+void spatialAvg::allocateAndZero( DataWarehouse * new_dw,
+                              const VarLabel * label,
+                              const int matl,
+                              const Patch * patch )
+{
+  CCVariable<T> Q;
+  new_dw->allocateAndPut( Q, label, matl, patch );
+  T zero(0.0);
+  Q.initialize( zero );
+}
+
+//______________________________________________________________________
+// Instantiate the explicit template instantiations.
+//
+template void spatialAvg::allocateAndZero<float> ( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+template void spatialAvg::allocateAndZero<double>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
+template void spatialAvg::allocateAndZero<Vector>( DataWarehouse  *, const VarLabel *, const int matl, const Patch * );
 
 //______________________________________________________________________
 //
-int spatioTemporalAvg::getTimestep_OldDW()
+spatialAvg::proc0patch0cout::proc0patch0cout( const int nPerTimestep)
 {
-  return d_baseTimestep;
+  d_nTimesPerTimestep = nPerTimestep;
+}
+
+//______________________________________________________________________
+//
+void spatialAvg::proc0patch0cout::print(const Patch * patch,
+                                   std::ostringstream& msg)
+{
+  if( d_count <= d_nTimesPerTimestep ){
+    if( patch->getID() == 0 && Uintah::Parallel::getMPIRank() == 0 && Uintah::Parallel::getMainThreadID() == std::this_thread::get_id() ){
+      std::cout << msg.str();
+      d_count += 1;  
+    }
+  } 
+  else {
+    d_count = 0;
+  }
 }

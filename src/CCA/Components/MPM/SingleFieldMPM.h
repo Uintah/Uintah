@@ -106,8 +106,6 @@ public:
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
-  virtual void restartInitialize();
-
   void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
   
   void scheduleTotalParticleCount(SchedulerP& sched,
@@ -324,6 +322,12 @@ protected:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+  void computeCurrentParticleSize(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* ,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -482,6 +486,9 @@ protected:
                                                  
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
+
+  void scheduleComputeCurrentParticleSize(SchedulerP&, const PatchSet*,
+                                          const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,

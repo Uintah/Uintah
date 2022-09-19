@@ -38,6 +38,7 @@
 #include <CCA/Components/MPM/Materials/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
@@ -398,7 +399,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
     return;
   }
-  Task* t = scinew Task( "MPM::actuallyInitialize", this, &SerialMPM::actuallyInitialize );
+  Task* t = scinew Task( "MPM::actuallyInitialize", this, 
+                   &SerialMPM::actuallyInitialize );
 
   const PatchSet* patches = level->eachPatch();
   printSchedule(patches,cout_doing,"MPM::scheduleInitialize");
@@ -540,23 +542,29 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
 
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
+
+/*`==========TESTING==========*/
+Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
+                      &SerialMPM::restartInitializeTask);
+
+  const PatchSet* patches = level->eachPatch();
+  unsigned int numMPM = m_materialManager->getNumMatls( "MPM" );
+
+  for(unsigned int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addReinitializeComputesAndRequires(t, mpm_matl, patches);
   }
 
+
+/*===========TESTING==========`*/
+
+
 #if 0
+  // to modify the particle temperature
   scheduleRestartInitializeHACK( sched, level );
-
-  Task* t = scinew Task("SerialMPM::restartInitializeTask", this,
-                        &SerialMPM::restartInitializeTask);
-
   t->modifies( lb->pTemperatureLabel );
-  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 #endif
 
 #if 0
@@ -568,26 +576,7 @@ void SerialMPM::scheduleRestartInitialize(const LevelP& level,
   }
 #endif
 
-}
-
-/* _____________________________________________________________________
- Purpose:   Set variables that are normally set during the initialization
-            phase, but get wiped clean when you restart
-_____________________________________________________________________*/
-void SerialMPM::restartInitialize()
-{
-#if 0
-  cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
-#endif
+  sched->addTask(t, level->eachPatch(),  m_materialManager->allMaterials( "MPM" ));
 }
 
 //______________________________________________________________________
@@ -1697,13 +1686,14 @@ SerialMPM::scheduleComputeParticleScaleFactor(       SchedulerP  & sched,
     return;
   }
 
-  printSchedule( patches, cout_doing, "MPM::scheduleComputeParticleScaleFactor" );
+  printSchedule( patches, cout_doing,"MPM::scheduleComputeParticleScaleFactor");
 
-  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, &SerialMPM::computeParticleScaleFactor );
+  Task * t = scinew Task( "MPM::computeParticleScaleFactor",this, 
+                          &SerialMPM::computeParticleScaleFactor );
 
-  t->requires( Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None );
-  t->requires( Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None );
-  t->computes( lb->pScaleFactorLabel_preReloc );
+  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,               Ghost::None);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, Ghost::None);
+  t->computes(lb->pScaleFactorLabel_preReloc );
 
   sched->addTask( t, patches, matls );
 }
@@ -2000,6 +1990,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
                                lb->pExternalForceCorner4Label, pset);
       }
       int nofPressureBCs = 0;
+      int nofTorqueBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         if (bcs_type == "Pressure") {
@@ -2046,7 +2037,39 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
             } // if pLoadCurveID...
            } // Loop over elements of the loadCurveID IntVector
           }  // loop over particles
-        }   // if pressure loop
+        } else if (bcs_type == "Torque") {
+          // Get the material points per load curve
+          sumlong_vartype numPart = 0;
+          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                      0, nofPressureBCs++);
+
+          // Save the material points per load curve in the PressureBC object
+          TorqueBC* tbc =
+            dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          tbc->numMaterialPoints(numPart);
+
+          if (cout_dbg.active())
+          cout_dbg << "    Load Curve = "
+                   << nofPressureBCs << " Num Particles = " << numPart << endl;
+
+          // Calculate the force per particle at t = 0.0
+          double torquePerPart = tbc->torquePerParticle(time);
+
+          // Loop through the patches and calculate the force vector
+          // at each particle
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce[idx] = Vector(0.,0.,0.);
+            for(int k=0;k<3;k++){
+             if (pLoadCurveID[idx](k) == nofPressureBCs) {
+               pExternalForce[idx] += tbc->getForceVector(px[idx],
+                                                          torquePerPart,time);
+            } // if pLoadCurveID...
+           } // Loop over elements of the loadCurveID IntVector
+          }  // loop over particles
+        }  // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
   }      // patch loop
@@ -2239,9 +2262,18 @@ void SerialMPM::restartInitializeTask(const ProcessorGroup *,
     printTask(patches, patch, cout_doing, msg);
 
     unsigned int numMatls = m_materialManager->getNumMatls( "MPM" );
+
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl =
-                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+
+/*`==========TESTING==========*/
+      if( cm->d_reinitializeCMData ){
+        cm->reinitializeCMData(patch, mpm_matl, new_dw);
+      }
+/*===========TESTING==========`*/
+
+#if 0  // used to modify the particle temperature.
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset  = new_dw->getParticleSubset( dwi, patch );
 
@@ -2253,6 +2285,7 @@ void SerialMPM::restartInitializeTask(const ProcessorGroup *,
         particleIndex idx = *iter;
         pTemperature[idx] = 310;
       }
+#endif
     }
   }
 }
@@ -2644,7 +2677,8 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get the arrays of particle values to be changed
@@ -2664,25 +2698,27 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity,    lb->gVelocityLabel,   dwi,patch,gac,NGP);
 
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
+      if(!mpm_matl->getIsRigid()){
+        // Loop over particles
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
 
-        // Get the node indices that surround the cell
-        int NN = interpolator->findCellAndWeights(px[idx], ni, S,
-                                                  psize[idx]);
-        // Accumulate the contribution from each surrounding vertex
-        Vector vel(0.0,0.0,0.0);
-        for (int k = 0; k < NN; k++) {
-          IntVector node = ni[k];
-          vel      += gvelocity[node]  * S[k];
+          // Get the node indices that surround the cell
+          int NN = interpolator->findCellAndWeights(px[idx], ni, S,
+                                                    psize[idx]);
+          // Accumulate the contribution from each surrounding vertex
+          Vector vel(0.0,0.0,0.0);
+          for (int k = 0; k < NN; k++) {
+            IntVector node = ni[k];
+            vel      += gvelocity[node]  * S[k];
+          }
+          pvelSSPlus[idx]    = vel;
         }
-        pvelSSPlus[idx]    = vel;
-      }
-    }
+      }  // only do this if the material is not rigid
+    }  // loop over materials
     delete interpolator;
-  }
+  } // loop over patches
 }
 
 void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
@@ -2705,7 +2741,8 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -2728,28 +2765,31 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
       gvelSPSSP.initialize(Vector(0,0,0));
 
-      // Loop over particles
-      for (ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        int NN =
-           interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
-        Vector pmom = pvelSSPlus[idx]*pmass[idx];
+      if(!mpm_matl->getIsRigid()){
+        // Loop over particles
+        for (ParticleSubset::iterator iter = pset->begin();
+             iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          int NN =
+             interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+          Vector pmom = pvelSSPlus[idx]*pmass[idx];
 
-        IntVector node;
-        for(int k = 0; k < NN; k++) {
-          node = ni[k];
-          if(patch->containsNode(node)) {
-            gvelSPSSP[node] += pmom * S[k];
+          IntVector node;
+          for(int k = 0; k < NN; k++) {
+            node = ni[k];
+            if(patch->containsNode(node)) {
+              gvelSPSSP[node] += pmom * S[k];
+            }
           }
-        }
-      } // End of particle loop
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        gvelSPSSP[c] /= gmass[c];
-      }
-    }
+        } // End of particle loop
+
+        for(NodeIterator iter=patch->getExtraNodeIterator();
+                         !iter.done();iter++){
+          IntVector c = *iter;
+          gvelSPSSP[c] /= gmass[c];
+        }  // loop over nodes
+      }  // only do if not a rigid material
+    } // loop over materials
     delete interpolator;
   }
 }
@@ -3836,7 +3876,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
 
-      if(flags->d_XPIC2){
+      if(flags->d_XPIC2 && !mpm_matl->getIsRigid()){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
@@ -4929,11 +4969,12 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing, "Doing MPM::computeParticleScaleFactor");
+    printTask(patches,patch,cout_doing,"Doing MPM::computeParticleScaleFactor");
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                       (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 

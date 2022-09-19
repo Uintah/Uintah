@@ -50,7 +50,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
-  } else{ 
+  } else{
     NGN=2;
   }
 }
@@ -71,18 +71,37 @@ ConstitutiveModel::~ConstitutiveModel()
   delete lb;
 }
 
-void 
+void
 ConstitutiveModel::addInitialComputesAndRequires(Task* ,
                                                  const MPMMaterial* ,
                                                  const PatchSet*) const
 {
 }
 
+/*`==========TESTING==========*/
+void
+ConstitutiveModel::addReinitializeComputesAndRequires(Task* ,
+                                                      const MPMMaterial* ,
+                                                      const PatchSet*) const
+{
+  // stub task
+}
+
+void
+ConstitutiveModel::reinitializeCMData(const Patch* patch,
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* new_dw)
+{
+  throw InternalError("Stub Task is being called and it shouldn't be: ConstitutiveModel::reinitializeCMData ", __FILE__, __LINE__);
+}
+
+/*===========TESTING==========`*/
+
 ///////////////////////////////////////////////////////////////////////
 /*! Initialize the common quantities that all the explicit constituive
  *  models compute */
 ///////////////////////////////////////////////////////////////////////
-void 
+void
 ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
@@ -109,25 +128,25 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
   }
 }
 
-void 
-ConstitutiveModel::addComputesAndRequires(Task*, 
+void
+ConstitutiveModel::addComputesAndRequires(Task*,
                                           const MPMMaterial*,
                                           const PatchSet*) const
 {
   throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);
 }
 
-void 
-ConstitutiveModel::addComputesAndRequires(Task*, 
+void
+ConstitutiveModel::addComputesAndRequires(Task*,
                                           const MPMMaterial*,
                                           const PatchSet*,
                                           const bool ,
                                           const bool) const
 {
-  throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);  
+  throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);
 }
 
-void 
+void
 ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
                                               const MaterialSubset* matlset,
                                               const PatchSet* p) const
@@ -137,7 +156,7 @@ ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
   task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
 }
 
-void 
+void
 ConstitutiveModel::addSharedCRForExplicit(Task* task,
                                           const MaterialSubset* matlset,
                                           const PatchSet* ) const
@@ -153,7 +172,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
+  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,
                                                             matlset, gnone);
   task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
 
@@ -162,7 +181,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
-void 
+void
 ConstitutiveModel::computeStressTensor(const PatchSubset*,
                                        const MPMMaterial*,
                                        DataWarehouse*,
@@ -171,7 +190,7 @@ ConstitutiveModel::computeStressTensor(const PatchSubset*,
   throw InternalError("Stub Task: ConstitutiveModel::computeStressTensor ", __FILE__, __LINE__);
 }
 
-void 
+void
 ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
                                                const MPMMaterial*,
                                                DataWarehouse*,
@@ -180,7 +199,7 @@ ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
   throw InternalError("Stub Task: ConstitutiveModel::computeStressTensorImplicit ", __FILE__, __LINE__);
 }
 
-void 
+void
 ConstitutiveModel::carryForward(const PatchSubset*,
                                 const MPMMaterial*,
                                 DataWarehouse*,
@@ -210,7 +229,7 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
   }
 }
 
-Vector 
+Vector
 ConstitutiveModel::getInitialFiberDir()
 {
   return Vector(0.,0.,1);
@@ -218,8 +237,8 @@ ConstitutiveModel::getInitialFiberDir()
 
 //______________________________________________________________________
 //______________________________________________________________________
-//          HARDWIRE FOR AN IDEAL GAS -Todd 
-double 
+//          HARDWIRE FOR AN IDEAL GAS -Todd
+double
 ConstitutiveModel::computeRhoMicro(double press, double gamma,
                                    double cv, double Temp, double rho_guess)
 {
@@ -227,9 +246,9 @@ ConstitutiveModel::computeRhoMicro(double press, double gamma,
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
-void 
+void
 ConstitutiveModel::computePressEOS(double rhoM, double gamma,
-                                   double cv, double Temp, double& press, 
+                                   double cv, double Temp, double& press,
                                    double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
@@ -241,7 +260,7 @@ ConstitutiveModel::computePressEOS(double rhoM, double gamma,
 
 
 // Convert J-integral into stress intensity (for FRACTURE)
-void 
+void
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
                                const string&,
                                const Vector&,
@@ -254,7 +273,7 @@ ConstitutiveModel::ConvertJToK(const MPMMaterial*,
 
 // Detect if crack propagtes and the propagation direction (for FRACTURE)
 short
-ConstitutiveModel::CrackPropagates(const double& , const double& , 
+ConstitutiveModel::CrackPropagates(const double& , const double& ,
                                    const double& , double& theta)
 {
   enum {NO=0, YES};
@@ -262,11 +281,11 @@ ConstitutiveModel::CrackPropagates(const double& , const double& ,
   return NO;
 }
 
-double 
-ConstitutiveModel::artificialBulkViscosity(double Dkk, 
-                                           double c_bulk, 
+double
+ConstitutiveModel::artificialBulkViscosity(double Dkk,
+                                           double c_bulk,
                                            double rho,
-                                           double dx) const 
+                                           double dx) const
 {
   double q = 0.0;
   if (Dkk < 0.0) {
@@ -286,21 +305,21 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
                                            constParticleVariable<Matrix3> psize,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           ParticleInterpolator* interp) 
+                                           ParticleInterpolator* interp)
 {
   Matrix3 dispGrad,Identity;
   Identity.Identity();
   vector<IntVector> ni(interp->size());
   vector<Vector> d_S(interp->size());
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-                                                                            
+
   for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++){
     particleIndex idx = *iter;
-                                                                            
+
     // Get the node indices that surround the cell
     interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-                                                                            
+
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
 
     // Update the deformation gradient tensor to its time n+1 value.
@@ -312,14 +331,14 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
       ostringstream warn;
       warn << "**ERROR** : ConstitutiveModel::computeDeformationGradientFromDisplacement" << endl << "Negative or zero determinant of Jacobian." << endl;
       warn << "     Particle = " << idx << " J = " << J << " position = " << px[idx] << endl;
-      warn << "     Disp Grad = " << dispGrad << endl; 
-      warn << "     F_new = " << Fnew[idx] << endl; 
+      warn << "     Disp Grad = " << dispGrad << endl;
+      warn << "     F_new = " << Fnew[idx] << endl;
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }
 }
 
-void 
+void
 ConstitutiveModel::computeDeformationGradientFromVelocity(
                                            constNCVariable<Vector> gVel,
                                            ParticleSubset* pset,
@@ -350,7 +369,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
-                                                                              
+
       // Update the deformation gradient tensor to its time n+1 value.
       Fnew[idx] = deformationGradientInc * Fold[idx];
 
@@ -360,15 +379,15 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
         warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
              << " Particle has inverted." << endl;
         warn << "     Particle = " << idx << ", J = " << J << ", position = " << px[idx]<<endl;
-        warn << "          Vel Grad = \n" << velGrad << endl; 
-        warn << "          F_inc = \n" << deformationGradientInc << endl; 
-        warn << "          F_old = \n" << Fold[idx] << endl; 
-        warn << "          F_new = \n" << Fnew[idx] << endl; 
+        warn << "          Vel Grad = \n" << velGrad << endl;
+        warn << "          F_inc = \n" << deformationGradientInc << endl;
+        warn << "          F_old = \n" << Fold[idx] << endl;
+        warn << "          F_new = \n" << Fnew[idx] << endl;
         warn << "          gVelocity:" << endl;
         for(int k = 0; k < flag->d_8or27; k++) {
           warn<< "             node: " << ni[k] << " vel: " << gVel[ni[k]] << endl;
         }
-        
+
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 
@@ -391,22 +410,22 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
   vector<double> S(interp->size());
   vector<Vector> d_S(interp->size());
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-                                                                                
+
   for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++){
     particleIndex idx = *iter;
-                                                                                
+
     // Get the node indices that surround the cell
     interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-                                                                                
+
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
-                                                                                
+
     // Update the deformation gradient tensor to its time n+1 value.
     // Compute the deformation gradient from the displacement gradient
     Fnew[idx] = Identity + dispGrad;
   }
 }
-                                                                                
+
 void
 ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
                                            constNCVariable<Vector> gDisp,
@@ -425,19 +444,19 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
     vector<Vector> d_S(interp->size());
 
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-                                                                                
+
     for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
       particleIndex idx = *iter;
-                                                                                
+
       // Get the node indices that surround the cell
       interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-                                                                                
+
       computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
-                                                                                
+
       // Compute the deformation gradient increment
       deformationGradientInc = IncDispGrad + Identity;
-                                                                                
+
       // Update the deformation gradient tensor to its time n+1 value.
       Fnew[idx] = deformationGradientInc * Fold[idx];
     }

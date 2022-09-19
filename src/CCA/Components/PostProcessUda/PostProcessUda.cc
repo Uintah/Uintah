@@ -55,10 +55,8 @@ PostProcessUda::~PostProcessUda()
     VarLabel::destroy(d_udaSavedLabels[i]);
   }
 
-  if(d_Modules.size() != 0){
-    for( auto iter  = d_Modules.begin();iter != d_Modules.end(); iter++){
-      delete *iter;
-    }
+  for( auto iter  = d_Modules.begin();iter != d_Modules.end(); iter++){
+    delete *iter;
   }
   
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++){
@@ -109,7 +107,7 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Find timestep data from the original uda
   d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myRank(), d_myworld->nRanks() );
-  d_dataArchive->queryTimesteps( d_udaTimesteps, d_udaTimes );
+  d_dataArchive->queryTimesteps( d_udaTimesteps, d_udaTimes, d_udaDelT );
   d_dataArchive->turnOffXMLCaching();
 
   proc0cout << "Time information from the original uda\n";
@@ -144,9 +142,9 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Set up data OnTheFly analysis modules
-  d_analysisModules = AnalysisModuleFactory::create(d_myworld,
-                                                    m_materialManager,
-                                                    prob_spec);
+  d_analysisModules = AnalysisModuleFactory::create( d_myworld,
+                                                     m_materialManager,
+                                                     prob_spec);
 
   for( auto iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
     AnalysisModule* am = *iter;
@@ -178,8 +176,8 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
 
 //______________________________________________________________________
 //
-void PostProcessUda::scheduleInitialize(const LevelP& level,
-                                        SchedulerP& sched)
+void PostProcessUda::scheduleInitialize(const LevelP & level,
+                                        SchedulerP   & sched)
 {
   // Misc setup calls
   Dir fromDir( d_udaDir );
@@ -202,8 +200,8 @@ void PostProcessUda::scheduleInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //  This task is only called once.
-void  PostProcessUda::scheduleTimeAdvance( const LevelP& level,
-                                           SchedulerP& sched )
+void  PostProcessUda::scheduleTimeAdvance( const LevelP & level,
+                                           SchedulerP   & sched )
 {
   sched_readDataArchive( level, sched );
 
@@ -225,8 +223,8 @@ void  PostProcessUda::scheduleTimeAdvance( const LevelP& level,
 //______________________________________________________________________
 //    Schedule for each patch that this processor owns.
 //    The DataArchiver::output() will cherry pick the variables to output
-void PostProcessUda::sched_readDataArchive(const LevelP& level,
-                                           SchedulerP& sched)
+void PostProcessUda::sched_readDataArchive( const LevelP & level,
+                                            SchedulerP   & sched)
 {
   Task* t = scinew Task("PostProcessUda::readDataArchive", this,
                         &PostProcessUda::readDataArchive);
@@ -290,56 +288,29 @@ void PostProcessUda::sched_readDataArchive(const LevelP& level,
 }
 
 //______________________________________________________________________
-//  This task reads data from the dataArchive and 'puts' it into the data Warehouse
+//  This task reads data from the dataArchive and 'puts' it into appropriate data Warehouse
 //
-void PostProcessUda::readDataArchive(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+void PostProcessUda::readDataArchive(const ProcessorGroup * pg,
+                                     const PatchSubset    * patches,
+                                     const MaterialSubset * matls,
+                                     DataWarehouse  * old_dw,
+                                     DataWarehouse  * new_dw)
 {
-  timeStep_vartype timeStep;
-  old_dw->get( timeStep, getTimeStepLabel() );
   
   double time  = d_udaTimes[d_simTimestep];
   int udaTimestep = d_udaTimesteps[d_simTimestep];
-  proc0cout << "    *** working on uda timestep: " << udaTimestep << " simTimestep: " <<  timeStep - 1 << " physical time: " << time << endl;
-
-  // populate the old_dw with variables from the uda.
-  // Only one timestep
-
-  int old_dw_timestep = NOTUSED;
-  bool isSet    = false;
-
-  for( auto iter  = d_Modules.begin(); iter != d_Modules.end(); iter++){
-    Module* m = *iter;
-    int tmp = m->getTimestep_OldDW();
-
-    // bulletproofing
-    if ( isSet && tmp != old_dw_timestep ){
-      ostringstream err;
-      err << "ERROR: PostProcessUda::readDataArchive.  The module (" << m->getName() << ") "
-          << "requested data from a previous timestep.  You can only specify one timestep for all modules.\n";
-      throw InternalError( err.str(), __FILE__, __LINE__ );
-    }
-    
-    if ( isSet == false && tmp != NOTUSED ){
-      old_dw_timestep = tmp;
-      isSet = true;
-    }
-  }
-  
+  proc0cout << "    *** working on uda timestep: " << udaTimestep << " simTimestep: " <<  d_simTimestep << " physical time: " << time << endl;
   proc0cout << "    Reading data archive " << endl;
 
 
   const Level * level = getLevel(patches);
   const GridP grid    = level->getGrid();
     
-  if( old_dw_timestep != NOTUSED && udaTimestep >= old_dw_timestep && udaTimestep > 1){
+  if( udaTimestep > 1){
     
    proc0cout << "    OLD_DW  ";
    old_dw->unfinalize();
-   d_dataArchive->postProcess_ReadUda(pg, old_dw_timestep, grid, patches, old_dw, m_loadBalancer);
+   d_dataArchive->postProcess_ReadUda(pg, d_simTimestep -1, grid, patches, old_dw, m_loadBalancer);
    old_dw->refinalize();
   }
 
@@ -385,11 +356,11 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
 
   double delt;
 
-  // For time step 0 the sim time will be 0 so the delT will simply be
+  // At timestep 0 the sim time will be 0 so the delT will simply be
   // the value of the first sim time. After that it will be the
   // differential between the time steps. Until the last which is moot.
   if ( d_simTimestep == 0 ) {
-    delt = d_udaTimes[d_simTimestep];    
+    delt = 0.0;
   } 
   else if ( d_simTimestep < (int) d_udaTimes.size() ) {
     delt = d_udaTimes[d_simTimestep] - d_udaTimes[d_simTimestep-1];
@@ -399,29 +370,6 @@ void PostProcessUda::computeDelT(const ProcessorGroup*,
   }
 
   new_dw->put(delt_vartype(delt), getDelTLabel());
-}
-
-//______________________________________________________________________
-//    Returns the physical time of the last output
-double PostProcessUda::getMaxTime()
-{
-  if (d_udaTimes.size() <= 1){
-    return 0;
-  }else {
-    return d_udaTimes[d_udaTimes.size()-2]; // the last one is the hacked one, see problemSetup
-  }
-}
-
-//______________________________________________________________________
-//    Returns the physical time of the first output
-double PostProcessUda::getInitialTime()
-{
-  if (d_udaTimes.size() <= 1){
-    return 0;
-  }
-  else {
-    return d_udaTimes[0];
-  }
 }
 
 //______________________________________________________________________

@@ -43,7 +43,7 @@
 #endif
 
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Kayenta.h>
-#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
+//#include <CCA/Components/MPM/Materials/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ProgramBurn.h>
@@ -56,6 +56,7 @@
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/TH_Water.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNH.h>
+#include <CCA/Components/MPM/Materials/ConstitutiveModel/UCNHVar.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/ViscoPlastic.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/NonLocalDruckerPrager.h>
 #include <CCA/Components/MPM/Materials/ConstitutiveModel/Arenisca.h>
@@ -167,6 +168,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (cm_type ==  "cnh_mms") {
     return( scinew CNH_MMS( child, flags ) );
   }
+  else if (cm_type ==  "UCNHVar" ){
+    return( scinew UCNHVar( child, flags, false, false ) );
+  } 
   //__________________________________
   
   else if (cm_type == "TransIsoHypoFrictional") {
@@ -238,9 +242,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     computes_pLocalizedMPM = true;
     return(scinew Kayenta(child,flags));
   }
-  else if (cm_type == "diamm"){
-    return(scinew Diamm(child,flags));
-  }
+//  else if (cm_type == "diamm"){
+//    return(scinew Diamm(child,flags));
+//  }
 #endif
 
   else if (cm_type ==  "mw_visco_elastic"){

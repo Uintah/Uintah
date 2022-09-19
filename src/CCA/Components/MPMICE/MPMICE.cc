@@ -343,26 +343,6 @@ void MPMICE::scheduleRestartInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //
-void MPMICE::restartInitialize()
-{
-  if (cout_doing.active())
-    cout_doing <<"Doing restartInitialize \t\t\t MPMICE" << endl;
-
-  d_mpm->restartInitialize();
-  d_ice->restartInitialize();
-
-  if(d_analysisModules.size() != 0){
-    vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
-      AnalysisModule* am = *iter;
-      am->restartInitialize();
-    }
-  }
-}
-
-//______________________________________________________________________
-//
 void MPMICE::scheduleComputeStableTimeStep(const LevelP& level,
                                       SchedulerP& sched)
 {
