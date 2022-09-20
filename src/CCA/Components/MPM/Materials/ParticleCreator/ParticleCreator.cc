@@ -31,6 +31,7 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/TorqueBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
@@ -452,9 +453,18 @@ IntVector ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp) 
+      if (pbc->flagMaterialPoint(pp, dxpp)
        && (pbc->loadCurveMatl()==dwi || pbc->loadCurveMatl()==-99)) {
-         ret(k) = pbc->loadCurveID(); 
+         ret(k) = pbc->loadCurveID();
+         k++;
+      }
+    }
+    else if (bcs_type == "Torque") {
+      TorqueBC* tbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (tbc->flagMaterialPoint(pp, dxpp)
+       && (tbc->loadCurveMatl()==dwi || tbc->loadCurveMatl()==-99)) {
+         ret(k) = tbc->loadCurveID();
          k++;
       }
     }
@@ -492,8 +502,13 @@ void ParticleCreator::printPhysicalBCs()
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
     if (bcs_type == "Pressure") {
-      PressureBC* pbc = 
+      PressureBC* pbc =
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *pbc << endl;
+    }
+    if (bcs_type == "Torque") {
+      TorqueBC* pbc =
+        dynamic_cast<TorqueBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *pbc << endl;
     }
     if (bcs_type == "HeatFlux") {
@@ -666,7 +681,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
-        
           IntVector idx(ix, iy, iz);
           Point p = lower + dxpp*idx;
           if (!b2.contains(p)){
@@ -1068,7 +1082,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-  
 
   if (d_with_color){
     particle_state.push_back(d_lb->pColorLabel);
@@ -1245,7 +1258,6 @@ ParticleCreator::checkForSurface2(const GeometryPieceP piece, const Point p,
   //  Check the candidate points which surround the point just passed
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
-  
   int ss = 0;
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.),true))

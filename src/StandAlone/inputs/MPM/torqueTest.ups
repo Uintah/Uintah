@@ -1,0 +1,195 @@
+<Uintah_specification>
+    <Meta>
+        <title>two layer HE Compaction</title>
+        <info>  Stuff </info>
+    </Meta>
+
+   <SimulationComponent type="mpm" />
+    <Time>
+        <maxTime>5.0</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.25</timestep_multiplier>
+    </Time>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <use_load_curves> true </use_load_curves>
+        <XPIC2>true</XPIC2>
+        <withColor>true</withColor>
+        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
+    </MPM>
+    <DataArchiver>
+        <filebase>TorqueTest.uda</filebase>
+        <outputInterval>0.1</outputInterval>
+        <save label="p.x"></save>
+        <save label="p.mass"></save>
+        <save label="p.color"></save>
+        <save label="p.volume"></save>
+        <save label="p.loadCurveID"></save>
+        <save label="p.velocity"></save>
+        <save label="p.externalforce"></save>
+        <save label="p.scalefactor"></save>
+        <save label="p.deformationMeasure"></save>
+        <save label="p.stress"></save>
+        <save label="KineticEnergy"></save>
+        <save label="g.velocity"></save>
+        <save label="RigidReactionForce"></save>
+        <save label="RigidReactionTorque"></save>
+        <checkpoint interval="5.0" cycle="2"></checkpoint>
+    </DataArchiver>
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+        <MPM>
+            <material name="Sample">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>1.e7</bulk_modulus>
+                    <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>0</temperature>
+                  <color>0</color>
+                  <cylinder label = "sample">
+                     <bottom>   [0.0,0.0,0.0]   </bottom>
+                     <top>      [0.0,0.0,1.0]   </top>
+                     <radius>   0.5             </radius>
+                   </cylinder>
+                </geom_object>
+            </material>
+
+            <material name="rigid">
+                <density>1000.0</density>
+                <thermal_conductivity>1.0</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+                <constitutive_model type="rigid">
+                  <bulk_modulus>1.e7</bulk_modulus>
+                  <shear_modulus>4.0e6</shear_modulus>
+                </constitutive_model>
+                <geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>0</temperature>
+                  <color>1</color>
+                  <box label = "stem">
+                     <min>   [-.5,-.5,-.5]   </min>
+                     <max>   [0.5,0.5,0.0]   </max>
+                   </box>
+                </geom_object>
+            </material>
+
+            <contact>
+              <type>specified</type>
+              <master_material> 1 </master_material>
+              <materials> [0,1] </materials>
+              <include_rotation> true </include_rotation>
+              <direction>[1,1,1]</direction>
+              <filename>zeroRotation.txt</filename>
+            </contact>
+        </MPM>
+    </MaterialProperties>
+
+    <PhysicalBC>
+      <MPM>
+        <pressure>
+         <geom_object>
+           <cylinder label = "circumference">
+              <bottom>   [0.0,0.0,0.999]   </bottom>
+              <top>      [0.0,0.0,1.001]   </top>
+              <radius>   0.5               </radius>
+              <cylinder_end>   true        </cylinder_end>
+            </cylinder>
+         </geom_object>
+          <load_curve>
+            <id>1</id>
+           <time_point>
+             <time> 0.0 </time>
+             <load> -0.1 </load>
+           </time_point>
+           <time_point>
+             <time> 0.0002 </time>
+             <load> -1.0e3 </load>
+           </time_point>
+           <time_point>
+             <time> 0.2001   </time>
+             <load> -1.0e3 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0001   </time>
+             <load> -1.0e3 </load>
+           </time_point>
+          </load_curve>
+        </pressure>
+        <torque>
+         <geom_object>
+           <cylinder label = "circumference">
+              <bottom>   [0.0,0.0,0.0]   </bottom>
+              <top>      [0.0,0.0,1.0]   </top>
+              <radius>   0.5             </radius>
+            </cylinder>
+         </geom_object>
+          <load_curve>
+            <id>2</id>
+           <time_point>
+             <time> 0.0 </time>
+             <load> -0.1 </load>
+           </time_point>
+           <time_point>
+             <time> 0.0002 </time>
+             <load> -1.0e3 </load>
+           </time_point>
+           <time_point>
+             <time> 0.2001   </time>
+             <load> -1.0e3 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0001   </time>
+             <load> -1.0e3 </load>
+           </time_point>
+          </load_curve>
+        </torque>
+      </MPM>
+    </PhysicalBC>
+
+    <Grid>
+        <Level>
+            <Box label="1">
+                <lower>[-1.2,-1.2,-.6]</lower>
+                <upper>[ 1.2, 1.2,1.2]</upper>
+                <extraCells>[1,1,1]</extraCells>
+                <patches>[2,2,1]</patches>
+                <resolution>[24,24,18]</resolution>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+            <Face side="x-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="x+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y-">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="y+">
+                <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z-">
+                <BCType var="symmetry" id="0" label="Symmetric"> </BCType>
+            </Face>
+            <Face side="z+">
+                <BCType var="Dirichlet" id="all" label="Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+    </Grid>
+</Uintah_specification>

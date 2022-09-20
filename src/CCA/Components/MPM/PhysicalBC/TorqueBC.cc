@@ -213,11 +213,15 @@ TorqueBC::getForceVector(const Point& px, double torquePerParticle,
   if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
 
-    Vector rad = Cross(px - gp->bottom(), d_axis)/d_axis.length();
-    Vector forceDir = Cross(rad,d_axis);
-    forceDir = forceDir/(forceDir.length() + 1.e-100);
-    //Vector normal = gp->radialDirection(px);
-    force = torquePerParticle/rad.length()*forceDir;
+    // dir is the magnitude of the radius and the direction of the force vector
+    Vector dir = Cross(px - gp->bottom(), d_axis)/d_axis.length();
+    double dirlength = dir.length();
+    force = torquePerParticle*(dir/(dirlength*dirlength));
+//    cout << "px = " << px << endl;
+//    cout << "dir = " << dir << endl;
+//    cout << "forceDir = " << forceDir << endl;
+//    cout << "force = " << force << endl;
+//    cout << "forceMag = " << force.length() << endl << endl;
   } else {
     throw ParameterNotFound("ERROR: Only cylinders work with torque BC",
                             __FILE__, __LINE__);
