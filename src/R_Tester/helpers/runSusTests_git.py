@@ -72,21 +72,28 @@ def ignorePerformanceTests( TESTS ):
         myTests.append( test )
   return myTests
         
-    
+
 #______________________________________________________________________    
 # Function used for checking the input files
 # skip tests that contain 
 #    <outputInitTimestep/> AND  outputTimestepInterval > 1
 def isValid_inputFile( inputxml, startFrom, do_restart ):
   from xml.etree.ElementTree import ElementTree
-  
+  from xml.etree.ElementTree import ParseError
+
   # these options are OK
   if startFrom == "checkpoint" or startFrom == "postProcessUda" or do_restart == 0:
     return True
 
   # load index.xml into tree
-  ET     = ElementTree()
-  uintah = ET.parse(inputxml)
+  ET = ElementTree()
+
+  try:
+    uintah = ET.parse(inputxml)
+  except ParseError:
+    print('    *** ERROR: The xml file {} is corrupt and cannot be parsed'.format(inputxml))
+    return False
+  
   
   #  Note <outputInitTimestep/> + outputTimestepInterval > 1 the uda/index.xml != restartUda/index.xml
   #             ( initTS )              ( intrvl )
