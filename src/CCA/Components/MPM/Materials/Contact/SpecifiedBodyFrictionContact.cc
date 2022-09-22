@@ -220,7 +220,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   // Retrieve necessary data from DataWarehouse
   std::vector<constNCVariable<double> > gmass(numMatls);
   std::vector<NCVariable<Vector> >      gvelocity_star(numMatls);
-  std::vector<constNCVariable<Vector> > gvelocity(numMatls);
   std::vector<constNCVariable<Vector> > ginternalForce(numMatls);
   std::vector<constNCVariable<double> > gvolume(numMatls);
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
@@ -272,16 +271,74 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
       }
     }
 
+    // If rotation axis is aligned with a ordinal direction,
+    // use the exact treatment, otherwise default to the approximate
+    int rotation_axis = -99;
+    if(d_includeRotation){
+      double ROL = requested_omega.length();
+      if(fabs(Dot(requested_omega/ROL,Vector(1.,0.,0.))) > 0.99){
+        rotation_axis=0;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,1.,0.))) > 0.99){
+        rotation_axis=1;
+      } else if(fabs(Dot(requested_omega/ROL,Vector(0.,0.,1.))) > 0.99){
+        rotation_axis=2;
+      }
+    }
+
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
+
+      Vector rotation_part(0.0,0.0,0.0);
+      Vector r(0.0,0.0,0.0);
+
+      if(d_includeRotation){
+       Point NodePos = patch->getNodePosition(c);
+       Point NewNodePos = NodePos;
+       // vector from node to a point on the axis of rotation
+       r = NodePos - requested_origin.asPoint();
+       if(rotation_axis==0){  //rotation about x-axis
+         double posz = NodePos.z() - requested_origin.z();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posz,posy);
+         double thetaPlus = theta+requested_omega.length()*delT;
+         double R = sqrt(posy*posy + posz*posz);
+         NewNodePos = Point(NodePos.x(),
+                            R*cos(thetaPlus)+requested_origin.y(),
+                            R*sin(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==1){  //rotation about y-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posz = NodePos.z() - requested_origin.z();
+         double theta = atan2(posz,posx);
+         double thetaPlus = theta+requested_omega.length()*delT;
+         double R = sqrt(posz*posz + posx*posx);
+         NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
+                            NodePos.y(),
+                            R*sin(thetaPlus)+requested_origin.z());
+       } else if(rotation_axis==2){  //rotation about z-axis
+         double posx = NodePos.x() - requested_origin.x();
+         double posy = NodePos.y() - requested_origin.y();
+         double theta = atan2(posy,posx);
+         double thetaPlus = theta+requested_omega.length()*delT;
+         double R = sqrt(posx*posx + posy*posy);
+         NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
+                            R*sin(thetaPlus)+requested_origin.y(),
+                            NodePos.z());
+       } 
+       rotation_part = (NewNodePos - NodePos)/delT;
+       if(rotation_axis==-99){
+         // normal vector from the axis of rotation to the node
+         //Vector axis_norm=requested_omega/(requested_omega.length()+1.e-100);
+         //Vector rad = r - Dot(r,axis_norm)*axis_norm;
+         rotation_part = Cross(requested_omega,r);
+       }
+      }
       
-      int alpha=alphaMaterial[c];
-      Point NodePos = patch->getNodePosition(c);
-      Vector r = NodePos - requested_origin.asPoint();
-      Vector rigid_vel = Cross(requested_omega,r) + requested_velocity;
+      Vector rigid_vel = rotation_part + requested_velocity;
       if(rigid_velocity) {
         rigid_vel = gvelocity_star[d_material][c];
       }
+
+      int alpha=alphaMaterial[c];
       if(alpha>=0){  // Only work on nodes where alpha!=-99
         for(int  n = 0; n < numMatls; n++){
           if(!d_matls.requested(n)) continue;
