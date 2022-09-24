@@ -27,6 +27,7 @@
 #include <CCA/Components/MPM/Materials/Contact/SingleVelContact.h>
 #include <CCA/Components/MPM/Materials/Contact/FrictionContactBard.h>
 #include <CCA/Components/MPM/Materials/Contact/FrictionContactLR.h>
+#include <CCA/Components/MPM/Materials/Contact/FrictionContactLRVar.h>
 #include <CCA/Components/MPM/Materials/Contact/NodalSVFContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyFrictionContact.h>
@@ -75,6 +76,10 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      }
      else if (con_type == "friction_LR") {
        contact_list->add(scinew FrictionContactLR(myworld,child,ss,lb,flag));
+       useLogisticRegression=true;
+     }
+     else if (con_type == "friction_LRVar") {
+       contact_list->add(scinew FrictionContactLRVar(myworld,child,ss,lb,flag));
        useLogisticRegression=true;
      }
      else if (con_type == "friction_bard") {

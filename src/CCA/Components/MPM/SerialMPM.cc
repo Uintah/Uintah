@@ -959,8 +959,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   Ghost::GhostType  gan = Ghost::AroundNodes;
 
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
+  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-//  t->requires(Task::OldDW, lb->pColorLabel,            gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   if (flags->d_GEVelProj) {
     t->requires(Task::OldDW, lb->pVelGradLabel,             gan,NGP);
@@ -1001,7 +1001,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gMassLabel);
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
-//  t->computes(lb->gColorLabel);
+  t->computes(lb->gColorLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
@@ -2416,6 +2416,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
+      old_dw->get(pColor,         lb->pColorLabel,         pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       if (flags->d_GEVelProj){
@@ -2460,11 +2461,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
+      NCVariable<double> gColor;
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gTemperatureRate;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
+      new_dw->allocateAndPut(gColor,           lb->gColorLabel,      dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
@@ -2486,6 +2489,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gSp_vol.initialize(0.);
+      gColor.initialize(0.);
 
       // JBH -- Scalar diffusion related
       NCVariable<double>  gConcentration, gConcentrationNoBC;
@@ -2541,7 +2545,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
-//            gColor[node]         += pColor[idx]*pmass[idx]         * S[k];
+            gColor[node]         += pColor[idx]*pmass[idx]         * S[k];
             if (!flags->d_useCBDI) {
               gexternalforce[node] += pexternalforce[idx]          * S[k];
             }
@@ -2615,6 +2619,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gvolumeglobal[c]  += gvolume[c];
         gvelglobal[c]     += gvelocity[c];
         gvelocity[c]      /= gmass[c];
+        gColor[c]         /= gmass[c];
         gtempglobal[c]    += gTemperature[c];
         gTemperature[c]   /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
