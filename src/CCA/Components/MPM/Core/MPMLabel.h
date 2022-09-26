@@ -179,9 +179,6 @@ namespace Uintah {
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
 
-      const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
-      const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
-
       const VarLabel* StrainEnergyLabel;
       const VarLabel* AccStrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
@@ -193,6 +190,7 @@ namespace Uintah {
       const VarLabel* BndyContactAreaLabel[6];
       const VarLabel* BndyContactCellAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
+      const VarLabel* ResultantRigidForceLabel;
       const VarLabel* TotalMomentumLabel;
       const VarLabel* RigidReactionForceLabel;
       const VarLabel* RigidReactionTorqueLabel;

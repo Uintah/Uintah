@@ -144,6 +144,9 @@ WARNING
    bool getIsRigid() const;
    void setIsRigid(const bool is_rigid);
 
+   bool getIsForceTransmittingMaterial() const;
+   void setIsForceTransmittingMaterial(const bool is_ftm);
+
    bool getIsActive() const;
    void setIsActive(const bool is_active);
    double getActivationTime() const;
@@ -200,8 +203,11 @@ WARNING
    double d_troom;
    double d_tmelt;
 
-   // for implicit rigid body contact
+   // for rigid body contact
    bool d_is_rigid;
+
+   // for undeformable force transmission
+   bool d_is_force_transmitting_material;
 
    // for insert particles
    bool d_is_active;

@@ -1320,8 +1320,33 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   t->computes(lb->gAccelerationLabel);
   t->computes( VarLabel::find(abortTimeStep_name) );
   t->computes( VarLabel::find(recomputeTimeStep_name) );
+  //__________________________________
+  //  reduction variables
+  //  Create reductionMatlSubSet that includes all mpm matls
+  // and the global matl.  Needed to output per matl reduction variables
+  const MaterialSubset* global_mss = t->getGlobalMatlSubset();
+  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+
+  MaterialSubset* reduction_mss = scinew MaterialSubset();
+  reduction_mss->add( global_mss->get(0) );
+
+  unsigned int nMatls = m_materialManager->getNumMatls( "MPM" );
+
+  if( nMatls > 1 ){  // ignore for single matl problems
+    for (unsigned int m = 0; m < nMatls; m++ ) {
+      reduction_mss->add( mpm_mss->get(m) );
+    }
+  }
+
+  if(flags->d_reductionVars->mass){
+    t->computes(lb->TotalMassLabel, reduction_mss);
+  }
 
   sched->addTask(t, patches, matls);
+
+  if (reduction_mss && reduction_mss->removeReference()){
+    delete reduction_mss;
+  }
 }
 
 void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
@@ -1475,9 +1500,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if(flags->d_reductionVars->centerOfMass){
     t->computes(lb->CenterOfMassPositionLabel, reduction_mss);
   }
-  if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel, reduction_mss);
-  }
+//  t->requires( Task::NewDW, lb->TotalMassLabel, reduction_mss);
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -2668,6 +2691,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
      } // is material active
     }  // End loop over materials
 
+//  if(flags->d_reductionVars->centerOfMass){
+    Vector RRF;
+    new_dw->put(sumvec_vartype(RRF), lb->ResultantRigidForceLabel, nullptr, -1);
+//  }
+
+
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
@@ -3252,8 +3281,15 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
-    for(unsigned int m = 0; m < m_materialManager->getNumMatls( "MPM" ); m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+
+    unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
+    vector<double> totalMass( numMPMMatls, 0.0 );
+    double allMatls_totalMass  = 0.0;
+//    Vector RRF;
+
+    for(unsigned int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl =
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get required variables for this patch
@@ -3287,6 +3323,9 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         }
         acceleration[c]  = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
+
+        totalMass[m]       += mass[c];
+        allMatls_totalMass += mass[c];
       }
 
       // Check the integrated nodal velocity and if the product of velocity
@@ -3314,6 +3353,16 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
        }
      }
     }    // matls
+    if( flags->d_reductionVars->mass ){
+      new_dw->put( sum_vartype(allMatls_totalMass),  
+                                               lb->TotalMassLabel, nullptr, -1);
+
+      MPMCommon::put_sum_vartype<double>(totalMass, lb->TotalMassLabel, new_dw);
+//  if(flags->d_reductionVars->centerOfMass){
+//      new_dw->put(sumvec_vartype(RRF), lb->ResultantRigidForceLabel, nullptr, -1);
+//  }
+    }
+
   }
 }
 
@@ -3787,13 +3836,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     // DON'T MOVE THESE!!!
     vector<double> kineticEng( numMPMMatls, 0.0 );
-    vector<double> totalMass( numMPMMatls, 0.0 );
     vector<double> thermalEng( numMPMMatls, 0.0 );
     vector<Vector> totalMom( numMPMMatls, Vector(0.0,0.0,0.0) );
     vector<Vector> CMX( numMPMMatls, Vector(0.0,0.0,0.0) );
 
     double allMatls_kineticEng = 0.0;
-    double allMatls_totalMass  = 0.0;
     double allMatls_thermalEng = 0.0;
     Vector allMatls_totalMom(0.0,0.0,0.0);
     Vector allMatls_CMX(0.0,0.0,0.0);
@@ -3802,6 +3849,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
+//    sumvec_vartype RRF;
+//    new_dw->get(RRF, lb->ResultantRigidForceLabel);
+//    sum_vartype TM;
+//    new_dw->get(TM, lb->TotalMassLabel, nullptr, -1);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3815,7 +3866,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     NC_CCweight_new.copyData(NC_CCweight);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl =
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -4020,11 +4072,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector mom         = pvelnew[idx]*pmass[idx];
           allMatls_totalMom += mom;
           totalMom[m]       += mom;
-
-          double mass        = pmass[idx];
-          totalMass[m]       += mass;
-          allMatls_totalMass += mass;
-
         }
       } else {  // Not XPIC(2)
         // Loop over particles
@@ -4109,10 +4156,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Vector mom = pvelnew[idx]*pmass[idx];
           allMatls_totalMom += mom;
           totalMom[m]       += mom;
-
-          double mass = pmass[idx];
-          totalMass[m]       += mass;
-          allMatls_totalMass += mass;
         }
       } // use XPIC(2) or not
 
@@ -4141,12 +4184,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     //__________________________________
     //  reduction variables
-    if( flags->d_reductionVars->mass ){
-      new_dw->put( sum_vartype(allMatls_totalMass),  lb->TotalMassLabel, nullptr, -1);
-
-      MPMCommon::put_sum_vartype<double>( totalMass, lb->TotalMassLabel, new_dw );
-    }
-
     if( flags->d_reductionVars->momentum ){
       new_dw->put( sumvec_vartype(allMatls_totalMom), lb->TotalMomentumLabel, nullptr, -1);
 

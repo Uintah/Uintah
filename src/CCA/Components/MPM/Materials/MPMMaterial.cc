@@ -150,10 +150,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   ps->get("room_temp", d_troom);
   ps->get("melt_temp", d_tmelt);
 
-  // This is currently only used in the implicit code, but should
-  // be put to use in the explicit code as well.
+  // Material is rigid (velocity prescribed)
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
+
+  // Material is force transmitting (moves according to sum of forces)
+  d_is_force_transmitting_material=false;
+  ps->get("is_force_transmitting_material", d_is_force_transmitting_material);
 
   // Enable ability to activate materials when needed to save computation time
   d_is_active=true;

@@ -442,16 +442,6 @@ MPMLabel::MPMLabel()
   gSp_vol_srcLabel =  VarLabel::create("g.sp_vol_src",
                         NCVariable<double>::getTypeDescription());
 
-  // Interaction with Arches, Fluid Mechanics
-
-  AccArchesNCLabel = VarLabel::create("AccArchesNC",
-                        NCVariable<Vector>::getTypeDescription() );
-
-  // Interaction with Arches, Heat Transfer
-
-  heaTranSolid_NCLabel = VarLabel::create("heaTranSolid_NC",
-                                         NCVariable<double>::getTypeDescription() );
-
   frictionalWorkLabel = VarLabel::create("frictionalWork",
                         NCVariable<double>::getTypeDescription());
 
@@ -479,6 +469,7 @@ MPMLabel::MPMLabel()
 
   NeedAddMPMMaterialLabel = VarLabel::create("NeedAddMPMMaterial",
                                  sum_vartype::getTypeDescription());
+
   for(int iside=0;iside<6;iside++) {
       string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
       
@@ -497,6 +488,9 @@ MPMLabel::MPMLabel()
   }
   
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
+                                 sumvec_vartype::getTypeDescription() );
+
+  ResultantRigidForceLabel = VarLabel::create( "ResultantRigidForce",
                                  sumvec_vartype::getTypeDescription() );
 
   TotalMomentumLabel = VarLabel::create( "TotalMomentum",
@@ -675,8 +669,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
-  VarLabel::destroy(AccArchesNCLabel);
-  VarLabel::destroy(heaTranSolid_NCLabel);
   VarLabel::destroy(frictionalWorkLabel);
   VarLabel::destroy(gNumNearParticlesLabel);
 
@@ -696,6 +688,7 @@ MPMLabel::~MPMLabel()
       VarLabel::destroy(BndyTractionLabel[iside]);
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
+  VarLabel::destroy(ResultantRigidForceLabel);
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
   VarLabel::destroy(RigidReactionTorqueLabel);
