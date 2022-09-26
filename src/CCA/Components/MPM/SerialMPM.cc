@@ -1338,6 +1338,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
     }
   }
 
+  reduction_mss->addReference();
+
   if(flags->d_reductionVars->mass){
     t->computes(lb->TotalMassLabel, reduction_mss);
   }
