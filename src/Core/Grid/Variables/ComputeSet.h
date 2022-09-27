@@ -213,14 +213,14 @@ public:
 
   void sortSubsets();
 
-  int size() const { return (int)d_set.size(); }
+  int size() const { return (int)m_set.size(); }
 
-  ComputeSubset<T>* getSubset(int idx) { return d_set[idx]; }
+  ComputeSubset<T>* getSubset(int idx) { return m_set[idx]; }
 
-  const ComputeSubset<T>* getSubset(int idx) const { return d_set[idx]; }
+  const ComputeSubset<T>* getSubset(int idx) const { return m_set[idx]; }
 
   /// Returns the vector of subsets managed by this set
-  const std::vector<ComputeSubset<T>*>& getVector() const { return d_set; }
+  const std::vector<ComputeSubset<T>*>& getVector() const { return m_set; }
 
   const ComputeSubset<T>* getUnion() const;
 
@@ -228,8 +228,8 @@ public:
   int  totalsize() const;
 
 private:
-  std::vector<ComputeSubset<T>*> d_set;
-  mutable ComputeSubset<T>*      d_un;
+  std::vector<ComputeSubset<T>*> m_set;
+  mutable ComputeSubset<T>*      m_subset;
 
   ComputeSet(const ComputeSet&);
   ComputeSet& operator=(const ComputeSet&);
@@ -254,20 +254,20 @@ std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 //______________________________________________________________________
 //
 template<class T>
-ComputeSet<T>::ComputeSet() { d_un = nullptr; }
+ComputeSet<T>::ComputeSet() { m_subset = nullptr; }
 
 //______________________________________________________________________
 //
 template<class T>
 ComputeSet<T>::~ComputeSet()
 {
-  for (int i = 0; i < (int)d_set.size(); i++) {
-    if (d_set[i] && d_set[i]->removeReference()) {
-      delete d_set[i];
+  for (int i = 0; i < (int)m_set.size(); i++) {
+    if (m_set[i] && m_set[i]->removeReference()) {
+      delete m_set[i];
     }
   }
-  if (d_un && d_un->removeReference()) {
-    delete d_un;
+  if (m_subset && m_subset->removeReference()) {
+    delete m_subset;
   }
 }
 
@@ -277,11 +277,11 @@ template<class T>
 void
 ComputeSet<T>::addAll( const std::vector<T>& sub )
 {
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
   subset->sort();
   subset->addReference();
-  d_set.push_back( subset );
+  m_set.push_back( subset );
 }
 
 //______________________________________________________________________
@@ -300,11 +300,11 @@ ComputeSet<T>::addAll_unique( const std::vector<T>& sub )
     }
   }
 
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub_unique);
   subset->sort();
   subset->addReference();
-  d_set.push_back(subset);
+  m_set.push_back(subset);
 }
 
 //______________________________________________________________________
@@ -313,12 +313,12 @@ template<class T>
 void
 ComputeSet<T>::addEach( const std::vector<T>& sub )
 {
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
   for(int i=0;i<(int)sub.size();i++){
     ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
     subset->addReference();
     (*subset)[0]=sub[i];
-    d_set.push_back(subset);
+    m_set.push_back(subset);
   }
 }
 //______________________________________________________________________
@@ -327,11 +327,11 @@ template<class T>
 void
 ComputeSet<T>::add( const T& item )
 {
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
   ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
   subset->addReference();
   (*subset)[0]=item;
-  d_set.push_back(subset);
+  m_set.push_back(subset);
 }
 
 //______________________________________________________________________
@@ -340,10 +340,10 @@ template<class T>
 void
 ComputeSet<T>::addSubset( ComputeSubset<T> * sub )
 {
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
 
   ComputeSubset<T>* subset = sub;  // hack to get around const issue
-  d_set.push_back(subset);
+  m_set.push_back(subset);
 }
 
 //______________________________________________________________________
@@ -352,8 +352,8 @@ template<class T>
 void
 ComputeSet<T>::sortSubsets()
 {
-  for(int i=0;i<(int)d_set.size();i++){
-    ComputeSubset<T>* ss = d_set[i];
+  for(int i=0;i<(int)m_set.size();i++){
+    ComputeSubset<T>* ss = m_set[i];
     ss->sort();
   }
 }
@@ -364,11 +364,11 @@ template<class T>
 void
 ComputeSet<T>::createEmptySubsets( int n )
 {
-  ASSERT(!d_un);
+  ASSERT(!m_subset);
   for( int i=0; i < n; i++ ) {
     ComputeSubset<T>* subset = scinew ComputeSubset<T>(0);
     subset->addReference();
-    d_set.push_back( subset );
+    m_set.push_back( subset );
   }
 }
 
@@ -378,18 +378,18 @@ template<class T>
 const ComputeSubset<T>*
 ComputeSet<T>::getUnion() const
 {
-  if( !d_un ){
-    d_un = scinew ComputeSubset<T>;
-    d_un->addReference();
-    for( int i = 0; i < (int)d_set.size(); i++ ) {
-      ComputeSubset<T>* ss = d_set[i];
+  if( !m_subset ){
+    m_subset = scinew ComputeSubset<T>;
+    m_subset->addReference();
+    for( int i = 0; i < (int)m_set.size(); i++ ) {
+      ComputeSubset<T>* ss = m_set[i];
       for( int j = 0; j < ss->size(); j++ ) {
-        d_un->add( ss->get(j) );
+        m_subset->add( ss->get(j) );
       }
     }
-    d_un->sort();
+    m_subset->sort();
   }
-  return d_un;
+  return m_subset;
 }
 
 //______________________________________________________________________
@@ -398,12 +398,12 @@ template<class T>
 int
 ComputeSet<T>::totalsize() const
 {
-  if(d_un) {
-    return d_un->size();
+  if(m_subset) {
+    return m_subset->size();
   }
   int total=0;
-  for(int i=0; i < (int)d_set.size(); i++) {
-    total += d_set[i]->size();
+  for(int i=0; i < (int)m_set.size(); i++) {
+    total += m_set[i]->size();
   }
   return total;
 }
