@@ -190,7 +190,7 @@ namespace Uintah {
       const VarLabel* BndyContactAreaLabel[6];
       const VarLabel* BndyContactCellAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
-      const VarLabel* ResultantRigidForceLabel;
+      const VarLabel* SumTransmittedForceLabel;
       const VarLabel* TotalMomentumLabel;
       const VarLabel* RigidReactionForceLabel;
       const VarLabel* RigidReactionTorqueLabel;

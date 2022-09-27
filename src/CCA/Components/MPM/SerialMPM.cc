@@ -1296,6 +1296,7 @@ void SerialMPM::scheduleComputeAndIntegrateDiffusion(       SchedulerP  & sched
 
   sched->addTask(t, patches, matls);
 }
+
 void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
@@ -1304,7 +1305,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
+  printSchedule(patches,cout_doing,
+                                "MPM::scheduleComputeAndIntegrateAcceleration");
 
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &SerialMPM::computeAndIntegrateAcceleration);
@@ -1341,7 +1343,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   reduction_mss->addReference();
 
   if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel, reduction_mss);
+    t->computes(lb->TotalMassLabel,           reduction_mss);
+    t->computes(lb->SumTransmittedForceLabel, reduction_mss);
   }
 
   sched->addTask(t, patches, matls);
@@ -1370,12 +1373,6 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /* exMomIntegrated
-   *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
-   *   operation(peform operations which will cause each of
-   *              velocity fields to feel the influence of the
-   *              the others according to specific rules)
-   *   out(G.VELOCITY_STAR, G.ACCELERATION) */
   printSchedule(patches,cout_doing,"MPM::scheduleExMomIntegrated");
   contactModel->addComputesAndRequiresIntegrated(sched, patches, matls);
 }
@@ -2693,12 +2690,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
      } // is material active
     }  // End loop over materials
 
-//  if(flags->d_reductionVars->centerOfMass){
-    Vector RRF;
-    new_dw->put(sumvec_vartype(RRF), lb->ResultantRigidForceLabel, nullptr, -1);
-//  }
-
-
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
@@ -3287,7 +3278,8 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     vector<double> totalMass( numMPMMatls, 0.0 );
     double allMatls_totalMass  = 0.0;
-//    Vector RRF;
+    vector<Vector> STF( numMPMMatls, Vector(0.,0.,0.) );
+    Vector allMatls_STF  = Vector(0.,0.,0.);
 
     for(unsigned int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl =
@@ -3328,6 +3320,8 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
         totalMass[m]       += mass[c];
         allMatls_totalMass += mass[c];
+        STF[m]             +=externalforce[c];
+        allMatls_STF       +=externalforce[c];
       }
 
       // Check the integrated nodal velocity and if the product of velocity
@@ -3360,9 +3354,11 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                                                lb->TotalMassLabel, nullptr, -1);
 
       MPMCommon::put_sum_vartype<double>(totalMass, lb->TotalMassLabel, new_dw);
-//  if(flags->d_reductionVars->centerOfMass){
-//      new_dw->put(sumvec_vartype(RRF), lb->ResultantRigidForceLabel, nullptr, -1);
-//  }
+
+      new_dw->put(sumvec_vartype(allMatls_STF), 
+                                     lb->SumTransmittedForceLabel, nullptr, -1);
+      MPMCommon::put_sum_vartype<Vector>(STF, 
+                                     lb->SumTransmittedForceLabel, new_dw);
     }
 
   }
@@ -3674,6 +3670,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
     }
   }
 
+
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -3697,9 +3694,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                              lb->pExtForceLabel_preReloc,  pset);
 
       // pExternalForce is either:
+      //  set to zero (default)
       //  set using load curves
       //  set using an MMS formulation
-      //  set to zero
 
       string mms_type = flags->d_mms_type;
       if (flags->d_useLoadCurves) {
@@ -3734,6 +3731,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            pExternalForce_new[idx] = Vector(0.,0.,0.);
         }
 
+        // Get the load curve data
         if(do_PressureBCs){
           // Get the external force data and allocate new space for
           // external force on particle corners
@@ -3782,13 +3780,15 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            }  // loop over elements of the IntVector
           }
         }
+        // Get the load curve data
         if(do_TorqueBCs){
           // Iterate over the particles
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
            particleIndex idx = *iter;
            for(int k=0;k<3;k++){
-            int loadCurveIndex = pLoadCurveID[idx](k)-numPressureLCs;
+            //int loadCurveIndex = pLoadCurveID[idx](k)-numPressureLCs;
+            int loadCurveIndex = pLoadCurveID[idx](k)-1;
             if (loadCurveIndex >= 0 && pLoadCurveID[idx](k) > numPressureLCs) {
               TorqueBC* tbc = TBC[loadCurveIndex - numPressureLCs];
               double torque = torquePerPart[loadCurveIndex-numPressureLCs];
@@ -3803,13 +3803,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         MMS MMSObject;
         MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
                                             lb,flags,pExternalForce_new);
-      } else {
-        // Set to zero
-        for(ParticleSubset::iterator iter = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          pExternalForce_new[idx] = Vector(0.,0.,0.);
-        }
       }
     } // matl loop
   }  // patch loop
@@ -3851,8 +3844,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
-//    sumvec_vartype RRF;
-//    new_dw->get(RRF, lb->ResultantRigidForceLabel);
+//    sumvec_vartype STF;
+//    new_dw->get(STF, lb->SumTransmittedForceLabel);
 //    sum_vartype TM;
 //    new_dw->get(TM, lb->TotalMassLabel, nullptr, -1);
 

@@ -490,7 +490,7 @@ MPMLabel::MPMLabel()
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
                                  sumvec_vartype::getTypeDescription() );
 
-  ResultantRigidForceLabel = VarLabel::create( "ResultantRigidForce",
+  SumTransmittedForceLabel = VarLabel::create( "SumTransmittedForce",
                                  sumvec_vartype::getTypeDescription() );
 
   TotalMomentumLabel = VarLabel::create( "TotalMomentum",
@@ -688,7 +688,7 @@ MPMLabel::~MPMLabel()
       VarLabel::destroy(BndyTractionLabel[iside]);
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
-  VarLabel::destroy(ResultantRigidForceLabel);
+  VarLabel::destroy(SumTransmittedForceLabel);
   VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(RigidReactionForceLabel);
   VarLabel::destroy(RigidReactionTorqueLabel);
