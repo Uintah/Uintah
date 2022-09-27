@@ -664,8 +664,6 @@ TaskGraph::createDetailedTasks(       bool    useInternalDeps
 void
 TaskGraph::createDetailedDependencies()
 {
-  int my_rank = m_proc_group->myRank();
-
   // Collect all of the computes
   CompTable ct;
   const int num_tasks = m_detailed_tasks->numTasks();
@@ -1321,35 +1319,38 @@ TaskGraph::createDetailedDependencies( DetailedTask     * dtask
     }
     else {
       std::ostringstream desc;
-      desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
-           << " \n Trying to require or modify " << *req << " in Task " << dtask->getTask()->getName() << "\n\n";
+      desc << "\nTaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
+           << " \n Trying to require or modify \n  " << *req << "\n  Task: " << dtask->getTask()->getName() << "\n\n"
+           << " Task and VarLabel:requires specification: \n";
       if (dtask->m_matls) {
-        desc << "task materials:" << *dtask->m_matls << "\n";
+        desc << "  Task materials: " << *dtask->m_matls << "\n";
       }
       else {
-        desc << "no task materials\n";
+        desc << "  Task materials:  None\n";
       }
       if (req->m_matls) {
-        desc << "req materials: " << *req->m_matls << "\n";
+        desc << "  VarLabel:requires materials: " << *req->m_matls << "\n";
       }
       else {
-        desc << "no req materials\n" << "domain materials: " << *matls.get_rep() << "\n";
+        desc << "  VarLabel:requires materials:  None\n" << " domain materials: " << *matls.get_rep() << "\n";
       }
       if (dtask->m_patches) {
-        desc << "task patches:" << *dtask->m_patches << "\n";
+        desc << "  Task patches: " << *dtask->m_patches << "\n";
       }
       else {
-        desc << "no task patches\n";
+        desc << "  Task patches: None\n";
       }
       if (req->m_patches) {
-        desc << "req patches: " << *req->m_patches << "\n";
+        desc << "  VarLabel:requires patches: " << *req->m_patches << "\n";
       }
       else {
-        desc << "no req patches\n";
+        desc << "  VarLabel:requires patches: None\n";
       }
       if ( patches ){
-        desc << "domain patches: " << *patches.get_rep() << "\n";
+        desc << "  Domain patches: " << *patches.get_rep() << "\n";
       }
+      desc << "  matls.size(): " << matls->size() << "\n"
+           << "  matls.empty() " << matls->empty() << "\n";
       SCI_THROW(InternalError(desc.str(), __FILE__, __LINE__));
     }
   }
