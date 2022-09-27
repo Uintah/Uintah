@@ -1132,7 +1132,20 @@ operator <<( std::ostream & out, const Uintah::Task::Dependency & dep )
       break;
   }
   out << " (mapped to dw index " << dep.m_task->mapDataWarehouse(dep.m_whichdw) << ")";
-  out << ", ";
+  out << ", matl domain:";
+
+  switch(dep.m_matls_dom){
+  case Task::NormalDomain:
+    out << "normal, ";
+    break;
+  case Task::OutOfDomain:
+    out<< "OutOfDomain, ";
+    break;
+  default:
+    out<< "Unknown, ";
+    break;
+  }
+
   switch (dep.m_gtype) {
     case Ghost::None :
       out << "Ghost::None";
