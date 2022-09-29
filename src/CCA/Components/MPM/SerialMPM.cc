@@ -3698,6 +3698,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       //  set using load curves
       //  set using an MMS formulation
 
+      ParticleSubset::iterator iter = pset->begin();
+      for(;iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+         pExternalForce_new[idx] = Vector(0.,0.,0.);
+      }
+
       string mms_type = flags->d_mms_type;
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
@@ -3725,11 +3731,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         new_dw->allocateAndPut(pLoadCurveID_new,
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-           particleIndex idx = *iter;
-           pExternalForce_new[idx] = Vector(0.,0.,0.);
-        }
 
         // Get the load curve data
         if(do_PressureBCs){
