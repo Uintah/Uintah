@@ -1343,8 +1343,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   reduction_mss->addReference();
 
   if(flags->d_reductionVars->mass){
-    t->computes(lb->TotalMassLabel,           reduction_mss);
-    t->computes(lb->SumTransmittedForceLabel, reduction_mss);
+    t->computes(lb->TotalMassLabel,           reduction_mss, Task::OutOfDomain);
+    t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
   sched->addTask(t, patches, matls);
@@ -1469,10 +1469,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   //__________________________________
   //  reduction variables
-  //  Create reductionMatlSubSet that includes all mpm matls
-  // and the global matl.  Needed to output per matl reduction variables
+  //  Create reductionMatlSubSet that could include all mpm matls
+  // and the global matl.  Needed for per matl reduction variables
+
   const MaterialSubset* global_mss = t->getGlobalMatlSubset();
-  const MaterialSubset* mpm_mss    = (matls ?  matls->getUnion() : nullptr);
+  const MaterialSubset* mpm_mss    = matls->getUnion();
 
   MaterialSubset* reduction_mss = scinew MaterialSubset();
   reduction_mss->add( global_mss->get(0) );
@@ -1488,18 +1489,19 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   reduction_mss->addReference();
 
   if(flags->d_reductionVars->momentum){
-    t->computes(lb->TotalMomentumLabel, reduction_mss);
+    t->computes(lb->TotalMomentumLabel, reduction_mss, Task::OutOfDomain);
   }
   if(flags->d_reductionVars->KE){
-    t->computes(lb->KineticEnergyLabel, reduction_mss);
+    t->computes(lb->KineticEnergyLabel, reduction_mss, Task::OutOfDomain);
   }
   if(flags->d_reductionVars->thermalEnergy){
-    t->computes(lb->ThermalEnergyLabel, reduction_mss);
+    t->computes(lb->ThermalEnergyLabel, reduction_mss, Task::OutOfDomain);
   }
   if(flags->d_reductionVars->centerOfMass){
-    t->computes(lb->CenterOfMassPositionLabel, reduction_mss);
+    t->computes(lb->CenterOfMassPositionLabel, reduction_mss, Task::OutOfDomain);
   }
-//  t->requires( Task::NewDW, lb->TotalMassLabel, reduction_mss);
+
+  t->requires( Task::NewDW, lb->TotalMassLabel, getLevel(patches), reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG );
 
   // debugging scalar
   if(flags->d_with_color) {
