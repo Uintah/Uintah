@@ -1633,10 +1633,10 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
   const MaterialSet* all_matls = m_materialManager->allMaterials();
   const PatchSet* patch_set = coarseLevel->eachPatch();
 
-  bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
+  Task::SearchTG OldTG = Task::SearchTG::OldTG;  // possibly search old TG for computes
 
   task->requires(Task::NewDW, Al->MPMRefineCellLabel,
-               0, Task::FineLevel,  d_one_matl,oims, d_gn, 0, fat);
+               0, Task::FineLevel,  d_one_matl,oims, d_gn, 0, OldTG);
 
   task->requires(Task::NewDW, RefineFlagXMaxLabel);
   task->requires(Task::NewDW, RefineFlagXMinLabel);
@@ -1645,7 +1645,7 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, RefineFlagZMaxLabel);
   task->requires(Task::NewDW, RefineFlagZMinLabel);
 
-  task->modifies(Al->MPMRefineCellLabel, d_one_matl, oims, fat);
+  task->modifies(Al->MPMRefineCellLabel, d_one_matl, oims, OldTG);
 
   sched->addTask(task, patch_set, all_matls);
 }

@@ -1144,7 +1144,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       SaveItem& saveItem = m_saveGlobalLabels[i];
 
       const MaterialSubset* mss = saveItem.getMaterialSubset(0);
-      task->requires( Task::NewDW, saveItem.label, mss, true);
+      task->requires( Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
     task->setType( Task::OutputGlobalVars ); 
@@ -1170,7 +1170,7 @@ DataArchiver::sched_allOutputTasks( const GridP      & grid,
       SaveItem& saveItem = m_checkpointGlobalLabels[i];
 
       const MaterialSubset* mss = saveItem.getMaterialSubset(0);
-      task->requires(Task::NewDW, saveItem.label, mss, true);
+      task->requires(Task::NewDW, saveItem.label, mss, Task::SearchTG::OldTG);
     }
 
     sched->addTask(task, nullptr, nullptr);
@@ -2528,7 +2528,7 @@ DataArchiver::sched_outputVariables(       vector<SaveItem> & saveLabels,
       const MaterialSubset* matlSubset = saveIter->getMaterialSubset( level.get_rep() );
 
       if ( matlSubset != nullptr ) {
-        task->requires( Task::NewDW, (*saveIter).label, matlSubset, Task::OutOfDomain, Ghost::None, 0, true );
+        task->requires( Task::NewDW, (*saveIter).label, matlSubset, Task::OutOfDomain, Ghost::None, 0, Task::SearchTG::OldTG );
 
         // Do not scrub any variables that are saved so they can be
         // accessed at any time after all of the tasks are finished.

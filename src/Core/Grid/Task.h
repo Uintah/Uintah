@@ -376,6 +376,11 @@ public: // class Task
     , OtherGridDomain  // for when we copy data to new grid after a regrid.
   };
 
+  enum class SearchTG{  
+      OldTG           // <- Search the OldTG for the computes if they aren't found in NewTG
+    , NewTG
+  };
+
   //////////
   // Most general case
   void requires( WhichDW
@@ -387,7 +392,7 @@ public: // class Task
                , MaterialDomainSpec     matls_dom
                , Ghost::GhostType       gtype
                , int                    numGhostCells = 0
-               , bool                   oldTG         = false
+               , SearchTG               whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -400,7 +405,7 @@ public: // class Task
                ,       MaterialDomainSpec   matls_dom
                ,       Ghost::GhostType     gtype
                ,       int                  numGhostCells = 0
-               ,       bool                 oldTG         = false
+               ,       SearchTG             whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -409,7 +414,7 @@ public: // class Task
                , const VarLabel         *
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       bool               oldTG         = false
+               ,       SearchTG           whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -420,7 +425,7 @@ public: // class Task
                , const MaterialSubset   * matls
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       bool               oldTG         = false
+               ,       SearchTG           whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -430,7 +435,7 @@ public: // class Task
                , const PatchSubset      * patches
                ,       Ghost::GhostType   gtype
                ,       int                numGhostCells = 0
-               ,       bool               oldTG         = false
+               ,       SearchTG           whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -440,7 +445,8 @@ public: // class Task
                , const MaterialSubset  * matls
                ,      Ghost::GhostType   gtype
                ,      int                numGhostCells = 0
-               ,      bool               oldTG         = false);
+               ,      SearchTG           whichTG = SearchTG::NewTG
+               );
 
   //////////
   //
@@ -450,7 +456,7 @@ public: // class Task
                ,       MaterialDomainSpec   matls_dom
                ,       Ghost::GhostType     gtype
                ,       int                  numGhostCells = 0
-               ,       bool                 oldTG         = false
+               ,       SearchTG             whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -460,7 +466,7 @@ public: // class Task
                , const Level              * level     = nullptr
                , const MaterialSubset     * matls     = nullptr
                ,       MaterialDomainSpec   matls_dom = NormalDomain
-               ,       bool                 oldTG     = false
+               ,       SearchTG             whichTG   = SearchTG::NewTG
                );
 
   //////////
@@ -468,7 +474,7 @@ public: // class Task
   void requires(       WhichDW
                , const VarLabel       *
                , const MaterialSubset * matls
-               ,       bool             oldTG = false
+               ,       SearchTG        whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -549,7 +555,7 @@ public: // class Task
                                ,       MaterialDomainSpec   matls_domain
                                ,       Ghost::GhostType     gtype
                                ,       int                  numGhostCells
-                               ,       bool                 oldTG = false
+                               ,       SearchTG             whichTG = SearchTG::NewTG
                                );
 
   void computesWithScratchGhost( const VarLabel           *
@@ -557,7 +563,7 @@ public: // class Task
                                ,       MaterialDomainSpec   matls_domain
                                ,       Ghost::GhostType     gtype
                                ,       int                  numGhostCells
-                               ,       bool                 oldTG = false
+                               ,       SearchTG             whichTG = SearchTG::NewTG
                                );
 
   //////////
@@ -567,7 +573,7 @@ public: // class Task
                ,       PatchDomainSpec      patches_domain
                , const MaterialSubset     * matls
                ,       MaterialDomainSpec   matls_domain
-               ,       bool                 oldTG = false
+               ,       SearchTG             whichTG = SearchTG::NewTG
                );
 
   //////////
@@ -575,37 +581,38 @@ public: // class Task
   void modifies( const VarLabel       *
                , const PatchSubset    * patches
                , const MaterialSubset * matls
-               ,       bool             oldTG = false
+               ,       SearchTG         whichTG = SearchTG::NewTG
                );
 
   //////////
   //
   void modifies( const VarLabel       *
                , const MaterialSubset * matls
-               ,       bool             oldTG = false
+               ,       SearchTG         whichTG = SearchTG::NewTG
                );
 
   //////////
   //
-  void modifies( const VarLabel       *
-               , const MaterialSubset * matls
-               , MaterialDomainSpec     matls_domain
-               , bool                   oldTG = false
+  void modifies( const VarLabel           *
+               , const MaterialSubset     * matls
+               ,       MaterialDomainSpec   matls_domain
+               ,       SearchTG             whichTG = SearchTG::NewTG
                );
 
   //////////
   //
   void modifies( const VarLabel *
-               ,       bool     oldTG = false
+               ,       SearchTG         whichTG = SearchTG::NewTG
                );
 
   //////////
   // Modify reduction vars
-  void modifies( const VarLabel*
-               , const Level* level
-               , const MaterialSubset* matls = nullptr
-               , MaterialDomainSpec matls_domain = NormalDomain
-               , bool oldTG = false);
+  void modifies( const VarLabel         *
+               , const Level            * level
+               , const MaterialSubset   * matls = nullptr
+               ,       MaterialDomainSpec matls_domain = NormalDomain
+               ,       SearchTG           whichTG = SearchTG::NewTG
+               );
 
   //////////
   // Tells the task to actually execute the function assigned to it.
@@ -673,7 +680,7 @@ public: // class Task
                 ,       Task               * task
                 ,       WhichDW              dw
                 , const VarLabel           * var
-                ,       bool                 oldtg
+                ,       SearchTG             whichTG
                 , const PatchSubset        * patches
                 , const MaterialSubset     * matls
                 ,       PatchDomainSpec      patches_dom   = ThisLevel
@@ -687,7 +694,7 @@ public: // class Task
                 ,       Task               * task
                 ,       WhichDW              dw
                 , const VarLabel           * var
-                ,       bool                 oldtg
+                ,       SearchTG             whichTG
                 , const Level              * reductionLevel
                 , const MaterialSubset     * matls
                 ,       MaterialDomainSpec   matls_dom = NormalDomain

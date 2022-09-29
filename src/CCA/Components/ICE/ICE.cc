@@ -836,14 +836,14 @@ void ICE::scheduleComputeStableTimeStep(const LevelP& level,
                         &ICE::actuallyComputeStableTimestep);
 
   const MaterialSet* ice_matls = m_materialManager->allMaterials( "ICE" );
-
-  t->requires( Task::NewDW, lb->vel_CCLabel,        m_gac,1, true );
-  t->requires( Task::NewDW, lb->speedSound_CCLabel, m_gac,1, true );
-  t->requires( Task::NewDW, lb->thermalCondLabel,   m_gn,  0, true );
-  t->requires( Task::NewDW, lb->gammaLabel,         m_gn,  0, true );
-  t->requires( Task::NewDW, lb->specific_heatLabel, m_gn,  0, true );
-  t->requires( Task::NewDW, lb->sp_vol_CCLabel,     m_gn,  0, true );
-  t->requires( Task::NewDW, lb->viscosityLabel,     m_gn,  0, true );
+  Task::SearchTG OldTG = Task::SearchTG::OldTG;   // search oldTG if computes cannont be found
+  t->requires( Task::NewDW, lb->vel_CCLabel,        m_gac,1, OldTG );
+  t->requires( Task::NewDW, lb->speedSound_CCLabel, m_gac,1, OldTG );
+  t->requires( Task::NewDW, lb->thermalCondLabel,   m_gn,  0, OldTG );
+  t->requires( Task::NewDW, lb->gammaLabel,         m_gn,  0, OldTG );
+  t->requires( Task::NewDW, lb->specific_heatLabel, m_gn,  0, OldTG );
+  t->requires( Task::NewDW, lb->sp_vol_CCLabel,     m_gn,  0, OldTG );
+  t->requires( Task::NewDW, lb->viscosityLabel,     m_gn,  0, OldTG );
 
   t->computes( lb->delTLabel,level.get_rep() );
   sched->addTask( t,level->eachPatch(), ice_matls );
@@ -1899,10 +1899,9 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP          & sched,
     return;
   }
 
-  // from another taskgraph
-  bool fat = false;
+  Task::SearchTG whichTG = Task::SearchTG::NewTG;       // which taskgraph to search for computes
   if (where == "finalizeTimestep"){
-    fat = true;
+    whichTG = Task::SearchTG::OldTG;
   }
 
   //---------------------------
@@ -1920,15 +1919,15 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP          & sched,
   t->requires( Task::NewDW, lb->eng_advLabel,       m_gn,0 );
   t->requires( Task::NewDW, lb->sp_vol_advLabel,    m_gn,0 );
 
-  t->requires( Task::NewDW, lb->specific_heatLabel, m_gn,0, fat );
-  t->requires( Task::NewDW, lb->speedSound_CCLabel, m_gn,0, fat );
-  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   m_gn,0, fat );
-  t->requires( Task::NewDW, lb->gammaLabel,         m_gn,0, fat );
+  t->requires( Task::NewDW, lb->specific_heatLabel, m_gn,0, whichTG );
+  t->requires( Task::NewDW, lb->speedSound_CCLabel, m_gn,0, whichTG );
+  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   m_gn,0, whichTG );
+  t->requires( Task::NewDW, lb->gammaLabel,         m_gn,0, whichTG );
 
   computesRequires_CustomBCs( t, "Advection", lb, ice_matlsub, d_BC_globalVars);
 
-  t->modifies( lb->rho_CCLabel,     fat);
-  t->modifies( lb->sp_vol_CCLabel,  fat);
+  t->modifies( lb->rho_CCLabel,     whichTG);
+  t->modifies( lb->sp_vol_CCLabel,  whichTG);
 
   if( where == "afterAdvection"){
     t->computes( lb->temp_CCLabel );
@@ -1937,9 +1936,9 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP          & sched,
   }
 
   if( where == "finalizeTimestep"){
-    t->modifies( lb->temp_CCLabel,  fat );
-    t->modifies( lb->vel_CCLabel,   fat );
-    t->modifies( lb->machLabel,     fat );
+    t->modifies( lb->temp_CCLabel,  whichTG );
+    t->modifies( lb->vel_CCLabel,   whichTG );
+    t->modifies( lb->machLabel,     whichTG );
   }
 
   //__________________________________
@@ -1964,7 +1963,7 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP          & sched,
             t->computes( tvar->var, tvar->matls );
           }
           if( where == "finalizeTimestep" ){
-            t->modifies( tvar->var, tvar->matls, fat );
+            t->modifies( tvar->var, tvar->matls, whichTG );
           }
 
         }
