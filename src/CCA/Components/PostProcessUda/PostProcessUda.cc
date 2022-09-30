@@ -27,7 +27,7 @@
 #include <Core/Exceptions/InternalError.h>
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Util/DOUT.hpp>
 #include <iomanip>
@@ -100,10 +100,6 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   setLockstepAMR(true);
   m_output->setSwitchState(true);         /// HACK NEED TO CHANGE THIS
 
-  // This matl is for delT
-  SimpleMaterial * oneMatl = scinew SimpleMaterial();
-  m_materialManager->registerSimpleMaterial( oneMatl );
-
   //__________________________________
   //  Find timestep data from the original uda
   d_dataArchive = scinew DataArchive( d_udaDir, d_myworld->myRank(), d_myworld->nRanks() );
@@ -114,7 +110,6 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   for (unsigned int t = 0; t< d_udaTimesteps.size(); t++ ){
     proc0cout << " *** " << t << " sim timestep " << d_udaTimesteps[t] << " sim time: " << d_udaTimes[t] << endl;
   }
-
 
   //__________________________________
   //  define the varLabels that will be saved
@@ -130,6 +125,27 @@ void PostProcessUda::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   proc0cout << "\n";
+
+  //__________________________________
+  //  read in the matls from input.xml.orig and register them
+  proc0cout << "\nRegistered materials\n";
+  string filename = d_udaDir + "/input.xml.orig";
+  ProblemSpecP ups = ProblemSpecReader().readInputFile( filename );
+  
+  ProblemSpecP matProp_ps = ups->findBlockWithOutAttribute( "MaterialProperties" );
+  
+  std::vector<ProblemSpecP> matls_ps = matProp_ps->findBlocksRecursive("material");
+  
+  // create material and register it.
+  for( size_t i=0; i<matls_ps.size(); i++){
+
+    ProblemSpecP mat_ps = matls_ps[i];
+    Material *mat = scinew Material( mat_ps );
+
+    m_materialManager->registerMaterial(  mat->getName() , mat );
+
+    proc0cout << "***  DW index = " << mat->getDWIndex() << " (" << mat->getName() << ")"  << endl;
+  } 
 
   //__________________________________
   //  create the PostProcess analysis modules
