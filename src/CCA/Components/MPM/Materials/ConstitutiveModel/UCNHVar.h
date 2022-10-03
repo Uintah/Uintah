@@ -82,12 +82,6 @@ namespace Uintah {
       double K;
     };
 
-    struct YieldDistribution {
-      std::string dist;
-      double range;
-      int seed;
-    };
-
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
 
@@ -126,7 +120,6 @@ namespace Uintah {
     //__________________________________
     //  Plasticity
     bool d_usePlasticity;
-    YieldDistribution d_yield;
 
     // Initial stress state
     bool d_useInitialStress;
@@ -280,10 +273,6 @@ namespace Uintah {
 
   private:
     
-    void getYieldStressDistribution(ProblemSpecP& ps);
-
-    void setYieldStressDistribution(const UCNHVar* cm);
-
     void createPlasticityLabels();
 
   protected:
