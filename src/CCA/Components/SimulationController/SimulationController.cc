@@ -683,6 +683,9 @@ SimulationController::ReportStats(const ProcessorGroup*,
     
     int hrs_setw = std::fmax( 2 , floor( log10(hrs.count()) ) );           // hrs can be a large number
     
+    std::ios orgFormat(NULL);                                     // keep track of 
+    orgFormat.copyfmt(message);
+    
     message << std::left
             << "Timestep "      << std::setw(8)  << m_application->getTimeStep()
             << "Time="          << std::setw(12) << m_application->getSimTime()
@@ -693,8 +696,9 @@ SimulationController::ReportStats(const ProcessorGroup*,
             << std::right
             << "ETC="           << std::setfill('0') << std::setw(hrs_setw) << hrs.count()  << ":" 
                                 << std::setfill('0') << std::setw(2) << mins.count() << ":" 
-                                << std::setfill('0') << std::setw(2) << secs.count() << "  "
-            << std::left;
+                                << std::setfill('0') << std::setw(2) << secs.count() << "  ";
+    message.copyfmt(orgFormat);
+    message << std::left;
 
     // Report on the memory used.
     if (g_sim_stats_mem) {
