@@ -58,6 +58,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #ifdef HAVE_CUDA
@@ -326,8 +327,15 @@ OnDemandDataWarehouse::get(       ReductionVariableBase & var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
-    proc0cout << "get() failed in dw: " << this << ", level: " << level << "\n";
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(ReductionVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank() );
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
 
@@ -345,7 +353,15 @@ OnDemandDataWarehouse::get(       SoleVariableBase& var
 {
   checkGetAccess( label, matlIndex, nullptr );
 
+  // throw an exception
   if( !m_level_DB.exists( label, matlIndex, level ) ) {
+    std::string levelIndx = level ? to_string( level->getIndex() ) : "nullptr";
+
+    DOUTR(true, "get(SoleVariableBase) failed in dw: " << this << ", level: " << levelIndx << ", matlIndex: " << matlIndex);
+
+    m_level_DB.print(d_myworld->myRank());
+    m_level_key_DB.print(d_myworld->myRank() );
+
     SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex, "on sole", __FILE__, __LINE__) );
   }
 

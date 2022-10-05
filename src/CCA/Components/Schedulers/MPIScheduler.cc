@@ -262,7 +262,8 @@ void MPIScheduler::initiateTask( DetailedTask * dtask
 void
 MPIScheduler::initiateReduction( DetailedTask* dtask )
 {
-  DOUTR(g_reductions, " Running Reduction Task: " << dtask->getName());
+  bool ans = (g_reductions || g_task_run);
+  DOUTR( ans, " Running Reduction Task: " << dtask->getName());
 
   Timers::Simple timer;
 
