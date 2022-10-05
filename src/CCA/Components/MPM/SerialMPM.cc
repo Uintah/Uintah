@@ -3847,10 +3847,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
-//    sumvec_vartype STF;
-//    new_dw->get(STF, lb->SumTransmittedForceLabel);
-//    sum_vartype TM;
-//    new_dw->get(TM, lb->TotalMassLabel, nullptr, -1);
+    sumvec_vartype STF;
+    new_dw->get(STF, lb->SumTransmittedForceLabel);
+    sum_vartype allMatls_TM;
+    new_dw->get(allMatls_TM, lb->TotalMassLabel, nullptr, -1 );
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3867,6 +3867,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       MPMMaterial* mpm_matl =
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
+
+      sum_vartype totalMass;
+      new_dw->get(totalMass, lb->TotalMassLabel, nullptr, dwi );
+//      cout << "dwi: " << dwi << " allMatls_TotalMass: " << allMatls_TM << " matl totalMass " << totalMass << endl; 
+
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp;

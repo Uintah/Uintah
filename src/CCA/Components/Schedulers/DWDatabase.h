@@ -485,7 +485,7 @@ template<class DomainType>
 void
 KeyDatabase<DomainType>::print( const int rank ) const
 {
-  DOUT( true, "Rank-"<<rank<< " __________________________________DWDatabase ")
+  DOUT( true, "Rank-"<<rank<< " __________________________________KeyDatabase ")
   for (auto keyiter = m_keys.begin(); keyiter != m_keys.end(); ++keyiter) {
     const VarLabelMatl<DomainType>& vlm = keyiter->first;
     const DomainType* dom = vlm.m_domain;
@@ -493,7 +493,7 @@ KeyDatabase<DomainType>::print( const int rank ) const
       DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index );
     }
     else {
-      DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index );
+      DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: nullptr  matl: " << vlm.m_matl_index );
     }
   }
   DOUT( true, "Rank-"<<rank<< " __________________________________")
@@ -733,7 +733,7 @@ DWDatabase<DomainType>::print( const int rank ) const
         DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: " << *dom << "  matl:" << vlm.m_matl_index );
       }
       else {
-        DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: N/A  matl: " << vlm.m_matl_index );
+        DOUT( true, "Rank-"<<rank<< " Name: " << vlm.m_label->getName() << "  domain: nullptr  matl: " << vlm.m_matl_index );
       }
     }
   }
