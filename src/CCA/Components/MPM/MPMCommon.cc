@@ -176,9 +176,37 @@ void MPMCommon::put_sum_vartype( std::vector<T>  reductionVars,
     }
   }
 }
+
+//______________________________________________________________________
+//    get a std::vector of reduction variables from the DW
+template< class T>
+std::vector<T> MPMCommon::get_sum_vartype( unsigned int    numMPMMatls,
+                                           const VarLabel * label,
+                                           DataWarehouse  * new_dw )
+{
+  std::vector<T>  reductionVars;
+  if( numMPMMatls > 1){    // ignore for single matl problems
+
+    for (unsigned int m = 0; m < numMPMMatls ; m++ ) {
+
+      MPMMaterial* matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
+      int dwi = matl->getDWIndex();
+
+      typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+      sumVartype reductionVar;
+      
+      new_dw->get( reductionVar, label, nullptr, dwi);
+      reductionVars.push_back(reductionVar);
+    }
+  }
+  return reductionVars;
+}
 //__________________________________
 //
 // Explicit template instantiations:
 
 template void MPMCommon::put_sum_vartype( std::vector<double> rv ,const VarLabel * l, DataWarehouse  * dw);
 template void MPMCommon::put_sum_vartype( std::vector<Vector> rv ,const VarLabel * l, DataWarehouse  * dw);
+
+template std::vector<double> MPMCommon::get_sum_vartype(unsigned int i, const VarLabel * l, DataWarehouse  * dw);
+template std::vector<Vector> MPMCommon::get_sum_vartype(unsigned int i, const VarLabel * l, DataWarehouse  * dw);

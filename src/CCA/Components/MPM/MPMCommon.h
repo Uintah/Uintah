@@ -62,6 +62,11 @@ namespace Uintah {
                           const VarLabel * label,
                           DataWarehouse  * new_dw);
 
+    template< class T>
+    std::vector<T> get_sum_vartype( unsigned int    numMPMMatls,
+                                    const VarLabel * label,
+                                    DataWarehouse  * new_dw );
+
     // Used by the switcher
     virtual void setupForSwitching() {
   

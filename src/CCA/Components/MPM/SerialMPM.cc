@@ -1501,8 +1501,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->CenterOfMassPositionLabel, reduction_mss, Task::OutOfDomain);
   }
 
-  t->requires( Task::NewDW, lb->TotalMassLabel, getLevel(patches), reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG );
-
+  if(flags->d_reductionVars->mass){
+    t->requires( Task::NewDW, lb->TotalMassLabel, getLevel(patches), reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG );
+  }
+  
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -3835,22 +3837,29 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     vector<double> kineticEng( numMPMMatls, 0.0 );
     vector<double> thermalEng( numMPMMatls, 0.0 );
+    vector<double> totalMass(  numMPMMatls, 0.0 );
     vector<Vector> totalMom( numMPMMatls, Vector(0.0,0.0,0.0) );
     vector<Vector> CMX( numMPMMatls, Vector(0.0,0.0,0.0) );
 
+    
     double allMatls_kineticEng = 0.0;
     double allMatls_thermalEng = 0.0;
     Vector allMatls_totalMom(0.0,0.0,0.0);
     Vector allMatls_CMX(0.0,0.0,0.0);
-
+    
+    sum_vartype   allMatls_totalMass  = 0.0;
+    sumvec_vartype STF;
+     
     double totalConc    =   0.0;
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
-    sumvec_vartype STF;
-    new_dw->get(STF, lb->SumTransmittedForceLabel);
-    sum_vartype allMatls_TM;
-    new_dw->get(allMatls_TM, lb->TotalMassLabel, nullptr, -1 );
+    if(flags->d_reductionVars->mass){
+      new_dw->get(STF,                lb->SumTransmittedForceLabel);
+      new_dw->get(allMatls_totalMass, lb->TotalMassLabel, nullptr, -1 );
+      totalMass = MPMCommon::get_sum_vartype<double>( numMPMMatls, 
+                                                      lb->TotalMassLabel, new_dw );
+    }
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches) );
@@ -3868,9 +3877,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
-      sum_vartype totalMass;
-      new_dw->get(totalMass, lb->TotalMassLabel, nullptr, dwi );
-//      cout << "dwi: " << dwi << " allMatls_TotalMass: " << allMatls_TM << " matl totalMass " << totalMass << endl; 
+      //cout << "dwi: " << dwi << " allMatls_TotalMass: " << allMatls_TM << " matl totalMass " << totalMass[m] << endl; 
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
