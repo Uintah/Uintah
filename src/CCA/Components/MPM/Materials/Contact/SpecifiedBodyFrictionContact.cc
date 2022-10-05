@@ -300,7 +300,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
          double posz = NodePos.z() - requested_origin.z();
          double posy = NodePos.y() - requested_origin.y();
          double theta = atan2(posz,posy);
-         double thetaPlus = theta+requested_omega.length()*delT;
+         double thetaPlus = theta+requested_omega[0]*delT;
          double R = sqrt(posy*posy + posz*posz);
          NewNodePos = Point(NodePos.x(),
                             R*cos(thetaPlus)+requested_origin.y(),
@@ -308,17 +308,17 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
        } else if(rotation_axis==1){  //rotation about y-axis
          double posx = NodePos.x() - requested_origin.x();
          double posz = NodePos.z() - requested_origin.z();
-         double theta = atan2(posz,posx);
-         double thetaPlus = theta+requested_omega.length()*delT;
+         double theta = atan2(posx,posz);
+         double thetaPlus = theta+requested_omega[1]*delT;
          double R = sqrt(posz*posz + posx*posx);
-         NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
+         NewNodePos = Point(R*sin(thetaPlus)+requested_origin.x(),
                             NodePos.y(),
-                            R*sin(thetaPlus)+requested_origin.z());
+                            R*cos(thetaPlus)+requested_origin.z());
        } else if(rotation_axis==2){  //rotation about z-axis
          double posx = NodePos.x() - requested_origin.x();
          double posy = NodePos.y() - requested_origin.y();
          double theta = atan2(posy,posx);
-         double thetaPlus = theta+requested_omega.length()*delT;
+         double thetaPlus = theta+requested_omega[2]*delT;
          double R = sqrt(posx*posx + posy*posy);
          NewNodePos = Point(R*cos(thetaPlus)+requested_origin.x(),
                             R*sin(thetaPlus)+requested_origin.y(),
