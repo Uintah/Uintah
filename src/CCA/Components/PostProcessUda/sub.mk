@@ -22,10 +22,8 @@
 #  IN THE SOFTWARE.
 #
 #
-#
-#
-#
 # Makefile fragment for this subdirectory
+#
 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -33,26 +31,27 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := CCA/Components/PostProcessUda
 
 SRCS += \
-	$(SRCDIR)/PostProcessUda.cc       \
-	$(SRCDIR)/Module.cc               \
-	$(SRCDIR)/ModuleFactory.cc
+        $(SRCDIR)/PostProcessUda.cc       \
+        $(SRCDIR)/Module.cc               \
+        $(SRCDIR)/ModuleFactory.cc
 
 PSELIBS := \
-	CCA/Components/Application \
-	CCA/Ports                  \
+        CCA/Components/Application \
+       CCA/Components/OnTheFlyAnalysis \
+       CCA/Components/ProblemSpecification \
+        CCA/Ports                  \
         \
-	Core/Containers  \
-	Core/DataArchive \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/OS          \
-	Core/Math        \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	Core/Util
+        Core/Containers  \
+        Core/DataArchive \
+        Core/Disclosure  \
+        Core/Exceptions  \
+        Core/Grid        \
+        Core/OS          \
+        Core/Math        \
+        Core/Parallel    \
+        Core/ProblemSpec \
+        Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
