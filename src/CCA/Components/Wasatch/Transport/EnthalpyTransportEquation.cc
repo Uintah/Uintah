@@ -77,11 +77,12 @@ struct EnthalpyBoundaryTyper
   class EnthDiffCoeff
    : public Expr::Expression<FieldT>
   {
-    DECLARE_FIELDS(FieldT, thermCond_, cp_, turbVisc_)
+    DECLARE_FIELDS(FieldT, thermCond_, rho_, cp_, turbVisc_)
     const double turbPr_;
     const bool isTurbulent_;
 
     EnthDiffCoeff( const Expr::Tag& thermCondTag,
+                   const Expr::Tag& densityTag,
                    const Expr::Tag& viscosityTag,
                    const Expr::Tag& turbViscTag,
                    const double turbPr )
@@ -91,6 +92,7 @@ struct EnthalpyBoundaryTyper
     {
        this->set_gpu_runnable(true);
        thermCond_ = create_field_request<FieldT>(thermCondTag);
+       rho_ = create_field_request<FieldT>(densityTag);
        cp_ = create_field_request<FieldT>(viscosityTag);
       if(isTurbulent_)  turbVisc_ = create_field_request<FieldT>(turbViscTag);
     }
@@ -109,22 +111,24 @@ struct EnthalpyBoundaryTyper
        */
       Builder( const Expr::Tag& resultTag,
                const Expr::Tag& thermCondTag,
+               const Expr::Tag& densityTag,
                const Expr::Tag& cpTag,
                const Expr::Tag& turbViscTag,
                const double turbPrandtl = 0.7 )
       : ExpressionBuilder( resultTag ),
         thermCondTag_( thermCondTag ),
-        cpTag_       ( cpTag ),
+        densityTag_  ( densityTag   ),
+        cpTag_       ( cpTag        ),
         turbViscTag_ ( turbViscTag  ),
         turbPr_      ( turbPrandtl  )
       {}
 
       Expr::ExpressionBase* build() const{
-        return new EnthDiffCoeff( thermCondTag_,cpTag_,turbViscTag_,turbPr_ );
+        return new EnthDiffCoeff( thermCondTag_, densityTag_, cpTag_,turbViscTag_,turbPr_ );
       }
 
     private:
-      const Expr::Tag thermCondTag_, cpTag_, turbViscTag_;
+      const Expr::Tag thermCondTag_, densityTag_, cpTag_, turbViscTag_;
       const double turbPr_;
     };
 
@@ -134,9 +138,10 @@ struct EnthalpyBoundaryTyper
       using namespace SpatialOps;
       FieldT& result = this->value();
       const FieldT& thermCond = thermCond_->field_ref();
+      const FieldT& rho = rho_->field_ref();
       const FieldT& cp = cp_->field_ref();
-      if( isTurbulent_ ) result <<= thermCond / cp + turbVisc_->field_ref()/turbPr_;
-      else               result <<= thermCond / cp;
+      if( isTurbulent_ ) result <<= thermCond / (rho * cp) + turbVisc_->field_ref()/turbPr_;
+      else               result <<= thermCond / (rho * cp);
     }
   };
 
@@ -230,28 +235,28 @@ struct EnthalpyBoundaryTyper
         icFactory.register_expression( scinew ThermCond( lambdaTag, temperatureTag,  yiInitTags_, tags.mixMW ) );
       }
     }
-      else
+    else
 #   endif
     if( propertiesSpecified ){
       lambdaTag = parse_nametag( lambdaParams->findBlock("NameTag") );
       cpTag     = parse_nametag( cpParams    ->findBlock("NameTag") );
       // if not calculated by PoKiTT, ensure that heat capcity and thermal conductivity are
       // specified in the input file
-      }
-      else{
-        std::ostringstream msg;
-        msg << "Specification of a 'TransportEquation equation=\"enthalpy\"' block requires" << std::endl
-            << "sub-blocks for 'ThermalConductivity' and 'HeatCapacity' or a"                << std::endl
-            << "'PropertiesFromPoKiTT' sub-block"
-            << std::endl;
-        throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
-      }
+    }
+    else{
+      std::ostringstream msg;
+      msg << "Specification of a 'TransportEquation equation=\"enthalpy\"' block requires" << std::endl
+          << "sub-blocks for 'ThermalConductivity' and 'HeatCapacity' or a"                << std::endl
+          << "'PropertiesFromPoKiTT' sub-block"
+          << std::endl;
+      throw Uintah::ProblemSetupException(msg.str(), __FILE__, __LINE__ );
+    }
 
     const Expr::Tag turbViscTag = enableTurbulence_ ? tags.turbulentviscosity : Expr::Tag();
     typedef EnthDiffCoeff::Builder DiffCoeff;
-    solnFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
+    solnFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
     if(flowTreatment_ == LOWMACH ){
-      icFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
+      icFactory.register_expression( scinew DiffCoeff( diffCoeffTag_, lambdaTag, densityTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl ) );
     }
 
     setup();
