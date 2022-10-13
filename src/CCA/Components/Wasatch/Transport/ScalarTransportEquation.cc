@@ -85,7 +85,9 @@ namespace WasatchCore{
       Expr::ExpressionFactory& factory   = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
       typedef typename TurbulentDiffusivity::Builder TurbDiffT;
+      if( !factory.have_entry( turbDiffTag_ ) ){
       factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+      }
     } // if(enableTurbulence_)
 
     // define the primitive variable and solution variable tags and trap errors
