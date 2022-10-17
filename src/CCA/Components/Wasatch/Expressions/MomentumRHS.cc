@@ -29,6 +29,8 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/FVStaggered.h>
 
+#include <CCA/Components/Wasatch/Wasatch.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 template< typename FieldT, typename DirT>
 MomRHS<FieldT, DirT>::
@@ -40,9 +42,20 @@ MomRHS( const Expr::Tag& pressureTag,
     hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  
+  guessStage1_=false;
+  guessStage1_=false;
+  const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;  
+  integName_ = WasatchCore::Wasatch::get_timeIntegratorName();
+
+  if (WasatchCore::Wasatch::using_pressure_guess()) {
+    rkStage_ = this->template create_field_request<TimeField>(rkst);
+    guessStage1_ = WasatchCore::Wasatch::guess_stage_1();
+    guessStage2_ = WasatchCore::Wasatch::guess_stage_2();
+    pressureGuess_ = this->template create_field_request<PFieldT>(WasatchCore::TagNames::self().pressureguess);
+  }
+  else rhsPart_ = this->template create_field_request<FieldT>(partRHSTag);
+
   if( hasP_ )  pressure_ = this->template create_field_request<PFieldT>(pressureTag);
-   rhsPart_ = this->template create_field_request<FieldT>(partRHSTag);
   if( hasIntrusion_ )  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
@@ -72,9 +85,23 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  if (WasatchCore::Wasatch::using_pressure_guess())
+  {
+    const PFieldT& p = pressure_->field_ref();
+    const PFieldT& pguess = pressureGuess_->field_ref();
+    const TimeField& RKStage = rkStage_->field_ref();
 
+    bool rk2Cond = integName_=="RK2SSP" && (*RKStage.begin() ==1 && guessStage1_);
+    bool rk3Cond = integName_=="RK3SSP" && ((*RKStage.begin() ==1 && guessStage1_)||(*RKStage.begin() ==2 && guessStage2_));
+    bool recompiled = WasatchCore::Wasatch::low_cost_integ_recompiled();
+    // the momentum rhs only contains the pressure gradient when using the integrator model that uses mom-hat. 
+    if (recompiled && (rk2Cond || rk3Cond)) result <<= - (*gradOp_)(pguess);
+    else result <<= - (*gradOp_)(p);
+
+    if( hasIntrusion_ ) result <<= volfrac_->field_ref() * result;
+  }
+  else{
   const FieldT&  rhsPart = rhsPart_->field_ref();
-
   if( hasP_ ){
     const PFieldT& p = pressure_->field_ref();
     if( hasIntrusion_ )  result <<= volfrac_->field_ref() * ( rhsPart - (*gradOp_)(p) );
@@ -83,6 +110,7 @@ evaluate()
   else{
     if( hasIntrusion_ ) result <<= volfrac_->field_ref() * rhsPart;
     else                result <<= rhsPart;
+  }
   }
 }
 

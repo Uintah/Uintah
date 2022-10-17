@@ -67,7 +67,8 @@ namespace WasatchCore{
      */
     EquationBase( GraphCategories& gc,
                   const std::string solnVarName,
-                  const Direction direction );
+                  const Direction direction,
+                  const bool hasHat=false );
 
     virtual ~EquationBase(){}
 
@@ -95,7 +96,12 @@ namespace WasatchCore{
      *  \brief Obtain the rhs tag of the solution variable for this transport equation.
      */
     inline const Expr::Tag& rhs_tag() const { return rhsTag_; }
-
+    
+    /**
+     *  \brief Obtain the momHAt tag of the solution variable for this transport equation.
+     */
+    inline const Expr::Tag& momHat_tag() const { return momHatTag_; }
+    
     /**
      *  \brief Obtain the rhs name of the solution variable for this transport equation.
      */
@@ -172,6 +178,7 @@ namespace WasatchCore{
     const Expr::Tag solnVarTag_;     ///< Tag for the solution variable. uses STATE_DYNAMIC (points to STATE_N - or latest)
     const Expr::Tag solnVarNP1Tag_;     ///< Tag for the solution variable at NP1. This points to the time advance tag
     const Expr::Tag rhsTag_;         ///< Tag for the rhs
+    const Expr::Tag momHatTag_;      ///< Tag for momentum hat
     Expr::ExpressionID rhsExprID_;   ///< The label for the rhs expression for this EquationBase.
   };
 

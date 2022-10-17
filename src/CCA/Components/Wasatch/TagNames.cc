@@ -111,6 +111,10 @@ namespace WasatchCore{
   strainzy  (  "strain_zy", Expr::STATE_NONE ),
   strainzz  (  "strain_zz", Expr::STATE_NONE ),
   
+  // momentum hat related variables
+  divmomhat    ( "div-mom-hat"   , Expr::STATE_NONE ),
+  pressureguess( "pressure-guess", Expr::STATE_NONE ),
+
   // turbulence related
   turbulentviscosity  ( "TurbulentViscosity",            Expr::STATE_NONE ),
   turbulentdiffusivity( "TurbulentDiffusivity",          Expr::STATE_NONE ),

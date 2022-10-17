@@ -921,6 +921,23 @@ namespace WasatchCore{
                                     densityTag :
                                     Expr::Tag(densityTag.name(), Expr::STATE_N);
 
+      // Parse UsingPressureGuess
+      if (momentumSpec->findBlock("UsingPressureGuess"))
+      {
+          Uintah::ProblemSpecP usingPressureGuessSpec = momentumSpec->findBlock("UsingPressureGuess");
+          bool use_guess_stage_1 = false;
+          bool use_guess_stage_2 = false;
+          usingPressureGuessSpec->getAttribute("stage-1",use_guess_stage_1);
+          usingPressureGuessSpec->getAttribute("stage-2",use_guess_stage_2);
+          WasatchCore::Wasatch::set_using_pressure_guess(true);
+          WasatchCore::Wasatch::set_guess_stage_1(use_guess_stage_1);
+          WasatchCore::Wasatch::set_guess_stage_2(use_guess_stage_2);
+          if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK2SSP" && use_guess_stage_1)
+            WasatchCore::Wasatch::low_cost_integ_need_recompile(/*recompile after the first timestep */1);
+          else if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK3SSP" && (use_guess_stage_1||use_guess_stage_2))
+            WasatchCore::Wasatch::low_cost_integ_need_recompile(/*recompile after the second timestep */ 2); 
+      }
+
       if( doxvel && doxmom ){
         proc0cout << "Setting up X momentum transport equation" << std::endl;
         typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
@@ -999,10 +1016,36 @@ namespace WasatchCore{
                                                                                                                                                             xMomTagNp1,yMomTagNp1,zMomTagNp1, TagNames::self().soundspeed, timeIntegratorName ), true);
 
       } else {
+        
+        double outerRuleMultiplier = 1;
+        Uintah::ProblemSpecP usingPressureGuessSpec = momentumSpec->findBlock("UsingPressureGuess");
+        if (usingPressureGuessSpec)
+          usingPressureGuessSpec->getAttribute("outer-rule-multiplier",outerRuleMultiplier);
+        if (timeIntegratorName=="RK3SSP" && (abs(outerRuleMultiplier - 1.0)<= 1e-15))
+        {
+          bool d1 = !WasatchCore::Wasatch::guess_stage_1();
+          bool d2 = !WasatchCore::Wasatch::guess_stage_2();
+          if (d1 && !d2 ) outerRuleMultiplier = 0.45;  // RK310
+          if (!d1 && d2 ) outerRuleMultiplier = 0.90;  // RK301
+          if (!d1 && !d2) outerRuleMultiplier = 0.20;  // RK300
+        }
+
+        double fixedCourant=0.0; 
+        Uintah::ProblemSpecP fixedCourantSpec = momentumSpec->findBlock("FixedCourantSum");
+        if (fixedCourantSpec)
+          fixedCourantSpec->getAttribute("value",fixedCourant);
+
         stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestepForEq<XVolField,YVolField,ZVolField>::Builder( Expr::Tag(stbldtMom,Expr::STATE_NONE),
-                                                                                                                                                            densityTag,
-                                                                                                                                                            viscTag,
-                                                                                                                                                            xMomTagNp1,yMomTagNp1,zMomTagNp1, Expr::Tag(),timeIntegratorName ), true);
+                                                                                                                                         densityTag,
+                                                                                                                                         viscTag,
+                                                                                                                                         xMomTagNp1,
+                                                                                                                                         yMomTagNp1,
+                                                                                                                                         zMomTagNp1,
+                                                                                                                                         Expr::Tag(),
+                                                                                                                                         timeIntegratorName,
+                                                                                                                                         outerRuleMultiplier,
+                                                                                                                                         fixedCourant )
+                                                                                                                                         , true);
         
 
       }

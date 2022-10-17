@@ -27,7 +27,9 @@ StableTimestepForEq( const Expr::Tag& rhoTag,
             const Expr::Tag& rhovTag,
             const Expr::Tag& rhowTag,
             const Expr::Tag& csoundTag,
-            const std::string timeIntegratorName)
+            const std::string timeIntegratorName,
+            const double multiplier,
+            const double courantVal)
 : Expr::Expression<SpatialOps::SingleValueField>(),
   dx_(1.0),
   dy_(1.0),
@@ -37,7 +39,9 @@ StableTimestepForEq( const Expr::Tag& rhoTag,
   doZ_( rhowTag != Expr::Tag() ),
   isCompressible_(csoundTag != Expr::Tag()),
   is3dconvdiff_( doX_ && doY_ && doZ_),
-  timeIntegratorName_(timeIntegratorName)
+  timeIntegratorName_(timeIntegratorName),
+  multiplier_(multiplier),
+  courantVal_(courantVal)
 {
   rho_ = create_field_request<SVolField>(rhoTag);
   visc_ = create_field_request<SVolField>(viscTag);
@@ -172,7 +176,22 @@ evaluate()
   SpatialOps::SpatFldPtr<SingleValueField> innerdtMin = SpatialOps::SpatialFieldStore::get<SingleValueField>( result );
   *innerdtMin <<= 999999999.0;
   *innerdtMin <<= field_min_interior(*innerdt);
-  result <<= min( *innerdtMin, field_min_interior(*outerdt) );
+  result <<= min( *innerdtMin, field_min_interior((*outerdt) * multiplier_) );
+
+  // specified value of courant Sum 
+  if (courantVal_)
+  {
+    SpatialOps::SpatFldPtr<SVolField> fixedCourantdt = SpatialOps::SpatialFieldStore::get<SVolField>( rho );
+  
+    if (!doX_) *fixedCourantdt <<= 0.0;
+    if (doX_)  *fixedCourantdt <<=            *u_ / dx_;
+    if (doY_)  *fixedCourantdt <<= *fixedCourantdt + *v_ / dy_;
+    if (doZ_)  *fixedCourantdt <<= *fixedCourantdt + *w_ / dz_;
+    *fixedCourantdt <<= courantVal_ / *fixedCourantdt;
+
+    result <<= min(result, field_min_interior((*fixedCourantdt)));
+  }
+  
 }
 
 //--------------------------------------------------------------------
@@ -185,7 +204,9 @@ Builder::Builder( const Expr::Tag& resultTag,
                  const Expr::Tag& rhovTag,
                  const Expr::Tag& rhowTag,
                  const Expr::Tag& csoundTag,
-                 const std::string timeIntegratorName)
+                 const std::string timeIntegratorName,
+                 const double multiplier,
+                 const double courantVal)
 : ExpressionBuilder( resultTag ),
 rhoTag_( rhoTag ),
 viscTag_( viscTag ),
@@ -193,7 +214,9 @@ rhouTag_( rhouTag ),
 rhovTag_( rhovTag ),
 rhowTag_( rhowTag ),
 csoundTag_(csoundTag),
-timeIntegratorName_(timeIntegratorName)
+timeIntegratorName_(timeIntegratorName),
+multiplier_(multiplier),
+courantVal_(courantVal)
 {}
 
 //--------------------------------------------------------------------
@@ -202,7 +225,7 @@ Expr::ExpressionBase*
 StableTimestepForEq<Vel1T,Vel2T,Vel3T>::
 Builder::build() const
 {
-  return new StableTimestepForEq( rhoTag_,viscTag_,rhouTag_,rhovTag_,rhowTag_, csoundTag_, timeIntegratorName_ );
+  return new StableTimestepForEq( rhoTag_,viscTag_,rhouTag_,rhovTag_,rhowTag_, csoundTag_, timeIntegratorName_,multiplier_,courantVal_ );
 }
 
 //==========================================================================

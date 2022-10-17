@@ -63,6 +63,8 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
+#include <CCA/Components/Wasatch/Expressions/MomHat.h>
+#include <CCA/Components/Wasatch/Expressions/PressureGuess.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 #include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
@@ -217,7 +219,38 @@ namespace WasatchCore{
     } else if( factory.have_entry( this->pressureTag_ ) ) {
       this->pressureID_ = factory.get_id( this->pressureTag_ );
     }
-    
+
+    // new momentum advance
+    if (WasatchCore::Wasatch::using_pressure_guess())
+    {
+    // create an expression for mom hat
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
+    momHatTag_ = mom_hat_tag(momName);
+    typedef typename MomHat<FieldT, SpatialOps::NODIR>::Builder momHat;
+
+    const Expr::ExpressionID momHatId = factory.register_expression( new momHat( momHatTag_,
+                                                                        rhs_part_tag(this->solnVarName_),
+                                                                        mom_tag(this->solnVarName_,true),
+                                                                        volFracTag) );
+    // graphHelper.rootIDs.insert(momHatId); // temporarly
+    factory.cleave_from_parents( momHatId  );
+    factory.cleave_from_children( momHatId  );
+    //---------------------- 
+
+    int approx_order=0;
+    if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK2SSP") approx_order=1;
+    else if (WasatchCore::Wasatch::get_timeIntegratorName()=="RK3SSP") approx_order=2;
+    WasatchCore::Wasatch::set_old_dt_num(approx_order);
+
+    OldVariable& oldVar = OldVariable::self();
+  
+    if( !factory.have_entry( tagNames.pressureguess ) && approx_order !=0){   
+      const Expr::ExpressionID pressureGuessId = factory.register_expression( new PressureGuess::Builder( tagNames.pressureguess, approx_order ));
+      oldVar.add_variables<SVolField>(ADVANCE_SOLUTION, tagNames.pressure, approx_order);
+      // graphHelper.rootIDs.insert(pressureGuessId); // temporarly
+      }
+    }
     this->setup();
   }
 
@@ -258,6 +291,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory& initFactory = *(graphCat[INITIALIZATION]->exprFactory);
     
     const TagNames& tagNames = TagNames::self();
+    bool hasHat = WasatchCore::Wasatch::using_pressure_guess();
     //
     // Add dummy modifiers on all patches. This is used to inject new dpendencies across all patches.
     // Those new dependencies, result for example from complicated boundary conditions added in this
@@ -331,6 +365,11 @@ namespace WasatchCore{
           BndCondSpec velBCSpec = {this->thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, velBCSpec);          
 
+          // momentum hat bcoundary condition spec on Wall
+          if (hasHat){
+          BndCondSpec momHatBCSpec = {this->momHat_tag().name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momHatBCSpec);
+          }
           if( isNormal ){
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(this->solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
@@ -362,6 +401,10 @@ namespace WasatchCore{
             // tsaad: If this VELOCITY boundary has ONLY velocity specified, then infer momentum bc
             const Expr::Tag momBCTag( this->solnVarName_ + "_bc_primvar_" + bndName, Expr::STATE_NONE);
             advSlnFactory.register_expression ( new typename BCPrimVar<FieldT>::Builder(momBCTag, this->thisVelTag_, this->densityTag_) );
+            if (hasHat){
+            const Expr::Tag momHatBCTag( this->momHatTag_.name() + "_bc_primvar_" + bndName, Expr::STATE_NONE);
+            advSlnFactory.register_expression ( new typename BCPrimVar<FieldT>::Builder(momHatBCTag, this->thisVelTag_, this->densityTag_));
+            }
             
             if( initFactory.have_entry(this->thisVelTag_) ){
               const Expr::Tag densityStateNone(this->densityTag_.name(), Expr::STATE_NONE);
@@ -369,7 +412,13 @@ namespace WasatchCore{
             }
 
             BndCondSpec momBCSPec = {this->solnVarName_, momBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-            bcHelper.add_boundary_condition(bndName, momBCSPec);            
+            bcHelper.add_boundary_condition(bndName, momBCSPec);
+            if (hasHat){
+            const Expr::Tag momHatBCTag( this->momHatTag_.name() + "_bc_primvar_" + bndName, Expr::STATE_NONE);
+            BndCondSpec momHatBCSPec = {this->solnVarName_, momHatBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, momHatBCSPec);  
+            }
+                 
           }
 
           if( isNormal ){
@@ -408,6 +457,11 @@ namespace WasatchCore{
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           bcHelper.add_boundary_condition(bndName, velBCSpec);
 
+          if (hasHat){
+          BndCondSpec momHatBCSpec = {this->momHat_tag().name(), "none" , 0.0, NEUMANN,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momHatBCSpec);
+          }
+
           // Set the pressure to Dirichlet 0 (atmospheric conditions)
           BndCondSpec pressureBCSpec = {this->pressureTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
@@ -434,6 +488,10 @@ namespace WasatchCore{
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           bcHelper.add_boundary_condition(bndName, velBCSpec);
 
+          if (hasHat){
+          BndCondSpec momHatBCSpec = {this->momHat_tag().name(), "none" , 0.0, NEUMANN,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momHatBCSpec);
+          }
           // Set the pressure to Dirichlet 0 (atmospheric conditions)
           BndCondSpec pressureBCSpec = {this->pressureTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
@@ -492,7 +550,11 @@ namespace WasatchCore{
     bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(this->solnVarName_)), taskCat, true);
     // set bcs for partial full rhs - apply directly on the boundary
     bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
-
+    if (WasatchCore::Wasatch::using_pressure_guess())
+    {
+    // set bcs for momHat 
+    bcHelper.apply_boundary_condition<FieldT>( this->momHatTag_, taskCat);
+    }
     if( !this->is_constant_density() ){
       // set bcs for density
       const Expr::Tag densityNP1Tag( this->densityTag_.name(), Expr::STATE_NP1 );

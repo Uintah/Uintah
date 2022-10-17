@@ -68,6 +68,7 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/InstantaneousPressure.h>
 
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleInitialization.h>
 
@@ -1198,7 +1199,8 @@ namespace WasatchCore{
       
       const TagNames tNames = TagNames::self();
       OldVariable& oldVar = OldVariable::self();
-      
+      oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, Expr::Tag( "pressure", Expr::STATE_NONE ));
+
       if( doxmom ){
         typedef XVolField FieldT;
         const double targetVelocity =targetVelocities[0];
@@ -1207,7 +1209,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_x", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(xmomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(xmomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(xmomname, Expr::STATE_DYNAMIC);
         
         // now create an XVOL geometry expression using GeometryBased
@@ -1215,12 +1217,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(xmomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(xmomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
       
       if( doymom ){
@@ -1232,7 +1234,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_y", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(ymomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(ymomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(ymomname, Expr::STATE_DYNAMIC);
         
         // now create a YVOL geometry expression using GeometryBased
@@ -1240,12 +1242,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(ymomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(ymomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
       
       if( dozmom ){
@@ -1255,7 +1257,7 @@ namespace WasatchCore{
         const Expr::Tag fanSourceTag(fanName + "_source_z", Expr::STATE_NONE);
         
         // need to use the old momentum RHS tag
-        Expr::Tag momRHSOldTag(zmomname + "_rhs_old",Expr::STATE_NONE);
+        Expr::Tag momRHSPartOldTag(zmomname + "_rhs_partial_old",Expr::STATE_NONE);
         const Expr::Tag momOldTag(zmomname, Expr::STATE_DYNAMIC);
         
         // now create a ZVOL geometry expression using GeometryBased
@@ -1263,12 +1265,12 @@ namespace WasatchCore{
         gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename GeometryBased<FieldT>::Builder(volFracTag, geomObjectsMap, outsideValue));
         
         // now create the xmomentum source term
-        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSOldTag, volFracTag, targetVelocity));
+        gc[ADVANCE_SOLUTION]->exprFactory->register_expression(scinew typename FanModel<FieldT,SpatialOps::NODIR>::Builder(fanSourceTag,  densityTag, momOldTag, momRHSPartOldTag, volFracTag, targetVelocity));
         
         // create an old variable
         oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, fanSourceTag);
-        Expr::Tag momRHSTag(zmomname + "_rhs", Expr::STATE_NONE);
-        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSTag);
+        Expr::Tag momRHSPartTag(zmomname + "_rhs_partial", Expr::STATE_NONE);
+        oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, momRHSPartTag);
       }
     }
 
@@ -1607,6 +1609,29 @@ namespace WasatchCore{
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
+      else if ( exprParams->findBlock("InstantaneousPressure") ) {
+        Uintah::ProblemSpecP InstPressSpec = exprParams->findBlock("InstantaneousPressure");
+        double order=0.0;
+        InstPressSpec->getAttribute("order",order);
+        Uintah::ProblemSpecP momentumSpec = parser->findBlock("MomentumEquations");
+        
+        if ( (!momentumSpec->findBlock("UsingPressureGuess")) || (order > 3.0) )
+        {
+          std::ostringstream msg;
+          msg << "ERROR: The instantaneous pressure can only be used when <UsingPressureGuess /> is applied in the momentum transport equation and for order <= 3.0. Please revise your input file." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        else{
+        const Expr::Tag pressuret = WasatchCore::TagNames::self().pressure;
+        // store the necessary number of pseudo-pressure values necessary for the 
+        // construction of the instantaneous pressure.
+        OldVariable& oldVar = OldVariable::self();
+        oldVar.add_variables<SVolField>(ADVANCE_SOLUTION, pressuret, order);
+
+        typedef InstantaneousPressure::Builder Builder;
+        builder = scinew Builder(tag, order);
+        }
+      }
 
       const Category cat = parse_tasklist(exprParams,false);
       gc[cat]->exprFactory->register_expression( builder );
@@ -1792,6 +1817,56 @@ namespace WasatchCore{
         graphHelper->exprFactory->register_expression( scinew Builder( thisMomentTag, val ) );
       }
     }
+
+    //___________________________________________________________
+    // parse and save old variables from the previous n timesteps
+    //___________________________________________________________
+    // loop over the blocks of OldVariables
+    for( Uintah::ProblemSpecP oldVarsParams = parser->findBlock("OldVariables");
+         oldVarsParams != nullptr;
+         oldVarsParams = oldVarsParams->findNextBlock("OldVariables") ){
+      
+      // reference to the old variable instance
+      OldVariable& oldVar = OldVariable::self();
+
+      // get the type of the fields to save and for how many timesteps 
+      std::string fieldType;
+      int last_n_steps = 0;
+      
+      oldVarsParams->getAttribute("type", fieldType);
+      oldVarsParams->getAttribute("last_n_steps",last_n_steps);
+
+      // get the graph category 
+      const Category cat = parse_tasklist(oldVarsParams,false);
+
+      // loop over the variables to save
+      for( Uintah::ProblemSpecP varTagParams = oldVarsParams->findBlock("carry");
+          varTagParams != nullptr;
+          varTagParams = varTagParams->findNextBlock("carry") ) {
+            
+            // get the name and the state of the variable
+            std::string varName, stateName;
+
+            varTagParams->getAttribute("name", varName);
+            varTagParams->getAttribute("state",stateName);
+            
+            // create a tag from the varName and stateName
+            const Expr::Tag oldVarTag( varName,  Expr::str2context(stateName));
+
+            // add variables to the oldVar instance based on the field type
+            switch( get_field_type(fieldType) ){
+              case SVOL : oldVar.add_variables< SVolField >( cat, oldVarTag, last_n_steps );  break;
+              case XVOL : oldVar.add_variables< XVolField >( cat, oldVarTag, last_n_steps );  break;
+              case YVOL : oldVar.add_variables< YVolField >( cat, oldVarTag, last_n_steps );  break;
+              case ZVOL : oldVar.add_variables< ZVolField >( cat, oldVarTag, last_n_steps );  break;
+              default:
+                std::ostringstream msg;
+                msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+                throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+          }
+    }
+
   }
   
   //------------------------------------------------------------------

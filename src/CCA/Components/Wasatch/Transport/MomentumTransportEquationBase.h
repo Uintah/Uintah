@@ -79,6 +79,8 @@ namespace WasatchCore{
   Expr::Tag rhs_part_tag( const Expr::Tag& momTag );
   
   Expr::Tag rhs_part_tag( const std::string& momName );
+
+  Expr::Tag mom_hat_tag( const std::string& momName );
   
   void set_vel_tags( Uintah::ProblemSpecP params,
                      Expr::TagList& velTags );
@@ -86,6 +88,9 @@ namespace WasatchCore{
   void set_mom_tags( Uintah::ProblemSpecP params,
                      Expr::TagList& momTags,
                      const bool old=false);
+
+  void set_mom_hat_tags( Uintah::ProblemSpecP params,
+                        Expr::TagList& momHatTags);
 
   bool is_normal_to_boundary( const Direction stagLoc,
                               const Uintah::Patch::FaceType face);
@@ -183,6 +188,7 @@ namespace WasatchCore{
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
+    Expr::TagList momHatTags_, oldMomHatTags_;  ///< TagList for the momentum hat expressions
     Expr::Tag     thisVolFracTag_;
     Expr::Tag     normalStrainTag_, normalConvFluxTag_;
 

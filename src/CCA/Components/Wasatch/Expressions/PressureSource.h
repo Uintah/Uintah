@@ -61,6 +61,7 @@ class PressureSource : public Expr::Expression<SVolField>
   DECLARE_FIELDS(YVolField, yMom_, yMomOld_, yVel_)
   DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, zVel_)
   DECLARE_FIELDS(SVolField, dil_, rho_, rhoStar_, divu_)
+  DECLARE_FIELDS(SVolField,dilatationHat_)
   DECLARE_FIELDS(TimeField, dt_, rkStage_)
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_;

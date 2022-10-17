@@ -1,6 +1,7 @@
  #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -47,6 +48,12 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   
   const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;
   rkStage_ = create_field_request<TimeField>(rkst);
+
+  if (WasatchCore::Wasatch::using_pressure_guess())
+  {
+  const Expr::Tag dilatationHatt = WasatchCore::TagNames::self().divmomhat;
+  dilatationHat_ = create_field_request<SVolField>(dilatationHatt);
+  }
 }
 
 //------------------------------------------------------------------
@@ -105,6 +112,12 @@ void PressureSource::evaluate()
   const double b3 = timeIntInfo.beta[2];
 
   if( isConstDensity_ ) {
+    if (WasatchCore::Wasatch::using_pressure_guess())
+    {
+      const SVolField& dilh = dilatationHat_->field_ref();
+      psrc <<= dilh / dt;
+    }
+    else{
     const SVolField& dil = dil_->field_ref();
 
     if( is3d_ ){ // for 3D cases, inline the whole thing
@@ -125,7 +138,7 @@ void PressureSource::evaluate()
                  ( rkStage == 2.0, (a2* psrc + b2 * rho * dil) / (b2 * dt) )
                  ( rkStage == 3.0, (a3* psrc + b3 * rho * dil) / (b3 * dt) )
                  ( 0.0 ); // should never get here.
-    
+    }
   } else { // variable density
     
     SVolField& drhodtstar = *results[1];

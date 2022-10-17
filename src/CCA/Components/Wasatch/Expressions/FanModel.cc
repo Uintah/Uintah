@@ -30,8 +30,8 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-template< typename FieldT >
-FanModel<FieldT>::
+template< typename FieldT, typename DirT >
+FanModel<FieldT,DirT>::
 FanModel( const Expr::Tag& rhoTag,
           const Expr::Tag& momTag,
           const Expr::Tag& momRHSTag,
@@ -50,55 +50,57 @@ FanModel( const Expr::Tag& rhoTag,
   momRHS_  = this->template create_field_request<FieldT>(momRHSTag);
   volFrac_ = this->template create_field_request<FieldT>(volFracTag);
   fanSourceOld_ = this->template create_field_request<FieldT>(fanSrcOldTag);
+  pressure_ = this->template create_field_request<SVolField>(Expr::Tag("pressure_old",Expr::STATE_NONE));
 }
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
-FanModel<FieldT>::
+template< typename FieldT, typename DirT >
+FanModel<FieldT,DirT>::
 ~FanModel()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT >
 void
-FanModel<FieldT>::
+FanModel<FieldT,DirT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
+  gradOp_ = opDB.retrieve_operator<Grad>();
 }
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT >
 void
-FanModel<FieldT>::
+FanModel<FieldT,DirT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
   // Do not delete this next line plz. THis is another form of the Fan Model - and for some reason it just works!
   // result <<= volFrac_->field_ref()*(1.0/dt_->field_ref()) * ( (*densityInterpOp_)(rho_->field_ref()) * targetVel_ - mom_->field_ref());
-  result <<= (1.0/dt_->field_ref()) * ( (*densityInterpOp_)(rho_->field_ref()) * targetVel_ - mom_->field_ref()) - ( momRHS_->field_ref() - fanSourceOld_->field_ref() );
+  result <<= (1.0/dt_->field_ref()) * ( (*densityInterpOp_)(rho_->field_ref()) * targetVel_ - mom_->field_ref()) - ( momRHS_->field_ref() - (*gradOp_)(pressure_->field_ref())  - fanSourceOld_->field_ref() );
   result <<= volFrac_->field_ref()*result;
 
 }
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
-FanModel<FieldT>::
+template< typename FieldT, typename DirT >
+FanModel<FieldT,DirT>::
 Builder::Builder( const Expr::Tag& result,
                  const Expr::Tag& rhoTag,
                  const Expr::Tag& momTag,
-                 const Expr::Tag& momRHSTag,
+                 const Expr::Tag& momRHSPartTag,
                  const Expr::Tag& volFracTag,
                  const double targetVelocity )
   : ExpressionBuilder(result         ),
     rhot_           ( rhoTag         ),
     momt_           ( momTag         ),
-    momrhst_        ( momRHSTag      ),
+    momrhspartt_    ( momRHSPartTag  ),
     volfract_       ( volFracTag     ),
     fansrcoldt_     ( Expr::Tag(result.name() + "_old", Expr::STATE_NONE) ),
     targetvelocity_ ( targetVelocity )
@@ -106,19 +108,21 @@ Builder::Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT >
 Expr::ExpressionBase*
-FanModel<FieldT>::Builder::build() const
+FanModel<FieldT,DirT>::Builder::build() const
 {
-  return new FanModel<FieldT>( rhot_, momt_, momrhst_, fansrcoldt_, volfract_, targetvelocity_ );
+  return new FanModel<FieldT,DirT>( rhot_, momt_, momrhspartt_, fansrcoldt_, volfract_, targetvelocity_ );
 }
 
 //--------------------------------------------------------------------
 
 //==================================================================
 // Explicit template instantiation
-template class FanModel< SpatialOps::SVolField >;
-template class FanModel< SpatialOps::XVolField >;
-template class FanModel< SpatialOps::YVolField >;
-template class FanModel< SpatialOps::ZVolField >;
+template class FanModel< SpatialOps::SVolField, SpatialOps::XDIR  >;
+template class FanModel< SpatialOps::SVolField, SpatialOps::YDIR  >;
+template class FanModel< SpatialOps::SVolField, SpatialOps::ZDIR  >;
+template class FanModel< SpatialOps::XVolField, SpatialOps::NODIR >;
+template class FanModel< SpatialOps::YVolField, SpatialOps::NODIR >;
+template class FanModel< SpatialOps::ZVolField, SpatialOps::NODIR >;
 //==================================================================

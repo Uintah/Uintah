@@ -33,6 +33,7 @@
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
+#include <CCA/Components/Wasatch/Expressions/PressureSchedulerHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
@@ -125,6 +126,8 @@ class Pressure
   MatType matrix_;
   const Uintah::Patch* patch_;
   WasatchBCHelper* bcHelper_;
+
+  RKPressureSchedulerHelper *pressure_scheduler_helper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,
