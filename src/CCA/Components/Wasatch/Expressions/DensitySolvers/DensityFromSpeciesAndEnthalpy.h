@@ -90,7 +90,7 @@ namespace WasatchCore{
                                    const unsigned       maxIter );
     
     //todo: decide if this should be different 
-    inline double get_normalization_factor( const unsigned i ) const{
+    inline double get_normalization_factor( const unsigned i ) const override{
       if(i < nSpec_-1) return 0.5; // nominal value for each species
       else return 500; // nominal value for temperature
     }
@@ -150,9 +150,9 @@ namespace WasatchCore{
 
     ~DensityFromSpeciesAndEnthalpy();
     void update_other_fields(Expr::UintahFieldManager<FieldT>& fieldTManager) override;
-    void set_initial_guesses();
-    Expr::IDSet register_local_expressions();
-    void evaluate();
+    void set_initial_guesses() override;
+    Expr::IDSet register_local_expressions() override;
+    void evaluate() override;
   };
 
 }
