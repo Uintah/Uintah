@@ -74,6 +74,23 @@ class Data_parser:
         return np.array(point)
 
     @staticmethod
+    def parse_ParticleVariable_IntVector(binfile_handle, nodes, endian_flag):
+        """!
+        @brief Parses three integers for a IntVector.
+
+        @param binfile_handle binary file to read from, already at the start point
+        @param nodes the number of nodes to be read
+        @param endian_flag the endianness of the data, as determine by the struct lib
+        @return a numpy array of data
+        """
+        point = []
+
+        for node in range(nodes):
+            point.append(struct.unpack(endian_flag+"iii", binfile_handle.read(12)))
+
+        return np.array(point)
+
+    @staticmethod
     def parse_ParticleVariable_Vector(binfile_handle, nodes, endian_flag):
         """!
         @brief Parses three floats for a vector.
@@ -245,6 +262,30 @@ class Data_parser:
         pass
 
     @staticmethod
+    def generate_xmf_ParticleVariable_IntVector(xml_root, h5_file_path, h5_data_dims):
+        """!
+        @brief Appends particle IntVector descriptor to the xmf xml root.
+
+        @param xml_root xmf descriptor root
+        @param h5_file_path file and h5 path to data
+        @param h5_data_dims data dimensions as returned from data.shape
+        @return None
+        """
+        variable = h5_file_path.split("/")[-1]
+
+        attribute = ET.SubElement(xml_root, "Attribute")
+        attribute.attrib["Name"] = variable
+        attribute.attrib["Center"] = "Cell"
+        attribute.attrib["Type"] = "Vector"
+
+        data_item = ET.SubElement(attribute, "DataItem")
+        data_item.attrib["Format"] = "HDF"
+        data_item.attrib["Dimensions"] = str(h5_data_dims[0])+" "+str(h5_data_dims[1])
+        data_item.attrib["Precision"] = "4"
+        data_item.attrib["DataType"] = "Int"
+        data_item.text = h5_file_path
+
+    @staticmethod
     def generate_xmf_ParticleVariable_Vector(xml_root, h5_file_path, h5_data_dims):
         """!
         @brief Appends particle vector descriptor to the xmf xml root.
@@ -406,6 +447,7 @@ class Variable_data_factory:
     """
     _data_lookup = {}
     _data_lookup["ParticleVariable<Point>"] = Data_parser.parse_ParticleVariable_Point
+    _data_lookup["ParticleVariable<IntVector>"] = Data_parser.parse_ParticleVariable_IntVector
     _data_lookup["ParticleVariable<Vector>"] = Data_parser.parse_ParticleVariable_Vector
     _data_lookup["ParticleVariable<double>"] = Data_parser.parse_ParticleVariable_double
     _data_lookup["ParticleVariable<Matrix3>"] = Data_parser.parse_ParticleVariable_Matrix3
@@ -417,6 +459,7 @@ class Variable_data_factory:
 
     _generate_xmf = {}
     _generate_xmf["ParticleVariable<Point>"] = Data_parser.generate_xmf_ParticleVariable_Point
+    _generate_xmf["ParticleVariable<IntVector>"] = Data_parser.generate_xmf_ParticleVariable_IntVector
     _generate_xmf["ParticleVariable<Vector>"] = Data_parser.generate_xmf_ParticleVariable_Vector
     _generate_xmf["ParticleVariable<double>"] = Data_parser.generate_xmf_ParticleVariable_Double
     _generate_xmf["ParticleVariable<Matrix3>"] = Data_parser.generate_xmf_ParticleVariable_Matrix3
