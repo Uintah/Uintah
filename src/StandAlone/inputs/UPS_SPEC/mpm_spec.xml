@@ -244,6 +244,7 @@
         <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
         <geom_object                     spec="MULTIPLE" />
         <is_rigid                        spec="OPTIONAL BOOLEAN" />
+        <is_force_transmitting_material  spec="OPTIONAL BOOLEAN" />
         <C_p                             spec="OPTIONAL DOUBLE" />
         <melt_temp                       spec="OPTIONAL DOUBLE" /> <!--295.0 -->
         <room_temp                       spec="OPTIONAL DOUBLE" /> <!--294.0 -->
