@@ -267,6 +267,8 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("room_temp",d_troom);
   mpm_ps->appendElement("melt_temp",d_tmelt);
   mpm_ps->appendElement("is_rigid",d_is_rigid);
+  mpm_ps->appendElement("is_force_transmitting_material",
+                       d_is_force_transmitting_material);
   mpm_ps->appendElement("is_active",d_is_active);
   mpm_ps->appendElement("activation_time",d_activation_time);
 
@@ -299,6 +301,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
+  d_is_force_transmitting_material = mat->d_is_force_transmitting_material;
   d_is_active = mat->d_is_active;
   d_activation_time = mat->d_activation_time;
 
@@ -401,6 +404,16 @@ void MPMMaterial::setIsRigid(const bool is_rigid)
 bool MPMMaterial::getIsRigid() const
 {
   return d_is_rigid;
+}
+
+void MPMMaterial::setIsFTM(const bool is_FTM)
+{
+  d_is_force_transmitting_material=is_FTM;
+}
+
+bool MPMMaterial::getIsFTM() const
+{
+  return d_is_force_transmitting_material;
 }
 
 void MPMMaterial::setIsActive(const bool is_active)

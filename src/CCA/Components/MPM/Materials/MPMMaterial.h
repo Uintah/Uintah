@@ -144,8 +144,8 @@ WARNING
    bool getIsRigid() const;
    void setIsRigid(const bool is_rigid);
 
-   bool getIsForceTransmittingMaterial() const;
-   void setIsForceTransmittingMaterial(const bool is_ftm);
+   bool getIsFTM() const;
+   void setIsFTM(const bool is_ftm);
 
    bool getIsActive() const;
    void setIsActive(const bool is_active);

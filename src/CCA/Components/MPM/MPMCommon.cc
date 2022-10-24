@@ -164,7 +164,7 @@ void MPMCommon::put_sum_vartype( std::vector<T>  reductionVars,
 {
   unsigned int numMatls = reductionVars.size();
 
-  if( numMatls > 1){    // ignore for single matl problems
+//  if( numMatls > 1){    // ignore for single matl problems
 
     for (unsigned int m = 0; m < numMatls ; m++ ) {
       MPMMaterial* matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM", m);
@@ -174,7 +174,7 @@ void MPMCommon::put_sum_vartype( std::vector<T>  reductionVars,
 
       new_dw->put( sumVartype(reductionVars[m]),  label, nullptr, dwi);
     }
-  }
+//  }
 }
 
 //______________________________________________________________________
@@ -185,7 +185,7 @@ std::vector<T> MPMCommon::get_sum_vartype( unsigned int    numMPMMatls,
                                            DataWarehouse  * new_dw )
 {
   std::vector<T>  reductionVars;
-  if( numMPMMatls > 1){    // ignore for single matl problems
+//  if( numMPMMatls > 1){    // ignore for single matl problems
 
     for (unsigned int m = 0; m < numMPMMatls ; m++ ) {
 
@@ -198,7 +198,7 @@ std::vector<T> MPMCommon::get_sum_vartype( unsigned int    numMPMMatls,
       new_dw->get( reductionVar, label, nullptr, dwi);
       reductionVars.push_back(reductionVar);
     }
-  }
+//  }
   return reductionVars;
 }
 //__________________________________

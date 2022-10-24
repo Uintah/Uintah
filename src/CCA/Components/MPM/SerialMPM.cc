@@ -1501,10 +1501,14 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->CenterOfMassPositionLabel, reduction_mss, Task::OutOfDomain);
   }
 
-  if(flags->d_reductionVars->mass){
-    t->requires( Task::NewDW, lb->TotalMassLabel, getLevel(patches), reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG );
+  if( flags->d_reductionVars->mass ){
+    t->requires(Task::NewDW, lb->TotalMassLabel, getLevel(patches), 
+                reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
+
+    t->requires(Task::NewDW, lb->SumTransmittedForceLabel, getLevel(patches), 
+                reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
   }
-  
+
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
@@ -3838,8 +3842,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<double> kineticEng( numMPMMatls, 0.0 );
     vector<double> thermalEng( numMPMMatls, 0.0 );
     vector<double> totalMass(  numMPMMatls, 0.0 );
-    vector<Vector> totalMom( numMPMMatls, Vector(0.0,0.0,0.0) );
-    vector<Vector> CMX( numMPMMatls, Vector(0.0,0.0,0.0) );
+    vector<Vector> totalSTF(   numMPMMatls, Vector(0.0,0.0,0.0) );
+    vector<Vector> totalMom(   numMPMMatls, Vector(0.0,0.0,0.0) );
+    vector<Vector> CMX(        numMPMMatls, Vector(0.0,0.0,0.0) );
 
     
     double allMatls_kineticEng = 0.0;
@@ -3848,17 +3853,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector allMatls_CMX(0.0,0.0,0.0);
     
     sum_vartype   allMatls_totalMass  = 0.0;
-    sumvec_vartype STF;
+    sumvec_vartype allMatls_STF;
      
     double totalConc    =   0.0;
     double minPatchConc =  5e11;
     double maxPatchConc = -5e11;
 
     if(flags->d_reductionVars->mass){
-      new_dw->get(STF,                lb->SumTransmittedForceLabel);
-      new_dw->get(allMatls_totalMass, lb->TotalMassLabel, nullptr, -1 );
+      new_dw->get(allMatls_STF,       lb->SumTransmittedForceLabel,nullptr, -1);
+      new_dw->get(allMatls_totalMass, lb->TotalMassLabel,          nullptr, -1);
       totalMass = MPMCommon::get_sum_vartype<double>( numMPMMatls, 
-                                                      lb->TotalMassLabel, new_dw );
+                                                    lb->TotalMassLabel, new_dw);
+      totalSTF  = MPMCommon::get_sum_vartype<Vector>( numMPMMatls, 
+                                          lb->SumTransmittedForceLabel, new_dw);
     }
 
     delt_vartype delT;
@@ -3876,9 +3883,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       MPMMaterial* mpm_matl =
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
-
-      //cout << "dwi: " << dwi << " allMatls_TotalMass: " << allMatls_TM << " matl totalMass " << totalMass[m] << endl; 
-
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp;
@@ -3989,7 +3993,42 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         lb->diffusion->pConcPrevious_preReloc,  pset);
       }
 
+     // This needs comments...
+     if(mpm_matl->getIsFTM()){
+        Vector FTM_acc = totalSTF[m]/totalMass[m];
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          
+          pvelnew[idx]  = pvelocity[idx] + FTM_acc*delT;
+          pxnew[idx]    = px[idx]   + 0.5*(pvelnew[idx] + pvelocity[idx])*delT;
+          pdispnew[idx] = pdisp[idx] + (pxnew[idx]-px[idx]);
 
+          pTempNew[idx]    = pTemperature[idx];
+          pTempPreNew[idx] = pTemperature[idx]; // for thermal stress
+          pmassNew[idx]    = pmass[idx];
+          psizeNew[idx]    = psize[idx];
+
+          //__________________________________
+          // reduction variables
+
+          Vector centerOfMass = (pxnew[idx]*pmass[idx]).asVector();
+          CMX[m]        += centerOfMass;
+          allMatls_CMX  += centerOfMass;
+
+          double thermalEngy   = pTemperature[idx] * pmass[idx] * Cp;
+          thermalEng[m]       += thermalEngy;
+          allMatls_thermalEng += thermalEngy;
+
+          double ke            = .5*pmass[idx]*pvelnew[idx].length2();
+          kineticEng[m]       += ke;
+          allMatls_kineticEng += ke;
+
+          Vector mom         = pvelnew[idx]*pmass[idx];
+          allMatls_totalMom += mom;
+          totalMom[m]       += mom;
+        }
+     } else {
       if(flags->d_XPIC2 && !mpm_matl->getIsRigid()){
         // Loop over particles
         for(ParticleSubset::iterator iter = pset->begin();
@@ -4168,6 +4207,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalMom[m]       += mom;
         }
       } // use XPIC(2) or not
+     } // is FTM
 
       // scale back huge particle velocities.
       // Default for d_max_vel is 3.e105, hence the conditional
