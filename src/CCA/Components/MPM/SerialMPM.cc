@@ -3332,6 +3332,11 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         allMatls_STF       +=externalforce[c];
       }
 
+      if(mpm_matl->getIsFTM()){
+        acceleration.initialize(Vector(0.,0.,0.));
+        velocity_star.copyData(velocity);
+      }
+
       // Check the integrated nodal velocity and if the product of velocity
       // and timestep size is larger than half the cell size, restart the
       // timestep with 10% as large of a timestep (see recomputeDelT in this
