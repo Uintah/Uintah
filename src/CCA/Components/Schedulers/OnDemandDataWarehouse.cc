@@ -378,10 +378,7 @@ OnDemandDataWarehouse::get_sum_vartypeD( const VarLabel       * label
                                        , const MaterialSubset * matls
                                        )
 {
-
-  //return get_sum_vartypeT<double>( label,  matls );
-  std::map<int,double> test;
-  return test;
+  return get_sum_vartypeT<double>( label,  matls );
 }
 
 //__________________________________
@@ -391,9 +388,7 @@ OnDemandDataWarehouse::get_sum_vartypeV( const VarLabel       * label
                                        , const MaterialSubset * matls
                                        )
 {
- // return get_sum_vartypeT<Vector>( label,  matls );
-  std::map<int,Vector> test;
-  return test;
+  return get_sum_vartypeT<Vector>( label,  matls );
 }
 
 //______________________________________________________________________
