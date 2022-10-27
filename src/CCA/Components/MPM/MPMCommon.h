@@ -25,8 +25,6 @@
 #ifndef UINTAH_HOMEBREW_MPM_COMMON_H
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
-#include <CCA/Components/Application/ApplicationCommon.h>
-
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
@@ -42,30 +40,20 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   
-  class MPMCommon : public ApplicationCommon
+  class MPMCommon
   {
   public:
-    MPMCommon(const ProcessorGroup* myworld, MaterialManagerP materialManager);
+    MPMCommon( const MaterialManagerP materialManager);
 
-    virtual ~MPMCommon();
+    ~MPMCommon();
 
     virtual void materialProblemSetup(const ProblemSpecP& prob_spec,
-                                      MPMFlags* flags, bool isRestart);
+                                      MPMFlags* flags, 
+                                      bool isRestart);
 
     void scheduleUpdateStress_DamageErosionModels(SchedulerP        & sched,
                                                   const PatchSet    * patches,
                                                   const MaterialSet * matls );
-    //__________________________________
-    //  utility 
-    template<class T>
-    void put_sum_vartype( std::vector<T>   reductionVar,
-                          const VarLabel * label,
-                          DataWarehouse  * new_dw);
-
-    template< class T>
-    std::vector<T> get_sum_vartype( unsigned int    numMPMMatls,
-                                    const VarLabel * label,
-                                    DataWarehouse  * new_dw );
 
     // Used by the switcher
     virtual void setupForSwitching() {
@@ -88,10 +76,18 @@ namespace Uintah {
       ngc = particle_ghost_layer;
     }
 
+    //__________________________________
+    //  utilities
+    template<class T>
+    static
+    std::map<int,T> initializeMap(T val);
+
+
     MPMLabel* lb {nullptr};
 
   private:
-    MPMFlags* d_flags = nullptr;
+    MPMFlags*        d_flags     = nullptr;
+    static MaterialManagerP d_matlManager;
     
   protected:
     //! so all components can know how many particle ghost cells to ask for

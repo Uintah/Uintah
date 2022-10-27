@@ -30,6 +30,7 @@
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/Materials/Contact/ContactMaterialSpec.h>
+#include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -143,7 +144,7 @@ DESCRIPTION
     double    d_stop_time;
     double    d_vol_const;
     Vector    d_vel_after_stop;
-    int       d_material;
+    int       d_material = INT_MAX;
     int       NGP;
     int       NGN;
     bool      d_NormalOnly;

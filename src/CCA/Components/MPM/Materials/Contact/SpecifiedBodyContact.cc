@@ -23,9 +23,11 @@
  */
 
 // SpecifiedBodyContact.cc
+#include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -138,14 +140,16 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 SpecifiedBodyContact::~SpecifiedBodyContact()
 {
 }
-
+//______________________________________________________________________
+//
 void SpecifiedBodyContact::setContactMaterialAttributes()
 {
   MPMMaterial* mpm_matl = 
          (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
   mpm_matl->setIsRigid(true);
 }
-
+//______________________________________________________________________
+//
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
@@ -312,19 +316,24 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   constNCVariable<Vector>               gsurfnorm;
 
   // per-matl 
-  vector<Vector> reaction_force(  numMatls, Vector(0.0) );
-  vector<Vector> reaction_torque( numMatls, Vector(0.0) );
+  map<int,Vector> zeroV = MPMCommon::initializeMap(Vector(0.));
+  map<int,Vector> reaction_force  = zeroV;
+  map<int,Vector> reaction_torque = zeroV;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+
+    map<int,Vector> STF = zeroV;
+    Vector allMatls_STF  = Vector(0.,0.,0.);
+    
     constNCVariable<double> NC_CCweight;
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     for(int m=0;m<matls->size();m++){
-     int dwi = matls->get(m);
+     int dwi = matls->get(m);     
      new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone,0);
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone,0);
      new_dw->get(gvolume[m],        lb->gVolumeLabel,       dwi,patch,gnone,0);
@@ -429,6 +438,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       }
 
       for(int  n = 0; n < numMatls; n++){
+        int dwi = matls->get(n);
+        
         if(!d_matls.requested(n)) continue;
 
         Vector new_vel(gvelocity_star[n][c]);
@@ -451,11 +462,19 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
-          reaction_force[n]  -= ginternalForce[n][c];
-          reaction_torque[n] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+          reaction_force[dwi]  -= ginternalForce[n][c];
+          reaction_torque[dwi] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+          STF[dwi]             +=gmass[n][c]*(new_vel-old_vel)/delT;
+          allMatls_STF         +=gmass[n][c]*(new_vel-old_vel)/delT;
         }  // if
       }    // for matls
     }      // for Node Iterator
+
+    if(flag->d_reductionVars->mass ){
+      new_dw->put(sumvec_vartype(allMatls_STF), 
+                                     lb->SumTransmittedForceLabel, nullptr, -1);
+      new_dw->put_sum_vartype(STF,   lb->SumTransmittedForceLabel, matls);
+    }
     
   } // loop over patches
 
@@ -465,8 +484,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
-      reaction_force[d_material]+=reaction_force[n];
-      reaction_torque[d_material]+=reaction_torque[n];
+      int dwi = matls->get(n);
+      reaction_force[d_material] +=reaction_force[dwi];
+      reaction_torque[d_material]+=reaction_torque[dwi];
     }
   }
 
@@ -474,9 +494,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     int dwi = matls->get(n);
 
     if( numMatls > 1 ){  // ignore for single matl problems
-      new_dw->put( sumvec_vartype(reaction_force[n]),
+      new_dw->put( sumvec_vartype( reaction_force[dwi] ),
                                     lb->RigidReactionForceLabel,  nullptr, dwi);
-      new_dw->put( sumvec_vartype(reaction_torque[n]),
+      new_dw->put( sumvec_vartype( reaction_torque[dwi] ),
                                     lb->RigidReactionTorqueLabel, nullptr, dwi);
     }
   }
@@ -547,9 +567,12 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 
   reduction_mss->addReference();
 
-  
   t->computes( lb->RigidReactionForceLabel,  reduction_mss );
   t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
+
+  if(flag->d_reductionVars->mass){
+    t->modifies(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
+  }
 
   sched->addTask(t, patches, ms);
 

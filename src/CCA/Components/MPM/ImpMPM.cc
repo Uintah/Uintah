@@ -95,7 +95,7 @@ static DebugStream cout_doing("IMPM", false);
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld,
                const MaterialManagerP materialManager) :
-  MPMCommon(myworld, materialManager)
+  ApplicationCommon( myworld, materialManager), MPMCommon(m_materialManager)
 {
   flags = scinew ImpMPMFlags(myworld);
   Il = scinew ImpMPMLabel();

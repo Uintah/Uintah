@@ -97,7 +97,7 @@ static Vector face_norm(Patch::FaceType f)
 
 SingleFieldMPM::SingleFieldMPM( const ProcessorGroup* myworld,
                                 const MaterialManagerP materialManager) :
-  MPMCommon( myworld, materialManager )
+  ApplicationCommon( myworld, materialManager ),MPMCommon( m_materialManager )
 {
   flags = scinew MPMFlags(myworld);
 

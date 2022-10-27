@@ -116,7 +116,7 @@ static Vector face_norm(Patch::FaceType f)
 
 SingleHydroMPM::SingleHydroMPM( const ProcessorGroup* myworld,
                       const MaterialManagerP materialManager) :
-  MPMCommon( myworld, materialManager )
+  ApplicationCommon( myworld, materialManager), MPMCommon( m_materialManager )
 {
   flags = scinew MPMFlags(myworld);
   Hlb = scinew HydroMPMLabel();

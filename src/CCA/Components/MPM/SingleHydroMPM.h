@@ -35,6 +35,7 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
@@ -81,17 +82,17 @@ WARNING
   
 ****************************************/
 
-  class SingleHydroMPM : public MPMCommon {
+  class SingleHydroMPM : public ApplicationCommon, public MPMCommon {
 public:
     SingleHydroMPM(const ProcessorGroup* myworld,
-              const MaterialManagerP materialManager);
+                   const MaterialManagerP materialManager);
 
   virtual ~SingleHydroMPM();
 
-  Contact*         contactModel;
-  FluidContact*         fluidContactModel;
-  ThermalContact*  thermalContactModel;
-  HeatConduction* heatConductionModel;
+  Contact*          contactModel;
+  FluidContact*     fluidContactModel;
+  ThermalContact*   thermalContactModel;
+  HeatConduction*   heatConductionModel;
   SDInterfaceModel* d_sdInterfaceModel;
   //////////
   // Insert Documentation Here:

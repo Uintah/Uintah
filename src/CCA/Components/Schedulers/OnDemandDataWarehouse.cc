@@ -343,6 +343,60 @@ OnDemandDataWarehouse::get(       ReductionVariableBase & var
 }
 
 //______________________________________________________________________
+//    get a std::map<int,T> of reduction variables from the DW
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+std::map<int,T> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel       * label
+                                                       , const MaterialSubset * matls
+                                                       )
+{
+  std::map<int,T>  reductionVars;
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+    sumVartype reductionVar;
+
+    get( reductionVar, label, nullptr, dwi);
+    reductionVars[dwi] = reductionVar;
+  }
+
+  return reductionVars;
+}
+//
+// Explicit template instantiations:
+template std::map<int,double> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+template std::map<int,Vector> OnDemandDataWarehouse::get_sum_vartypeT( const VarLabel *, const MaterialSubset * );
+
+//__________________________________
+//        double
+std::map<int,double>
+OnDemandDataWarehouse::get_sum_vartypeD( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+
+  //return get_sum_vartypeT<double>( label,  matls );
+  std::map<int,double> test;
+  return test;
+}
+
+//__________________________________
+//        Uintah::Vector
+std::map<int,Vector>
+OnDemandDataWarehouse::get_sum_vartypeV( const VarLabel       * label
+                                       , const MaterialSubset * matls
+                                       )
+{
+ // return get_sum_vartypeT<Vector>( label,  matls );
+  std::map<int,Vector> test;
+  return test;
+}
+
+//______________________________________________________________________
 //
 void
 OnDemandDataWarehouse::get(       SoleVariableBase& var
@@ -1008,7 +1062,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label
 
     // debugging info
     int levelIndx = level ? level->getIndex() : -1;
-    DOUTR(g_mpi_dbg, " DW:reduceMPI label: " << label->getName() << " matlIndex " << matlIndex << " level: " 
+    DOUTR(g_mpi_dbg, " DW:reduceMPI label: " << label->getName() << " matlIndex " << matlIndex << " level: "
           << levelIndx << " exists: " <<  m_level_DB.exists( label, matlIndex, level ) );
 
 
@@ -1116,6 +1170,55 @@ OnDemandDataWarehouse::put( const ReductionVariableBase & var
 
 //______________________________________________________________________
 //
+//    Put a std::map of Sum<T> reduction variables
+//    C++ doesn't allow for virtual templated functions, thus the duplication
+//    Use a map instead of a vector since the material indices may not be consecutive
+//    starting at 0
+//    How can we generalize this for different reduction variable types?   -Todd
+template< class T>
+void
+OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, T>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls
+                                      )
+{
+  for( auto m = 0; m < matls->size(); ++m ) {
+    int dwi = matls->get( m );
+
+    typedef ReductionVariable<T, Reductions::Sum<T> > sumVartype;
+
+    put( sumVartype(reductionVars[dwi]),  label, nullptr, dwi);
+  }
+}
+
+//
+// Explicit template instantiations:
+
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, double> rv ,const VarLabel * l,const MaterialSubset * matls);
+template void OnDemandDataWarehouse::put_sum_vartypeT( std::map<int, Vector> rv ,const VarLabel * l,const MaterialSubset * matls);
+
+//__________________________________
+//  Vector
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, Vector>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<Vector>( reductionVars, label, matls );
+}
+//__________________________________
+//    double
+void
+OnDemandDataWarehouse::put_sum_vartype( std::map<int, double>  reductionVars
+                                      , const VarLabel       * label
+                                      , const MaterialSubset * matls )
+{
+  put_sum_vartypeT<double>( reductionVars, label, matls );
+}
+
+
+//______________________________________________________________________
+//
 void
 OnDemandDataWarehouse::override( const ReductionVariableBase & var
                                , const VarLabel              * label
@@ -1200,7 +1303,7 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex   numParticles
   return psubset;
 }
 //______________________________________________________________________
-//  Delete the particle subset from the 
+//  Delete the particle subset from the
 void
 OnDemandDataWarehouse::deleteParticleSubset( ParticleSubset*  pset )
 {
@@ -1326,7 +1429,7 @@ OnDemandDataWarehouse::deletePSetRecord(       psetDBType     & subsetDB
     psetDB_monitor psetDB_lock{ Uintah::CrowdMonitor<psetDB_tag>::WRITER };
 
     psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
-    
+
     subsetDB.erase(key);
 
     if(psubset && psubset->removeReference()) {
@@ -2822,14 +2925,14 @@ OnDemandDataWarehouse::print(       std::ostream & intout
     checkGetAccess( label, matlIndex, nullptr );
     ReductionVariableBase* var = dynamic_cast<ReductionVariableBase*>( m_level_DB.get( label, matlIndex, level ) );
     var->print( intout );
-    
-    // Debugging output   
+
+    // Debugging output
     if( g_DA_dbg.active() ){
       std::ostringstream me;
       var->print( me );
 
       int levelIndx = level ? level->getIndex() : -1;
-      DOUTR(true, " OnDemandDataWarehouse::print " << label->getName() << " matl: "<< matlIndex << " "  << me.str() << " level: " << levelIndx ); 
+      DOUTR(true, " OnDemandDataWarehouse::print " << label->getName() << " matl: "<< matlIndex << " "  << me.str() << " level: " << levelIndx );
     }
   }
   catch( UnknownVariable& ) {
