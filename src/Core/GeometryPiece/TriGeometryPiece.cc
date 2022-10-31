@@ -67,7 +67,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   tri_list = tri.makeTriList( d_tri, d_points) ;
   d_grid   = scinew UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
-  d_points.clear();
+//  d_points.clear();
 }
 
 //______________________________________________________________________
