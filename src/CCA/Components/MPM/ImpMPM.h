@@ -32,6 +32,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Components/MPM/Solver/Solver.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -81,7 +82,7 @@ WARNING
   
 ****************************************/
 
-class ImpMPM : public MPMCommon {
+class ImpMPM : public ApplicationCommon, public MPMCommon {
 public:
   ImpMPM(const ProcessorGroup* myworld,
          const MaterialManagerP sharedStat);

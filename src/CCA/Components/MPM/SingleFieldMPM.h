@@ -35,6 +35,7 @@
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
+#include <CCA/Components/Application/ApplicationCommon.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
 #include <CCA/Components/MPM/Materials/Contact/Contact.h>
 #include <CCA/Components/MPM/MPMCommon.h>
@@ -78,7 +79,7 @@ WARNING
   
 ****************************************/
 
-  class SingleFieldMPM : public MPMCommon {
+  class SingleFieldMPM : public ApplicationCommon, public MPMCommon {
 public:
     SingleFieldMPM(const ProcessorGroup* myworld,
               const MaterialManagerP materialManager);

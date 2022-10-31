@@ -61,45 +61,46 @@ class VarLabel;
 class Task;
 
 /**************************************
-        
+
 CLASS
    DataWarehouse
-        
-   Short description...
-        
+
+   Short description:
+   Abstract class that currently only inherits from OnDemandDW
+
 GENERAL INFORMATION
-        
+
    DataWarehouse.h
-        
+
    Steven G. Parker
    Department of Computer Science
    University of Utah
-        
+
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-        
-        
+
+
 KEYWORDS
    DataWarehouse
-        
+
 DESCRIPTION
    Long description...
-        
+
 WARNING
-        
+
 ****************************************/
 
 class DataWarehouse : public RefCounted {
 
 public:
   virtual ~DataWarehouse();
-      
+
   virtual bool exists(const VarLabel*, int matlIndex, const Patch*) const = 0;
   virtual bool exists(const VarLabel*, int matlIndex, const Level*) const = 0;
 
   virtual ReductionVariableBase* getReductionVariable( const VarLabel*,
                                                        int matlIndex,
                                                        const Level* ) const = 0;
-  
+
   // Returns a (const) pointer to the grid.  This pointer can then be
   // used to (for example) get the number of levels in the grid.
   virtual const Grid * getGrid() = 0;
@@ -112,8 +113,23 @@ public:
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
                    const Level* level = 0, int matlIndex = -1) = 0;
+
+  virtual std::map<int,double> get_sum_vartypeD( const VarLabel * label,
+                                                 const MaterialSubset * ) = 0;
+
+  virtual std::map<int,Vector> get_sum_vartypeV( const VarLabel * label,
+                                                 const MaterialSubset * ) = 0;
+
   virtual void put(const ReductionVariableBase&, const VarLabel*,
                    const Level* level = 0, int matlIndex = -1) = 0;
+
+  virtual void put_sum_vartype( std::map<int,Vector>,
+                                const VarLabel *,
+                                const MaterialSubset *) = 0;
+
+  virtual void put_sum_vartype( std::map<int,double>,
+                                const VarLabel *,
+                                const MaterialSubset *) = 0;
 
   virtual void override(const ReductionVariableBase&, const VarLabel*,
                         const Level* level = 0, int matlIndex = -1) = 0;
@@ -130,7 +146,7 @@ public:
   virtual void override(const SoleVariableBase&, const VarLabel*,
                         const Level* level = 0, int matlIndex = -1) = 0;
 
-  virtual void doReserve() = 0; 
+  virtual void doReserve() = 0;
 
   // Particle Variables
   // changed way PS's were stored from ghost info to low-high range.
@@ -142,7 +158,7 @@ public:
                                                  IntVector high = IntVector(0,0,0) ) = 0;
 
   virtual void deleteParticleSubset( ParticleSubset* psubset ) = 0;
-                                                 
+
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
@@ -211,9 +227,9 @@ public:
             bool replace = false) = 0;
 
   // returns the constGridVariable for all patches on the level
-  virtual void getLevel( constGridVariableBase&, 
+  virtual void getLevel( constGridVariableBase&,
                          const VarLabel*,
-                         int matlIndex, 
+                         int matlIndex,
                          const Level* level) = 0;
 
   virtual void getRegion(constGridVariableBase&, const VarLabel*,
@@ -231,14 +247,14 @@ public:
   virtual void getCopy(GridVariableBase& var, const VarLabel* label, int matlIndex,
                const Patch* patch, Ghost::GhostType gtype = Ghost::None,
                int numGhostCells = 0) = 0;
-      
+
 
   // PerPatch Variables
   virtual void get(PerPatchBase&, const VarLabel*,
                    int matlIndex, const Patch*) = 0;
   virtual void put(PerPatchBase&, const VarLabel*,
                    int matlIndex, const Patch*, bool replace = false) = 0;
-     
+
   // this is so we can get reduction information for regridding
   virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars ) const = 0;
 
@@ -271,10 +287,10 @@ public:
                     int matlIndex, const Patch* patch) = 0;
 
 #if HAVE_PIDX
-  virtual void emitPIDX(PIDXOutputContext&, 
-                        const VarLabel* label, 
-                        int matlIndex, 
-                        const Patch* patch, 
+  virtual void emitPIDX(PIDXOutputContext&,
+                        const VarLabel* label,
+                        int matlIndex,
+                        const Patch* patch,
                         unsigned char* buffer,
                         size_t bufferSize) = 0;
 #endif
@@ -318,12 +334,12 @@ public:
   GPUDataWarehouse* getGPUDW() const {
     int i;
     CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
-    return d_gpuDWs[i]; 
+    return d_gpuDWs[i];
   }
 #endif
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
-                 Scheduler* scheduler, 
+                 Scheduler* scheduler,
                  int generation );
   // These two things should be removed from here if possible - Steve
   const ProcessorGroup* d_myworld;
@@ -334,7 +350,7 @@ protected:
   // for the first DW) to the correct generation number based on how
   // many previous time steps had taken place before the restart.
   int d_generation;
-  
+
 #ifdef HAVE_CUDA
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
