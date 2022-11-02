@@ -90,6 +90,8 @@ public:
 
   void allowMultipleComputes();
 
+  void setAllowMultipleComputes(bool input);
+
   bool allowsMultipleComputes() const { return m_allow_multiple_computes; }
 
   static VarLabel* find( const std::string& name );

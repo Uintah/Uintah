@@ -215,6 +215,17 @@ VarLabel::allowMultipleComputes()
    m_allow_multiple_computes = true;
 }
 
+//______________________________________________________________________
+//
+void
+VarLabel::setAllowMultipleComputes( bool input)
+{
+   if (!m_td->isReductionVariable()) {
+     SCI_THROW(InternalError(std::string("Only reduction variables may set allow multiple computes.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
+   }
+   m_allow_multiple_computes = input;
+}
+
 namespace Uintah {
 std::ostream &
   operator<<( std::ostream & out, const Uintah::VarLabel & vl )

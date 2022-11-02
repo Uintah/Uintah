@@ -105,14 +105,15 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_myworld                            =  myworld;
   
   d_reductionVars = scinew reductionVars();
-  d_reductionVars->mass             = false;
-  d_reductionVars->momentum         = false;
-  d_reductionVars->thermalEnergy    = false;
-  d_reductionVars->strainEnergy     = false;
-  d_reductionVars->accStrainEnergy  = false;
-  d_reductionVars->KE               = false;
-  d_reductionVars->volDeformed      = false;
-  d_reductionVars->centerOfMass     = false;
+  d_reductionVars->mass                = false;
+  d_reductionVars->momentum            = false;
+  d_reductionVars->thermalEnergy       = false;
+  d_reductionVars->strainEnergy        = false;
+  d_reductionVars->accStrainEnergy     = false;
+  d_reductionVars->KE                  = false;
+  d_reductionVars->volDeformed         = false;
+  d_reductionVars->centerOfMass        = false;
+  d_reductionVars->sumTransmittedForce = false;
 
   //******* Hydro-mechanical coupling MPM
   d_coupledflow = false;

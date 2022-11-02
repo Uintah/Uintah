@@ -470,7 +470,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       }    // for matls
     }      // for Node Iterator
 
-    if(flag->d_reductionVars->mass ){
+    if( flag->d_reductionVars->sumTransmittedForce ){
       new_dw->put(sumvec_vartype(allMatls_STF), 
                                      lb->SumTransmittedForceLabel, nullptr, -1);
       new_dw->put_sum_vartype(STF,   lb->SumTransmittedForceLabel, matls);
@@ -570,8 +570,8 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->computes( lb->RigidReactionForceLabel,  reduction_mss );
   t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
 
-  if(flag->d_reductionVars->mass){
-    t->modifies(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
+  if(flag->d_reductionVars->sumTransmittedForce){
+    t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
   sched->addTask(t, patches, ms);

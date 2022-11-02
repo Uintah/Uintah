@@ -149,6 +149,7 @@ class Output;
      bool KE;
      bool volDeformed;
      bool centerOfMass;
+     bool sumTransmittedForce;
     };
     reductionVars* d_reductionVars;
     

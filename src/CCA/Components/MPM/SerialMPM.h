@@ -548,6 +548,10 @@ protected:
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
+  virtual void scheduleReduceVars( SchedulerP&, 
+                                   const PatchSet*,
+                                   const MaterialSet* );
+
 
   // JBH -- Scalar Diffusion Related
   virtual void scheduleConcInterpolated(        SchedulerP  &
