@@ -363,6 +363,9 @@ public: // class Task
          void usesDevice(bool state, int maxStreamsPerTask = 1);
   inline bool usesDevice() const { return m_uses_device; }
   inline int  maxStreamsPerTask() const { return  m_max_streams_per_task; }
+  
+  inline void setDebugFlag( bool in ){m_debugFlag = in;}
+  inline bool getDebugFlag()const {return m_debugFlag;}
 
   enum MaterialDomainSpec {
       NormalDomain  // <- Normal/default setting
@@ -866,6 +869,7 @@ protected: // class Task
   int  m_max_streams_per_task{1};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
+  bool m_debugFlag{false};
 
   TaskType d_tasktype;
 

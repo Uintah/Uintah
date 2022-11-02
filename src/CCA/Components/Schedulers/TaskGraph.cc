@@ -110,23 +110,31 @@ TaskGraph::nullSort( std::vector<Task*> & tasks )
   // No longer going to sort them... let the scheduler take care of calling the tasks when all
   // dependencies are satisfied. Sorting the tasks causes problem because now tasks (actually task groups) run in
   // different orders on different MPI processes.
+  DOUTR(g_detailed_task_dbg, " TaskGraph::nullSort " );
   int n = 0;
   for (auto task_iter = m_tasks.begin(); task_iter != m_tasks.end(); ++task_iter) {
-    // For all reduction tasks filtering out the one that is not in ReductionTasksMap
     Task* task = task_iter->get();
+
+    std::ostringstream mesg;
+    mesg<< "      " << std::left<< std::setw(50) << task->getName();
+
+    // For all reduction tasks filtering out the one that is not in ReductionTasksMap
     if (task->getType() == Task::Reduction) {
       for (auto reduction_task_iter = m_scheduler->m_reduction_tasks.begin(); reduction_task_iter != m_scheduler->m_reduction_tasks.end(); ++reduction_task_iter) {
         if (task == reduction_task_iter->second) {
           (*task_iter)->setSortedOrder(n++);
           tasks.push_back(task);
+          mesg<< "     Added to sorted tasks (reduction task)";
           break;
         }
       }
     }
     else {
+      mesg << "     Added to sorted tasks (normal task)";
       task->setSortedOrder(n++);
       tasks.push_back(task);
     }
+    DOUTR(g_detailed_task_dbg, mesg.str() );
   }
 }
 
