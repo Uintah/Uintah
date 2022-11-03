@@ -464,8 +464,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
           reaction_force[dwi]  -= ginternalForce[n][c];
           reaction_torque[dwi] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-          STF[dwi]             +=gmass[n][c]*(new_vel-old_vel)/delT;
-          allMatls_STF         +=gmass[n][c]*(new_vel-old_vel)/delT;
+          STF[d_material]      -=gmass[n][c]*(new_vel-old_vel)/delT;
+          allMatls_STF         -=gmass[n][c]*(new_vel-old_vel)/delT;
         }  // if
       }    // for matls
     }      // for Node Iterator
@@ -475,7 +475,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                      lb->SumTransmittedForceLabel, nullptr, -1);
       new_dw->put_sum_vartype(STF,   lb->SumTransmittedForceLabel, matls);
     }
-    
+
   } // loop over patches
 
   //__________________________________
