@@ -116,6 +116,7 @@ TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
                               :  ParticleCreator(matl,flags)
 {
+
   d_Hlb = scinew HydroMPMLabel();
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
@@ -123,7 +124,6 @@ TriangleParticleCreator::TriangleParticleCreator(MPMMaterial* matl,
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
   d_doScalarDiffusion = flags->d_doScalarDiffusion;
-  //d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
 
@@ -383,14 +383,17 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
   int numTriangles = triangles.size();
   vector<double> triXmax(numTriangles);
   vector<double> triYmax(numTriangles);
+  vector<double> triZmax(numTriangles);
   vector<double> triXmin(numTriangles);
   vector<double> triYmin(numTriangles);
+  vector<double> triZmin(numTriangles);
 
   //cout << "numTriangles = " << numTriangles << endl;
   //cout << "numPoints = " << points.size() << endl;
   // Find min/max x and y for each triangle
   double xa, xb, xc;
   double ya, yb, yc;
+  double za, zb, zc;
   for(int i=0;i<numTriangles;i++){
     xa = points[triangles[i].x()].x(); 
     xb = points[triangles[i].y()].x(); 
@@ -399,10 +402,16 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
     ya = points[triangles[i].x()].y(); 
     yb = points[triangles[i].y()].y(); 
     yc = points[triangles[i].z()].y();
+
+    za = points[triangles[i].x()].z(); 
+    zb = points[triangles[i].y()].z(); 
+    zc = points[triangles[i].z()].z();
     triXmin[i]=min(min(xa,xb),xc);
     triXmax[i]=max(max(xa,xb),xc);
     triYmin[i]=min(min(ya,yb),yc);
     triYmax[i]=max(max(ya,yb),yc);
+    triZmin[i]=min(min(za,zb),zc);
+    triZmax[i]=max(max(za,zb),zc);
   }  // Loop over all triangles
 
   Vector DX = patch->dCell();
@@ -413,12 +422,14 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
   IntVector low  = patch->getCellLowIndex();
 
   Point anchor = patch->getLevel()->getAnchor();
-//  Point patchCorner = patch->getNodePosition(low);
-//  cout << "patchCorner = " << patchCorner << endl;
-  
 
   double epsilon = 1.e-8;
 
+  set<Point> zProjSet;
+  set<Point> yProjSet;
+  set<Point> xProjSet;
+
+#if 1
   for(int i=low.x(); i<high.x(); i++){
    double xcorner = ((double) i)*DX.x()+dcorner.x() + anchor.x();
    for(int ix=0; ix < ppc.x(); ix++){
@@ -491,8 +502,8 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
              }
              if(count%2==1){
                Point p(xcand, ycand, zcand);
-               vars.d_object_points[obj].push_back(p);
-               //parts_out << xcand << " " << ycand << " " << zcand << endl;
+               //vars.d_object_points[obj].push_back(p);
+               zProjSet.insert(p);
              }
            }  // z
          }  // k-cell
@@ -501,6 +512,185 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
     }  // j-cell
    }  // x
   }  // i-cell
+
+  for(int i=low.x(); i<high.x(); i++){
+   double xcorner = ((double) i)*DX.x()+dcorner.x() + anchor.x();
+   for(int ix=0; ix < ppc.x(); ix++){
+    double xcand = xcorner + ((double) ix)*dxpp.x();
+    for(int k=low.z(); k<high.z(); k++){
+      double zcorner = ((double) k)*DX.z()+dcorner.z() + anchor.z();
+      for(int iz=0; iz < ppc.z(); iz++){
+        double zcand = zcorner + ((double) iz)*dxpp.z();
+        vector<double> YI;
+        for(int m=0;m<numTriangles;m++){
+          // First, check to see if candidate point is inside of a rectangle 
+          // that contains the triangle.  If it is, do more math.
+          if(triXmin[m]<=xcand && xcand<=triXmax[m]){
+            if(triZmin[m]<=zcand && zcand<=triZmax[m]){
+              // inside the bounding square, compute Eqs 3 and 4
+              double ebx = points[triangles[m].y()].x() 
+                         - points[triangles[m].x()].x();
+              double ebz = points[triangles[m].y()].z() 
+                         - points[triangles[m].x()].z();
+              double ecx = points[triangles[m].z()].x() 
+                         - points[triangles[m].x()].x();
+              double ecz = points[triangles[m].z()].z() 
+                         - points[triangles[m].x()].z();
+              double ebDOTec = ebx*ecx + ebz*ecz;
+              double ebDOTeb = ebx*ebx + ebz*ebz;
+              double ecDOTeb = ebDOTec;
+              double ecDOTec = ecx*ecx + ecz*ecz;
+              double ebPx = ebDOTec*ebx - ebDOTeb*ecx;
+              double ebPz = ebDOTec*ebz - ebDOTeb*ecz;
+              double ecPx = ecDOTec*ebx - ecDOTeb*ecx;
+              double ecPz = ecDOTec*ebz - ecDOTeb*ecz;
+              double wx = xcand - points[triangles[m].x()].x();
+              double wz = zcand - points[triangles[m].x()].z();
+              double u = (wx*ecPx + wz*ecPz)/(ebx*ecPx + ebz*ecPz);
+              double v = (wx*ebPx + wz*ebPz)/(ecx*ebPx + ecz*ebPz);
+              if(u>=-1.*epsilon && v>=-1.*epsilon && u+v<=1.+epsilon){
+                // x-y point is within a triangle
+                // Compute yi for each triangle that gets this far
+                double yi = u*(points[triangles[m].y()].y() 
+                             - points[triangles[m].x()].y())
+                          + v*(points[triangles[m].z()].y() 
+                             - points[triangles[m].x()].y()) + 
+                               points[triangles[m].x()].y();
+                YI.push_back(yi);
+              } // Is point inside of triangle
+            }   // Is point in bounding rectangle y
+          }     // Is point in bounding rectangle x
+        }       // Loop over triangles       
+
+        if(YI.size()>0){
+         // elimintate any double counts due to expanding triangles
+         sort(YI.begin(), YI.end());
+         vector<double> YIsorted;
+         YIsorted.push_back(YI[0]);
+         for(unsigned int iyi=1;iyi<YI.size();iyi++){
+           if(fabs(YI[iyi] - YI[iyi-1]) > 2.*epsilon){
+             YIsorted.push_back(YI[iyi]);
+           }
+         }
+
+         for(int j=low.y(); j<high.y(); j++){
+           double ycorner = ((double) j)*DX.y()+dcorner.y() + anchor.y();
+           for(int iy=0;iy < ppc.y(); iy++){
+             double ycand = ycorner + ((double) iy)*dxpp.y();
+             int count = 0;
+             for(unsigned int iyi=0;iyi<YIsorted.size();iyi++){
+               if(YIsorted[iyi]>ycand){
+                 count++;
+               }
+             }
+             if(count%2==1){
+               Point p(xcand, ycand, zcand);
+               //vars.d_object_points[obj].push_back(p);
+               yProjSet.insert(p);
+             }
+           }  // y
+         }  // j-cell
+       }  // if YI isn't empty
+      }  // z
+    }  // k-cell
+   }  // x
+  }  // i-cell
+#endif
+
+  for(int j=low.y(); j<high.y(); j++){
+   double ycorner = ((double) j)*DX.y()+dcorner.y() + anchor.y();
+   for(int iy=0; iy < ppc.y(); iy++){
+    double ycand = ycorner + ((double) iy)*dxpp.y();
+    for(int k=low.z(); k<high.z(); k++){
+      double zcorner = ((double) k)*DX.z()+dcorner.z() + anchor.z();
+      for(int iz=0; iz < ppc.z(); iz++){
+        double zcand = zcorner + ((double) iz)*dxpp.z();
+        vector<double> XI;
+        for(int m=0;m<numTriangles;m++){
+          // First, check to see if candidate point is inside of a rectangle 
+          // that contains the triangle.  If it is, do more math.
+          if(triYmin[m]<=ycand && ycand<=triYmax[m]){
+            if(triZmin[m]<=zcand && zcand<=triZmax[m]){
+              // inside the bounding square, compute Eqs 3 and 4
+              double eby = points[triangles[m].y()].y() 
+                         - points[triangles[m].x()].y();
+              double ebz = points[triangles[m].y()].z() 
+                         - points[triangles[m].x()].z();
+              double ecy = points[triangles[m].z()].y() 
+                         - points[triangles[m].x()].y();
+              double ecz = points[triangles[m].z()].z() 
+                         - points[triangles[m].x()].z();
+              double ebDOTec = eby*ecy + ebz*ecz;
+              double ebDOTeb = eby*eby + ebz*ebz;
+              double ecDOTeb = ebDOTec;
+              double ecDOTec = ecy*ecy + ecz*ecz;
+              double ebPy = ebDOTec*eby - ebDOTeb*ecy;
+              double ebPz = ebDOTec*ebz - ebDOTeb*ecz;
+              double ecPy = ecDOTec*eby - ecDOTeb*ecy;
+              double ecPz = ecDOTec*ebz - ecDOTeb*ecz;
+              double wy = ycand - points[triangles[m].x()].y();
+              double wz = zcand - points[triangles[m].x()].z();
+              double u = (wy*ecPy + wz*ecPz)/(eby*ecPy + ebz*ecPz);
+              double v = (wy*ebPy + wz*ebPz)/(ecy*ebPy + ecz*ebPz);
+              if(u>=-1.*epsilon && v>=-1.*epsilon && u+v<=1.+epsilon){
+                // z-y point is within a triangle
+                // Compute xi for each triangle that gets this far
+                double xi = u*(points[triangles[m].y()].x() 
+                             - points[triangles[m].x()].x())
+                          + v*(points[triangles[m].z()].x() 
+                             - points[triangles[m].x()].x()) + 
+                               points[triangles[m].x()].x();
+                XI.push_back(xi);
+              } // Is point inside of triangle
+            }   // Is point in bounding rectangle y
+          }     // Is point in bounding rectangle x
+        }       // Loop over triangles       
+
+        if(XI.size()>0){
+         // elimintate any double counts due to expanding triangles
+         sort(XI.begin(), XI.end());
+         vector<double> XIsorted;
+         XIsorted.push_back(XI[0]);
+         for(unsigned int ixi=1;ixi<XI.size();ixi++){
+           if(fabs(XI[ixi] - XI[ixi-1]) > 2.*epsilon){
+             XIsorted.push_back(XI[ixi]);
+           }
+         }
+
+         for(int i=low.x(); i<high.x(); i++){
+           double xcorner = ((double) i)*DX.x()+dcorner.x() + anchor.x();
+           for(int ix=0;ix < ppc.x(); ix++){
+             double xcand = xcorner + ((double) ix)*dxpp.x();
+             int count = 0;
+             for(unsigned int ixi=0;ixi<XIsorted.size();ixi++){
+               if(XIsorted[ixi]>xcand){
+                 count++;
+               }
+             }
+             if(count%2==1){
+               Point p(xcand, ycand, zcand);
+               //vars.d_object_points[obj].push_back(p);
+               xProjSet.insert(p);
+             }
+           }  // y
+         }  // j-cell
+       }  // if XI isn't empty
+      }  // z
+    }  // k-cell
+   }  // x
+  }  // i-cell
+
+  set<Point> intersectZY;
+  set_intersection(zProjSet.begin(), zProjSet.end(), 
+                   yProjSet.begin(), yProjSet.end(),
+                   std::inserter(intersectZY, intersectZY.begin()));
+
+  for (set<Point>::iterator it1 = intersectZY.begin();
+                            it1!= intersectZY.end();  it1++){
+    Point point = *it1;
+    vars.d_object_points[obj].push_back(point);
+  }
+
 }
 
 void 
