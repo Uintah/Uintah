@@ -47,8 +47,8 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
     return scinew ImplicitParticleCreator(mat,flags);
 
   else if (flags->d_integrator_type == "explicit" && allTriGeom==true) 
-    return scinew ParticleCreator(mat,flags);
-    //return scinew TriangleParticleCreator(mat,flags);
+    return scinew TriangleParticleCreator(mat,flags);
+    //return scinew ParticleCreator(mat,flags);
 
   else 
     return scinew ParticleCreator(mat,flags);

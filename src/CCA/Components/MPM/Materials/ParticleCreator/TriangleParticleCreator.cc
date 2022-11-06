@@ -367,12 +367,26 @@ TriangleParticleCreator::allocateVariables(particleIndex numParticles,
   return subset;
 }
 
-void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, 
-                                                       ObjectVars& vars)
+void TriangleParticleCreator::createPoints(const Patch* patch, 
+                                           GeometryObject* obj, 
+                                           ObjectVars& vars)
 {
+  // In this version of create points, triangles are projected into
+  // planes and points are checked to see if they lie within the projection
+  // of those triangles.  If they do, then the out of plane direction is
+  // checked to see if the point is inside of an object. 
   GeometryPieceP piece = obj->getPiece();
   Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getInitialData_IntVector("res");
+
+  Vector DX = patch->dCell();
+  Vector dxpp = DX/ppc;
+  Vector dcorner = dxpp*0.5;
+
+  IntVector high = patch->getCellHighIndex();
+  IntVector low  = patch->getCellLowIndex();
+
+  Point anchor = patch->getLevel()->getAnchor();
 
   TriGeometryPiece *tgp = dynamic_cast<TriGeometryPiece*>(piece.get_rep());
 
@@ -414,22 +428,13 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
     triZmax[i]=max(max(za,zb),zc);
   }  // Loop over all triangles
 
-  Vector DX = patch->dCell();
-  Vector dxpp = DX/ppc;
-  Vector dcorner = dxpp*0.5;
-
-  IntVector high = patch->getCellHighIndex();
-  IntVector low  = patch->getCellLowIndex();
-
-  Point anchor = patch->getLevel()->getAnchor();
-
   double epsilon = 1.e-8;
 
   set<Point> zProjSet;
   set<Point> yProjSet;
   set<Point> xProjSet;
 
-#if 1
+  // First, project all triangles into the x-y plane
   for(int i=low.x(); i<high.x(); i++){
    double xcorner = ((double) i)*DX.x()+dcorner.x() + anchor.x();
    for(int ix=0; ix < ppc.x(); ix++){
@@ -513,6 +518,7 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
    }  // x
   }  // i-cell
 
+  // Next, project all triangles into the x-z plane
   for(int i=low.x(); i<high.x(); i++){
    double xcorner = ((double) i)*DX.x()+dcorner.x() + anchor.x();
    for(int ix=0; ix < ppc.x(); ix++){
@@ -595,8 +601,8 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
     }  // k-cell
    }  // x
   }  // i-cell
-#endif
 
+  // Finally, project all triangles into the y-z plane
   for(int j=low.y(); j<high.y(); j++){
    double ycorner = ((double) j)*DX.y()+dcorner.y() + anchor.y();
    for(int iy=0; iy < ppc.y(); iy++){
@@ -680,13 +686,47 @@ void TriangleParticleCreator::createPoints(const Patch* patch, GeometryObject* o
    }  // x
   }  // i-cell
 
+  // First create intersections between each of the pairs of projected
+  // directions.  First YZ, then XZ, then XY.  Then insert all of the points
+  // from those intersection into union set that will contain all particles
+  // that considered to be inside for at least two of the projected directions
   set<Point> intersectZY;
   set_intersection(zProjSet.begin(), zProjSet.end(), 
                    yProjSet.begin(), yProjSet.end(),
                    std::inserter(intersectZY, intersectZY.begin()));
 
+  set<Point> intersectZX;
+  set_intersection(zProjSet.begin(), zProjSet.end(), 
+                   xProjSet.begin(), xProjSet.end(),
+                   std::inserter(intersectZX, intersectZX.begin()));
+
+  set<Point> intersectYX;
+  set_intersection(yProjSet.begin(), yProjSet.end(), 
+                   xProjSet.begin(), xProjSet.end(),
+                   std::inserter(intersectYX, intersectYX.begin()));
+
+  // Set containing all of the points that will be created as particles
+  set<Point> unionXY_XZ_YZ;
+
   for (set<Point>::iterator it1 = intersectZY.begin();
                             it1!= intersectZY.end();  it1++){
+    unionXY_XZ_YZ.insert(*it1);
+  }
+
+  for (set<Point>::iterator it1 = intersectZX.begin();
+                            it1!= intersectZX.end();  it1++){
+    unionXY_XZ_YZ.insert(*it1);
+  }
+
+  for (set<Point>::iterator it1 = intersectYX.begin();
+                            it1!= intersectYX.end();  it1++){
+    unionXY_XZ_YZ.insert(*it1);
+  }
+
+  // Finally, push all of the points in the union of the intersections
+  // into the vector of points to become particles.
+  for (set<Point>::iterator it1 = unionXY_XZ_YZ.begin();
+                            it1!= unionXY_XZ_YZ.end();  it1++){
     Point point = *it1;
     vars.d_object_points[obj].push_back(point);
   }
