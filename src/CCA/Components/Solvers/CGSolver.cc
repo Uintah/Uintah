@@ -280,11 +280,11 @@ public:
     tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
 
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
-    tmp_flop_label->allowMultipleComputes();
+    tmp_flop_label->schedReductionTask(false);
     flop_label = tmp_flop_label;
 
     VarLabel* tmp_memref_label = VarLabel::create(A->getName()+" memrefs", sumlong_vartype::getTypeDescription());
-    tmp_memref_label->allowMultipleComputes();
+    tmp_memref_label->schedReductionTask(false);
     memref_label = tmp_memref_label;
 
     switch(params->norm){

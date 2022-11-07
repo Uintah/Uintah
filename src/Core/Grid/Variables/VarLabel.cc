@@ -204,26 +204,16 @@ VarLabel::getFullName( int matlIndex, const Patch * patch ) const
   return out.str();
 }
 
-//______________________________________________________________________
-//
-void
-VarLabel::allowMultipleComputes()
-{
-   if (!m_td->isReductionVariable()) {
-     SCI_THROW(InternalError(std::string("Only reduction variables may allow multiple computes.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
-   }
-   m_allow_multiple_computes = true;
-}
 
 //______________________________________________________________________
 //
 void
-VarLabel::setAllowMultipleComputes( bool input)
+VarLabel::schedReductionTask( bool input)
 {
    if (!m_td->isReductionVariable()) {
-     SCI_THROW(InternalError(std::string("Only reduction variables may set allow multiple computes.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
+     SCI_THROW(InternalError(std::string("Only reduction variables may set this flag.\n'" + m_name + "' is not a reduction variable."), __FILE__, __LINE__));
    }
-   m_allow_multiple_computes = input;
+   m_sched_reduction_task = input;
 }
 
 namespace Uintah {

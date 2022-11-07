@@ -1661,7 +1661,7 @@ TaskGraph::addDependencyEdges( Task              * task
             }
             // with reduction variables, you can modify them up to the Reduction Task, which also modifies
             // those who don't modify will get the reduced value.
-            if (!modifies && !req->m_var->allowsMultipleComputes()) {
+            if (!modifies && req->m_var->doSchedReductionTask()) {
               requiresReductionTask = true;
             }
           }
@@ -1957,7 +1957,7 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
         // for reduction var allows multi computes such as delT
         // do not generate reduction task each time it computes,
         // instead computes it in a system wide reduction task
-        if (comp->m_var->allowsMultipleComputes()) {
+        if ( !comp->m_var->doSchedReductionTask()) {
           DOUT(g_topological_deps_dbg, "Rank-" << m_proc_group->myRank() << " Skipping Reduction task for variable: " << comp->m_var->getName() << " on level " << levelidx << ", DW " << dw);
           continue;
         }

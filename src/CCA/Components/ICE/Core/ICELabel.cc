@@ -62,7 +62,7 @@ ICELabel::ICELabel()
   // delta t
   VarLabel* nonconstDelt =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-  nonconstDelt->allowMultipleComputes();
+  nonconstDelt->schedReductionTask(false);
   delTLabel = nonconstDelt;
 
   //__________________________________
