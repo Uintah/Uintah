@@ -869,7 +869,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   scheduleComputeCurrentParticleSize(     sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
-  scheduleFindSurfaceParticles(           sched, patches, matls);
+  if(flags->d_useLogisticRegression || flags->d_doingDissolution){
+    scheduleFindSurfaceParticles(           sched, patches, matls);
+  }
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   if(flags->d_useLineSegments){
     scheduleComputeLineSegmentForces(     sched, patches, mpm_matls_sub,
@@ -958,7 +960,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       scheduleComputeTriangleScaleFactor( sched, patches, triangle_matls);
     }
   }
-  scheduleChangeGrainMaterials(           sched, patches, matls);
+  if(flags->d_changeGrainMaterials){
+    scheduleChangeGrainMaterials(           sched, patches, matls);
+  }
   scheduleFinalParticleUpdate(            sched, patches, matls);
   scheduleInsertParticles(                sched, patches, matls);
   if(flags->d_canAddParticles){
@@ -1138,7 +1142,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::NewDW, lb->pCurSizeLabel,          gan,NGP);
-  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,    gan,NGP);
+  if (flags->d_doingDissolution){
+    t->requires(Task::NewDW,lb->pSurfLabel_preReloc,   gan,NGP);
+  }
   if (flags->d_useCBDI) {
     t->requires(Task::NewDW,  lb->pExternalForceCorner1Label,gan,NGP);
     t->requires(Task::NewDW,  lb->pExternalForceCorner2Label,gan,NGP);
@@ -1579,7 +1585,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pCurSizeLabel,                   gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
-  t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
+  if (flags->d_doingDissolution){
+    t->requires(Task::NewDW, lb->pSurfLabel_preReloc,             gnone);
+  }
 
   t->requires(Task::NewDW, lb->massBurnFractionLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->NodalWeightSumLabel,             gac,NGN);
@@ -2784,7 +2792,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     Ghost::GhostType  gan = Ghost::AroundNodes;
 
     for(unsigned int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
@@ -2815,7 +2824,17 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->get(psize,          lb->pCurSizeLabel,       pset);
 
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
-      new_dw->get(pSurf,          lb->pSurfLabel_preReloc,     pset);
+      if (flags->d_doingDissolution){
+        new_dw->get(pSurf,          lb->pSurfLabel_preReloc,   pset);
+      } else {
+        ParticleVariable<double>  p_surfTemp;
+        new_dw->allocateTemporary(p_surfTemp,  pset);
+        for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+          p_surfTemp[*it]=0.0;
+        }
+        pSurf = p_surfTemp; // reference created data
+      }
+
 
       constParticleVariable<IntVector> pLoadCurveID;
       if (flags->d_useCBDI) {
@@ -3022,7 +3041,8 @@ void SerialMPM::computeSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
       // Get the arrays of particle values to be changed
@@ -3083,7 +3103,8 @@ void SerialMPM::computeSPlusSSPlusVp(const ProcessorGroup*,
 
     unsigned int numMPMMatls=m_materialManager->getNumMatls( "MPM" );
     for(unsigned int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = (MPMMaterial*) m_materialManager->getMaterial( "MPM",  m );
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
@@ -4438,7 +4459,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_XPIC2){
         new_dw->get(pvelSSPlus, lb->pVelocitySSPlusLabel,            pset);
       } 
-      new_dw->get(pSurf,        lb->pSurfLabel_preReloc,             pset);
+      if (flags->d_doingDissolution){
+        new_dw->get(pSurf,          lb->pSurfLabel_preReloc,   pset);
+      } else {
+        ParticleVariable<double>  p_surfTemp;
+        new_dw->allocateTemporary(p_surfTemp,  pset);
+        for(ParticleSubset::iterator it = pset->begin();it != pset->end();it++){
+          p_surfTemp[*it]=0.0;
+        }
+        pSurf = p_surfTemp; // reference created data
+      }
 
       new_dw->allocateAndPut(pxnew,      lb->pXLabel_preReloc,            pset);
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,     pset);

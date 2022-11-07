@@ -42,7 +42,7 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     
     static ParticleCreator* create(ProblemSpecP& ps, MPMMaterial* mat,
-                                   MPMFlags* flags);
+                                   MPMFlags* flags, bool allTriGeom);
 
 
   };

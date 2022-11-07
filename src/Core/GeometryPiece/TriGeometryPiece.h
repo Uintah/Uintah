@@ -119,7 +119,7 @@ WARNING
                                          double      & min_distance ){
            int intersections = 0;
            
-           d_grid->countIntersections( start, end, intersections, min_distance );
+           d_grid->countIntersections( start, end, intersections, min_distance);
            return intersections;
          }
 
@@ -128,6 +128,15 @@ WARNING
            d_grid->countIntersections( start, intersections );
            return intersections;
          }
+
+         inline std::vector<IntVector> getTriangles( ){
+           return d_tri;
+         }
+
+         inline std::vector<Point> getPoints( ){
+           return d_points;
+         }
+
 
       private:
 

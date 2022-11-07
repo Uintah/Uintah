@@ -63,6 +63,8 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      
      if (dis_type == "null") {
       dissolution_list->add(scinew NullDissolution(myworld,ss,lb));
+      flag->d_doingDissolution=false;
+      flag->d_computeNormals=false;
      }
      else if (dis_type == "contactStressIndependent") {
       dissolution_list->add(scinew ContactStressIndependent(myworld,child,ss,lb));
@@ -91,7 +93,8 @@ Dissolution* DissolutionFactory::create(const ProcessorGroup* myworld,
      }
      else {
        cerr << "Unknown Dissolution Type R (" << dis_type << ")" << std::endl;;
-       throw ProblemSetupException(" E R R O R----->MPM:Unknown Dissolution type", __FILE__, __LINE__);
+       throw ProblemSetupException(" ERROR----->MPM:Unknown Dissolution type",
+                                     __FILE__, __LINE__);
      }
    }
 

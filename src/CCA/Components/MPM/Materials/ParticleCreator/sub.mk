@@ -29,5 +29,6 @@ SRCDIR   := CCA/Components/MPM/Materials/ParticleCreator
 
 SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
+	$(SRCDIR)/TriangleParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc

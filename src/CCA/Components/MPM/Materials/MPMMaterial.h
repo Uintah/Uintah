@@ -179,6 +179,7 @@ WARNING
    double d_specificHeat;
    double d_thermalConductivity;
    bool   d_pLocalizedComputed  =  false;        // set to true if any task computes pLocalizedMPM or pLocalizedMPM_preReloc
+   bool   d_allTriGeometry = false;
    // For Cyberstone only
    int    d_modalID;
    bool   d_isPistonMaterial;

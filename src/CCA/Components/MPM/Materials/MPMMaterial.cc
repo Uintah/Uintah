@@ -42,6 +42,7 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/NullGeometryPiece.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <iostream>
@@ -64,7 +65,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MaterialManagerP& ss,MPMFlags* flags,
   d_cm->setMaterialManager(ss.get_rep());
 
   // Check to see which ParticleCreator object we need
-  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
+  d_particle_creator = ParticleCreatorFactory::create(ps, this,
+                                                      flags, d_allTriGeometry);
 }
 //______________________________________________________________________
 //
@@ -152,12 +154,21 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps,
   } 
 
   if(!isRestart){
+    d_allTriGeometry=true;
     for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
          geom_obj_ps != nullptr; 
          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
      vector<GeometryPieceP> pieces;
      GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+     for(unsigned int i = 0; i< pieces.size(); i++){
+       TriGeometryPiece* tri_piece = 
+                           dynamic_cast<TriGeometryPiece*>(pieces[i].get_rep());
+       if (!tri_piece){
+         d_allTriGeometry=false;
+       }
+     }
 
      GeometryPieceP mainpiece;
      if(pieces.size() == 0){
@@ -252,7 +263,8 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_is_rigid = mat->d_is_rigid;
 
   // Check to see which ParticleCreator object we need
-  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
+  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags,
+                                                      d_allTriGeometry);
 }
 
 ConstitutiveModel* MPMMaterial::getConstitutiveModel() const

@@ -954,8 +954,12 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pScaleFactorLabel_preReloc);
   }
 
-  particle_state.push_back(d_lb->pSurfLabel);
-  particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+  if(d_flags->d_useLogisticRegression || 
+       d_flags->d_SingleFieldMPM      ||
+       d_flags->d_doingDissolution){
+    particle_state.push_back(d_lb->pSurfLabel);
+    particle_state_preReloc.push_back(d_lb->pSurfLabel_preReloc);
+  }
 
   particle_state.push_back(d_lb->pModalIDLabel);
   particle_state_preReloc.push_back(d_lb->pModalIDLabel_preReloc);

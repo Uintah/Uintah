@@ -64,7 +64,6 @@ public:
   inline Point operator+(const Point&) const;
   inline Vector operator-(const Point&) const;
   inline Point operator+(const Vector&) const;
-//  inline Point operator+(const Point&) const;
   inline Point operator-(const Vector&) const;
   inline Point operator*(double) const;
   inline Point& operator*=(const double);
@@ -75,6 +74,7 @@ public:
   inline Point operator-() const;
   inline double& operator()(int idx);
   inline double operator()(int idx) const;
+  inline bool operator<(const Point&);
 
   inline void addscaled(const Point& p, const double scale);  // this += p * w;
 
@@ -184,9 +184,31 @@ inline Point Point::operator+(const Point& p) const
     return Point(x_+p.x_, y_+p.y_, z_+p.z_);
 }
 
-//inline Point Point::operator+(const Point& p2) const
+// This was added so that stl::set<Point> could be used.  Apologies to sparker
+inline bool operator<(Point p1, Point p2)
+{
+  {
+    if (p1.z() < p2.z()) {
+      return true;
+    }
+    else if (p1.z() > p2.z()) {
+      return false;
+    }
+    else if (p1.y() < p2.y()) {
+      return true;
+    }
+    else if (p1.y() > p2.y()) {
+      return false;
+    }
+    else {
+      return p1.x() < p2.x();
+    }
+  }
+}
+
+//inline Vector Point::operator+(const Point& p) const
 //{
-//    return Vector(x_+p2.x_, y_+p2.y_, z_+p2.z_);
+//    return Vector(x_+p.x_, y_+p.y_, z_+p.z_);
 //}
 
 inline Vector Point::operator-(const Point& p) const
