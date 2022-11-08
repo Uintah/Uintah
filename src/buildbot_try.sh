@@ -58,7 +58,7 @@ cat << EOF > $usage
 EOF
 
 # Defaults
-set trunkServers = ("Trunk:opt-full-try" "Trunk:dbg-full-try" "Trunk:opt-gpu-try")
+set trunkServers = ("Trunk:opt-full" "Trunk:dbg-full" "Trunk:opt-gpu")
 
 set BUILDERS = ""
 set CREATE_PATCH = false
@@ -106,21 +106,21 @@ while ( $#argv )
       breaksw
 
     case trunk-opt:
-      set BUILDERS = "$BUILDERS --builder=Trunk:opt-full-try"
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-full"
       shift
       breaksw
     case trunk-d*b*g:         # debug or dbg
-      set BUILDERS = "$BUILDERS --builder=Trunk:dbg-full-try"
+      set BUILDERS = "$BUILDERS --builder=Trunk:dbg-full"
       shift
       breaksw
 
     case trunk-gpu:
-      set BUILDERS = "$BUILDERS --builder=Trunk:opt-gpu-try"
+      set BUILDERS = "$BUILDERS --builder=Trunk:opt-gpu"
       shift
       breaksw
 
     case kokkos-opt:
-      set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full-try"
+      set BUILDERS = "$BUILDERS --builder=Kokkos:opt-full"
       set BRANCH = "kokkos_dev"
       shift
       breaksw
