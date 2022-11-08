@@ -93,7 +93,7 @@ void FluidContact::exMomInterpolated(const ProcessorGroup*,
                                         const MaterialSubset* matls,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
-{ 
+{
 //   // Setting the fluid velocity equal to the rigid velocity,
 //   // to satisfy the no-slip boundary condition of impermeable wall-fluid contact
 //   // in computational fluid dynamics
@@ -345,6 +345,7 @@ void FluidContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                           const PatchSet* patches,
                                                           const MaterialSet* ms)
 {
+#if 0
   Task * t = scinew Task("FluidContact::exMomInterpolated", 
               this, &FluidContact::exMomInterpolated);
 
@@ -374,6 +375,7 @@ void FluidContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 
   if (z_matl->removeReference())
     delete z_matl; // shouln't happen, but...
+#endif
 }
 
 void FluidContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
