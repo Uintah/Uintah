@@ -351,7 +351,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
+  PetscClassId id = INT_MAX;
   if (d_A) {
     PetscObjectGetClassId((PetscObject)d_A,&id);
   }
@@ -507,7 +507,7 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #endif
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
+  PetscClassId id = INT_MAX;
   if (d_A) {
     PetscObjectGetClassId((PetscObject)d_A,&id);
   }

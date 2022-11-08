@@ -1876,7 +1876,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               for (int qn=0; qn< qn_total; qn++){
                 // get weight BC
                 double weightScalingConstant = ArchesCore::get_scaling_constant(db_BCType,"weight",qn);
-                double weight;
+                double weight = std::numeric_limits<double>::infinity();
                 for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);
