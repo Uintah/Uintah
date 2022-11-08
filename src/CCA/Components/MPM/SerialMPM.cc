@@ -1356,7 +1356,7 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   if( flags->d_reductionVars->sumTransmittedForce ){
     // Tell scheduler to not automatically reduce variable.
-    lb->SumTransmittedForceLabel->setAllowMultipleComputes(true);
+    lb->SumTransmittedForceLabel->schedReductionTask(false);
     t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
@@ -1726,7 +1726,7 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
 
 //______________________________________________________________________
 //  Schedule the reduction of variables that are computed multiple times in a timestep
-//  Use Label->setAllowMultipleComputes( false );
+//  Use Label->schedReductionTask( true );
 //  to the tell scheduler to perform the reduction.
 //  The actual task is inside MPIScheduler.
 void
@@ -1765,7 +1765,7 @@ SerialMPM::scheduleReduceVars(       SchedulerP  & sched,
   reduction_mss->addReference();
 
   // Tell the scheduler to reduce this variable
-  lb->SumTransmittedForceLabel->setAllowMultipleComputes(false);
+  lb->SumTransmittedForceLabel->schedReductionTask(true);
   t->computes( lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain );
 
   sched->addTask(t, patches, matls);
@@ -3962,9 +3962,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       MPMMaterial* mpm_matl =
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
-
-
-      //DOUTR(true, "patch: " << patch->getID() << " dwi " << dwi << " totalMass: " << totalMass[dwi] << " totalSTF: " << totalSTF[dwi] );
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;

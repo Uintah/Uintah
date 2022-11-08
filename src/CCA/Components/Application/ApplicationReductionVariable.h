@@ -68,7 +68,7 @@ WARNING
     {
       // Construct the label.
       VarLabel* nonconstVar = VarLabel::create(name, varType);
-      nonconstVar->allowMultipleComputes();
+      nonconstVar->schedReductionTask(false);
       m_label = nonconstVar;
 
       m_active = varActive;      
