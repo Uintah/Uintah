@@ -1,12 +1,12 @@
 # -*- python -*-
 # ex: set syntax=python:
 
-# import numpy as np
-# import os
-# import shutil
-# import glob
-# import re                # regular expressions
-# import pprint
+import numpy as np
+import os
+import shutil
+import glob
+import re                # regular expressions
+import pprint
 # 
 from buildbot.plugins               import *
 from buildbot.process               import results
@@ -42,9 +42,6 @@ def getValue( Q, Qname):
 
 def getValueWithDefault( Q_default, Qname):
     Q = util.Interpolate('%(prop:'+Qname+')s') 
-    print( "getValueWithDefault %s, %s" % (Qname, Q) )
-    
-    
 
     if Q == None:
       return  Q_default
