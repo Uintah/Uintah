@@ -212,7 +212,6 @@
     <DoThermalExpansion>false</DoThermalExpansion>
     <minimum_particle_mass>3.0000000000000001e-12</minimum_particle_mass>
     <minimum_mass_for_acc>0</minimum_mass_for_acc>
-    <maximum_particle_velocity>1000</maximum_particle_velocity>
     <UsePrescribedDeformation>false</UsePrescribedDeformation>
     <InsertParticles>false</InsertParticles>
     <do_contact_friction_heating>true</do_contact_friction_heating>

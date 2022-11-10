@@ -112,7 +112,6 @@ class Output;
     double      d_min_part_mass;                               // Minimum particle mass before deletion  
     int         d_min_subcycles_for_F;                         // Minimum number of subcycles to use in computing the deformation gradient
     double      d_min_mass_for_acceleration;                   // Minimum mass to allow division by in computing acceleration
-    double      d_max_vel;                                     // Maxmimum particle velocity before  deletion
     bool        d_prescribeDeformation;                        // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile;                   // File containing prescribed deformations
     bool        d_exactDeformation;                            // Set steps exactly to match times in prescribed deformation file

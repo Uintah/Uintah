@@ -3265,10 +3265,10 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // Get the current simulation time
     simTime_vartype simTimeVar;
     old_dw->get(simTimeVar, lb->simulationTimeLabel);
-    double time = simTimeVar;
     Vector RIGID_VEL;
     // For the Screw Pullout
 #if 0
+    double time = simTimeVar;
     if(time<5.e-6){ 
       RIGID_VEL = (time/5.e-6)*Vector(0.,0.,0.5);
     } else {
@@ -3478,27 +3478,6 @@ void SingleFieldMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalMom   += pvelnew[idx]*pmass[idx];
           totalmass  += pmass[idx];
         }
-
-      // scale back huge particle velocities.
-      // Default for d_max_vel is 3.e105, hence the conditional
-      if(flags->d_max_vel < 1.e105){
-       for(ParticleSubset::iterator iter  = pset->begin();
-                                    iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(pvelnew[idx].length() > flags->d_max_vel){
-          if(pvelnew[idx].length() >= pvelocity[idx].length()){
-            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
-                             *(flags->d_max_vel*.9);
-            cout << endl <<"Warning: particle " <<pids[idx]
-                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
-		 << "  " << pvelnew[idx].length()
-		 << "  " << flags->d_max_vel
-		 << "  " << pvelocity[idx].length()
-                 << endl;
-          } // if
-        } // if
-       }// for particles
-      } // max velocity flag
     }  // loop over materials
 
     // DON'T MOVE THESE!!!

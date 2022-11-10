@@ -4288,53 +4288,36 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } // use XPIC(2) or not
      } // is FTM
-
-      // scale back huge particle velocities.
-      // Default for d_max_vel is 3.e105, hence the conditional
-      if(flags->d_max_vel < 1.e105){
-       for(ParticleSubset::iterator iter  = pset->begin();
-                                    iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(pvelnew[idx].length() > flags->d_max_vel){
-          if(pvelnew[idx].length() >= pvelocity[idx].length()){
-            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
-                             *(flags->d_max_vel*.9);
-            cout << endl <<"Warning: particle " <<pids[idx]
-                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
-                 << "  " << pvelnew[idx].length()
-                 << "  " << flags->d_max_vel
-                 << "  " << pvelocity[idx].length()
-                 << endl;
-          } // if
-        } // if
-       }// for particles
-      } // max velocity flag
     }  // loop over materials
 
     // DON'T MOVE THESE!!!
     //__________________________________
     //  reduction variables
     if( flags->d_reductionVars->momentum ){
-      new_dw->put( sumvec_vartype(allMatls_totalMom), lb->TotalMomentumLabel, nullptr, -1);
+      new_dw->put( sumvec_vartype(allMatls_totalMom), 
+                   lb->TotalMomentumLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( totalMom,   lb->TotalMomentumLabel, matls );
     }
 
     if( flags->d_reductionVars->KE ){
-      new_dw->put( sum_vartype(allMatls_kineticEng),  lb->KineticEnergyLabel, nullptr, -1);
+      new_dw->put( sum_vartype(allMatls_kineticEng),  
+                   lb->KineticEnergyLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( kineticEng, lb->KineticEnergyLabel, matls );
     }
 
     if( flags->d_reductionVars->thermalEnergy ){
-      new_dw->put( sum_vartype(allMatls_thermalEng),  lb->ThermalEnergyLabel, nullptr, -1);
+      new_dw->put( sum_vartype(allMatls_thermalEng),  
+                   lb->ThermalEnergyLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( thermalEng, lb->ThermalEnergyLabel, matls );
 
     }
 
     if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(allMatls_CMX), lb->CenterOfMassPositionLabel, nullptr, -1);
+      new_dw->put(sumvec_vartype(allMatls_CMX), 
+                  lb->CenterOfMassPositionLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( CMX,  lb->CenterOfMassPositionLabel, matls );
     }
