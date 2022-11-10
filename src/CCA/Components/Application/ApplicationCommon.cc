@@ -82,7 +82,7 @@ ApplicationCommon::ApplicationCommon( const ProcessorGroup   * myworld,
 
   // delta t
   VarLabel* nonconstDelT = VarLabel::create(delT_name, delt_vartype::getTypeDescription());
-  nonconstDelT->allowMultipleComputes();
+  nonconstDelT->schedReductionTask(false);
   m_delTLabel = nonconstDelT;
 
   m_application_stats.calculateRankMinimum( true );

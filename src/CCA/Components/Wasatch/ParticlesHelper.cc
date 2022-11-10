@@ -134,7 +134,7 @@ namespace Uintah {
     // delta t
     VarLabel* nonconstDelT =
       VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-    nonconstDelT->allowMultipleComputes();
+    nonconstDelT->schedReductionTask(false);
     delTLabel_ = nonconstDelT;
   }
   

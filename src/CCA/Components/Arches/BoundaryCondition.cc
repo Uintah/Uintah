@@ -49,6 +49,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -82,11 +83,13 @@ using namespace Uintah;
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      PhysicalConstants* phys_const,
                                      Properties* props,
-                                     TableLookup* table_lookup ) :
+                                     TableLookup* table_lookup,
+                                     Output* output ) :
   d_lab(label),
   d_physicalConsts(phys_const),
   d_props(props),
-  d_table_lookup(table_lookup)
+  d_table_lookup(table_lookup),
+  d_output(output)
 {
 
   _using_new_intrusion  = false;
@@ -169,7 +172,8 @@ BoundaryCondition::problemSetup( const ProblemSpecP& params,
       for ( int i = 0; i < grid->numLevels(); i++ ){
         _intrusionBC.insert(std::make_pair(i, scinew IntrusionBC( d_lab, d_props,
                                                                   d_table_lookup,
-                                                                  BoundaryCondition::INTRUSION )));
+                                                                  BoundaryCondition::INTRUSION,
+                                                                  d_output )));
         ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
         if (i == (grid->numLevels() - 1)){  //  Only create intrusions on the finest level.
                                             //  In the future, we may want to create intrusions on all levels,
@@ -1876,7 +1880,7 @@ BoundaryCondition::setupBCs( ProblemSpecP db, const LevelP& level )
               for (int qn=0; qn< qn_total; qn++){
                 // get weight BC
                 double weightScalingConstant = ArchesCore::get_scaling_constant(db_BCType,"weight",qn);
-                double weight;
+                double weight = std::numeric_limits<double>::infinity();
                 for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != nullptr; db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
                   std::string tempLabelName;
                   db_BCType2->getAttribute("label",tempLabelName);

@@ -433,7 +433,7 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
   int ierr;
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscClassId id;
+  PetscClassId id = INT_MAX;
   if (U) {
     PetscObjectGetClassId((PetscObject)U, &id);
   }

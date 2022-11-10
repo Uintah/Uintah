@@ -93,6 +93,7 @@ class TimeIntegratorLabel;
 class IntrusionBC;
 class BoundaryCondition_new;
 class WBCHelper;
+class Output;
 
 class BoundaryCondition {
 
@@ -419,7 +420,8 @@ addIntrusionMassRHS( const Patch* patch,
 BoundaryCondition(const ArchesLabel* label,
                   PhysicalConstants* phys_const,
                   Properties* props,
-                  TableLookup* table_lookup);
+                  TableLookup* table_lookup,
+                  Output * output);
 
 
 ~BoundaryCondition();
@@ -863,6 +865,9 @@ PhysicalConstants* d_physicalConsts;
 // used to get properties of different streams
 Properties* d_props;
 TableLookup* d_table_lookup;
+
+Output * d_output;            // output ported needed to write files in IntrustionBC
+
 // mass flow
 double d_uvwout;
 double d_overallMB;

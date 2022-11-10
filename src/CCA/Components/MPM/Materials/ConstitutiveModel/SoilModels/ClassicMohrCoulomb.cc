@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ClassicMohrCoulomb.h"
+#include <limits>
 
 /* this ia a classic Mohr-Coulomb model
 
@@ -3372,7 +3373,8 @@ double ClassicMohrCoulomb::FindPercentage (double * Strain, BBMPoint* InitialPoi
 {
 	//Procedure finds the percentage of strain required to get principal stresses equal (S1=S2 or S2=S3).
 
-	double Percentage=1.0,Delta;
+	double Percentage=1.0;
+       double Delta = std::numeric_limits<double>::infinity();
 	double PercLow=0,PercHigh=1,Theta,ThetaOld=0,Theta1,Theta2,TargetDeg;
 	double TempStrain[6], Eigens[3];
 	BBMPoint FinalPoint;

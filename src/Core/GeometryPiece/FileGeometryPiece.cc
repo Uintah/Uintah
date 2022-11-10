@@ -241,7 +241,10 @@ FileGeometryPiece::read_bbox(std::istream & source, Point & min,
 bool
 FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
-  double x1,x2,x3;
+  double inf = std::numeric_limits<double>::infinity();
+  double x1=inf;
+  double x2=inf;
+  double x3=inf;
 
   // CPTI and CPDI can pass the size matrix columns containing rvec1, rvec2, rvec3
   // Other interpolators will default to grid spacing and default orientation

@@ -3867,27 +3867,6 @@ void SingleHydroMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           totalmass  += pmass[idx];
         }
       } // use XPIC(2) or not
-
-      // scale back huge particle velocities.
-      // Default for d_max_vel is 3.e105, hence the conditional
-      if(flags->d_max_vel < 1.e105){
-       for(ParticleSubset::iterator iter  = pset->begin();
-                                    iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(pvelnew[idx].length() > flags->d_max_vel){
-          if(pvelnew[idx].length() >= pvelocity[idx].length()){
-            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
-                             *(flags->d_max_vel*.9);
-            cout << endl <<"Warning: particle " <<pids[idx]
-                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
-                 << "  " << pvelnew[idx].length()
-                 << "  " << flags->d_max_vel
-                 << "  " << pvelocity[idx].length()
-                 << endl;
-          } // if
-        } // if
-       }// for particles
-      } // max velocity flag
     }  // loop over materials
 
     // DON'T MOVE THESE!!!

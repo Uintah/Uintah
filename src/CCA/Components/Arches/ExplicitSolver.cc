@@ -151,17 +151,19 @@ static DebugStream dbg("ARCHES", false);
 // Default constructor for ExplicitSolver
 // ****************************************************************************
 ExplicitSolver::
-ExplicitSolver(MaterialManagerP& materialManager,
-               PhysicalConstants* physConst,
-               const ProcessorGroup* myworld,
+ExplicitSolver(MaterialManagerP     & materialManager,
+               PhysicalConstants    * physConst,
+               const ProcessorGroup * myworld,
                ArchesParticlesHelper* particle_helper,
-               SolverInterface* hypreSolver,
-               ApplicationCommon* arches ):
-               NonlinearSolver(myworld, arches),
-               d_materialManager(materialManager),
-               d_physicalConsts(physConst),
-               _particlesHelper( particle_helper ),
-               d_hypreSolver(hypreSolver)
+               SolverInterface      * hypreSolver,
+               ApplicationCommon    * arches )
+:
+  NonlinearSolver( myworld, arches ),
+  d_materialManager( materialManager ),
+  d_physicalConsts( physConst ),
+  _particlesHelper( particle_helper ),
+  d_hypreSolver( hypreSolver ),
+  d_arches( arches )
 {
 
   d_lab  = scinew ArchesLabel();
@@ -508,7 +510,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_physicalConsts,
-                                                 d_props, d_tabulated_properties );
+                                                 d_props, d_tabulated_properties, m_arches->getOutput() );
 
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db,  grid);

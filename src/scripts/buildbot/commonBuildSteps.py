@@ -1,12 +1,12 @@
 # -*- python -*-
 # ex: set syntax=python:
 
-# import numpy as np
-# import os
-# import shutil
-# import glob
-# import re                # regular expressions
-# import pprint
+import numpy as np
+import os
+import shutil
+import glob
+import re                # regular expressions
+import pprint
 # 
 from buildbot.plugins               import *
 from buildbot.process               import results
@@ -38,18 +38,17 @@ def getValue( Q, Qname):
       return Q
 
 #______________________________________________________________________
-#   returns value from either input argv or the property dictionary
+#   Returns the test components to run through localRT.
+#   The property "test_components" is initialized in the buildbot_try.sh script
+#   The property "defaultTestComps" is initialized in the builders definition
+def getTestComponents():
+    TC        = util.Interpolate('%(prop:test_components)s')
+    defaultTC = util.Interpolate('%(prop:defaultTestComps)s')
 
-def getValueWithDefault( Q_default, Qname):
-    Q = util.Interpolate('%(prop:'+Qname+')s') 
-    print( "getValueWithDefault %s, %s" % (Qname, Q) )
-    
-    
-
-    if Q == None:
-      return  Q_default
+    if TC == None:
+      return  defaultTC
     else:
-      return Q
+      return TC
 
 #______________________________________________________________________
 #   Update the branch code and remove doc/ directory

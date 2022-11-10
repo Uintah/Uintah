@@ -67,7 +67,7 @@ KokkosSolver::KokkosSolver( MaterialManagerP& materialManager,
   // delta t
   VarLabel* nonconstDelT =
     VarLabel::create(delT_name, delt_vartype::getTypeDescription() );
-  nonconstDelT->allowMultipleComputes();
+  nonconstDelT->schedReductionTask(false);
   m_delTLabel = nonconstDelT;
   // Simulation time
   //VarLabel* m_simtime_label = VarLabel::create(simTime_name, simTime_vartype::getTypeDescription());

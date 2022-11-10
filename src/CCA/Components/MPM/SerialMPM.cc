@@ -1356,7 +1356,7 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   if( flags->d_reductionVars->sumTransmittedForce ){
     // Tell scheduler to not automatically reduce variable.
-    lb->SumTransmittedForceLabel->setAllowMultipleComputes(true);
+    lb->SumTransmittedForceLabel->schedReductionTask(false);
     t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
   }
 
@@ -1726,7 +1726,7 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
 
 //______________________________________________________________________
 //  Schedule the reduction of variables that are computed multiple times in a timestep
-//  Use Label->setAllowMultipleComputes( false );
+//  Use Label->schedReductionTask( true );
 //  to the tell scheduler to perform the reduction.
 //  The actual task is inside MPIScheduler.
 void
@@ -1765,7 +1765,7 @@ SerialMPM::scheduleReduceVars(       SchedulerP  & sched,
   reduction_mss->addReference();
 
   // Tell the scheduler to reduce this variable
-  lb->SumTransmittedForceLabel->setAllowMultipleComputes(false);
+  lb->SumTransmittedForceLabel->schedReductionTask(true);
   t->computes( lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain );
 
   sched->addTask(t, patches, matls);
@@ -3963,9 +3963,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                         (MPMMaterial*) m_materialManager->getMaterial("MPM", m);
       int dwi = mpm_matl->getDWIndex();
 
-
-      //DOUTR(true, "patch: " << patch->getID() << " dwi " << dwi << " totalMass: " << totalMass[dwi] << " totalSTF: " << totalSTF[dwi] );
-
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       constParticleVariable<Vector> pvelocity, pvelSSPlus, pdisp;
@@ -4291,53 +4288,36 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } // use XPIC(2) or not
      } // is FTM
-
-      // scale back huge particle velocities.
-      // Default for d_max_vel is 3.e105, hence the conditional
-      if(flags->d_max_vel < 1.e105){
-       for(ParticleSubset::iterator iter  = pset->begin();
-                                    iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if(pvelnew[idx].length() > flags->d_max_vel){
-          if(pvelnew[idx].length() >= pvelocity[idx].length()){
-            pvelnew[idx]=(pvelnew[idx]/pvelnew[idx].length())
-                             *(flags->d_max_vel*.9);
-            cout << endl <<"Warning: particle " <<pids[idx]
-                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
-                 << "  " << pvelnew[idx].length()
-                 << "  " << flags->d_max_vel
-                 << "  " << pvelocity[idx].length()
-                 << endl;
-          } // if
-        } // if
-       }// for particles
-      } // max velocity flag
     }  // loop over materials
 
     // DON'T MOVE THESE!!!
     //__________________________________
     //  reduction variables
     if( flags->d_reductionVars->momentum ){
-      new_dw->put( sumvec_vartype(allMatls_totalMom), lb->TotalMomentumLabel, nullptr, -1);
+      new_dw->put( sumvec_vartype(allMatls_totalMom), 
+                   lb->TotalMomentumLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( totalMom,   lb->TotalMomentumLabel, matls );
     }
 
     if( flags->d_reductionVars->KE ){
-      new_dw->put( sum_vartype(allMatls_kineticEng),  lb->KineticEnergyLabel, nullptr, -1);
+      new_dw->put( sum_vartype(allMatls_kineticEng),  
+                   lb->KineticEnergyLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( kineticEng, lb->KineticEnergyLabel, matls );
     }
 
     if( flags->d_reductionVars->thermalEnergy ){
-      new_dw->put( sum_vartype(allMatls_thermalEng),  lb->ThermalEnergyLabel, nullptr, -1);
+      new_dw->put( sum_vartype(allMatls_thermalEng),  
+                   lb->ThermalEnergyLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( thermalEng, lb->ThermalEnergyLabel, matls );
 
     }
 
     if(flags->d_reductionVars->centerOfMass){
-      new_dw->put(sumvec_vartype(allMatls_CMX), lb->CenterOfMassPositionLabel, nullptr, -1);
+      new_dw->put(sumvec_vartype(allMatls_CMX), 
+                  lb->CenterOfMassPositionLabel, nullptr, -1);
 
       new_dw->put_sum_vartype( CMX,  lb->CenterOfMassPositionLabel, matls );
     }

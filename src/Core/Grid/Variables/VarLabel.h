@@ -88,11 +88,9 @@ public:
 
   IntVector getBoundaryLayer() const { return m_boundary_layer; }
 
-  void allowMultipleComputes();
+  void schedReductionTask(bool input);
 
-  void setAllowMultipleComputes(bool input);
-
-  bool allowsMultipleComputes() const { return m_allow_multiple_computes; }
+  bool doSchedReductionTask() const { return m_sched_reduction_task; }
 
   static VarLabel* find( const std::string& name );
 
@@ -167,8 +165,8 @@ private:
   static  std::string         s_default_compression_mode;
   static  std::string         s_particle_position_name;
 
-  // Allow a variable of this label to be computed multiple times in a TaskGraph without complaining.
-  bool                        m_allow_multiple_computes{false};
+  // Allow this VarLabel to be computed multiple times in a TaskGraph without complaining.
+  bool                        m_sched_reduction_task{true};
 
   // eliminate copy, assignment and move
   VarLabel( const VarLabel & )            = delete;

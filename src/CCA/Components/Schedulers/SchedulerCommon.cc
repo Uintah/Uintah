@@ -952,7 +952,7 @@ SchedulerCommon::addTask(       Task        * task
       int levelidx = dep->m_reduction_level ? dep->m_reduction_level->getIndex() : -1;
       int dw = dep->mapDataWarehouse();
 
-      if (dep->m_var->allowsMultipleComputes()) {
+      if ( !dep->m_var->doSchedReductionTask() ) {
         DOUTR( g_schedulercommon_dbg, " Skipping Reduction task for multi compute variable: "<< dep->m_var->getName() 
                                    << " on level " << levelidx << ", DW " << dw);
         continue;
