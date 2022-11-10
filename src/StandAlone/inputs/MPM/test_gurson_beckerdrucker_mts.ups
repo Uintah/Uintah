@@ -41,10 +41,7 @@
     <save label = "p.temperature"/>
     <save label = "p.particleID"/>
     <save label = "p.localizedMPM"/>
-<!--
-    <save label = "p.damage"/>
-    <save label = "p.porosity"/>
--->
+    <save label = "p.scalefactor"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
@@ -117,10 +114,10 @@
         </geom_object>
       </material>
       <contact>
-        <type>rigid</type>
+        <type>specified_friction</type>
         <materials>[0,1]</materials>
-        <direction>[0,1,0]</direction>
-        <stop_time>999999.9</stop_time>
+        <master_material>0</master_material>
+        <mu>0.0</mu>
       </contact>
     </MPM>
   </MaterialProperties>
