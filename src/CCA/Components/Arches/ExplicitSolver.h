@@ -85,6 +85,8 @@ class RadPropertyCalculator;
 class ExplicitTimeInt;
 class WBCHelper;
 class ArchesParticlesHelper;
+
+
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -504,6 +506,8 @@ public:
 
   EfficiencyCalculator* d_eff_calculator;
   RadPropertyCalculator* d_rad_prop_calc;
+
+  ApplicationCommon* d_arches;
 
   //Diagnostics
   bool d_printTotalKE;
