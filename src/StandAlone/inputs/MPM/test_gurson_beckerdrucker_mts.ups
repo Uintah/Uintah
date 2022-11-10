@@ -41,8 +41,10 @@
     <save label = "p.temperature"/>
     <save label = "p.particleID"/>
     <save label = "p.localizedMPM"/>
+<!--
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
+-->
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
@@ -55,7 +57,6 @@
     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
     <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
     <artificial_viscosity> false </artificial_viscosity>
-    <use_load_curves> false </use_load_curves>
   </MPM>
 
   <PhysicalConstants>
@@ -89,25 +90,20 @@
           <include href="inputs/MPM/MaterialData/MieGrunEOSHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/MTSPlasticHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/GursonYieldSteel.xml"/>
-          <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
 
           <initial_material_temperature>  294.0 </initial_material_temperature>
+<!--
+          The following four lines may or may not do anything.  See code...
+-->
           <initial_mean_porosity>         0.002 </initial_mean_porosity>
           <initial_std_porosity>          0.002 </initial_std_porosity>
           <critical_porosity>             0.5   </critical_porosity>
           <frac_nucleation>               0.1   </frac_nucleation>
+          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
           <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
-          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
           <plastic_convergence_algo>  biswajit  </plastic_convergence_algo>
         </constitutive_model>
-        
-        <damage_model type="hancock_mackenzie">
-          <initial_mean_scalar_damage>    0.0001 </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.01   </initial_std_scalar_damage>
-          <critical_scalar_damage>        0.7    </critical_scalar_damage>
-          <initial_scalar_damage_distrib> constant  </initial_scalar_damage_distrib>
-        </damage_model>
 
         <geom_object>
           <cylinder label = "Cylinder">
