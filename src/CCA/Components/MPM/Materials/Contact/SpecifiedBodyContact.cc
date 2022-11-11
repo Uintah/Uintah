@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
-
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -140,28 +139,26 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 SpecifiedBodyContact::~SpecifiedBodyContact()
 {
 }
-//______________________________________________________________________
-//
+
 void SpecifiedBodyContact::setContactMaterialAttributes()
 {
   MPMMaterial* mpm_matl = 
          (MPMMaterial*) d_materialManager->getMaterial( "MPM",  d_material);
   mpm_matl->setIsRigid(true);
 }
-//______________________________________________________________________
-//
+
 void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type","specified");
-  contact_ps->appendElement("filename",d_filename);
-  contact_ps->appendElement("direction",d_direction);
-  contact_ps->appendElement("master_material",d_material);
-  contact_ps->appendElement("stop_time",d_stop_time);
-  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
-  contact_ps->appendElement("volume_constraint",d_vol_const);
-  contact_ps->appendElement("OneOrTwoStep",     d_oneOrTwoStep);
-  contact_ps->appendElement("include_rotation", d_includeRotation);
+  contact_ps->appendElement("filename",            d_filename);
+  contact_ps->appendElement("master_material",     d_material);
+  contact_ps->appendElement("stop_time",           d_stop_time);
+  contact_ps->appendElement("velocity_after_stop", d_vel_after_stop);
+  contact_ps->appendElement("include_rotation",    d_includeRotation);
+  contact_ps->appendElement("direction",           d_direction);
+  contact_ps->appendElement("volume_constraint",   d_vol_const);
+  contact_ps->appendElement("OneOrTwoStep",        d_oneOrTwoStep);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -333,7 +330,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     for(int m=0;m<matls->size();m++){
-     int dwi = matls->get(m);     
+     int dwi = matls->get(m);
      new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone,0);
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone,0);
      new_dw->get(gvolume[m],        lb->gVolumeLabel,       dwi,patch,gnone,0);
@@ -348,6 +345,10 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
+    // rigid_velocity just means that the master_material's initial velocity
+    // remains constant through the simulation, until d_stop_time is reached.
+    // If the velocity comes from a profile specified in a file, or after
+    // d_stop_time, rigid_velocity is false
     bool  rigid_velocity = true;
     Vector requested_velocity(0.0, 0.0, 0.0);
     Vector requested_omega(0.0, 0.0, 0.0);
@@ -470,6 +471,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       }    // for matls
     }      // for Node Iterator
 
+    // Put the sumTransmittedForce contribution into the reduction variables
     if( flag->d_reductionVars->sumTransmittedForce ){
       new_dw->put(sumvec_vartype(allMatls_STF), 
                                      lb->SumTransmittedForceLabel, nullptr, -1);
@@ -494,19 +496,21 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     int dwi = matls->get(n);
 
     if( numMatls > 1 ){  // ignore for single matl problems
-      new_dw->put( sumvec_vartype( reaction_force[dwi] ),
-                                    lb->RigidReactionForceLabel,  nullptr, dwi);
-      new_dw->put( sumvec_vartype( reaction_torque[dwi] ),
-                                    lb->RigidReactionTorqueLabel, nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_force[dwi]),
+                                  lb->RigidReactionForceLabel,  nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_torque[dwi]),
+                                  lb->RigidReactionTorqueLabel, nullptr, dwi);
     }
   }
-  new_dw->put( sumvec_vartype( reaction_force[d_material] ),
+
+  new_dw->put( sumvec_vartype( reaction_force[d_material]),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( reaction_torque[d_material] ),
+  new_dw->put( sumvec_vartype( reaction_torque[d_material]),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
-void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
+void SpecifiedBodyContact::addComputesAndRequiresInterpolated(
+                                                   SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
@@ -537,7 +541,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->simulationTimeLabel);
-  t->requires(Task::OldDW, lb->delTLabel);    
+  t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
@@ -548,7 +552,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   }
 
   t->modifies(             lb->gVelocityStarLabel,   mss);
-  
+
   //__________________________________
   //  Create reductionMatlSubSet that includes all mss matls
   //  and the global matlsubset
@@ -579,7 +583,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   if (z_matl->removeReference()){
     delete z_matl; // shouln't happen, but...
   }
-  
+
   if (reduction_mss && reduction_mss->removeReference()){
     delete reduction_mss;
   } 
@@ -622,4 +626,3 @@ SpecifiedBodyContact::findValFromProfile(double t,
       return Vector(vx,vy,vz);
     }
 }
-
