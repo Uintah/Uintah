@@ -40,6 +40,8 @@ NIGHTLYTESTS = [
                   ("NairnFrictionTest",                   "NairnFrictionTest.ups",               1,  "ALL", ["exactComparison"] ),
                   ("ColPlate_AffineTrans",                "ColPlate_AffineTrans.ups",                1,  "ALL", ["exactComparison"] ),
                   ("extrudeRT",                           "extrudeRT.ups",                           5,  "ALL", ["exactComparison"] ),
+                  ("frictionVar",                           "frictionVar.ups",                           4,  "ALL", ["exactComparison"] ),
+                  ("disk_UCNHVar",                           "disk_UCNHVar.ups",                           4,  "ALL", ["exactComparison"] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
 #                  ("periodic_disks",                      "periodic_disks.ups",                      1,  "ALL", [] ),
 #                  ("periodic_spheres3D",                  "periodic_spheres3D.ups",                  8,  "All", ["no_dbg","exactComparison"] ),

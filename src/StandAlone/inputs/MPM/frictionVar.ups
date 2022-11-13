@@ -23,7 +23,7 @@
     </MPM>
     <DataArchiver>
         <filebase>FrictionVarExample.uda</filebase>
-        <outputInterval>0.01</outputInterval>
+        <outputInterval>0.1</outputInterval>
         <save label="p.x"></save>
         <save label="p.mass"></save>
         <save label="p.color"></save>
@@ -31,6 +31,7 @@
         <save label="p.velocity"></save>
         <save label="p.scalefactor"></save>
         <save label="p.deformationMeasure"></save>
+        <save label="p.displacement"></save>
         <save label="p.stress"></save>
         <save label="KineticEnergy"></save>
         <save label="TotalMomentum"></save>
@@ -62,7 +63,7 @@
                 </geom_object>
             </material>
 
-            <material name="SmoothSkipper">
+            <material name="Skipper">
                 <density>1000.0</density>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
@@ -75,7 +76,7 @@
                   <velocity>[0.5,0.0,-.5]</velocity>
                   <temperature>0</temperature>
                   <color>1</color>
-                  <box>
+                  <box label = "smooth">
                     <min>[-1.4,-0.4,0.3] </min>
                     <max>[-1.0, 0.0,0.5] </max>
                   </box>
@@ -86,7 +87,7 @@
                   <velocity>[0.5,0.0,-.5]</velocity>
                   <temperature>0</temperature>
                   <color>1.1</color>
-                  <box>
+                  <box label = "rough">
                     <min>[-1.4, 0.0,0.3] </min>
                     <max>[-1.0, 0.4,0.5] </max>
                   </box>
@@ -114,11 +115,11 @@
     <Grid>
         <Level>
             <Box label="1">
-                <lower>[-1.5,-0.6,0.0]</lower>
-                <upper>[ 0.0, 0.6,0.8]</upper>
+                <lower>[-1.5,-0.5,0.0]</lower>
+                <upper>[-0.5, 0.5,0.6]</upper>
                 <extraCells>[1,1,1]</extraCells>
                 <patches>[2,2,1]</patches>
-                <resolution>[15,12,8]</resolution>
+                <resolution>[10,10,6]</resolution>
             </Box>
         </Level>
         <BoundaryConditions>
@@ -135,21 +136,8 @@
                 <BCType var="symmetry" id="all" label="Symmetric"> </BCType>
             </Face>
 
-            <!-- SK: Here, I have specified a different boundary condition for
-                     materials 0 and 1.  The "Dirichlet" condition means that
-                     the velocity is specified at the boundary, while "Neumann" 
-                     means that the velocity gradient is specified.  The upshot 
-                     of this is that the sample material (0) is prevented from
-                     moving downward, but the clamp material (1) is allowed to
-                     move through the lower boundary, so it can slide down as
-                     it compresses the perimeter of the input file. -->
             <Face side="z-">
                 <BCType var="symmetry" id="0" label="Symmetric"> </BCType>
-<!--
-                <BCType var="Dirichlet" id="0" label="Velocity">
-                    <value> [0.0,0.0,0.0] </value>
-                </BCType>
--->
                 <BCType var="Neumann" id="1" label="Velocity">
                     <value> [0.0,0.0,0.0] </value>
                 </BCType>
@@ -162,4 +150,3 @@
         </BoundaryConditions>
     </Grid>
 </Uintah_specification>
-

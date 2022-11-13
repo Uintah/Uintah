@@ -18,7 +18,6 @@
    </Time>
    <DataArchiver>
        <filebase>disk_UCNHVar.uda</filebase>
-       <outputInitTimestep/>
        <outputInterval>.01</outputInterval>
        <save label = "KineticEnergy"/>
        <save label = "TotalMass"/>
@@ -30,6 +29,7 @@
        <save label = "p.velocity" levels = "-1"/>
        <save label = "p.color" levels = "-1"/>
        <save label = "p.particleID" levels = "-1"/>
+       <save label = "p.plasticStrain" levels = "-1"/>
        <save label = "p.scalefactor" levels = "-1"/>
        <save label = "p.stress" levels = "-1"/>
        <save label = "g.mass" levels = "-1"/>
@@ -43,7 +43,8 @@
        <interpolator>   fast_cpdi      </interpolator>
        <withColor>      true      </withColor>
        <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
-       <UseGradientEnhancedVelocityProjection>true</UseGradientEnhancedVelocityProjection>
+       <UseGradientEnhancedVelocityProjection>true
+                         </UseGradientEnhancedVelocityProjection>
    </MPM>
 
     <PhysicalConstants>
@@ -139,10 +140,10 @@
        </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>[0.0,0.5,0.05]</lower>
+              <lower>[0.5,0.5,0.05]</lower>
               <upper>[1.0,1.0,0.10]</upper>
               <resolution>[40,20,1]</resolution>
-              <patches>[2,1,1]</patches>
+              <patches>[2,2,1]</patches>
               <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
