@@ -60,7 +60,7 @@ set BUILDERS = ""
 set CREATE_PATCH    = false
 set MY_PATCH        = false
 set BRANCH          = "master"
-set TESTCOMPONENTS  = "None"          # "None" is used inside commonBuildSteps.py:getValueWithDefault()
+set TESTCOMPONENTS  = ""          # "None" is used inside commonBuildSteps.py:getValueWithDefault()
 # No args so all tests
 
 if ($#argv == 0) then
