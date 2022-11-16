@@ -1010,7 +1010,8 @@ namespace Uintah {
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
         //DS 10252019: added levels to be solved on GPU. coarser level will be executed on CPU, which is faster. 12 is determined by experiments.
         //Can be modified later or added into ups file.
-        HYPRE_StructPFMGSetDeviceLevel(precond_solver, 12);
+        //MGM 11162022: deprecated HYPRE function and deprecated whole “feature” of Device-Level in PFMG/SMG.
+//      HYPRE_StructPFMGSetDeviceLevel(precond_solver, 12);
 #endif
 
         precond = HYPRE_StructPFMGSolve;
@@ -1154,10 +1155,11 @@ namespace Uintah {
   : SolverCommon(myworld)
   {
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
+    //-------------MGM:11162022: Upgrate to latest kokkos 3.7.00.----------------
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
-    int argc = 0;
+//  int argc = 0;
     //std::string
-    HYPRE_Init(argc, NULL);
+    HYPRE_Init();
 #endif
     //-----------------  end of hypre-cuda  -----------------
 
