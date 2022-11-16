@@ -7,7 +7,7 @@ import shutil
 import glob
 import re                # regular expressions
 import pprint
-# 
+#
 from buildbot.plugins               import *
 from buildbot.process               import results
 from buildbot.process.results       import FAILURE
@@ -42,13 +42,9 @@ def getValue( Q, Qname):
 #   The property "test_components" is initialized in the buildbot_try.sh script
 #   The property "defaultTestComps" is initialized in the builders definition
 def getTestComponents():
-    TC        = util.Interpolate('%(prop:test_components)s')
-    defaultTC = util.Interpolate('%(prop:defaultTestComps)s')
-
-    if TC == None:
-      return  defaultTC
-    else:
-      return TC
+    return util.Property('test_components',
+                          default = util.Property('defaultTestComps')
+                        )
 
 #______________________________________________________________________
 #   Update the branch code and remove doc/ directory
@@ -214,9 +210,11 @@ def rm_localRT_dir( factory, wrkDir=None,):
 
 def runComponentTests(factory):
 
+    runCmd = ["make","runLocalRT"]
+
     runLocalRT = steps.ShellCommand(
                      description    = ["Running  tests"],
-                     command        = ["make", "runLocalRT"],
+                     command        = runCmd,
                      workdir        = util.Property( 'wrkDir' ),
                      timeout        = 60*60,  # timeout after 1 hour
                      name           = "localRT_test",
@@ -225,7 +223,7 @@ def runComponentTests(factory):
                      haltOnFailure  = False )
 
     factory.addStep( runLocalRT )
-    
+
 #______________________________________________________________________
 #  Utilities:
 #_______________________________________________________________________
