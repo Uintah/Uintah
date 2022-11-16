@@ -1192,7 +1192,7 @@ if (timeSubStep==0){
     for( int ord=0;  ord< _DO_model->getIntOrdinates();ord++){
       std::stringstream tasknamec;
       tasknamec << "DORadiation::sweeping_initialize_" <<ord;
-      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC,ord);
+      Task* tskc = scinew Task(tasknamec.str(), this, &DORadiation::setIntensityBC, ord);
 
       tskc->requires( Task::OldDW,_labels->d_cellTypeLabel, gn, 0 );
       tskc->requires( Task::NewDW,_T_label, gn, 0 );
