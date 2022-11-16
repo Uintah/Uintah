@@ -90,7 +90,7 @@ public:
   Dir  createSubdirPlus( const std::string & sub );
   
   Dir  getSubdir(    const std::string & name ) const;
-  bool exists();
+  bool exists() const;
   
   void getFilenamesBySuffix( const std::string              & suffix,
                                    std::vector<std::string> & filenames ) const;

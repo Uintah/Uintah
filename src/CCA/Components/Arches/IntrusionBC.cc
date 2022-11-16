@@ -1457,9 +1457,15 @@ IntrusionBC::writeIntrusionInformation( const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw )
 {
+  if ( !_output->doesOutputDirExist() ){
+    std::cout << " INFO:  Uda directory does not exist.  The file <uda>/IntrusionBC.txt will not be generated.\n\n";
+    return;
+  }
+
   //__________________________________
   //  Open the file pointer
   const std::string udaDir = _output->getOutputLocation();
+
   std::string filename = udaDir + "/IntrusionBC.txt";
 
   FILE *fp;
