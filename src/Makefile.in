@@ -595,8 +595,10 @@ lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE) : $(CLEANLIBS)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Building libgpu_extra_link.$(SO_OR_A_FILE)..."
 	@$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   else
 	$(NVCC) $(NVCC_CXXFLAGS) -dlink $(DLINK_FILES) -o lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
+	chmod 755 lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
   endif
 
 endif
