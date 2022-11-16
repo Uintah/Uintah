@@ -27,7 +27,6 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ArchesStatsEnum.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/ApplicationInterface.h>
@@ -49,11 +48,13 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/hypre_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef HAVE_HYPRE
+#if defined(HAVE_HYPRE)
+#  include <sci_defs/hypre_defs.h>
 #  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#elif defined(HAVE_PETSC)
+#  include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #endif
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
@@ -331,15 +332,19 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   else{
     db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
     if (!_sweepMethod){
+#if defined(HAVE_PETSC)
       if (linear_sol == "petsc"){
 
         d_linearSolver = scinew RadPetscSolver(d_myworld);
 
-      } else if (linear_sol == "hypre"){
+      }
+#elif defined(HAVE_HYPRE)
+      else if (linear_sol == "hypre"){
 
         d_linearSolver = scinew RadHypreSolver(d_myworld);
 
       }
+#endif
       d_linearSolver->problemSetup(db);
     }
   }
@@ -450,16 +455,16 @@ DORadiationModel::computeOrdinatesOPL()
 
     // unit vector specifying direction of that are orthogonal.  You must have 8 entries.
     const                                             //    omu    oeta      oxi   wt
-    std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 }, 
+    std::vector<std::vector<double>> orthogonalCosineDirs{{1.0,    2e-16,   2e-16, 0 },
                                                           {-2e-16, 1.0,     2e-16, 0 },
                                                           {2e-16, -2e-16,   1.0,   0 },
                                                           {-1.0,  -2e-16,   2e-16, 0 },
                                                           {2e-16,  1.0,    -2e-16, 0 },  // NULL at 5
                                                           {-2e-16, 1.0,    -2e-16, 0 },  // NULL at 6
                                                           {2e-16, -1.0,    -2e-16, 0 },
-                                                          {-2e-16,-2e-16,  -1.0,   0 } };   
-    const int nthElement = m_totalOrds/8;   
-    
+                                                          {-2e-16,-2e-16,  -1.0,   0 } };
+    const int nthElement = m_totalOrds/8;
+
     insertEveryNth( orthogonalCosineDirs, nthElement, 0,  m_omu );
     insertEveryNth( orthogonalCosineDirs, nthElement, 1,  m_oeta );
     insertEveryNth( orthogonalCosineDirs, nthElement, 2,  m_oxi );
@@ -655,7 +660,8 @@ struct computeAMatrix{
        double vol;
        int    intFlow;
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )
        KokkosView3<const int,    Kokkos::HostSpace> cellType;
        KokkosView3<const double, Kokkos::HostSpace> wallTemp;
        KokkosView3<const double, Kokkos::HostSpace> abskt;
@@ -740,7 +746,8 @@ struct compute4Flux{
        double  oxi;    ///< z-directional component
        double  wt;     ///< ordinate weight
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )
        KokkosView3<constDouble_or_double, Kokkos::HostSpace> intensity; ///< intensity solution from linear solve
 
        KokkosView3<double, Kokkos::HostSpace> fluxX;   ///< x-directional flux ( positive or negative direction)
@@ -1309,7 +1316,8 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
     const int jEnd = m_plusY[dir] ? idxHi.y() : -idxLo.y();
     const int iEnd = m_plusX[dir] ? idxHi.x() : -idxLo.x();
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+//#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
+#if defined( KOKKOS_ENABLE_OPENMP )    
     KokkosView3<const int, Kokkos::HostSpace>    kv_cellType  = cellType.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_emissSrc  = emissSrc.getKokkosView();
     KokkosView3<const double, Kokkos::HostSpace> kv_abskt     = abskt.getKokkosView();
@@ -1325,7 +1333,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
         int km=k-zdir;
-        int jm=j-ydir; 
+        int jm=j-ydir;
         int im=i-xdir;
         kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + (kv_abskg_array(i,j,k)  + kv_abskt(i,j,k))*vol);
         kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=m_ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
@@ -1334,7 +1342,7 @@ DORadiationModel::intensitysolveSweepOptimized( const Patch* patch,
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
       Uintah::sweeping_parallel_for(execObj, range, [&](int i, int j, int k) {
         int km=k-zdir;
-        int jm=j-ydir; 
+        int jm=j-ydir;
         int im=i-xdir;
         kv_intensity(i,j,k) = (kv_emissSrc(i,j,k) + kv_intensity(i,j,km)*abs_oxi  +  kv_intensity(i,jm,k)*abs_oeta  +  kv_intensity(im,j,k)*abs_omu)/(denom + kv_abskt(i,j,k)*vol);
         kv_intensity(i,j,k) = (kv_cellType(i,j,k) !=m_ffield) ? kv_emissSrc(i,j,k) : kv_intensity(i,j,k);
