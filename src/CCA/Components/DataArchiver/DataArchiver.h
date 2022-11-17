@@ -165,6 +165,9 @@ class LoadBalancer;
     // Returns as a string the name of the top of the output directory.
     virtual const std::string getOutputLocation() const;
 
+    // Returns bool, does the outputdir exist
+    virtual bool doesOutputDirExist() const;
+
     // Normally saved vars are scrubbed if not needed for the next
     // time step. By pass scubbing when running in situ or if wanting
     // to save the previous time step.

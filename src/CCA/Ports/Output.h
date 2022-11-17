@@ -146,6 +146,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual const std::string getOutputLocation() const = 0;
+    virtual bool doesOutputDirExist() const = 0;
 
     virtual void setScrubSavedVariables( bool val ) = 0;
 

@@ -2617,7 +2617,15 @@ DataArchiver::loadDocument(const string & xmlName )
 const string
 DataArchiver::getOutputLocation() const
 {
-    return m_outputDir.getName();
+  return m_outputDir.getName();
+}
+
+//______________________________________________________________________
+//
+bool
+DataArchiver::doesOutputDirExist() const
+{
+  return m_outputDir.exists();
 }
 
 //______________________________________________________________________

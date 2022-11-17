@@ -46,6 +46,7 @@ namespace Uintah{
   class ArchesConstVariables;
   class Properties;
   class TableLookup;
+  class output;
 
   class IntrusionBC {
 
@@ -54,8 +55,12 @@ namespace Uintah{
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL };
       enum INLET_TYPE { FLAT, HANDOFF, MASSFLOW, TABULATED };
 
-      IntrusionBC( const ArchesLabel* lab, Properties* props,
-                   TableLookup* table_lookup, int WALL );
+      IntrusionBC( const ArchesLabel* lab, 
+                    Properties* props,
+                    TableLookup* table_lookup, 
+                    int WALL,
+                    Output * output );
+
       ~IntrusionBC();
 
       /** @brief Return true if there is a velocity type inlet **/
@@ -120,6 +125,12 @@ namespace Uintah{
                                             const MaterialSet* matls );
 
       void printIntrusionInformation( const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw );
+      /** writes intrusion to a file **/
+      void writeIntrusionInformation( const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
@@ -1022,6 +1033,7 @@ namespace Uintah{
       int _WALL;
       bool _intrusion_on;
       bool _do_energy_exchange;
+      Output * _output {nullptr};
 
       Uintah::MasterLock _bc_face_iterator_lock{};
       Uintah::MasterLock _interior_cell_iterator_lock{};

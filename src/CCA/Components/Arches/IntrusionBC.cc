@@ -31,6 +31,7 @@
 #include <CCA/Components/Arches/ChemMix/TableLookup.h>
 #include <CCA/Components/Arches/HandoffHelper.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/GeometryPiece/TriGeometryPiece.h>
@@ -57,12 +58,16 @@ namespace {
 }
 
 //_________________________________________
-IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props,
-                          TableLookup* table_lookup, int WALL )
+IntrusionBC::IntrusionBC( const ArchesLabel* lab,
+                          Properties* props,
+                          TableLookup* table_lookup,
+                          int WALL,
+                          Output * output )
   : _lab(lab)
   , _props(props)
   , _table_lookup(table_lookup)
   , _WALL(WALL)
+  , _output(output)
 {
   // helper for the intvector direction
   _dHelp.push_back( IntVector(-1,0,0) );
@@ -1313,28 +1318,56 @@ IntrusionBC::setCellType( const ProcessorGroup*,
   }     // patch loop
 }
 
-//_________________________________________
+//______________________________________________________________________
+//
 void
 IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
                                               const LevelP& level,
                                               const MaterialSet* matls )
 {
 
-  Task* tsk = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation);
+  Task* tsk0 = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation);
 
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
 
     if ( i->second.type == INLET ){
-      tsk->requires( Task::NewDW, i->second.inlet_bc_area );
+      tsk0->requires( Task::NewDW, i->second.inlet_bc_area );
     }
 
-    tsk->requires( Task::NewDW, i->second.wetted_surface_area );
+    tsk0->requires( Task::NewDW, i->second.wetted_surface_area );
 
   }
 
-  sched->addTask(tsk, level->eachPatch(), matls);
+  sched->addTask(tsk0, level->eachPatch(), matls);
+
+  // write out information to a file in the uda
+  Task* tsk1 = scinew Task("IntrusionBC::writeIntrusionInformation", this, &IntrusionBC::writeIntrusionInformation);
+
+  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
+
+    if ( i->second.type == INLET ){
+      tsk1->requires( Task::NewDW, i->second.inlet_bc_area );
+    }
+
+    tsk1->requires( Task::NewDW, i->second.wetted_surface_area );
+
+  }
+
+  // only run task on the first patch on this level
+  const Patch* p = level->getPatch(0);
+  PatchSet* zeroPatch = new PatchSet();
+  zeroPatch->add(p);
+  zeroPatch->addReference();
+
+  sched->addTask(tsk1, zeroPatch, matls);
+
+  if (zeroPatch && zeroPatch->removeReference()) {
+    delete zeroPatch;
+  }
 
 }
+//__________________________________
+//
 void
 IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
                                         const PatchSubset* patches,
@@ -1414,6 +1447,98 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
     proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
   }
 }
+
+//__________________________________
+//
+void
+IntrusionBC::writeIntrusionInformation( const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw )
+{
+  if ( !_output->doesOutputDirExist() ){
+    std::cout << " INFO:  Uda directory does not exist.  The file <uda>/IntrusionBC.txt will not be generated.\n\n";
+    return;
+  }
+
+  //__________________________________
+  //  Open the file pointer
+  const std::string udaDir = _output->getOutputLocation();
+
+  std::string filename = udaDir + "/IntrusionBC.txt";
+
+  FILE *fp;
+  fp = fopen(filename.c_str(), "w");
+
+  if (!fp){
+    perror("Error opening file:");
+    throw InternalError("\nERROR:IntrusionBC::writeIntrusionInformation:  failed opening file: " + filename,__FILE__, __LINE__);
+  }
+
+  std::cout << "IntrusionBC information is located in " << filename << "\n";
+  fprintf( fp, "#----- Intrusion Summary ----- \n" );
+  fprintf( fp, "#  All areas are based on the cell area\n" );
+
+  for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+
+    if (iter->second.type == SIMPLE_WALL) {
+
+      double area;
+      sum_vartype area_var;
+      new_dw->get(area_var, iter->second.wetted_surface_area);
+      area = area_var;
+
+      fprintf( fp, "  Simple wall intrusion name: %-*s,", 20,iter->first.c_str());
+      fprintf( fp, " wetted area: %f,", area);
+      fprintf( fp, " Solid T: %f\n", iter->second.temperature );
+    }
+  }
+
+  for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+
+    if (iter->second.type == INLET) {
+
+      double area;
+      double wetted_area;
+
+      sum_vartype area_var;
+      new_dw->get(area_var, iter->second.inlet_bc_area);
+      area = area_var;
+
+      sum_vartype wetted_area_var;
+      new_dw->get(wetted_area_var, iter->second.wetted_surface_area);
+      wetted_area = wetted_area_var;
+
+      fprintf( fp, "  Inlet Intrusion name: %-*s,", 20,iter->first.c_str() );
+      fprintf( fp, " inlet area: %f,", area);
+      fprintf( fp, " wetted area: %f,", wetted_area );
+      fprintf( fp, " Solid T: %f,", iter->second.temperature );
+      fprintf( fp,   " Active inlet directions (normals):");
+
+      for (int idir = 0; idir < 6; idir++) {
+        if (iter->second.directions[idir] != 0) {
+          const IntVector d = _dHelp[idir];
+          fprintf( fp, " [%i,%i,%i],",d.x(), d.y(), d.z()  );
+        }
+      }
+
+      if ( iter->second.velocity_inlet_type == IntrusionBC::MASSFLOW ){
+        fprintf( fp, " density: %f,", iter->second.density );
+      }
+      else {
+        fprintf( fp, " density: %f,", iter->second.density);
+        fprintf( fp, " (note: the density may vary over the face of the inlet)");
+      }
+      fprintf( fp, "\n");
+    }
+  }
+  fprintf( fp,  "#----- End Intrusion Summary ----- \n " );
+
+  fflush(fp);
+  fclose(fp);
+}
+
 
 //_________________________________________
 void

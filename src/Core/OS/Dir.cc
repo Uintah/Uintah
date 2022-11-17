@@ -323,7 +323,7 @@ Dir::getFilenamesBySuffix( const string         & suffix,
 //______________________________________________________________________
 //
 bool
-Dir::exists()
+Dir::exists() const
 {
   struct stat buf;
   if(LSTAT(name_.c_str(),&buf) != 0)

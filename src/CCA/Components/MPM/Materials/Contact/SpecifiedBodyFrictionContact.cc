@@ -23,6 +23,7 @@
  */
 
 // SpecifiedBodyFrictionContact.cc
+#include <CCA/Components/MPM/MPMCommon.h>
 #include <CCA/Components/MPM/Materials/Contact/SpecifiedBodyFrictionContact.h>
 #include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Components/MPM/Core/MPMFlags.h>
@@ -142,12 +143,12 @@ void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP contact_ps = ps->appendChild("contact");
   contact_ps->appendElement("type","specified_friction");
-  contact_ps->appendElement("filename",           d_filename);
-  contact_ps->appendElement("master_material",    d_material);
-  contact_ps->appendElement("stop_time",          d_stop_time);
-  contact_ps->appendElement("mu",                 d_mu);
-  contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
-  contact_ps->appendElement("include_rotation",   d_includeRotation);
+  contact_ps->appendElement("filename",            d_filename);
+  contact_ps->appendElement("master_material",     d_material);
+  contact_ps->appendElement("stop_time",           d_stop_time);
+  contact_ps->appendElement("velocity_after_stop", d_vel_after_stop);
+  contact_ps->appendElement("include_rotation",    d_includeRotation);
+  contact_ps->appendElement("mu",                  d_mu);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -225,12 +226,16 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   std::vector<constNCVariable<double> > gmatlprominence(numMatls);    
 
   // per-matl 
-  vector<Vector> reaction_force(  numMatls, Vector(0.0) );
-  vector<Vector> reaction_torque( numMatls, Vector(0.0) );
+  map<int,Vector> zeroV = MPMCommon::initializeMap(Vector(0.));
+  map<int,Vector> reaction_force  = zeroV;
+  map<int,Vector> reaction_torque = zeroV;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    map<int,Vector> STF = zeroV;
+    Vector allMatls_STF  = Vector(0.,0.,0.);
+    
     constNCVariable<double> NC_CCweight;
     constNCVariable<int>    alphaMaterial;
     constNCVariable<Vector> normAlphaToBeta;
@@ -242,7 +247,6 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
      int dwi = matls->get(m);
      new_dw->get(gmass[m],          lb->gMassLabel,         dwi,patch,gnone, 0);
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone, 0);
-     new_dw->get(gvolume[m],        lb->gVolumeLabel,       dwi,patch,gnone, 0);
      new_dw->get(gmatlprominence[m],lb->gMatlProminenceLabel,
                                                             dwi,patch,gnone, 0);
      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,dwi,patch);
@@ -341,6 +345,7 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
       int alpha=alphaMaterial[c];
       if(alpha>=0){  // Only work on nodes where alpha!=-99
         for(int  n = 0; n < numMatls; n++){
+          int dwi = matls->get(n);
           if(!d_matls.requested(n)) continue;
           Vector new_vel = rigid_vel;
 
@@ -375,8 +380,10 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
                 //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
 //              reaction_force  -= ginternalForce[n][c];
 //              reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-                reaction_force[n] -=ginternalForce[n][c];
-                reaction_torque[n]+=Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+                reaction_force[dwi] -=ginternalForce[n][c];
+                reaction_torque[dwi]+=Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
+                STF[d_material]      -=gmass[n][c]*(new_vel-old_vel)/delT;
+                allMatls_STF         -=gmass[n][c]*(new_vel-old_vel)/delT;
               }  // if normalDeltaVel > 0
             }  // if separation
           }  // if mass of both matls>0
@@ -389,6 +396,14 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
         }
       }
     }      // for Node Iterator
+
+    // Put the sumTransmittedForce contribution into the reduction variables
+    if( flag->d_reductionVars->sumTransmittedForce ){
+      new_dw->put(sumvec_vartype(allMatls_STF), 
+                                     lb->SumTransmittedForceLabel, nullptr, -1);
+      new_dw->put_sum_vartype(STF,   lb->SumTransmittedForceLabel, matls);
+    }
+
   } // loop over patches
 
   //__________________________________
@@ -397,8 +412,9 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
 
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
-      reaction_force[d_material]+=reaction_force[n];
-      reaction_torque[d_material]+=reaction_torque[n];
+      int dwi = matls->get(n);
+      reaction_force[d_material] +=reaction_force[dwi];
+      reaction_torque[d_material]+=reaction_torque[dwi];
     }
   }
 
@@ -406,16 +422,16 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     int dwi = matls->get(n);
 
     if( numMatls > 1 ){  // ignore for single matl problems
-      new_dw->put( sumvec_vartype(reaction_force[n]),
-                                    lb->RigidReactionForceLabel,  nullptr, dwi);
-      new_dw->put( sumvec_vartype(reaction_torque[n]),
-                                    lb->RigidReactionTorqueLabel, nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_force[dwi]),
+                                  lb->RigidReactionForceLabel,  nullptr, dwi);
+      new_dw->put( sumvec_vartype(reaction_torque[dwi]),
+                                  lb->RigidReactionTorqueLabel, nullptr, dwi);
     }
   }
 
-  new_dw->put( sumvec_vartype( reaction_force[d_material] ),
+  new_dw->put( sumvec_vartype( reaction_force[d_material]),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( reaction_torque[d_material] ),
+  new_dw->put( sumvec_vartype( reaction_torque[d_material]),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
@@ -443,7 +459,6 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   t->requires(Task::OldDW, lb->delTLabel);
   t->requires(Task::NewDW, lb->gMassLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->gInternalForceLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->gVolumeLabel,                  Ghost::None);
   t->requires(Task::NewDW, lb->gMatlProminenceLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gAlphaMaterialLabel,           Ghost::None);
   t->requires(Task::OldDW, lb->NC_CCweightLabel,      z_matl, Ghost::None);
@@ -472,6 +487,10 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   t->computes( lb->RigidReactionForceLabel,  reduction_mss );
   t->computes( lb->RigidReactionTorqueLabel, reduction_mss );
 
+  if(flag->d_reductionVars->sumTransmittedForce){
+    t->computes(lb->SumTransmittedForceLabel, reduction_mss, Task::OutOfDomain);
+  }
+
   sched->addTask(t, patches, ms);
 
   if (z_matl->removeReference()){
@@ -481,13 +500,12 @@ void SpecifiedBodyFrictionContact::addComputesAndRequiresIntegrated(
   if (reduction_mss && reduction_mss->removeReference()){
     delete reduction_mss;
   } 
-
 }
 
 // find velocity from table of values
 Vector
 SpecifiedBodyFrictionContact::findValFromProfile(double t, 
-                                         vector<pair<double, Vector> > profile) const
+                                 vector<pair<double, Vector> > profile) const
 {
   int smin = 0;
   int smax = (int)(profile.size())-1;

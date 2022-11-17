@@ -1349,8 +1349,8 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   reduction_mss->addReference();
 
-
-  if(flags->d_reductionVars->mass){
+  if(flags->d_reductionVars->mass ||
+     flags->d_reductionVars->sumTransmittedForce){
     t->computes(lb->TotalMassLabel,           reduction_mss, Task::OutOfDomain);
   }
 
@@ -1513,7 +1513,8 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   if(flags->d_reductionVars->centerOfMass){
     t->computes(lb->CenterOfMassPositionLabel, reduction_mss, Task::OutOfDomain);
   }
-  if( flags->d_reductionVars->mass ){
+  if( flags->d_reductionVars->mass ||
+      flags->d_reductionVars->sumTransmittedForce){
     t->requires(Task::NewDW, lb->TotalMassLabel, nullptr,
                 reduction_mss, Task::OutOfDomain, Task::SearchTG::NewTG);
   }
@@ -3436,13 +3437,13 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
     //  put the reduction variables
     const MaterialSubset* matls = m_materialManager->allMaterials( "MPM" )->getUnion();
 
-    if( flags->d_reductionVars->mass ){
+    if( flags->d_reductionVars->mass ||
+        flags->d_reductionVars->sumTransmittedForce){
       new_dw->put( sum_vartype(allMatls_totalMass),
                                           lb->TotalMassLabel, nullptr, -1);
       new_dw->put_sum_vartype( totalMass, lb->TotalMassLabel, matls );
     }
     if( flags->d_reductionVars->sumTransmittedForce ){
-
       new_dw->put(sumvec_vartype(allMatls_STF),
                                      lb->SumTransmittedForceLabel, nullptr, -1);
       new_dw->put_sum_vartype( STF,  lb->SumTransmittedForceLabel, matls);
@@ -3934,11 +3935,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     sum_vartype   allMatls_totalMass  = 0.0;
     sumvec_vartype allMatls_STF;
 
-    if(flags->d_reductionVars->mass){
+    if(flags->d_reductionVars->mass ||
+       flags->d_reductionVars->sumTransmittedForce){
       new_dw->get(allMatls_totalMass, lb->TotalMassLabel, nullptr, -1);
       totalMass = new_dw->get_sum_vartypeD(lb->TotalMassLabel, matls );
     }
-    if( flags->d_reductionVars->sumTransmittedForce ){
+
+    if(flags->d_reductionVars->sumTransmittedForce ){
       new_dw->get(allMatls_STF, lb->SumTransmittedForceLabel,nullptr, -1);
       totalSTF  = new_dw->get_sum_vartypeV(lb->SumTransmittedForceLabel, matls);
     }
