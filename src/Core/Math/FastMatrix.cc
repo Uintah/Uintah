@@ -376,7 +376,7 @@ template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][Fas
         row=j;
       }
     }
-    ASSERT(max > 1.e-12);
+    ASSERT(max > 1.e-16);
     if(row != i){
       // Switch rows
       for(int j=i;j<size;j++){
