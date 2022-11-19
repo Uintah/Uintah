@@ -95,7 +95,7 @@
            </material>
 
            <contact>
-             <type>specified_friction</type>
+             <type>specified</type>
              <materials>[0,1]</materials>
              <master_material>0</master_material>
              <direction>[1,1,1]</direction>
