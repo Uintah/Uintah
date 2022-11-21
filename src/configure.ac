@@ -803,13 +803,14 @@ SCI_ARG_ENABLE(all_components,
 # --- end list of -enable components ------
 #
 BUILD_MODELS_RADIATION=no
-DEF_MODELS_RADIATION=
+DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"
 
 if test "$enable_all_components" = "yes" -o  \
         "$enable_arches"         = "yes" -o  \
         "$enable_examples"       = "yes" -o  \
         "$enable_wasatch"        = "yes" ; then
   BUILD_MODELS_RADIATION=yes
+  DEF_MODELS_RADIATION=
 fi
 
 # Check for enabling a specific component (one or more)
