@@ -149,6 +149,7 @@ DESCRIPTION
     int       NGN;
     bool      d_NormalOnly;
     bool      d_includeRotation;
+    int       d_excludeMatl;
     std::string    d_filename;
     IntVector d_direction;
     std::vector< std::pair<double, Vector> > d_vel_profile;

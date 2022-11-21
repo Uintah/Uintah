@@ -74,6 +74,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 
   d_oneOrTwoStep = 2;
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
+  ps->getWithDefault("ExcludeMaterial", d_excludeMatl, -999);
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
 
@@ -159,6 +160,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("direction",           d_direction);
   contact_ps->appendElement("volume_constraint",   d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",        d_oneOrTwoStep);
+  contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -438,10 +440,15 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         rigid_vel = gvelocity_star[d_material][c];
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       for(int  n = 0; n < numMatls; n++){
         int dwi = matls->get(n);
         
-        if(!d_matls.requested(n)) continue;
+        if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
 
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){

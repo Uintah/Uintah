@@ -67,6 +67,7 @@ SpecifiedBodyFrictionContact::SpecifiedBodyFrictionContact(const ProcessorGroup*
   d_matls.add(d_material); // always need specified material
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
+  ps->getWithDefault("ExcludeMaterial",  d_excludeMatl,     -999);
 
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
@@ -149,6 +150,7 @@ void SpecifiedBodyFrictionContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("velocity_after_stop", d_vel_after_stop);
   contact_ps->appendElement("include_rotation",    d_includeRotation);
   contact_ps->appendElement("mu",                  d_mu);
+  contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -342,11 +344,16 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
         rigid_vel = gvelocity_star[d_material][c];
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       int alpha=alphaMaterial[c];
       if(alpha>=0){  // Only work on nodes where alpha!=-99
         for(int  n = 0; n < numMatls; n++){
           int dwi = matls->get(n);
-          if(!d_matls.requested(n)) continue;
+          if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
           Vector new_vel = rigid_vel;
 
           if(n==d_material){
