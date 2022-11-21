@@ -319,6 +319,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   map<int,Vector> reaction_force  = zeroV;
   map<int,Vector> reaction_torque = zeroV;
 
+  int dwi_dmatl = matls->get(d_material);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -472,7 +474,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
           reaction_force[dwi]  -= ginternalForce[n][c];
           reaction_torque[dwi] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-          STF[d_material]      -=gmass[n][c]*(new_vel-old_vel)/delT;
+          STF[dwi_dmatl]       -=gmass[n][c]*(new_vel-old_vel)/delT;
           allMatls_STF         -=gmass[n][c]*(new_vel-old_vel)/delT;
         }  // if
       }    // for matls
@@ -491,7 +493,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   //  reduction Vars
   reaction_force[d_material]=Vector(0.0,0.0,0.0);
 
-  int dwi_dmatl = matls->get(d_material);
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
       int dwi = matls->get(n);
@@ -511,9 +512,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
   }
 
-  new_dw->put( sumvec_vartype( reaction_force[d_material]),
+  new_dw->put( sumvec_vartype( reaction_force[dwi_dmatl]),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( reaction_torque[d_material]),
+  new_dw->put( sumvec_vartype( reaction_torque[dwi_dmatl]),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 

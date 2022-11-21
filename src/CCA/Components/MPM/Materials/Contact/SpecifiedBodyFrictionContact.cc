@@ -232,6 +232,8 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   map<int,Vector> reaction_force  = zeroV;
   map<int,Vector> reaction_torque = zeroV;
 
+  int dwi_dmatl = matls->get(d_material);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -389,13 +391,13 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
 //              reaction_torque += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
                 reaction_force[dwi] -=ginternalForce[n][c];
                 reaction_torque[dwi]+=Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-                STF[d_material]      -=gmass[n][c]*(new_vel-old_vel)/delT;
+                STF[dwi_dmatl]       -=gmass[n][c]*(new_vel-old_vel)/delT;
                 allMatls_STF         -=gmass[n][c]*(new_vel-old_vel)/delT;
               }  // if normalDeltaVel > 0
             }  // if separation
           }  // if mass of both matls>0
         }    // for matls
-      } else{  // alpha!=0
+      } else{  // alpha>=0
         for(int  n = 0; n < numMatls; n++){
           if(n==d_material && gmass[n][c]>1.e-99){
             gvelocity_star[n][c] =  rigid_vel;
@@ -420,8 +422,8 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
       int dwi = matls->get(n);
-      reaction_force[d_material] +=reaction_force[dwi];
-      reaction_torque[d_material]+=reaction_torque[dwi];
+      reaction_force[dwi_dmatl] +=reaction_force[dwi];
+      reaction_torque[dwi_dmatl]+=reaction_torque[dwi];
     }
   }
 
@@ -436,9 +438,9 @@ void SpecifiedBodyFrictionContact::exMomIntegrated(const ProcessorGroup*,
     }
   }
 
-  new_dw->put( sumvec_vartype( reaction_force[d_material]),
+  new_dw->put( sumvec_vartype( reaction_force[dwi_dmatl]),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( reaction_torque[d_material]),
+  new_dw->put( sumvec_vartype( reaction_torque[dwi_dmatl]),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 
