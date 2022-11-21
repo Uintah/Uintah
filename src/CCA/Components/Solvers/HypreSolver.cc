@@ -1155,7 +1155,7 @@ namespace Uintah {
   : SolverCommon(myworld)
   {
     //-------------DS: 04262019: Added to run hypre task using hypre-cuda.----------------
-    //-------------MGM:11162022: Upgrate to latest kokkos 3.7.00.----------------
+    //-------------MGM:11162022: Upgrade to latest kokkos 3.7.00.----------------
 #if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
 //  int argc = 0;
     //std::string
