@@ -38,6 +38,7 @@
        <save label="KineticEnergy"/>
        <save label="TotalMomentum"/>
        <save label="TotalMass"/>
+       <save label="SumTransmittedForce"/>
        <checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
 

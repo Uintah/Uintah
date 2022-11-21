@@ -484,11 +484,12 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   //  reduction Vars
   reaction_force[d_material]=Vector(0.0,0.0,0.0);
 
+  int dwi_dmatl = matls->get(d_material);
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
       int dwi = matls->get(n);
-      reaction_force[d_material] +=reaction_force[dwi];
-      reaction_torque[d_material]+=reaction_torque[dwi];
+      reaction_force[dwi_dmatl] +=reaction_force[dwi];
+      reaction_torque[dwi_dmatl]+=reaction_torque[dwi];
     }
   }
 
