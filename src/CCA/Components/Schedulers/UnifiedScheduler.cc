@@ -446,32 +446,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec
 
   SchedulerCommon::problemSetup(prob_spec, materialManager);
 
-#ifdef HAVE_CUDA
-  // Now pick out the materials out of the file.  This is done with an assumption that there
-  // will only be ICE or MPM problems, and no problem will have both ICE and MPM materials in it.
-  // I am unsure if this assumption is correct.
-  // TODO: Add in MPM material support, just needs to look for an MPM block instead of an ICE block.
-  ProblemSpecP mp = prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  if (mp) {
-    ProblemSpecP group = mp->findBlock("ICE");
-    if (group) {
-      for (ProblemSpecP child = group->findBlock("material"); child != nullptr; child = child->findNextBlock("material")) {
-        ProblemSpecP EOS_ps = child->findBlock("EOS");
-        if (!EOS_ps) {
-          throw ProblemSetupException("ERROR ICE: Cannot find EOS tag", __FILE__, __LINE__);
-        }
-
-        std::string EOS;
-        if (!EOS_ps->getAttribute("type", EOS)) {
-          throw ProblemSetupException("ERROR ICE: Cannot find EOS 'type' tag", __FILE__, __LINE__);
-        }
-
-        // add this material to the collection of materials
-        m_material_names.push_back(EOS);
-      }
-    }
-  }
-#endif
 
   // this spawns threads, sets affinity, etc
   init_threads(this, num_threads);
