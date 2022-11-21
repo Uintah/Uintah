@@ -257,7 +257,7 @@ CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
-AC_TRY_LINK([$3],[$8],[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[$3]],[[$8]])],[
 eval $1_LIB_DIR='"$6"'
 
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
@@ -592,7 +592,7 @@ if test "$__extern_c" = "yes"; then
 }"
 fi
 
-AC_TRY_LINK($__sci_pound_includes,[$8],[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[$__sci_pound_includes]],[[$8]])],[
 
 if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
