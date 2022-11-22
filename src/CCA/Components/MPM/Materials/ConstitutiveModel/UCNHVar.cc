@@ -138,11 +138,7 @@ void UCNHVar::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","UCNHVar");
   }
-
-  cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
-  cm_ps->appendElement("usePlasticity",            d_usePlasticity);
-
-  ProblemSpecP lc_ps = ps->appendChild("variable_properties");
+  ProblemSpecP lc_ps = cm_ps->appendChild("variable_properties");
   for (int i = 0; i<(int)d_Color.size();i++) {
     ProblemSpecP time_ps = lc_ps->appendChild("entry");
     time_ps->appendElement("color",            d_Color[i]);
@@ -151,6 +147,10 @@ void UCNHVar::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     time_ps->appendElement("yield_stress",     d_FlowStress[i]);
     time_ps->appendElement("hardening_modulus",d_Hardening[i]);
   }
+
+  cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
+  cm_ps->appendElement("usePlasticity",            d_usePlasticity);
+
 }
 //______________________________________________________________________
 //
