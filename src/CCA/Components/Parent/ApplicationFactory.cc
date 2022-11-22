@@ -48,7 +48,9 @@
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/Heat.hpp>
 #include <CCA/Components/Examples/DOSweep.h>
+#ifndef NO_MODELS_RADIATION
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#endif
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
