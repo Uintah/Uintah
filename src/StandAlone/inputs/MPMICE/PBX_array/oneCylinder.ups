@@ -199,9 +199,7 @@
          </material>
 
           <contact>                                               
-           <type>approach</type>                                 
-           <materials>              [0,1]         </materials>   
-           <mu> 0.0 </mu>                                        
+           <type>null</type>                                 
          </contact>
        </MPM>
 
@@ -349,7 +347,7 @@
               <newCheckPointInterval>  1.5e-6  </newCheckPointInterval>
             </DetonationDetected>
           </adjust_IO_intervals>
-          
+
         </DDT1>
       </Model>  
     </Models>

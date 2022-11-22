@@ -4078,7 +4078,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
      // This needs comments...
      if(mpm_matl->getIsFTM()){
-        Vector FTM_acc = totalSTF[m]/totalMass[m];
+        Vector FTM_acc = totalSTF[dwi]/totalMass[dwi];
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           particleIndex idx = *iter;

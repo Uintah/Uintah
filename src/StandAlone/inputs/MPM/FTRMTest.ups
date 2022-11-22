@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: Updated 7/31/00-->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>FTRM</title>
+       <info> Test problem demonstrating use of Force Transmitting Rigid
+              Material.  An FTRM block with initial velocity and an applied
+              pressure accelerates, collides with an elastic block, and
+              then decelerates due to the applied force reversing direction.
+       </info>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>1.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0000001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>FTRMTest.uda</filebase>
+       <outputInterval>.05</outputInterval>
+       <save label="p.x"/>
+       <save label="p.velocity"/>
+       <save label="p.volume"/>
+       <save label="p.stress"/>
+       <save label="p.scalefactor"/>
+       <save label="g.mass"/>
+       <save label="g.stressFS"/>
+       <save label="p.loadCurveID"/>
+       <save label="p.externalforce"/>
+       <save label="KineticEnergy"/>
+       <save label="TotalMomentum"/>
+       <save label="TotalMass"/>
+       <save label="SumTransmittedForce"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <use_load_curves> true </use_load_curves>
+       <XPIC2> true </XPIC2>
+       <interpolator>gimp</interpolator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <is_force_transmitting_material>true
+                                              </is_force_transmitting_material>
+              <density>1000.0</density>
+                <constitutive_model type="rigid">
+                    <bulk_modulus> 6000000.0</bulk_modulus>
+                    <shear_modulus> 600000.0</shear_modulus>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label="gp1">
+                     <min>[-1.0,-1.0,-1.0]</min>
+                     <max>[ 1.0, 1.0, 1.0]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[1.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+              <density>1000.0</density>
+                <constitutive_model type="UCNH">
+                    <bulk_modulus> 6000000.0</bulk_modulus>
+                    <shear_modulus> 600000.0</shear_modulus>
+                </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label="gp3">
+                     <min>[ 1.4,-1.0,-1.0]</min>
+                     <max>[ 3.4, 1.0, 1.0]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>specified</type>
+             <materials>[0,1]</materials>
+             <master_material>0</master_material>
+             <direction>[1,1,1]</direction>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+            <box label="x-face">
+              <min>[-1.01,-1.0,-1.0]</min>
+              <max>[-0.99, 1.0, 1.0]</max>
+            </box>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 0.25   </time>
+             <load> 1.0e4 </load>
+           </time_point>
+           <time_point>
+             <time> 0.5 </time>
+             <load> 0.0 </load>
+           </time_point>
+           <time_point>
+             <time>  0.75   </time>
+             <load> -1.0e4 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0 </time>
+             <load> 0.0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+
+     </MPM>
+   </PhysicalBC>
+       
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+          <Face side = "y+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>[-1.2,-1.2,-1.2]</lower>
+              <upper>[ 5.8, 1.2, 1.2]</upper>
+              <patches>[1,2,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+           <spacing>[0.2,0.2,0.2]</spacing>
+       </Level>
+    </Grid>
+
+</Uintah_specification>

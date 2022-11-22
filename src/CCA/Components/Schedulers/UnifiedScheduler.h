@@ -268,8 +268,6 @@ class UnifiedScheduler : public MPIScheduler  {
     int  m_num_devices;
     int  m_current_device;
 
-    std::vector< std::string > m_material_names;
-
     struct labelPatchMatlDependency {
 
         labelPatchMatlDependency( const char          * label

@@ -74,6 +74,7 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
 
   d_oneOrTwoStep = 2;
   ps->get("OneOrTwoStep",     d_oneOrTwoStep);
+  ps->getWithDefault("ExcludeMaterial", d_excludeMatl, -999);
 
   ps->getWithDefault("include_rotation", d_includeRotation, false);
 
@@ -159,6 +160,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("direction",           d_direction);
   contact_ps->appendElement("volume_constraint",   d_vol_const);
   contact_ps->appendElement("OneOrTwoStep",        d_oneOrTwoStep);
+  contact_ps->appendElement("ExcludeMaterial",     d_excludeMatl);
 
   d_matls.outputProblemSpec(contact_ps);
 
@@ -317,6 +319,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   map<int,Vector> reaction_force  = zeroV;
   map<int,Vector> reaction_torque = zeroV;
 
+  int dwi_dmatl = matls->get(d_material);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -438,10 +442,15 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         rigid_vel = gvelocity_star[d_material][c];
       }
 
+      double excludeMass = 0.;
+      if(d_excludeMatl >=0){
+        excludeMass = gmass[d_excludeMatl][c];
+      }
+
       for(int  n = 0; n < numMatls; n++){
         int dwi = matls->get(n);
         
-        if(!d_matls.requested(n)) continue;
+        if(!d_matls.requested(n) || excludeMass >= 1.e-99) continue;
 
         Vector new_vel(gvelocity_star[n][c]);
         if(d_NormalOnly){
@@ -465,7 +474,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
           reaction_force[dwi]  -= ginternalForce[n][c];
           reaction_torque[dwi] += Cross(r,gmass[n][c]*(new_vel-old_vel)/delT);
-          STF[d_material]      -=gmass[n][c]*(new_vel-old_vel)/delT;
+          STF[dwi_dmatl]       -=gmass[n][c]*(new_vel-old_vel)/delT;
           allMatls_STF         -=gmass[n][c]*(new_vel-old_vel)/delT;
         }  // if
       }    // for matls
@@ -487,8 +496,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   for(int  n = 0; n < numMatls; n++){
     if(n!=d_material){
       int dwi = matls->get(n);
-      reaction_force[d_material] +=reaction_force[dwi];
-      reaction_torque[d_material]+=reaction_torque[dwi];
+      reaction_force[dwi_dmatl] +=reaction_force[dwi];
+      reaction_torque[dwi_dmatl]+=reaction_torque[dwi];
     }
   }
 
@@ -503,9 +512,9 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
   }
 
-  new_dw->put( sumvec_vartype( reaction_force[d_material]),
+  new_dw->put( sumvec_vartype( reaction_force[dwi_dmatl]),
                                      lb->RigidReactionForceLabel, nullptr, -1 );
-  new_dw->put( sumvec_vartype( reaction_torque[d_material]),
+  new_dw->put( sumvec_vartype( reaction_torque[dwi_dmatl]),
                                      lb->RigidReactionTorqueLabel,nullptr, -1 );
 }
 

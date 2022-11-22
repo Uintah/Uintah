@@ -796,7 +796,7 @@ void ICE::scheduleRestartInitialize(const LevelP & level,
     AnalysisModule* am = *iter;
     am->scheduleRestartInitialize( sched, level);
   }
-  
+
   //__________________________________
   // ICE: Material specific flags
   unsigned int numMatls = m_materialManager->getNumMatls( "ICE" );
@@ -2016,7 +2016,7 @@ void ICE::scheduleTestConservation(SchedulerP            & sched,
 
     unsigned int numICEmatls = m_materialManager->getNumMatls( "ICE" );
 
-    if( numICEmatls > 1 ){  // ignore for single matl problems
+    if( numICEmatls > 1  ){  // ignore for single matl problems
       for (unsigned int m = 0; m < numICEmatls; m++ ) {
         reduction_mss->add( ice_mss->get(m) );
       }
@@ -5269,10 +5269,10 @@ void ICE::TestConservation(const ProcessorGroup  *,
   old_dw->get( delT, lb->delTLabel, level );
 
   unsigned int numICEmatls = m_materialManager->getNumMatls( "ICE" );
-  vector<double> total_mass     ( numICEmatls, 0.0 );
-  vector<double> total_KE       ( numICEmatls, 0.0 );
-  vector<double> total_int_eng  ( numICEmatls, 0.0 );
-  vector<Vector> total_mom      ( numICEmatls, Vector(0.0) );
+  map<int,double> total_mass;
+  map<int,double> total_KE;
+  map<int,double> total_int_eng;
+  map<int,Vector> total_mom;
 
   double allMatls_totalMass     = 0.0;
   double allMatls_totalKE       = 0.0;
@@ -5325,10 +5325,15 @@ void ICE::TestConservation(const ProcessorGroup  *,
 
     if(d_conservationTest->mass){
       for (unsigned int m = 0; m < numICEmatls; m++ ) {
+
+        ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
+        int indx = ice_matl->getDWIndex();
+        total_mass[indx] = 0.0;
         double mat_mass = 0;
+
         conservationTest<double>(patch, delT, mass[m],
                                  uvel_FC[m], vvel_FC[m], wvel_FC[m], mat_mass );
-        total_mass[m]      += mat_mass;
+        total_mass[indx]   += mat_mass;
         allMatls_totalMass += mat_mass;
       }
     }
@@ -5345,6 +5350,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
         int indx = ice_matl->getDWIndex();
         new_dw->get( vel_CC, lb->vel_CCLabel,   indx, patch, m_gn,0 );
 
+        total_mom[indx] = Vector(0.0);
         for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
           mom[c] = mass[m][c] * vel_CC[c];
@@ -5353,7 +5359,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
         Vector mat_mom(0,0,0);
         conservationTest<Vector>(patch, delT, mom,
                                   uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_mom);
-        total_mom[m]      += mat_mom;
+        total_mom[indx]   += mat_mom;
         allMatls_totalMom += mat_mom;
       }
     }
@@ -5371,6 +5377,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
         int indx = ice_matl->getDWIndex();
         new_dw->get( temp_CC, lb->temp_CCLabel,      indx,patch,m_gn,0 );
         new_dw->get( cv,      lb->specific_heatLabel,indx,patch,m_gn,0 );
+        total_int_eng[indx] = 0.0;
 
         for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
           IntVector c = *iter;
@@ -5381,7 +5388,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
 
         conservationTest<double>(patch, delT, int_eng,
                                  uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_int_eng);
-        total_int_eng[m]     += mat_int_eng;
+        total_int_eng[indx]  += mat_int_eng;
         allMatls_totalIntEng += mat_int_eng;
 
       }
@@ -5410,7 +5417,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
         double mat_KE(0);
         conservationTest<double>(patch, delT, KE,
                                   uvel_FC[m],vvel_FC[m],wvel_FC[m], mat_KE);
-        total_KE[m]      += mat_KE;
+        total_KE[indx]   += mat_KE;
         allMatls_totalKE += mat_KE;
       }
     }
@@ -5429,8 +5436,10 @@ void ICE::TestConservation(const ProcessorGroup  *,
         Material* matl = m_materialManager->getMaterial( m );
         int indx = matl->getDWIndex();
 
-        constCCVariable<double> int_eng_L_CC, eng_L_ME_CC;
-        constCCVariable<Vector> mom_L_CC, mom_L_ME_CC;
+        constCCVariable<double> int_eng_L_CC;
+        constCCVariable<double> eng_L_ME_CC;
+        constCCVariable<Vector> mom_L_CC;
+        constCCVariable<Vector> mom_L_ME_CC;
 
         new_dw->get( mom_L_CC,     lb->mom_L_CCLabel,     indx,patch,m_gn,0 );
         new_dw->get( int_eng_L_CC, lb->int_eng_L_CCLabel, indx,patch,m_gn,0 );
@@ -5452,18 +5461,13 @@ void ICE::TestConservation(const ProcessorGroup  *,
 
   //__________________________________
   //  Put variables into the DW.
+  const MaterialSubset* matls = m_materialManager->allMaterials( "ICE" )->getUnion();
+
+
   if(d_conservationTest->mass){
 
     new_dw->put( sum_vartype( allMatls_totalMass),  lb->TotalMassLabel, nullptr, -1);
-
-    if( numICEmatls > 1 ){  // ignore for single matl problems
-      for (unsigned int m = 0; m < numICEmatls; m++ ) {
-        ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-        int indx = ice_matl->getDWIndex();
-
-        new_dw->put( sum_vartype( total_mass[m]),  lb->TotalMassLabel, nullptr, indx);
-      }
-    }
+    new_dw->put_sum_vartype(  total_mass,           lb->TotalMassLabel, matls );
   }
   //__________________________________
   //
@@ -5479,15 +5483,8 @@ void ICE::TestConservation(const ProcessorGroup  *,
     new_dw->put( sum_vartype( allMatls_totalKE ),      lb->KineticEnergyLabel, nullptr, -1);
     new_dw->put( sum_vartype( allMatls_totalIntEng ),  lb->TotalIntEngLabel,   nullptr, -1);
 
-    if( numICEmatls > 1 ){  // ignore for single matl problems
-      for (unsigned int m = 0; m < numICEmatls; m++ ) {
-        ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-        int indx = ice_matl->getDWIndex();
-
-        new_dw->put( sum_vartype( total_KE[m] ),       lb->KineticEnergyLabel, nullptr, indx);
-        new_dw->put( sum_vartype( total_int_eng[m] ),  lb->TotalIntEngLabel,   nullptr, indx);
-      }
-    }
+    new_dw->put_sum_vartype( total_KE,       lb->KineticEnergyLabel, matls );
+    new_dw->put_sum_vartype( total_int_eng,  lb->TotalIntEngLabel, matls );
   }
 
   //__________________________________
@@ -5495,15 +5492,7 @@ void ICE::TestConservation(const ProcessorGroup  *,
   if(d_conservationTest->momentum){
 
     new_dw->put( sumvec_vartype( allMatls_totalMom ),  lb->TotalMomentumLabel, nullptr, -1);
-
-    if( numICEmatls > 1 ){  // ignore for single matl problems
-      for (unsigned int m = 0; m < numICEmatls; m++ ) {
-        ICEMaterial* ice_matl = (ICEMaterial*) m_materialManager->getMaterial( "ICE", m);
-        int indx = ice_matl->getDWIndex();
-
-        new_dw->put( sumvec_vartype( total_mom[m] ), lb->TotalMomentumLabel,   nullptr, indx);
-      }
-    }
+    new_dw->put_sum_vartype(    total_mom,             lb->TotalMomentumLabel, matls);
   }
 }
 
