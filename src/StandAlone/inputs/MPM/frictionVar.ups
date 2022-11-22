@@ -36,7 +36,7 @@
         <save label="KineticEnergy"></save>
         <save label="TotalMomentum"></save>
         <save label="g.velocity"></save>
-        <checkpoint interval="5.0" cycle="2"></checkpoint>
+        <checkpoint interval="0.1" cycle="2"></checkpoint>
     </DataArchiver>
     <PhysicalConstants>
         <gravity>[0,0,0]</gravity>

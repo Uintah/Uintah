@@ -35,7 +35,7 @@
        <save label = "g.mass" levels = "-1"/>
        <save label = "g.stressFS" levels = "-1"/>
 
-       <checkpoint cycle = "2" interval = "0.01"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
 
    <MPM>
