@@ -111,7 +111,7 @@ void FrictionContactLRVar::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("master_material",   d_material);
   d_matls.outputProblemSpec(contact_ps);
 
-  ProblemSpecP lc_ps = ps->appendChild("variable_friction");
+  ProblemSpecP lc_ps = contact_ps->appendChild("variable_friction");
   for (int i = 0; i<(int)d_Color.size();i++) {
     ProblemSpecP time_ps = lc_ps->appendChild("entry");
     time_ps->appendElement("color",  d_Color[i]);
