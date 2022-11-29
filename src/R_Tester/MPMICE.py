@@ -53,6 +53,7 @@ AMRTESTS   = [
              ]
 
 LOCALTESTS = [   ("advect",                   "advect.ups",                8,  "ALL", ["exactComparison"]),
+                 ("advect3Mat",               "advect3mat.ups",            1,  "ALL", ["exactComparison"]),
                  ("2d_diw",                   "2ddiw.ups",                 2,  "ALL", ["exactComparison"]),
                  ("rmpmice_advect_periodic",  "advect_periodic.ups",       8,  "ALL", ["exactComparison"]),
                  ("advectSlipExch_Off",       "advectSlipExch.ups",        8,  "ALL", ["exactComparison","no_restart"]),
