@@ -2,7 +2,7 @@
 
 
 
-<Uintah_specification> 
+<Uintah_specification>
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
@@ -10,8 +10,8 @@
    </Meta>
 
    <SimulationComponent type="mpmice" />
-    
-    
+
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -19,12 +19,12 @@
        <maxTime>            2.0         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <delt_max>           0.1      </delt_max>
+       <delt_max>           0.1         </delt_max>
        <delt_init>          1e-5        </delt_init>
-       <max_Timesteps>     1000         </max_Timesteps>
+       <max_Timesteps>     100         </max_Timesteps>
        <timestep_multiplier>0.1         </timestep_multiplier>
    </Time>
-   
+
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -80,7 +80,7 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
@@ -114,7 +114,7 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
         </BCType>
-      </Face>                  
+      </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
@@ -143,13 +143,13 @@
            <spacing>        [0.5,0.5,0.5]     </spacing>
        </Level>
     </Grid>
-   
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect3mat.uda</filebase>
-      <outputTimestepInterval>0</outputTimestepInterval>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="vol_frac_CC"/>
       <save label="mass_L_CC"/>
       <save label="press_equil_CC"/>
@@ -167,16 +167,19 @@
       <save label="p.volume"/>
       <save label="p.temperature"/>
       <save label="p.velocity"/>
+      <save label="TotalMass"/>
+      <save label="TotalMomentum"/>
+      <checkpoint timestepInterval="20" cycle="1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
     <!--    M P M I  C  E     P  A  R  A  M  E  T  E  R  S                  -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.4</cfl>
+       <cfl>0.4</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-      </ICE>        
+      </ICE>
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
@@ -184,7 +187,7 @@
     </MPM>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 1.013250  </reference_pressure>
@@ -195,92 +198,89 @@
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
-       <MPM>
-         <material name = "PISTON">
-                <density>              1.901e8         </density>
-                <constitutive_model type="comp_neo_hook_plastic">
-                    <bulk_modulus>      10.2e8         </bulk_modulus>
-                    <shear_modulus>     7.2e8          </shear_modulus>
-                    <yield_stress>     .27e8           </yield_stress>
-                    <hardening_modulus>0.1e4           </hardening_modulus>
-                    <alpha> 0.0 </alpha>
-                </constitutive_model>
-              <thermal_conductivity>    0.5e-7          </thermal_conductivity>
-              <specific_heat>           1.004e-5        </specific_heat>          
-                <geom_object>
-                    <box label="piston">
-                        <min>           [2.0,2.5,2.0]   </min>
-                        <max>           [4.0,3.5,4.0]   </max>
-                    </box>
-                    <res>               [2,2,2]         </res>
-                    <velocity>          [0.01,0.01,0.01]   </velocity>
-                    <temperature>       300             </temperature>
-                </geom_object>
-         </material>
-        <material name = "HMX BLOCK">
-                <density>              1.901e6         </density>
-                <constitutive_model type="comp_neo_hook_plastic">
-                    <bulk_modulus>      10.2e6         </bulk_modulus>
-                    <shear_modulus>     7.2e6          </shear_modulus>
-                    <yield_stress>     .27e6           </yield_stress>
-                    <hardening_modulus>0.1e4           </hardening_modulus>
-                    <alpha> 0.0 </alpha>
-                </constitutive_model>
-              <thermal_conductivity>    .5e-7           </thermal_conductivity>
-              <specific_heat>           1.004e-5        </specific_heat> 
-                        
-                <geom_object>
-                    <box label="hmx_block">
-                        <min>           [2.0,1.0,2.0]   </min>
-                        <max>           [4.0,2.0,4.0]   </max>
-                    </box>
-                    <res>               [2,2,2]         </res>
-                    <velocity>          [0.01,0.01,0.01]   </velocity>
-                    <temperature>       300             </temperature>
-                </geom_object>
-                
-         </material>
-           <contact>
-             <type>null</type>
-             <materials>[0]</materials>
-           </contact>
-      </MPM>
        <ICE>
          <material name = "Surrounding Gas">
-           <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>          0.0             </dynamic_viscosity>
-           <thermal_conductivity>       0.0             </thermal_conductivity>
-           <specific_heat>              716.0e-8        </specific_heat>
-           <gamma>                      1.4             </gamma>           
-           <geom_object>
-
+            <EOS type = "ideal_gas">                   </EOS>
+            <dynamic_viscosity>          0.0           </dynamic_viscosity>
+            <thermal_conductivity>       0.0           </thermal_conductivity>
+            <specific_heat>              716.0e-8      </specific_heat>
+            <gamma>                      1.4           </gamma>
+            <geom_object>
               <difference>
-                 <difference>
-                   <box label="Domain">
-                       <min>           [-1.0,-1.0,-1.0]    </min>
-                       <max>           [7.0,7.0,7.0 ]      </max>
-                   </box>
-                   <box label="piston"> </box>
-                 </difference>
-                   <box label="hmx_block"> </box>
-               </difference>
-               <res>                      [2,2,2]        </res>
-               <velocity>           [0.01,0.01,0.01]       </velocity>
-               <temperature>        300.0               </temperature>
-               <density>      1.1792946927374306000e+03 </density>
-               <pressure>           1.013250            </pressure>
+                  <box label="Domain">
+                    <min>           [-1.0,-1.0,-1.0]  </min>
+                    <max>           [7.0,7.0,7.0 ]    </max>
+                  </box>
+                <union>
+                  <box label="piston"/>
+                  <box label="hmx_block"/>
+                </union>
+             </difference>
+             <res>                      [2,2,2]     </res>
+             <velocity>           [0.01,0.01,0.01]  </velocity>
+             <temperature>        300.0             </temperature>
+             <density>      1.17929469273743060e+03 </density>
+             <pressure>           1.013250          </pressure>
            </geom_object>
          </material>
-      </ICE>       
-       
-            <exchange_properties> 
-         <exchange_coefficients>
-              <momentum>               [1e10, 1e10,1e10]         </momentum>
-              <heat>                  [1e10, 1e10,1e10]           </heat>
-        </exchange_coefficients>
-            </exchange_properties> 
-    </MaterialProperties>
-            
+      </ICE>
+       <MPM>
+         <material name = "PISTON">
+              <density>              1.901e8          </density>
+              <constitutive_model type="comp_neo_hook_plastic">
+                  <bulk_modulus>        10.2e8        </bulk_modulus>
+                  <shear_modulus>       7.2e8         </shear_modulus>
+                  <yield_stress>        .27e8         </yield_stress>
+                  <hardening_modulus>   0.1e4         </hardening_modulus>
+                  <alpha>               0.0 </alpha>
+              </constitutive_model>
+              <thermal_conductivity>    0.5e-7        </thermal_conductivity>
+              <specific_heat>           1.004e-5      </specific_heat>
+              <geom_object>
+                  <box label="piston">
+                    <min>           [2.0,2.5,2.0]   </min>
+                    <max>           [4.0,3.5,4.0]   </max>
+                  </box>
+                  <res>               [2,2,2]         </res>
+                  <velocity>          [0.01,0.01,0.01]   </velocity>
+                  <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+        <material name = "HMX BLOCK">
+              <density>              1.901e6         </density>
+              <constitutive_model type="comp_neo_hook_plastic">
+                  <bulk_modulus>      10.2e6         </bulk_modulus>
+                  <shear_modulus>     7.2e6          </shear_modulus>
+                  <yield_stress>     .27e6           </yield_stress>
+                  <hardening_modulus>0.1e4           </hardening_modulus>
+                  <alpha> 0.0 </alpha>
+              </constitutive_model>
+              <thermal_conductivity>    .5e-7        </thermal_conductivity>
+              <specific_heat>           1.004e-5     </specific_heat>
 
-       
+              <geom_object>
+                  <box label="hmx_block">
+                    <min>           [2.0,1.0,2.0]  </min>
+                    <max>           [4.0,2.0,4.0]  </max>
+                  </box>
+                  <res>               [2,2,2]        </res>
+                  <velocity>          [0.01,0.01,0.01]   </velocity>
+                  <temperature>       300            </temperature>
+              </geom_object>
+
+         </material>
+         <contact>
+           <type>null</type>
+           <materials>[0]</materials>
+         </contact>
+      </MPM>
+
+
+      <exchange_properties>
+         <exchange_coefficients>
+              <momentum>         [1e10, 1e10,1e10]    </momentum>
+              <heat>             [1e10, 1e10,1e10]    </heat>
+        </exchange_coefficients>
+      </exchange_properties>
+    </MaterialProperties>
 </Uintah_specification>

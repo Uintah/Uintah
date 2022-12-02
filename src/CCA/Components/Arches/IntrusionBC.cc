@@ -119,9 +119,6 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab,
 //_________________________________________
 IntrusionBC::~IntrusionBC()
 {
-
-  delete localPatches_;
-
   VarLabel::destroy(m_alpha_geom_label);
 
   if ( _intrusion_on ) {
@@ -388,6 +385,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params, const int ilvl )
         throw ProblemSetupException("Error: Two intrusion boundaries with the same name listed in input file", __FILE__, __LINE__);
       }
 
+    }
+  }
+
+  _intrusion_map_org = _intrusion_map;    // keep a copy of the map for output to stdout and a file
+
+  if( dbg_intrusion.active() ){
+    for (IntrusionMap::iterator iter = _intrusion_map_org.begin(); iter != _intrusion_map_org.end(); ++iter) {
+        std::ostringstream message;
+        message << " IntrusionBC::problemSetup: ";
+        iter->second.print(message);
+        DOUTR( true , message.str() );
     }
   }
 }
@@ -789,8 +797,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
           IntVector c = *i;
           iv.clear();
 
-          DOUT( dbg_intrusion, "[IntrusionBC]  For Intrusion named: " << iIntrusion->second.name );
-          DOUT( dbg_intrusion, "[IntrusionBC]  At location: " << c );
+          DOUTR( dbg_intrusion, "[IntrusionBC]  For Intrusion named: " << iIntrusion->second.name );
+          DOUTR( dbg_intrusion, "[IntrusionBC]  At location: " << c );
 
           for ( unsigned int niv = 0; niv < iv_var_names.size(); niv++ ){
 
@@ -809,7 +817,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
             iv.push_back(scalar_var);
 
-            DOUT( dbg_intrusion, "[IntrusionBC]  For independent variable " << iv_var_names[niv]
+            DOUTR( dbg_intrusion, "[IntrusionBC]  For independent variable " << iv_var_names[niv]
               << ". Using value = " << scalar_var );
 
           }
@@ -822,7 +830,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           if ( does_post_mix ){
 
-            DOUT( dbg_intrusion, "[IntrusionBC]  Using inert stream mixing to look up properties");
+            DOUTR( dbg_intrusion, "[IntrusionBC]  Using inert stream mixing to look up properties");
 
             typedef std::map<std::string, DMap > IMap;
             IMap inert_map = mixingTable->getInertMap();
@@ -839,7 +847,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
               inert_list.insert(std::make_pair(name,inert_value));
 
-              DOUT( dbg_intrusion, "[IntrusionBC]  For inert variable " << name
+              DOUTR( dbg_intrusion, "[IntrusionBC]  For inert variable " << name
                 << ". Using value = " << inert_value );
 
             }
@@ -859,7 +867,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name, inert_list);
 
-                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first
+                DOUTR( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first
                   << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
@@ -869,10 +877,10 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           } else {
 
-            DOUT( dbg_intrusion, "[IntrusionBC]  NOT using inert stream mixing to look up properties" );
+            DOUTR( dbg_intrusion, "[IntrusionBC]  NOT using inert stream mixing to look up properties" );
 
             density = mixingTable->getTableValue(iv, "density");
-            DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
+            DOUTR( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
             //get values for all other scalars that depend on a table lookup:
             for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin();
@@ -887,8 +895,8 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
                 double lookup_value = mixingTable->getTableValue(iv, lookup_name);
 
-                DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for  " << lookup_name << " = " << lookup_value );
-                DOUT( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value );
+                DOUTR( dbg_intrusion, "[IntrusionBC]  Got a value for  " << lookup_name << " = " << lookup_value );
+                DOUTR( dbg_intrusion, "[IntrusionBC]  Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value );
 
                 tab_scalar.set_scalar_constant( c, lookup_value );
 
@@ -899,7 +907,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density));
 
-          DOUT( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
+          DOUTR( dbg_intrusion, "[IntrusionBC]  Got a value for density = " << density );
 
           //
           //Note: Using the last value of density to set the total intrusion density.
@@ -1325,46 +1333,40 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
                                               const LevelP& level,
                                               const MaterialSet* matls )
 {
-
-  Task* tsk0 = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation);
-
-  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
-
-    if ( i->second.type == INLET ){
-      tsk0->requires( Task::NewDW, i->second.inlet_bc_area );
-    }
-
-    tsk0->requires( Task::NewDW, i->second.wetted_surface_area );
-
-  }
-
-  sched->addTask(tsk0, level->eachPatch(), matls);
-
-  // write out information to a file in the uda
-  Task* tsk1 = scinew Task("IntrusionBC::writeIntrusionInformation", this, &IntrusionBC::writeIntrusionInformation);
-
-  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){
-
-    if ( i->second.type == INLET ){
-      tsk1->requires( Task::NewDW, i->second.inlet_bc_area );
-    }
-
-    tsk1->requires( Task::NewDW, i->second.wetted_surface_area );
-
-  }
-
   // only run task on the first patch on this level
   const Patch* p = level->getPatch(0);
   PatchSet* zeroPatch = new PatchSet();
   zeroPatch->add(p);
   zeroPatch->addReference();
 
+  Task* tsk0 = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation);
+
+  for ( IntrusionMap::iterator i = _intrusion_map_org.begin(); i != _intrusion_map_org.end(); ++i ){
+
+    if ( i->second.type == INLET ){
+      tsk0->requires( Task::NewDW, i->second.inlet_bc_area );
+    }
+    tsk0->requires( Task::NewDW, i->second.wetted_surface_area );
+  }
+
+  sched->addTask(tsk0, zeroPatch, matls);
+
+  // write out information to a file in the uda
+  Task* tsk1 = scinew Task("IntrusionBC::writeIntrusionInformation", this, &IntrusionBC::writeIntrusionInformation);
+
+  for ( IntrusionMap::iterator i = _intrusion_map_org.begin(); i != _intrusion_map_org.end(); ++i ){
+
+    if ( i->second.type == INLET ){
+      tsk1->requires( Task::NewDW, i->second.inlet_bc_area );
+    }
+    tsk1->requires( Task::NewDW, i->second.wetted_surface_area );
+  }
+
   sched->addTask(tsk1, zeroPatch, matls);
 
   if (zeroPatch && zeroPatch->removeReference()) {
     delete zeroPatch;
   }
-
 }
 //__________________________________
 //
@@ -1378,11 +1380,11 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
   // RAII-style approach to acquiring output mutex for this entire scoped block.
   std::lock_guard<Uintah::MasterLock> print_lock(intrusion_print_mutex);
 
-  for (int p = 0; p < patches->size(); p++) {
+  for (int p = 0; p < patches->size(); p++) {       // while loop over patches?  --Todd
 
     proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
-    for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+    for (IntrusionMap::iterator iter = _intrusion_map_org.begin(); iter != _intrusion_map_org.end(); ++iter) {
 
       if (iter->second.type == SIMPLE_WALL) {
 
@@ -1480,7 +1482,7 @@ IntrusionBC::writeIntrusionInformation( const ProcessorGroup*,
   fprintf( fp, "#----- Intrusion Summary ----- \n" );
   fprintf( fp, "#  All areas are based on the cell area\n" );
 
-  for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+  for (IntrusionMap::iterator iter = _intrusion_map_org.begin(); iter != _intrusion_map_org.end(); ++iter) {
 
     if (iter->second.type == SIMPLE_WALL) {
 
@@ -1495,7 +1497,7 @@ IntrusionBC::writeIntrusionInformation( const ProcessorGroup*,
     }
   }
 
-  for (IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter) {
+  for (IntrusionMap::iterator iter = _intrusion_map_org.begin(); iter != _intrusion_map_org.end(); ++iter) {
 
     if (iter->second.type == INLET) {
 
@@ -2027,58 +2029,63 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
   }
 }
 
-//----------------------------------
+//______________________________________________________________________
+//
 void
-IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
+IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched,
+                                         const LevelP& level,
+                                         const MaterialSet* matls )
 {
 
-  const Uintah::PatchSet* const allPatches =
+  const PatchSet* allPatches =
     sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const Uintah::PatchSubset* const localPatches =
-    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
-  localPatches_ = new Uintah::PatchSet;
-  localPatches_->addEach( localPatches->getVector() );
-  auto mypatches = localPatches->getVector();
-  std::vector<std::string> intrusion_map_idx;
 
-  for ( IntrusionMap::iterator i_intrusion = _intrusion_map.begin();
-          i_intrusion != _intrusion_map.end(); ++i_intrusion ){
+  const PatchSubset* localPatches =
+    allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+
+  std::vector<std::string> delete_intrusions;
+
+  for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
     bool patch_geom_intersection = false;
 
-    for( auto ipatches = (mypatches).begin(); ipatches != mypatches.end(); ipatches++ ){
+    for ( int p = 0; p < localPatches->size(); p++ ){
+      const Patch* patch = localPatches->get(p);
 
-      std::vector<Patch::FaceType>::const_iterator bf_iter;
-      std::vector<Patch::FaceType> bf;
-      (*ipatches)->getBoundaryFaces(bf);
-      Box patch_box = (*ipatches)->getBox();
+      Box patch_box = patch->getBox();
 
-      for ( int i = 0; i < (int)i_intrusion->second.geometry.size(); i++ ){
+      for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){
 
         //Buffer the search region by one cell so as not to miss inlets on patch boundaries.
-        GeometryPieceP piece = i_intrusion->second.geometry[i];
+        GeometryPieceP piece = iter->second.geometry[i];
         Box geometry_box  = piece->getBoundingBox();
-        Point low((*ipatches)->cellPosition((*ipatches)->getCellLowIndex()-IntVector(1,1,1)));
-        Point high((*ipatches)->cellPosition((*ipatches)->getCellHighIndex()+IntVector(1,1,1)));
-        Box buffered_patch_box(low, high);
+
+        IntVector lo = patch->getCellLowIndex()-IntVector(1,1,1);
+        IntVector hi = patch->getCellHighIndex()+IntVector(1,1,1);
+
+        Point loPt( patch->cellPosition(lo) );
+        Point hiPt( patch->cellPosition(hi) );
+
+        Box buffered_patch_box(loPt, hiPt);
         Box intersect_box = geometry_box.intersect( buffered_patch_box );
 
         if ( !(intersect_box.degenerate()) ) {
           patch_geom_intersection = true;
         }
-
       }
     } // patch loop
 
-    // add non-intersecting geometry to a list
+    // add non-intersecting geometry to delete_intrusions
     if ( !patch_geom_intersection ){
-      intrusion_map_idx.push_back(i_intrusion->first);
+      delete_intrusions.push_back( iter->first );
     }
 
   } // intrusion loop
 
+  //__________________________________
+  //
   // now delete the intrusions that aren't resident on this patch
-  for ( auto it = intrusion_map_idx.begin(); it != intrusion_map_idx.end(); ++it ){
+  for ( auto it = delete_intrusions.begin(); it != delete_intrusions.end(); ++it ){
 
     if ( _intrusion_map[*it].type == INLET ){
       VarLabel::destroy(_intrusion_map[*it].inlet_bc_area);
@@ -2093,6 +2100,15 @@ IntrusionBC::prune_per_patch_intrusions( SchedulerP& sched, const LevelP& level,
     for ( std::map<std::string, scalarInletBase*>::iterator scalar_iter = _intrusion_map[*it].scalar_map.begin();
         scalar_iter != _intrusion_map[*it].scalar_map.end(); scalar_iter++ ){
       delete(scalar_iter->second);
+    }
+
+    //  debugging output
+    if( dbg_intrusion.active() ){
+      std::ostringstream message;
+      message << " [IntrusionBC] removing intrusion ("
+              << std::left  << std::setw(10) << _intrusion_map[*it].name
+              << ").  It's not a resident on the patches this rank owns" ;
+      DOUTR( true , message.str() );
     }
 
     _intrusion_map.erase(*it);
