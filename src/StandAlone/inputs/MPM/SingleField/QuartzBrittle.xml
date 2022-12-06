@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Quartz -->
+<Uintah_Include>
+   <density>2.65e6</density>
+   <constitutive_model type = "cnh_damage">
+     <bulk_modulus>       3.7e5 </bulk_modulus>
+     <shear_modulus>      4.4e5 </shear_modulus>
+     <yield_stress>       4.8e3 </yield_stress>
+     <hardening_modulus>  1.0e1 </hardening_modulus>
+     <alpha>              0.0 </alpha>
+   </constitutive_model>
+   <erosion algorithm="ZeroStress">
+      <char_time>1.0</char_time>
+   </erosion>
+
+<!--
+   <damage_model type="Threshold">
+      <failure_mean> 8.0e2       </failure_mean>
+      <failure_std>  10.0        </failure_std>
+      <failure_distrib>weibull   </failure_distrib>
+      <failure_criteria>MaximumPrincipalStress</failure_criteria>
+   </damage_model>
+-->
+   <damage_model type="Threshold">
+      <failure_mean> 1.0e3       </failure_mean>
+      <failure_std>  5.0e2       </failure_std>
+      <failure_distrib>gauss     </failure_distrib>
+      <failure_criteria>MaximumPrincipalStress</failure_criteria>
+   </damage_model>
+
+   <thermal_conductivity>1.4e-7</thermal_conductivity>
+   <specific_heat>670.e-8</specific_heat>
+</Uintah_Include>
