@@ -121,7 +121,9 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     for(int m=0;m<numMatls;m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
 
       new_dw->get(gmass[m],           lb->gMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],         lb->gVolumeLabel,   dwi, patch, gnone, 0);
@@ -297,7 +299,9 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);

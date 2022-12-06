@@ -42,6 +42,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/MPM/Core/MPMLabel.h>
+#include <CCA/Components/MPM/Materials/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <vector>
 
@@ -94,9 +95,11 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     std::vector<constNCVariable<double> > gmass(numMatls);
     std::vector<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->get(gmass[m], lb->gMassLabel,    dwindex, patch,Ghost::None,0);
-      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwindex, patch);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
+      new_dw->get(gmass[m], lb->gMassLabel,    dwi, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwi, patch);
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -151,7 +154,9 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     std::vector<NCVariable<Vector> > gvelocity_star(numMatls);
 
     for(int m=0;m<matls->size();m++){
-     int dwi = matls->get(m);
+     MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_materialManager->getMaterial("MPM", m);
+     int dwi = mpm_matl->getDWIndex();
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
     }

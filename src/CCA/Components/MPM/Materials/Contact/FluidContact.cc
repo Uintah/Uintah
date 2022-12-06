@@ -289,7 +289,9 @@ void FluidContact::exMomIntegrated(const ProcessorGroup*,
     old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
+      MPMMaterial* mpm_matl = 
+                        (MPMMaterial*) d_sharedState->getMaterial("MPM", m);
+      int dwi = mpm_matl->getDWIndex();
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);
       // new_dw->get(gposition[m],   lb->gPositionLabel,    dwi, patch, gnone, 0);
