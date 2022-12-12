@@ -3,7 +3,7 @@
 
 # to differentiate among the build names & even directories
 COMPILE="yes"                                       # yes/no for compiling uintah
-DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
+DEFAULT_MAIL_TO="uintah-developers@lists.utah.edu"
 
 DO_DBG="1"                                          # compile and run debug tests
 DO_OPT="1"                                          # compile and run optimized tests
@@ -12,7 +12,7 @@ WHICH_TESTS="NIGHTLYTESTS"
 BUILDONLY="0"                                       # Compile Uintah, don't run RT tests
 OS=$(uname -s)                                      # operating sytem
 PARALLELISM=0                                       # number of cores to use
-REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+REPLY_TO="uintah-developers@lists.utah.edu"
 AUTO_UPDATE_PERF_GS="yes"                           # Automatically update performance GS if they improve
 AUTO_UPDATE_GIT_STAMP="yes"                         # Automatically update the git hash when a test passes
 
