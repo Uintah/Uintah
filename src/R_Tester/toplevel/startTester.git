@@ -57,10 +57,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
 #  export TEST_COMPONENTS="ARCHES Examples ICE IMPM Models MPMICE MPM UCF Wasatch"
 
   if [ "$LOGNAME" == "gpu_rt" ]; then
-    names=(\
-      "t.harman@utah.edu,"                 \
-      "jholmen@sci.utah.edu,"              \
-      "jeremy.thornock@utah.edu" )
+    names=( "t.harman@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     export TEST_COMPONENTS="Examples ARCHES"
@@ -74,11 +71,7 @@ if [ "$MACHINE" == "uintah-build" ]; then
     DO_DBG="0"
     GIT_branch="kokkos_dev"
     
-    names=(\
-    "damodars@sci.utah.edu,"      \
-    "jholmen@sci.utah.edu,"       \
-    "jeremy.thornock@utah.edu,"   \
-    "t.harman@utah.edu" )
+    names=("jeremy.thornock@utah.edu," "t.harman@utah.edu" )
     IFS=""    # used to elimnate spaces between array elements
     DEFAULT_MAIL_TO=${names[*]}
     IFS=" "
