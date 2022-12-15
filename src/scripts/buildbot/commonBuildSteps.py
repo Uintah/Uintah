@@ -163,6 +163,47 @@ def copyBuildDir( factory ):
                    doStepIf   = hasStepFailed,
                    hideStepIf = skipped )
 
+  changePerms = steps.ShellCommand(
+                     description   = ["change permissions"],
+                     name          = "Change permissions",
+                     command       = ["/bin/sh", "-c", "chgrp -R users . ; chmod -R g+rwX ."],
+                     doStepIf      = hasStepFailed,
+                     hideStepIf    = skipped ,
+                     workdir       = util.Property( 'wrkDir' ),
+                     logEnviron    = False,
+                     warnOnWarnings= True,
+                     warnOnFailure = True )
+
+  tarBall = steps.ShellSequence(
+                     description   = ["tarring"],
+                     name          = "Tarring the failed uintah build",
+                     commands      = [
+                                       util.ShellArg( logfile='tarBall', command=[ "/bin/sh", "-c", 'tar -cf tarBall.tar .' ] ),
+                                       util.ShellArg( logfile='tarBall', command=[ "/bin/sh", "-c", util.Interpolate( 'mv tarBall.tar /data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/') ])
+                                      ],
+
+                     doStepIf      = hasStepFailed,
+                     hideStepIf    = skipped ,
+                     workdir       = 'build/',
+                     logEnviron    = True,
+                     warnOnWarnings= True,
+                     warnOnFailure = True )
+
+  unTar = steps.ShellSequence(
+                     description   = ["untar"],
+                     name          = "untar the failed uintah build",
+                     commands      = [
+                                       util.ShellArg( logfile='unTar', command=[ "/bin/sh", "-c", 'tar -xf tarBall.tar']),
+                                       util.ShellArg( logfile='unTar', command=[ "/bin/sh", "-c", '/bin/rm -rf tarBall.tar'])
+                                      ],
+
+                     doStepIf      = hasStepFailed,
+                     hideStepIf    = skipped ,
+                     workdir       = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/'),
+                     logEnviron    = True,
+                     warnOnWarnings= True,
+                     warnOnFailure = True )
+
   copyDir = steps.CopyDirectory(
                    src        = "build",
                    dest       = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/' ),
@@ -170,21 +211,11 @@ def copyBuildDir( factory ):
                    doStepIf   = hasStepFailed,
                    hideStepIf = skipped )
 
-  changePerms = steps.ShellCommand(
-                   description   = ["change permissions"],
-                   name          = "Change permissions",
-                   command       = ["/bin/sh", "-c", "chgrp -R users . ; chmod -R g+rwX ."],
-                   doStepIf      = hasStepFailed,
-                   hideStepIf    = skipped ,
-                   workdir       = util.Interpolate( '/data/buildbot/%(prop:buildername)s/%(prop:buildnumber)s/' ),
-                   logEnviron    = False,
-                   warnOnWarnings= True,
-                   warnOnFailure = True )
-
-
   factory.addStep( mkdir )
-  factory.addStep( copyDir )
   factory.addStep( changePerms )
+  factory.addStep( tarBall )
+  factory.addStep( unTar )
+
 
 
 
