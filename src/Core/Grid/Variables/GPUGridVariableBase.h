@@ -37,6 +37,7 @@ class GPUGridVariableBase : public GPUVariable {
   friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
   friend class KokkosScheduler;   // allow scheduler access
   friend class UnifiedScheduler;  // allow scheduler access
+  friend class DetailedTask;      // allow task access
 
   public:
     HOST_DEVICE virtual ~GPUGridVariableBase() {}
