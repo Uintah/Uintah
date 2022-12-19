@@ -31,14 +31,16 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/StringUtil.h>
-
-
-#include <set>
+#include <Core/Parallel/MasterLock.h>
 
 using namespace Uintah;
 
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
+namespace {
+  Uintah::MasterLock  deviceNums_mutex{};
+  Uintah::MasterLock cudaStreams_mutex{};
+}
 
 //______________________________________________________________________
 //
@@ -77,8 +79,8 @@ Task::~Task()
     delete m_patch_set;
   }
 
-  // easier to periodically delete this than to force a call to a cleanup
-  // function, and probably not very expensive.
+  // easier to periodically delete this than to force a call to a
+  // cleanup function, and probably not very expensive.
   if (globalMatlSubset && globalMatlSubset->removeReference()) {
     delete globalMatlSubset;
   }
@@ -130,12 +132,16 @@ Task::initialize()
 void
 Task::setSets( const PatchSet* ps, const MaterialSet* ms )
 {
-  // NOTE: the outer [patch/matl]Set checks are related to temporal scheduling, e.g. more then 1 regular task graph
+  // NOTE: the outer [patch/matl]Set checks are related to temporal
+  // scheduling, e.g. more then 1 regular task graph
   //
-  // This is called from TaskGraph::addTask() in which a single task may be added to more than 1 Normal
-  // task graphs. In this case, first time here, m_path/matl_set will be nullptr and subsequent visits
-  // will be the same pointer as ps and ms respectively. Without these checks, the refCount gets
-  // artificially inflated and ComputeSubsets (Patch/Matl)) are not deleted, resulting in a mem leak. APH, 06/08/17
+  // This is called from TaskGraph::addTask() in which a single task
+  // may be added to more than 1 Normal task graphs. In this case,
+  // first time here, m_path/matl_set will be nullptr and subsequent
+  // visits will be the same pointer as ps and ms
+  // respectively. Without these checks, the refCount gets
+  // artificially inflated and ComputeSubsets (Patch/Matl)) are not
+  // deleted, resulting in a mem leak. APH, 06/08/17
   if (m_patch_set == nullptr) {
     m_patch_set = ps;
     if (m_patch_set) {
@@ -435,7 +441,7 @@ Task::requires(       WhichDW          dw
               )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  
+
   if(vartype == TypeDescription::ReductionVariable) {
     requires(dw, var, (const Level*) nullptr, matls, NormalDomain, oldTG);
   }
@@ -473,10 +479,10 @@ void Task::requires(       WhichDW              dw
     else if (matls->size() == 0) {
       return;  // no materials, no dependency
     }
-    
+
     Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
     dep->m_next = nullptr;
-    
+
     if (m_req_tail) {
       m_req_tail->m_next = dep;
     }
@@ -484,7 +490,7 @@ void Task::requires(       WhichDW              dw
       m_req_head = dep;
     }
     m_req_tail = dep;
-    
+
     if (dw == OldDW) {
       m_requires_old_dw.insert(std::make_pair(var, dep));
     }
@@ -815,7 +821,7 @@ bool Task::hasRequires( const VarLabel  * var
     depMap = m_requires_old_dw;
   }
 
-  Dependency* dep = isInDepMap(depMap, var, matlIndex, patch);  
+  Dependency* dep = isInDepMap(depMap, var, matlIndex, patch);
 
 
   if (dep) {
@@ -824,7 +830,7 @@ bool Task::hasRequires( const VarLabel  * var
 
     Patch::getGhostOffsets(var->typeDescription()->getType(), dep->m_gtype, dep->m_num_ghost_cells,
                            allowableLowOffset, allowableHighOffset);
-                           
+
     return ((Max(allowableLowOffset, lowOffset) == allowableLowOffset) &&
             (Max(allowableHighOffset, highOffset) == allowableHighOffset));
   }
@@ -877,24 +883,30 @@ Task::isInDepMap( const DepMap   & depMap
       hasPatches = true;
     }
     else {
-      if (dep->m_patches_dom == Task::CoarseLevel) {  // check that the level of the patches matches the coarse level
+      // check that the level of the patches matches the coarse level
+      if (dep->m_patches_dom == Task::CoarseLevel) {
         hasPatches = getLevel(getPatchSet())->getRelativeLevel(-dep->m_level_offset) == getLevel(patches);
       }
-      else if (dep->m_patches_dom == Task::FineLevel) {  // check that the level of the patches matches the fine level
+      // check that the level of the patches matches the fine level
+      else if (dep->m_patches_dom == Task::FineLevel) {
         hasPatches = getLevel(getPatchSet())->getRelativeLevel(dep->m_level_offset) == getLevel(patches);
       }
-      else { // check that the patches subset contain the requested patch
+      // check that the patches subset contain the requested patch      
+      else {
         hasPatches = patches->contains(patch);
       }
     }
-    if (matls == nullptr) { // if matls == nullptr then the requirement for matls is satisfied
+    // if matls == nullptr then the requirement for matls is satisfied    
+    if (matls == nullptr) {
       hasMatls = true;
     }
     else { // check that the malts subset contains the matlIndex
       hasMatls = matls->contains(matlIndex);
     }
 
-    if (hasMatls && hasPatches) {  // if this dependency contains both the matls and patches return the dependency
+    if (hasMatls && hasPatches) {  // if this dependency contains both
+				   // the matls and patches return the
+				   // dependency
       return dep;
     }
     found_iter++;
@@ -1000,10 +1012,11 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset * domainPatches) const
 {
   switch(m_patches_dom){
   case Task::ThisLevel:
-  case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
+  case Task::OtherGridDomain: // use the same patches, we'll figure
+			      // out where it corresponds on the other grid
     return PatchSubset::intersection(m_patches, domainPatches);
   case Task::CoarseLevel:
-  case Task::FineLevel:      
+  case Task::FineLevel:
     return getOtherLevelPatchSubset(m_patches_dom, m_level_offset, m_patches, domainPatches, m_num_ghost_cells);
   default:
     SCI_THROW(InternalError(std::string("Unknown patch domain ") + " type " +
@@ -1065,7 +1078,8 @@ constHandle<PatchSubset> Task::Dependency::getOtherLevelPatchSubset(       Task:
 
 //______________________________________________________________________
 //
-//TODO: Provide an overloaded legacy CPU/non-portable version that doesn't use UintahParams or ExecutionObject
+// TODO: Provide an overloaded legacy CPU/non-portable version that
+// doesn't use UintahParams or ExecutionObject
 void
 Task::doit( const PatchSubset           * patches
           , const MaterialSubset        * matls
@@ -1082,6 +1096,276 @@ Task::doit( const PatchSubset           * patches
   }
 }
 
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+//______________________________________________________________________
+//
+#ifdef USE_KOKKOS_INSTANCE
+//_____________________________________________________________________________
+//
+void
+Task::assignDevice(intptr_t dTask, unsigned int device_id)
+{
+  // m_deviceNum = device_id;
+
+  // As m_deviceNums can be touched by multiple threads a mutext is needed.
+  deviceNums_mutex.lock();
+  {
+    m_deviceNums[dTask].insert( device_id );
+  }
+  deviceNums_mutex.unlock();
+}
+
+//_____________________________________________________________________________
+// For tasks where there are multiple devices for the task (i.e. data
+// archiver output tasks)
+Task::deviceNumSet
+Task::getDeviceNums(intptr_t dTask)
+{
+  // As m_deviceNums can be touched by multiple threads a local copy is needed.
+  Task::deviceNumSet dNumSet;
+
+  deviceNums_mutex.lock();
+  {
+    dNumSet = m_deviceNums[dTask];
+  }
+  deviceNums_mutex.unlock();
+
+  return dNumSet;
+}
+
+//_____________________________________________________________________________
+//
+
+void
+Task::assignDevicesAndStreams(intptr_t dTask)
+{
+  for (int i = 0; i < maxStreamsPerTask(); i++) {
+    if (this->getCudaStreamForThisTask(dTask, i) == nullptr) {
+      this->assignDevice(dTask, 0);
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, i);
+      this->setCudaStreamForThisTask(dTask, i, stream);
+    }
+  }
+}
+
+void
+Task::assignDevicesAndStreams(intptr_t dTask, unsigned int device_id)
+{
+  if (this->getCudaStreamForThisTask(dTask, device_id) == nullptr) {
+    this->assignDevice(dTask, device_id);
+    cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, device_id);
+    this->setCudaStreamForThisTask(dTask, device_id, stream);
+  }
+}
+
+cudaStream_t*
+Task::getCudaStreamForThisTask(intptr_t dTask, unsigned int device_id)
+{
+  cudaStream_t* stream = nullptr;
+
+  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
+  cudaStreams_mutex.lock();
+  {
+    if(m_cudaStreams.find(dTask) != m_cudaStreams.end())
+      {
+        cudaStreamMapIter it = m_cudaStreams[dTask].find(device_id);
+
+        if (it != m_cudaStreams[dTask].end())
+          stream = it->second;
+      }
+  }
+  cudaStreams_mutex.unlock();
+
+  return stream;
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::setCudaStreamForThisTask( intptr_t dTask
+                              , unsigned int   device_id
+                              , cudaStream_t * stream
+                              )
+{
+  if (stream == nullptr) {
+    printf("ERROR! - Task::setCudaStreamForThisTask() - "
+           "A request was made to assign a stream to a nullptr address "
+           "for this task %s\n", getName().c_str());
+    SCI_THROW(InternalError("A request was made to assign a stream to a "
+                            "nullptr address for this task :" +
+                            getName() , __FILE__, __LINE__));
+  } else if(getCudaStreamForThisTask(dTask, device_id) != nullptr) {
+    printf("ERROR! - Task::setCudaStreamForThisTask() - "
+           "This task %s already has a stream assigned for device %d\n",
+           getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
+                            getName(), __FILE__, __LINE__));
+  } else {
+    // As m_cudaStreams can be touched by multiple threads a mutext is needed.
+    cudaStreams_mutex.lock();
+    {
+      m_cudaStreams[dTask][device_id] = stream;
+    }
+    cudaStreams_mutex.unlock();
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::reclaimCudaStreamsIntoPool(intptr_t dTask)
+{
+  GPUMemoryPool::reclaimCudaStreamsIntoPool(dTask, this);
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::clearCudaStreamsForThisTask(intptr_t dTask)
+{
+  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
+  cudaStreams_mutex.lock();
+  {
+    if(m_cudaStreams.find(dTask) != m_cudaStreams.end())
+      {
+        m_cudaStreams[dTask].clear();
+        m_cudaStreams.erase(dTask);
+      }
+  }
+  cudaStreams_mutex.unlock();
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::checkCudaStreamDoneForThisTask( intptr_t dTask
+                                    , unsigned int device_id)
+{
+  // sets the CUDA context, for the call to cudaEventQuery()
+
+  if (device_id != 0) {
+   printf("Error, Task::checkCudaStreamDoneForThisTask is %u\n", device_id);
+   exit(-1);
+  }
+  // Commented out in OnDemandDataWarehouse.cc
+  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+
+  cudaStream_t * stream = getCudaStreamForThisTask(dTask, device_id);
+
+  if(stream == nullptr)
+  {
+    printf("ERROR! - Task::checkCudaStreamDoneForThisTask() - "
+           "Request for stream information for device %d, but this task "
+           "wasn't assigned a stream for this device.  For task %s\n",
+           device_id,  getName().c_str());
+    SCI_THROW(InternalError("Request for stream information for a device, "
+                            "but this task wasn't assigned a stream for this "
+                            "device.  For task %s\n" + getName(),
+                            __FILE__, __LINE__));
+    return false;
+  }
+
+  cudaError_t retVal = cudaStreamQuery(*stream);
+  if (retVal == cudaSuccess) {
+    return true;
+  }
+  else if (retVal == cudaErrorNotReady ) {
+    return false;
+  }
+  else if (retVal ==  cudaErrorLaunchFailure) {
+    printf("ERROR! - Task::checkCudaStreamDoneForThisTask(%d) - "
+           "CUDA kernel execution failure on Task: %s\n",
+           device_id, getName().c_str());
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " +
+                            getName() , __FILE__, __LINE__));
+    return false;
+  } else { //other error
+    printf("\nA CUDA error occurred with error code %d.\n\n"
+           "Waiting for 60 seconds\n", retVal);
+
+    int sleepTime = 60;
+
+    struct timespec ts;
+    ts.tv_sec = (int) sleepTime;
+    ts.tv_nsec = (int)(1.e9 * (sleepTime - ts.tv_sec));
+
+    nanosleep(&ts, &ts);
+
+    CUDA_RT_SAFE_CALL (retVal);
+    return false;
+  }
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::checkAllCudaStreamsDoneForThisTask(intptr_t dTask)
+{
+  // A task can have multiple streams (such as an output task pulling
+  // from multiple GPUs).  Check all streams to see if they are done.
+  // If any one stream isn't done, return false.  If nothing returned
+  // false, then they all must be good to go.
+
+  // As m_cudaStreams can be touched by multiple threads get a local copy.
+  cudaStreamMap cudaStreams;
+
+  cudaStreams_mutex.lock();
+  {
+    cudaStreams = m_cudaStreams[dTask];
+  }
+  cudaStreams_mutex.unlock();
+
+  bool retVal = true;
+
+  for (cudaStreamMapIter it=cudaStreams.begin(); it!=cudaStreams.end(); ++it)
+  {
+    retVal = checkCudaStreamDoneForThisTask(dTask, it->first);
+    if (retVal == false)
+      break;
+  }
+
+  return retVal;
+}
+
+
+//_____________________________________________________________________________
+//
+bool
+Task::doCudaMemcpyAsync( intptr_t dTask, unsigned int deviceNum,
+			 void* dst, const void* src, size_t count,
+			 cudaMemcpyKind kind)
+{
+  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
+
+  CUDA_RT_SAFE_CALL(cudaMemcpyAsync(dst, src, count, kind, *stream));
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+			     void* dst, int  dstDevice,
+			     const void* src, int  srcDevice,
+			     size_t count )
+{
+  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
+  
+  CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice,
+					src, srcDevice, count, *stream));
+}
+
+bool
+Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
+				 GPUDataWarehouse *taskgpudw)
+{
+  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
+
+  taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
+}
+
+#endif
+#endif
+
 //______________________________________________________________________
 //
 void
@@ -1093,7 +1377,7 @@ Task::display( std::ostream & out ) const
   }
 
   out << " (" << d_tasktype << ")";
- 
+
   if ( (d_tasktype == Task::Normal || d_tasktype == Task::Output ) && m_patch_set != nullptr) {
     out << ", Level " << getLevel(m_patch_set)->getIndex();
   }
@@ -1248,7 +1532,7 @@ operator <<( std::ostream & out, const Uintah::Task::Dependency & dep )
   out << "]";
   return out;
 }
-  
+
 //______________________________________________________________________
 //
 std::ostream &
@@ -1257,7 +1541,7 @@ operator <<( std::ostream & out, const Task & task )
   task.display(out);
   return out;
 }
-  
+
 //______________________________________________________________________
 //
 std::ostream&
@@ -1354,4 +1638,3 @@ Task::mapDataWarehouse( WhichDW dw, std::vector<DataWarehouseP> & dws ) const
     return dws[m_dwmap[dw]].get_rep();
   }
 }
-

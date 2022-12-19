@@ -25,9 +25,10 @@
 #ifndef CORE_GRID_TASK_H
 #define CORE_GRID_TASK_H
 
+#include <CCA/Ports/DataWarehouseP.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Ghost.h>
-#include <Core/Grid/TaskStatus.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Malloc/Allocator.h>
@@ -35,10 +36,15 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/SpaceTypes.h>
 #include <Core/Parallel/UintahParams.h>
-#include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/TupleHelpers.hpp>
+
+#include <sci_defs/cuda_defs.h>
+
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+  #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+#endif
 
 #include <set>
 #include <vector>
@@ -47,13 +53,17 @@
 
 namespace Uintah {
 
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#ifdef USE_KOKKOS_INSTANCE
+class GPUDataWarehouse;
+#endif
+#endif
+  
 class Level;
 class DataWarehouse;
 class OnDemandDataWarehouse;
 class ProcessorGroup;
 class Task;
-class DetailedTask;
-class TaskStatus;
 
 /**************************************
 
@@ -77,8 +87,18 @@ class TaskStatus;
  ****************************************/
 
 class Task {
- 
+
 public: // class Task
+
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#ifdef USE_KOKKOS_INSTANCE
+  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
+  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
+
+  typedef std::set<unsigned int>       deviceNumSet;
+  typedef deviceNumSet::const_iterator deviceNumSetIter;
+#endif
+#endif
 
 protected: // class Task
 
@@ -87,7 +107,7 @@ protected: // class Task
 
     public:
 
-      virtual ~ActionBase(){};
+      virtual ~ActionBase() {};
 
       virtual void doit( const PatchSubset    * patches
                        , const MaterialSubset * matls
@@ -97,10 +117,15 @@ protected: // class Task
                        ) = 0;
   };
 
-// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
-// The following uses std::tuple if nvcc version 8 or 9 is NOT used, otherwise, the variatic templates are manually unwrapped.
-// Not that we can can't use the unwrapped templates exclusively, Alan H mentioned the justification for going to variatic
-// templates was to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't
+// compile std::tuples with more than 2 template parameters
+
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used,
+// otherwise, the variatic templates are manually unwrapped.
+
+// Not that we can can't use the unwrapped templates exclusively, Alan
+// H mentioned the justification for going to variatic templates was
+// to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
 #if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
 
 private: // class Task
@@ -218,6 +243,7 @@ private: // class Task
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -625,6 +651,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -685,6 +712,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -750,6 +778,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -820,6 +849,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -895,6 +925,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -976,6 +1007,7 @@ private:
 
       const int numStreams = uintahParams.getNumStreams();
 
+      // ARS - FIX ME
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1010,9 +1042,11 @@ public: // class Task
       Normal
     , Reduction
     , InitialSend
-    , OncePerProc // make sure to pass a PerProcessor PatchSet to the addTask function
+    , OncePerProc // make sure to pass a PerProcessor PatchSet to the
+                  // addTask function
     , Output
-    , Spatial     // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
+    , Spatial     // e.g. Radiometer task (spatial scheduling); must
+                  // call task->setType(Task::Spatial)
     , Hypre       // previously identified as a OncePerProc
   };
 
@@ -1025,10 +1059,15 @@ public: // class Task
     initialize();
   }
 
-// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't compile std::tuples with more than 2 template parameters
-// The following uses std::tuple if nvcc version 8 or 9 is NOT used, otherwise, the variatic templates are manually unwrapped.
-// Not that we can can't use the unwrapped templates exclusively, Alan H mentioned the justification for going to variatic
-// templates was to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
+// Nvidia's nvcc compiler version 8 and 9 have a bug where it can't
+// compile std::tuples with more than 2 template parameters
+
+// The following uses std::tuple if nvcc version 8 or 9 is NOT used,
+// otherwise, the variatic templates are manually unwrapped.
+
+// Not that we can can't use the unwrapped templates exclusively, Alan
+// H mentioned the justification for going to variatic templates was
+// to avoid another bug elsewhere.  -- Brad P. Jan 10 2018
 #if !(defined (__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ >=8)
 
   // CPU Task constructor
@@ -1636,16 +1675,66 @@ public: // class Task
                    ,       UintahParams                & uintahParams
                    );
 
+  //////////
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#ifdef USE_KOKKOS_INSTANCE
+  // Device and Stream related calls
+  void assignDevice(intptr_t dTask, unsigned int device);
+
+  // Most tasks will only run on one device.
+
+  // But some, such as the data archiver task or send_old_data could
+  // run on multiple devices.
+
+  // This is not a good idea.  A task should only run on one device.
+  // But the capability for a task to run on multiple nodes exists.
+  deviceNumSet getDeviceNums(intptr_t dTask);
+
+  virtual void assignDevicesAndStreams(intptr_t dTask);
+
+  virtual void assignDevicesAndStreams(intptr_t dTask, unsigned int deviceNum);
+
+  virtual void setCudaStreamForThisTask(intptr_t dTask, unsigned int deviceNum, cudaStream_t * s );
+
+  virtual cudaStream_t* getCudaStreamForThisTask(intptr_t dTask, unsigned int deviceNum );
+
+  virtual void reclaimCudaStreamsIntoPool(intptr_t dTask);
+
+  virtual void clearCudaStreamsForThisTask(intptr_t dTask);
+
+  virtual bool checkCudaStreamDoneForThisTask(intptr_t dTask, unsigned int deviceNum );
+
+  virtual bool checkAllCudaStreamsDoneForThisTask(intptr_t dTask);
+
+  virtual bool doCudaMemcpyAsync( intptr_t dTask, unsigned int deviceNum,
+				  void* dst, const void* src, size_t count,
+				  cudaMemcpyKind kind);
+  virtual bool doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+				      void* dst, int dstDevice,
+				      const void* src, int srcDevice,
+				      size_t count );
+
+  virtual bool copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
+					  GPUDataWarehouse *taskgpudw);
+
+#endif
+#endif
+
   inline const std::string & getName() const { return m_task_name; }
 
   inline const PatchSet * getPatchSet() const { return m_patch_set; }
 
   inline const MaterialSet * getMaterialSet() const { return m_matl_set; }
 
-  bool hasDistalRequires() const;         // determines if this Task has any "distal" ghost cell requirements
+  bool hasDistalRequires() const;         // determines if this Task
+                                          // has any "distal" ghost
+                                          // cell requirements
 
-  int m_phase{-1};                        // synchronized phase id, for dynamic task scheduling
-  int m_comm{-1};                         // task communicator id, for threaded task scheduling
+  int m_phase{-1};                        // synchronized phase id,
+                                          // for dynamic task
+                                          // scheduling
+  int m_comm{-1};                         // task communicator id, for
+                                          // threaded task scheduling
   std::map<int,int> m_max_ghost_cells;    // max ghost cells of this task
   int m_max_level_offset{0};              // max level offset of this task
 
@@ -1809,7 +1898,7 @@ public: // class Task
   //////////
   // Prints out all information about the task, including dependencies
   void displayAll_DOUT( Uintah::Dout& dbg) const;
-  
+
   void displayAll( std::ostream & out ) const;
 
   int mapDataWarehouse( WhichDW dw ) const;
@@ -1836,6 +1925,16 @@ private: // class Task
                         ) const;
 
   std::string m_task_name;
+
+#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#ifdef USE_KOKKOS_INSTANCE
+  // The task is pointed to by multiple DetailedTasks. As such, the
+  // task has to keep track of the device and stream on a DetailedTask
+  // basis. The DetailedTask's pointer address is used as the key.
+  std::map<intptr_t, deviceNumSet>  m_deviceNums;
+  std::map<intptr_t, cudaStreamMap> m_cudaStreams;
+#endif
+#endif
 
 protected: // class Task
 
