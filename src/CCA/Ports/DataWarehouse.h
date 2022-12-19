@@ -38,7 +38,7 @@
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/VarLabelMatlMemspace.h>
 #include <Core/Grid/Task.h>
-#include <Core/Parallel/ExecutionObject.h>
+//#include <Core/Parallel/ExecutionObject.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
@@ -281,8 +281,8 @@ public:
                             const PatchSubset*, const MaterialSubset*,
                             bool replace, const PatchSubset*) = 0;
 
-  //An overloaded version of transferFrom.  GPU transfers need a stream, and a
-  //stream is found in a detailedTask object.
+  // An overloaded version of transferFrom.  GPU transfers need a stream, and a
+  // stream is found in a detailedTask object.
 //  virtual void transferFrom(DataWarehouse*, const VarLabel*,
 //                            const PatchSubset*, const MaterialSubset*, ExecutionObject& execObj,
 //                            bool replace, const PatchSubset*) = 0;
