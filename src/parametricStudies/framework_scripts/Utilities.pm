@@ -68,10 +68,7 @@ sub setPath{
   
   # the input file may have a wildcard
   if($input =~ m/\*/){
-    my @files = glob($input);
-    foreach  my $file (@files){
-      print "The file contains a wild card, ignoring  ($file)\n";
-    }
+    system("file -E $input > /dev/null 2>&1")  == 0 || die("\nInvalid path($input)");
     return $input;
   }
 
