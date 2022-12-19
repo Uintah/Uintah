@@ -24,6 +24,7 @@
 
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 
 using namespace Uintah;
 

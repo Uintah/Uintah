@@ -25,6 +25,7 @@
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
 #include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Mat.h>

@@ -26,6 +26,7 @@
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Ports/ApplicationInterface.h>
 #include <CCA/Ports/Scheduler.h>
 
