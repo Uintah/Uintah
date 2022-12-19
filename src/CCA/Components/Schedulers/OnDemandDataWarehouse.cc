@@ -25,6 +25,7 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
@@ -153,9 +154,9 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
     CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
 
     for (int i = 0; i < numDevices; i++) {
-      //those gpuDWs should only live host side.
-      //Ideally these don't need to be created at all as a separate datawarehouse,
-      //but could be contained within this datawarehouse
+      // These gpuDWs should only live host side.  Ideally these don't
+      // need to be created at all as a separate datawarehouse, but
+      // could be contained within this datawarehouse
 
       GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
       std::ostringstream out;
@@ -3335,13 +3336,15 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse  * from
 
 //______________________________________________________________________
 //
-//! Copy a var from the parameter DW to this one.  If newPatches
-//! is not null, then it associates the copy of the variable with
-//! newPatches, and otherwise it uses patches (the same it finds
-//! the variable with.
-//transferFrom() will perform a deep copy on the data if it's in the CPU or GPU.
-//GPU transferFrom is not yet supported for GPU PerPatch variables.
-//See the GPU's transferFrom() method for many more more details.
+// Copy a var from the parameter DW to this one.  If newPatches
+// is not null, then it associates the copy of the variable with
+// newPatches, and otherwise it uses patches (the same it finds
+// the variable with.
+
+// transferFrom() will perform a deep copy on the data if it's in the
+// CPU or GPU.  GPU transferFrom is not yet supported for GPU PerPatch
+// variables.  See the GPU's transferFrom() method for many more more
+// details.
 template <typename ExecSpace, typename MemSpace>
 void
 OnDemandDataWarehouse::transferFrom(       DataWarehouse                        * from
@@ -3377,28 +3380,37 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             m_var_DB.put( label, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
-
 #ifdef HAVE_CUDA
-
           if (Uintah::Parallel::usingDevice()) {
-            //See if it's in the GPU.  Both the source and destination must be in the GPU data warehouse,
-            //both must be listed as "allocated", and both must have the same variable sizes.
-            //If those conditions match, then it will do a device to device memcopy call.
-            //hard coding it for the 0th GPU
+            // See if it's in the GPU.  Both the source and destination
+            // must be in the GPU data warehouse, both must be listed
+            // as "allocated", and both must have the same variable
+            // sizes.  If those conditions match, then it will do a
+            // device to device memcopy call.  hard coding it for the
+            // 0th GPU.
             const Level * level = patch->getLevel();
             const int levelID = level->getID();
             const int patchID = patch->getID();
             GPUGridVariableBase* device_var_source = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
             GPUGridVariableBase* device_var_dest = OnDemandDataWarehouse::createGPUGridVariable(label->typeDescription()->getSubType()->getType());
-            if(!execObj.getStream()) {
-              std::cout << "ERROR! transferFrom() does not have access to the task and its associated CUDA stream."
-                        << " You need to update the task's callback function to include more parameters which supplies this information."
-                        << " Then you need to pass that detailed task pointer into the transferFrom method."
-                        << " As an example, please see the parameters for Poisson1::timeAdvanceUnified."   << std::endl;
-              throw InternalError("transferFrom() needs access to the task's pointer and its associated CUDA stream.\n", __FILE__, __LINE__);
+	    cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
+            if(!stream) {
+              std::cout << "ERROR! transferFrom() does not have access to "
+			<< "the task and its associated CUDA stream. You need "
+                        << "to update the task's callback function to include "
+			<< "more parameters which supplies this information. "
+                        << "Then pass that detailed task pointer into the "
+			<< "transferFrom method. As an example, see the "
+			<< "parameters for Poisson1::timeAdvanceUnified."
+			<< std::endl;
+              throw InternalError("OnDemandDataWarehouse::transferFrom() "
+				  "needs access to the task's pointer and "
+				  "its associated CUDA stream.\n",
+				  __FILE__, __LINE__);
             }
-            //The GPU assigns streams per task.  For transferFrom to work, it *must* know which correct stream to use
-            bool foundGPU = getGPUDW(0)->transferFrom((cudaStream_t*)execObj.getStream(),
+            // The GPU assigns streams per task. For transferFrom to
+            // work, it *must* know which stream to use.
+            bool foundGPU = getGPUDW(0)->transferFrom(stream,
                                                       *device_var_source, *device_var_dest,
                                                       from->getGPUDW(0),
                                                       label->getName().c_str(), patchID, matl, levelID);
@@ -3407,9 +3419,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
               found = true;
             }
           }
-
 #endif
-
 
           if (!found) {
             SCI_THROW(UnknownVariable(label->getName(), fromDW->getID(), patch, matl, "in transferFrom", __FILE__, __LINE__) );

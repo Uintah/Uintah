@@ -1077,9 +1077,10 @@ public:
   void setValidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   bool compareAndSwapSetInvalidWithGhostsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
-  friend class SchedulerCommon;
-  friend class KokkosScheduler;
-  friend class UnifiedScheduler;
+  friend class SchedulerCommon;   // allow scheduler access
+  friend class KokkosScheduler;   // allow scheduler access
+  friend class UnifiedScheduler;  // allow scheduler access
+  friend class DetailedTask;      // allow task access
 
 private:
 
