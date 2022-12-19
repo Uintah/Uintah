@@ -25,6 +25,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>

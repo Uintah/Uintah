@@ -338,6 +338,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Some places need to know if this is a copy data timestep or
     // a normal timestep.  (A copy data timestep is AMR's current 
     // method of getting data from an old to a new grid).
+protected:
     bool                                m_is_copy_data_timestep{false};
     bool                                m_is_init_timestep{false};
     bool                                m_is_restart_init_timestep{false};
