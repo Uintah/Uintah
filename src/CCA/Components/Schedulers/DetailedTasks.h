@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
 #include <CCA/Components/Schedulers/DetailedDependency.h>
-#include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -40,13 +39,12 @@
 
 #include <Core/Lockfree/Lockfree_Pool.hpp>
 
+#include <sci_defs/cuda_defs.h>
 
 #ifdef HAVE_CUDA
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
-
-#include <sci_defs/cuda_defs.h>
 
 #include <map>
 #include <queue>
