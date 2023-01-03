@@ -65,6 +65,7 @@ namespace Uintah {
       double Gamma_0;
       double S_alpha;
       double FlowStress;
+      double Kh;  // deviatoric hardening modulus
     };
 
     const VarLabel* alphaLabel;
