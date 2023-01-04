@@ -73,7 +73,6 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   ps->get("volume_constraint",d_vol_const);
   ps->getWithDefault("normal_only", d_NormalOnly, false);
 
-  d_oneOrTwoStep = 1;
   ps->getWithDefault("OneOrTwoStep",     d_oneOrTwoStep, 1);
   if(flag->d_XPIC2==true){
     d_oneOrTwoStep = 2;
@@ -219,8 +218,6 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
-// cerr << "exMomInterpolated is currently a no-op for SpecifiedBodyContact"
-//      << endl;
 #if 1
  if(d_oneOrTwoStep==2){
   simTime_vartype simTime;
