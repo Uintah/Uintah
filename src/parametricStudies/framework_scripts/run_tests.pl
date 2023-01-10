@@ -169,7 +169,7 @@ foreach my $test_dom ($doc->findnodes('/start/Test')) {
     system(" cp $batchScript $test_batch" );
 
     my @nodes = $doc->findnodes('/start/batchScheduler/batchReplace');
-    modify_batchScript( $batchScript, @nodes );
+    modify_batchScript( $test_batch, @nodes );
     modify_batchScript( $test_batch, $test_dom->findnodes('batchReplace') );
   }
 
