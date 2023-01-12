@@ -42,6 +42,7 @@
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- default is true -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+      <keepPressBCNormalToSurface         spec="OPTIONAL BOOLEAN" />
       <use_CBDI_boundary_condition        spec="OPTIONAL BOOLEAN" />
       <use_cohesive_zones                 spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 

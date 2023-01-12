@@ -935,6 +935,9 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW,    lb->pXLabel,                  Ghost::None);
     t->requires(Task::OldDW,    lb->pLoadCurveIDLabel,        Ghost::None);
+    if(flags->d_keepPressBCNormalToSurface){
+      t->requires(Task::OldDW,  lb->pDeformationMeasureLabel, Ghost::None);
+    }
     t->computes(                lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
        t->requires(Task::OldDW, lb->pSizeLabel,               Ghost::None);
@@ -3435,7 +3438,8 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
     //__________________________________
     //  put the reduction variables
-    const MaterialSubset* matls = m_materialManager->allMaterials( "MPM" )->getUnion();
+    const MaterialSubset* matls = 
+                           m_materialManager->allMaterials( "MPM" )->getUnion();
 
     if( flags->d_reductionVars->mass ||
         flags->d_reductionVars->sumTransmittedForce){
@@ -3776,7 +3780,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector>       pExternalForce_new;
-      old_dw->get(px,    lb->pXLabel,    pset);
       new_dw->allocateAndPut(pExternalForce_new,
                              lb->pExtForceLabel_preReloc,  pset);
 
@@ -3797,6 +3800,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         bool do_TorqueBCs=false;
         int numPressureLCs = 0;
         int numTorqueLCs = 0;
+        old_dw->get(px,    lb->pXLabel,    pset);
         for (int ii = 0;
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
           string bcs_type =
@@ -3839,7 +3843,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                   lb->pExternalForceCorner3Label, pset);
             new_dw->allocateAndPut(pExternalForceCorner4,
                                   lb->pExternalForceCorner4Label, pset);
-           }
+          }
 
           // Iterate over the particles
           ParticleSubset::iterator iter = pset->begin();
@@ -3868,6 +3872,21 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            }  // loop over elements of the IntVector
           }
         }
+
+        if(flags->d_keepPressBCNormalToSurface){
+         old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel,pset);
+         for(ParticleSubset::iterator iter = pset->begin();
+                                      iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            Matrix3 F = pDeformationMeasure[idx];
+            Matrix3 R, V;
+            F.polarDecompositionRMB(V, R);
+            Vector pF = pExternalForce_new[idx];
+
+            pExternalForce_new[idx] = R*pF;
+          }
+        }
+
         // Get the load curve data
         if(do_TorqueBCs){
           // Iterate over the particles
