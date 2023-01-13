@@ -27,6 +27,14 @@
 
 @DEF_KOKKOS@
 
+#ifdef UINTAH_ENABLE_KOKKOS
+#define TASK_MANAGES_EXECSPACE
+#define USE_KOKKOS_PARALLEL_FOR
+#define USE_KOKKOS_DEEPCOPY
+#define USE_KOKKOS_VIEW
+#define USE_KOKKOS_INSTANCE
+#endif
+
 /* 
    For reference, (if Kokkos is enabled, then) you are linking against this Kokkos:
 

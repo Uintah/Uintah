@@ -243,10 +243,18 @@ namespace Uintah {
         int cur_val = __sync_val_compare_and_swap(&copied_to_gpu, 0, 1);
         if(cur_val == 0){ //comparison was successful and this is a lucky thread that gets to copy the value.
           listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
-          cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
-          cudaMemcpyAsync(listOfCells_gpu.data(), listOfCells_.data(),  listOfCells_.size() * sizeof(int_3), cudaMemcpyHostToDevice, *stream);
-          cudaStreamSynchronize(*stream); //Think how cudaStreamSynchronize can be avoided. No other way to set  copied_to_gpu as of now.
 
+#ifdef USE_KOKKOS_INSTANCE
+	  ExecSpace instance = execObj.getInstance();
+
+	  // Deep copy the host view to the device view.
+	  Kokkos::deep_copy(instance, listOfCells_gpu, listOfCells_);
+	  instance.fence();
+#else	  
+          cudaStream_t* stream = static_cast<cudaStream_t*>(execObj.getStream());
+          cudaMemcpyAsync(listOfCells_gpu.data(), listOfCells_.data(), listOfCells_.size() * sizeof(int_3), cudaMemcpyHostToDevice, *stream);
+          cudaStreamSynchronize(*stream); //Think how cudaStreamSynchronize can be avoided. No other way to set copied_to_gpu as of now.
+#endif
           bool success = __sync_bool_compare_and_swap(&copied_to_gpu, 1, 2);
           if(!success){
             printf("Error in copying values. Possible CPU race condition. %s:%d\n", __FILE__, __LINE__);

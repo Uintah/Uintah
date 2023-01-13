@@ -22,8 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-// This class is crucial for Uintah portability.   It contains additional task parameters to help
-// aid execution of this task on different architectures.  At the time of this file's creation a
+// This class is crucial for Uintah portability.  It contains
+// additional task parameters to help aid execution of this task on
+// different architectures.  At the time of this file's creation a
 // Detailed Task supporting portabiltiy consisted of the following:
 //                        const PatchSubset* patches,
 //                        const MaterialSubset* matls,
@@ -31,12 +32,14 @@
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & execObj
-// For Cuda related tasks in particular, this object wraps a Cuda Stream.  Further, this task
-// wraps the command line execution arguments given so that a particular task can modify
-// these arguments further.
-// From the application developer's perpsective, the execObj received should be
-// passed into a Uintah parallel loop from LoopExecution.hpp.  The application developer does not
-// need to modify this object at all, and likely most of the time won't need to.
+// For Cuda related tasks in particular, this object wraps a Cuda
+// Stream.  Further, this task wraps the command line execution
+// arguments given so that a particular task can modify these
+// arguments further.  From the application developer's perpsective,
+// the execObj received should be passed into a Uintah parallel loop
+// from LoopExecution.hpp.  The application developer does not need to
+// modify this object at all, and likely most of the time won't need
+// to.
 
 
 #ifndef EXECUTIONOBJECT_H_
@@ -44,6 +47,7 @@
 #include <Core/Exceptions/InternalError.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #include <vector>
 
@@ -55,9 +59,51 @@ template <typename ExecSpace, typename MemSpace>
 class ExecutionObject {
 public:
 
-  // Streams should be created, supplied, and managed by the scheduler itself.
-  // The application developer probably shouldn't be managing his or her own streams.
-  void setStream(void* stream, int deviceID){
+#ifdef USE_KOKKOS_INSTANCE
+  // Instances should be created, supplied, and managed by the Task
+  // itself.  The application developer probably shouldn't be managing
+  // their own instances.
+  void setInstance(ExecSpace instance, int deviceID) {
+    //Ignore the non-CUDA case as those instances are pointless.
+    m_instances.push_back(instance);
+    this->deviceID = deviceID;
+  }
+
+  void setInstances(const std::vector<ExecSpace>& instances, int deviceID) {
+  for (auto& instance : instances) {
+    m_instances.push_back(instance);
+  }
+  this->deviceID = deviceID;
+  }
+
+  ExecSpace getInstance() const {
+    if ( m_instances.size() == 0 ) {
+      std::cout << "Requested a stream that doesn't exist." << std::endl;
+      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
+    } else {
+      return m_instances[0];
+    }
+  }
+
+  ExecSpace getInstance(unsigned int i) const {
+    if ( i >= m_instances.size() ) {
+      std::cout << "Requested an instance that doesn't exist." << std::endl;
+      SCI_THROW(InternalError("Requested an instance that doesn't exist.", __FILE__, __LINE__));
+    } else {
+      return m_instances[i];
+    }
+  }
+
+  unsigned int getNumInstances() const {
+    return m_instances.size();
+  }
+
+#else
+
+  // Streams should be created, supplied, and managed by the Task
+  // itself.  The application developer probably shouldn't be managing
+  // their own streams.
+  void setStream(void* stream, int deviceID) {
 #if defined(HAVE_CUDA)
     //Ignore the non-CUDA case as those streams are pointless.
     m_streams.push_back(stream);
@@ -65,7 +111,7 @@ public:
 #endif
   }
 
-  void setStreams(const std::vector<void*>& streams, int deviceID){
+  void setStreams(const std::vector<void*>& streams, int deviceID) {
 #if defined(HAVE_CUDA)
   for (auto& stream : streams) {
     m_streams.push_back(stream);
@@ -76,13 +122,15 @@ public:
 
   void * getStream() const {
     if ( m_streams.size() == 0 ) {
-      return nullptr;
+      std::cout << "Requested a stream that doesn't exist." << std::endl;
+      SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
     } else {
       return m_streams[0];
     }
   }
   void * getStream(unsigned int i) const {
     if ( i >= m_streams.size() ) {
+      std::cout << "Requested a stream that doesn't exist." << std::endl;
       SCI_THROW(InternalError("Requested a stream that doesn't exist.", __FILE__, __LINE__));
     } else {
       return m_streams[i];
@@ -92,6 +140,7 @@ public:
   unsigned int getNumStreams() const {
     return m_streams.size();
   }
+#endif
 
   int getCudaThreadsPerBlock() const {
     return cuda_threads_per_block;
@@ -109,9 +158,13 @@ public:
     this->cuda_blocks_per_loop = CudaBlocksPerLoop;
   }
 
-  //void getTempTaskSpaceFromPool(void** ptr, unsigned int size) const {}
+  // void getTempTaskSpaceFromPool(void** ptr, unsigned int size) const {}
 private:
+#ifdef USE_KOKKOS_INSTANCE
+  std::vector<ExecSpace> m_instances;
+#else
   std::vector<void*> m_streams;
+#endif
   int deviceID{0};
   int cuda_threads_per_block{-1};
   int cuda_blocks_per_loop{-1};

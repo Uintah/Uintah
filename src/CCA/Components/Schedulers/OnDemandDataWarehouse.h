@@ -39,6 +39,15 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/UintahMPI.h>
 
+#include <sci_defs/cuda_defs.h>
+
+#ifdef HAVE_CUDA
+#include <Core/Grid/Variables/GPUPerPatch.h>
+#include <Core/Grid/Variables/GPUVariable.h>
+#include <Core/Grid/Variables/GPUGridVariable.h>
+#include <Core/Grid/Variables/GPUReductionVariable.h>
+#endif
+
 #include <iosfwd>
 #include <map>
 #include <vector>
@@ -666,7 +675,11 @@ public:
                )
   {
     if ( matlIndex != -999 ) {
-      return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
+      return this->getGPUDW()->getKokkosView<T>(
+ label->getName().c_str(),
+ patch->getID(),
+  matlIndex,
+ patch->getLevel()->getID() );
     } else {
       return KokkosView3<T, Kokkos::CudaSpace>();
     }
@@ -1212,7 +1225,7 @@ private:
                             , const Patch    * patch
                             ,       int        line
                             );
-                                
+
   void printDebuggingPutInfo( const VarLabel * label
                             ,       int        matlIndex
                             , const Level    * level
@@ -1343,7 +1356,7 @@ private:
 
   typedef volatile int atomicDataStatus;
 
-  std::map<labelPatchMatlLevel, atomicDataStatus>   atomicStatusInHostMemory;	//maintain status of the variable in the host memory
+  std::map<labelPatchMatlLevel, atomicDataStatus>   atomicStatusInHostMemory;   //maintain status of the variable in the host memory
 
 }; // end class OnDemandDataWarehouse
 

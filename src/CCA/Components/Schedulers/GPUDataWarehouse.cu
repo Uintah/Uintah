@@ -24,9 +24,8 @@
 
 /* GPU DataWarehouse device & host access*/
 
-#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Grid/Variables/GPUVariable.h>
@@ -36,7 +35,6 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/DebugStream.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -1864,7 +1862,6 @@ GPUDataWarehouse::syncto_device(cudaStream_t *stream)
 __host__ void
 GPUDataWarehouse::clear()
 {
-
   OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
 
   varLock->lock();
@@ -2099,11 +2096,12 @@ GPUDataWarehouse::getMaterial(int i) const
   // This could probably be made more efficient by using only perhaps
   // one block, copying float 4s, and doing it with instruction level
   // parallelism.
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef USE_KOKKOS_PARALLEL_FOR
 KOKKOS_FUNCTION void
 GPUDataWarehouse::copyGpuGhostCellsToGpuVars( const int threadIdxX,
                                               const int threadIdxY,
-                                              const int threadIdxZ) {
+                                              const int threadIdxZ)
+{
   int blockDimX = 32;
   int blockDimY = 16;
   int blockDimZ = 1;
@@ -2127,10 +2125,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars( const int threadIdxX,
 // for the kernel launch. The predefined variables threadIdx and
 // blockIdx contain the index of the thread within its thread block
 // and the thread block within the grid, respectively.
-
 __device__ void
-GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
-
+GPUDataWarehouse::copyGpuGhostCellsToGpuVars()
+{
   int blockID = (blockIdx.x +     // blockID on the grid
                  blockIdx.y * gridDim.x +
                  blockIdx.z * gridDim.x * gridDim.y);
@@ -2255,14 +2252,8 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 
 //______________________________________________________________________
 //
-#ifdef USE_KOKKOS_INSTANCE
-KOKKOS_FUNCTION void
-copyGpuGhostCellsToGpuVarsKernel(GPUDataWarehouse *gpudw,
-                                 const int threadIdxX,
-                                 const int threadIdxY,
-                                 const int threadIdxZ) {
-  gpudw->copyGpuGhostCellsToGpuVars(threadIdxX, threadIdxY, threadIdxZ );
-}
+#ifdef USE_KOKKOS_PARALLEL_FOR
+// Not needed as copyGpuGhostCellsToGpuVars is called directly
 #else
 __global__ void
 copyGpuGhostCellsToGpuVarsKernel(GPUDataWarehouse *gpudw) {
@@ -2270,26 +2261,24 @@ copyGpuGhostCellsToGpuVarsKernel(GPUDataWarehouse *gpudw) {
 }
 #endif
 
-//______________________________________________________________________
-//
+#ifdef USE_KOKKOS_INSTANCE
+template <>
 __host__ void
-GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
+GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance)
 {
-  //see if this GPU datawarehouse has ghost cells in it.
+#else
+template <>
+__host__ void
+GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<cudaStream_t*>(cudaStream_t* stream)
+{
+#ifdef USE_KOKKOS_PARALLEL_FOR
+    Kokkos::Cuda instance(*stream);
+#endif
+#endif
+  // See if this GPU datawarehouse has ghost cells in it.
   if (numGhostCellCopiesNeeded > 0) {
-    //call a kernel which gets the copy process started.
+    // Call a kernel which gets the copy process started.
     OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
-
-    // const int BLOCKSIZE = 1;
-    const int blockDimX = 32;
-    const int blockDimY = 16;
-    const int blockDimZ = 1;
-
-    dim3 dimBlock(blockDimX, blockDimY, blockDimZ);
-    dim3 dimGrid(1, 1, 1);  // Give each ghost copying kernel 32x16 =
-                            // 512 threads to copy (32x32 was too large
-                            // for a smaller laptop GPU and the Uintah
-                            // build server in debug mode)
 
     if (gpu_stats.active()) {
       cerrLock.lock();
@@ -2307,20 +2296,29 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
 
     GPUDataWarehouse * device_copy = this->d_device_copy;
 
-#ifdef USE_KOKKOS_INSTANCE
-    Kokkos::Cuda instanceObject(*stream);
+    // Give each ghost copying kernel 32x16 = 512 threads to copy
+    // (32x32 was too large for a smaller laptop GPU and the Uintah
+    // build server in debug mode)
+    const int BLOCKSIZE = 1;
+    const int blockDimX = 32;
+    const int blockDimY = 16;
+    const int blockDimZ = 1;
 
+#if defined(USE_KOKKOS_INSTANCE) || defined(USE_KOKKOS_PARALLEL_FOR)
     Kokkos::parallel_for("copyGpuGhostCellsToGpuVars",
-                         Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instanceObject, {0,0,0}, {blockDimX, blockDimY, blockDimZ}),
+                         Kokkos::MDRangePolicy< Kokkos::Rank<3> > (instance, {0,0,0}, {blockDimX, blockDimY, blockDimZ}),
                          KOKKOS_LAMBDA (const int threadIdxX,
                                         const int threadIdxY,
                                         const int threadIdxZ) {
-                           copyGpuGhostCellsToGpuVarsKernel(device_copy,
-                                                            threadIdxX,
-                                                            threadIdxY,
-                                                            threadIdxZ);
+                           device_copy->copyGpuGhostCellsToGpuVars(threadIdxX,
+                                                                   threadIdxY,
+                                                                   threadIdxZ );
+
                          });
 #else
+    dim3 dimBlock(blockDimX, blockDimY, blockDimZ);
+    dim3 dimGrid(BLOCKSIZE, BLOCKSIZE, BLOCKSIZE);
+
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
 #endif
   }
@@ -2529,15 +2527,16 @@ GPUDataWarehouse::getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, i
 // variable, and perhaps some sanity checks to ensure a shallow copied
 // variable is not called a computes and then later listed as a
 // modifies.
+template <>
 __host__ bool
-GPUDataWarehouse::transferFrom(  cudaStream_t* stream
-                               , GPUGridVariableBase &var_source
-                               , GPUGridVariableBase &var_dest
-                               , GPUDataWarehouse * from
-                               , char const* label
-                               , int patchID
-                               , int matlIndx
-                               , int levelIndx) {
+GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
+                                             , GPUGridVariableBase &var_source
+                                             , GPUGridVariableBase &var_dest
+                                             , GPUDataWarehouse * from
+                                             , char const* label
+                                             , int patchID
+                                             , int matlIndx
+                                             , int levelIndx) {
   from->varLock->lock();
   this->varLock->lock();  // Lock both data warehouses, no way to lock
                           // free this section, you could get the
@@ -2632,14 +2631,161 @@ GPUDataWarehouse::transferFrom(  cudaStream_t* stream
 
   var_source.setArray3(dest_it->second.var->device_offset, dest_it->second.var->device_size, dest_it->second.var->device_ptr);
 
-  cudaMemcpyAsync(dest_it->second.var->device_ptr,
-                  source_it->second.var->device_ptr,
-                  source_it->second.var->device_size.x *
+  // cudaMemcpyAsync(dest_it->second.var->device_ptr,
+  //                 source_it->second.var->device_ptr,
+  //                 source_it->second.var->device_size.x *
+  //                 source_it->second.var->device_size.y *
+  //                 source_it->second.var->device_size.z *
+  //                 source_it->second.var->sizeOfDataType,
+  //                 cudaMemcpyDeviceToDevice,
+  //                 *stream);
+
+  const char * srcPtr =
+    static_cast<const char *>(source_it->second.var->device_ptr);
+  char * dstPtr =
+    static_cast<      char *>(dest_it->second.var->device_ptr);
+
+  size_t count = (source_it->second.var->device_size.x *
                   source_it->second.var->device_size.y *
                   source_it->second.var->device_size.z *
-                  source_it->second.var->sizeOfDataType,
-                  cudaMemcpyDeviceToDevice,
-                  *stream);
+                  source_it->second.var->sizeOfDataType);
+
+  Kokkos::DefaultExecutionSpace instance(*stream);
+
+  Kokkos::parallel_for("transferFrom",
+                       Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> (instance, 0, count),
+                       KOKKOS_LAMBDA (const int i) {
+                         dstPtr[i] = srcPtr[i];
+                         });
+
+  from->varLock->unlock();
+  this->varLock->unlock();
+
+  // Let the caller know we found and transferred something.
+  return true;
+}
+
+template <>
+__host__ bool
+GPUDataWarehouse::transferFrom<Kokkos::DefaultExecutionSpace>( Kokkos::DefaultExecutionSpace instance
+                                             , GPUGridVariableBase &var_source
+                                             , GPUGridVariableBase &var_dest
+                                             , GPUDataWarehouse * from
+                                             , char const* label
+                                             , int patchID
+                                             , int matlIndx
+                                             , int levelIndx) {
+  from->varLock->lock();
+  this->varLock->lock();  // Lock both data warehouses, no way to lock
+                          // free this section, you could get the
+                          // dining philosophers problem.
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator source_it = from->varPointers->find(lpml);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator dest_it   = this->varPointers->find(lpml);
+  int proceed = true;
+  if (source_it == from->varPointers->end()) {
+    // It may just be there wasn't any requires in the GPU to begin
+    // with, so don't bother attempting to copy.
+    //printf("GPU source not found\n");
+    proceed = false;
+  } else if (dest_it == this->varPointers->end()) {
+    // It may just be there wasn't any computes in the GPU to begin
+    // with, so don't bother attempting to copy.
+    //printf("GPU dest not found in DW at %p for variable %s patch %d matl %d level %d\n", this, label, patchID, matlIndx, levelIndx);
+    proceed = false;
+  } else if (((__sync_fetch_and_or(&(source_it->second.var->atomicStatusInGpuMemory), 0) & ALLOCATED) != ALLOCATED)){
+    //It may just be there wasn't any computes in the GPU to begin with, so don't bother attempting to copy.
+    //printf("GPU source not allocated for variable %s patch %d matl %d level %d, it has status codes %s\n",  label, patchID, matlIndx, levelIndx, getDisplayableStatusCodes(source_it->second.atomicStatusInGpuMemory).c_str());
+    proceed = false;
+
+    // Is this a problem?  We know of this variable in the data
+    // warehouse, but we have no space for it.
+    //printf("Error: GPUDataWarehouse::transferFrom() - No source variable device space found.  Cannot proceed with deep copy.  Exiting...\n");
+    //exit(-1);
+  } else if (((__sync_fetch_and_or(&(dest_it->second.var->atomicStatusInGpuMemory), 0) & ALLOCATED) != ALLOCATED)){
+    //printf("GPU destination not allocated for variable %s patch %d matl %d level %d\n",  label, patchID, matlIndx, levelIndx);
+    // It may just be there wasn't any computes in the GPU to begin
+    // with, so don't bother attempting to copy.
+    proceed = false;
+
+    // Is a problem?  We know of this variable in the data warehouse,
+    // but we have no space for it.
+    //printf("Error: GPUDataWarehouse::transferFrom() - No destination variable device space found.  Cannot proceed with deep copy.  Exiting...\n");
+    //exit(-1);
+  }
+  if (!proceed) {
+    from->varLock->unlock();
+    this->varLock->unlock();
+    return false;
+  }
+
+  if (!(    source_it->second.var->device_offset.x == dest_it->second.var->device_offset.x
+         && source_it->second.var->device_offset.y == dest_it->second.var->device_offset.y
+         && source_it->second.var->device_offset.z == dest_it->second.var->device_offset.z
+         && source_it->second.var->device_size.x   == dest_it->second.var->device_size.x
+         && source_it->second.var->device_size.y   == dest_it->second.var->device_size.y
+         && source_it->second.var->device_size.z   == dest_it->second.var->device_size.z    )) {
+
+    printf("Error: GPUDataWarehouse::transferFrom() - The source and destination variables exists for variable %s patch %d matl %d level %d, but the sizes don't match.  Cannot proceed with deep copy.  Exiting...\n", label, patchID, matlIndx, levelIndx);
+    printf("The source size is (%d, %d, %d) with offset (%d, %d, %d) and device size is (%d, %d, %d) with offset (%d, %d, %d)\n",
+            source_it->second.var->device_size.x, source_it->second.var->device_size.y, source_it->second.var->device_size.z,
+            source_it->second.var->device_offset.x, source_it->second.var->device_offset.y, source_it->second.var->device_offset.z,
+            dest_it->second.var->device_size.x, dest_it->second.var->device_size.y, dest_it->second.var->device_size.z,
+            dest_it->second.var->device_offset.x, dest_it->second.var->device_offset.y, dest_it->second.var->device_offset.z);
+
+    from->varLock->unlock();
+    this->varLock->unlock();
+    exit(-1);
+
+  } else if (!(source_it->second.var->device_ptr)) {
+    //A couple more santiy checks, this may be overkill...
+    printf("Error: GPUDataWarehouse::transferFrom() - No source variable pointer found for variable %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
+    from->varLock->unlock();
+    this->varLock->unlock();
+    exit(-1);
+
+  } else if (!(dest_it->second.var->device_ptr)) {
+    printf("Error: GPUDataWarehouse::transferFrom() - No destination variable pointer found for variable %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
+    from->varLock->unlock();
+    this->varLock->unlock();
+    exit(-1);
+  }
+
+  // We shouldn't need to allocate space on either the source or the
+  // datination.  The source should have been listed as a requires, and
+  // the destination should have been listed as a computes for the
+  // task.  And this solves a mess of problems, mainly deailing with
+  // when it is listed as allocated and when it's listed as valid.
+
+  var_source.setArray3(source_it->second.var->device_offset, source_it->second.var->device_size, source_it->second.var->device_ptr);
+
+  var_source.setArray3(dest_it->second.var->device_offset, dest_it->second.var->device_size, dest_it->second.var->device_ptr);
+
+  // cudaMemcpyAsync(dest_it->second.var->device_ptr,
+  //                 source_it->second.var->device_ptr,
+  //                 source_it->second.var->device_size.x *
+  //                 source_it->second.var->device_size.y *
+  //                 source_it->second.var->device_size.z *
+  //                 source_it->second.var->sizeOfDataType,
+  //                 cudaMemcpyDeviceToDevice,
+  //                 *stream);
+
+  const char * srcPtr =
+    static_cast<const char *>(source_it->second.var->device_ptr);
+  char * dstPtr =
+    static_cast<      char *>(dest_it->second.var->device_ptr);
+
+  size_t count = (source_it->second.var->device_size.x *
+                  source_it->second.var->device_size.y *
+                  source_it->second.var->device_size.z *
+                  source_it->second.var->sizeOfDataType);
+
+  Kokkos::parallel_for("transferFrom",
+                       Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> (instance, 0, count),
+                       KOKKOS_LAMBDA (const int i) {
+                         dstPtr[i] = srcPtr[i];
+                         });
 
   from->varLock->unlock();
   this->varLock->unlock();

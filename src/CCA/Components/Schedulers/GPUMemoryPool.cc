@@ -30,19 +30,28 @@
 #include <Core/Parallel/MasterLock.h>
 #include <Core/Util/DebugStream.h>
 
-
+// Memory pools.
 std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrItem,
-	      Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>* Uintah::GPUMemoryPool::gpuMemoryPoolInUse =
+              Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>* Uintah::GPUMemoryPool::gpuMemoryPoolInUse =
     new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrItem,
-		      Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>;
+                      Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue>;
 
 std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
-	      Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>* Uintah::GPUMemoryPool::gpuMemoryPoolUnused =
+              Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>* Uintah::GPUMemoryPool::gpuMemoryPoolUnused =
     new std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeItem,
-		      Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
+                      Uintah::GPUMemoryPool::gpuMemoryPoolDeviceSizeValue>;
 
-std::map <unsigned int, std::queue<cudaStream_t*> > * Uintah::GPUMemoryPool::s_idle_streams =
-    new std::map <unsigned int, std::queue<cudaStream_t*> >;
+#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
+              Uintah::GPUMemoryPool::gpuMemoryPoolDevicePtrValue> Uintah::GPUMemoryPool::gpuMemoryPoolViewInUse;
+#endif
+
+#ifdef USE_KOKKOS_INSTANCE
+  // Not needed instances are managed by DetailedTask/Task.
+#else
+std::map <unsigned int, std::queue<cudaStream_t*> > Uintah::GPUMemoryPool::s_idle_streams;//  =
+    // new std::map <unsigned int, std::queue<cudaStream_t*> >;
+#endif
 
 extern Uintah::MasterLock cerrLock;
 
@@ -51,8 +60,11 @@ namespace Uintah {
 }
 
 namespace {
+#ifdef USE_KOKKOS_INSTANCE
+  // Not needed instances are managed by DetailedTask/Task.
+#else
   Uintah::MasterLock idle_streams_mutex{};
-
+#endif
   struct pool_tag{};
   using  pool_monitor = Uintah::CrowdMonitor<pool_tag>;
 }
@@ -74,47 +86,59 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
 
   {
     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
-    cudaError_t err;
 
     gpuMemoryPoolDeviceSizeItem item(device_id, memSize);
 
     std::multimap<gpuMemoryPoolDeviceSizeItem,
-		  gpuMemoryPoolDeviceSizeValue>::iterator ret = gpuMemoryPoolUnused->find(item);
+                  gpuMemoryPoolDeviceSizeValue>::iterator ret = gpuMemoryPoolUnused->find(item);
 
     if (ret != gpuMemoryPoolUnused->end()) {
-      // We found one
+      // Found an unused chunk of memory on this device.
       addr = ret->second.ptr;
+
       if (gpu_stats.active()) {
-	cerrLock.lock();
-	{
-	  gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-		    << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
-		    << " reusing space starting at " << addr
-		    << " on device " << device_id
-		    << " with size " << memSize
-		    << " from the GPU memory pool"
-		    << std::endl;
-	}
-	cerrLock.unlock();
+        cerrLock.lock();
+        {
+          gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
+                    << " GPUMemoryPool::allocateCudaSpaceFromPool() -"
+                    << " reusing space starting at " << addr
+                    << " on device " << device_id
+                    << " with size " << memSize
+                    << " from the GPU memory pool"
+                    << std::endl;
+        }
+        cerrLock.unlock();
       }
-      gpuMemoryPoolDevicePtrValue insertValue;
-      insertValue.timestep = 99999;
-      insertValue.size = memSize;
+
+      // Insert it into the in use pool.
+      gpuMemoryPoolDevicePtrItem  insertItem(device_id, addr);
+      gpuMemoryPoolDevicePtrValue insertValue(99999, memSize);
+
       gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem,
-				           gpuMemoryPoolDevicePtrValue>(gpuMemoryPoolDevicePtrItem(device_id,addr), insertValue));
+                                           gpuMemoryPoolDevicePtrValue>(insertItem, insertValue));
+      // Remove it from the unsed pool.
       gpuMemoryPoolUnused->erase(ret);
     } else {
-      // There wasn't one
+      // No chunk of memory found on this device so create it.
+
       // Set the device
       OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
       // Allocate the memory.
-      err = cudaMalloc(&addr, memSize);
+#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+      // Kokkos equivalent - KokkosView
+      Kokkos::View<char*, Kokkos::DefaultExecutionSpace::memory_space> deviceView( "device", memSize);
+
+      // ARS - FIX ME - The view should be schelped around.
+      // With CUDA the raw data pointer is schelped around.
+      addr = deviceView.data();
+#else
+      cudaError_t err = cudaMalloc(&addr, memSize);
       if (err == cudaErrorMemoryAllocation) {
         printf("The GPU memory pool is full.  Need to clear!\n");
         exit(-1);
       }
-
+#endif
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
@@ -127,10 +151,22 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
         }
         cerrLock.unlock();
       }
-      gpuMemoryPoolDevicePtrValue insertValue;
-      insertValue.timestep = 99999;
-      insertValue.size = memSize;
-      gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>(gpuMemoryPoolDevicePtrItem(device_id,addr), insertValue));
+
+      // Insert the address into the in use pool.
+      gpuMemoryPoolDevicePtrItem  insertItem(device_id, addr);
+      gpuMemoryPoolDevicePtrValue insertValue(99999, memSize);
+
+      gpuMemoryPoolInUse->insert(std::pair<gpuMemoryPoolDevicePtrItem,
+                                           gpuMemoryPoolDevicePtrValue>(insertItem, insertValue));
+
+#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+      // ARS - FIX ME Keep a copy of the view so the view reference
+      // count is incremented which prevents the memory from being
+      // de-allocated.
+      gpuMemoryPoolDeviceViewItem insertView(device_id, deviceView);
+      gpuMemoryPoolViewInUse.insert(std::pair<gpuMemoryPoolDeviceViewItem,
+                                              gpuMemoryPoolDevicePtrValue>(insertView, insertValue));
+#endif
     }
   } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
 
@@ -140,138 +176,88 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
 
 //______________________________________________________________________
 //
- bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
- {
-   {
-     pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
-
-     size_t memSize;
-     gpuMemoryPoolDevicePtrItem item(device_id, addr);
-
-     std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>::iterator ret = gpuMemoryPoolInUse->find(item);
-
-     if (ret != gpuMemoryPoolInUse->end()){
-       // We found it
-       memSize = ret->second.size;
-
-       if (gpu_stats.active()) {
-         cerrLock.lock();
-         {
-           gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
-                     << " GPUMemoryPool::freeCudaSpaceFromPool() -"
-                     << " space starting at " << addr
-                     << " on device " << device_id
-                     << " with size " << memSize
-                     << " marked for reuse in the GPU memory pool"
-                     << std::endl;
-         }
-         cerrLock.unlock();
-       }
-       gpuMemoryPoolDeviceSizeItem insertItem(device_id, memSize);
-       gpuMemoryPoolDeviceSizeValue insertValue;
-       insertValue.ptr = addr;
-
-       gpuMemoryPoolUnused->insert(std::pair<gpuMemoryPoolDeviceSizeItem, gpuMemoryPoolDeviceSizeValue>(insertItem, insertValue));
-       gpuMemoryPoolInUse->erase(ret);
-
-     } else {
-       printf("ERROR: GPUMemoryPool::freeCudaSpaceFromPool - "
-	      "No memory found at pointer %p on device %u\n", addr, device_id);
-       return false;
-     }
-   } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
-
-   return true;
-
-   // TODO: Actually deallocate!!!
+#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+void GPUMemoryPool::freeViewsFromPool()
+{
+  // By clearing the pool the view reference count is decremented and if
+  // zero is deleted.
+  gpuMemoryPoolViewInUse.clear();
 }
+#endif
 
 
 //______________________________________________________________________
 //
-void
-GPUMemoryPool::freeCudaStreamsFromPool()
+bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
 {
-  cudaError_t retVal;
-
-  idle_streams_mutex.lock();
   {
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << UnifiedScheduler::myRankThread() << " locking freeCudaStreams" << std::endl;
-      }
-      cerrLock.unlock();
-    }
+    pool_monitor pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER };
 
-    unsigned int totalStreams = 0;
-    for (std::map<unsigned int, std::queue<cudaStream_t*> >::const_iterator it = s_idle_streams->begin(); it != s_idle_streams->end(); ++it) {
-      totalStreams += it->second.size();
+    size_t memSize;
+    gpuMemoryPoolDevicePtrItem item(device_id, addr);
+
+    std::multimap<gpuMemoryPoolDevicePtrItem, gpuMemoryPoolDevicePtrValue>::iterator ret = gpuMemoryPoolInUse->find(item);
+
+    if (ret != gpuMemoryPoolInUse->end()){
+      // Found this chuck of memory on this device.
+      memSize = ret->second.size;
+
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << UnifiedScheduler::myRankThread()
-                    << " Preparing to deallocate " << it->second.size()
-                    << " CUDA stream(s) for device #"
-                    << it->first
+          gpu_stats << UnifiedScheduler::UnifiedScheduler::myRankThread()
+                    << " GPUMemoryPool::freeCudaSpaceFromPool() -"
+                    << " space starting at " << addr
+                    << " on device " << device_id
+                    << " with size " << memSize
+                    << " marked for reuse in the GPU memory pool"
                     << std::endl;
         }
         cerrLock.unlock();
       }
-    }
 
-    for (std::map<unsigned int, std::queue<cudaStream_t*> >::const_iterator it = s_idle_streams->begin(); it != s_idle_streams->end(); ++it) {
-      unsigned int device = it->first;
-      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+      // Insert it into the unused pool.
+      gpuMemoryPoolDeviceSizeItem  insertItem(device_id, memSize);
+      gpuMemoryPoolDeviceSizeValue insertValue(addr);
 
-      while (!s_idle_streams->operator[](device).empty()) {
-        cudaStream_t* stream = s_idle_streams->operator[](device).front();
-        s_idle_streams->operator[](device).pop();
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << UnifiedScheduler::myRankThread()
-                      << " Performing cudaStreamDestroy for stream " << stream
-                      << " on device " << device
-                      << std::endl;
-          }
-          cerrLock.unlock();
-        }
-        CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
-        free(stream);
-      }
-    }
+      gpuMemoryPoolUnused->insert(std::pair<gpuMemoryPoolDeviceSizeItem,
+                                            gpuMemoryPoolDeviceSizeValue>(insertItem, insertValue));
+      gpuMemoryPoolInUse->erase(ret);
 
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << UnifiedScheduler::myRankThread()
-                  << " unlocking freeCudaStreams " << std::endl;
-      }
-      cerrLock.unlock();
+    } else {
+      printf("ERROR: GPUMemoryPool::freeCudaSpaceFromPool - "
+             "No memory found at pointer %p on device %u\n", addr, device_id);
+      return false;
     }
-  }
-  idle_streams_mutex.unlock();
+  } // end pool_write_lock{ Uintah::CrowdMonitor<pool_tag>::WRITER }
+
+  return true;
+
+  // TODO: Actually deallocate!!!
+  // ARS - FIX ME - Do not delete until the scheduler is deleted.
 }
 
 
+#ifdef USE_KOKKOS_INSTANCE
+// Not needed instances are managed by DetailedTask/Task.
+#else // CUDA Streams
 //______________________________________________________________________
 //
 cudaStream_t*
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef TASK_MANAGES_EXECSPACE
 GPUMemoryPool::getCudaStreamFromPool(const Task * task, int device)
 #else
 GPUMemoryPool::getCudaStreamFromPool(const DetailedTask * task, int device)
 #endif
 {
   cudaError_t retVal;
-  cudaStream_t* stream;
+  cudaStream_t* stream = nullptr;
 
   idle_streams_mutex.lock();
   {
-    if (s_idle_streams->operator[](device).size() > 0) {
-      stream = s_idle_streams->operator[](device).front();
-      s_idle_streams->operator[](device).pop();
+    if (s_idle_streams[device].size() > 0) {
+      stream = s_idle_streams[device].front();
+      s_idle_streams[device].pop();
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
@@ -318,7 +304,7 @@ GPUMemoryPool::getCudaStreamFromPool(const DetailedTask * task, int device)
 // one task to be able to run if it is able to do so even if another
 // task is not yet ready.
 void
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef TASK_MANAGES_EXECSPACE
 GPUMemoryPool::reclaimCudaStreamsIntoPool(intptr_t dTask, Task * task )
 #else
 GPUMemoryPool::reclaimCudaStreamsIntoPool(DetailedTask * task )
@@ -330,34 +316,29 @@ GPUMemoryPool::reclaimCudaStreamsIntoPool(DetailedTask * task )
       gpu_stats << UnifiedScheduler::myRankThread()
                 << " Attempting to reclaim CUDA streams for task "
                 << task->getName()
-#ifdef USE_KOKKOS_INSTANCE
-                    // << " at " << dTask
-#else
-                    // << " at " << task
-#endif
+                << " at " << task
                 << std::endl;
     }
     cerrLock.unlock();
   }
 
   // Reclaim the streams
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef TASK_MANAGES_EXECSPACE
   std::set<unsigned int> deviceNums = task->getDeviceNums(dTask);
 #else
   std::set<unsigned int> deviceNums = task->getDeviceNums();
 #endif
-  for (std::set<unsigned int>::iterator iter = deviceNums.begin(); iter != deviceNums.end(); ++iter) {
-
-#ifdef USE_KOKKOS_INSTANCE
-    cudaStream_t* stream = task->getCudaStreamForThisTask(dTask, *iter);
+  for ( auto &iter : deviceNums) {
+#ifdef TASK_MANAGES_EXECSPACE
+    cudaStream_t* stream = task->getCudaStreamForThisTask(dTask, iter);
 #else
-    cudaStream_t* stream = task->getCudaStreamForThisTask(*iter);
+    cudaStream_t* stream = task->getCudaStreamForThisTask(iter);
 #endif
     if (stream != nullptr) {
 
       idle_streams_mutex.lock();
       {
-        s_idle_streams->operator[](*iter).push(stream);
+        s_idle_streams.operator[](iter).push(stream);
       }
 
       idle_streams_mutex.unlock();
@@ -367,13 +348,9 @@ GPUMemoryPool::reclaimCudaStreamsIntoPool(DetailedTask * task )
         {
           gpu_stats << UnifiedScheduler::myRankThread()
                     << " Reclaimed CUDA stream " << std::hex << stream
-                    << " on device " << std::dec << *iter
+                    << " on device " << std::dec << iter
                     << " for task " << task->getName()
-#ifdef USE_KOKKOS_INSTANCE
-                    << " at " << dTask
-#else
                     << " at " << task
-#endif
                     << std::endl;
         }
         cerrLock.unlock();
@@ -383,11 +360,76 @@ GPUMemoryPool::reclaimCudaStreamsIntoPool(DetailedTask * task )
 
   // Task objects persist between timesteps.  So remove all knowledge
   // of any formerly used streams.
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef TASK_MANAGES_EXECSPACE
   task->clearCudaStreamsForThisTask(dTask);
 #else
   task->clearCudaStreamsForThisTask();
 #endif
 }
+
+//______________________________________________________________________
+//
+void
+GPUMemoryPool::freeCudaStreamsFromPool()
+{
+  cudaError_t retVal;
+
+  idle_streams_mutex.lock();
+  {
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+                  << " locking freeCudaStreams" << std::endl;
+      }
+      cerrLock.unlock();
+    }
+
+    for( auto &it : s_idle_streams) {
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << UnifiedScheduler::myRankThread()
+                    << " Preparing to deallocate " << it.second.size()
+                    << " CUDA stream(s) for device #" << it.first
+                    << std::endl;
+        }
+        cerrLock.unlock();
+      }
+
+      unsigned int device = it.first;
+      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+
+      while (!s_idle_streams[device].empty()) {
+        cudaStream_t* stream = s_idle_streams[device].front();
+        s_idle_streams[device].pop();
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << UnifiedScheduler::myRankThread()
+                      << " Performing cudaStreamDestroy for stream " << stream
+                      << " on device " << device
+                      << std::endl;
+          }
+          cerrLock.unlock();
+        }
+        CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
+        free(stream);
+      }
+    }
+
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+                  << " unlocking freeCudaStreams " << std::endl;
+      }
+      cerrLock.unlock();
+    }
+  }
+
+  idle_streams_mutex.unlock();
+}
+#endif
 
 } //end namespace Uintah

@@ -39,6 +39,8 @@
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
+#include <sci_defs/kokkos_defs.h>
+
 #include <atomic>
 #include <list>
 #include <map>
@@ -254,23 +256,69 @@ public:
   typedef std::set<unsigned int>       deviceNumSet;
   typedef deviceNumSet::const_iterator deviceNumSetIter;
 
+#ifdef TASK_MANAGES_EXECSPACE
+  // These methods are defined so that the UnifiedScheduler
+  // compiles. However the UnifiedScheduler is not used.
+  void assignDevice( unsigned int device )
+  {
+    printf("ERROR: DetailedTask::assignDevice - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::assignDevice - Should not be called.", __FILE__, __LINE__));
+  };
+
+  deviceNumSet getDeviceNums() const
+  {
+    printf("ERROR: DetailedTask::getDeviceNums - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::getDeviceNums - Should not be called.", __FILE__, __LINE__));
+  };
+
+  void setCudaStreamForThisTask( unsigned int deviceNum, cudaStream_t * s )
+  {
+    printf("ERROR: DetailedTask::setCudaStreamForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::setCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
+
+  cudaStream_t* getCudaStreamForThisTask( unsigned int deviceNum ) const
+  {
+    printf("ERROR: DetailedTask::getCudaStreamForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::getCudaStreamForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
+
 #ifdef USE_KOKKOS_INSTANCE
-  // These methods which are no-ops are defined so that the
-  // UnifiedScheduler compiles. However it is not used.
-  void assignDevice( unsigned int device ) {};
 
-  // Most tasks will only run on one device.
+  // These three methods are pass through methods to the actual task
+  // similar to doit.
+  void clearKokkosInstancesForThisTask();
 
-  // But some, such as the data archiver task or send_old_data could
-  // run on multiple devices.
+  bool checkAllKokkosInstancesDoneForThisTask() const;
 
-  // This is not a good idea.  A task should only run on one device.
-  // But the capability for a task to run on multiple nodes exists.
-  deviceNumSet getDeviceNums() const {};
+  // These methods are defined so that the UnifiedScheduler
+  // compiles. However the UnifiedScheduler is not used.
+  void reclaimCudaStreamsIntoPool()
+  {
+    printf("ERROR: DetailedTask::reclaimCudaStreamsIntoPool - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::reclaimCudaStreamsIntoPool - Should not be called.", __FILE__, __LINE__));
+  };
 
-  void setCudaStreamForThisTask( unsigned int deviceNum, cudaStream_t * s ) {};
+  void clearCudaStreamsForThisTask()
+  {
+    printf("ERROR: DetailedTask::clearCudaStreamsForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::clearCudaStreamsForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
 
-  cudaStream_t* getCudaStreamForThisTask( unsigned int deviceNum ) const {};
+  bool checkAllCudaStreamsDoneForThisTask()
+  {
+    printf("ERROR: DetailedTask::checkAllCudaStreamsDoneForThisTask - Should not be called.\n");
+    SCI_THROW(InternalError("DetailedTask::checkAllCudaStreamsDoneForThisTask - Should not be called.", __FILE__, __LINE__));
+  };
+#else
+  void reclaimCudaStreamsIntoPool();
+
+  void clearCudaStreamsForThisTask();
+
+  bool checkCudaStreamDoneForThisTask( unsigned int deviceNum ) const;
+
+  bool checkAllCudaStreamsDoneForThisTask() const;
+#endif
 #else
   void assignDevice( unsigned int device );
 
@@ -286,10 +334,7 @@ public:
   void setCudaStreamForThisTask( unsigned int deviceNum, cudaStream_t * s );
 
   cudaStream_t* getCudaStreamForThisTask( unsigned int deviceNum ) const;
-#endif
 
-  // When TASK_STREAM is defiend, these four methods are pass through
-  // methods to the actual task similar to doit.
   void reclaimCudaStreamsIntoPool();
 
   void clearCudaStreamsForThisTask();
@@ -297,6 +342,7 @@ public:
   bool checkCudaStreamDoneForThisTask( unsigned int deviceNum ) const;
 
   bool checkAllCudaStreamsDoneForThisTask() const;
+#endif
 
   // Task GPU date warehouses
   std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
@@ -371,7 +417,7 @@ private:
   std::atomic<int>  m_external_dependency_count { 0 };
 
   mutable std::string m_name;  // Doesn't get set until getName() is
-			       // called the first time.
+                               // called the first time.
 
   // Internal dependencies are dependencies within the same process.
   std::list<InternalDependency> m_internal_dependencies;
@@ -403,7 +449,7 @@ private:
 //  bool         m_completed{false};
 //  unsigned int m_deviceNum{0};
 
-#ifndef USE_KOKKOS_INSTANCE
+#ifndef TASK_MANAGES_EXECSPACE
   deviceNumSet  m_deviceNums;
   cudaStreamMap m_cudaStreams;
 #endif
@@ -413,14 +459,14 @@ private:
   // data.  It just helps to gather it all up into a collection prior
   // to copying data.
   DeviceGridVariables deviceVars;  // Holds variables that will need
-				   // to be copied into the GPU
+                                   // to be copied into the GPU
   DeviceGridVariables taskVars;    // Holds variables that will be
                                    // needed for a GPU task (a Task DW
                                    // has a snapshot of all important
                                    // pointer info from the host-side
                                    // GPU DW)
   DeviceGhostCells ghostVars;      // Holds ghost cell meta data copy
-				   // information
+                                   // information
 
   DeviceGridVariables varsToBeGhostReady;  // Holds a list of vars
                                            // this task is managing to
@@ -442,9 +488,9 @@ private:
                                            // cells once.
 
   DeviceGridVariables varsBeingCopiedByTask;  // Holds a list of the
-					      // vars that this task
-					      // is actually copying
-					      // into the GPU.
+                                              // vars that this task
+                                              // is actually copying
+                                              // into the GPU.
 
   struct gpuMemoryPoolDevicePtrItem {
 
@@ -515,9 +561,10 @@ public:
     // void gpuInitialize( bool reset = false );
 
     void syncTaskGpuDWs();
-    void syncto_device(const unsigned int deviceNum,
+#ifdef TASK_MANAGES_EXECSPACE
+    void syncTaskGpuDW(const unsigned int deviceNum,
                              GPUDataWarehouse *taskgpudw);
-
+#endif
     Uintah::MasterLock * varLock {nullptr};
 
     void performInternalGhostCellCopies();

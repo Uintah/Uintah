@@ -5121,8 +5121,12 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
       for (int i = 0; i < dtask->getTask()->maxStreamsPerTask(); i++) {
         if (dtask->getCudaStreamForThisTask(i) == nullptr) {
           dtask->assignDevice(0);
+#ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
+	  cudaStream_t* stream = nullptr;
+#else
           cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), i);
+#endif
 #else
           cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, i);
 #endif
@@ -5204,12 +5208,15 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
     // see if this task was already assigned a stream.
     if (dtask->getCudaStreamForThisTask(*iter) == nullptr) {
       dtask->assignDevice(*iter);
+#ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), *iter);
+      cudaStream_t* stream = nullptr;
 #else
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), *iter);
 #endif
-      dtask->setCudaStreamForThisTask(*iter, stream);
+#else      
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
+#endif      dtask->setCudaStreamForThisTask(*iter, stream);
     }
   }
 }

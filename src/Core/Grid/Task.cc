@@ -31,15 +31,14 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/StringUtil.h>
-#include <Core/Parallel/MasterLock.h>
 
 using namespace Uintah;
 
 MaterialSubset* Task::globalMatlSubset = nullptr;
 
 namespace {
-  Uintah::MasterLock  deviceNums_mutex{};
-  Uintah::MasterLock cudaStreams_mutex{};
+  Uintah::MasterLock      deviceNums_mutex{};
+  Uintah::MasterLock     cudaStreams_mutex{};
 }
 
 //______________________________________________________________________
@@ -891,12 +890,12 @@ Task::isInDepMap( const DepMap   & depMap
       else if (dep->m_patches_dom == Task::FineLevel) {
         hasPatches = getLevel(getPatchSet())->getRelativeLevel(dep->m_level_offset) == getLevel(patches);
       }
-      // check that the patches subset contain the requested patch      
+      // check that the patches subset contain the requested patch
       else {
         hasPatches = patches->contains(patch);
       }
     }
-    // if matls == nullptr then the requirement for matls is satisfied    
+    // if matls == nullptr then the requirement for matls is satisfied
     if (matls == nullptr) {
       hasMatls = true;
     }
@@ -905,8 +904,8 @@ Task::isInDepMap( const DepMap   & depMap
     }
 
     if (hasMatls && hasPatches) {  // if this dependency contains both
-				   // the matls and patches return the
-				   // dependency
+                                   // the matls and patches return the
+                                   // dependency
       return dep;
     }
     found_iter++;
@@ -1013,7 +1012,7 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset * domainPatches) const
   switch(m_patches_dom){
   case Task::ThisLevel:
   case Task::OtherGridDomain: // use the same patches, we'll figure
-			      // out where it corresponds on the other grid
+                              // out where it corresponds on the other grid
     return PatchSubset::intersection(m_patches, domainPatches);
   case Task::CoarseLevel:
   case Task::FineLevel:
@@ -1099,7 +1098,7 @@ Task::doit( const PatchSubset           * patches
 #if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
 //______________________________________________________________________
 //
-#ifdef USE_KOKKOS_INSTANCE
+#ifdef TASK_MANAGES_EXECSPACE
 //_____________________________________________________________________________
 //
 void
@@ -1133,50 +1132,440 @@ Task::getDeviceNums(intptr_t dTask)
   return dNumSet;
 }
 
+#ifdef USE_KOKKOS_INSTANCE
+//_____________________________________________________________________________
+//
+//  Task::ActionNonPortableBase
 //_____________________________________________________________________________
 //
 
 void
+Task::ActionNonPortableBase::
+assignDevicesAndInstances(intptr_t dTask)
+{
+  for (int i = 0; i < this->taskPtr->maxStreamsPerTask(); i++) {
+   this->assignDevicesAndInstances(dTask, i);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
+{
+  if (this->haveKokkosInstanceForThisTask(dTask, device_id) == false) {
+    this->taskPtr->assignDevice(dTask, device_id);
+
+    this->setKokkosInstanceForThisTask(dTask, device_id);
+  }
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+haveKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  bool retVal = false;
+
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      retVal = (it != iMap.end());
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+Kokkos::DefaultExecutionSpace
+Task::ActionNonPortableBase::
+getKokkosInstanceForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  // As m_kokkosInstance can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask); // Instances for this task.
+
+    if(iter != m_kokkosInstances.end())
+    {
+      kokkosInstanceMap iMap = iter->second;
+      kokkosInstanceMapIter it = iMap.find(device_id);
+
+      if (it != iMap.end())
+      {
+        kokkosInstances_mutex.unlock();
+
+        return it->second;
+      }
+    }
+  }
+
+  kokkosInstances_mutex.unlock();
+
+  printf("ERROR! - Task::ActionNonPortableBase::getKokkosInstanceForThisTask() - "
+           "This task %s does not have an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                            this->taskPtr->getName(), __FILE__, __LINE__));
+
+  Kokkos::DefaultExecutionSpace instance;
+
+  return instance;
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+setKokkosInstanceForThisTask(intptr_t dTask,
+                             unsigned int device_id)
+{
+  // if (instance == nullptr) {
+  //   printf("ERROR! - Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+  //          "A request was made to assign an instance to a nullptr address "
+  //          "for this task %s\n", this->taskPtr->getName().c_str());
+  //   SCI_THROW(InternalError("A request was made to assign an instance to a "
+  //                           "nullptr address for this task :" +
+  //                           this->taskPtr->getName() , __FILE__, __LINE__));
+  // } else
+  if(this->haveKokkosInstanceForThisTask(dTask, device_id) == true) {
+    printf("ERROR! - Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+           "This task %s already has an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), device_id);
+    SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                            this->taskPtr->getName(), __FILE__, __LINE__));
+  } else {
+    // printf("Task::ActionNonPortableBase::setKokkosInstanceForThisTask() - "
+    //        "This task %s now has an instance assigned for device %d\n",
+    //        this->taskPtr->getName().c_str(), device_id);
+    // As m_kokkosInstances can be touched by multiple threads a
+    // mutext is needed.
+    kokkosInstances_mutex.lock();
+    {
+      Kokkos::DefaultExecutionSpace instance;
+      m_kokkosInstances[dTask][device_id] = instance;
+    }
+    kokkosInstances_mutex.unlock();
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+clearKokkosInstancesForThisTask(intptr_t dTask)
+{
+  // As m_kokkosInstances can be touched by multiple threads a mutext is needed.
+  kokkosInstances_mutex.lock();
+  {
+    if(m_kokkosInstances.find(dTask) != m_kokkosInstances.end())
+    {
+      m_kokkosInstances[dTask].clear();
+      m_kokkosInstances.erase(dTask);
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  // printf("Task::ActionNonPortableBase::clearKokkosInstancesForThisTask() - "
+  //     "Clearing instances for task %s\n",
+  //     this->taskPtr->getName().c_str());
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) const
+{
+  // ARS - FIXME
+  if (device_id != 0) {
+   printf("Error, Task::checkKokkosInstanceDoneForThisTask is %u\n", device_id);
+   exit(-1);
+  }
+
+  // Commented out in OnDemandDataWarehouse.cc
+  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, device_id);
+
+  instance.fence();
+
+  return true;
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::ActionNonPortableBase::
+checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
+{
+  // A task can have multiple instances (such as an output task
+  // pulling from multiple GPUs).  Check all instacnes to see if they
+  // are done.  If any one instance isn't done, return false.  If
+  // nothing returned false, then they all must be good to go.
+  bool retVal = true;
+
+  // As m_kokkosInstances can be touched by multiple threads get a local
+  // copy so not to lock everything.
+  kokkosInstanceMap kokkosInstances;
+
+  kokkosInstances_mutex.lock();
+  {
+    auto iter = m_kokkosInstances.find(dTask);
+    if(iter != m_kokkosInstances.end()) {
+      kokkosInstances = iter->second;
+    } else {
+      kokkosInstances_mutex.unlock();
+
+      return retVal;
+    }
+  }
+  kokkosInstances_mutex.unlock();
+
+  for (auto & it : kokkosInstances)
+  {
+    retVal = this->checkKokkosInstanceDoneForThisTask(dTask, it.first);
+    if (retVal == false)
+      break;
+  }
+
+  return retVal;
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                  void* dst, void* src,
+                  size_t count, GPUMemcpyKind kind)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  char * srcPtr = static_cast<char *>(src);
+  char * dstPtr = static_cast<char *>(dst);
+
+  if(kind == GPUMemcpyHostToDevice)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView( srcPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( dstPtr, count);
+    // Deep copy the host view to the device view.
+    Kokkos::deep_copy(instance, deviceView, hostView);
+  }
+  else if(kind == GPUMemcpyDeviceToHost)
+  {
+    // Create an unmanage Kokkos view from the raw pointers.
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView( dstPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( srcPtr, count);
+    // Deep copy the device view to the host view.
+    Kokkos::deep_copy(instance, hostView, deviceView);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+doKokkosMemcpyPeerAsync( intptr_t dTask,
+                       unsigned int deviceNum,
+                             void* dst, int  dstDevice,
+                       const void* src, int  srcDevice,
+                       size_t count )
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+  // ARS - FIXME
+  // CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
+  //                                    count, *stream));
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::ActionNonPortableBase::
+copyGpuGhostCellsToGpuVars(intptr_t dTask,
+                           unsigned int deviceNum,
+                           GPUDataWarehouse *taskgpudw)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(instance);
+}
+
+//_____________________________________________________________________________
+//
+//  Task instance pass through methods to the action
+//_____________________________________________________________________________
+//
+void
+Task::assignDevicesAndInstances(intptr_t dTask)
+{
+  if (m_action)
+    m_action->assignDevicesAndInstances(dTask);
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::assignDevicesAndInstances(intptr_t dTask, unsigned int device_id)
+{
+  if (m_action)
+    m_action->assignDevicesAndInstances(dTask, device_id);
+}
+
+//_____________________________________________________________________________
+//
+void Task::clearKokkosInstancesForThisTask(intptr_t dTask)
+{
+  if (m_action)
+    m_action->clearKokkosInstancesForThisTask(dTask);
+}
+
+//_____________________________________________________________________________
+//
+bool Task::checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
+{
+  if (m_action)
+    return m_action->checkAllKokkosInstancesDoneForThisTask(dTask);
+  else
+    return true;
+}
+
+//_____________________________________________________________________________
+//
+void Task::doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
+                             void* dst, void* src,
+                             size_t count, cudaMemcpyKind kind)
+{
+  if (m_action)
+    m_action->doKokkosDeepCopy(dTask, deviceNum, dst,src, count,
+                               Uintah::Task::GPUMemcpyKind(kind));
+}
+
+//_____________________________________________________________________________
+//
+void Task::doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
+                                            void* dst, int dstDevice,
+                                      const void* src, int srcDevice,
+                                      size_t count )
+{
+  if (m_action) {
+    m_action->doKokkosMemcpyPeerAsync(dTask, deviceNum,
+                                      dst, dstDevice, src, srcDevice, count);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
+                                 GPUDataWarehouse *taskgpudw)
+{
+  if (m_action) {
+    m_action->copyGpuGhostCellsToGpuVars(dTask, deviceNum, taskgpudw);
+  }
+}
+#else  // #ifdef TASK_MANAGES_EXECSPACE - STREAMS
+//_____________________________________________________________________________
+//
+void
 Task::assignDevicesAndStreams(intptr_t dTask)
 {
   for (int i = 0; i < maxStreamsPerTask(); i++) {
-    if (this->getCudaStreamForThisTask(dTask, i) == nullptr) {
-      this->assignDevice(dTask, 0);
-      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, i);
-      this->setCudaStreamForThisTask(dTask, i, stream);
-    }
+    assignDevicesAndStreams(dTask, i);
+
+    // if (this->haveCudaStreamForThisTask(dTask, i) == false) {
+    //   this->assignDevice(dTask, 0);
+    //   // this->assignDevice(i);
+    //   this->setCudaStreamForThisTask(dTask, i);
+    // }
   }
 }
 
+//_____________________________________________________________________________
+//
 void
 Task::assignDevicesAndStreams(intptr_t dTask, unsigned int device_id)
 {
-  if (this->getCudaStreamForThisTask(dTask, device_id) == nullptr) {
+  if (this->haveCudaStreamForThisTask(dTask, device_id) == false) {
     this->assignDevice(dTask, device_id);
-    cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, device_id);
-    this->setCudaStreamForThisTask(dTask, device_id, stream);
+    this->setCudaStreamForThisTask(dTask, device_id);
   }
 }
 
+//_____________________________________________________________________________
+//
 cudaStream_t*
-Task::getCudaStreamForThisTask(intptr_t dTask, unsigned int device_id)
+Task::getCudaStreamForThisTask(intptr_t dTask, unsigned int device_id) const
 {
-  cudaStream_t* stream = nullptr;
+  // As m_cudaStreams can be touched by multiple threads a mutext is needed.
+  cudaStreams_mutex.lock();
+  {
+    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
+
+    if( iter != m_cudaStreams.end())
+    {
+      cudaStreamMap streamMap = iter->second;
+      cudaStreamMapIter it = streamMap.find(device_id);
+
+      if (it != streamMap.end())
+      {
+        cudaStreams_mutex.unlock();
+
+        return it->second;
+      }
+    }
+  }
+  cudaStreams_mutex.unlock();
+
+  printf("ERROR! - Task::getCudaStreamForThisTask() - "
+         "This task %s does not have a stream assigned for device %d\n",
+         getName().c_str(), device_id);
+  SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
+                          getName(), __FILE__, __LINE__));
+
+  return nullptr;
+}
+
+//_____________________________________________________________________________
+//
+bool
+Task::haveCudaStreamForThisTask(intptr_t dTask, unsigned int device_id) const
+{
+  bool retVal = false;
 
   // As m_cudaStreams can be touched by multiple threads a mutext is needed.
   cudaStreams_mutex.lock();
   {
-    if(m_cudaStreams.find(dTask) != m_cudaStreams.end())
-      {
-        cudaStreamMapIter it = m_cudaStreams[dTask].find(device_id);
+    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
 
-        if (it != m_cudaStreams[dTask].end())
-          stream = it->second;
-      }
+    if(iter != m_cudaStreams.end())
+    {
+      cudaStreamMap streamMap = iter->second;
+      cudaStreamMapIter it = streamMap.find(device_id);
+
+      retVal = (it != streamMap.end());
+    }
   }
   cudaStreams_mutex.unlock();
 
-  return stream;
+  return retVal;
 }
 
 //_____________________________________________________________________________
@@ -1184,26 +1573,31 @@ Task::getCudaStreamForThisTask(intptr_t dTask, unsigned int device_id)
 void
 Task::setCudaStreamForThisTask( intptr_t dTask
                               , unsigned int   device_id
-                              , cudaStream_t * stream
                               )
 {
-  if (stream == nullptr) {
-    printf("ERROR! - Task::setCudaStreamForThisTask() - "
-           "A request was made to assign a stream to a nullptr address "
-           "for this task %s\n", getName().c_str());
-    SCI_THROW(InternalError("A request was made to assign a stream to a "
-                            "nullptr address for this task :" +
-                            getName() , __FILE__, __LINE__));
-  } else if(getCudaStreamForThisTask(dTask, device_id) != nullptr) {
+  // Comment out as the stream at this point should never be a nullptr.
+  // if (stream == nullptr) {
+  //   printf("ERROR! - Task::setCudaStreamForThisTask() - "
+  //          "A request was made to assign a stream to a nullptr address "
+  //          "for this task %s\n", getName().c_str());
+  //   SCI_THROW(InternalError("A request was made to assign a stream to a "
+  //                           "nullptr address for this task :" +
+  //                           getName() , __FILE__, __LINE__));
+  // } else
+  if(haveCudaStreamForThisTask(dTask, device_id)) {
     printf("ERROR! - Task::setCudaStreamForThisTask() - "
            "This task %s already has a stream assigned for device %d\n",
            getName().c_str(), device_id);
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: " +
                             getName(), __FILE__, __LINE__));
   } else {
+    // printf("Task::setCudaStreamForThisTask() - "
+    //        "This task %s now has a stream assigned for device %d\n",
+    //        getName().c_str(), device_id);
     // As m_cudaStreams can be touched by multiple threads a mutext is needed.
     cudaStreams_mutex.lock();
     {
+      cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(this, device_id);
       m_cudaStreams[dTask][device_id] = stream;
     }
     cudaStreams_mutex.unlock();
@@ -1215,6 +1609,7 @@ Task::setCudaStreamForThisTask( intptr_t dTask
 void
 Task::reclaimCudaStreamsIntoPool(intptr_t dTask)
 {
+  // Once streams are reclaimed, clearCudaStreamsForThisTask is called.
   GPUMemoryPool::reclaimCudaStreamsIntoPool(dTask, this);
 }
 
@@ -1227,10 +1622,10 @@ Task::clearCudaStreamsForThisTask(intptr_t dTask)
   cudaStreams_mutex.lock();
   {
     if(m_cudaStreams.find(dTask) != m_cudaStreams.end())
-      {
-        m_cudaStreams[dTask].clear();
-        m_cudaStreams.erase(dTask);
-      }
+    {
+      m_cudaStreams[dTask].clear();
+      m_cudaStreams.erase(dTask);
+    }
   }
   cudaStreams_mutex.unlock();
 }
@@ -1239,7 +1634,7 @@ Task::clearCudaStreamsForThisTask(intptr_t dTask)
 //
 bool
 Task::checkCudaStreamDoneForThisTask( intptr_t dTask
-                                    , unsigned int device_id)
+                                    , unsigned int device_id) const
 {
   // sets the CUDA context, for the call to cudaEventQuery()
 
@@ -1250,20 +1645,7 @@ Task::checkCudaStreamDoneForThisTask( intptr_t dTask
   // Commented out in OnDemandDataWarehouse.cc
   // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
-  cudaStream_t * stream = getCudaStreamForThisTask(dTask, device_id);
-
-  if(stream == nullptr)
-  {
-    printf("ERROR! - Task::checkCudaStreamDoneForThisTask() - "
-           "Request for stream information for device %d, but this task "
-           "wasn't assigned a stream for this device.  For task %s\n",
-           device_id,  getName().c_str());
-    SCI_THROW(InternalError("Request for stream information for a device, "
-                            "but this task wasn't assigned a stream for this "
-                            "device.  For task %s\n" + getName(),
-                            __FILE__, __LINE__));
-    return false;
-  }
+  cudaStream_t* stream = getCudaStreamForThisTask(dTask, device_id);
 
   cudaError_t retVal = cudaStreamQuery(*stream);
   if (retVal == cudaSuccess) {
@@ -1299,27 +1681,35 @@ Task::checkCudaStreamDoneForThisTask( intptr_t dTask
 //_____________________________________________________________________________
 //
 bool
-Task::checkAllCudaStreamsDoneForThisTask(intptr_t dTask)
+Task::checkAllCudaStreamsDoneForThisTask(intptr_t dTask) const
 {
   // A task can have multiple streams (such as an output task pulling
   // from multiple GPUs).  Check all streams to see if they are done.
   // If any one stream isn't done, return false.  If nothing returned
   // false, then they all must be good to go.
+  bool retVal = true;
 
-  // As m_cudaStreams can be touched by multiple threads get a local copy.
+  // As m_cudaStreams can be touched by multiple threads get a local
+  // copy so not to lock everything.
   cudaStreamMap cudaStreams;
 
   cudaStreams_mutex.lock();
   {
-    cudaStreams = m_cudaStreams[dTask];
+    auto iter = m_cudaStreams.find(dTask); // Streams for this task.
+
+    if(iter != m_cudaStreams.end()) {
+      cudaStreams = iter->second;
+    } else {
+      cudaStreams_mutex.unlock();
+
+      return retVal;
+    }
   }
   cudaStreams_mutex.unlock();
 
-  bool retVal = true;
-
-  for (cudaStreamMapIter it=cudaStreams.begin(); it!=cudaStreams.end(); ++it)
+  for (auto & it : cudaStreams)
   {
-    retVal = checkCudaStreamDoneForThisTask(dTask, it->first);
+    retVal = checkCudaStreamDoneForThisTask(dTask, it.first);
     if (retVal == false)
       break;
   }
@@ -1330,41 +1720,76 @@ Task::checkAllCudaStreamsDoneForThisTask(intptr_t dTask)
 
 //_____________________________________________________________________________
 //
-bool
+void
 Task::doCudaMemcpyAsync( intptr_t dTask, unsigned int deviceNum,
-			 void* dst, const void* src, size_t count,
-			 cudaMemcpyKind kind)
+                         void* dst, void* src,
+                         size_t count, cudaMemcpyKind kind)
 {
   cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
 
+#ifdef USE_KOKKOS_DEEPCOPY
+  Kokkos::DefaultExecutionSpace instance(*stream);
+
+  char * srcPtr = static_cast<char *>(src);
+  char * dstPtr = static_cast<char *>(dst);
+
+  if(kind == GPUMemcpyHostToDevice)
+  {
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView( srcPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( dstPtr, count);
+    // Deep copy the host view to the device view.
+    Kokkos::deep_copy(instance, deviceView, hostView);
+  }
+  else if(kind == GPUMemcpyDeviceToHost)
+  {
+    Kokkos::View<char*, Kokkos::HostSpace>               hostView( dstPtr, count);
+    Kokkos::View<char*, Kokkos::DefaultExecutionSpace> deviceView( srcPtr, count);
+    // Deep copy the device view to the host view.
+    Kokkos::deep_copy(instance, hostView, deviceView);
+  }
+#else
   CUDA_RT_SAFE_CALL(cudaMemcpyAsync(dst, src, count, kind, *stream));
+#endif
 }
 
 //_____________________________________________________________________________
 //
-bool
+void
 Task::doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
-			     void* dst, int  dstDevice,
-			     const void* src, int  srcDevice,
-			     size_t count )
+                                   void* dst, int  dstDevice,
+                             const void* src, int  srcDevice,
+                             size_t count )
 {
   cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
-  
-  CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice,
-					src, srcDevice, count, *stream));
+
+#ifdef USE_KOKKOS_DEEPCOPY
+  printf("ERROR! - Task::doCudaMemcpyPeerAsync() - NOT DEFINED"
+           "This task %s does not have an instance assigned for device %d\n",
+           this->taskPtr->getName().c_str(), deviceNum);
+  SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
+                          this->taskPtr->getName(), __FILE__, __LINE__));
+#else
+  CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
+                                        count, *stream));
+#endif
 }
 
-bool
+//_____________________________________________________________________________
+//
+void
 Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
-				 GPUDataWarehouse *taskgpudw)
+                                 GPUDataWarehouse *taskgpudw)
 {
   cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
 
   taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
-}
 
-#endif
-#endif
+  // Kokkos::Cuda instanceObject(*stream);
+  // taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(instanceObject);
+}
+#endif // #ifdef USE_KOKKOS_INSTANCE - STREAMS
+#endif // #ifdef TASK_MANAGES_EXECSPACE
+#endif // #if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
 
 //______________________________________________________________________
 //

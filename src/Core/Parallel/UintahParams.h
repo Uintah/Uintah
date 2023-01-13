@@ -22,17 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-// This class acts as an additional Task parameter object to easy add or remove additional parameters with ease.
-// At the time of this class's creation, the Task consisted of 5 or 6 parameters (legacy and Kokkos tasks)
-// For Kokkos tasks, the parameters are as follows:
+// This class acts as an additional Task parameter object to easy add
+// or remove additional parameters with ease.  At the time of this
+// class's creation, the Task consisted of 5 or 6 parameters (legacy
+// and Kokkos tasks) For Kokkos tasks, the parameters are as follows:
 //                        const PatchSubset* patches,
 //                        const MaterialSubset* matls,
 //                        DataWarehouse* fromDW,
 //                        DataWarehouse* toDW,
 //                        UintahParams & uintahParams,
 //                        ExecutionObject & execObj
-// The first 4 parameters are rather important parameters that help a task execute.
-// uintahParams may contain a collection of additional helpful items inside.
+// The first 4 parameters are rather important parameters that help a
+// task execute.  uintahParams may contain a collection of additional
+// helpful items inside.
 
 
 #ifndef UINTAH_HOMEBREW_UINTAH_PARAMS_HPP
@@ -82,7 +84,7 @@ public:
     this->processorGroup = processorGroup;
   }
 
-  void setStream(void* stream){
+  void setStream(void* stream) {
 #if defined(HAVE_CUDA)
     //Ignore the non-CUDA case as those streams are pointless.
     m_streams.push_back(stream);
@@ -101,6 +103,14 @@ public:
     return m_streams.size();
   }
 
+  void setTaskIntPtr( intptr_t taskIntPtr ) {
+    m_TaskIntPtr = taskIntPtr;
+  }
+
+  intptr_t getTaskIntPtr() const {
+    return m_TaskIntPtr;
+  }
+
 private:
 
   void * oldTaskGpuDW{nullptr};
@@ -111,6 +121,7 @@ private:
 
   std::vector<void*> m_streams;
 
+  intptr_t m_TaskIntPtr{0};
 };
 
 } //namespace Uintah

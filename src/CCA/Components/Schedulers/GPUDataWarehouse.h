@@ -28,12 +28,14 @@
 #define CCA_COMPONENTS_SCHEDULERS_GPUDATAWAREHOUSE_H
 
 #include <sci_defs/cuda_defs.h>
+
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Parallel/MasterLock.h>
+#include <Core/Util/DebugStream.h>
 
 #include <sci_defs/kokkos_defs.h>
 
@@ -60,6 +62,12 @@
                                         // a region of patches for a
                                         // level instead of a regular
                                         // patch.
+extern Uintah::MasterLock cerrLock;
+
+namespace Uintah {
+  extern DebugStream gpu_stats;
+}
+
 namespace Uintah {
 
 enum materialType {
@@ -78,7 +86,7 @@ enum materialType {
 };
 
 class OnDemandDataWarehouse;
-  
+
 class GPUDataWarehouse {
 
 public:
@@ -144,7 +152,7 @@ public:
 
     // So we can look up the size and offset information in the d_varDB
     int dest_varDB_index;  // Will be set to -1 if this d_varDB item
-			   // isn't a ghost cell item.
+                           // isn't a ghost cell item.
 
   };
 
@@ -159,10 +167,10 @@ public:
     void*        var_ptr;           // Raw pointer to the memory
     unsigned int sizeOfDataType;    // The memory size of a single data element.
     VarItem       varItem;          // If the item is holding variable
-			            // data, remaining info is found in here.
+                                    // data, remaining info is found in here.
     GhostItem     ghostItem;        // If the item contains only ghost
-				    // cell copying meta data, its
-				    // info is found in here.
+                                    // cell copying meta data, its
+                                    // info is found in here.
   };
 
   struct contiguousArrayInfo {
@@ -177,9 +185,9 @@ public:
       allocatedHostMemory = nullptr;
       sizeOfAllocatedMemory = 0;
       assignedOffset = 0; // To keep up to the point where data has
-			  // been "put".  Computes data will be assigned
+                          // been "put".  Computes data will be assigned
       copiedOffset = 0;   // To keep up to the point where data will
-			  // need to be copied.  Required data will be copied
+                          // need to be copied.  Required data will be copied
     }
     // Overloaded constructor
     contiguousArrayInfo(double * allocatedDeviceMemory,
@@ -189,9 +197,9 @@ public:
       this->allocatedHostMemory = allocatedHostMemory;
       this->sizeOfAllocatedMemory = sizeOfAllocatedMemory;
       assignedOffset = 0; // To keep up to the point where data has
-			  // been "put"
+                          // been "put"
       copiedOffset = 0;   // To keep up to the point where data has
-			  // been copied.
+                          // been copied.
     }
   };
 
@@ -215,9 +223,9 @@ public:
                                                             // Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
                                                             // non ghost part is unknown?
                 DEALLOCATING              = 0x00000040,     // TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
-                FORMING_SUPERPATCH        = 0x00000080,     // As the name suggests, when a number of individual patches are being formed 
+                FORMING_SUPERPATCH        = 0x00000080,     // As the name suggests, when a number of individual patches are being formed
                                                             // into a superpatch, there is a period of time which other threads
-                                                            // should wait until all patches have been processed.  
+                                                            // should wait until all patches have been processed.
                 SUPERPATCH                = 0x00000100,     // Indicates this patch is allocated as part of a superpatch.
                                                             // At the moment superpatches is only implemented for entire domain
                                                             // levels.  But it seems to make the most sense to have another set of
@@ -304,11 +312,11 @@ public:
   struct stagingVarInfo {
     void*           device_ptr {nullptr};   // Where it is on the device
     void*           host_contiguousArrayPtr {nullptr};  // TODO,
-							// remove
-							// this.  It's
-							// an old idea
-							// that didn't
-							// pan out.
+                                                        // remove
+                                                        // this.  It's
+                                                        // an old idea
+                                                        // that didn't
+                                                        // pan out.
     int             varDB_index;
     atomicDataStatus      atomicStatusInHostMemory;
     atomicDataStatus      atomicStatusInGpuMemory;
@@ -517,8 +525,10 @@ public:
                                 int3 varOffset, int3 varSize,
                                 int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset);
 
+  template <typename ExecSpace>
+  __host__ bool transferFrom(ExecSpace instance, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx);
+  // __host__ bool transferFrom(cudaStream_t* stream, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx);
 
-  __host__ bool transferFrom(cudaStream_t* stream, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ bool areAllStagingVarsValid(char const* label, int patchID, int matlIndx, int levelIndx);
 
 
@@ -564,20 +574,29 @@ public:
   __host__ bool compareAndSwapDeallocating(atomicDataStatus& status);
   __host__ bool compareAndSwapDeallocate(atomicDataStatus& status);
 
-  // This and the function below go through the d_ghostCellData array
-  // and copies data into the correct destination GPU var.  This would
-  // be the final step of a GPU ghost cell transfer.
-  __host__ void copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream);
-#ifdef USE_KOKKOS_INSTANCE
-KOKKOS_FUNCTION void copyGpuGhostCellsToGpuVars(const int threadIdxX,
-						const int threadIdxY,
-						const int threadIdxZ);
+  // This function and the one below go through the d_ghostCellData
+  // array and copies data into the correct destination GPU var. This
+  // step is the final step of a GPU ghost cell transfer.
+  template <typename ExecSpace>
+  __host__ void copyGpuGhostCellsToGpuVarsInvoker(ExecSpace instance)
+  {
+    printf("Error: GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space.\n");
+    SCI_THROW(InternalError("GPUDataWarehouse.h::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space: ", __FILE__, __LINE__) );
+  };
+
+#ifdef USE_KOKKOS_PARALLEL_FOR
+  KOKKOS_FUNCTION void
+  copyGpuGhostCellsToGpuVars( const int threadIdxX,
+                              const int threadIdxY,
+                              const int threadIdxZ);
 #else
-  __device__ void copyGpuGhostCellsToGpuVars();
-#endif  
+  __device__ void
+  copyGpuGhostCellsToGpuVars();
+#endif
+
   HOST_DEVICE bool ghostCellCopiesNeeded();
   __host__ void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndx, int levelIndx = 0);
-  
+
 
   __host__ void init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems );
   __host__ void init(int id, std::string internalName);
@@ -586,10 +605,8 @@ KOKKOS_FUNCTION void copyGpuGhostCellsToGpuVars(const int threadIdxX,
   __device__ void print();
 
 private:
-
   __device__ dataItem* getItem(char const* label, const int patchID, const int8_t matlIndx, const int8_t levelIndx);
   HOST_DEVICE void resetdVarDB();
-
 
   HOST_DEVICE void printError(const char* msg, const char* methodName, char const* label, int patchID, int8_t matlIndx, int8_t levelIndx);
   HOST_DEVICE void printError(const char* msg, const char* methodName) {
@@ -605,7 +622,6 @@ private:
 
 
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
-
 
   Uintah::MasterLock * allocateLock {nullptr};
   Uintah::MasterLock * varLock {nullptr};
@@ -659,6 +675,23 @@ private:
   // functions (10.3) and virtual base classes (10.1)."
   dataItem d_varDB[MAX_VARDB_ITEMS];
 };
+
+//______________________________________________________________________
+//
+#ifdef USE_KOKKOS_INSTANCE
+template <>
+__host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance);
+#else
+template <>
+__host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<cudaStream_t*>(cudaStream_t* stream);
+#endif
+
+
+template <typename ExecSpace>
+__host__ bool
+GPUDataWarehouse::transferFrom(ExecSpace instance, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx)
+{
+}
 
 } // end namespace Uintah
 

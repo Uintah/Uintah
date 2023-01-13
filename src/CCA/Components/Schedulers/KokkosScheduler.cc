@@ -190,6 +190,9 @@ KokkosScheduler::KokkosScheduler( const ProcessorGroup  * myworld
 //
 KokkosScheduler::~KokkosScheduler()
 {
+#if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
+  GPUMemoryPool::freeViewsFromPool();
+#endif
 }
 
 
@@ -1222,7 +1225,8 @@ KokkosScheduler::runTasks( int thread_id )
         // so task C needs new ghost cells.
         readyTask->markDeviceModifiesGhostAsInvalid(m_dws);
 
-        // The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
+        // The Task GPU Datawarehouses are no longer needed.  Delete
+        // them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
         readyTask->deleteTemporaryTaskVars();
@@ -1233,8 +1237,11 @@ KokkosScheduler::runTasks( int thread_id )
         runTask(readyTask, m_curr_iteration, thread_id, CallBackEvent::postGPU);
 
         // Recycle this task's stream
-        // GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+#ifdef USE_KOKKOS_INSTANCE
+        // Not needed instances are freed when the detailed task is deleted.
+#else
         readyTask->reclaimCudaStreamsIntoPool();
+#endif
       } // if(gpuPending)
 #endif
       else {
@@ -1335,8 +1342,11 @@ KokkosScheduler::runTasks( int thread_id )
           // internally interact with GPUs without modifying the
           // structure of the data warehouse.
 
-          //GPUMemoryPool::reclaimCudaStreamsIntoPool(readyTask);
+#ifdef USE_KOKKOS_INSTANCE
+          // Not needed instances are freed when the detailed task is deleted.
+#else
           readyTask->reclaimCudaStreamsIntoPool();
+#endif
         }
 #endif
       } // CPU

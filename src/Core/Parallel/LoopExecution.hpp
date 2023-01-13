@@ -493,8 +493,11 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   // (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_block   = execObj.getCudaThreadsPerBlock();
   const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+#ifdef USE_KOKKOS_INSTANCE
+  const unsigned int streamPartitions = execObj.getNumInstances();
+#else
   const unsigned int streamPartitions = execObj.getNumStreams();
-
+#endif
   // The requested range of data may not have enough work for the
   // requested command line arguments, so shrink them if necessary.
   const unsigned int actual_threads = (numItems / streamPartitions) > (cuda_threads_per_block * cuda_blocks_per_loop)
@@ -508,12 +511,12 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
+#ifdef USE_KOKKOS_INSTANCE
+    ExecSpace instanceObject = execObj.getInstance(i);
+#else
     void* stream = execObj.getStream(i);
-    if (!stream) {
-      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-    }
     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
     //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::Cuda > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
@@ -598,13 +601,12 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //  const int threadsPerGroup = 256;
 //  const int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
 //
-//  void* stream = r.getStream();
-//
-//  if (!stream) {
-//    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-//    exit(-1);
-//  }
-//  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+// #ifdef USE_KOKKOS_INSTANCE
+//     ExecSpace instanceObject = execObj.getInstance();
+// #else
+//     void* stream = execObj.getStream();
+//     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+// #endif
 //  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
 //
 //  Kokkos::parallel_for( rangepolicy, KOKKOS_LAMBDA ( const int& n ) {
@@ -788,7 +790,11 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
   // (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
   const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+#ifdef USE_KOKKOS_INSTANCE
+  const unsigned int streamPartitions = execObj.getNumInstances();
+#else
   const unsigned int streamPartitions = execObj.getNumStreams();
+#endif
 
   // The requested range of data may not have enough work for the
   // requested command line arguments, so shrink them if necessary.
@@ -802,12 +808,12 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
+#ifdef USE_KOKKOS_INSTANCE
+    ExecSpace instanceObject = execObj.getInstance(i);
+#else
     void* stream = execObj.getStream(i);
-    if (!stream) {
-      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-    }
     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
     //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
@@ -860,13 +866,12 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
 //  const int threadsPerGroup = 256;
 //  const int actualThreads = teamThreadRangeSize > threadsPerGroup ? threadsPerGroup : teamThreadRangeSize;
 //
-//  void* stream = r.getStream();
-//
-//  if (!stream) {
-//    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-//    exit(-1);
-//  }
-//  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+// #ifdef USE_KOKKOS_INSTANCE
+//     ExecSpace instanceObject = execObj.getInstance();
+// #else
+//     void* stream = execObj.getStream();
+//     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+// #endif
 //  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
 //
 //  Kokkos::parallel_reduce( rangepolicy, KOKKOS_LAMBDA ( const int& n, ReductionType & inner_tmp ) {
@@ -1004,7 +1009,11 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
   // (SM) and number of SMs totals.
   const unsigned int cuda_threads_per_block = execObj.getCudaThreadsPerBlock();
   const unsigned int cuda_blocks_per_loop     = execObj.getCudaBlocksPerLoop();
+#ifdef USE_KOKKOS_INSTANCE
+  const unsigned int streamPartitions = execObj.getNumInstances();
+#else
   const unsigned int streamPartitions = execObj.getNumStreams();
+#endif
 
   // The requested range of data may not have enough work for the
   // requested command line arguments, so shrink them if necessary.
@@ -1018,12 +1027,12 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
     Kokkos::Cuda instanceObject();
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
+#ifdef USE_KOKKOS_INSTANCE
+    ExecSpace instanceObject = execObj.getInstance(i);
+#else
     void* stream = execObj.getStream(i);
-    if (!stream) {
-      std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-      SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-    }
     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
     //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
     Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
@@ -1378,9 +1387,12 @@ typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::typ
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
              Kokkos::View<int_3*, Kokkos::CudaSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
-
-  void* stream = execObj.getStream();
-  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#ifdef USE_KOKKOS_INSTANCE
+    ExecSpace instanceObject = execObj.getInstance();
+#else
+    void* stream = execObj.getStream();
+    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
   Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, list_size);
 
   Kokkos::parallel_for (policy, KOKKOS_LAMBDA (const unsigned int& iblock) {
@@ -1397,12 +1409,12 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Kokkos::Cuda instanceObject();
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
-  void* stream = execObj.getStream();
-  if (!stream) {
-    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-    SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-  }
-  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#ifdef USE_KOKKOS_INSTANCE
+    ExecSpace instanceObject = execObj.getInstance();
+#else
+    void* stream = execObj.getStream();
+    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
 #endif
 
@@ -1581,8 +1593,12 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #if defined(NO_STREAM)
 	Kokkos::RangePolicy< Kokkos::Cuda > policy(0, n_cells);
 #else
+#ifdef USE_KOKKOS_INSTANCE
+	ExecSpace instanceObject = execObj.getInstance();
+#else
 	void* stream = execObj.getStream();
 	Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
 	Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, n_cells);
 #endif
 
@@ -1617,12 +1633,12 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   Kokkos::Cuda instanceObject();
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
+#ifdef USE_KOKKOS_INSTANCE
+  ExecSpace instanceObject = execObj.getInstance();
+#else
   void* stream = execObj.getStream();
-  if (!stream) {
-    std::cout << "Error, the CUDA stream must not be nullptr\n" << std::endl;
-    SCI_THROW(InternalError("Error, the CUDA stream must not be nullptr.", __FILE__, __LINE__));
-  }
   Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+#endif
   Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
 #endif
 
