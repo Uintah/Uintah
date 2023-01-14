@@ -1410,6 +1410,20 @@ copyGpuGhostCellsToGpuVars(intptr_t dTask,
 
 //_____________________________________________________________________________
 //
+void
+Task::ActionNonPortableBase::
+syncTaskGpuDW(intptr_t dTask,
+              unsigned int deviceNum,
+              GPUDataWarehouse *taskgpudw)
+{
+  Kokkos::DefaultExecutionSpace instance =
+    this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->syncto_device<Kokkos::DefaultExecutionSpace>(instance);
+}
+
+//_____________________________________________________________________________
+//
 //  Task instance pass through methods to the action
 //_____________________________________________________________________________
 //
@@ -1479,6 +1493,17 @@ Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
 {
   if (m_action) {
     m_action->copyGpuGhostCellsToGpuVars(dTask, deviceNum, taskgpudw);
+  }
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
+                    GPUDataWarehouse *taskgpudw)
+{
+  if (m_action) {
+    m_action->syncTaskGpuDW(dTask, deviceNum, taskgpudw);
   }
 }
 #else  // #ifdef TASK_MANAGES_EXECSPACE - STREAMS

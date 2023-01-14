@@ -4430,12 +4430,14 @@ DetailedTask::syncTaskGpuDWs()
 
     taskgpudw = this->getTaskGpuDataWarehouse(currentDevice,Task::OldDW);
     if (taskgpudw) {
-      syncTaskGpuDW(currentDevice, taskgpudw);
+      m_task->syncTaskGpuDW(reinterpret_cast<intptr_t>(this),
+                            currentDevice, taskgpudw);
     }
 
     taskgpudw = this->getTaskGpuDataWarehouse(currentDevice,Task::NewDW);
     if (taskgpudw) {
-      syncTaskGpuDW(currentDevice, taskgpudw);
+      m_task->syncTaskGpuDW(reinterpret_cast<intptr_t>(this),
+                            currentDevice, taskgpudw);
     }
   }
 #else
@@ -4459,57 +4461,6 @@ DetailedTask::syncTaskGpuDWs()
 #endif
 }
 
-#ifdef TASK_MANAGES_EXECSPACE
-void
-DetailedTask::syncTaskGpuDW(const unsigned int deviceNum,
-                                  GPUDataWarehouse *taskgpudw)
-{
-  varLock->lock();
-
-  if (taskgpudw->getDeviceDirty()) {
-    OnDemandDataWarehouse::uintahSetCudaDevice( deviceNum );
-
-    // Even though this is in a writeLock state on the CPU, the nature
-    // of multiple threads each with their own stream copying to a GPU
-    // means that one stream might seemingly go out of order.  This is
-    // ok for two reasons. 1) Nothing should ever be *removed* from a
-    // gpu data warehouse 2) Therefore, it doesn't matter if streams go
-    // out of order, each thread will still ensure it copies exactly
-    // what it needs.  Other streams may write additional data to the
-    // gpu data warehouse, but cpu threads will only access their own
-    // data, not data copied in by other cpu threada via streams.
-
-    // This approach does NOT require CUDA pinned memory.
-    // unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
-
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << UnifiedScheduler::myRankThread()
-            << " DetailedTask::syncTaskGpuDW() - cudaMemcpy -"
-            << " sync GPUDW at " << taskgpudw->getdevice_ptr()
-            << " with description " << taskgpudw->getInternaleName()
-            << " to device " << deviceNum
-            // << " on stream " << stream
-            << std::endl;
-      }
-      cerrLock.unlock();
-    }
-
-#ifdef USE_KOKKOS_INSTANCE
-    m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this), deviceNum,
-#else
-    m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this), deviceNum,
-#endif
-                              taskgpudw->getdevice_ptr(), taskgpudw,
-                              taskgpudw->getObjectSizeInBytes(),
-                              cudaMemcpyHostToDevice);
-    taskgpudw->setDeviceDirty(false);
-  }
-
-  varLock->unlock();
-}
-#endif  // #ifdef TASK_MANAGES_EXECSPACE
 
 // ______________________________________________________________________
 //

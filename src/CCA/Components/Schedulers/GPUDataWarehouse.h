@@ -501,7 +501,12 @@ public:
   // HOST_DEVICE bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
   __host__ bool remove(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void* getPlacementNewBuffer();
-  __host__ void syncto_device(cudaStream_t* cuda_stream);
+  template <typename ExecSpace>
+  __host__ void syncto_device(ExecSpace instance)
+  {
+    printf("Error: GPUDataWarehouse::syncto_device not implemented for this execution space.\n");
+    SCI_THROW(InternalError("GPUDataWarehouse::syncto_device not implemented for this execution space: ", __FILE__, __LINE__) );
+  };
   __host__ void clear();
   __host__ void deleteSelfOnDevice();
   __host__ GPUDataWarehouse* getdevice_ptr() {return d_device_copy;};
@@ -526,8 +531,11 @@ public:
                                 int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset);
 
   template <typename ExecSpace>
-  __host__ bool transferFrom(ExecSpace instance, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx);
-  // __host__ bool transferFrom(cudaStream_t* stream, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool transferFrom(ExecSpace instance, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx)
+  {
+    printf("Error: GPUDataWarehouse::transferFrom not implemented for this execution space.\n");
+    SCI_THROW(InternalError("GPUDataWarehouse::transferFrom not implemented for this execution space: ", __FILE__, __LINE__) );
+  };
 
   __host__ bool areAllStagingVarsValid(char const* label, int patchID, int matlIndx, int levelIndx);
 
@@ -581,7 +589,7 @@ public:
   __host__ void copyGpuGhostCellsToGpuVarsInvoker(ExecSpace instance)
   {
     printf("Error: GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space.\n");
-    SCI_THROW(InternalError("GPUDataWarehouse.h::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space: ", __FILE__, __LINE__) );
+    SCI_THROW(InternalError("GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker not implemented for this execution space: ", __FILE__, __LINE__) );
   };
 
 #ifdef USE_KOKKOS_PARALLEL_FOR
@@ -681,17 +689,40 @@ private:
 #ifdef USE_KOKKOS_INSTANCE
 template <>
 __host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance);
+
+template<>
+__host__ void GPUDataWarehouse::syncto_device<Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace instance);
+
+template <>
+__host__ bool
+GPUDataWarehouse::transferFrom<Kokkos::DefaultExecutionSpace>( Kokkos::DefaultExecutionSpace instance
+                                             , GPUGridVariableBase &var_source
+                                             , GPUGridVariableBase &var_dest
+                                             , GPUDataWarehouse * from
+                                             , char const* label
+                                             , int patchID
+                                             , int matlIndx
+                                             , int levelIndx);
 #else
 template <>
 __host__ void GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<cudaStream_t*>(cudaStream_t* stream);
-#endif
 
+template<>
+__host__ void
+GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream);
 
-template <typename ExecSpace>
+template <>
 __host__ bool
-GPUDataWarehouse::transferFrom(ExecSpace instance, GPUGridVariableBase &var_source, GPUGridVariableBase &var_dest, GPUDataWarehouse * from, char const* label, int patchID, int matlIndx, int levelIndx)
-{
-}
+GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
+                                             , GPUGridVariableBase &var_source
+                                             , GPUGridVariableBase &var_dest
+                                             , GPUDataWarehouse * from
+                                             , char const* label
+                                             , int patchID
+                                             , int matlIndx
+                                             , int levelIndx);
+
+#endif
 
 } // end namespace Uintah
 

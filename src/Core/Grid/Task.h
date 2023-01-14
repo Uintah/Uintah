@@ -154,6 +154,10 @@ protected: // class Task
     virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
                                             unsigned int deviceNum,
                                             GPUDataWarehouse *taskgpudw) = 0;
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw) = 0;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
 #endif  // defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
 
@@ -222,6 +226,9 @@ public: // private:
                                             unsigned int deviceNum,
                                             GPUDataWarehouse *taskgpudw);
 
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
     // task has to keep track of the device and stream on a DetailedTask
@@ -398,6 +405,10 @@ public: // private:
                                             unsigned int deviceNum,
                                             GPUDataWarehouse *taskgpudw);
 
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
+
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
     // task has to keep track of the Kokkos intance on a DetailedTask
@@ -523,7 +534,6 @@ public: // private:
     virtual bool haveKokkosInstanceForThisTask(intptr_t dTask,
                                                unsigned int deviceNum ) const;
 
-    // ARS - FIX ME - This needs to be prue virtual for the GPU instance Pool
     virtual Kokkos::DefaultExecutionSpace
     getKokkosInstanceForThisTask(intptr_t dTask,
                                  unsigned int deviceNum ) const;
@@ -547,6 +557,10 @@ public: // private:
     virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
                                             unsigned int deviceNum,
                                             GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
 
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
@@ -994,6 +1008,10 @@ public: // private:
     virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
                                             unsigned int deviceNum,
                                             GPUDataWarehouse *taskgpudw);
+
+    virtual void syncTaskGpuDW(intptr_t dTask,
+                               unsigned int deviceNum,
+                               GPUDataWarehouse *taskgpudw);
 
   protected:
     // The task is pointed to by multiple DetailedTasks. As such, the
@@ -2228,6 +2246,10 @@ public: // class Task
   virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
                                           unsigned int deviceNum,
                                           GPUDataWarehouse *taskgpudw);
+
+  virtual void syncTaskGpuDW(intptr_t dTask,
+                             unsigned int deviceNum,
+                             GPUDataWarehouse *taskgpudw);
 #endif
 #endif
 
@@ -2825,6 +2847,18 @@ copyGpuGhostCellsToGpuVars(intptr_t dTask,
   ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
 
   taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(instance);
+}
+
+template<typename ExecSpace, typename MemSpace>
+void
+Task::ActionPortableBase<ExecSpace, MemSpace>::
+syncTaskGpuDW(intptr_t dTask,
+                           unsigned int deviceNum,
+                           GPUDataWarehouse *taskgpudw)
+{
+  ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, deviceNum);
+
+  taskgpudw->syncto_device(instance);
 }
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
 #endif  // defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)

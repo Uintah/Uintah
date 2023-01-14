@@ -557,14 +557,10 @@ public:
                                );
 
     void createTaskGpuDWs();
+    void   syncTaskGpuDWs();
 
     // void gpuInitialize( bool reset = false );
 
-    void syncTaskGpuDWs();
-#ifdef TASK_MANAGES_EXECSPACE
-    void syncTaskGpuDW(const unsigned int deviceNum,
-                             GPUDataWarehouse *taskgpudw);
-#endif
     Uintah::MasterLock * varLock {nullptr};
 
     void performInternalGhostCellCopies();
