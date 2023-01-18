@@ -825,7 +825,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   //Now allocate it
   if (allocationNeeded) {
 
-    OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
 
     unsigned int memSize = var.getMemSize();
 
@@ -1192,7 +1193,8 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //chunk of memory, only one malloc and one copy to device should be needed.
   double *d_ptr = nullptr;
   double *h_ptr = nullptr;
-  OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+  // Base call is commented out
+  // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
 
   printf("Allocated GPU buffer of size %lu \n", (unsigned long)size);
 
@@ -1470,8 +1472,10 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
      //Have this var use the existing memory address.
      var.setData(addr);
   } else {
-    //We are the first task to request allocation.  Do it.
-    OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+    // We are the first task to request allocation.  Do it.
+
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
     size_t memSize = var.getMemSize();
 
     if (gpu_stats.active()) {
@@ -1583,8 +1587,10 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
      //Have this var use the existing memory address.
      var.setData(addr);
   } else {
-    //We are the first task to request allocation.  Do it.
-    OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+    // We are the first task to request allocation.  Do it.
+
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
     size_t memSize = var.getMemSize();
 
     if (gpu_stats.active()) {
@@ -1782,9 +1788,12 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
 {
   this->objectSizeInBytes = objectSizeInBytes;
   this->d_maxdVarDBItems = d_maxdVarDBItems;
-  OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+
+  // Base call is commented out
+  // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+
   void* temp = nullptr;
-  //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
+  // CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
   temp = GPUMemoryPool::allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -1800,12 +1809,9 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int d_maxdVarDB
     cerrLock.unlock();
   }
   d_device_copy = (GPUDataWarehouse*) temp;
-  //cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
-
-
+  // cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
 
   d_dirty = true;
-
 }
 
 //______________________________________________________________________
@@ -1820,7 +1826,7 @@ __host__ void
 GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream)
 {
 #if defined(USE_KOKKOS_DEEPCOPY)
-    Kokkos::Cuda instance(*stream);
+    Kokkos::DefaultExecutionSpace instance(*stream);
 #endif
 #endif
   if (!d_device_copy) {
@@ -1883,7 +1889,8 @@ GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream)
 __host__ void
 GPUDataWarehouse::clear()
 {
-  OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+  // Base call is commented out
+  // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
 
   varLock->lock();
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator varIter;
@@ -1963,7 +1970,8 @@ __host__ void
 GPUDataWarehouse::deleteSelfOnDevice()
 {
   if ( d_device_copy ) {
-    OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
@@ -2293,13 +2301,14 @@ __host__ void
 GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker<cudaStream_t*>(cudaStream_t* stream)
 {
 #ifdef USE_KOKKOS_PARALLEL_FOR
-    Kokkos::Cuda instance(*stream);
+    Kokkos::DefaultExecutionSpace instance(*stream);
 #endif
 #endif
   // See if this GPU datawarehouse has ghost cells in it.
   if (numGhostCellCopiesNeeded > 0) {
     // Call a kernel which gets the copy process started.
-    OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
 
     if (gpu_stats.active()) {
       cerrLock.lock();
@@ -2507,197 +2516,6 @@ GPUDataWarehouse::getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, i
   }
   varLock->unlock();
 }
-
-//______________________________________________________________________
-//  Deep copies (not shallow copies or moves) an entry from one data
-//  warehouse to another.  (Note: A deep copy is a full copy of data
-//  from one variable's memory space to another variable's memory
-//  space A shallow copy is just a pointer copy and a ref counting A
-//  move is a true std::move() reseating.  RMCRT and Arches often keep
-//  a variable in the old data warehouse alive by copying it to the
-//  new data warehouse.  It can't be a move (it may be needed to use
-//  data from the old and the new) It can't be a shallow copy (it may
-//  be needed to modify the new and also use the old) So it must be a
-//  deep copy.  Both the source and destination variables must be in
-//  the GPU data warehouse, both must be listed as "allocated".  If
-//  these are not the case, the transferFrom doesn't proceed.  Both
-//  must have the same variable sizes.  If this is not the case, the
-//  program will exit.  If all above conditions are met, then it will
-//  do a device to device memcopy call.
-
-// *Important*: For this to work, it needs a GPU stream.  GPU streams
-// are stored per task, every Uintah task is assigned a possible
-// stream to use.  To get the stream you have to request it from the
-// detailedTask object.  Normal CPU task callback functions do not
-// have access to the detailedTask object, but it is possible to
-// extend the callack function parameter list so that it does.  See
-// UnifiedSchedulerTest::timeAdvanceUnified as an example.
-
-// *Also important*: For this to work, the destination variable *MUST*
-// be listed as a computes in the task that's calling transferFrom().
-// That allows for the computes data to have been preallocated ahead
-// of time by the scheduler.  Uintah's scheduler is fine if it is able
-// to allocate the space, so that it can allow the task developer to
-// write data into space it created.  If it was a computes, then this
-// method can copy data into the computes memory, and when the task
-// which called transferFrom is done, the scheduler will mark this
-// computes variable as VALID.
-
-// Note: A shallow copy method has been requested by the Arches team.
-// That hasn't been implemented yet.  It would require ref counting a
-// variable, and perhaps some sanity checks to ensure a shallow copied
-// variable is not called a computes and then later listed as a
-// modifies.
-#ifdef USE_KOKKOS_INSTANCE
-template <>
-__host__ bool
-GPUDataWarehouse::transferFrom<Kokkos::DefaultExecutionSpace>( Kokkos::DefaultExecutionSpace instance
-                                             , GPUGridVariableBase &var_source
-                                             , GPUGridVariableBase &var_dest
-                                             , GPUDataWarehouse * from
-                                             , char const* label
-                                             , int patchID
-                                             , int matlIndx
-                                             , int levelIndx)
-{
-#else
-template <>
-__host__ bool
-GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
-                                             , GPUGridVariableBase &var_source
-                                             , GPUGridVariableBase &var_dest
-                                             , GPUDataWarehouse * from
-                                             , char const* label
-                                             , int patchID
-                                             , int matlIndx
-                                             , int levelIndx)
-{
-#if defined(USE_KOKKOS_PARALLEL_FOR)
-    Kokkos::Cuda instance(*stream);
-#endif
-#endif
-
-  from->varLock->lock();
-  this->varLock->lock();  // Lock both data warehouses, no way to lock
-                          // free this section, you could get the
-                          // dining philosophers problem.
-  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator source_it = from->varPointers->find(lpml);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator dest_it   = this->varPointers->find(lpml);
-  int proceed = true;
-  if (source_it == from->varPointers->end()) {
-    // It may just be there wasn't any requires in the GPU to begin
-    // with, so don't bother attempting to copy.
-    //printf("GPU source not found\n");
-    proceed = false;
-  } else if (dest_it == this->varPointers->end()) {
-    // It may just be there wasn't any computes in the GPU to begin
-    // with, so don't bother attempting to copy.
-    //printf("GPU dest not found in DW at %p for variable %s patch %d matl %d level %d\n", this, label, patchID, matlIndx, levelIndx);
-    proceed = false;
-  } else if (((__sync_fetch_and_or(&(source_it->second.var->atomicStatusInGpuMemory), 0) & ALLOCATED) != ALLOCATED)){
-    //It may just be there wasn't any computes in the GPU to begin with, so don't bother attempting to copy.
-    //printf("GPU source not allocated for variable %s patch %d matl %d level %d, it has status codes %s\n",  label, patchID, matlIndx, levelIndx, getDisplayableStatusCodes(source_it->second.atomicStatusInGpuMemory).c_str());
-    proceed = false;
-
-    // Is this a problem?  We know of this variable in the data
-    // warehouse, but we have no space for it.
-    //printf("Error: GPUDataWarehouse::transferFrom() - No source variable device space found.  Cannot proceed with deep copy.  Exiting...\n");
-    //exit(-1);
-  } else if (((__sync_fetch_and_or(&(dest_it->second.var->atomicStatusInGpuMemory), 0) & ALLOCATED) != ALLOCATED)){
-    //printf("GPU destination not allocated for variable %s patch %d matl %d level %d\n",  label, patchID, matlIndx, levelIndx);
-    // It may just be there wasn't any computes in the GPU to begin
-    // with, so don't bother attempting to copy.
-    proceed = false;
-
-    // Is a problem?  We know of this variable in the data warehouse,
-    // but we have no space for it.
-    //printf("Error: GPUDataWarehouse::transferFrom() - No destination variable device space found.  Cannot proceed with deep copy.  Exiting...\n");
-    //exit(-1);
-  }
-  if (!proceed) {
-    from->varLock->unlock();
-    this->varLock->unlock();
-    return false;
-  }
-
-  if (!(    source_it->second.var->device_offset.x == dest_it->second.var->device_offset.x
-         && source_it->second.var->device_offset.y == dest_it->second.var->device_offset.y
-         && source_it->second.var->device_offset.z == dest_it->second.var->device_offset.z
-         && source_it->second.var->device_size.x   == dest_it->second.var->device_size.x
-         && source_it->second.var->device_size.y   == dest_it->second.var->device_size.y
-         && source_it->second.var->device_size.z   == dest_it->second.var->device_size.z    )) {
-
-    printf("Error: GPUDataWarehouse::transferFrom() - The source and destination variables exists for variable %s patch %d matl %d level %d, but the sizes don't match.  Cannot proceed with deep copy.  Exiting...\n", label, patchID, matlIndx, levelIndx);
-    printf("The source size is (%d, %d, %d) with offset (%d, %d, %d) and device size is (%d, %d, %d) with offset (%d, %d, %d)\n",
-            source_it->second.var->device_size.x, source_it->second.var->device_size.y, source_it->second.var->device_size.z,
-            source_it->second.var->device_offset.x, source_it->second.var->device_offset.y, source_it->second.var->device_offset.z,
-            dest_it->second.var->device_size.x, dest_it->second.var->device_size.y, dest_it->second.var->device_size.z,
-            dest_it->second.var->device_offset.x, dest_it->second.var->device_offset.y, dest_it->second.var->device_offset.z);
-
-    from->varLock->unlock();
-    this->varLock->unlock();
-    exit(-1);
-
-  } else if (!(source_it->second.var->device_ptr)) {
-    //A couple more santiy checks, this may be overkill...
-    printf("Error: GPUDataWarehouse::transferFrom() - No source variable pointer found for variable %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
-    from->varLock->unlock();
-    this->varLock->unlock();
-    exit(-1);
-
-  } else if (!(dest_it->second.var->device_ptr)) {
-    printf("Error: GPUDataWarehouse::transferFrom() - No destination variable pointer found for variable %s patch %d matl %d level %d\n", label, patchID, matlIndx, levelIndx);
-    from->varLock->unlock();
-    this->varLock->unlock();
-    exit(-1);
-  }
-
-  // We shouldn't need to allocate space on either the source or the
-  // datination.  The source should have been listed as a requires, and
-  // the destination should have been listed as a computes for the
-  // task.  And this solves a mess of problems, mainly deailing with
-  // when it is listed as allocated and when it's listed as valid.
-
-  var_source.setArray3(source_it->second.var->device_offset, source_it->second.var->device_size, source_it->second.var->device_ptr);
-
-  var_source.setArray3(dest_it->second.var->device_offset, dest_it->second.var->device_size, dest_it->second.var->device_ptr);
-
-#if defined(USE_KOKKOS_INSTANCE) || defined(USE_KOKKOS_PARALLEL_FOR)
-  const char * srcPtr =
-    static_cast<const char *>(source_it->second.var->device_ptr);
-  char * dstPtr =
-    static_cast<      char *>(dest_it->second.var->device_ptr);
-
-  size_t count = (source_it->second.var->device_size.x *
-                  source_it->second.var->device_size.y *
-                  source_it->second.var->device_size.z *
-                  source_it->second.var->sizeOfDataType);
-
-  Kokkos::parallel_for("transferFrom",
-                       Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> (instance, 0, count),
-                       KOKKOS_LAMBDA (const int i) {
-                         dstPtr[i] = srcPtr[i];
-                         });
-#else
-  cudaMemcpyAsync(dest_it->second.var->device_ptr,
-                  source_it->second.var->device_ptr,
-                  source_it->second.var->device_size.x *
-                  source_it->second.var->device_size.y *
-                  source_it->second.var->device_size.z *
-                  source_it->second.var->sizeOfDataType,
-                  cudaMemcpyDeviceToDevice,
-                  *stream);
-#endif
-
-  from->varLock->unlock();
-  this->varLock->unlock();
-
-  // Let the caller know we found and transferred something.
-  return true;
-}
-
 
 //______________________________________________________________________
 // Go through all staging vars for a var. See if they are all marked as valid.

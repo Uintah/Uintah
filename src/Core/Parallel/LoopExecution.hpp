@@ -43,49 +43,58 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
 #include <cstring>
 #include <cstddef> // TODO: What is this doing here?
 #include <vector> //  Used to manage multiple streams in a task.
 #include <algorithm>
 #include <initializer_list>
 
-#include <sci_defs/cuda_defs.h>
-#include <sci_defs/kokkos_defs.h>
-
 #define ARRAY_SIZE 16
 
 using std::max;
 using std::min;
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
 #include <Kokkos_Core.hpp>
-  const bool HAVE_KOKKOS = true;
-#if !defined( KOKKOS_ENABLE_CUDA )  //This define comes from Kokkos itself.
+
+// ARS - FIX ME - I do not fully understand these defines.
+namespace Kokkos {
   // Kokkos CUDA (NVIDIA GPU) is not included in this build.  Create
   // some stub types so these types at least exist.
-  namespace Kokkos {
+#if !defined( KOKKOS_ENABLE_CUDA )
     class Cuda {};
     class CudaSpace {};
-#if !defined( KOKKOS_ENABLE_OPENMPTARGET )
+#elif !defined( KOKKOS_ENABLE_HIP )
+    namespace Experimental {
+      class HIP {};
+      class HIPSpace {};
+    }
+#elif !defined( KOKKOS_ENABLE_SYCL )
+    namespace Experimental {
+      class SYCL {};
+      class SYCLDeviceUSMSpace {};
+    }
+#elif !defined( KOKKOS_ENABLE_OPENMPTARGET )
     namespace Experimental { 
       class OpenMPTarget {};
       class OpenMPTargetSpace {};
     }
-#endif
-  }
 #elif !defined( KOKKOS_ENABLE_OPENMP )
   // For the Unified Scheduler + Kokkos GPU but not Kokkos OpenMP.
   // This logic may be temporary if all GPU functionality is merged
   // into the Kokkos scheduler and the Unified Scheduler is no longer
   // used for GPU logic.  Brad P Jun 2018
-  namespace Kokkos {
     class OpenMP {};
-  }
 #endif
-#else //if defined( UINTAH_ENABLE_KOKKOS )
+}
 
-  //Kokkos not included in this build.  Create some stub types so
-  //these types at least exist.
+#else //#if defined( HAVE_KOKKOS )
+
+  // Kokkos not included in this build.  Create some stub types so
+  // these types at least exist.
   namespace Kokkos {
     class OpenMP {};
     class HostSpace {};
@@ -93,13 +102,25 @@ using std::min;
       class OpenMPTarget {};
       class OpenMPTargetSpace {};
     }
+#if defined( KOKKOS_ENABLE_CUDA )
     class Cuda {};
     class CudaSpace {};
+#elif defined( KOKKOS_ENABLE_HIP )
+    namespace Experimental {
+      class HIP {};
+      class HIPSpace {};
+    }
+#elif defined( KOKKOS_ENABLE_SYCL )
+    namespace Experimental {
+      class SYCL {};
+      class SYCLDeviceUSMSpace {};
+    }
+#endif
   }
-  const bool HAVE_KOKKOS = false;
+
 #define KOKKOS_LAMBDA [&]
 
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //if defined( HAVE_KOKKOS )
 
 // Create some data types for non-Kokkos CPU runs.
 namespace UintahSpaces{
@@ -107,15 +128,11 @@ namespace UintahSpaces{
 			 // (e.g. no Kokkos)
   class HostSpace {};    // And also to refer to any data in host
 			 // memory
-#if defined( HAVE_CUDA )
-  class GPU {};          // At the moment, this is only used to
-			 // describe data in Cuda Memory
-  class CudaSpace {};    // and not to manage non-Kokkos GPU tasks.
-#endif //HAVE_CUDA
-#if defined( HAVE_OPENMPTARGET )
+  
+#if defined(HAVE_OPENMPTARGET)
   class OpenMPTarget {}; // To describe data in Kokkos OpenMPTarget Memory
   class OpenMPTargetSpace {};
-#endif //HAVE_OPENMPTARGET
+#endif //if defined( HAVE_OPENMPTARGET )
 }
 
 enum TASKGRAPH {
@@ -137,7 +154,7 @@ enum TASKGRAPH {
 // process is doable but just requires a muck of boilerplating to get
 // there, instead of the above if statement, I instead opted for a
 // weirder system where I compared the tags as strings if
-// (strcmp(STRVX(ORIGINAL_KOKKOS_CUDA_TAG), STRVX(TAG1)) == 0) {
+// (strcmp(STRVX(ORIGINAL_KOKKOS_DEVICE_TAG), STRVX(TAG1)) == 0) {
 // Further, the C++11 way ended up defining a tag as more of a string
 // of code rather than an actual data type.
 
@@ -145,14 +162,14 @@ enum TASKGRAPH {
 //using KOKKOS_OPENMP_TAG = Kokkos::OpenMP;
 //using KOKKOS_DEFAULT_HOST_TAG = Kokkos::DefaultHostExecutionSpace;
 //using KOKKOS_DEFAULT_DEVICE_TAG = Kokkos::DefaultExecutionSpace;
-//using KOKKOS_CUDA_TAG = Kokkos::Cuda;
+//using KOKKOS_DEVICE_TAG = Kokkos::Cuda;
 
 // Main concept of the below tags: Whatever tags the user supplies is
 // directly compiled into the Uintah binary build.  In case of a
 // situation where a user supplies a tag that isn't valid for that
-// build, such as KOKKOS_CUDA_TAG in a non-CUDA build, the tag is
+// build, such as KOKKOS_DEVICE_TAG in a non-CUDA build, the tag is
 // "downgraded" to one that is valid.  So in a non-CUDA build,
-// KOKKOS_CUDA_TAG gets associated with Kokkos::OpenMP or
+// KOKKOS_DEVICE_TAG gets associated with Kokkos::OpenMP or
 // UintahSpaces::CPU.  This helps ensure that the compiler never
 // attempts to compile anything with a Kokkos::Cuda data type in a
 // non-GPU build
@@ -160,7 +177,17 @@ enum TASKGRAPH {
 #define ORIGINAL_KOKKOS_OPENMP_TAG          Kokkos::OpenMP COMMA Kokkos::HostSpace
 #define ORIGINAL_KOKKOS_DEFAULT_HOST_TAG    Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
 #define ORIGINAL_KOKKOS_DEFAULT_DEVICE_TAG  Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-#define ORIGINAL_KOKKOS_CUDA_TAG            Kokkos::Cuda COMMA Kokkos::CudaSpace
+
+#if defined( KOKKOS_ENABLE_CUDA )
+  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Cuda COMMA Kokkos::CudaSpace
+#elif defined( KOKKOS_ENABLE_HIP )
+  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Experimental::HIP COMMA Kokkos::Experimental::HIPSpace
+#elif defined( KOKKOS_ENABLE_SYCL )
+  #define ORIGINAL_KOKKOS_DEVICE_TAG        Kokkos::Experimental::SYCL COMMA Kokkos::Experimental::SYCLDeviceUSMSpace
+#else
+#define ORIGINAL_KOKKOS_DEVICE_TAG          Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+#endif
+
 
 // Example of Kokkos options following Kokkos internal order:
 //     https://github.com/kokkos/kokkos/blob/develop/core/src/Kokkos_Core_fwd.hpp
@@ -187,58 +214,65 @@ enum TASKGRAPH {
 // default execution space, and the highest enabled host execution
 // space is Kokkos' default host execution space.
 
-#if defined(UINTAH_ENABLE_KOKKOS) && defined(HAVE_CUDA)
-  #if defined(KOKKOS_ENABLE_OPENMP)
-    #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
+#if defined(HAVE_KOKKOS)
+  #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+    #if defined(KOKKOS_ENABLE_OPENMP)
+      #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
 //    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
-  #else
-    #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace 
-  #endif
-  #define KOKKOS_CUDA_TAG             Kokkos::Cuda COMMA Kokkos::CudaSpace
-  #define KOKKOS_DEFAULT_DEVICE_TAG   Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-//    |- This should default into:    Kokkos::Cuda COMMA Kokkos::CudaSpace
+    #else
+      #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace 
+    #endif
 
-#elif defined(UINTAH_ENABLE_KOKKOS) && !defined(HAVE_CUDA)
+    #define KOKKOS_DEFAULT_DEVICE_TAG   Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
 
-  #if defined(KOKKOS_ENABLE_OPENMPTARGET)
-
-    #define UINTAH_CPU_TAG            Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-    #define KOKKOS_OPENMP_TAG         Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
-//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
-//    |- This should default into:    Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
-    #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
-
-  #elif defined(KOKKOS_ENABLE_OPENMP)
-    #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
-//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space 
-//    |- This should default into:    Kokkos::OpenMP COMMA Kokkos::HostSpace
-    #define KOKKOS_CUDA_TAG           Kokkos::OpenMP COMMA Kokkos::HostSpace
+    #if defined( KOKKOS_ENABLE_CUDA )
+      #define KOKKOS_DEVICE_TAG         Kokkos::Cuda COMMA Kokkos::CudaSpace
+    #elif defined( KOKKOS_ENABLE_HIP )
+     #define KOKKOS_DEVICE_TAG          Kokkos::Experimental::HIP COMMA Kokkos::Experimental::HIPSpace
+    #elif defined( KOKKOS_ENABLE_SYCL )
+      #define KOKKOS_DEVICE_TAG         Kokkos::Experimental::SYCL COMMA Kokkos::Experimental::SYCLDeviceUSMSpace
+    #else
+      #define KOKKOS_DEVICE_TAG         Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+    #endif
 
   #else
+    #if defined(KOKKOS_ENABLE_OPENMP)
+      #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+//    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space 
+//    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_DEVICE_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
 
-    #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_DEFAULT_DEVICE_TAG UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-    #define KOKKOS_CUDA_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+    #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+      #define UINTAH_CPU_TAG            Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+      #define KOKKOS_OPENMP_TAG         Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space
+      #define KOKKOS_DEFAULT_HOST_TAG   Kokkos::DefaultHostExecutionSpace COMMA Kokkos::DefaultHostExecutionSpace::memory_space 
+//    |- This should default into:      Kokkos::OpenMP COMMA Kokkos::HostSpace
+      #define KOKKOS_DEFAULT_DEVICE_TAG Kokkos::DefaultExecutionSpace COMMA Kokkos::DefaultExecutionSpace::memory_space
+//    |- This should default into:      Kokkos::Experimental::OpenMPTarget COMMA Kokkos::Experimental::OpenMPTargetSpace
+      #define KOKKOS_DEVICE_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
 
+    #else
+      #define UINTAH_CPU_TAG            UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_OPENMP_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_DEFAULT_HOST_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_DEFAULT_DEVICE_TAG UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+      #define KOKKOS_DEVICE_TAG         UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+
+    #endif
   #endif
-
-#elif !defined(UINTAH_ENABLE_KOKKOS)
+#else // !defined(HAVE_KOKKOS)
   #define UINTAH_CPU_TAG              UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_OPENMP_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_DEFAULT_HOST_TAG     UintahSpaces::CPU COMMA UintahSpaces::HostSpace
   #define KOKKOS_DEFAULT_DEVICE_TAG   UintahSpaces::CPU COMMA UintahSpaces::HostSpace
-  #define KOKKOS_CUDA_TAG             UintahSpaces::CPU COMMA UintahSpaces::HostSpace
+  #define KOKKOS_DEVICE_TAG           UintahSpaces::CPU COMMA UintahSpaces::HostSpace
 #endif
 
 namespace Uintah {
@@ -406,7 +440,7 @@ struct int_3
 //----------------------------------------------------------------------------
 
 // -------------------------------------  parallel_for loops  ---------------------------------------------
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -431,9 +465,9 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 }
 
 #endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -458,13 +492,13 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 }
 
 #endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor )
 {
 
@@ -508,22 +542,22 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
   for (unsigned int i = 0; i < streamPartitions; i++) {
     
 #if defined(NO_STREAM)
-    Kokkos::Cuda instanceObject();
-    Kokkos::TeamPolicy< Kokkos::Cuda > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::DefaultExecutionSpace instanceObject();
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance(i);
 #else
     void* stream = execObj.getStream(i);
-    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
-    Kokkos::TeamPolicy< Kokkos::Cuda > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    //Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace, Kokkos::LaunchBounds<640,1> > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
     
     // Use a Team Policy, this allows us to control how many threads
     // per block and how many blocks are used.
-    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+    typedef Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > policy_type;
     Kokkos::parallel_for ( tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
       // We are within an SM, and all SMs share the same amount of
@@ -605,9 +639,9 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //     ExecSpace instanceObject = execObj.getInstance();
 // #else
 //     void* stream = execObj.getStream();
-//     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+//     Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 // #endif
-//  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
+//  Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> rangepolicy( instanceObject, 0, actualThreads);
 //
 //  Kokkos::parallel_for( rangepolicy, KOKKOS_LAMBDA ( const int& n ) {
 //    int threadNum = n;
@@ -620,8 +654,9 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //    }
 //  });
 }
-#endif  //#if defined(HAVE_CUDA)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
@@ -640,8 +675,8 @@ parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r
   }
 }
 
-//For legacy loops where no execution space was specified as a
-//template parameter.
+// For legacy loops where no execution space was specified as a
+// template parameter.
 template < typename Functor>
 void
 parallel_for( BlockRange const & r, const Functor & functor )
@@ -654,7 +689,7 @@ parallel_for( BlockRange const & r, const Functor & functor )
 
 // -------------------------------------  parallel_reduce_sum loops  ---------------------------------------------
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -726,9 +761,9 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 }
 
 #endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -759,12 +794,13 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 }
 
 #endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & r, const Functor & functor, ReductionType & red )
 {
   // Overall goal, split a 3D range requested by the user into various
@@ -805,21 +841,21 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
   for (unsigned int i = 0; i < streamPartitions; i++) {
 
 #if defined(NO_STREAM)
-    Kokkos::Cuda instanceObject();
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::DefaultExecutionSpace instanceObject();
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance(i);
 #else
     void* stream = execObj.getStream(i);
-    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    //Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
     
     // Use a Team Policy, this allows us to control how many threads per block and how many blocks are used.
-    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+    typedef Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > policy_type;
     Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_sum ) {
 
       // We are within an SM, and all SMs share the same amount of
@@ -870,9 +906,9 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
 //     ExecSpace instanceObject = execObj.getInstance();
 // #else
 //     void* stream = execObj.getStream();
-//     Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+//     Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 // #endif
-//  Kokkos::RangePolicy<Kokkos::Cuda> rangepolicy( instanceObject, 0, actualThreads);
+//  Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> rangepolicy( instanceObject, 0, actualThreads);
 //
 //  Kokkos::parallel_reduce( rangepolicy, KOKKOS_LAMBDA ( const int& n, ReductionType & inner_tmp ) {
 //    int threadNum = n;
@@ -888,8 +924,9 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
 //  red = tmp;
 
 }
-#endif  //#if defined(HAVE_CUDA)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
@@ -924,9 +961,9 @@ parallel_reduce_sum( BlockRange const & r, const Functor & functor, ReductionTyp
 
 // -------------------------------------  parallel_reduce_min loops  ---------------------------------------------
 
-
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
+
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -952,9 +989,9 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
   red = min(tmp0,red);
 }
 #endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -983,12 +1020,13 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 }
 
 #endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,  
                      BlockRange const & r, const Functor & functor, ReductionType & red )
 {
@@ -1024,22 +1062,22 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 
   for (unsigned int i = 0; i < streamPartitions; i++) {
 #if defined(NO_STREAM)
-    Kokkos::Cuda instanceObject();
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::DefaultExecutionSpace instanceObject();
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > reduce_tp( actual_cuda_blocks_per_loop, actual_threads_per_block );
 #else
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance(i);
 #else
     void* stream = execObj.getStream(i);
-    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-    //Kokkos::TeamPolicy< Kokkos::Cuda, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
-    Kokkos::TeamPolicy< Kokkos::Cuda > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    //Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace, Kokkos::LaunchBounds<640,1>  > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
+    Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > reduce_tp( instanceObject, actual_cuda_blocks_per_loop, actual_threads_per_block );
 #endif
     
     // Use a Team Policy, this allows us to control how many threads
     // per block and how many blocks are used.
-    typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+    typedef Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > policy_type;
     Kokkos::parallel_reduce ( reduce_tp, KOKKOS_LAMBDA ( typename policy_type::member_type thread, ReductionType& inner_min ) {
 
       // We are within an SM, and all SMs share the same amount of
@@ -1081,8 +1119,9 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
   cudaDeviceSynchronize();
 #endif
 }
-#endif  //#if defined(HAVE_CUDA)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
 // TODO: This appears to not do any "min" on the reduction.
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -1131,8 +1170,9 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 }
 
 // -------------------------------------  sweeping_parallel_for loops  ---------------------------------------------
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
@@ -1226,11 +1266,11 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
   } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
 #endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
@@ -1324,25 +1364,28 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
   } // end for ( int iphase = 0; iphase < nphase; iphase++ )
 }
 #endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange const & r, const Functor & functor, const bool plusX, const bool plusY, const bool plusZ , const int npart)
 {
     SCI_THROW(InternalError("Error: sweeps on cuda has not been implimented .", __FILE__, __LINE__));
 }
-#endif
-#endif
+
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
 // Allows the user to specify a vector (or view) of indices that
 // require an operation, often needed for boundary conditions and
 // possibly structured grids.
 // TODO: Can this be called parallel_for_unstructured?
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -1352,16 +1395,19 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   });
 }
+
 #endif  //#if defined(KOKKOS_ENABLE_OPENMP)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
 
 // Allows the user to specify a vector (or view) of indices that
 // require an operation, often needed for boundary conditions and
 // possibly structured grids
 // TODO: Can this be called parallel_for_unstructured?
-#if defined(UINTAH_ENABLE_KOKKOS)
+
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -1371,8 +1417,9 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   });
 }
+
 #endif  //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#endif  //#if defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(HAVE_KOKKOS)
 
 // Allows the user to specify a vector (or view) of indices that
 // require an operation, often needed for boundary conditions and
@@ -1380,20 +1427,22 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 // original GPU version.
 // TODO: Can this be called parallel_for_unstructured?
 // TODO: Make streamable.
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
+
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+
 template <typename ExecSpace, typename MemSpace, typename Functor>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
-             Kokkos::View<int_3*, Kokkos::CudaSpace> iterSpace ,const unsigned int list_size , const Functor & functor )
+             Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> iterSpace ,const unsigned int list_size , const Functor & functor )
 {
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance();
 #else
     void* stream = execObj.getStream();
-    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-  Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, list_size);
+  Kokkos::RangePolicy< Kokkos::DefaultExecutionSpace > policy(instanceObject, 0, list_size);
 
   Kokkos::parallel_for (policy, KOKKOS_LAMBDA (const unsigned int& iblock) {
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
@@ -1406,19 +1455,19 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int actualThreads = list_size > cudaThreadsPerBlock ? cudaThreadsPerBlock : list_size;
 
 #if defined(NO_STREAM)
-  Kokkos::Cuda instanceObject();
-  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
+  Kokkos::DefaultExecutionSpace instanceObject();
+  Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
 #ifdef USE_KOKKOS_INSTANCE
     ExecSpace instanceObject = execObj.getInstance();
 #else
     void* stream = execObj.getStream();
-    Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+    Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
+  Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
 #endif
 
-  typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+  typedef Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > policy_type;
 
   Kokkos::parallel_for (teamPolicy, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
@@ -1434,14 +1483,14 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 
 }
-#endif //HAVE_CUDA
-#endif //UINTAH_ENABLE_KOKKOS
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
-#if defined(HAVE_CUDA)
-// TODO: What is this?  It needs a better name
+#if defined(HAVE_KOKKOS)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+
 template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
 			T2 KV3, const T3 init_val)
 {
@@ -1460,8 +1509,8 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
   });
 }
-#endif  //defined(HAVE_CUDA)
-#endif  //defined(UINTAH_ENABLE_KOKKOS)
+#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS)
 
 // ------------------------------  parallel_initialize loops and its helper functions  ------------------------------
 
@@ -1471,7 +1520,7 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 // ------------------------------------------------------------------------------------------------------------------
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
@@ -1509,10 +1558,10 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //  }
 //}
 
-#endif //KOKKOS_ENABLE_OPENMP
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //#if defined(KOKKOS_ENABLE_OPENMP)
+#endif //#if defined(HAVE_KOKKOS)
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
@@ -1550,20 +1599,19 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 //  }
 //}
 
-#endif //KOKKOS_ENABLE_OPENMPTARGET
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#endif //#if defined(HAVE_KOKKOS)
 
 template <class TTT> // Needed for the casting inside of the Variadic
 		     // template, also allows for nested templating
 using Alias = TTT;
 
-#if defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_KOKKOS)
 
 template <typename T, typename MemSpace> // Forward Declaration of KokkosView3
 class KokkosView3;
 
-
-#if defined(HAVE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 /* DS 11052019: Wrote alternative (and simpler) version of
  * parallel_initialize_grouped for cuda The previous version seems to
@@ -1577,7 +1625,7 @@ class KokkosView3;
  * produces correct result. Revisit later if it becomes a bottleneck.
  */
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 		const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
@@ -1591,15 +1639,15 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 		n_cells = KKV3[j].m_view.size() > n_cells ? KKV3[j].m_view.size() : n_cells;
 	}
 #if defined(NO_STREAM)
-	Kokkos::RangePolicy< Kokkos::Cuda > policy(0, n_cells);
+	Kokkos::RangePolicy< Kokkos::DefaultExecutionSpace > policy(0, n_cells);
 #else
 #ifdef USE_KOKKOS_INSTANCE
 	ExecSpace instanceObject = execObj.getInstance();
 #else
 	void* stream = execObj.getStream();
-	Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+	Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-	Kokkos::RangePolicy< Kokkos::Cuda > policy(instanceObject, 0, n_cells);
+	Kokkos::RangePolicy< Kokkos::DefaultExecutionSpace > policy(instanceObject, 0, n_cells);
 #endif
 
 	Kokkos::parallel_for (policy, KOKKOS_LAMBDA (int i){
@@ -1612,7 +1660,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 
 /*
 template <typename ExecSpace, typename MemSpace, typename T, typename ValueType>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
                             const struct1DArray<T, ARRAY_SIZE>& KKV3, const ValueType& init_val ){
 
@@ -1630,19 +1678,19 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
   const unsigned int actualThreads = n_cells > cudaThreadsPerBlock ? cudaThreadsPerBlock : n_cells;
 
 #if defined(NO_STREAM)
-  Kokkos::Cuda instanceObject();
-  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( cudaBlocksPerLoop, actualThreads );
+  Kokkos::DefaultExecutionSpace instanceObject();
+  Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > teamPolicy( cudaBlocksPerLoop, actualThreads );
 #else
 #ifdef USE_KOKKOS_INSTANCE
   ExecSpace instanceObject = execObj.getInstance();
 #else
   void* stream = execObj.getStream();
-  Kokkos::Cuda instanceObject(*(static_cast<cudaStream_t*>(stream)));
+  Kokkos::DefaultExecutionSpace instanceObject(*(static_cast<cudaStream_t*>(stream)));
 #endif
-  Kokkos::TeamPolicy< Kokkos::Cuda > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
+  Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > teamPolicy( instanceObject, cudaBlocksPerLoop, actualThreads );
 #endif
 
-  typedef Kokkos::TeamPolicy< Kokkos::Cuda > policy_type;
+  typedef Kokkos::TeamPolicy< Kokkos::DefaultExecutionSpace > policy_type;
 
   Kokkos::parallel_for (teamPolicy, KOKKOS_LAMBDA ( typename policy_type::member_type thread ) {
 
@@ -1673,7 +1721,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 }
 */
-#endif //HAVE_CUDA
+#endif //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 //For array of Views
 template<typename T, typename MemSpace, unsigned int Capacity>
@@ -1719,7 +1767,7 @@ template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::OpenMP>::value, void>::type
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value, void>::type
-#endif //KOKKOS_ENABLE_OPENMP or KOKKOS_ENABLE_OPENMPTARGET
+#endif //#if defined(KOKKOS_ENABLE_OPENMP) or defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& initializationValue,  Ts & ... inputs) {
 
@@ -1751,7 +1799,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& init
 // Could this be modified to accept grid variables AND containers of
 // grid variables?
 template <typename ExecSpace, typename MemSpace, typename T, class ...Ts>
-typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, void>::type
+typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
 parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
                     const T & initializationValue,  Ts & ... inputs) {
 
@@ -1782,7 +1830,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
   }
 }
 
-#endif // defined(UINTAH_ENABLE_KOKKOS)
+#endif //#if defined(HAVE_KOKKOS)
 
 template< typename T, typename T2, const unsigned int T3>
 void legacy_initialize(T inside_value, struct1DArray<T2,T3>& data_fields) {  // for vectors
@@ -1839,7 +1887,7 @@ void parallel_for( BlockRange const & r, const Functor & f, const Option& op )
   }}}
 };
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, UintahSpaces::CPU>::value, void>::type
 parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
@@ -1859,15 +1907,15 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
     functor(iterSpace[iblock][0],iterSpace[iblock][1],iterSpace[iblock][2]);
   };
 }
-#endif
+#endif //#if defined( HAVE_KOKKOS )
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 // This FunctorBuilder exists because I couldn't go the lambda
 // approach.  I was running into some conflict with
 // Uintah/nvcc_wrapper/Kokkos/CUDA somewhere.  So I went the
 // alternative route and built a functor instead of building a lambda.
-#if defined( HAVE_CUDA )
 template < typename Functor, typename ReductionType >
 struct FunctorBuilderReduce {
   //Functor& f = nullptr;
@@ -1896,8 +1944,8 @@ struct FunctorBuilderReduce {
     }
   }
 };
-#endif //defined(HAVE_CUDA)
-#endif //if defined( UINTAH_ENABLE_KOKKOS )
+#endif //if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif //if defined(HAVE_KOKKOS)
 
 } // namespace Uintah
 

@@ -39,7 +39,7 @@
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
   #include <curand.h>
   #include <curand_kernel.h>
 #endif

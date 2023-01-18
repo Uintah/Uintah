@@ -32,7 +32,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   #include <Kokkos_Macros.hpp>
 #endif
 
@@ -298,7 +298,8 @@ Parallel::initializeManager( int& argc , char**& argv )
     // it only displays the usage to the root process.
   }
 
-  // TODO: Set sensible defaults after deprecating use of Kokkos::OpenMP with the Unified Scheduler
+  // TODO: Set sensible defaults after deprecating use of
+  // Kokkos::OpenMP with the Unified Scheduler
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   if ( s_num_partitions <= 0 ) {
     s_num_partitions = 1;
@@ -308,10 +309,13 @@ Parallel::initializeManager( int& argc , char**& argv )
   }
 #endif
 
-  // Set CUDA parameters (NOTE: This could be autotuned if we grab knowledge of how many patches are assigned to this MPI rank and
+  // Set CUDA parameters (NOTE: This could be autotuned if we grab
+  // knowledge of how many patches are assigned to this MPI rank and
   // how many SMs are on this particular machine.)
-  // TODO, only display if gpu mode is turned on and if these values weren't set.
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+
+  // TODO, only display if gpu mode is turned on and if these values
+  // weren't set.
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   if ( s_using_device ) {
     if ( s_cuda_threads_per_block <= 0 ) {
       s_cuda_threads_per_block = 256;
@@ -397,7 +401,7 @@ Parallel::initializeManager( int& argc , char**& argv )
     }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     if ( s_using_device ) {
       if ( s_cuda_blocks_per_loop > 0 ) {
         std::string plural = (s_cuda_blocks_per_loop > 1) ? "blocks" : "block";

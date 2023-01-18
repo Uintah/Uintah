@@ -25,7 +25,7 @@
  #ifndef UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 #define UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
 #include <Kokkos_Core.hpp>
 #include <Core/Parallel/LoopExecution.hpp>
 #include <Core/Grid/Patch.h>
@@ -157,5 +157,5 @@ struct KokkosView3<const Uintah::Patch *, T>
 };
 
 } // End namespace Uintah
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 #endif //UINTAH_GRID_VARIABLES_KOKKOSVIEWS_H

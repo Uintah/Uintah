@@ -31,7 +31,7 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
@@ -51,7 +51,7 @@
 
 using namespace Uintah;
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 extern Uintah::MasterLock cerrLock;
 
 namespace {
@@ -165,7 +165,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   uintahParams.setProcessorGroup(pg);
   uintahParams.setCallBackEvent(event);
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   // Load in streams whether this is a CPU task or GPU task. GPU tasks
   // need streams. CPU tasks can also use streams for D2H copies or
   // transferFrom calls.
@@ -177,12 +177,16 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     cudaStream_t* stream = this->getCudaStreamForThisTask(i);
     uintahParams.setStream(stream);
   }
+  std::cerr << __FILE__ << "  " << __LINE__ << "  "
+            << numStreams << "  "
+            << (this->getCudaStreamForThisTask(0) == nullptr ? "nullptr" : "")
+            << std::endl;
 #endif
 #endif
 
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     // Run the GPU task.  Technically the engine has structure to run
     // one task on multiple devices if that task had patches on
     // multiple devices.  So run the task once per device.  As often
@@ -192,7 +196,8 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     //for (deviceNumSetIter deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
     // const unsigned int currentDevice = *deviceNums_it;
       int currentDevice = 0;
-      OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
       GPUDataWarehouse* host_oldtaskdw = getTaskGpuDataWarehouse(currentDevice, Task::OldDW);
       GPUDataWarehouse* device_oldtaskdw = nullptr;
       if (host_oldtaskdw) {
@@ -734,7 +739,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
 
 } // end namespace Uintah
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 #ifdef TASK_MANAGES_EXECSPACE
   // Now in the Task
@@ -853,7 +858,8 @@ DetailedTask::checkCudaStreamDoneForThisTask( unsigned int device_id ) const
    exit(-1);
   }
 
-  OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+  // Base call is commented out
+  // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   cudaStreamMapIter it = m_cudaStreams.find(device_id);
 
   // if (it == m_cudaStreams.end()) {
@@ -1461,7 +1467,8 @@ DetailedTask::initiateH2DCopies(std::vector<OnDemandDataWarehouseP> & m_dws)
   varIter = vars.begin();
   if (varIter != vars.end()) {
     device_id = GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(this->getPatches())->get(0));
-    OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   }
 
   // Go through each unique dependent var and see if we should allocate space and/or queue it to be copied H2D.
@@ -2242,9 +2249,11 @@ DetailedTask::prepareDeviceVars(std::vector<OnDemandDataWarehouseP> & m_dws)
                 }
 
                 if (host_ptr && device_ptr) {
-
                   // Perform the copy!
-                  OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+
+                  // Base call is commented out
+                  // OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+
                   if (it->second.m_varMemSize == 0) {
                     printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
                         label_cstr, patchID, matlIndx, levelID, staging ? "true" : "false" );
@@ -3262,7 +3271,9 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-          OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
 
           if (gpudw != nullptr) {
 
@@ -3582,7 +3593,9 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
     }
 
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-    OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
 
@@ -4579,7 +4592,8 @@ DetailedTask::copyAllGpuToGpuDependences(std::vector<OnDemandDataWarehouseP> & m
 
       // Note: If we move to UVA, then we could just do a straight memcpy
 
-      OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
 
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
@@ -4681,7 +4695,8 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
             && device_size.y == host_size.y()
             && device_size.z == host_size.z()) {
 
-          OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
 
           // Since we know we need a stream, obtain one.
 #ifdef TASK_MANAGES_EXECSPACE
@@ -4805,7 +4820,7 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
   }
 }
 
-#endif // #if HAVE_CUDA || UINTAH_ENABLE_KOKKOS
+#endif // #if HAVE_CUDA || KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_SYCL
 
 // ______________________________________________________________________
 //  generate string   <MPI_rank>.<Thread_ID>

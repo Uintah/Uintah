@@ -121,8 +121,8 @@ GPUMemoryPool::allocateCudaSpaceFromPool(unsigned int device_id, size_t memSize)
     } else {
       // No chunk of memory found on this device so create it.
 
-      // Set the device
-      OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
       // Allocate the memory.
 #if defined(USE_KOKKOS_VIEW) || defined(USE_KOKKOS_INSTANCE)
@@ -270,7 +270,8 @@ GPUMemoryPool::getCudaStreamFromPool(const DetailedTask * task, int device)
         cerrLock.unlock();
       }
     } else {  // Shouldn't need any more than the queue capacity, but in case
-      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(device);
 
       // This stream will be put into idle stream queue and
       // ultimately deallocated after the final timestep.
@@ -398,7 +399,9 @@ GPUMemoryPool::freeCudaStreamsFromPool()
       }
 
       unsigned int device = it.first;
-      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(device);
 
       while (!s_idle_streams[device].empty()) {
         cudaStream_t* stream = s_idle_streams[device].front();

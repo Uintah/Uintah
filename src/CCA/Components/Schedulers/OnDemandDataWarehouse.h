@@ -40,8 +40,9 @@
 #include <Core/Parallel/UintahMPI.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -485,18 +486,14 @@ public:
 
   virtual void finalize();
 
-
-#ifdef HAVE_CUDA
-
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   static int getNumDevices();
-  static void uintahSetCudaDevice(int deviceNum);
+  // static void uintahSetCudaDevice(int deviceNum);
   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
   static GPUGridVariableBase* createGPUGridVariable(const TypeDescription::Type& type);
   static GPUPerPatchBase* createGPUPerPatch(const TypeDescription::Type& type);
   static GPUReductionVariableBase* createGPUReductionVariable(const TypeDescription::Type& type);
-
 #endif
-
 
   virtual void unfinalize();
 
@@ -664,9 +661,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getCCVariable( const VarLabel         * label
                ,       int                matlIndex
                , const Patch            * patch
@@ -681,7 +678,7 @@ public:
   matlIndex,
  patch->getLevel()->getID() );
     } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
+      return KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -720,9 +717,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstCCVariable( const VarLabel         * label
                     ,       int                matlIndex
                     , const Patch            * patch
@@ -733,7 +730,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      return KokkosView3<const T, Kokkos::CudaSpace>();
+      return KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -782,9 +779,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getNCVariable( const VarLabel         * label
                ,       int                matlIndex
                , const Patch            * patch
@@ -795,7 +792,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
+      return KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -834,9 +831,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstNCVariable( const VarLabel         * label
                     ,       int                matlIndex
                     , const Patch            * patch
@@ -847,7 +844,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      return KokkosView3<const T, Kokkos::CudaSpace>();
+      return KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -919,9 +916,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename grid_T,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getGridVariable( const VarLabel         * label
                  ,       int                matlIndex
                  , const Patch            * patch
@@ -933,7 +930,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      return KokkosView3<T, Kokkos::CudaSpace>();
+      return KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -990,9 +987,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename grid_CT,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, KokkosView3<const T, Kokkos::CudaSpace> >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstGridVariable( const VarLabel         * label
                       ,       int                matlIndex
                       , const Patch            * patch
@@ -1003,7 +1000,7 @@ public:
     if ( matlIndex != -999 ) {
       return this->getGPUDW()->getKokkosView<const T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      return KokkosView3<const T, Kokkos::CudaSpace>();
+      return KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -1052,9 +1049,9 @@ public:
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template <typename grid_T,typename T, typename MemSpace>
-  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::CudaSpace >::value, void >::type
+  inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & var
                     , const VarLabel                 * label
                     ,       int                        matlIndex
@@ -1067,7 +1064,7 @@ public:
     if ( matlIndex != -999 ) {
       var = this->getGPUDW()->getKokkosView<T>( label->getName().c_str(), patch->getID(),  matlIndex, patch->getLevel()->getID() );
     } else {
-      var = KokkosView3<T, Kokkos::CudaSpace>();
+      var = KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space>();
     }
   }
 #endif
@@ -1233,7 +1230,7 @@ private:
                             );
 
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
   std::map<Patch*, bool> assignedPatches; // indicates where a given patch should be stored in an accelerator
 

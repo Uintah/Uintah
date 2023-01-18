@@ -74,7 +74,7 @@ typedef constNCVariable<double> constvartype;
 //   &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>         // Task supports Kokkos::OpenMP builds and is executed using OpenMP via Kokkos
 //   &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>   // Task supports Kokkos::DefaultHostExecutionSpace builds and is executed using the Default Host Execution space via Kokkos
 //   &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG> // Task supports Kokkos::DefaultExecutionSpace builds and is executed using the Default Execution space via Kokkos
-//   &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>           // Task supports Kokkos::Cuda builds and is executed using CUDA via Kokkos
+//   &Poisson1::timeAdvance<KOKKOS_DEVICE_TAG>         // Task supports Kokkos builds and is executed using GPU via Kokkos
 
 Poisson1::Poisson1( const ProcessorGroup   * myworld
                   , const MaterialManagerP   materialManager
@@ -174,7 +174,7 @@ void Poisson1::scheduleTimeAdvance( const LevelP     & level
                         &Poisson1::timeAdvance<KOKKOS_OPENMP_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_DEFAULT_HOST_TAG>,
                         &Poisson1::timeAdvance<KOKKOS_DEFAULT_DEVICE_TAG>,
-                        &Poisson1::timeAdvance<KOKKOS_CUDA_TAG>,
+                        &Poisson1::timeAdvance<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 

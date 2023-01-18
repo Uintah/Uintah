@@ -878,7 +878,7 @@ SchedulerCommon::addTask(       Task        * task
                         )
 {
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   //DS 12062019: Store max ghost cell count for this variable across all GPU tasks. update it in dependencies of all gpu tasks before task graph compilation
   //in case modifieswithscratchghost is used.
   //tg_num != 1 avoid updating max ghosts from RMCRT task graphs.

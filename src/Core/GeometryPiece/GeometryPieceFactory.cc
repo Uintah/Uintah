@@ -50,7 +50,10 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/RWS.h>
 
-#if !defined( HAVE_CUDA )
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
+#if !defined(HAVE_CUDA) && !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
   #include <Core/GeometryPiece/ConvexPolyhedronGeometryPiece.h>
 #endif
 
@@ -326,7 +329,7 @@ GeometryPieceFactory::create( const ProblemSpecP           & ps,
     else if ( go_type == NullGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew NullGeometryPiece(child);
     }
-#if !defined( HAVE_CUDA )
+#if !defined(HAVE_CUDA) && !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
     else if ( go_type == ConvexPolyhedronGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew ConvexPolyhedronGeometryPiece(child);
     }

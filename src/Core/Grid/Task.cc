@@ -120,9 +120,13 @@ Task::initialize()
   m_phase        = -1;
   m_comm         = -1;
 
-  //The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
+  // The 0th level has a max ghost cell of zero.  Other levels are left uninitialized.
   m_max_ghost_cells[0] = 0;
   m_max_level_offset   = 0;
+
+  // Assures that CPU tasks will have 1 stream
+  if(Uintah::Parallel::usingDevice())
+    m_max_streams_per_task = 1;
 }
 
 //______________________________________________________________________
@@ -1095,7 +1099,7 @@ Task::doit( const PatchSubset           * patches
   }
 }
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 //______________________________________________________________________
 //
 #ifdef TASK_MANAGES_EXECSPACE
@@ -1295,7 +1299,7 @@ checkKokkosInstanceDoneForThisTask( intptr_t dTask, unsigned int device_id ) con
    exit(-1);
   }
 
-  // Commented out in OnDemandDataWarehouse.cc
+  // Base call is commented out
   // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
   Kokkos::DefaultExecutionSpace instance =
@@ -1667,7 +1671,8 @@ Task::checkCudaStreamDoneForThisTask( intptr_t dTask
    printf("Error, Task::checkCudaStreamDoneForThisTask is %u\n", device_id);
    exit(-1);
   }
-  // Commented out in OnDemandDataWarehouse.cc
+
+  // Base call is commented out
   // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
   cudaStream_t* stream = getCudaStreamForThisTask(dTask, device_id);
@@ -1789,10 +1794,10 @@ Task::doCudaMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
 
 #ifdef USE_KOKKOS_DEEPCOPY
   printf("ERROR! - Task::doCudaMemcpyPeerAsync() - NOT DEFINED"
-           "This task %s does not have an instance assigned for device %d\n",
-           this->taskPtr->getName().c_str(), deviceNum);
+           "This task %s does not have an stream assigned for device %d\n",
+           this->getName().c_str(), deviceNum);
   SCI_THROW(InternalError("Detected Kokkos execution failure on task: " +
-                          this->taskPtr->getName(), __FILE__, __LINE__));
+                          this->getName(), __FILE__, __LINE__));
 #else
   CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice,
                                         count, *stream));
@@ -1809,12 +1814,23 @@ Task::copyGpuGhostCellsToGpuVars(intptr_t dTask, unsigned int deviceNum,
 
   taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(stream);
 
-  // Kokkos::Cuda instanceObject(*stream);
+  // Kokkos::DefaultExecutionSpace instanceObject(*stream);
   // taskgpudw->copyGpuGhostCellsToGpuVarsInvoker(instanceObject);
+}
+
+//_____________________________________________________________________________
+//
+void
+Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
+                    GPUDataWarehouse *taskgpudw)
+{
+  cudaStream_t* stream = getCudaStreamForThisTask(dTask, deviceNum);
+
+  taskgpudw->syncto_device(stream);
 }
 #endif // #ifdef USE_KOKKOS_INSTANCE - STREAMS
 #endif // #ifdef TASK_MANAGES_EXECSPACE
-#endif // #if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#endif // #if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 //______________________________________________________________________
 //

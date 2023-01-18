@@ -141,7 +141,7 @@ void GPUResizeTest1::scheduleTimeAdvance( const LevelP     & level
                         "GPUResizeTest1::timeAdvance",
                         &GPUResizeTest1::timeAdvance<UINTAH_CPU_TAG>,
                         &GPUResizeTest1::timeAdvance<KOKKOS_OPENMP_TAG>,
-                        &GPUResizeTest1::timeAdvance<KOKKOS_CUDA_TAG>,
+                        &GPUResizeTest1::timeAdvance<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
 
@@ -156,7 +156,7 @@ void GPUResizeTest1::scheduleTimeAdvance( const LevelP     & level
                         "GPUResizeTest1::timeRequires",
                         &GPUResizeTest1::timeAdvance1<UINTAH_CPU_TAG>,
                         &GPUResizeTest1::timeAdvance1<KOKKOS_OPENMP_TAG>,
-                        &GPUResizeTest1::timeAdvance1<KOKKOS_CUDA_TAG>,
+                        &GPUResizeTest1::timeAdvance1<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
 

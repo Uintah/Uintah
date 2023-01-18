@@ -43,14 +43,13 @@
 #include <Core/Util/TupleHelpers.hpp>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
-#include <sci_defs/kokkos_defs.h>
-
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   #include <Kokkos_Core.hpp>
 #endif
 
@@ -65,10 +64,10 @@ namespace {
 
 namespace Uintah {
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
-#ifdef TASK_MANAGES_EXECSPACE
-class GPUDataWarehouse;
-#endif
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  #ifdef TASK_MANAGES_EXECSPACE
+    class GPUDataWarehouse;
+  #endif
 #endif
 
 class Level;
@@ -126,7 +125,7 @@ protected: // class Task
                        ,       UintahParams   & uintahParams
                        ) = 0;
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     virtual void assignDevicesAndInstances(intptr_t dTask) = 0;
 
@@ -159,7 +158,7 @@ protected: // class Task
                                unsigned int deviceNum,
                                GPUDataWarehouse *taskgpudw) = 0;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
     protected:
       Task *taskPtr {nullptr};
@@ -312,7 +311,7 @@ public: // private:
       ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionPortableBase() {};
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -415,7 +414,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   };
 
   template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
@@ -480,7 +479,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1081,7 +1079,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1156,7 +1153,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1236,7 +1232,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1321,7 +1316,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1411,7 +1405,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -1507,7 +1500,6 @@ public: // private:
       }
 #else
       const int numStreams = uintahParams.getNumStreams();
-
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
       }
@@ -2176,7 +2168,7 @@ public: // class Task
                    );
 
   //////////
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #ifdef TASK_MANAGES_EXECSPACE
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
@@ -2459,7 +2451,7 @@ private: // class Task
 
   std::string m_task_name;
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #ifdef TASK_MANAGES_EXECSPACE
   // The task is pointed to by multiple DetailedTasks. As such, the
   // task has to keep track of the device and stream on a DetailedTask
@@ -2508,7 +2500,7 @@ protected: // class Task
   bool m_uses_kokkos_openmp{false};
   bool m_uses_kokkos_openmptarget{false};
   bool m_uses_kokkos_cuda{false};
-  int  m_max_streams_per_task{1};
+  int  m_max_streams_per_task{0};
   bool m_subpatch_capable{false};
   bool m_has_subscheduler{false};
 
@@ -2548,7 +2540,7 @@ inline void Task::Dependency::addReq( Edge * edge )
   m_req_tail = edge;
 }
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
 //_____________________________________________________________________________
 //
@@ -2722,7 +2714,7 @@ checkKokkosInstanceDoneForThisTask_impl<ES>(intptr_t dTask, unsigned int device_
    exit(-1);
   }
 
-  // Commented out in OnDemandDataWarehouse.cc
+  // Base call is commented out
   // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
 
   ExecSpace instance = this->getKokkosInstanceForThisTask(dTask, device_id);
@@ -2861,7 +2853,7 @@ syncTaskGpuDW(intptr_t dTask,
   taskgpudw->syncto_device(instance);
 }
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 }  // End namespace Uintah
 

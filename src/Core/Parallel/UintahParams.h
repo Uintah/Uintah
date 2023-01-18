@@ -84,11 +84,10 @@ public:
     this->processorGroup = processorGroup;
   }
 
+#if defined(HAVE_CUDA) // CUDA only when using streams
   void setStream(void* stream) {
-#if defined(HAVE_CUDA)
-    //Ignore the non-CUDA case as those streams are pointless.
+    // Ignore the non-CUDA case as those streams are pointless.
     m_streams.push_back(stream);
-#endif
   }
 
   void * getStream(unsigned int i) const {
@@ -102,6 +101,7 @@ public:
   unsigned int getNumStreams() const {
     return m_streams.size();
   }
+#endif
 
   void setTaskIntPtr( intptr_t taskIntPtr ) {
     m_TaskIntPtr = taskIntPtr;
@@ -119,7 +119,9 @@ private:
   CallBackEvent callBackEvent;
   const ProcessorGroup* processorGroup {nullptr};
 
+#if defined(HAVE_CUDA) // CUDA only when using streams
   std::vector<void*> m_streams;
+#endif
 
   intptr_t m_TaskIntPtr{0};
 };

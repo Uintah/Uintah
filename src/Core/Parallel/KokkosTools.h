@@ -29,7 +29,7 @@
 #ifndef UINTAH_CORE_KOKKOS_TOOLS_H
 #define UINTAH_CORE_KOKKOS_TOOLS_H
 
-#if defined( UINTAH_ENABLE_KOKKOS ) 
+#if defined( HAVE_KOKKOS ) 
 
 #include <Core/Parallel/MasterLock.h>
 #include <Kokkos_Random.hpp>
@@ -51,7 +51,7 @@ namespace Uintah {
     // Note, I'd rather these random objects all stored in a single collection.  But I couldn't figure out
     // a way in C++11 to do that.  The Type Erasure Idiom was close, but our need relied on templated return types
     // and it couldn't mesh with Type Erasure Idiom's polymorphism.  std::variant seems like a decent idea, but that's C++17.
-    // For now, I'm hard coding the two options we use, Kokkos::OpenMP and Kokkos::Cuda.  -- Brad P.
+    // For now, I'm hard coding the two options we use, Kokkos::OpenMP and Kokkos::DefaultExecutionSpace.  -- Brad P.
     //
     // Adding third option Kokkos::Experimental::OpenMPTarget. However, it would be better to compact them all 
     // or at least OpenMP and OpenMPTarget whenever the later is operational. As of now, I think the functionality
@@ -68,8 +68,8 @@ class KokkosRandom;
     std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::OpenMP > > > openMPTargetRandomPool;
 // MGM - std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Experimental::OpenMPTarget > > > openMPTargetRandomPool;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA)
-    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda > > > cudaRandomPool;
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+    std::unique_ptr< KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace > > > cudaRandomPool;
 #endif
 
 template < typename RandomGenerator>
@@ -112,7 +112,7 @@ void cleanupKokkosTools() {
       openMPTargetRandomPool.release();
     }
 #endif
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     if (cudaRandomPool) {
       cudaRandomPool.release();
     }
@@ -136,14 +136,14 @@ GetKokkosRandom1024Pool() {
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 template <typename ExecSpace>
-inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::Cuda>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>::type
+inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>::type
 GetKokkosRandom1024Pool() {
   {
     std::lock_guard<Uintah::MasterLock> rand_init_mutex_guard(rand_init_mutex);
     if (!cudaRandomPool) {
-      std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::Cuda >>(true) );
+      std::unique_ptr<KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>> temp( new KokkosRandom< Kokkos::Random_XorShift1024_Pool< Kokkos::DefaultExecutionSpace >>(true) );
       cudaRandomPool = std::move(temp);
     }
   }
@@ -153,5 +153,5 @@ GetKokkosRandom1024Pool() {
 
 } // end namespace Uintah
 
-#endif // UINTAH_ENABLE_KOKKOS 
+#endif // HAVE_KOKKOS 
 #endif // UINTAH_CORE_KOKKOS_TOOLS_H

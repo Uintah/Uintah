@@ -284,7 +284,7 @@ KokkosOpenMPScheduler::execute( int tgnum       /* = 0 */
 
     this->runTasks();
 
-#endif // UINTAH_ENABLE_KOKKOS
+#endif // HAVE_KOKKOS
 
     if ( g_have_hypre_task ) {
       DOUT( g_dbg, " Exited runTasks to run a " << g_HypreTask->getTask()->getType() << " task" );

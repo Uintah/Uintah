@@ -139,7 +139,7 @@ void PortableDependencyTest::scheduleTask1Computes( const LevelP     & level
                         "PortableDependencyTest::task1Computes",
                         &PortableDependencyTest::task1Computes<UINTAH_CPU_TAG>,
                         &PortableDependencyTest::task1Computes<KOKKOS_OPENMP_TAG>,
-                        &PortableDependencyTest::task1Computes<KOKKOS_CUDA_TAG>,
+                        &PortableDependencyTest::task1Computes<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
@@ -157,7 +157,7 @@ void PortableDependencyTest::scheduleTask2Modifies( const LevelP     & level
                         "PortableDependencyTest::task2Modifies",
                         &PortableDependencyTest::task2Modifies<UINTAH_CPU_TAG>,
                         &PortableDependencyTest::task2Modifies<KOKKOS_OPENMP_TAG>,
-                        &PortableDependencyTest::task2Modifies<KOKKOS_CUDA_TAG>,
+                        &PortableDependencyTest::task2Modifies<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
@@ -177,7 +177,7 @@ void PortableDependencyTest::scheduleTask3Modifies( const LevelP     & level
                         "PortableDependencyTest::task3Modifies",
                         &PortableDependencyTest::task3Modifies<UINTAH_CPU_TAG>,
                         &PortableDependencyTest::task3Modifies<KOKKOS_OPENMP_TAG>,
-                        &PortableDependencyTest::task3Modifies<KOKKOS_CUDA_TAG>,
+                        &PortableDependencyTest::task3Modifies<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 
@@ -193,7 +193,7 @@ void PortableDependencyTest::scheduleTask4Requires( const LevelP     & level
                         "PortableDependencyTest::task4Requires",
                         &PortableDependencyTest::task4Requires<UINTAH_CPU_TAG>,
                         &PortableDependencyTest::task4Requires<KOKKOS_OPENMP_TAG>,
-                        &PortableDependencyTest::task4Requires<KOKKOS_CUDA_TAG>,
+                        &PortableDependencyTest::task4Requires<KOKKOS_DEVICE_TAG>,
                         sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 }
 

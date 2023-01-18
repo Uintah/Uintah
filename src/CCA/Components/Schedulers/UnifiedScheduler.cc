@@ -1902,7 +1902,8 @@ UnifiedScheduler::initiateH2DCopies( DetailedTask * dtask )
   varIter = vars.begin();
   if (varIter != vars.end()) {
     device_id = GpuUtilities::getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(dtask->getPatches())->get(0));
-    OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(device_id);
   }
 
   // Go through each unique dependent var and see if we should allocate space and/or queue it to be copied H2D.
@@ -2939,7 +2940,8 @@ UnifiedScheduler::prepareDeviceVars( DetailedTask * dtask )
                   //Perform the copy!
 
                   cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
-                  OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
+                  // Base call is commented out
+                  // OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
                   if (it->second.m_varMemSize == 0) {
                     printf("ERROR: For variable %s patch %d material %d level %d staging %s attempting to copy zero bytes to the GPU.\n",
                         label_cstr, patchID, matlIndx, levelID, staging ? "true" : "false" );
@@ -4031,7 +4033,8 @@ UnifiedScheduler::initiateD2HForHugeGhostCells( DetailedTask * dtask )
 
           const unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
           GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-          OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
           cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
           if (gpudw != nullptr) {
@@ -4408,7 +4411,8 @@ UnifiedScheduler::initiateD2H( DetailedTask * dtask )
     }
 
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
-    OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+    // Base call is commented out
+    // OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
     cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     const std::string varName = dependantVar->m_var->getName();
@@ -5123,7 +5127,7 @@ UnifiedScheduler::assignDevicesAndStreams( DetailedTask * dtask )
           dtask->assignDevice(0);
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
-	  cudaStream_t* stream = nullptr;
+          cudaStream_t* stream = nullptr;
 #else
           cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), i);
 #endif
@@ -5214,7 +5218,7 @@ UnifiedScheduler::assignDevicesAndStreamsFromGhostVars( DetailedTask * dtask )
 #else
       cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask->getTask(), *iter);
 #endif
-#else      
+#else
       cudaStream_t* stream = GPUMemoryPool::getCudaStreamFromPool(dtask, *iter);
 #endif      dtask->setCudaStreamForThisTask(*iter, stream);
     }
@@ -5525,7 +5529,8 @@ UnifiedScheduler::copyAllGpuToGpuDependences( DetailedTask * dtask )
       //   Note: If we move to UVA, then we could just do a straight memcpy
 
       cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_destDeviceNum);
-      OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
+      // Base call is commented out
+      // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_destDeviceNum);
 
       CUDA_RT_SAFE_CALL(cudaMemcpyPeerAsync(device_dest_ptr, it->second.m_destDeviceNum, device_source_ptr, it->second.m_sourceDeviceNum, memSize, *stream));
     }
@@ -5605,7 +5610,8 @@ UnifiedScheduler::copyAllExtGpuDependenciesToHost( DetailedTask * dtask )
 
           // Since we know we need a stream, obtain one.
           cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.m_sourceDeviceNum);
-          OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
+          // Base call is commented out
+          // OnDemandDataWarehouse::uintahSetCudaDevice(it->second.m_sourceDeviceNum);
           if (gpu_stats.active()) {
             cerrLock.lock();
             {

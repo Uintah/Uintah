@@ -33,10 +33,10 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   #include <Kokkos_Core.hpp>
   #include <Core/Grid/Variables/KokkosViews.h>
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 
 namespace Uintah {
 

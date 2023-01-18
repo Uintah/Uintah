@@ -240,7 +240,7 @@ void UnifiedSchedulerTest::timeAdvance( const PatchSubset           * patches
 
 
   // When Task is scheduled to GPU
-#if defined(HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) && !defined(HAVE_KOKKOS)
   if (event == Task::GPU) {
 
     // Do time steps

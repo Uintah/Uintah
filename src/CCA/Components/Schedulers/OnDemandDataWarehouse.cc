@@ -62,7 +62,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Geometry/GPUVector.h>
@@ -86,7 +86,7 @@ namespace Uintah {
 
   extern Dout g_mpi_dbg;
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   extern DebugStream gpudbg;
 #endif
 
@@ -147,12 +147,10 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 
   varLock = new Uintah::MasterLock{};
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
   if (Uintah::Parallel::usingDevice()) {
-    int numDevices;
-    CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
-
+    int numDevices = getNumDevices();
     for (int i = 0; i < numDevices; i++) {
       // These gpuDWs should only live host side.  Ideally these don't
       // need to be created at all as a separate datawarehouse, but
@@ -169,7 +167,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
   }
 
 #endif
-
 }
 
 //______________________________________________________________________
@@ -214,7 +211,7 @@ OnDemandDataWarehouse::clear()
   m_running_tasks.clear();
 
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
   if (Uintah::Parallel::usingDevice()) {
     //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
@@ -427,12 +424,12 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
   }
 }
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
-void
-OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
-  //  CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
-}
+// void
+// OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
+//   CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
+// }
 
 int
 OnDemandDataWarehouse::getNumDevices() {
@@ -442,8 +439,10 @@ OnDemandDataWarehouse::getNumDevices() {
     numDevices = 1;
   }
 
-  //if multiple devices are desired, use this:
-   CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
+#if defined(HAVE_CUDA)
+  // If multiple devices are desired.
+  CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
+#endif
 
   return numDevices;
 }
@@ -3380,7 +3379,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             m_var_DB.put( label, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
           if (Uintah::Parallel::usingDevice()) {
             // See if it's in the GPU.  Both the source and destination
             // must be in the GPU data warehouse, both must be listed

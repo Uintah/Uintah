@@ -839,9 +839,9 @@ int main( int argc, char *argv[], char *env[] )
     simController->attachPort( "load balancer", loadBalancer );
     appComp->attachPort( "load balancer", loadBalancer );
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     Kokkos::initialize();
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 
     //__________________________________
     // Scheduler
@@ -945,10 +945,10 @@ int main( int argc, char *argv[], char *env[] )
     delete simController;
     delete scheduler;
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   Uintah::cleanupKokkosTools();
   Kokkos::finalize();
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 
   }
   

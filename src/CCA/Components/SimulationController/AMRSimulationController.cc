@@ -45,8 +45,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
 
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #endif
 
 #include <sci_defs/gperftools_defs.h>
@@ -184,7 +184,7 @@ AMRSimulationController::run()
   finalSetup();
 
   // Once the grid is set up pass it on to the GPU.
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   GpuUtilities::assignPatchesToGpus( m_current_gridP );
 #endif
 
@@ -601,7 +601,7 @@ AMRSimulationController::doInitialTimeStep()
       // ScheduleCheckInSitu( true );
 
       //DS 04222020: collect max ghost cells across tasks. Do not change the this place.
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
       collectGhostCells();
 #endif
 

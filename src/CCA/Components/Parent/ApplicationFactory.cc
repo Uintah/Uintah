@@ -38,7 +38,7 @@
 
 #ifndef NO_EXAMPLES
 
-#if defined (HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
+#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
 #  include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #endif
 
@@ -478,7 +478,7 @@ ApplicationFactory::create(       ProblemSpecP     & prob_spec
     turned_on_options += "wave ";
   }
 
-#if defined (HAVE_CUDA) && !defined(UINTAH_ENABLE_KOKKOS)
+#if defined (HAVE_CUDA) && !defined(HAVE_KOKKOS)
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(myworld, materialManager);
   }

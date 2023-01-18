@@ -304,14 +304,15 @@ namespace Uintah {
       const ProcessorGroup * pg = uintahParams.getProcessorGroup();
 
       if(pg->myRank()==0){
-#if defined(HYPRE_USING_CUDA) || (defined(HYPRE_USING_KOKKOS) && defined(KOKKOS_ENABLE_CUDA))
+#if defined(HYPRE_USING_CUDA) || \
+  (defined(HYPRE_USING_KOKKOS) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)))
         bool hypre_cuda = true;
 #else
         bool hypre_cuda = false;
 #endif
-        if(std::is_same<ExecSpace, Kokkos::Cuda>::value){
+        if(std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value){
           if(hypre_cuda == false){
-            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is cuda, but hypre is NOT configured with cuda. ######\n", __FILE__, __LINE__);
+            printf("######  Error at file %s, line %d: ExecSpace of HypreSolver task in Uintah is kokkos, but hypre is NOT configured with kokkos. ######\n", __FILE__, __LINE__);
             exit(1);
           }
         }
@@ -1368,7 +1369,7 @@ namespace Uintah {
                           &HypreStencil7<GridVarType>::template solve<KOKKOS_OPENMP_TAG>,
                           &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_HOST_TAG>,
                           &HypreStencil7<GridVarType>::template solve<KOKKOS_DEFAULT_DEVICE_TAG>,
-                          &HypreStencil7<GridVarType>::template solve<KOKKOS_CUDA_TAG>,
+                          &HypreStencil7<GridVarType>::template solve<KOKKOS_DEVICE_TAG>,
                           sched, patches, matls, TASKGRAPH::DEFAULT, handle);
   }
 

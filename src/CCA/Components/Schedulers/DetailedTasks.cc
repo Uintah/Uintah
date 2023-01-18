@@ -38,10 +38,9 @@
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DOUT.hpp>
 
-#include <sci_defs/cuda_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <Core/Parallel/CrowdMonitor.hpp>
 #endif
 
@@ -76,7 +75,7 @@ namespace {
   Dout g_message_tags_task_stats_dbg("MessageTagTaskStats", "DetailedTasks", "stats on MPI message tag task assignment", false);
 #endif  
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   struct device_transfer_complete_queue_tag{};
   struct device_finalize_prep_queue_tag{};
   struct device_ready_queue_tag{};
@@ -1202,9 +1201,7 @@ DetailedTaskPriorityComparison::operator()( DetailedTask *& ltask
 
 }
 
-
-
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 //_____________________________________________________________________________
 //

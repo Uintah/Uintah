@@ -119,21 +119,21 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     // Kokkos CUDA
-    if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value || std::is_same<Kokkos::Cuda, ExecSpace3>::value || std::is_same<Kokkos::Cuda, ExecSpace4>::value || std::is_same<Kokkos::Cuda, ExecSpace5>::value ) {
+    if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace5>::value ) {
       taskName = taskName + " (GPUTask)";
-      if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+      if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace3>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace4>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace5>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace5>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf5, std::forward<Args>(args)... );
       }
 
@@ -252,18 +252,18 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     // Kokkos CUDA
-    if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value || std::is_same<Kokkos::Cuda, ExecSpace3>::value || std::is_same<Kokkos::Cuda, ExecSpace4>::value ) {
+    if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value ) {
       taskName = taskName + " (GPUTask)";
-      if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+      if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace3>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace4>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace4>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf4, std::forward<Args>(args)... );
       }
 
@@ -367,15 +367,15 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     // Kokkos CUDA
-    if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value || std::is_same<Kokkos::Cuda, ExecSpace3>::value ) {
+    if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {
       taskName = taskName + " (GPUTask)";
-      if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+      if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace3>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace3>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf3, std::forward<Args>(args)... );
       }
 
@@ -464,12 +464,12 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     // Kokkos CUDA
-    if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value || std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {
+    if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value || std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {
       taskName = taskName + " (GPUTask)";
-      if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+      if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
       }
-      else if ( std::is_same<Kokkos::Cuda, ExecSpace2>::value ) {      /* Task supports Kokkos::Cuda builds */
+      else if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace2>::value ) {      /* Task supports Kokkos builds */
         task = scinew Task( taskName, ptr, pmf2, std::forward<Args>(args)... );
       }
 
@@ -543,7 +543,7 @@ void create_portable_tasks(       TaskFunctor   taskFunctor
   // GPU tasks take top priority
   if ( Uintah::Parallel::usingDevice() ) {
     // Kokkos CUDA
-    if ( std::is_same<Kokkos::Cuda, ExecSpace1>::value ) {           /* Task supports Kokkos::Cuda builds */
+    if ( std::is_same<Kokkos::DefaultExecutionSpace, ExecSpace1>::value ) {           /* Task supports Kokkos builds */
       taskName = taskName + " (GPUTask)";
       task = scinew Task( taskName, ptr, pmf1, std::forward<Args>(args)... );
 

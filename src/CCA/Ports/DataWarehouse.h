@@ -38,18 +38,18 @@
 #include <Core/Grid/Variables/VarLabelMatl.h>
 #include <Core/Grid/Variables/VarLabelMatlMemspace.h>
 #include <Core/Grid/Task.h>
-//#include <Core/Parallel/ExecutionObject.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
+
 #include <sci_defs/cuda_defs.h>
-#ifdef HAVE_CUDA
+
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
 #include <iosfwd>
-
 
 namespace Uintah {
 
@@ -333,11 +333,13 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
           const MaterialSubset* matls, int nComm) = 0;
 
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW() const {
     int i;
+#if defined(HAVE_CUDA)
     CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
+#endif
     return d_gpuDWs[i]; 
   }
 #endif
@@ -355,7 +357,7 @@ protected:
   // many previous time steps had taken place before the restart.
   int d_generation;
   
-#ifdef HAVE_CUDA
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   std::vector<GPUDataWarehouse*> d_gpuDWs;
 #endif
 private:

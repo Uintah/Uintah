@@ -49,9 +49,7 @@
 #include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#if defined( UINTAH_ENABLE_KOKKOS )
 #include <Kokkos_Core.hpp>
-#endif
 
 #include <fstream>
 #include <vector>
@@ -215,9 +213,7 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
-#ifdef UINTAH_ENABLE_KOKKOS
   proc0cout << "  - Using the Kokkos-based implementation of RMCRT.\n";
-#endif
 
   if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
@@ -423,16 +419,17 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
 
 //__________________________________
 // Increase the printf buffer size only once!
-#ifdef HAVE_CUDA
-  #ifdef CUDA_PRINTF
-  if( Parallel::usingDevice() && Parallel::getMPIRank() == 0){
-    size_t size;
-    CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
-    CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
-    printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
-  }
-  #endif
-#endif
+// #if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) // || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+//   #ifdef CUDA_PRINTF
+//   if( Parallel::usingDevice() && Parallel::getMPIRank() == 0) {
+//     size_t size;
+//     CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size, cudaLimitPrintfFifoSize) );
+//     CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
+//     printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n", 
+// 	   (long uint) size, ((long uint)10 * size) );
+//   }
+//   #endif
+// #endif
   proc0cout << "__________________________________ " << endl;
 }
 
@@ -788,7 +785,7 @@ Ray::rayTrace( const PatchSubset* patches,
         }
       }
     } else {  //if ( Parallel::usingDevice() )
-//#if defined(HAVE_CUDA)
+//#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 //      GPUDataWarehouse* abskg_gdw    = nullptr;
 //      GPUDataWarehouse* sigmaT4_gdw  = nullptr;
 //      GPUDataWarehouse* celltype_gdw = nullptr;
@@ -865,7 +862,7 @@ Ray::rayTrace( const PatchSubset* patches,
 //      RT_flags.endCell = numCells;
 
 //      Uintah::BlockRange range;
-//#ifdef HAVE_CUDA
+//#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 //      int numKernels = dtask->getTask()->maxStreamsPerTask();
 //      IntVector hiRange(256,0,0);
 //      // Split up a functor into four loops.  Gets better GPU occupancy this way.
@@ -875,7 +872,7 @@ Ray::rayTrace( const PatchSubset* patches,
 //        RT_flags.endCell = ((i+1)/static_cast<double>(numKernels)) * numCells;
 //        RT_flags.cellsPerGroup = hiRange.x();
 //        range.setValues((cudaStream_t*)dtask->getCudaStreamForThisTask(i), IntVector(0,0,0), IntVector(RT_flags.cellsPerGroup,0,0) );
-//        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda>   >
+//        rayTrace_solveDivQFunctor< T, Kokkos::Random_XorShift1024_Pool<Kokkos::DefaultExecutionSpace>   >
 //#else
 //      {
 //        IntVector hiRange(8,0,0);
@@ -1091,7 +1088,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           "Ray::rayTrace_dataOnion",
                           //&Ray::rayTrace_dataOnion<2, double, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, double, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_CUDA_TAG>,
+                          &Ray::rayTrace_dataOnion<2, double, KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   } else {
@@ -1099,7 +1096,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
                           "Ray::rayTrace_dataOnion",
                           //&Ray::rayTrace_dataOnion<2, float, UINTAH_CPU_TAG>,
                           &Ray::rayTrace_dataOnion<2, float, KOKKOS_OPENMP_TAG>,
-                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_CUDA_TAG>,
+                          &Ray::rayTrace_dataOnion<2, float, KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(), d_matlSet,  RMCRTCommon::TG_RMCRT,
                           modifies_divQ, NotUsed, sigma_dw, celltype_dw);
   }
@@ -1798,17 +1795,17 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
   CCVariable<Stencil7> boundFlux_fine;
   CCVariable<double>   radiationVolq_fine;
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-  KokkosView3<const T,   Kokkos::CudaSpace> abskg_view[numLevels];
-  KokkosView3<const T,   Kokkos::CudaSpace> sigmaT4OverPi_view[numLevels];
-  KokkosView3<const int, Kokkos::CudaSpace> cellType_view[numLevels];
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> abskg_view[numLevels];
+  KokkosView3<const T,   Kokkos::DefaultExecutionSpace::memory_space> sigmaT4OverPi_view[numLevels];
+  KokkosView3<const int, Kokkos::DefaultExecutionSpace::memory_space> cellType_view[numLevels];
 
   GPUDataWarehouse* sigmaT4_gdw  = static_cast<GPUDataWarehouse*>(sigmaT4_dw->getGPUDW());
   GPUDataWarehouse* celltype_gdw = static_cast<GPUDataWarehouse*>(celltype_dw->getGPUDW());
   GPUDataWarehouse* abskg_gdw    = static_cast<GPUDataWarehouse*>(abskg_dw->getGPUDW());
 
-  KokkosView3<double, Kokkos::CudaSpace> divQ_fine_view;
-  KokkosView3<double, Kokkos::CudaSpace> radiationVolq_fine_view;
+  KokkosView3<double, Kokkos::DefaultExecutionSpace::memory_space> divQ_fine_view;
+  KokkosView3<double, Kokkos::DefaultExecutionSpace::memory_space> radiationVolq_fine_view;
 #else
   KokkosView3<const T,   Kokkos::HostSpace> abskg_view[numLevels];
   KokkosView3<const T,   Kokkos::HostSpace> sigmaT4OverPi_view[numLevels];
@@ -1920,14 +1917,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       }
     }
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     // Get the Kokkos Views from the simulation variables
     const Level* curLevel = fineLevel;
     const Patch* curPatch = patch;
     for ( int L = (numLevels - 1); L >= 0; L-- ) {
       // Get vars on this level
-      abskg_view[L]         = abskg_gdw->getKokkosView<const T>(      d_abskgLabel->getName().c_str(),    curPatch->getID(), d_matl, L);
-      sigmaT4OverPi_view[L] = sigmaT4_gdw->getKokkosView<const T>(    d_sigmaT4Label->getName().c_str(),  curPatch->getID(), d_matl, L);
+      abskg_view[L]         =    abskg_gdw->getKokkosView<const T  >(    d_abskgLabel->getName().c_str(), curPatch->getID(), d_matl, L);
+      sigmaT4OverPi_view[L] =  sigmaT4_gdw->getKokkosView<const T  >(  d_sigmaT4Label->getName().c_str(), curPatch->getID(), d_matl, L);
       cellType_view[L]      = celltype_gdw->getKokkosView<const int>( d_cellTypeLabel->getName().c_str(), curPatch->getID(), d_matl, L);
 
       // Go down a coarser level, if possible
@@ -1946,9 +1943,10 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //Get the computational variables on the fine level
     divQ_fine_view          = new_dw->getGPUDW()->getKokkosView<double>( d_divQLabel->getName().c_str(),          patch->getID(), d_matl, fine_L);
     radiationVolq_fine_view = new_dw->getGPUDW()->getKokkosView<double>( d_radiationVolqLabel->getName().c_str(), patch->getID(), d_matl, fine_L);
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
+// #endif // end KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_SYCL
 
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
+// #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
+#elif !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
     for(int L = 0; L<numLevels; L++) {
       LevelP level = new_dw->getGrid()->getLevel(L);
       if (level->hasFinerLevel() ) {
@@ -1976,7 +1974,7 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       old_dw->getModifiable( divQ_fine,          d_divQLabel,          d_matl, finePatch );
       new_dw->getModifiable( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
       old_dw->getModifiable( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
-    }else{
+    } else{
       new_dw->allocateAndPut( divQ_fine,          d_divQLabel,          d_matl, finePatch );
       new_dw->allocateAndPut( boundFlux_fine,     d_boundFluxLabel,     d_matl, finePatch );
       new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl, finePatch );
@@ -2031,35 +2029,37 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
       //       For Kokkos::CUDA builds, the KOKKOS_OPENMP_TAG is downshifted to UINTAH_CPU_TAG in Core/Parallel/LoopExecution.h.
       //       This bulletproofing is to prevent Kokkos::CUDA builds from attempting to build for the not yet supported UINTAH_CPU_TAG.
       // TODO: Add support for Mersenne Twister-based random number generation
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-      auto random_pool = Uintah::GetKokkosRandom1024Pool<Kokkos::Cuda>( );
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+      auto random_pool = Uintah::GetKokkosRandom1024Pool<Kokkos::DefaultExecutionSpace>( );
 #else
       auto random_pool = Uintah::GetKokkosRandom1024Pool<ExecSpace>( );
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-      rayTrace_dataOnion_solveDivQFunctor<T, Kokkos::CudaSpace, decltype(random_pool), numLevels> functor( random_pool
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+      rayTrace_dataOnion_solveDivQFunctor<T, Kokkos::DefaultExecutionSpace::memory_space,
+					  decltype(random_pool), numLevels> functor( random_pool
 #else
-      rayTrace_dataOnion_solveDivQFunctor<T, MemSpace, decltype(random_pool), numLevels> functor( random_pool
+      rayTrace_dataOnion_solveDivQFunctor<T, MemSpace,
+					  decltype(random_pool), numLevels> functor( random_pool
 #endif
-                                                                                                , levelParamsML
-                                                                                                , domain_BB_Lo
-                                                                                                , domain_BB_Hi
-                                                                                                , fineLevel_ROI_Lo_pod
-                                                                                                , fineLevel_ROI_Hi_pod
-                                                                                                , sigmaT4OverPi_view
-                                                                                                , abskg_view
-                                                                                                , cellType_view
-                                                                                                , divQ_fine_view
-                                                                                                , radiationVolq_fine_view
-                                                                                                , d_threshold
-                                                                                                , d_allowReflect
-                                                                                                , d_nDivQRays
-                                                                                                , d_CCRays
-                                                                                                , m_use_virtual_ROI
-                                                                                                , m_virtual_ROI.get_pointer()
-                                                                                                , d_haloCells.get_pointer()
-                                                                                                );
+										   , levelParamsML
+										   , domain_BB_Lo
+										   , domain_BB_Hi
+										   , fineLevel_ROI_Lo_pod
+										   , fineLevel_ROI_Hi_pod
+										   , sigmaT4OverPi_view
+										   , abskg_view
+										   , cellType_view
+										   , divQ_fine_view
+										   , radiationVolq_fine_view
+										   , d_threshold
+										   , d_allowReflect
+										   , d_nDivQRays
+										   , d_CCRays
+										   , m_use_virtual_ROI
+										   , m_virtual_ROI.get_pointer()
+										   , d_haloCells.get_pointer()
+										   );
 
       // This parallel pattern replaces the cellIterator loop used to solve DivQ
       // When verifying correctness, parallel_reduce is used to confirm ray step consistency across implementations

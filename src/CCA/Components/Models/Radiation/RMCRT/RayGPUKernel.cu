@@ -109,13 +109,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, level.index);
   cellType_gdw->getLevel( cellType,     "cellType", matl, level.index);
 
-  if(RT_flags.usingFloats){
+  if(RT_flags.usingFloats) {
     abskg_gdw->getLevel( abskg, "abskgRMCRT",  matl, level.index);
   }else{
     abskg_gdw->getLevel( abskg, "abskg",       matl, level.index);
   }
 
-  if( RT_flags.modifies_divQ ){
+  if( RT_flags.modifies_divQ ) {
     new_gdw->getModifiable( divQ,         "divQ",           patch.ID, matl );
     new_gdw->getModifiable( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq",  patch.ID, matl );
@@ -179,7 +179,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                patch.ID,
                                curTimeStep);
 
-  if( RT_flags.solveBoundaryFlux ){
+  if( RT_flags.solveBoundaryFlux ) {
 
     __shared__ int3 dirIndexOrder[6];
     __shared__ int3 dirSignSwap[6];
@@ -213,7 +213,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 
         //get a new set of random numbers
-        if (doLatinHyperCube){
+        if (doLatinHyperCube) {
           randVectorDevice(rand_i, nFluxRays, randNumStates);
         }
 
@@ -242,13 +242,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
           //__________________________________
           // Flux ray loop
           #pragma unroll
-          for (int iRay=0; iRay < nFluxRays; iRay++){
+          for (int iRay=0; iRay < nFluxRays; iRay++) {
 
             GPUVector direction_vector;
             GPUVector rayOrigin;
             double cosTheta;
 
-            if ( doLatinHyperCube ){                              // Latin-Hyper-Cube sampling
+            if ( doLatinHyperCube ) {                              // Latin-Hyper-Cube sampling
               rayDirectionHyperCube_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                                     direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
             } else {
@@ -297,7 +297,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                patch.ID,
                                curTimeStep);
 
-  if( RT_flags.solveDivQ ){
+  if( RT_flags.solveDivQ ) {
     const int nDivQRays = RT_flags.nDivQRays;               // for readability
 
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
@@ -308,7 +308,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         GPUIntVector origin = make_int3(tidX, tidY, z);     // for each thread
 
         //Get the same set of random numbers as we had before.  We need the same rays.
-        if (doLatinHyperCube){
+        if (doLatinHyperCube) {
           randVectorDevice(rand_i, nFluxRays, randNumStates);
         }
 
@@ -316,7 +316,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         GPUPoint CC_pos = level.getCellPosition(origin);
 
         // don't compute in intrusions and walls
-        if( cellType[origin] != d_flowCell ){
+        if( cellType[origin] != d_flowCell ) {
           continue;
         }
 
@@ -327,7 +327,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         for (int iRay = 0; iRay < nDivQRays; iRay++) {
 
           GPUVector direction_vector;
-          if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
+          if ( doLatinHyperCube ) {                          // Latin-Hyper-Cube sampling
             direction_vector = findRayDirectionHyperCubeDevice(randNumStates, nDivQRays, rand_i[iRay], iRay );
           }else{                                            // Naive Monte-Carlo sampling
             direction_vector = findRayDirectionDevice( randNumStates );
@@ -346,7 +346,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
         radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
 
 #if ( DEBUG == 1)
-        if( isDbgCellDevice( origin ) ){
+        if( isDbgCellDevice( origin ) ) {
           printf( "\n      [%d, %d, %d]  sumI: %1.16e  divQ: %1.16e radiationVolq: %1.16e  abskg: %1.16e,    sigmaT4: %1.16e \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
         }
@@ -365,9 +365,13 @@ __constant__ levelParams d_levels[d_MAXLEVELS];
 
 template< class T>
 __global__
-#if NDEBUG  //Uinth has a DNDEBUG compiler defined flag in normal trunk builds.  Debug builds have no compiler flags we can capture.
-__launch_bounds__(640, 1) // For 96 registers with 320 threads.  Allows two kernels to fit within an SM.
-                          // Seems to be the performance sweet spot in release mode.
+#if NDEBUG  // Uinth has a DNDEBUG compiler defined flag in normal
+	    // trunk builds.  Debug builds have no compiler flags we
+	    // can capture.
+__launch_bounds__(640, 1) // For 96 registers with 320 threads.
+                          // Allows two kernels to fit within an SM.
+                          // Seems to be the performance sweet spot in
+                          // release mode.
 #endif
 void rayTraceDataOnionKernel( dim3 dimGrid,
                               dim3 dimBlock,
@@ -424,7 +428,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
     if (d_levels[l].hasFinerLevel) {
-      if(RT_flags.usingFloats){
+      if(RT_flags.usingFloats) {
         abskg_gdw->getLevel( abskg[l],  "abskgRMCRT", matl, l);
       } else {
         abskg_gdw->getLevel( abskg[l],  "abskg",      matl, l);
@@ -442,7 +446,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   //  ToDo:  replace get with getRegion() calls so
   //  so the halo can be > 0
   if ( RT_flags.whichROI_algo == patch_based ) {
-    if(RT_flags.usingFloats){
+    if(RT_flags.usingFloats) {
       abskg_gdw->get(abskg[fineL],           "abskgRMCRT",    finePatch.ID, matl, fineL);
     } else {
       abskg_gdw->get(abskg[fineL],           "abskg",    finePatch.ID, matl, fineL);
@@ -460,7 +464,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   //__________________________________
   //  fine level data for this patch
-  if( RT_flags.modifies_divQ ){
+  if( RT_flags.modifies_divQ ) {
     new_gdw->getModifiable( divQ_fine,         "divQ",           finePatch.ID, matl, fineL );
     new_gdw->getModifiable( boundFlux_fine,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
     new_gdw->getModifiable( radiationVolQ_fine,"radiationVolq",  finePatch.ID, matl, fineL );
@@ -514,7 +518,8 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
     return;
   }
   setupRandNumsSeedAndSequences(randNumStates,
-                               (dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z),
+                               (dimGrid.x  * dimGrid.y  * dimGrid.z *
+				dimBlock.x * dimBlock.y * dimBlock.z),
                                finePatch.ID,
                                curTimeStep);
 
@@ -528,7 +533,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   //______________________________________________________________________
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
-  if( RT_flags.solveBoundaryFlux ){
+  if( RT_flags.solveBoundaryFlux ) {
     int3 dirIndexOrder[6];
     int3 dirSignSwap[6];
 
@@ -561,7 +566,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
                                (threadID / (finePatchSize.x * finePatchSize.y)) + finePatch.lo.z);
     while (threadID < RT_flags.endCell) {
       //get a new set of random numbers
-      if (doLatinHyperCube){
+      if (doLatinHyperCube) {
         randVectorDevice(rand_i, nFluxRays, randNumStates);
       }
 
@@ -592,13 +597,13 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
           //__________________________________
           // Flux ray loop
           #pragma unroll
-          for (int iRay=0; iRay < nFluxRays; iRay++){
+          for (int iRay=0; iRay < nFluxRays; iRay++) {
 
             GPUVector direction_vector;
             GPUVector rayOrigin;
             double cosTheta;
 
-            if ( doLatinHyperCube ){        // Latin-Hyper-Cube sampling
+            if ( doLatinHyperCube ) {        // Latin-Hyper-Cube sampling
               rayDirectionHyperCube_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                                     direction_vector, cosTheta, rand_i[iRay], iRay, nFluxRays);
             } else{                                               // Naive Monte-Carlo sampling
@@ -663,13 +668,13 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
     while (threadID < RT_flags.endCell) {
 
       // don't compute in intrusions and walls
-      if(cellType[fineL][origin] != d_flowCell ){
+      if(cellType[fineL][origin] != d_flowCell ) {
         continue;
       }
       GPUPoint CC_pos = d_levels[fineL].getCellPosition(origin);
 
 #if( DEBUG == 1 )
-        if( isDbgCellDevice( origin ) ){
+        if( isDbgCellDevice( origin ) ) {
           printf(" origin[%i,%i,%i] finePatchID: %i \n", origin.x, origin.y, origin.z, finePatch.ID);
         }
 #endif
@@ -682,7 +687,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
           GPUVector ray_direction;
-          if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
+          if ( doLatinHyperCube ) {                          // Latin-Hyper-Cube sampling
             ray_direction = findRayDirectionHyperCubeDevice(randNumStates, RT_flags.nDivQRays, rand_i[iRay], iRay );
           }else{                                            // Naive Monte-Carlo sampling
             ray_direction = findRayDirectionDevice( randNumStates );
@@ -704,7 +709,7 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
         radiationVolQ_fine[origin] = 4.0 * M_PI * (sumI/RT_flags.nDivQRays);
 
 #if (DEBUG == 1)
-       if( isDbgCellDevice(origin) ){
+       if( isDbgCellDevice(origin) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x, origin.y, origin.z, sumI,divQ_fine[origin], radiationVolQ_fine[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
         }
@@ -824,13 +829,13 @@ __device__ GPUVector findRayDirectionHyperCubeDevice(curandState* randNumStates,
 //______________________________________________________________________
 __device__ void randVectorDevice( int int_array[],
                                   const int size,
-                                  curandState* randNumStates ){
+                                  curandState* randNumStates ) {
 
-  for (int i=0; i<size; i++){   // populate sequential array from 0 to size-1
+  for (int i=0; i<size; i++) {   // populate sequential array from 0 to size-1
     int_array[i] = i;
   }
 
-  for (int i=size-1; i>0; i--){  // fisher-yates shuffle starting with size-1
+  for (int i=size-1; i>0; i--) {  // fisher-yates shuffle starting with size-1
     int rand_int =  randIntDevice(randNumStates, i);    // Random number between 0 & i
     int swap = int_array[i];
     int_array[i] = int_array[rand_int];
@@ -875,7 +880,7 @@ GPUVector rayOriginDevice( curandState* randNumStates,
                            const bool   useCCRays)
 {
   GPUVector rayOrigin;
-  if( useCCRays == false ){
+  if( useCCRays == false ) {
     rayOrigin[0] =  CC_pos.x - 0.5*dx.x  + randDblDevice(randNumStates) * dx.x;
     rayOrigin[1] =  CC_pos.y - 0.5*dx.y  + randDblDevice(randNumStates) * dx.y;
     rayOrigin[2] =  CC_pos.z - 0.5*dx.z  + randDblDevice(randNumStates) * dx.z;
@@ -967,21 +972,21 @@ __device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
 //
 __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
                                      const GPUGridVariable<int>& celltype,
-                                     BoundaryFaces &boundaryFaces){
+                                     BoundaryFaces &boundaryFaces) {
 
   GPUIntVector adj = c;
   bool hasBoundary = false;
 
   adj[0] = c[0] - 1;     // west
 
-  if ( celltype[adj]+1 ){              // cell type of flow is -1, so when cellType+1 isn't false, we
+  if ( celltype[adj]+1 ) {              // cell type of flow is -1, so when cellType+1 isn't false, we
     boundaryFaces.addFace( WEST );     // know we're at a boundary
     hasBoundary = true;
   }
 
   adj[0] += 2;           // east
 
-  if ( celltype[adj]+1 ){
+  if ( celltype[adj]+1 ) {
     boundaryFaces.addFace( EAST );
     hasBoundary = true;
   }
@@ -989,14 +994,14 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
   adj[0] -= 1;
   adj[1] = c[1] - 1;     // south
 
-  if ( celltype[adj]+1 ){
+  if ( celltype[adj]+1 ) {
     boundaryFaces.addFace( SOUTH );
     hasBoundary = true;
   }
 
   adj[1] += 2;           // north
 
-  if ( celltype[adj]+1 ){
+  if ( celltype[adj]+1 ) {
     boundaryFaces.addFace( NORTH );
     hasBoundary = true;
   }
@@ -1004,14 +1009,14 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
   adj[1] -= 1;
   adj[2] = c[2] - 1;     // bottom
 
-  if ( celltype[adj]+1 ){
+  if ( celltype[adj]+1 ) {
     boundaryFaces.addFace( BOT );
     hasBoundary = true;
   }
 
   adj[2] += 2;           // top
 
-  if ( celltype[adj]+1 ){
+  if ( celltype[adj]+1 ) {
     boundaryFaces.addFace( TOP );
     hasBoundary = true;
   }
@@ -1028,7 +1033,7 @@ __device__ void raySignStepDevice(GPUVector& sign,
                                   const GPUVector& inv_direction_vector)
 {
   // get new step and sign
-  for ( int d=0; d<3; d++){
+  for ( int d=0; d<3; d++) {
     double me = copysign((double)1.0, inv_direction_vector[d]);  // +- 1
 
     sign[d] = fmax(0.0, me);    // 0, 1
@@ -1147,11 +1152,11 @@ __device__ void updateSumIDevice ( levelParams level,
 
   //+++++++Begin ray tracing+++++++++++++++++++
   //Threshold while loop
-  while ( intensity > RT_flags.threshold ){
+  while ( intensity > RT_flags.threshold ) {
 
     DIR dir = NONE;
 
-    while (in_domain){
+    while (in_domain) {
 
       prevCell = cur;
       double disMin = -9;          // Represents ray segment length.
@@ -1159,14 +1164,14 @@ __device__ void updateSumIDevice ( levelParams level,
       //__________________________________
       //  Determine which cell the ray will enter next
       dir = NONE;
-      if ( tMax.x < tMax.y ){        // X < Y
-        if ( tMax.x < tMax.z ){      // X < Z
+      if ( tMax.x < tMax.y ) {        // X < Y
+        if ( tMax.x < tMax.z ) {      // X < Z
           dir = X;
         } else {
           dir = Z;
         }
       } else {
-        if( tMax.y < tMax.z ){       // Y < Z
+        if( tMax.y < tMax.z ) {       // Y < Z
           dir = Y;
         } else {
           dir = Z;
@@ -1193,7 +1198,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
 
 #if ( DEBUG >= 1 )
-      if( isDbgCellDevice(origin) ){
+      if( isDbgCellDevice(origin) ) {
           printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
           printf( " dir %d ", dir );
           printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
@@ -1217,7 +1222,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
 
 #ifdef RAY_SCATTER
-      if ( (rayLength > scatLength) && in_domain){
+      if ( (rayLength > scatLength) && in_domain) {
 
         // get new scatLength for each scattering event
         scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;
@@ -1232,7 +1237,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
         // if sign[dir] changes sign, put ray back into prevCell (back scattering)
         // a sign change only occurs when the product of old and new is negative
-        if( step[dir] * stepOld < 0 ){
+        if( step[dir] * stepOld < 0 ) {
           cur = prevCell;
         }
 
@@ -1253,7 +1258,7 @@ __device__ void updateSumIDevice ( levelParams level,
         rayLength = 0;  // allow for multiple scattering events per ray
 
 #if (DEBUG == 3)
-        if( isDbgCellDevice( origin)  ){
+        if( isDbgCellDevice( origin)  ) {
           printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x, cur.y, cur.z,rayLength, tMax[0], tMax[1], tMax[2], tDelta.x, tDelta.y , tDelta.z, ray_direction.x, ray_direction.y , ray_direction.z);
           printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
           printf( "                    ray_location: [%g, %g, %g]\n", rayLocation[0], rayLocation[1], rayLocation[2] );
@@ -1269,7 +1274,7 @@ __device__ void updateSumIDevice ( levelParams level,
     //  wall emission 12/15/11
     double wallEmissivity = abskg[cur];
 
-    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one.
+    if (wallEmissivity > 1.0) {       // Ensure wall emissivity doesn't exceed one.
       wallEmissivity = 1.0;
     }
 
@@ -1281,12 +1286,12 @@ __device__ void updateSumIDevice ( levelParams level,
 
 
     // when a ray reaches the end of the domain, we force it to terminate.
-    if( !RT_flags.allowReflect ){
+    if( !RT_flags.allowReflect ) {
      intensity = 0;
     }
 
 #if DEBUG >0
-    if( isDbgCellDevice(origin) ){
+    if( isDbgCellDevice(origin) ) {
         printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n",
                 cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
     }
@@ -1294,7 +1299,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
     //__________________________________
     //  Reflections
-    if ( (intensity > RT_flags.threshold) && RT_flags.allowReflect){
+    if ( (intensity > RT_flags.threshold) && RT_flags.allowReflect) {
       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[dir], sign[dir], ray_direction[dir]);
       ++nReflect;
     }
@@ -1480,7 +1485,7 @@ __device__ void updateSumIDevice ( levelParams level,
 
       //__________________________________
       // when moving to a coarse level tmax will change only in the direction the ray is moving
-      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ){
+      if ( jumpFinetoCoarserLevel || jumpCoarsetoCoarserLevel ) {
         GPUVector dx = d_levels[L].Dx;
         double rayDx_Level = ray_location[dir] - ( CC_pos[dir] - 0.5*dx[dir] );
         double tMax_tmp    = ( sign[dir] * dx[dir] - rayDx_Level ) * inv_ray_direction[dir];
@@ -1543,7 +1548,7 @@ __device__ void updateSumIDevice ( levelParams level,
     intensity = intensity * fs;
 
     // when a ray reaches the end of the domain, we force it to terminate.
-    if (!RT_flags.allowReflect){
+    if (!RT_flags.allowReflect) {
       intensity = 0;
     }
     
@@ -1669,7 +1674,7 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
   dbgCell[1] = make_int3(5,5,5);
 
   for (int i = 0; i < size; i++) {
-    if( me == dbgCell[i]){
+    if( me == dbgCell[i]) {
       return true;
     }
   }
@@ -1729,7 +1734,7 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
     GPUIntVector varLo = Q.getLowIndex();
     GPUIntVector varHi = Q.getHighIndex();
 
-    if( Lo < varLo || varHi < Hi){
+    if( Lo < varLo || varHi < Hi) {
       printf ( "ERROR: GPUVariableSanityCK \n");
       printf("  Variable:          varLo:[%i,%i,%i], varHi[%i,%i,%i]\n", varLo.x, varLo.y, varLo.z, varHi.x, varHi.y, varHi.z);
       printf("  Requested extents: varLo:[%i,%i,%i], varHi[%i,%i,%i]\n", Lo.x, Lo.y, Lo.z, Hi.x, Hi.y, Hi.z);
@@ -1743,7 +1748,7 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
         for (int k = Lo.z; k < Hi.z; k++) {
           GPUIntVector idx = make_int3(i, j, k);
           T me = Q[idx];
-          if ( isNan(me) || isInf(me)){
+          if ( isNan(me) || isInf(me)) {
             printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
             printf(" Now existing...");
             __threadfence();
@@ -1782,33 +1787,41 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                    GPUDataWarehouse* old_gdw,
                                    GPUDataWarehouse* new_gdw)
 {
-  // setup random number generator states on the device, 1 for each thread
+  // Setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
-  int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
-  
+  int numStates = dimGrid.x * dimGrid.y * dimGrid.z *
+    dimBlock.x * dimBlock.y * dimBlock.z;
+
+  // ARS - FIX ME
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
 
-  //Create a host array, load it with data, and send it over to the GPU
+  // Create a host array, load it with data, and send it over to the GPU
   int nRandNums = 512;
   double* d_debugRandNums;
   size_t randNumsByteSize = nRandNums * sizeof(double);
+  // ARS - FIX ME
   d_debugRandNums = (double*)GPUMemoryPool::allocateCudaSpaceFromPool(0, randNumsByteSize);
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, d_debugRandNums);
 
-  //Making sure we have kernel/mem copy overlapping
+  // Making sure we have kernel/mem copy overlapping
   double* h_debugRandNums = new double[nRandNums];
+  // ARS - FIX ME
   cudaHostRegister(h_debugRandNums, randNumsByteSize, cudaHostRegisterPortable);
+  dtask->addTempHostMemoryToBeFreedOnCompletion(h_debugRandNums);
 
-  //perform computations here on h_debugRandNums
+  // Perform computations here on h_debugRandNums
   for (int i = 0; i < nRandNums; i++) {
     h_debugRandNums[i] = i;
   }
-  dtask->addTempHostMemoryToBeFreedOnCompletion(h_debugRandNums);
-  cudaMemcpyAsync(d_debugRandNums, h_debugRandNums, randNumsByteSize, cudaMemcpyHostToDevice, *stream );
 
+  CUDA_RT_SAFE_CALL( cudaMemcpyAsync(d_debugRandNums, h_debugRandNums, randNumsByteSize, cudaMemcpyHostToDevice, *stream ) );
+
+  // ARS - FIX ME
+#if defined(USE_KOKKOS_INSTANCE) || defined(USE_KOKKOS_PARALLEL_FOR)
+#else  
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
-                                                            dimBlock,                                               
+                                                            dimBlock,
                                                             matlIndx,
                                                             level,
                                                             patch,
@@ -1820,6 +1833,7 @@ __host__ void launchRayTraceKernel(DetailedTask* dtask,
                                                             cellType_gdw,
                                                             old_gdw,
                                                             new_gdw);
+#endif
 
 #if DEBUG > 0
     cudaDeviceSynchronize();    // so printF will work
@@ -1848,67 +1862,69 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw )
 {
-
-  
-  // copy regionLo & regionHi to device memory
+  // Copy regionLo & regionHi to device memory.
   int maxLevels = gridP.maxLevels;
 
   int3* dev_regionLo;
   int3* dev_regionHi;
   
   size_t size = d_MAXLEVELS * sizeof(int3);
+  // ARS - FIX ME
   dev_regionLo = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
   dev_regionHi = (int3*)GPUMemoryPool::allocateCudaSpaceFromPool(0, size);
 
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionLo);
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, dev_regionHi);
   
-  //More GPU stuff to allow kernel/copy overlapping
+  // More GPU stuff to allow kernel/copy overlapping
   int3 * myLo = new int3[d_MAXLEVELS];
-  cudaHostRegister(myLo, sizeof(int3) * d_MAXLEVELS, cudaHostRegisterPortable);
   int3 * myHi = new int3[d_MAXLEVELS];
+  // ARS - FIX ME
+  cudaHostRegister(myLo, sizeof(int3) * d_MAXLEVELS, cudaHostRegisterPortable);
   cudaHostRegister(myHi, sizeof(int3) * d_MAXLEVELS, cudaHostRegisterPortable);
   dtask->addTempHostMemoryToBeFreedOnCompletion(myLo);
   dtask->addTempHostMemoryToBeFreedOnCompletion(myHi);
 
   for (int l = 0; l < maxLevels; ++l) {
-    myLo[l] = levelP[l].regionLo;        // never use levelP regionLo or hi in the kernel.
-    myHi[l] = levelP[l].regionHi;        // They are different on each patch
+    myLo[l] = levelP[l].regionLo; // Never use levelP regionLo or hi in the
+    myHi[l] = levelP[l].regionHi; // kernel. They are different on each patch.
   }
 
+  // ARS - FIX ME
   CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionLo, myLo, size, cudaMemcpyHostToDevice, *stream) );
-  CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionHi, myHi, size, cudaMemcpyHostToDevice, *stream) );
-  
+  CUDA_RT_SAFE_CALL( cudaMemcpyAsync( dev_regionHi, myHi, size, cudaMemcpyHostToDevice, *stream) );  
 
   //__________________________________
-  // copy levelParams array to constant memory on device
+  // Copy levelParams array to constant memory on device
   CUDA_RT_SAFE_CALL(cudaMemcpyToSymbolAsync(d_levels, levelP, (maxLevels * sizeof(levelParams)),0, cudaMemcpyHostToDevice,*stream));
 
-  //__________________________________
-  // setup random number generator states on the device, 1 for each thread
+  //_____________________________
+  // Setup random number generator states on the device, 1 for each thread
   int numStates = dimGrid.x * dimGrid.y * dimGrid.z * dimBlock.x * dimBlock.y * dimBlock.z;
 
   curandState* randNumStates;
   randNumStates = (curandState*)GPUMemoryPool::allocateCudaSpaceFromPool(0, numStates * sizeof(curandState));
   dtask->addTempCudaMemoryToBeFreedOnCompletion(0, randNumStates);
   
-  rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
-                                                                     dimBlock,
-                                                                     matlIndex,
-                                                                     patch,
-                                                                     gridP,
-                                                                     fineLevel_ROI_Lo,
-                                                                     fineLevel_ROI_Hi,
-                                                                     dev_regionLo,
-                                                                     dev_regionHi,
-                                                                     randNumStates,
-                                                                     RT_flags,
-                                                                     curTimeStep,
-                                                                     abskg_gdw,
-                                                                     sigmaT4_gdw,
-                                                                     cellType_gdw,
-                                                                     old_gdw,
-                                                                     new_gdw);
+  // ARS - FIX ME
+  rayTraceDataOnionKernel< T >
+    <<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
+					   dimBlock,
+					   matlIndex,
+					   patch,
+					   gridP,
+					   fineLevel_ROI_Lo,
+					   fineLevel_ROI_Hi,
+					   dev_regionLo,
+					   dev_regionHi,
+					   randNumStates,
+					   RT_flags,
+					   curTimeStep,
+					   abskg_gdw,
+					   sigmaT4_gdw,
+					   cellType_gdw,
+					   old_gdw,
+					   new_gdw);
    
   //cudaDeviceSynchronize();
   //cudaError_t result = cudaPeekAtLastError();

@@ -32,7 +32,7 @@
 
 #include <sci_defs/kokkos_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   #include <Kokkos_Macros.hpp>
 #endif
 
@@ -159,7 +159,7 @@ template<class T> class Array3Window : public RefCounted {
       {
         return KokkosView3<U, Kokkos::HostSpace>();
       }
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 
       ///////////////////////////////////////////////////////////////////////
       // Return pointer to the data

@@ -32,14 +32,13 @@
 #include <Core/Grid/Task.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
-
-#include <sci_defs/kokkos_defs.h>
 
 #include <atomic>
 #include <list>
@@ -58,7 +57,7 @@ class DetailedTasks;
 
 //_____________________________________________________________________________
 //
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   struct TaskGpuDataWarehouses {
     GPUDataWarehouse* TaskGpuDW[2];
   };
@@ -159,7 +158,7 @@ public:
     }
   };
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   struct delayedCopyingInfo {
     delayedCopyingInfo( GpuUtilities::LabelPatchMatlLevelDw   lpmld_
                       , DeviceGridVariableInfo                devGridVarInfo_
@@ -249,7 +248,7 @@ public:
   double task_exec_time() const { return m_exec_timer().seconds(); }
 
 //-----------------------------------------------------------------------------
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
 
@@ -443,7 +442,7 @@ private:
 
 
 //-----------------------------------------------------------------------------
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 private:
 //  bool         m_deviceExternallyReady{false};
 //  bool         m_completed{false};
@@ -528,7 +527,7 @@ private:
 #endif
 //-----------------------------------------------------------------------------
 
-#if defined(HAVE_CUDA) || defined(UINTAH_ENABLE_KOKKOS)
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 public:
     // int m_num_partitions{0};
     // int m_threads_per_partition{0};

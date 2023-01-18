@@ -38,15 +38,16 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
+#include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
+
 #include <iosfwd>
 
 #include <type_traits>
 
-#include <sci_defs/kokkos_defs.h>
-
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
 #include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 namespace Uintah {
 
@@ -228,7 +229,8 @@ public:
 
 //For now, if it's a homogeneous only Kokkos environment, use Kokkos Views
 //If it's a legacy environment or a CUDA environment, use the original way of accessing data.
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && !defined( HAVE_CUDA )
+#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && \
+  (!defined(HAVE_CUDA) && !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL))
 
   //Note: Dan Sunderland used a Kokkos define KOKKOS_FORCEINLINE_FUNCTION,
   //however, this caused problems when trying to compile with CUDA, as it tried

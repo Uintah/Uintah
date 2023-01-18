@@ -116,7 +116,7 @@ private: // MEMBERS
 
     /// View to the variable
     /// (points the variable itself or to the kokkos view of it for gpu builds)
-#ifndef UINTAH_ENABLE_KOKKOS
+#ifndef HAVE_KOKKOS
     Variable<VAR, T> * m_view;
 #else
     KokkosView3<T> * m_view;
@@ -140,7 +140,7 @@ private: // COPY CONSTRUCTOR
         m_material ( copy->m_material ),
         m_level ( copy->m_level ),
         m_variable ( ( copy->m_variable && deep ) ? scinew Variable<VAR, T> ( *copy->m_variable ) : nullptr ),
-#ifndef UINTAH_ENABLE_KOKKOS
+#ifndef HAVE_KOKKOS
         m_view ( m_variable )
 #else
         m_view ( m_variable ? m_variable->getKokkosView() : nullptr )
@@ -317,7 +317,7 @@ public: // CONSTRUCTORS/DESTRUCTOR
         m_material ( material ),
         m_level ( patch->getLevel() ),
         m_variable ( create_patch_variable<std::is_const<T>::value> ( dw, patch, use_ghosts ) ),
-#ifndef UINTAH_ENABLE_KOKKOS
+#ifndef HAVE_KOKKOS
         m_view ( m_variable )
 #else
         m_view ( m_variable->getKokkosView() )
@@ -356,7 +356,7 @@ public: // VIEW METHODS
         delete m_variable;
         m_level = patch->getLevel();
         m_variable = create_patch_variable<std::is_const<T>::value> ( dw, patch, use_ghosts );
-#ifndef UINTAH_ENABLE_KOKKOS
+#ifndef HAVE_KOKKOS
         m_view = m_variable;
 #else
         m_view = m_variable->getKokkosView();
@@ -384,7 +384,7 @@ public: // VIEW METHODS
         delete m_variable;
         m_level = level;
         m_variable = create_region_variable<std::is_const<T>::value> ( dw, level, low, high, use_ghosts );
-#ifndef UINTAH_ENABLE_KOKKOS
+#ifndef HAVE_KOKKOS
         m_view = m_variable;
 #else
         m_view = m_variable->getKokkosView();

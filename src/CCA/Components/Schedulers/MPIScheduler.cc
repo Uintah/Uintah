@@ -49,9 +49,9 @@
 #include <sci_defs/kokkos_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
 #  include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
 
 #include <cstring>
 #include <iomanip>

@@ -34,9 +34,10 @@
 #include <Core/Grid/Variables/Iterator.h>
 #include <signal.h>
 
+#include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -78,7 +79,7 @@ namespace Uintah {
 
     public:
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
     ListOfCellsIterator(int size) : mySize(0), index_(0), listOfCells_("primary_ListIterator_BCview", size+1)
     {
       listOfCells_(mySize) = int_3(INT_MAX, INT_MAX, INT_MAX);
@@ -97,7 +98,7 @@ namespace Uintah {
 
     ListOfCellsIterator(Iterator &copy) : mySize(0)
                                         , index_(0)
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
                                         , listOfCells_("iterator_copy_ListIterator_BCview", copy.size()+1)
 #else
                                         , listOfCells_(copy.size()+1)
@@ -189,8 +190,8 @@ namespace Uintah {
     inline void reset() { index_ = 0; }
 
 // Special handling of MemSpace to promote UintahSpaces::HostSpace to Kokkos::HostSpace
-// UintahSpaces::HostSpace is not supported with Kokkos::OpenMP and/or Kokkos::CUDA builds
-#if defined( UINTAH_ENABLE_KOKKOS )
+// UintahSpaces::HostSpace is not supported with Kokkos::OpenMP and/or Kokkos::CUDA/HIP/SYCL builds
+#if defined( HAVE_KOKKOS )
 //    template<typename MemSpace>
 //    inline typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, Kokkos::View<int_3*, Kokkos::HostSpace> >::type
 //    get_ref_to_iterator(){ return listOfCells_; }
@@ -218,15 +219,15 @@ namespace Uintah {
     get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj){ return listOfCells_; }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 //    template<typename MemSpace>
-//    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
+//    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> >::type
 //    get_ref_to_iterator() {
 //      if ( copied_to_gpu ) {
 //        return listOfCells_gpu;
 //      }
 //      else {
-//        listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+//        listOfCells_gpu = Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space>( "gpu_listOfCellsIterator", listOfCells_.size() );
 //        Kokkos::deep_copy( listOfCells_gpu, listOfCells_ );
 //        copied_to_gpu = true;
 //        return listOfCells_gpu;
@@ -234,7 +235,7 @@ namespace Uintah {
 //    }
 
     template<typename ExecSpace, typename MemSpace>
-    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, Kokkos::View<int_3*, Kokkos::CudaSpace> >::type
+    inline typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> >::type
     get_ref_to_iterator(ExecutionObject<ExecSpace, MemSpace>& execObj) {
       if ( copied_to_gpu == 2 ) { //if already copied, return
         return listOfCells_gpu;
@@ -242,7 +243,7 @@ namespace Uintah {
       else {
         int cur_val = __sync_val_compare_and_swap(&copied_to_gpu, 0, 1);
         if(cur_val == 0){ //comparison was successful and this is a lucky thread that gets to copy the value.
-          listOfCells_gpu = Kokkos::View<int_3*, Kokkos::CudaSpace>( "gpu_listOfCellsIterator", listOfCells_.size() );
+          listOfCells_gpu = Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space>( "gpu_listOfCellsIterator", listOfCells_.size() );
 
 #ifdef USE_KOKKOS_INSTANCE
 	  ExecSpace instance = execObj.getInstance();
@@ -297,14 +298,14 @@ namespace Uintah {
     unsigned int mySize{0};
     unsigned int index_{0}; // index into the iterator
 
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
     Kokkos::View<int_3*, Kokkos::HostSpace> listOfCells_;
 #else
     std::vector<int_3> listOfCells_{};
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
-    Kokkos::View<int_3*, Kokkos::CudaSpace> listOfCells_gpu;
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+    Kokkos::View<int_3*, Kokkos::DefaultExecutionSpace::memory_space> listOfCells_gpu;
     //bool copied_to_gpu{false};
     volatile int copied_to_gpu{0}; //0: not copied, 1: copying, 2: copied
 #endif
@@ -312,7 +313,7 @@ namespace Uintah {
     private:
 
     // This old constructor has a static size for portability reasons. It should be avoided since.
-#if defined( UINTAH_ENABLE_KOKKOS )
+#if defined( HAVE_KOKKOS )
     ListOfCellsIterator() : mySize(0), index_(0), listOfCells_("priv_ListIterator_BCview", 1000)
     {
       listOfCells_(mySize) = int_3(INT_MAX, INT_MAX, INT_MAX);
