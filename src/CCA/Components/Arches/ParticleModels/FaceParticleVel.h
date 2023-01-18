@@ -140,7 +140,7 @@ private:
                                        , &FaceParticleVel<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FaceParticleVel<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &FaceParticleVel<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 
@@ -153,7 +153,7 @@ private:
                                        , &FaceParticleVel<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FaceParticleVel<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &FaceParticleVel<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &FaceParticleVel<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 

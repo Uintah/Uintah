@@ -31,7 +31,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskInitializeFunctionPointers()
                                      //, &OneDWallHT::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &OneDWallHT::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &OneDWallHT::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &OneDWallHT::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -43,7 +43,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskEvalFunctionPointers()
                                      //, &OneDWallHT::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &OneDWallHT::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &OneDWallHT::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &OneDWallHT::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -55,7 +55,7 @@ TaskAssignedExecutionSpace OneDWallHT::loadTaskTimestepInitFunctionPointers()
                                      //, &OneDWallHT::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &OneDWallHT::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &OneDWallHT::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &OneDWallHT::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &OneDWallHT::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

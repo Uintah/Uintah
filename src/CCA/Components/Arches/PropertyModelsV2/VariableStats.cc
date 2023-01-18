@@ -29,7 +29,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskInitializeFunctionPointers()
                                      //, &VariableStats::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VariableStats::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &VariableStats::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &VariableStats::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskEvalFunctionPointers()
                                      //, &VariableStats::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VariableStats::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &VariableStats::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &VariableStats::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -53,7 +53,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskTimestepInitFunctionPointers()
                                      //, &VariableStats::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VariableStats::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &VariableStats::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &VariableStats::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -65,7 +65,7 @@ TaskAssignedExecutionSpace VariableStats::loadTaskRestartInitFunctionPointers()
                                      //, &VariableStats::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &VariableStats::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VariableStats::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &VariableStats::restart_initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &VariableStats::restart_initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

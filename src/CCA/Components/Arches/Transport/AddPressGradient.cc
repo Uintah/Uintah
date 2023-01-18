@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace AddPressGradient::loadTaskEvalFunctionPointers()
                                      , &AddPressGradient::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &AddPressGradient::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &AddPressGradient::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &AddPressGradient::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &AddPressGradient::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

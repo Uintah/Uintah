@@ -22,7 +22,7 @@ TaskAssignedExecutionSpace InitLagrangianParticleVelocity::loadTaskInitializeFun
                                      //, &InitLagrangianParticleVelocity::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &InitLagrangianParticleVelocity::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &InitLagrangianParticleVelocity::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &InitLagrangianParticleVelocity::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &InitLagrangianParticleVelocity::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

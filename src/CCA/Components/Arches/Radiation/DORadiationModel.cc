@@ -604,7 +604,7 @@ struct computeAMatrix{
                        fluxX(_fluxX) ,
                        fluxY(_fluxY) ,
                        fluxZ(_fluxZ)
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
                                     { SB=5.67e-8;  // W / m^2 / K^4
                                       dirX = (omu  > 0.0)? -1 : 1;
                                       dirY = (oeta > 0.0)? -1 : 1;
@@ -728,7 +728,7 @@ struct compute4Flux{
                    fluxY(_fluxY) ,
                    fluxZ(_fluxZ) ,
                    volQ(_volQ)
-#endif //UINTAH_ENABLE_KOKKOS
+#endif //HAVE_KOKKOS
                      { }
 
        void operator()(int i , int j, int k ) const {

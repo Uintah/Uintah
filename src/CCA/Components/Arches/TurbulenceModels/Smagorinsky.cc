@@ -26,7 +26,7 @@ TaskAssignedExecutionSpace Smagorinsky::loadTaskInitializeFunctionPointers()
                                      //, &Smagorinsky::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Smagorinsky::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Smagorinsky::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Smagorinsky::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &Smagorinsky::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -38,7 +38,7 @@ TaskAssignedExecutionSpace Smagorinsky::loadTaskEvalFunctionPointers()
                                      //, &Smagorinsky::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Smagorinsky::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Smagorinsky::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Smagorinsky::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &Smagorinsky::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -49,7 +49,7 @@ TaskAssignedExecutionSpace Smagorinsky::loadTaskTimestepInitFunctionPointers()
                                      //, &Smagorinsky::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &Smagorinsky::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &Smagorinsky::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &Smagorinsky::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &Smagorinsky::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

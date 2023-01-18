@@ -41,7 +41,7 @@ TaskAssignedExecutionSpace SGSsigma::loadTaskInitializeFunctionPointers()
                                      //, &SGSsigma::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &SGSsigma::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SGSsigma::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &SGSsigma::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &SGSsigma::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -53,7 +53,7 @@ TaskAssignedExecutionSpace SGSsigma::loadTaskEvalFunctionPointers()
                                      //, &SGSsigma::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &SGSsigma::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SGSsigma::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &SGSsigma::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &SGSsigma::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

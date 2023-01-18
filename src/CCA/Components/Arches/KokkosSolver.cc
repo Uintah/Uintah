@@ -279,7 +279,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
 						  "KokkosSolver::computeStableTimeStep",
 						  &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
 						  &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
-						  &KokkosSolver::computeStableTimeStep<KOKKOS_CUDA_TAG>,
+						  &KokkosSolver::computeStableTimeStep<KOKKOS_DEVICE_TAG>,
 						  sched, lb->getPerProcessorPatchSet(level), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
     }
     else{
@@ -287,7 +287,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
                           "KokkosSolver::computeStableTimeStep",
                           &KokkosSolver::computeStableTimeStep<UINTAH_CPU_TAG>,
                           &KokkosSolver::computeStableTimeStep<KOKKOS_OPENMP_TAG>,
-                          &KokkosSolver::computeStableTimeStep<KOKKOS_CUDA_TAG>,
+                          &KokkosSolver::computeStableTimeStep<KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
     }
 
@@ -316,7 +316,7 @@ KokkosSolver::computeTimestep( const LevelP     & level
                           "KokkosSolver::setTimeStep",
                           &KokkosSolver::setTimeStep<UINTAH_CPU_TAG>,
                           &KokkosSolver::setTimeStep<KOKKOS_OPENMP_TAG>,
-                          //&KokkosSolver::setTimeStep<KOKKOS_CUDA_TAG>,
+                          //&KokkosSolver::setTimeStep<KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(), m_materialManager->allMaterials(), TASKGRAPH::DEFAULT);
 
   }

@@ -17,7 +17,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskInitializeFunctionPointers()
                                      //, &BurnsChriston::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &BurnsChriston::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &BurnsChriston::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &BurnsChriston::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskTimestepInitFunctionPointers()
                                      //, &BurnsChriston::timestep_init<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &BurnsChriston::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &BurnsChriston::timestep_init<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &BurnsChriston::timestep_init<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -47,7 +47,7 @@ TaskAssignedExecutionSpace BurnsChriston::loadTaskRestartInitFunctionPointers()
                                      //, &BurnsChriston::restart_initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &BurnsChriston::restart_initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &BurnsChriston::restart_initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &BurnsChriston::restart_initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &BurnsChriston::restart_initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

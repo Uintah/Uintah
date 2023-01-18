@@ -20,7 +20,7 @@ using namespace Uintah;
 //                                            //, &SampleTask::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
 //                                            //, &SampleTask::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
 //                                            //, &SampleTask::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-//                                            //, &SampleTask::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+//                                            //, &SampleTask::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
 //                                            );
 //       }
 //
@@ -165,7 +165,7 @@ SampleTask::~SampleTask()
 //                                       , &SampleTask::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
 //                                       //, &SampleTask::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
 //                                       //, &SampleTask::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-//                                       //, &SampleTask::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+//                                       //, &SampleTask::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
 //                                       );
 //
 //  * Tag all non-empty tasks with UINTAH_CPU_TAG
@@ -173,7 +173,7 @@ SampleTask::~SampleTask()
 //  * Tag non-empty tasks refactored to support Kokkos::OpenMP builds with KOKKOS_OPENMP_TAG
 //    - e.g., Thread-safe tasks using Uintah::parallel_<pattern>
 //
-//  * Tag non-empty tasks refactored to support Kokkos::Cuda builds with KOKKOS_CUDA_TAG
+//  * Tag non-empty tasks refactored to support Kokkos builds with KOKKOS_DEVICE_TAG
 //    - e.g., Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++ functionality support by CUDA
 //--------------------------------------------------------------------------------------------------
 
@@ -191,7 +191,7 @@ TaskAssignedExecutionSpace SampleTask::loadTaskInitializeFunctionPointers()
                                      //, &SampleTask::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &SampleTask::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SampleTask::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &SampleTask::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &SampleTask::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -203,7 +203,7 @@ TaskAssignedExecutionSpace SampleTask::loadTaskEvalFunctionPointers()
                                      //, &SampleTask::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &SampleTask::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &SampleTask::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &SampleTask::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &SampleTask::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

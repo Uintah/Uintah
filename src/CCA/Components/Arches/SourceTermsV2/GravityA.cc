@@ -27,7 +27,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskInitializeFunctionPointers()
                                      , &GravityA::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GravityA::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GravityA::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GravityA::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &GravityA::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace GravityA::loadTaskEvalFunctionPointers()
                                      , &GravityA::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &GravityA::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &GravityA::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &GravityA::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &GravityA::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

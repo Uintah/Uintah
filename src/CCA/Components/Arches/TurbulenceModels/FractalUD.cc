@@ -72,7 +72,7 @@ namespace Uintah{
                                        //, &FractalUD::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FractalUD::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FractalUD::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                       //, &FractalUD::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -84,7 +84,7 @@ namespace Uintah{
                                        //, &FractalUD::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &FractalUD::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &FractalUD::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &FractalUD::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                       //, &FractalUD::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 

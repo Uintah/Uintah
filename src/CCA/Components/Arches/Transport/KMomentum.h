@@ -259,7 +259,7 @@ private:
                                        , &KMomentum<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KMomentum<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KMomentum<T>::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 
@@ -272,7 +272,7 @@ private:
                                        , &KMomentum<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KMomentum<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KMomentum<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 
@@ -285,7 +285,7 @@ private:
                                        , &KMomentum<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KMomentum<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KMomentum<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 
@@ -298,7 +298,7 @@ private:
                                        , &KMomentum<T>::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KMomentum<T>::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KMomentum<T>::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KMomentum<T>::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KMomentum<T>::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 

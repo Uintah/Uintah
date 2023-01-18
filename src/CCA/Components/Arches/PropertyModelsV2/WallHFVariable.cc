@@ -30,7 +30,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskInitializeFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::INITIALIZE>( this
                                      , &WallHFVariable::initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WallHFVariable::initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallHFVariable::initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     //, &WallHFVariable::initialize<KOKKOS_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -40,7 +40,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskEvalFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::TIMESTEP_EVAL>( this
                                      , &WallHFVariable::eval<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WallHFVariable::eval<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallHFVariable::eval<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     //, &WallHFVariable::eval<KOKKOS_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 
@@ -56,7 +56,7 @@ TaskAssignedExecutionSpace WallHFVariable::loadTaskRestartInitFunctionPointers()
   return create_portable_arches_tasks<TaskInterface::RESTART_INITIALIZE>( this
                                      , &WallHFVariable::restart_initialize<UINTAH_CPU_TAG>     // Task supports non-Kokkos builds
                                      //, &WallHFVariable::restart_initialize<KOKKOS_OPENMP_TAG>  // Task supports Kokkos::OpenMP builds
-                                     //, &WallHFVariable::restart_initialize<KOKKOS_CUDA_TAG>    // Task supports Kokkos::Cuda builds
+                                     //, &WallHFVariable::restart_initialize<KOKKOS_DEVICE_TAG>    // Task supports Kokkos builds
                                      );
 }
 

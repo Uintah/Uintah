@@ -556,7 +556,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 	if(task_group_name == "density_star" && type == (TaskInterface::TIMESTEP_EVAL)){
 	  create_portable_tasks( TaskDependencies, this,
 							  _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
-							  &TaskFactoryBase::do_task<KOKKOS_CUDA_TAG>,
+							  &TaskFactoryBase::do_task<KOKKOS_DEVICE_TAG>,
 							  sched, sched->getLoadBalancer()->getPerProcessorPatchSet(level), matls, TASKGRAPH::DEFAULT,
 							  variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
 	  //printf("warning: Creating per processor task for density_star due to race condition in kokkos cuda parallel_reduce %s %d\n", __FILE__, __LINE__);
@@ -564,7 +564,7 @@ void TaskFactoryBase::factory_schedule_task( const LevelP& level,
 	else{
       create_portable_tasks( TaskDependencies, this,
                           _factory_name + std::string("::") + task_group_name + std::string("::") + type_string,
-                          &TaskFactoryBase::do_task<KOKKOS_CUDA_TAG>,
+                          &TaskFactoryBase::do_task<KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(), matls, TASKGRAPH::DEFAULT,
                           variable_registry, arches_tasks, type, time_substep, non_const_pack_tasks);
 	}

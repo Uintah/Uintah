@@ -25,7 +25,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskInitializeFunctionPointers()
                                      , &CCVel::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CCVel::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &CCVel::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -37,7 +37,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskEvalFunctionPointers()
                                      , &CCVel::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CCVel::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &CCVel::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -49,7 +49,7 @@ TaskAssignedExecutionSpace CCVel::loadTaskTimestepInitFunctionPointers()
                                      , &CCVel::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &CCVel::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &CCVel::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &CCVel::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &CCVel::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

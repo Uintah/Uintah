@@ -23,7 +23,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskInitializeFunctionPointer
                                      //, &PartVariablesDQMOM::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PartVariablesDQMOM::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &PartVariablesDQMOM::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &PartVariablesDQMOM::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 
@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace PartVariablesDQMOM::loadTaskEvalFunctionPointers()
                                      //, &PartVariablesDQMOM::eval<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                      //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PartVariablesDQMOM::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     //, &PartVariablesDQMOM::eval<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                     //, &PartVariablesDQMOM::eval<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                      );
 }
 

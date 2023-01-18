@@ -269,7 +269,7 @@ namespace Uintah {
         /** @brief Get the heat loss upper and lower bounds **/
         virtual const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size ) = 0;
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         virtual const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size )=0;
 #endif
 
@@ -308,7 +308,7 @@ namespace Uintah {
 
         bool has_heat_loss(){ return false; };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double> hl_bounds;
@@ -391,7 +391,7 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double> hl_b;
@@ -495,7 +495,7 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double> hl_bounds;
@@ -651,7 +651,7 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double>  hl_bounds(2);
@@ -862,7 +862,7 @@ namespace Uintah {
 
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double>  hl_bounds(2);
@@ -1042,7 +1042,7 @@ namespace Uintah {
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace,Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >  const  size ){
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__);
         };
@@ -1286,7 +1286,7 @@ namespace Uintah {
 
         };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double>  hl_bounds(2);
@@ -1491,7 +1491,7 @@ namespace Uintah {
 
         bool inline has_heat_loss(){ return true; };
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
         inline const std::vector<double> get_hl_bounds( Kokkos::View<double**,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const iv_grids,Kokkos::View<int*,  Kokkos::LayoutLeft,Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> > const  size )
         {
           std::vector<double>  hl_bounds(2);

@@ -99,7 +99,7 @@ private:
   //                                       , &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>           // Task supports Kokkos::OpenMP builds
   //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_HOST_TAG>   // Task supports Kokkos::DefaultHostExecutionSpace builds
   //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG> // Task supports Kokkos::DefaultExecutionSpace builds
-  //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_CUDA_TAG>           // Task supports Kokkos::Cuda builds
+  //                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEVICE_TAG>           // Task supports Kokkos builds
   //                                       );
   //
   //  * Tag all non-empty tasks with UINTAH_CPU_TAG
@@ -109,7 +109,7 @@ private:
   //
   //  * Tag non-empty tasks refactored to support Kokkos::Experimental::OpenMPTarget builds with KOKKOS_DEFAULT_DEVICE_TAG
   //
-  //  * Tag non-empty tasks refactored to support Kokkos::Cuda builds with KOKKOS_CUDA_TAG
+  //  * Tag non-empty tasks refactored to support Kokkos builds with KOKKOS_DEVICE_TAG
   //    - e.g. Thread-safe tasks using Uintah::parallel_<pattern> that use only C/C++
   //           functionality support by CUDA
   //--------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ private:
                                        //, &TemplatedSampleTask<T>::initialize<KOKKOS_OPENMP_TAG>          // Task supports Kokkos::OpenMP builds
                                        //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_CUDA_TAG>            // Task supports Kokkos::Cuda builds
+                                       //, &TemplatedSampleTask<T>::initialize<KOKKOS_DEVICE_TAG>            // Task supports Kokkos builds
                                        );
   }
 
@@ -143,7 +143,7 @@ private:
                                        //, &TemplatedSampleTask<T>::eval<KOKKOS_OPENMP_TAG>        // Task supports Kokkos::OpenMP builds
                                        //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_HOST_TAG>  // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &TemplatedSampleTask<T>::eval<KOKKOS_DEFAULT_DEVICE>    // Task supports Kokkos::DefaultExecutionSpace builds
-                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_CUDA_TAG>          // Task supports Kokkos::Cuda builds
+                                       //, &TemplatedSampleTask<T>::eval<KOKKOS_DEVICE_TAG>          // Task supports Kokkos builds
                                        );
   }
 

@@ -68,7 +68,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
 
   d_allIndepVarNames = std::vector<std::string>(d_indepvarscount);
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   tempIntContainer<Kokkos::HostSpace> d_allIndepVarNum("array_of_ind_var_sizes",d_indepvarscount);  //< std::vector storing the grid size for the Independent variables
 #else
   std::vector<int> *d_allIndepVarNum=scinew std::vector<int>(d_indepvarscount);                     //< std::vector storing the grid size for the Independent variables
@@ -80,7 +80,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   }
   for (int ii = 0; ii < d_indepvarscount; ii++){
     int grid_size = getInt( fp );
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     d_allIndepVarNum(ii) = grid_size;
 #else
     (*d_allIndepVarNum)[ii] = grid_size;
@@ -131,7 +131,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   //indep vars grids
 
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     int max_size=0;
     for (int i = 0; i < d_indepvarscount - 1; i++) {
       max_size=max(max_size, d_allIndepVarNum(i+1)); // pad this non-square portion of the table = (
@@ -150,14 +150,14 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
 
   //assign values (backwards)
   for (int i = d_indepvarscount-2; i>=0; i--) {
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     for (int j = 0; j < d_allIndepVarNum(i+1) ; j++) 
 #else
     for (int j = 0; j < (*d_allIndepVarNum)[i+1] ; j++) 
 #endif
     {
       double v = getDouble( fp );
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
       indep_headers(i, j) = v;
 #else
       (*indep_headers)[i][j] = v;
@@ -168,20 +168,20 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
   int size=1;
   //ND size
   for (int i = 0; i < d_indepvarscount; i++) {
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     size = size*d_allIndepVarNum(i);
 #else
     size = size*(*d_allIndepVarNum)[i];
 #endif
   }
   int num_dep_vars=loadAll ? d_varscount : d_savedDep_var.size();
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     tempTableContainer<Kokkos::HostSpace> table("ClassicMixingTable",num_dep_vars,size);
 #else
     tempTableContainer* table=new tempTableContainer(num_dep_vars , std::vector<double> (size,0.0));
 #endif
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   int size2 = size/d_allIndepVarNum(d_indepvarscount-1);
 #else
   int size2 = size/(*d_allIndepVarNum)[d_indepvarscount-1];
@@ -199,14 +199,14 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
         }
 
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         for (int mm = 0; mm < d_allIndepVarNum(d_indepvarscount-1); mm++) 
 #else
         for (int mm = 0; mm < (*d_allIndepVarNum)[d_indepvarscount-1]; mm++) 
 #endif
         {
           if (read_assign) {
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             for (int i = 0; i < d_allIndepVarNum(0); i++)
 #else
             for (int i = 0; i < (*d_allIndepVarNum)[0]; i++)
@@ -214,7 +214,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
             {
               double v = getDouble(fp);
               if ( index_map[kk] >-1){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
               i1(mm,i) = v;
 #else
               (*i1)[mm][i] = v;
@@ -223,7 +223,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
             }
           } else {
             //read but don't assign inbetween vals
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             for (int i = 0; i < d_allIndepVarNum(0); i++) {
 #else
             for (int i = 0; i < (*d_allIndepVarNum)[0]; i++) {
@@ -234,7 +234,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
           for (int j=0; j<((d_indepvarscount > 1) ? size2 : size); j++) { // since 1D is a special case
             double v = getDouble(fp);
             if ( index_map[kk] >-1){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
               table(index_map[kk],j + mm*size2) = v;
 #else
               (*table)[index_map[kk] ][j + mm*size2] = v;
@@ -248,7 +248,7 @@ loadMixingTable(fileTYPE &fp, const std::string & inputfile,  std::vector<std::s
       if ( read_assign ) { read_assign = false; }
     }
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         ClassicTableInfo infoStruct(indep_headers, d_allIndepVarNum, d_allIndepVarNames,d_savedDep_var, d_allDepVarUnits,d_constants); 
     return   scinew Interp_class<max_dep_request_at_a_time>( table,d_allIndepVarNum, indep_headers, i1,infoStruct);
 #else

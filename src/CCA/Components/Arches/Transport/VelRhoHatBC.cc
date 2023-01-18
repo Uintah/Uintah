@@ -35,7 +35,7 @@ TaskAssignedExecutionSpace VelRhoHatBC::loadTaskEvalFunctionPointers()
                                      , &VelRhoHatBC::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &VelRhoHatBC::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VelRhoHatBC::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &VelRhoHatBC::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &VelRhoHatBC::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

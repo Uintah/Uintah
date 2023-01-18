@@ -27,7 +27,7 @@ TaskAssignedExecutionSpace DSFT::loadTaskInitializeFunctionPointers()
                                      , &DSFT::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &DSFT::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DSFT::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &DSFT::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &DSFT::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -39,7 +39,7 @@ TaskAssignedExecutionSpace DSFT::loadTaskEvalFunctionPointers()
                                      , &DSFT::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &DSFT::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &DSFT::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &DSFT::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &DSFT::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

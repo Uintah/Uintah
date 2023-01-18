@@ -153,7 +153,7 @@ private:
                                        , &KFEUpdate<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KFEUpdate<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KFEUpdate<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 
@@ -173,7 +173,7 @@ private:
                                        , &KFEUpdate<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                        //, &KFEUpdate<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                        //, &KFEUpdate<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                       , &KFEUpdate<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                       , &KFEUpdate<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                        );
   }
 

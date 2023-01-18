@@ -159,7 +159,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskComputeBCsFunctionPointe
                                      , &UnweightVariable<T>::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UnweightVariable<T>::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &UnweightVariable<T>::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &UnweightVariable<T>::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -172,7 +172,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskInitializeFunctionPointe
                                      , &UnweightVariable<T>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UnweightVariable<T>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &UnweightVariable<T>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &UnweightVariable<T>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -185,7 +185,7 @@ TaskAssignedExecutionSpace UnweightVariable<T>::loadTaskEvalFunctionPointers()
                                      , &UnweightVariable<T>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &UnweightVariable<T>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &UnweightVariable<T>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &UnweightVariable<T>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &UnweightVariable<T>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

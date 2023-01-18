@@ -140,7 +140,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskInitializeFunctionPo
                                      , &VarInterpolation<T, IT>::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VarInterpolation<T, IT>::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -153,7 +153,7 @@ TaskAssignedExecutionSpace VarInterpolation<T, IT>::loadTaskEvalFunctionPointers
                                      , &VarInterpolation<T, IT>::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &VarInterpolation<T, IT>::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &VarInterpolation<T, IT>::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &VarInterpolation<T, IT>::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 

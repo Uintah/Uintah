@@ -55,7 +55,7 @@
  *
 */
 namespace Uintah {
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
 template <typename MemSpace>
 using tempIntContainer   = Kokkos::View<int*,     Kokkos::LayoutLeft, MemSpace, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
 template <typename MemSpace>
@@ -72,7 +72,7 @@ typedef const std::vector<std::vector<double> > &tableContainer ;
 #endif
 
 struct ClassicTableInfo {
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
   tableContainer<Kokkos::HostSpace> indep_headers;
   intContainer<Kokkos::HostSpace> d_allIndepVarNum;            ///< std::vector storing the grid size for the Independent variables
 #else
@@ -87,7 +87,7 @@ struct ClassicTableInfo {
 
 
   ClassicTableInfo(  // pay for full copy for arguments 3->6 (4 total)
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
   tableContainer<Kokkos::HostSpace> arg1,
   intContainer<Kokkos::HostSpace> arg2,
 #else
@@ -115,7 +115,7 @@ struct ClassicTableInfo {
 
   public:
 
-#ifdef UINTAH_ENABLE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS  // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
     Interp_class( tableContainer<Kokkos::HostSpace>  table,
                   intContainer<Kokkos::HostSpace> IndepVarNo,
                   tableContainer<Kokkos::HostSpace> indepin,
@@ -129,7 +129,7 @@ struct ClassicTableInfo {
                   const ClassicTableInfo &cti )
       : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in), tableInfo(cti)
     {
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
            int numDim=d_allIndepVarNo.size();
            int max_size=0;
            int size=d_allIndepVarNo(0); // size of a single dep variable
@@ -138,13 +138,13 @@ struct ClassicTableInfo {
             size*=d_allIndepVarNo(i+1);
            }
 
-           g_d_allIndepVarNo= intContainer<Kokkos::CudaSpace>
+           g_d_allIndepVarNo= intContainer<Kokkos::DefaultExecutionSpace::memory_space>
 ("COPY_array_of_ind_var_sizes",numDim);            ///< std::vector storing the grid size for the Independent variables
-           g_indep= tableContainer<Kokkos::CudaSpace>
+           g_indep= tableContainer<Kokkos::DefaultExecutionSpace::memory_space>
 ("COPY_secondary_independent_variables",numDim-1,max_size);
-           g_ind_1= tableContainer<Kokkos::CudaSpace>
+           g_ind_1= tableContainer<Kokkos::DefaultExecutionSpace::memory_space>
 ("COPY_primary_independent_variable",d_allIndepVarNo(numDim-1),d_allIndepVarNo(0));
-           g_table2= tableContainer<Kokkos::CudaSpace>
+           g_table2= tableContainer<Kokkos::DefaultExecutionSpace::memory_space>
 ("COPY_ClassicMixingTable",table2.size()/size,size);
 
 
@@ -156,7 +156,7 @@ struct ClassicTableInfo {
 }
 
            ~Interp_class() {
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         // no delete needed due to kokkos smart pointers
 #else
             delete &ind_1;
@@ -225,7 +225,7 @@ struct ClassicTableInfo {
 
       dliniate[0]=1; 
       for( int  i=1 ; i<nDim; i++){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo(i-1); // compute effective 1-D index
 #else
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo[i-1]; // compute effective 1-D index
@@ -251,14 +251,14 @@ struct ClassicTableInfo {
        //  LINEAR search
       for (int j=0;  j< nDim-1 ; j++){
         
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         if (iv[j+1] <  TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-1))
 #else
         if (iv[j+1] <  TDMS_indep[j][TDMS_d_allIndepVarNo[j+1]-1])
 #endif
          {
           int i=1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
           while ( iv[j+1]  >TDMS_indep(j, i)  )
 #else
           while ( iv[j+1]  >TDMS_indep[j][i]  )
@@ -268,13 +268,13 @@ struct ClassicTableInfo {
           }
             index[iHigh][j]=i;
             index[iLow][j]=i-1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             distal_val[j+2]=(iv[j+1]-TDMS_indep(j, i-1))/(TDMS_indep(j, i)-TDMS_indep(j, i-1));
 #else
             distal_val[j+2]=(iv[j+1]-TDMS_indep[j][i-1])/(TDMS_indep[j][i]-TDMS_indep[j][i-1]);
 #endif
         }else{
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             index[iHigh][j]=TDMS_d_allIndepVarNo(j+1)-1;
             index[iLow][j]=TDMS_d_allIndepVarNo(j+1)-2;
             distal_val[j+2]=(iv[j+1]-TDMS_indep(j, TDMS_d_allIndepVarNo[j+1]-2))/(TDMS_indep(j, TDMS_d_allIndepVarNo[j+1]-1)-TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-2));
@@ -291,14 +291,14 @@ struct ClassicTableInfo {
        // LINEAR search
       for (int iSp=0;  iSp< oneD_switch; iSp++){
           const int cur_index=index[iSp][nDim_withSwitch-1];
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         if (iv[0] <  TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-1))
 #else
         if (iv[0] <  TDMS_ind_1[cur_index][TDMS_d_allIndepVarNo[0]-1])
 #endif
        {
           int i=1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
           while ( iv[0]  >TDMS_ind_1(cur_index, i)  )
 #else
           while ( iv[0]  >TDMS_ind_1[cur_index][i]  )
@@ -308,13 +308,13 @@ struct ClassicTableInfo {
           }
             theSpecial[iHigh][iSp]=i;
             theSpecial[iLow][iSp]=i-1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             distal_val[iSp]=(iv[0]-TDMS_ind_1(cur_index, i-1))/(TDMS_ind_1(cur_index, i)-TDMS_ind_1(cur_index, i-1));
 #else
             distal_val[iSp]=(iv[0]-TDMS_ind_1[cur_index][i-1])/(TDMS_ind_1[cur_index][i]-TDMS_ind_1[cur_index][i-1]);
 #endif
         }else{
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             theSpecial[iHigh][iSp]=TDMS_d_allIndepVarNo(0)-1;
             theSpecial[iLow] [iSp]=TDMS_d_allIndepVarNo(0)-2;
             distal_val[iSp]=(iv[0]-TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-2))/(TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo[0]-1)-TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-2));
@@ -345,7 +345,7 @@ struct ClassicTableInfo {
         for (unsigned int k = 0; k < var_index.runTime_size; k++) {
  /////      get values from table
         for (int j=0; j<npts; j++){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             table_vals[j]=TDMS_table2(var_index[k],table_indices[j]);
 #else
             table_vals[j]=TDMS_table2[var_index[k]][table_indices[j]];
@@ -380,7 +380,7 @@ struct ClassicTableInfo {
 
 
 // DUE TO USING THE PORTABILITY API INCORRECTLY ( couldn't figure it out without c+= 14)
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
@@ -392,10 +392,10 @@ struct ClassicTableInfo {
     ) const {
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
-    typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
    tableContainer<MemSpace>  TDMS_table2,  
    intContainer<MemSpace>    TDMS_d_allIndepVarNo,
@@ -405,18 +405,18 @@ struct ClassicTableInfo {
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
     }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif // end KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_SYCL
+#endif // end HAVE_KOKKOS
 
     template< typename MemSpace, unsigned int numOfDep>
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
    inline
 #endif
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_type_correct( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues,
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
    tableContainer<Kokkos::HostSpace>  TDMS_table2,  
    intContainer<Kokkos::HostSpace>    TDMS_d_allIndepVarNo,
    tableContainer<Kokkos::HostSpace>  TDMS_indep,  
@@ -428,7 +428,7 @@ struct ClassicTableInfo {
    tableContainer  TDMS_ind_1 
 #endif
  ) const { 
-#ifdef UINTAH_ENABLE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
+#ifdef HAVE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
       find_val<Kokkos::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
 #else
       find_val<UintahSpaces::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,TDMS_table2,TDMS_d_allIndepVarNo,TDMS_indep,TDMS_ind_1);
@@ -436,33 +436,33 @@ struct ClassicTableInfo {
     }
 
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION
     typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
        find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
     }
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
     template< typename MemSpace, unsigned int numOfDep>
     KOKKOS_INLINE_FUNCTION 
-    typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, void >::type
+    typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
       //printf("GPU table reading is being done incorrectly by the Arches Developers; Use CPU for this application.\n");
     find_val<MemSpace>(one_cell_iv1,depVarIndexes,depVarValues,g_table2,g_d_allIndepVarNo,g_indep,g_ind_1);
     }
-#endif // end HAVE_CUDA && KOKKOS_ENABLE_CUDA
-#endif // end UINTAH_ENABLE_KOKKOS
+#endif // end KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_SYCL
+#endif // end HAVE_KOKKOS
 
     template< typename MemSpace, unsigned int numOfDep>
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
    inline
 #endif
     typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, void >::type
     find_val_wrapper( const struct1DArray<double,MAX_TABLE_DIMENSION>& one_cell_iv1, const struct1DArray<int,numOfDep>& depVarIndexes, struct1DArray<double,numOfDep>& depVarValues){
-#ifdef UINTAH_ENABLE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
+#ifdef HAVE_KOKKOS // We have to do this because we don't want to store the table in kokkos::hostSpace AND uintahSpaces::HostSpace
       find_val<Kokkos::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
 #else
       find_val<UintahSpaces::HostSpace>(one_cell_iv1,depVarIndexes,depVarValues,table2,d_allIndepVarNo,indep,ind_1);
@@ -472,13 +472,13 @@ struct ClassicTableInfo {
     enum HighLow { iLow, iHigh};
 
     template< typename MemSpace, unsigned int numOfDep>
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
     KOKKOS_INLINE_FUNCTION 
 #else
    inline
 #endif
     void find_val( const struct1DArray<double,MAX_TABLE_DIMENSION>& iv, const struct1DArray<int,numOfDep>& var_index, struct1DArray<double,numOfDep>& var_values, 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
    tableContainer<MemSpace>  TDMS_table2,  
    intContainer<MemSpace>    TDMS_d_allIndepVarNo,
    tableContainer<MemSpace>  TDMS_indep,  
@@ -515,7 +515,7 @@ struct ClassicTableInfo {
 
       dliniate[0]=1;
       for( int  i=1 ; i<nDim; i++){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo(i-1); // compute effective 1-D index
 #else
         dliniate[i]=dliniate[i-1]*TDMS_d_allIndepVarNo[i-1]; // compute effective 1-D index
@@ -529,14 +529,14 @@ struct ClassicTableInfo {
        //  LINEAR search
       for (int j=0;  j< nDim-1 ; j++){
         
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         if (iv[j+1] <  TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-1))
 #else
         if (iv[j+1] <  TDMS_indep[j][TDMS_d_allIndepVarNo[j+1]-1])
 #endif
          {
           int i=1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
           while ( iv[j+1]  >TDMS_indep(j, i)  )
 #else
           while ( iv[j+1]  >TDMS_indep[j][i]  )
@@ -546,13 +546,13 @@ struct ClassicTableInfo {
           }
             index[iHigh][j]=i;
             index[iLow][j]=i-1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             distal_val[j+2]=(iv[j+1]-TDMS_indep(j, i-1))/(TDMS_indep(j, i)-TDMS_indep(j, i-1));
 #else
             distal_val[j+2]=(iv[j+1]-TDMS_indep[j][i-1])/(TDMS_indep[j][i]-TDMS_indep[j][i-1]);
 #endif
         }else{
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             index[iHigh][j]=TDMS_d_allIndepVarNo(j+1)-1;
             index[iLow][j]=TDMS_d_allIndepVarNo(j+1)-2;
             distal_val[j+2]=(iv[j+1]-TDMS_indep(j, TDMS_d_allIndepVarNo[j+1]-2))/(TDMS_indep(j, TDMS_d_allIndepVarNo[j+1]-1)-TDMS_indep(j, TDMS_d_allIndepVarNo(j+1)-2));
@@ -569,14 +569,14 @@ struct ClassicTableInfo {
        // LINEAR search
       for (int iSp=0;  iSp< oneD_switch; iSp++){
           const int cur_index=index[iSp][nDim_withSwitch-1];
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
         if (iv[0] <  TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-1))
 #else
         if (iv[0] <  TDMS_ind_1[cur_index][TDMS_d_allIndepVarNo[0]-1])
 #endif
        {
           int i=1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
           while ( iv[0]  >TDMS_ind_1(cur_index, i)  )
 #else
           while ( iv[0]  >TDMS_ind_1[cur_index][i]  )
@@ -586,13 +586,13 @@ struct ClassicTableInfo {
           }
             theSpecial[iHigh][iSp]=i;
             theSpecial[iLow][iSp]=i-1;
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             distal_val[iSp]=(iv[0]-TDMS_ind_1(cur_index, i-1))/(TDMS_ind_1(cur_index, i)-TDMS_ind_1(cur_index, i-1));
 #else
             distal_val[iSp]=(iv[0]-TDMS_ind_1[cur_index][i-1])/(TDMS_ind_1[cur_index][i]-TDMS_ind_1[cur_index][i-1]);
 #endif
         }else{
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             theSpecial[iHigh][iSp]=TDMS_d_allIndepVarNo(0)-1;
             theSpecial[iLow] [iSp]=TDMS_d_allIndepVarNo(0)-2;
             distal_val[iSp]=(iv[0]-TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-2))/(TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo[0]-1)-TDMS_ind_1(cur_index, TDMS_d_allIndepVarNo(0)-2));
@@ -623,7 +623,7 @@ struct ClassicTableInfo {
         for (unsigned int k = 0; k < var_index.runTime_size; k++) {
  /////      get values from table
         for (int j=0; j<npts; j++){
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
             table_vals[j]=TDMS_table2(var_index[k],table_indices[j]);
 #else
             table_vals[j]=TDMS_table2[var_index[k]][table_indices[j]];
@@ -657,7 +657,7 @@ struct ClassicTableInfo {
 //I always thought these access functions were silly, but these actually does something; template meta progrimming
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
 tableContainer
@@ -670,7 +670,7 @@ tableContainer
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef UINTAH_ENABLE_KOKKOS  
+#ifdef HAVE_KOKKOS  
 intContainer<Kokkos::HostSpace>
 #else
 intContainer
@@ -683,7 +683,7 @@ intContainer
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
 tableContainer<Kokkos::HostSpace>
 #else
 tableContainer
@@ -696,7 +696,7 @@ tableContainer
 
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, UintahSpaces::HostSpace>::value, 
-#ifdef UINTAH_ENABLE_KOKKOS 
+#ifdef HAVE_KOKKOS 
 tableContainer<Kokkos::HostSpace>
 #else
 tableContainer
@@ -707,7 +707,7 @@ tableContainer
   }
 
 
-#ifdef UINTAH_ENABLE_KOKKOS
+#ifdef HAVE_KOKKOS
   template<typename MemSpace>
 typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableContainer<Kokkos::HostSpace> >::type
   getPrimaryVar(){
@@ -736,27 +736,27 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::HostSpace>::value, tableC
   }
 #endif
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, tableContainer<Kokkos::DefaultExecutionSpace::memory_space> >::type
   getTable(){
     return g_table2;
   }
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, intContainer<Kokkos::CudaSpace> >::type
+typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, intContainer<Kokkos::DefaultExecutionSpace::memory_space> >::type
   getInts(){
     return g_d_allIndepVarNo;
   }
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, tableContainer<Kokkos::DefaultExecutionSpace::memory_space> >::type
   getSecondaryVar(){
     return g_indep;
   }
 
   template<typename MemSpace>
-typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableContainer<Kokkos::CudaSpace> >::type
+typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, tableContainer<Kokkos::DefaultExecutionSpace::memory_space> >::type
   getPrimaryVar(){
     return g_ind_1;
   }
@@ -764,7 +764,7 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableC
 
   protected:
 
-#ifdef UINTAH_ENABLE_KOKKOS // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
+#ifdef HAVE_KOKKOS // HARD CODED TO RUN ON CPU ONLY (HOST SPACE)  and optimized for GPU (layoutLeft??)
     tableContainer<Kokkos::HostSpace> table2;          // All dependent variables
     intContainer<Kokkos::HostSpace>   d_allIndepVarNo; // size of independent variable array, for all independent variables
     tableContainer<Kokkos::HostSpace> indep;           // independent variables 1 to N-1
@@ -780,12 +780,12 @@ typename std::enable_if<std::is_same<MemSpace, Kokkos::CudaSpace>::value, tableC
 
     const ClassicTableInfo tableInfo; // variable names, units, and table keys
 
-#if defined( HAVE_CUDA ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   protected:
-    tableContainer<Kokkos::CudaSpace> g_table2;          // All dependent variables
-    intContainer<Kokkos::CudaSpace>   g_d_allIndepVarNo; // size of independent variable array, for all independent variables
-    tableContainer<Kokkos::CudaSpace> g_indep;           // independent variables 1 to N-1
-    tableContainer<Kokkos::CudaSpace> g_ind_1;           // independent variable N
+    tableContainer<Kokkos::DefaultExecutionSpace::memory_space> g_table2;          // All dependent variables
+    intContainer  <Kokkos::DefaultExecutionSpace::memory_space> g_d_allIndepVarNo; // size of independent variable array, for all independent variables
+    tableContainer<Kokkos::DefaultExecutionSpace::memory_space> g_indep;           // independent variables 1 to N-1
+    tableContainer<Kokkos::DefaultExecutionSpace::memory_space> g_ind_1;           // independent variable N
 #endif
 
   };

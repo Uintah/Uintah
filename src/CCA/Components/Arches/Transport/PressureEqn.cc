@@ -28,7 +28,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskComputeBCsFunctionPointers()
                                      , &PressureEqn::compute_bcs<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &PressureEqn::compute_bcs<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PressureEqn::compute_bcs<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureEqn::compute_bcs<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::compute_bcs<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -40,7 +40,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskInitializeFunctionPointers()
                                      , &PressureEqn::initialize<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &PressureEqn::initialize<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PressureEqn::initialize<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureEqn::initialize<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::initialize<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -52,7 +52,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskEvalFunctionPointers()
                                      , &PressureEqn::eval<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &PressureEqn::eval<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PressureEqn::eval<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureEqn::eval<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::eval<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -64,7 +64,7 @@ TaskAssignedExecutionSpace PressureEqn::loadTaskTimestepInitFunctionPointers()
                                      , &PressureEqn::timestep_init<KOKKOS_OPENMP_TAG>            // Task supports Kokkos::OpenMP builds
                                      //, &PressureEqn::timestep_init<KOKKOS_DEFAULT_HOST_TAG>    // Task supports Kokkos::DefaultHostExecutionSpace builds
                                      //, &PressureEqn::timestep_init<KOKKOS_DEFAULT_DEVICE_TAG>  // Task supports Kokkos::DefaultExecutionSpace builds
-                                     , &PressureEqn::timestep_init<KOKKOS_CUDA_TAG>              // Task supports Kokkos::Cuda builds
+                                     , &PressureEqn::timestep_init<KOKKOS_DEVICE_TAG>              // Task supports Kokkos builds
                                      );
 }
 
@@ -501,7 +501,7 @@ PressureEqn::solve( const LevelP& level, SchedulerP& sched, const int time_subst
                           "PressureEqn::blindGuessToLinearSystem",
                           &PressureEqn::blindGuessToLinearSystem<UINTAH_CPU_TAG>,
                           &PressureEqn::blindGuessToLinearSystem<KOKKOS_OPENMP_TAG>,
-                          //&PressureEqn::blindGuessToLinearSystem<KOKKOS_CUDA_TAG>,
+                          //&PressureEqn::blindGuessToLinearSystem<KOKKOS_DEVICE_TAG>,
                           sched, level->eachPatch(),m_materialManager->allMaterials( "Arches" ), TASKGRAPH::DEFAULT);
    }
 
