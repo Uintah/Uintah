@@ -25,6 +25,8 @@
 #ifndef SCI_CUDA_DEFS_H
 #define SCI_CUDA_DEFS_H
 
+#include "gpu_defs.h"
+
 @DEF_CUDA@
 #define SCI_CUDA_ASSERTION_LEVEL @ASSERTION_LEVEL@
 
@@ -46,7 +48,7 @@ extern "C" {
 
 #  include <stdio.h>
 
-// Allow easy indexing into deice-side 3D array
+// Allow easy indexing into device-side 3D array
 #  define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
 
 
@@ -116,7 +118,15 @@ extern "C" {
 }
 #  endif       
 
+#else // No CUDA but needed for Kokkos
+
+#  define HOST_DEVICE 
+// Allow easy indexing into device-side 3D array
+#  define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
+#  define CHECK_INSIDE( idx, offset, size )
+#  define CHECK_INSIDE3( x, y, z, offset, size )
+#  define CHECK_RANGE( idx, low, high )
+
 #endif // HAVE_CUDA
 
 #endif // SCI_CUDA_DEFS_H
-

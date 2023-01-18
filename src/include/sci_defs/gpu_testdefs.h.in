@@ -22,31 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SCI_KOKKOS_DEFS_H
-#define SCI_KOKKOS_DEFS_H
+#ifndef SCI_GPU_DEFS_H
+#define SCI_GPU_DEFS_H
 
-#include "gpu_defs.h"
-
-@DEF_KOKKOS@
-
-#ifdef HAVE_KOKKOS
-#define TASK_MANAGES_EXECSPACE
-#define USE_KOKKOS_PARALLEL_FOR
-#define USE_KOKKOS_DEEPCOPY
-#define USE_KOKKOS_VIEW
-#define USE_KOKKOS_INSTANCE
-#endif
-
-/* 
-   For reference, (if Kokkos is enabled, then) you are linking against this Kokkos:
-
-   @KOKKOS_LIB_DIR_FLAG@
-
-   @INC_KOKKOS_H@
-
-   (Note, the above info is used to tell when the user configures
-   against a new Kokkos, so please leave it here.)
-*/
+@DEF_HAVE_GPU@
 
 #endif
 

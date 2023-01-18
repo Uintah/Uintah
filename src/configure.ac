@@ -3663,7 +3663,6 @@ AC_SUBST(GPERFTOOLS_LIB_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/gperftools_testdefs.h"
 
 ##  --  Handle --enable-kokkos -------------------------------
-
 if test "$build_kokkos_lib" != "no"; then
 
   if test "$with_kokkos" != NOT_SET; then
@@ -3724,7 +3723,7 @@ if test "$with_kokkos" != NOT_SET; then
 fi
 
 if test "$HAVE_KOKKOS" = "yes"; then
-  DEF_KOKKOS="#define UINTAH_ENABLE_KOKKOS"
+  DEF_KOKKOS="#define HAVE_KOKKOS"
 fi
 
 AC_SUBST(HAVE_KOKKOS)
@@ -3732,6 +3731,7 @@ AC_SUBST(DEF_KOKKOS)
 AC_SUBST(INC_KOKKOS_H)
 AC_SUBST(KOKKOS_LIB_DIR_FLAG)
 AC_SUBST(KOKKOS_LIB_FLAG)
+AC_SUBST(HAVE_KOKKOS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/kokkos_testdefs.h"
 
@@ -3848,6 +3848,20 @@ AC_SUBST(NVCC_LIBS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
+##  --  defines for GPU builds  ------------------------------------------
+HAVE_GPU=""
+DEF_GPU_HAVE=""
+
+if test "$HAVE_KOKKOS" = "yes" -o "$HAVE_CUDA" = "yes"; then
+  AC_MSG_NOTICE(Building with GPU support)
+  HAVE_GPU="yes"
+  DEF_HAVE_GPU="#define HAVE_GPU"
+fi
+
+AC_SUBST(HAVE_GPU)
+AC_SUBST(DEF_HAVE_GPU)
+
+sci_defs_files="$sci_defs_files include/sci_defs/gpu_testdefs.h"
 
 ##  --  search for visus  -------------------------------------------------
 AC_LANG(C++)
