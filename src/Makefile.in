@@ -56,12 +56,12 @@ configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
 
 ALLTARGETS := $(ALLTARGETS) lib/libVisIt_interfaces.$(SO_OR_A_FILE)
 
-ifeq ($(HAVE_GPU),yes)
+ifeq ($(HAVE_CUDA),yes)
   GPU_EXTRA_LINK := gpu_extra_link
   ALLTARGETS := $(ALLTARGETS) lib/lib$(GPU_EXTRA_LINK).$(SO_OR_A_FILE)
 
-  # Function to create a make rule to copy the original .cc file from the .../src/ tree
-  # to the .../binary/ tree and rename it with a .cu extension.
+  # Function to create a make rule to copy the original .cc file from the
+  # ../src/ tree to the .../binary/ tree and rename it with a .cu extension.
   #
   define make-cuda-target
     $(OBJTOP_ABS)/$(SRCDIR)/$1.cu : $(SRCTOP_ABS)/$(SRCDIR)/$1.cc
@@ -585,7 +585,7 @@ runLocalRT:
 ###############################################################################################
 # Build the extra library file needed for static builds when using the NVCC compiler...
 
-ifeq ($(HAVE_GPU),yes)
+ifeq ($(HAVE_CUDA),yes)
 
 # This target (cleancuda) is mostly for debugging...
 cleancuda :
