@@ -186,6 +186,7 @@ public: // private:
       ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionNonPortableBase() {};
 
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -234,6 +235,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   };
 
   // CPU Action constructor
@@ -341,7 +343,7 @@ public: // private:
     };
 
     // To use enable_if with a member function there needs to be a
-    // dummy template argument that is defaulted to ExecSapce which
+    // dummy template argument that is defaulted to ExecSpace which
     // is used perform the SFINAE (Substitution failure is not an error).
 
     // The reason is becasue there is no substitution occurring when
@@ -372,7 +374,7 @@ public: // private:
     };
 
     // To use enable_if with a member function there needs to be a
-    // dummy template argument that is defaulted to ExecSapce which
+    // dummy template argument that is defaulted to ExecSpace which
     // is used perform the SFINAE (Substitution failure is not an error).
 
     // The reason is becasue there is no substitution occurring when
@@ -469,7 +471,7 @@ public: // private:
       const int numStreams = this->taskPtr->maxStreamsPerTask();
       for (int i = 0; i < numStreams; i++) {
 #ifdef USE_KOKKOS_INSTANCE
-        ExecSapce instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
+        ExecSpace instance = this->getKokkosInstanceForThisTask(uintahParams.getTaskIntPtr(), i);
         execObj.setInstance(instance, 0);
 #else
         cudaStream_t* stream =
@@ -517,6 +519,7 @@ public: // private:
       ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionNonPortableBase() {};
 
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -565,7 +568,8 @@ public: // private:
     // task has to keep track of the device and stream on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
-#endif
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   };
 
   template<class T>
@@ -917,6 +921,7 @@ public: // private:
       ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionPortableBase() {};
 
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -944,7 +949,7 @@ public: // private:
     };
 
     // To use enable_if with a member function there needs to be a
-    // dummy template argument that is defaulted to ExecSapce which
+    // dummy template argument that is defaulted to ExecSpace which
     // is used perform the SFINAE (Substitution failure is not an error).
 
     // The reason is becasue there is no substitution occurring when
@@ -975,7 +980,7 @@ public: // private:
     };
 
     // To use enable_if with a member function there needs to be a
-    // dummy template argument that is defaulted to ExecSapce which
+    // dummy template argument that is defaulted to ExecSpace which
     // is used perform the SFINAE (Substitution failure is not an error).
 
     // The reason is becasue there is no substitution occurring when
@@ -1016,7 +1021,8 @@ public: // private:
     // task has to keep track of the Kokkos intance on a DetailedTask
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
-#endif
+#endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   };
 
   template<class T, typename ExecSpace, typename MemSpace>
@@ -2234,7 +2240,7 @@ public: // class Task
                                             void* dst, int dstDevice,
                                       const void* src, int srcDevice,
                                       size_t count );
-#endif
+#endif // defined(USE_KOKKOS_INSTANCE)
   virtual void copyGpuGhostCellsToGpuVars(intptr_t dTask,
                                           unsigned int deviceNum,
                                           GPUDataWarehouse *taskgpudw);
@@ -2242,8 +2248,8 @@ public: // class Task
   virtual void syncTaskGpuDW(intptr_t dTask,
                              unsigned int deviceNum,
                              GPUDataWarehouse *taskgpudw);
-#endif
-#endif
+#endif  // defined(TASK_MANAGES_EXECSPACE)
+#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
   inline const std::string & getName() const { return m_task_name; }
 
