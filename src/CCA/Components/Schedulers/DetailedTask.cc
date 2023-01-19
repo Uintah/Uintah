@@ -30,6 +30,7 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/kokkos_defs.h>
 
 #if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
@@ -93,8 +94,9 @@ DetailedTask::DetailedTask(       Task           * task
   , m_matls( matls )
   , m_task_group( taskGroup )
 {
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   varLock = new Uintah::MasterLock{};
-
+#endif
   if (m_patches) {
     // patches and matls must be sorted
     ASSERT(std::is_sorted(m_patches->getVector().begin(), m_patches->getVector().end(), Patch::Compare()));

@@ -48,7 +48,7 @@ std::multimap<Uintah::GPUMemoryPool::gpuMemoryPoolDeviceViewItem,
 
 #ifdef USE_KOKKOS_INSTANCE
   // Not needed instances are managed by DetailedTask/Task.
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
 std::map <unsigned int, std::queue<cudaStream_t*> > Uintah::GPUMemoryPool::s_idle_streams;//  =
     // new std::map <unsigned int, std::queue<cudaStream_t*> >;
 #endif
@@ -240,7 +240,7 @@ bool GPUMemoryPool::freeCudaSpaceFromPool(unsigned int device_id, void* addr)
 
 #ifdef USE_KOKKOS_INSTANCE
 // Not needed instances are managed by DetailedTask/Task.
-#else // CUDA Streams
+#elif defined(HAVE_CUDA) // CUDA only when using streams
 //______________________________________________________________________
 //
 cudaStream_t*

@@ -30,11 +30,15 @@
 @DEF_KOKKOS@
 
 #ifdef HAVE_KOKKOS
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 #define TASK_MANAGES_EXECSPACE
 #define USE_KOKKOS_PARALLEL_FOR
 #define USE_KOKKOS_DEEPCOPY
 #define USE_KOKKOS_VIEW
 #define USE_KOKKOS_INSTANCE
+#endif
 #endif
 
 /* 

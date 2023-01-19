@@ -152,7 +152,7 @@ public:
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
   // Not needed instances are managed by DetailedTask/Task.
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
   static cudaStream_t* getCudaStreamFromPool(const Task * task, int device);
   static void reclaimCudaStreamsIntoPool(intptr_t dTask, Task * task);
   static void freeCudaStreamsFromPool();
@@ -195,7 +195,7 @@ private:
   // DetailedTasks.cc
 #ifdef USE_KOKKOS_INSTANCE
   static std::map <unsigned int, std::queue<Kokkos::DefaultExecutionSpace> > s_idle_instances;
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
   static std::map <unsigned int, std::queue<cudaStream_t*> > s_idle_streams;
 #endif
 };

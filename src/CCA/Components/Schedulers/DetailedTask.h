@@ -524,10 +524,8 @@ private:
   std::vector<delayedCopyingInfo> delayedCopyingVars;
   int delayedCopy{0};
 
-#endif
 //-----------------------------------------------------------------------------
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 public:
     // int m_num_partitions{0};
     // int m_threads_per_partition{0};

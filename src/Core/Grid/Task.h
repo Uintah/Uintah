@@ -479,7 +479,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1083,7 +1083,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1157,7 +1157,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1236,7 +1236,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1320,7 +1320,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1409,7 +1409,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);
@@ -1504,7 +1504,7 @@ public: // private:
         execObj.setStream(stream, 0);
 #endif
       }
-#else
+#elif defined(HAVE_CUDA) // CUDA only when using streams
       const int numStreams = uintahParams.getNumStreams();
       for (int i = 0; i < numStreams; i++) {
         execObj.setStream(uintahParams.getStream(i), 0);

@@ -86,9 +86,7 @@ namespace {
 } // namespace
 
 
-#ifdef HAVE_CUDA
-
-extern Uintah::MasterLock cerrLock;
+#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
 
 namespace Uintah {
 
@@ -96,6 +94,10 @@ namespace Uintah {
   DebugStream gpudbg(                 "GPUDataWarehouse"     , "UnifiedScheduler", "detailed statistics from within the GPUDW on GPUDataWarehouse activity", false );
 
 }
+
+#endif
+
+#ifdef HAVE_CUDA
 
 namespace {
 
@@ -105,6 +107,8 @@ namespace {
   Uintah::MasterLock g_GridVarSuperPatch_mutex{};   // An ugly hack to get superpatches for host levels to work.
 
 }
+
+extern Uintah::MasterLock cerrLock;
 
 #endif
 
