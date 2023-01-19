@@ -109,14 +109,11 @@ class MasterLock
     MasterLock& operator=( MasterLock && )      = delete;
 
 #if defined(_OPENMP)
-
     omp_lock_t m_lock;
-
 #endif
 
     std::mutex m_mutex;
     bool m_mutex_used{true};
-
 };
 
 } // end namespace Uintah
