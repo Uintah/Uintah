@@ -336,8 +336,8 @@ public:
 #if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW() const {
-    int i;
-#if defined(HAVE_CUDA)
+    int i = 0;
+#if defined(HAVE_CUDA) // Direct CUDA call
     CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
 #endif
     return d_gpuDWs[i]; 
