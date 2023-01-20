@@ -4818,7 +4818,7 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
   }
 }
 
-#endif // #if HAVE_CUDA || KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_SYCL
+#endif // end defined(HAVE_GPU)
 
 // ______________________________________________________________________
 //  generate string   <MPI_rank>.<Thread_ID>

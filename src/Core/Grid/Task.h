@@ -158,7 +158,7 @@ protected: // class Task
                                unsigned int deviceNum,
                                GPUDataWarehouse *taskgpudw) = 0;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
 
     protected:
       Task *taskPtr {nullptr};
@@ -235,7 +235,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
   };
 
   // CPU Action constructor
@@ -416,7 +416,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
   };
 
   template<typename T, typename ExecSpace, typename MemSpace, typename... Args>
@@ -569,7 +569,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
   };
 
   template<class T>
@@ -1022,7 +1022,7 @@ public: // private:
     // basis. The DetailedTask's pointer address is used as the key.
     std::map<intptr_t, kokkosInstanceMap> m_kokkosInstances;
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
   };
 
   template<class T, typename ExecSpace, typename MemSpace>
@@ -2249,7 +2249,7 @@ public: // class Task
                              unsigned int deviceNum,
                              GPUDataWarehouse *taskgpudw);
 #endif  // defined(TASK_MANAGES_EXECSPACE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
 
   inline const std::string & getName() const { return m_task_name; }
 
@@ -2859,7 +2859,7 @@ syncTaskGpuDW(intptr_t dTask,
   taskgpudw->syncto_device(instance);
 }
 #endif  // defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
-#endif  // defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  // defined(HAVE_GPU)
 
 }  // End namespace Uintah
 

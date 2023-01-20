@@ -216,10 +216,13 @@ public:
 #if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
   inline KokkosView3<T, Kokkos::HostSpace> getKokkosView() const
   {
-    // Kokkos Views don't reference count, but OnDemand Data Warehouse's GridVariables will clean themselves up
-    // when it goes out of scope and the ref count hits zero.  Uintah's KokkosView3 API means that the GridVariables
-    // are out of scope but the KokkosView3 remains.  So we have the KokkosView3 also manage Array3Data ref counting.
-	  if (!m_view.m_A3Data) {
+    // Kokkos Views don't reference count, but OnDemand Data
+    // Warehouse's GridVariables will clean themselves up when it goes
+    // out of scope and the ref count hits zero.  Uintah's KokkosView3
+    // API means that the GridVariables are out of scope but the
+    // KokkosView3 remains.  So we have the KokkosView3 also manage
+    // Array3Data ref counting.
+    if (!m_view.m_A3Data) {
       m_view.m_A3Data = d_window->getData();
       m_view.m_A3Data->addReference();
 	  }
@@ -227,19 +230,22 @@ public:
   }
 #endif
 
-//For now, if it's a homogeneous only Kokkos environment, use Kokkos Views
-//If it's a legacy environment or a CUDA environment, use the original way of accessing data.
-#if defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP ) && \
-  (!defined(HAVE_CUDA) && !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL))
+// For now, if it's a homogeneous only Kokkos environment, use Kokkos
+// Views If it's a legacy environment or a CUDA environment, use the
+// original way of accessing data.
+#if !defined(HAVE_GPU) && defined( _OPENMP ) && defined( KOKKOS_ENABLE_OPENMP )
 
-  //Note: Dan Sunderland used a Kokkos define KOKKOS_FORCEINLINE_FUNCTION,
-  //however, this caused problems when trying to compile with CUDA, as it tried
-  //to put a __device__ __host__ header (needed for GPU builds)
-  //instead of __attribute__((always_inline)) (which makes sense in a CPU build as
-  //Array3.h won't ever run on the GPU).
-  //I couldn't find a way to ask Kokkos to be smart and choose a non-CUDA version
-  //here, so I'll just explicitly provide the gcc one as this will never be compiled
-  //as CUDA code.  Brad Peterson Nov 23 2017
+  // Note: Dan Sunderland used a Kokkos define
+  // KOKKOS_FORCEINLINE_FUNCTION, however, this caused problems when
+  // trying to compile with CUDA, as it tried to put a __device__
+  // __host__ header (needed for GPU builds) instead of
+  // __attribute__((always_inline)) (which makes sense in a CPU build
+  // as Array3.h won't ever run on the GPU).
+
+  // I couldn't find a way to ask Kokkos to be smart and choose a
+  // non-CUDA version here, so I'll just explicitly provide the gcc
+  // one as this will never be compiled as CUDA code.  Brad Peterson
+  // Nov 23 2017
   //KOKKOS_FORCEINLINE_FUNCTION
   __attribute__((always_inline))
     T& operator[](const IntVector& idx) const

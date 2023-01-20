@@ -661,7 +661,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getCCVariable( const VarLabel         * label
@@ -717,7 +717,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstCCVariable( const VarLabel         * label
@@ -779,7 +779,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getNCVariable( const VarLabel         * label
@@ -831,7 +831,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstNCVariable( const VarLabel         * label
@@ -916,7 +916,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getGridVariable( const VarLabel         * label
@@ -987,7 +987,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename grid_CT,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, KokkosView3<const T, Kokkos::DefaultExecutionSpace::memory_space> >::type
   getConstGridVariable( const VarLabel         * label
@@ -1049,7 +1049,7 @@ public:
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   template <typename grid_T,typename T, typename MemSpace>
   inline typename std::enable_if< std::is_same< MemSpace, Kokkos::DefaultExecutionSpace::memory_space >::value, void >::type
   assignGridVariable(       KokkosView3<T, MemSpace> & var

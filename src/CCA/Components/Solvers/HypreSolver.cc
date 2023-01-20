@@ -305,7 +305,7 @@ namespace Uintah {
 
       if(pg->myRank()==0){
 #if defined(HYPRE_USING_CUDA) || \
-  (defined(HYPRE_USING_KOKKOS) && (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)))
+  (defined(HYPRE_USING_KOKKOS) && (defined(HAVE_KOKKOS_GPU)))
         bool hypre_cuda = true;
 #else
         bool hypre_cuda = false;

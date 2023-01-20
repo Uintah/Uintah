@@ -212,7 +212,7 @@ doConvection( ExecutionObject<ExecSpace, MemSpace> & execObj
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 template <typename ExecSpace, typename MemSpace, unsigned int Cscheme>
 inline
 typename std::enable_if<std::is_same<MemSpace, Kokkos::DefaultExecutionSpace::memory_space>::value, void>::type

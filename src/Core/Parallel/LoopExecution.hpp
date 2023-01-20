@@ -217,7 +217,7 @@ enum TASKGRAPH {
 // space is Kokkos' default host execution space.
 
 #if defined(HAVE_KOKKOS)
-  #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  #if defined(HAVE_KOKKOS_GPU)
     #if defined(KOKKOS_ENABLE_OPENMP)
       #define UINTAH_CPU_TAG            Kokkos::OpenMP COMMA Kokkos::HostSpace
       #define KOKKOS_OPENMP_TAG         Kokkos::OpenMP COMMA Kokkos::HostSpace
@@ -497,7 +497,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 #endif  //#if defined(HAVE_KOKKOS)
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -657,7 +657,7 @@ parallel_for( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange const & 
 //  });
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
@@ -799,7 +799,7 @@ parallel_reduce_sum(ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange co
 #endif  //#if defined(HAVE_KOKKOS)
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -927,7 +927,7 @@ parallel_reduce_sum( ExecutionObject<ExecSpace, MemSpace>& execObj, BlockRange c
 
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
@@ -1025,7 +1025,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif  //#if defined(HAVE_KOKKOS)
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor, typename ReductionType>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -1122,7 +1122,7 @@ parallel_reduce_min( ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 // TODO: This appears to not do any "min" on the reduction.
@@ -1369,7 +1369,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
 #endif  //#if defined(HAVE_KOKKOS)
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 inline typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -1378,7 +1378,7 @@ sweeping_parallel_for(ExecutionObject<ExecSpace, MemSpace>& execObj,  BlockRange
     SCI_THROW(InternalError("Error: sweeps on cuda has not been implimented .", __FILE__, __LINE__));
 }
 
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 // Allows the user to specify a vector (or view) of indices that
@@ -1431,7 +1431,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 // TODO: Make streamable.
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename Functor>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -1485,11 +1485,11 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 
 }
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 #if defined(HAVE_KOKKOS)
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 template <typename ExecSpace, typename MemSpace, typename T2, typename T3>
 typename std::enable_if<std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value, void>::type
@@ -1511,7 +1511,7 @@ parallel_for_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
     });
   });
 }
-#endif  //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif  //#if defined(HAVE_KOKKOS_GPU)
 #endif  //#if defined(HAVE_KOKKOS)
 
 // ------------------------------  parallel_initialize loops and its helper functions  ------------------------------
@@ -1613,7 +1613,7 @@ using Alias = TTT;
 template <typename T, typename MemSpace> // Forward Declaration of KokkosView3
 class KokkosView3;
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 /* DS 11052019: Wrote alternative (and simpler) version of
  * parallel_initialize_grouped for cuda The previous version seems to
@@ -1723,7 +1723,7 @@ parallel_initialize_grouped(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif
 }
 */
-#endif //#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif //#if defined(HAVE_KOKKOS_GPU)
 
 //For array of Views
 template<typename T, typename MemSpace, unsigned int Capacity>
@@ -1797,7 +1797,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& init
 }
 
 // ARS - FIX ME - not needed with just KokkosOpenMP
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 // This function is the same as above,but appears to be necessary due
 // to CCVariable support.....
 // Could this be modified to accept grid variables AND containers of
@@ -1914,7 +1914,7 @@ parallel_for_unstructured(ExecutionObject<ExecSpace, MemSpace>& execObj,
 #endif //#if defined( HAVE_KOKKOS )
 
 #if defined( HAVE_KOKKOS )
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
 
 // This FunctorBuilder exists because I couldn't go the lambda
 // approach.  I was running into some conflict with
@@ -1948,7 +1948,7 @@ struct FunctorBuilderReduce {
     }
   }
 };
-#endif //if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif //if defined(HAVE_KOKKOS_GPU)
 #endif //if defined(HAVE_KOKKOS)
 
 } // namespace Uintah

@@ -3853,7 +3853,10 @@ sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 ##  --  defines for GPU builds  ------------------------------------------
 
 HAVE_GPU=""
-DEF_GPU_HAVE=""
+DEF_HAVE_GPU=""
+
+HAVE_KOKKOS_GPU=""
+DEF_HAVE_KOKKOS_GPU=""
 
 if test "$HAVE_CUDA" = "yes"; then
   AC_MSG_NOTICE(Building with GPU support)
@@ -3887,6 +3890,8 @@ if test $? = 0; then
   AC_MSG_RESULT(yes)
   HAVE_GPU="yes"
   DEF_HAVE_GPU="#define HAVE_GPU"
+  HAVE_KOKKOS_GPU="yes"
+  DEF_HAVE_KOKKOS_GPU="#define HAVE_KOKKOS_GPU"
 else
   AC_MSG_RESULT(no)
 fi
@@ -3897,6 +3902,9 @@ fi
 
 AC_SUBST(HAVE_GPU)
 AC_SUBST(DEF_HAVE_GPU)
+
+AC_SUBST(HAVE_KOKKOS_GPU)
+AC_SUBST(DEF_HAVE_KOKKOS_GPU)
 
 sci_defs_files="$sci_defs_files include/sci_defs/gpu_testdefs.h"
 

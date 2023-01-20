@@ -398,7 +398,7 @@ public:
 
   };
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_KOKKOS_GPU)
   // ______________________________________________________________________
   // Kokkos methods
   template <typename T>

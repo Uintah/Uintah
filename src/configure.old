@@ -719,8 +719,6 @@ VISUS_LIB_FLAG
 INC_VISUS_H
 DEF_VISUS
 HAVE_VISUS
-DEF_HAVE_KOKKOS_GPU
-HAVE_KOKKOS_GPU
 DEF_HAVE_GPU
 HAVE_GPU
 NVCC_LIBS
@@ -7924,8 +7922,6 @@ sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
 ## -- Begin Test for Bluegene Q --
-CXX_BASE=$CXX
-CXXFLAGS_BASE=$CXXFLAGS
 
 cat > conftest-bgq.cc <<EOF
 #include <stdio.h>
@@ -36594,61 +36590,15 @@ fi
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 ##  --  defines for GPU builds  ------------------------------------------
-
 HAVE_GPU=""
-DEF_HAVE_GPU=""
+DEF_GPU_HAVE=""
 
-HAVE_KOKKOS_GPU=""
-DEF_HAVE_KOKKOS_GPU=""
-
-if test "$HAVE_CUDA" = "yes"; then
+if test "$HAVE_KOKKOS" = "yes" -o "$HAVE_CUDA" = "yes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: Building with GPU support" >&5
 $as_echo "$as_me: Building with GPU support" >&6;}
   HAVE_GPU="yes"
   DEF_HAVE_GPU="#define HAVE_GPU"
-
-elif test "$HAVE_KOKKOS" = "yes"; then
-
-## --------------
-## -- Begin Test for Kokkos GPU --
-
-cat > conftest-kokkos.cc <<EOF
-#include <Kokkos_Macros.hpp>
-int
-main()
-{
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
-  return 0;
-#else
-  return 1;
-#endif
-}
-EOF
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if Kokkos uses a GPU" >&5
-$as_echo_n "checking if Kokkos uses a GPU... " >&6; }
-$CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
-
-./conftest-kokkos
-
-if test $? = 0; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-  HAVE_GPU="yes"
-  DEF_HAVE_GPU="#define HAVE_GPU"
-  HAVE_KOKKOS_GPU="yes"
-  DEF_HAVE_KOKKOS_GPU="#define HAVE_KOKKOS_GPU"
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
 fi
-
-#rm -f conftest-kokkos.cc conftest-kokkos
-
-fi
-
-
-
 
 
 
