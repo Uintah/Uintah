@@ -45,7 +45,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
@@ -64,7 +64,7 @@ namespace {
 
 namespace Uintah {
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   #ifdef TASK_MANAGES_EXECSPACE
     class GPUDataWarehouse;
   #endif
@@ -125,7 +125,7 @@ protected: // class Task
                        ,       UintahParams   & uintahParams
                        ) = 0;
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     virtual void assignDevicesAndInstances(intptr_t dTask) = 0;
 
@@ -186,7 +186,7 @@ public: // private:
       ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionNonPortableBase() {};
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -313,7 +313,7 @@ public: // private:
       ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionPortableBase() {};
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -519,7 +519,7 @@ public: // private:
       ActionNonPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionNonPortableBase() {};
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, Kokkos::DefaultExecutionSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -921,7 +921,7 @@ public: // private:
       ActionPortableBase(Task *ptr) : ActionBase(ptr) {};
       virtual ~ActionPortableBase() {};
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
     typedef          std::map<unsigned int, ExecSpace> kokkosInstanceMap;
     typedef typename kokkosInstanceMap::const_iterator kokkosInstanceMapIter;
@@ -2174,7 +2174,7 @@ public: // class Task
                    );
 
   //////////
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #ifdef TASK_MANAGES_EXECSPACE
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
@@ -2457,7 +2457,7 @@ private: // class Task
 
   std::string m_task_name;
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #ifdef TASK_MANAGES_EXECSPACE
   // The task is pointed to by multiple DetailedTasks. As such, the
   // task has to keep track of the device and stream on a DetailedTask
@@ -2546,7 +2546,7 @@ inline void Task::Dependency::addReq( Edge * edge )
   m_req_tail = edge;
 }
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #if defined(TASK_MANAGES_EXECSPACE) && defined(USE_KOKKOS_INSTANCE)
 //_____________________________________________________________________________
 //

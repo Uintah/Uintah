@@ -32,7 +32,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
 #endif
 
@@ -52,7 +52,7 @@
 
 using namespace Uintah;
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 extern Uintah::MasterLock cerrLock;
 
 namespace {
@@ -94,7 +94,7 @@ DetailedTask::DetailedTask(       Task           * task
   , m_matls( matls )
   , m_task_group( taskGroup )
 {
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   varLock = new Uintah::MasterLock{};
 #endif
   if (m_patches) {
@@ -167,7 +167,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
   uintahParams.setProcessorGroup(pg);
   uintahParams.setCallBackEvent(event);
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   // Load in streams whether this is a CPU task or GPU task. GPU tasks
   // need streams. CPU tasks can also use streams for D2H copies or
   // transferFrom calls.
@@ -188,7 +188,7 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
   // Determine if task will be executed on CPU or GPU
   if ( m_task->usesDevice() ) {
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
     // Run the GPU task.  Technically the engine has structure to run
     // one task on multiple devices if that task had patches on
     // multiple devices.  So run the task once per device.  As often
@@ -741,7 +741,7 @@ operator<<( std::ostream & out, const DetailedTask & dtask )
 
 } // end namespace Uintah
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 
 #ifdef TASK_MANAGES_EXECSPACE
   // Now in the Task

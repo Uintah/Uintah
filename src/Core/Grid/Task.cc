@@ -1099,7 +1099,7 @@ Task::doit( const PatchSubset           * patches
   }
 }
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 //______________________________________________________________________
 //
 #ifdef TASK_MANAGES_EXECSPACE
@@ -1830,7 +1830,7 @@ Task::syncTaskGpuDW(intptr_t dTask, unsigned int deviceNum,
 }
 #endif // #ifdef USE_KOKKOS_INSTANCE - STREAMS
 #endif // #ifdef TASK_MANAGES_EXECSPACE
-#endif // #if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#endif // #if defined(HAVE_GPU)
 
 //______________________________________________________________________
 //

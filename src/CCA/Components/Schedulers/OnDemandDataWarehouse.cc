@@ -62,7 +62,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
   #include <Core/Grid/Variables/GPUStencil7.h>
   #include <Core/Geometry/GPUVector.h>
@@ -86,7 +86,7 @@ namespace Uintah {
 
   extern Dout g_mpi_dbg;
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   extern DebugStream gpudbg;
 #endif
 
@@ -147,7 +147,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup * myworld
 
   varLock = new Uintah::MasterLock{};
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 
   if (Uintah::Parallel::usingDevice()) {
     int numDevices = getNumDevices();
@@ -211,7 +211,7 @@ OnDemandDataWarehouse::clear()
   m_running_tasks.clear();
 
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 
   if (Uintah::Parallel::usingDevice()) {
     //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
@@ -424,7 +424,7 @@ OnDemandDataWarehouse::getReductionVariable( const VarLabel * label
   }
 }
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 
 // void
 // OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
@@ -3379,7 +3379,7 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse                        
             m_var_DB.put( label, matl, copyPatch, v, d_scheduler->copyTimestep(), replace );
           }
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
           if (Uintah::Parallel::usingDevice()) {
             // See if it's in the GPU.  Both the source and destination
             // must be in the GPU data warehouse, both must be listed

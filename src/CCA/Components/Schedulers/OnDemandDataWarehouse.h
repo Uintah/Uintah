@@ -42,7 +42,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/kokkos_defs.h>
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
@@ -486,7 +486,7 @@ public:
 
   virtual void finalize();
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
   static int getNumDevices();
   // static void uintahSetCudaDevice(int deviceNum);
   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
@@ -1230,7 +1230,7 @@ private:
                             );
 
 
-#if defined(HAVE_CUDA) || defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(HAVE_GPU)
 
   std::map<Patch*, bool> assignedPatches; // indicates where a given patch should be stored in an accelerator
 

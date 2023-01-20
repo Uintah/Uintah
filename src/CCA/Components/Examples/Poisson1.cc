@@ -49,7 +49,7 @@ class DetailedTask;
 
 
 //DS 05132020: Updated Poisson1 to use CC Variable or NCVariable. Comment/uncomment USE_CC_VARS to switch between two types.
-#define USE_CC_VARS
+//#define USE_CC_VARS
 
 
 #ifdef USE_CC_VARS
