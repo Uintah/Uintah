@@ -98,24 +98,26 @@ namespace Kokkos {
   namespace Kokkos {
     class OpenMP {};
     class HostSpace {};
-    namespace Experimental {
-      class OpenMPTarget {};
-      class OpenMPTargetSpace {};
-    }
-#if defined( KOKKOS_ENABLE_CUDA )
-    class Cuda {};
-    class CudaSpace {};
-#elif defined( KOKKOS_ENABLE_HIP )
-    namespace Experimental {
-      class HIP {};
-      class HIPSpace {};
-    }
-#elif defined( KOKKOS_ENABLE_SYCL )
-    namespace Experimental {
-      class SYCL {};
-      class SYCLDeviceUSMSpace {};
-    }
-#endif
+    class DefaultExecutionSpace {};
+
+//     namespace Experimental {
+//       class OpenMPTarget {};
+//       class OpenMPTargetSpace {};
+//     }
+// #if defined( KOKKOS_ENABLE_CUDA )
+//     class Cuda {};
+//     class CudaSpace {};
+// #elif defined( KOKKOS_ENABLE_HIP )
+//     namespace Experimental {
+//       class HIP {};
+//       class HIPSpace {};
+//     }
+// #elif defined( KOKKOS_ENABLE_SYCL )
+//     namespace Experimental {
+//       class SYCL {};
+//       class SYCLDeviceUSMSpace {};
+//     }
+// #endif
   }
 
 #define KOKKOS_LAMBDA [&]
