@@ -1794,6 +1794,9 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj, const T& init
   }
 }
 
+// ARS - FIX ME - works with both Cuda/OpenMP but not just OpenMP.
+#if defined(KOKKOS_ENABLE_OPENMP) && \
+  (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL))
 // This function is the same as above,but appears to be necessary due
 // to CCVariable support.....
 // Could this be modified to accept grid variables AND containers of
@@ -1829,7 +1832,7 @@ parallel_initialize(ExecutionObject<ExecSpace, MemSpace>& execObj,
     //parallel_initialize_single<ExecSpace>(execObj, inputs_, inside_value ); // safer version, less ambitious
   }
 }
-
+#endif
 #endif //#if defined(HAVE_KOKKOS)
 
 template< typename T, typename T2, const unsigned int T3>
