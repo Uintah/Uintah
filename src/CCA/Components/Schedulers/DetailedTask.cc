@@ -179,10 +179,6 @@ DetailedTask::doit( const ProcessorGroup                      * pg
     cudaStream_t* stream = this->getCudaStreamForThisTask(i);
     uintahParams.setStream(stream);
   }
-  std::cerr << __FILE__ << "  " << __LINE__ << "  "
-            << numStreams << "  "
-            << (this->getCudaStreamForThisTask(0) == nullptr ? "nullptr" : "")
-            << std::endl;
 #endif
 #endif
 
