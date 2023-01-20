@@ -68,6 +68,14 @@ public:
     this->newTaskGpuDW = newTaskGpuDW;
   }
 
+  void * getOldTaskGpuDW() const {
+    return this->oldTaskGpuDW;
+  }
+
+  void * getNewTaskGpuDW() const {
+    return this->newTaskGpuDW;
+  }
+
   void setCallBackEvent(CallBackEvent callBackEvent) {
     this->callBackEvent = callBackEvent;
   }
