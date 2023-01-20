@@ -34,6 +34,7 @@
 # ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # ## IN THE SOFTWARE.
 # ##
+# ##
 ## IMPORTANT!!!  Configure developers, PLEASE READ:
 ##
 ## The following BULLET PROOFING needs to be placed manually into
@@ -36607,7 +36608,9 @@ $as_echo "$as_me: Building with GPU support" >&6;}
   HAVE_GPU="yes"
   DEF_HAVE_GPU="#define HAVE_GPU"
 
-elif test "$HAVE_KOKKOS" = "yes"; then
+fi
+
+if test "$HAVE_KOKKOS" = "yes"; then
 
 ## --------------
 ## -- Begin Test for Kokkos GPU --

@@ -3863,7 +3863,9 @@ if test "$HAVE_CUDA" = "yes"; then
   HAVE_GPU="yes"
   DEF_HAVE_GPU="#define HAVE_GPU"
 
-elif test "$HAVE_KOKKOS" = "yes"; then
+fi
+
+if test "$HAVE_KOKKOS" = "yes"; then
 
 ## --------------
 ## -- Begin Test for Kokkos GPU --
