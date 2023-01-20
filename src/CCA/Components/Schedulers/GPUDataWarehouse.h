@@ -29,6 +29,7 @@
 
 #include <sci_defs/cuda_defs.h>
 
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Variables/GPUVariable.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
@@ -738,34 +739,36 @@ GPUDataWarehouse::syncto_device<cudaStream_t *>(cudaStream_t * stream);
 // variable is not called a computes and then later listed as a
 // modifies.
 
+#ifdef HAVE_KOKKOS
 template <>
 __host__ inline bool
 GPUDataWarehouse::transferFrom<UintahSpaces::CPU>( UintahSpaces::CPU instance
-						 , GPUGridVariableBase &var_source
-						 , GPUGridVariableBase &var_dest
-					         , GPUDataWarehouse * from
-						 , char const* label
-						 , int patchID
-						 , int matlIndx
-						 , int levelIndx)
+                                                 , GPUGridVariableBase &var_source
+                                                 , GPUGridVariableBase &var_dest
+                                                 , GPUDataWarehouse * from
+                                                 , char const* label
+                                                 , int patchID
+                                                 , int matlIndx
+                                                 , int levelIndx)
 {
   // printf("Error: GPUDataWarehouse::transferFrom not implemented for this execution space.\n");
   // SCI_THROW(InternalError("GPUDataWarehouse::transferFrom not implemented for this execution space: ", __FILE__, __LINE__) );
 
   return true;
 };
-  
+#endif
+
 #ifdef USE_KOKKOS_INSTANCE
 template <typename ExecSpace>
 __host__ inline bool
 GPUDataWarehouse::transferFrom( ExecSpace instance
-			      , GPUGridVariableBase &var_source
-			      , GPUGridVariableBase &var_dest
-			      , GPUDataWarehouse * from
-			      , char const* label
-			      , int patchID
-			      , int matlIndx
-			      , int levelIndx)
+                              , GPUGridVariableBase &var_source
+                              , GPUGridVariableBase &var_dest
+                              , GPUDataWarehouse * from
+                              , char const* label
+                              , int patchID
+                              , int matlIndx
+                              , int levelIndx)
 {
 #else
 template <>
@@ -904,7 +907,7 @@ GPUDataWarehouse::transferFrom<cudaStream_t*>( cudaStream_t* stream
   // Let the caller know we found and transferred something.
   return true;
 }
-  
+
 } // end namespace Uintah
 
 #endif // end #ifndef CCA_COMPONENTS_SCHEDULERS_GPUDATAWAREHOUSE_H
