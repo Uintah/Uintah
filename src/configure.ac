@@ -3896,7 +3896,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-#rm -f conftest-kokkos.cc conftest-kokkos
+rm -f conftest-kokkos.cc conftest-kokkos
 
 fi
 
