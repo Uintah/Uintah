@@ -1112,6 +1112,8 @@ sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
 ## -- Begin Test for Bluegene Q --
+CXX_BASE=$CXX
+CXXFLAGS_BASE=$CXXFLAGS
 
 cat > conftest-bgq.cc <<EOF
 #include <stdio.h>
@@ -3849,13 +3851,48 @@ AC_SUBST(NVCC_LIBS)
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 ##  --  defines for GPU builds  ------------------------------------------
+
 HAVE_GPU=""
 DEF_GPU_HAVE=""
 
-if test "$HAVE_KOKKOS" = "yes" -o "$HAVE_CUDA" = "yes"; then
+if test "$HAVE_CUDA" = "yes"; then
   AC_MSG_NOTICE(Building with GPU support)
   HAVE_GPU="yes"
   DEF_HAVE_GPU="#define HAVE_GPU"
+
+elif test "$HAVE_KOKKOS" = "yes"; then
+
+## --------------
+## -- Begin Test for Kokkos GPU --
+
+cat > conftest-kokkos.cc <<EOF
+#include <Kokkos_Macros.hpp>
+int
+main()
+{
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  return 0;
+#else
+  return 1;
+#endif
+}
+EOF
+
+AC_MSG_CHECKING(if Kokkos uses a GPU)
+$CXX_BASE $CXXFLAGS_BASE $INC_KOKKOS_H conftest-kokkos.cc -o conftest-kokkos
+
+./conftest-kokkos
+
+if test $? = 0; then
+  AC_MSG_RESULT(yes)
+  HAVE_GPU="yes"
+  DEF_HAVE_GPU="#define HAVE_GPU"
+else
+  AC_MSG_RESULT(no)
+fi
+
+#rm -f conftest-kokkos.cc conftest-kokkos
+
 fi
 
 AC_SUBST(HAVE_GPU)
