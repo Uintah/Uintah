@@ -181,7 +181,7 @@ Ray::~Ray()
 
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
-    
+
   if( d_radiometer) {
     delete d_radiometer;
   }
@@ -425,8 +425,8 @@ Ray::problemSetup( const ProblemSpecP     & prob_spec
 //     size_t size;
 //     CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size, cudaLimitPrintfFifoSize) );
 //     CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
-//     printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n", 
-// 	   (long uint) size, ((long uint)10 * size) );
+//     printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",
+//         (long uint) size, ((long uint)10 * size) );
 //   }
 //   #endif
 // #endif
@@ -502,10 +502,10 @@ Ray::sched_rayTrace( const LevelP        & level
 {
   // Get the application so to record stats.
   m_application = sched->getApplication();
-  
+
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
-  
+
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
@@ -557,7 +557,7 @@ Ray::sched_rayTrace( const LevelP        & level
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
   tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
-  
+
 
   if( modifies_divQ ) {
     tsk->modifies( d_divQLabel );
@@ -569,7 +569,7 @@ Ray::sched_rayTrace( const LevelP        & level
     tsk->computes( d_radiationVolqLabel );
   }
 
-#ifdef USE_TIMER 
+#ifdef USE_TIMER
   if( modifies_divQ ){
     tsk->modifies( d_PPTimerLabel );
   } else {
@@ -912,7 +912,7 @@ Ray::rayTrace( const PatchSubset* patches,
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
     // For each stat recorded increment the count so to get a per patch value.
-    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
 #endif
@@ -950,7 +950,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP        & level
 {
   // Get the application so to record stats.
   m_application = sched->getApplication();
-  
+
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
@@ -1138,7 +1138,7 @@ struct rayTrace_dataOnion_solveDivQFunctor {
   int       m_virtual_ROI [3];
   int       m_haloCells [3];
 
-  rayTrace_dataOnion_solveDivQFunctor( RandomGenerator                     rand_pool 
+  rayTrace_dataOnion_solveDivQFunctor( RandomGenerator                     rand_pool
                                      , LevelParamsML                       levelParamsML[m_maxLevels]
                                      , double                              domain_BB_Lo[3]
                                      , double                              domain_BB_Hi[3]
@@ -2034,29 +2034,29 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
 
 #if defined(HAVE_KOKKOS_GPU)
       rayTrace_dataOnion_solveDivQFunctor<T, Kokkos::DefaultExecutionSpace::memory_space,
-					  decltype(random_pool), numLevels> functor( random_pool
+                                          decltype(random_pool), numLevels> functor( random_pool
 #else
       rayTrace_dataOnion_solveDivQFunctor<T, MemSpace,
-					  decltype(random_pool), numLevels> functor( random_pool
+                                          decltype(random_pool), numLevels> functor( random_pool
 #endif
-										   , levelParamsML
-										   , domain_BB_Lo
-										   , domain_BB_Hi
-										   , fineLevel_ROI_Lo_pod
-										   , fineLevel_ROI_Hi_pod
-										   , sigmaT4OverPi_view
-										   , abskg_view
-										   , cellType_view
-										   , divQ_fine_view
-										   , radiationVolq_fine_view
-										   , d_threshold
-										   , d_allowReflect
-										   , d_nDivQRays
-										   , d_CCRays
-										   , m_use_virtual_ROI
-										   , m_virtual_ROI.get_pointer()
-										   , d_haloCells.get_pointer()
-										   );
+                                                                                   , levelParamsML
+                                                                                   , domain_BB_Lo
+                                                                                   , domain_BB_Hi
+                                                                                   , fineLevel_ROI_Lo_pod
+                                                                                   , fineLevel_ROI_Hi_pod
+                                                                                   , sigmaT4OverPi_view
+                                                                                   , abskg_view
+                                                                                   , cellType_view
+                                                                                   , divQ_fine_view
+                                                                                   , radiationVolq_fine_view
+                                                                                   , d_threshold
+                                                                                   , d_allowReflect
+                                                                                   , d_nDivQRays
+                                                                                   , d_CCRays
+                                                                                   , m_use_virtual_ROI
+                                                                                   , m_virtual_ROI.get_pointer()
+                                                                                   , d_haloCells.get_pointer()
+                                                                                   );
 
       // This parallel pattern replaces the cellIterator loop used to solve DivQ
       // When verifying correctness, parallel_reduce is used to confirm ray step consistency across implementations
@@ -2071,14 +2071,14 @@ Ray::rayTrace_dataOnion( const PatchSubset* finePatches,
     //__________________________________
     //
     timer.stop();
-    
+
 #ifdef ADD_PERFORMANCE_STATS
     // Add in the patch stat, recording for each patch.
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += nRaySteps;
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += nRaySteps / timer().seconds();
     // For each stat recorded increment the count so to get a per patch value.
-    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
 #endif
@@ -2294,12 +2294,12 @@ Ray::sched_setBoundaryConditions( const LevelP        & level
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 
   // ______________________________________________________________________
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   m_application = sched->getApplication();
-  
+
   // Running with VisIt so add in the variables that the user can
   // modify.
   if( m_application && m_application->getVisIt() && !initialized ) {
@@ -2742,10 +2742,10 @@ void Ray::sched_CoarsenAll( const LevelP     & coarseLevel
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,g_ray_dbg,"Ray::sched_CoarsenAll");
-    
+
     int L = coarseLevel->getIndex();
     Task::WhichDW fineLevel_abskg_dw = get_abskg_whichDW( L+1, d_abskgLabel);
-    
+
     sched_Coarsen_Q(coarseLevel, sched, fineLevel_abskg_dw, modifies_abskg,     d_abskgLabel );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW,        modifies_sigmaT4,  d_sigmaT4Label );
   }

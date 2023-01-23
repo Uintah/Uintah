@@ -25,25 +25,17 @@
 #include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/MaterialManager.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-
-#ifdef HAVE_CUDA
-#  include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
-#endif
-
-#include <sci_defs/cuda_defs.h>
-
-#define BLOCKSIZE 16
 
 using namespace Uintah;
 
@@ -116,7 +108,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance( const LevelP     & level
                                               ,       SchedulerP & sched
                                               )
 {
-  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance", this, &UnifiedSchedulerTest::timeAdvance);
+  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance", this, &UnifiedSchedulerTest::timeAdvance<UintahSpaces::GPU, UintahSpaces::DeviceSpace>);
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP"    , this, &UnifiedSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP"    , this, &UnifiedSchedulerTest::timeAdvance3DP);
 
@@ -182,123 +174,6 @@ void UnifiedSchedulerTest::initialize( const ProcessorGroup * pg
     }
     new_dw->put(sum_vartype(-1), m_residual_label);
   }
-}
-
-//______________________________________________________________________
-//
-void UnifiedSchedulerTest::timeAdvance( const PatchSubset           * patches
-                                      , const MaterialSubset        * matls
-                                      ,       OnDemandDataWarehouse * old_dw
-                                      ,       OnDemandDataWarehouse * new_dw
-                                      ,       UintahParams          & uintahParams
-                                      ,       ExecutionObject       & execObj
-                                      )
-{
-  //-----------------------------------------------------------------------------------------------
-  // When Task is scheduled to CPU
-  if (event == Task::CPU) {
-
-    int matl = 0;
-
-    int num_patches = patches->size();
-    for (int p = 0; p < num_patches; ++p) {
-      const Patch* patch = patches->get(p);
-      constNCVariable<double> phi;
-
-      old_dw->get(phi, m_phi_label, matl, patch, Ghost::AroundNodes, 1);
-      NCVariable<double> newphi;
-
-      new_dw->allocateAndPut(newphi, m_phi_label, matl, patch);
-      newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-      double residual = 0.0;
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex();
-
-      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-
-      h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zplus)  == Patch::Neighbor ? 0 : 1);
-
-      //__________________________________
-      //  Stencil
-      for (NodeIterator iter(l, h); !iter.done(); iter++) {
-        IntVector n = *iter;
-
-        newphi[n] = (1. / 6)
-                  * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
-                  + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
-        double diff = newphi[n] - phi[n];
-        residual += diff * diff;
-      }
-      new_dw->put(sum_vartype(residual), m_residual_label);
-    }
-  }  // end CPU task execution
-  //-----------------------------------------------------------------------------------------------
-
-
-  // When Task is scheduled to GPU
-#if defined(HAVE_CUDA) && !defined(HAVE_KOKKOS)
-  if (event == Task::GPU) {
-
-    // Do time steps
-    int num_patches = patches->size();
-    for (int p = 0; p < num_patches; ++p) {
-      const Patch* patch = patches->get(p);
-
-      // Calculate the memory block size
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex();
-
-      uint3 patchNodeLowIndex = make_uint3(l.x(), l.y(), l.z());
-      uint3 patchNodeHighIndex = make_uint3(h.x(), h.y(), h.z());
-      IntVector s = h - l;
-      int xdim = s.x();
-      int ydim = s.y();
-
-      // define dimensions of the thread grid to be launched
-      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
-      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
-      dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
-      dim3 dimGrid(xblocks, yblocks, 1);
-
-      // now calculate the computation domain (ignoring the outside cell regions)
-      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-
-      h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::yplus)  == Patch::Neighbor ? 0 : 1,
-                     patch->getBCType(Patch::zplus)  == Patch::Neighbor ? 0 : 1);
-
-      // Domain extents used by the kernel to prevent out of bounds accesses.
-      uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
-      uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-
-      // setup and launch kernel
-      GPUGridVariable<double> device_var;
-      new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0, 0);
-
-      launchUnifiedSchedulerTestKernel( dimGrid
-                                      , dimBlock
-                                      , (cudaStream_t*)execObj.getStream()
-                                      , patch->getID()
-                                      , patchNodeLowIndex
-                                      , patchNodeHighIndex
-                                      , domainLow
-                                      , domainHigh
-                                      , (GPUDataWarehouse*)uintahParams.old_TaskGpuDW
-                                      , (GPUDataWarehouse*)uintahParams.new_TaskGpuDW
-                                      );
-
-      // residual is automatically "put" with the D2H copy of the GPUReductionVariable
-      // new_dw->put(sum_vartype(residual), m_residual_label);
-
-    } // end patch loop
-  } // end GPU task execution
-#endif
 }
 
 //______________________________________________________________________

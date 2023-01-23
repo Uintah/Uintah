@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTask.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
@@ -46,67 +46,55 @@ static DebugStream dbggpu("RAYGPU", "Radiation Models", "RMCRT Ray GPU debug str
 //---------------------------------------------------------------------------
 // Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
-template<class T>
-void Ray::rayTraceGPU(DetailedTask* dtask,
-                      CallBackEvent event,
-                      const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+template<class T, typename ExecSpace, typename MemSpace>
+void Ray::rayTraceGPU(const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      void* oldTaskGpuDW,
-                      void* newTaskGpuDW,
-                      // ARS - FIX ME
-                      void* stream,
-                      int deviceID,
-                      bool modifies_divQ,
+                      OnDemandDataWarehouse* old_dw,
+                      OnDemandDataWarehouse* new_dw,
+                      UintahParams& uintahParams,
+                      ExecutionObject<ExecSpace, MemSpace>& execObj,
                       int timeStep,
+                      bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
                       Task::WhichDW which_celltype_dw)
 {
-  if (event == Task::GPU) {
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
+    DetailedTask* dtask = uintahParams.getDetailedTask();
+    GPUDataWarehouse* oldTaskGpuDW =
+      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+    GPUDataWarehouse* newTaskGpuDW =
+      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+    void* stream = uintahParams.getStream(0);
+
     const Level* level = getLevel(patches);
 
     //__________________________________
-    // Increase the size of the printbuffer on the device
-
-    //__________________________________
-    //
-    //GPUDataWarehouse* old_taskgdw = nullptr;
-    //if (oldTaskGpuDW) {
-    //  old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
-    //}
-
-    //GPUDataWarehouse* new_taskgdw = nullptr;
-    //if (newTaskGpuDW) {
-    //  new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
-    //}
+    // Assign dataWarehouses
 
     GPUDataWarehouse* abskg_gdw = nullptr;
     GPUDataWarehouse* sigmaT4_gdw = nullptr;
     GPUDataWarehouse* celltype_gdw = nullptr;
+
     if (which_abskg_dw == Task::OldDW) {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      abskg_gdw = oldTaskGpuDW;
     } else {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      abskg_gdw = newTaskGpuDW;
     }
     if (which_sigmaT4_dw == Task::OldDW) {
-      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      sigmaT4_gdw = oldTaskGpuDW;
     } else {
-      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      sigmaT4_gdw = newTaskGpuDW;
     }
     if (which_celltype_dw == Task::OldDW) {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      celltype_gdw = oldTaskGpuDW;
     } else {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      celltype_gdw = newTaskGpuDW;
     }
 
 #if 0
     //__________________________________
     // varLabel name struct
-    
+
     varLabelNames*  labelNames = new varLabelNames;
 
     labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
@@ -115,20 +103,20 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
     labelNames->celltype  = d_cellTypeLabel->getName().c_str();
     labelNames->boundFlux = d_boundFluxLabel->getName().c_str();
     labelNames->radVolQ   = d_radiationVolqLabel->getName().c_str();
-    
+
     labelNames->print();
 #endif
 
     //__________________________________
     // RMCRT_flags
     RMCRT_flags RT_flags;
-    RT_flags.modifies_divQ     = modifies_divQ;                              
+    RT_flags.modifies_divQ     = modifies_divQ;
 
-    RT_flags.solveDivQ         = d_solveDivQ;                                
-    RT_flags.allowReflect      = d_allowReflect;                             
-    RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;                        
-    RT_flags.CCRays            = d_CCRays;                                   
-    RT_flags.usingFloats       = (d_FLT_DBL == TypeDescription::float_type); 
+    RT_flags.solveDivQ         = d_solveDivQ;
+    RT_flags.allowReflect      = d_allowReflect;
+    RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;
+    RT_flags.CCRays            = d_CCRays;
+    RT_flags.usingFloats       = (d_FLT_DBL == TypeDescription::float_type);
 
     RT_flags.sigma             = d_sigma;
     RT_flags.sigmaScat         = d_sigmaScat;
@@ -144,7 +132,7 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
 
     //__________________________________
     // Level Parameters - first batch of level data
-    levelParams levelP;     
+    levelParams levelP;
     levelP.hasFinerLevel = level->hasFinerLevel();
 
     Uintah::Vector dx = level->dCell();
@@ -215,14 +203,11 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
                               d_matl,
                               levelP,
                               patchP,
-                              (cudaStream_t*) stream,
+                              stream,
                               RT_flags,
                               timeStep,
-                              abskg_gdw,
-                              sigmaT4_gdw,
-                              celltype_gdw,
-                              static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
-                              static_cast<GPUDataWarehouse*>(newTaskGpuDW));
+                              abskg_gdw, sigmaT4_gdw, celltype_gdw,
+                              oldTaskGpuDW, newTaskGpuDW);
 
       //__________________________________
       //
@@ -238,52 +223,49 @@ void Ray::rayTraceGPU(DetailedTask* dtask,
         std::cout << std::endl;
       }
     }  // end patch loop
-#endif  // end #if defined(HAVE_CUDA)   // Only compiled when NOT built with Kokkos see sub.mk
-  }  // end GPU task code
 }  // end GPU ray trace method
 
 //---------------------------------------------------------------------------
 // Method: The GPU data onion ray tracer - setup for ray trace data onion kernel
 //---------------------------------------------------------------------------
-template<class T>
-void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
-                                CallBackEvent event,
-                                const ProcessorGroup* pg,
-                                const PatchSubset* finePatches,
+template<class T, typename ExecSpace, typename MemSpace>
+void Ray::rayTraceDataOnionGPU( const PatchSubset* finePatches,
                                 const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                void* oldTaskGpuDW,
-                                void* newTaskGpuDW,
-                                void* stream,
-                                int deviceID,
-                                bool modifies_divQ,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
+                                UintahParams& uintahParams,
+                                ExecutionObject<ExecSpace, MemSpace>& execObj,
                                 int timeStep,
+                                bool modifies_divQ,
                                 Task::WhichDW which_abskg_dw,
                                 Task::WhichDW which_sigmaT4_dw,
                                 Task::WhichDW which_celltype_dw)
 {
-  if (event == Task::GPU) {
+    DetailedTask* dtask = uintahParams.getDetailedTask();
+    GPUDataWarehouse* oldTaskGpuDW =
+      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+    GPUDataWarehouse* newTaskGpuDW =
+      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+    void* stream = uintahParams.getStream(0);
 
-#if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
     //__________________________________
-    // Bulletproofing   FIX ME 
+    // Bulletproofing   FIX ME
     const Level* fineLevel = getLevel(finePatches);
     const int maxLevels   = fineLevel->getGrid()->numLevels();
     if ( maxLevels > d_MAXLEVELS) {
       std::ostringstream warn;
       warn << "\nERROR: RMCRT:GPU The maximum number of levels allowed ("
-	   << d_MAXLEVELS << ") has been exceeded." << std::endl
-	   << "To increase that value see: "
-	   << "/src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
+           << d_MAXLEVELS << ") has been exceeded." << std::endl
+           << "To increase that value see: "
+           << "/src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
     if (d_nDivQRays > d_MAX_RAYS || d_nFluxRays > d_MAX_RAYS) {
       std::ostringstream warn;
       warn << "\nERROR: RMCRT:GPU The maximum number of rays allows ("
-	   << d_MAX_RAYS << ") has been exceeded." << std::endl
-	   << "To increase that value see: "
-	   << "/src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
+           << d_MAX_RAYS << ") has been exceeded." << std::endl
+           << "To increase that value see: "
+           << "/src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
 
@@ -296,7 +278,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     // Determine the size of the domain.
     BBox domain_BB;
     level_0->getInteriorSpatialRange( domain_BB ); // Edge of the computational
-						   // domain
+                                                   // domain
     Point lo = domain_BB.min();
     Point hi = domain_BB.max();
     gridP.domain_BB.lo = make_double3( lo.x(), lo.y(), lo.z() );
@@ -305,13 +287,12 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     //__________________________________
     // Level Parameters - first batch of level data
     // levelParams levelP[maxLevels];
-    // ARS - FIX ME
     levelParams * levelP = new levelParams[maxLevels];
     cudaHostRegister(levelP, sizeof(levelParams) * maxLevels, cudaHostRegisterPortable);
     dtask->addTempHostMemoryToBeFreedOnCompletion(levelP);
 
     for (int l = 0; l < maxLevels; ++l) {
-      LevelP level = new_dw->getGrid()->getLevel(l);      
+      LevelP level = new_dw->getGrid()->getLevel(l);
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
       Uintah::Vector dx = level->dCell();
@@ -331,22 +312,21 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
     GPUDataWarehouse* celltype_gdw = nullptr;
 
     if (which_abskg_dw == Task::OldDW) {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      abskg_gdw = oldTaskGpuDW;
     } else {
-      abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      abskg_gdw = newTaskGpuDW;
     }
-
     if (which_sigmaT4_dw == Task::OldDW) {
-      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      sigmaT4_gdw = oldTaskGpuDW;
     } else {
-      sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      sigmaT4_gdw = newTaskGpuDW;
     }
     if (which_celltype_dw == Task::OldDW) {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+      celltype_gdw = oldTaskGpuDW;
     } else {
-      celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+      celltype_gdw = newTaskGpuDW;
     }
-    
+
     //__________________________________
     // RMCRT_flags
     RMCRT_flags RT_flags;
@@ -374,20 +354,20 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 
       const Patch* finePatch = finePatches->get(p);
       printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceDataOnionGPU");
-      
+
       IntVector ROI_Lo = IntVector(-9,-9,-9);
       IntVector ROI_Hi = IntVector(-9,-9,-9);
       std::vector<IntVector> regionLo(maxLevels);
       std::vector<IntVector> regionHi(maxLevels);
-  
+
       //__________________________________
-      // Compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI    
+      // Compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw, ROI_Lo, ROI_Hi, regionLo,  regionHi);
-      
+
       // Move everything into GPU vars
       GPUIntVector fineLevel_ROI_Lo = GPUIntVector( make_int3(ROI_Lo.x(), ROI_Lo.y(), ROI_Lo.z()) );
       GPUIntVector fineLevel_ROI_Hi = GPUIntVector( make_int3(ROI_Hi.x(), ROI_Hi.y(), ROI_Hi.z()) );
-      
+
       for (int l = 0; l < maxLevels; ++l) {
         IntVector rlo = regionLo[l];
         IntVector rhi = regionHi[l];
@@ -432,7 +412,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
 #endif
 
       const unsigned int numCells =
-	(hi.x() - lo.x()) * (hi.y() - lo.y()) * (hi.z() - lo.z());
+        (hi.x() - lo.x()) * (hi.y() - lo.y()) * (hi.z() - lo.z());
 
       // Another tuning parameter.  It is very useful for flexibility
       // and big performance gains in production runs.  This supports
@@ -443,7 +423,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
       // so we have 28 slots to fill.  We can fill it with 28 blocks,
       // or 28 kernels, or a combo of 14 kernels with 2 blocks each,
       // etc.
-      
+
       // For production runs, testing indicates multiple kernels is
       // the most efficient, with 4 to 8 kenrels per patch being
       // optimal and only 1 block.  It is efficient because 1) smaller
@@ -463,7 +443,7 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
       // 2) If 1 block 4 kernels are used, then 16*4 = 64 kernels do a
       // nice job of filling the GPUs SMs.  When one SM is done, it
       // can pick up another ready to compute kernel.
-      
+
       // 3) If 4 blocks per kernel is used, results aren't so good.
       // Kernels can't complete until all blocks are done.  Initally
       // only only 7 kernels would run (7 kernels * 4 blocks per
@@ -473,20 +453,20 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
       // The block approach should be avoided, but if future GPUs have
       // many SMXs but allow few overlapping kernels then blocks are
       // really our next best option.
-      
+
       // Final note, in order to split up a patch into multiple
       // kernels and get nice overlapping, each kernel needs to be
       // launched with a different stream.  Otherwise if one single
       // stream tried to do:
-      
+
       // H2D copy -> kernel -> H2D copy -> kernel, etc., then the GPU
       // is horrible at trying to find overlaps.  (However, if all
       // kernel launches occurred from only one CPU thread, then the
       // GPU can find overlaps.)
- 
+
       int numBlocks = 1;
       //The number of streams defines how many kernels per patch we run
-      int numKernels = dtask->getTask()->maxStreamsPerTask();   
+      int numKernels = dtask->getTask()->maxStreamsPerTask();
 
       dim3 dimBlock(numThreadsPerGPUBlock, 1, 1);
       dim3 dimGrid(numBlocks, 1, 1);
@@ -508,93 +488,72 @@ void Ray::rayTraceDataOnionGPU( DetailedTask* dtask,
                                          levelP,
                                          fineLevel_ROI_Lo,
                                          fineLevel_ROI_Hi,
-                                         // ARS - FIX ME
-                                         (cudaStream_t*) dtask->getCudaStreamForThisTask(i),
+                                         stream,
                                          RT_flags,
                                          timeStep,
-                                         abskg_gdw,
-                                         sigmaT4_gdw,
-                                         celltype_gdw,
-                                         static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
-                                         static_cast<GPUDataWarehouse*>(newTaskGpuDW));
+                                         abskg_gdw, sigmaT4_gdw, celltype_gdw,
+                                         oldTaskGpuDW, newTaskGpuDW);
 
       }
     }  //end patch loop
-
-#endif // end #if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
-  }  //end GPU task code
 }
 
 //______________________________________________________________________
 // Explicit template instantiations
-template
-void Ray::rayTraceGPU< float > ( DetailedTask* dtask,
-                                 CallBackEvent,
-                                 const ProcessorGroup*,
-                                 const PatchSubset*,
-                                 const MaterialSubset*,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-				 void* oldTaskGpuDW,
-				 void* newTaskGpuDW,
-                                 void* stream,
-                                 int deviceID,
-                                 bool modifies_divQ,
+/*
+template< typename ExecSpace, typename MemSpace >
+void Ray::rayTraceGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
+                               (const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                OnDemandDataWarehouse* old_dw,
+                                OnDemandDataWarehouse* new_dw,
+                                UintahParams& uintahParams,
+                                ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
+                                int timeStep,
+                                bool modifies_divQ,
+                                Task::WhichDW which_abskg_dw,
+                                Task::WhichDW which_sigmaT4_dw,
+                                Task::WhichDW which_celltype_dw);
+
+template< typename ExecSpace, typename MemSpace >
+void Ray::rayTraceGPU< double, ExecSpace, MemSpace >
+                                (const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 OnDemandDataWarehouse* old_dw,
+                                 OnDemandDataWarehouse* new_dw,
+                                 UintahParams& uintahParams,
+                                 ExecutionObject<ExecSpace, MemSpace>& execObj,
                                  int timeStep,
-                                 Task::WhichDW,
-                                 Task::WhichDW,
-                                 Task::WhichDW);
+                                 bool modifies_divQ,
+                                 Task::WhichDW which_abskg_dw,
+                                 Task::WhichDW which_sigmaT4_dw,
+                                 Task::WhichDW which_celltype_dw);
 
-template
-void Ray::rayTraceGPU< double > ( DetailedTask* dtask,
-                                  CallBackEvent,
-                                  const ProcessorGroup*,
-                                  const PatchSubset*,
-                                  const MaterialSubset*,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw,
-                                  void* oldTaskGpuDW,
-                                  void* newTaskGpuDW,
-                                  void* stream,
-                                  int deviceID,
-                                  bool modifies_divQ,
-                                  int timeStep,
-                                  Task::WhichDW,
-                                  Task::WhichDW,
-                                  Task::WhichDW);
-
-template
-void Ray::rayTraceDataOnionGPU< float > ( DetailedTask* dtask,
-                                          CallBackEvent,
-                                          const ProcessorGroup*,
-                                          const PatchSubset*,
+template< typename ExecSpace, typename MemSpace >
+void Ray::rayTraceDataOnionGPU< float, ExecSpace, MemSpace >
+                                        ( const PatchSubset*,
                                           const MaterialSubset*,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
-                                          void* oldTaskGpuDW,
-                                          void* newTaskGpuDW,
-                                          void* stream,
-                                          int deviceID,
-                                          bool modifies_divQ,
+                                          OnDemandDataWarehouse* old_dw,
+                                          OnDemandDataWarehouse* new_dw,
+                                          UintahParams& uintahParams,
+                                          ExecutionObject<ExecSpace, MemSpace>& execObj,
                                           int timeStep,
+                                          bool modifies_divQ,
                                           Task::WhichDW,
                                           Task::WhichDW,
                                           Task::WhichDW);
 
-template
-void Ray::rayTraceDataOnionGPU< double > ( DetailedTask* dtask,
-                                           CallBackEvent,
-                                           const ProcessorGroup*,
-                                           const PatchSubset*,
+template< typename ExecSpace, typename MemSpace >
+void Ray::rayTraceDataOnionGPU< double, ExecSpace, MemSpace >
+                                         ( const PatchSubset*,
                                            const MaterialSubset*,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw,
-                                           void* oldTaskGpuDW,
-                                           void* newTaskGpuDW,
-                                           void* stream,
-                                           int deviceID,
-                                           bool modifies_divQ,
+                                           OnDemandDataWarehouse* old_dw,
+                                           OnDemandDataWarehouse* new_dw,
+                                           UintahParams& uintahParams,
+                                           ExecutionObject<ExecSpace, MemSpace>& execObj,
                                            int timeStep,
+                                           bool modifies_divQ,
                                            Task::WhichDW,
                                            Task::WhichDW,
                                            Task::WhichDW);
+*/

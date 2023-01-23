@@ -142,7 +142,7 @@ Ray::~Ray()
 
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
-    
+
   if( d_radiometer) {
     delete d_radiometer;
   }
@@ -407,14 +407,14 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps,
     proc0cout << "______________________________________________________________________\n\n" << endl;
 
   } else {
-    
+
     if( chk_temp ){
       is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
     }
     if( chk_absk ){
       is_BC_specified(root_ps, d_abskgBC_tag,              mss);
     }
-    
+
     Vector periodic;
     ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
     ProblemSpecP level_ps = grid_ps->findBlock("Level");
@@ -443,41 +443,42 @@ Ray::sched_rayTrace( const LevelP& level,
 {
   // Get the application so to record stats.
   m_application = sched->getApplication();
-  
+
   string taskname = "Ray::rayTrace";
   Task *tsk = nullptr;
-  
+
   int L = level->getIndex();
   Task::WhichDW abskg_dw = get_abskg_whichDW( L, d_abskgLabel );
 
 #if defined(HAVE_CUDA)  // Only compiled when NOT built with Kokkos see sub.mk
   if (Parallel::usingDevice()) {          // G P U
+    taskname = "Ray::rayTraceGPU";
 
     // Pass the time step in which is used to generate what should be
-    // a unique seed. But it is not, see RayGPUKernel.cu. 
+    // a unique seed. But it is not, see RayGPUKernel.cu.
 
     // The reason a timestep is passed in is that Todd liked random
     // numbers that are in a sense repeatable.  But the same could be
     // accomplished with repeatable random numbers passed in.
 
     timeStep_vartype timeStepVar(0);
-    
+
     DataWarehouse* old_dw = sched->get_dw(0);
     DataWarehouse* new_dw = sched->get_dw(1);
-    
+
     if( old_dw && old_dw->exists( m_timeStepLabel ) ){
       old_dw->get( timeStepVar, m_timeStepLabel );
     }
     else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
       new_dw->get( timeStepVar, m_timeStepLabel );
     }
-    
+
     int timeStep = timeStepVar;
-    
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >, modifies_divQ, timeStep, abskg_dw, sigma_dw, celltype_dw );
+
+    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
+      tsk = scinew Task(taskname, this, &Ray::rayTraceGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceSpace >, timeStep, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >, modifies_divQ, timeStep, abskg_dw, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >, timeStep, modifies_divQ, abskg_dw, sigma_dw, celltype_dw);
     }
     tsk->usesDevice(true);
   } else {                                // C P U
@@ -527,7 +528,7 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, n_ghostCells );
   tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, n_ghostCells );
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, n_ghostCells );
-  
+
 
   if( modifies_divQ ) {
     tsk->modifies( d_divQLabel );
@@ -539,7 +540,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
   }
 
-#ifdef USE_TIMER 
+#ifdef USE_TIMER
   if( modifies_divQ ){
     tsk->modifies( d_PPTimerLabel );
   } else {
@@ -572,10 +573,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
 {
   const Level* level = getLevel(patches);
 
-#ifdef USE_TIMER 
+#ifdef USE_TIMER
     // No carry forward just reset the time to zero.
     PerPatch< double > ppTimer = 0;
-    
+
     for (int p=0; p<patches->size(); ++p) {
       const Patch* patch = patches->get(p);
       new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
@@ -608,8 +609,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,g_ray_dbg,"Doing Ray::rayTrace");
-    
-    
+
+
 //    if ( d_isSeedRandom == false ){     Disable until the code compares with nightly GS -Todd
 //      mTwister.seed(patch->getID());
 //    }
@@ -653,7 +654,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //  BULLETPROOFING
 //    if ( level->isNonCubic() ){
     if( false) {
-      
+
       IntVector l = abskg.getLowIndex();
       IntVector h = abskg.getHighIndex();
 
@@ -702,7 +703,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
         if (celltype[origin] != d_flowCell) {
           continue;
         }
- 
+
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
@@ -789,39 +790,39 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
-        
+
         // don't compute in intrusions and walls
         if( celltype[origin] != d_flowCell ){
           continue;
         }
-        
+
         if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
           randVector(rand_i, mTwister, origin);
         }
         double sumI = 0;
         Point CC_pos = level->getCellPosition(origin);
-        
+
         // ray loop
         for (int iRay=0; iRay < d_nDivQRays; iRay++){
-          
+
           Vector direction_vector;
           if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
             direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
           }else{                                              // Naive Monte-Carlo sampling
             direction_vector =findRayDirection(mTwister, origin, iRay );
           }
-          
+
           Vector rayOrigin;
           ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin);
-          
+
           updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
-          
+
         }  // Ray loop
-        
+
         //__________________________________
         //  Compute divQ
         divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
-        
+
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolq[origin] = 4.0 * M_PI * (sumI/d_nDivQRays) ;
         /*`==========TESTING==========*/
@@ -834,20 +835,20 @@ Ray::rayTrace( const ProcessorGroup* pg,
 /*===========TESTING==========`*/
       }  // end cell iterator
     }  // end of if(_solveDivQ)
-    
+
     timer.stop();
-    
+
 #ifdef ADD_PERFORMANCE_STATS
     // Add in the patch stat, recording for each patch.
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
     // For each stat recorded increment the count so to get a per patch value.
-    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
 #endif
-    
+
     if (patch->getGridIndex() == 0) {
       cout << endl
            << " RMCRT REPORT: Patch 0" << endl
@@ -858,7 +859,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
            << " steps per sec" << endl
            << endl;
     }
-#ifdef USE_TIMER    
+#ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, patch);
 #endif
@@ -880,7 +881,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 {
   // Get the application so to record stats.
   m_application = sched->getApplication();
-  
+
   int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
@@ -897,25 +898,31 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
 
+    // Pass the time step in which is used to generate what should be
+    // a unique seed. But it is not, see RayGPUKernel.cu.
+
+    // The reason a timestep is passed in is that Todd liked random
+    // numbers that are in a sense repeatable.  But the same could be
+    // accomplished with repeatable random numbers passed in.
+
     timeStep_vartype timeStepVar(0);
-    
+
     DataWarehouse* old_dw = sched->get_dw(0);
     DataWarehouse* new_dw = sched->get_dw(1);
-    
+
     if( old_dw && old_dw->exists( m_timeStepLabel ) ){
       old_dw->get( timeStepVar, m_timeStepLabel );
     }
     else if( new_dw && new_dw->exists( m_timeStepLabel ) ){
       new_dw->get( timeStepVar, m_timeStepLabel );
     }
-    
+
     int timeStep = timeStepVar;
-    
-    
+
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<double, UintahSpaces::GPU, UintahSpaces::DeviceSpace>, timeStep, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     } else {
-      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float>, modifies_divQ, timeStep, NotUsed, sigma_dw, celltype_dw);
+      tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float, UintahSpaces::GPU, UintahSpaces::DeviceSpace>, timeStep, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     }
     //Allow it to use up to 4 GPU streams per patch.
     tsk->usesDevice(true, 4);
@@ -936,7 +943,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   Ghost::GhostType         gac  = Ghost::AroundCells;
   Task::WhichDW        abskg_dw = get_abskg_whichDW(L_indx, d_abskgLabel);
-  
+
   // finest level:
   if ( d_ROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
     //__________________________________
@@ -1002,7 +1009,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->computes( d_radiationVolqLabel );
   }
 
-#ifdef USE_TIMER 
+#ifdef USE_TIMER
   if( modifies_divQ ){
     tsk->modifies( d_PPTimerLabel );
   } else {
@@ -1011,7 +1018,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   sched->overrideVariableBehavior(d_PPTimerLabel->getName(),
                                   false, false, true, true, true);
 #endif
-                                
+
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 }
 
@@ -1034,9 +1041,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   const Level* fineLevel = getLevel(finePatches);
 
-#ifdef USE_TIMER 
+#ifdef USE_TIMER
     // No carry forward just reset the time to zero.
-    PerPatch< double > ppTimer = 0;    
+    PerPatch< double > ppTimer = 0;
 
     for (int p=0; p<finePatches->size(); ++p) {
       const Patch* finePatch = finePatches->get(p);
@@ -1059,7 +1066,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   std::vector< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
- 
+
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
@@ -1070,7 +1077,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     if (level->hasFinerLevel() ) {                               // coarse level data
       DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-      
+
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
@@ -1091,7 +1098,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     int L = maxLevels - 1;
     DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-    
+
     const Patch* notUsed = 0;
     computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo,  regionHi);
@@ -1130,7 +1137,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
       int L = maxLevels - 1;
       DataWarehouse* abskg_dw = get_abskg_dw(L, d_abskgLabel, new_dw);
-      
+
       DOUT( g_ray_dbg, "    RT DataOnion: getting fine level data across L-" << L );
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi );
@@ -1264,12 +1271,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
         IntVector origin = *iter;
-        
+
         // don't compute in intrusions and walls
         if(cellType[my_L][origin] != d_flowCell ){
           continue;
         }
-        
+
         Point CC_pos = fineLevel->getCellPosition(origin);
 
         if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
@@ -1321,14 +1328,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //__________________________________
     //
     timer.stop();
-    
+
 #ifdef ADD_PERFORMANCE_STATS
     // Add in the patch stat, recording for each patch.
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime ] += timer().milliseconds();
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize ] += size;
     m_application->getApplicationStats()[ (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency ] += size / timer().seconds();
     // For each stat recorded increment the count so to get a per patch value.
-    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );    
+    m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchTime );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchSize );
     m_application->getApplicationStats().incrCount( (ApplicationInterface::ApplicationStatsEnum) RMCRTPatchEfficiency );
 #endif
@@ -1345,7 +1352,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
            << endl;
     }
 
-#ifdef USE_TIMER     
+#ifdef USE_TIMER
     PerPatch< double > ppTimer = timer().seconds();
     new_dw->put( ppTimer, d_PPTimerLabel, d_matl, finePatch );
 #endif
@@ -1594,8 +1601,8 @@ void Ray::rayLocation_cellFace( MTRand& mTwister,
 //______________________________________________________________________
 //
 bool
-Ray::has_a_boundary( const IntVector      & c,       
-                     constCCVariable<int> & celltype, 
+Ray::has_a_boundary( const IntVector      & c,
+                     constCCVariable<int> & celltype,
                      vector<int>     & boundaryFaces)
 {
 
@@ -1696,12 +1703,12 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_matlSet, RMCRTCommon::TG_RMCRT );
 
   // ______________________________________________________________________
-  
+
 #ifdef HAVE_VISIT
   static bool initialized = false;
 
   m_application = sched->getApplication();
-  
+
   // Running with VisIt so add in the variables that the user can
   // modify.
   if( m_application && m_application->getVisIt() && !initialized ) {
@@ -1731,7 +1738,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
     var.recompile  = false;
     var.modified   = false;
     m_application->getUPSVars().push_back( var );
-    
+
     initialized = true;
   }
 #endif
@@ -2131,10 +2138,10 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,g_ray_dbg,"Ray::sched_CoarsenAll");
-    
+
     int L = coarseLevel->getIndex();
     Task::WhichDW fineLevel_abskg_dw = get_abskg_whichDW( L+1, d_abskgLabel);
-    
+
     sched_Coarsen_Q(coarseLevel, sched, fineLevel_abskg_dw, modifies_abskg,     d_abskgLabel );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW,        modifies_sigmaT4,  d_sigmaT4Label );
   }
