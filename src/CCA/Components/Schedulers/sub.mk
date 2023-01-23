@@ -53,13 +53,11 @@ ifeq ($(HAVE_GPU),yes)
           $(SRCDIR)/GPUGridVariableGhosts.cc  \
           $(SRCDIR)/GPUMemoryPool.cc
 
-ifeq ($(HAVE_KOKKOS),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cc
-endif
-
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu
   DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
+else ifeq ($(HAVE_KOKKOS),yes)
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cc
 endif
 
 endif
