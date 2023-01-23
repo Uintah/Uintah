@@ -131,7 +131,7 @@ void
 DetailedTask::doit( const ProcessorGroup                      * pg
                   ,       std::vector<OnDemandDataWarehouseP> & oddws
                   ,       std::vector<DataWarehouseP>         & dws
-                  ,       CallBackEvent                         event /* = Task::CPU */
+                  ,       CallBackEvent                         event // = CallBackEvent::CPU
                   )
 {
   // Stop timing the task wait
