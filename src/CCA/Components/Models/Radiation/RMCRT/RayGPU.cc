@@ -64,7 +64,7 @@ void Ray::rayTraceGPU(const PatchSubset* patches,
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
     GPUDataWarehouse* newTaskGpuDW =
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
-    void* stream = uintahParams.getStream(0);
+    cudaStream_t* stream = static_cast<cudaStream_t*>(uintahParams.getStream(0));
 
     const Level* level = getLevel(patches);
 
@@ -246,7 +246,7 @@ void Ray::rayTraceDataOnionGPU( const PatchSubset* finePatches,
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
     GPUDataWarehouse* newTaskGpuDW =
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
-    void* stream = uintahParams.getStream(0);
+    cudaStream_t* stream = static_cast<cudaStream_t*>(uintahParams.getStream(0));
 
     //__________________________________
     // Bulletproofing   FIX ME
@@ -500,8 +500,8 @@ void Ray::rayTraceDataOnionGPU( const PatchSubset* finePatches,
 
 //______________________________________________________________________
 // Explicit template instantiations
-/*
-template< typename ExecSpace, typename MemSpace >
+
+template
 void Ray::rayTraceGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
                                (const PatchSubset* patches,
                                 const MaterialSubset* matls,
@@ -515,45 +515,44 @@ void Ray::rayTraceGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
                                 Task::WhichDW which_sigmaT4_dw,
                                 Task::WhichDW which_celltype_dw);
 
-template< typename ExecSpace, typename MemSpace >
-void Ray::rayTraceGPU< double, ExecSpace, MemSpace >
+template
+void Ray::rayTraceGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
                                 (const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  OnDemandDataWarehouse* old_dw,
                                  OnDemandDataWarehouse* new_dw,
                                  UintahParams& uintahParams,
-                                 ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                 ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
                                  int timeStep,
                                  bool modifies_divQ,
                                  Task::WhichDW which_abskg_dw,
                                  Task::WhichDW which_sigmaT4_dw,
                                  Task::WhichDW which_celltype_dw);
 
-template< typename ExecSpace, typename MemSpace >
-void Ray::rayTraceDataOnionGPU< float, ExecSpace, MemSpace >
+template
+void Ray::rayTraceDataOnionGPU< float, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
                                         ( const PatchSubset*,
                                           const MaterialSubset*,
                                           OnDemandDataWarehouse* old_dw,
                                           OnDemandDataWarehouse* new_dw,
                                           UintahParams& uintahParams,
-                                          ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                          ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
                                           int timeStep,
                                           bool modifies_divQ,
                                           Task::WhichDW,
                                           Task::WhichDW,
                                           Task::WhichDW);
 
-template< typename ExecSpace, typename MemSpace >
-void Ray::rayTraceDataOnionGPU< double, ExecSpace, MemSpace >
+template
+void Ray::rayTraceDataOnionGPU< double, UintahSpaces::GPU, UintahSpaces::DeviceSpace >
                                          ( const PatchSubset*,
                                            const MaterialSubset*,
                                            OnDemandDataWarehouse* old_dw,
                                            OnDemandDataWarehouse* new_dw,
                                            UintahParams& uintahParams,
-                                           ExecutionObject<ExecSpace, MemSpace>& execObj,
+                                           ExecutionObject<UintahSpaces::GPU, UintahSpaces::DeviceSpace>& execObj,
                                            int timeStep,
                                            bool modifies_divQ,
                                            Task::WhichDW,
                                            Task::WhichDW,
                                            Task::WhichDW);
-*/
