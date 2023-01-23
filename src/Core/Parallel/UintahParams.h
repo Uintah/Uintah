@@ -63,7 +63,15 @@ public:
   UintahParams& operator=(const UintahParams& obj) = delete;
   UintahParams& operator=(UintahParams&& obj) = delete;
 
-  void setTaskDWs(void * oldTaskGpuDW, void * newTaskGpuDW) {
+  void setDetailedTask(DetailedTask * dTask) {
+    this->dTask = dTask;
+  }
+
+  DetailedTask * getDetailedTask() const {
+    return this->dTask;
+  }
+
+  void setTaskGpuDWs(void * oldTaskGpuDW, void * newTaskGpuDW) {
     this->oldTaskGpuDW = oldTaskGpuDW;
     this->newTaskGpuDW = newTaskGpuDW;
   }
@@ -120,6 +128,7 @@ public:
   }
 
 private:
+  DetailedTask * dTask{nullptr};
 
   void * oldTaskGpuDW{nullptr};
   void * newTaskGpuDW{nullptr};

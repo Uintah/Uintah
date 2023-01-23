@@ -209,7 +209,8 @@ DetailedTask::doit( const ProcessorGroup                      * pg
 
       // Load up the uintahParams object with task data warehouses (if
       // they are needed)
-      uintahParams.setTaskDWs(device_oldtaskdw, device_newtaskdw);
+      uintahParams.setDetailedTask(this);
+      uintahParams.setTaskGpuDWs(device_oldtaskdw, device_newtaskdw);
 
       m_task->doit( m_patches, m_matls, dws, uintahParams );
    //}

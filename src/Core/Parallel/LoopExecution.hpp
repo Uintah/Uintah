@@ -126,9 +126,14 @@ namespace Kokkos {
 
 // Create some data types for non-Kokkos CPU runs.
 namespace UintahSpaces{
-  class CPU {};          // These are used for legacy Uintah tasks
-                         // (e.g. no Kokkos)
+  class CPU {};          // These are used for legacy Uintah CPU tasks
+                         // (e.g. no Cuda or Kokkos)
   class HostSpace {};    // And also to refer to any data in host
+                         // memory
+
+  class GPU {};          // These are used for legacy Uintah GPU (Cuda) tasks
+                         // (e.g. no Kokkos)
+  class DeviceSpace {};  // And also to refer to any data in device
                          // memory
 
 #if defined(HAVE_OPENMPTARGET)
