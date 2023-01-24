@@ -28,7 +28,6 @@
 #define UINTAH_CORE_GRID_VARIABLES_GPUGRIDVARIABLEBASE_H
 
 #include <Core/Grid/Variables/GPUVariable.h>
-#include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
 

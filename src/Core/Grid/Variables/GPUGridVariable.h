@@ -29,8 +29,6 @@
 
 #include <Core/Grid/Variables/GPUGridVariableBase.h>
 
-#include <sci_defs/cuda_defs.h>
-
 #include <cstdio>
 
 namespace Uintah {
