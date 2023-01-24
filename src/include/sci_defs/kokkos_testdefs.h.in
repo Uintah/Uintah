@@ -39,6 +39,11 @@
     #define USE_KOKKOS_VIEW
     #define USE_KOKKOS_INSTANCE
   #endif
+
+#if defined(KOKKOS_ENABLED_SYCL)
+using int3 = sycl::intt3
+#endif
+
 #endif
 
 /* 
