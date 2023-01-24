@@ -2278,12 +2278,15 @@ DetailedTask::prepareDeviceVars(std::vector<OnDemandDataWarehouseP> & m_dws)
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
                     m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                              whichGPU,
+                                              device_ptr, host_ptr,
+                                              it->second.m_varMemSize, GPUMemcpyHostToDevice);
 #else
                     m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                               whichGPU,
                                               device_ptr, host_ptr,
                                               it->second.m_varMemSize, cudaMemcpyHostToDevice);
+#endif
 #else
                     cudaStream_t* stream = this->getCudaStreamForThisTask(whichGPU);
                     // ARS cudaMemcpyAsync copy from host to device
@@ -2341,12 +2344,15 @@ DetailedTask::copyDelayedDeviceVars()
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
     m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                              devGridVarInfo.m_whichGPU,
+                              device_ptr, host_ptr,
+                              size, GPUMemcpyHostToDevice);
 #else
     m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                               devGridVarInfo.m_whichGPU,
                               device_ptr, host_ptr,
                               size, cudaMemcpyHostToDevice);
+#endif
 #else
     cudaStream_t* stream = this->getCudaStreamForThisTask(devGridVarInfo.m_whichGPU);
     // ARS cudaMemcpyAsync copy from host to device
@@ -3354,12 +3360,15 @@ DetailedTask::initiateD2HForHugeGhostCells(std::vector<OnDemandDataWarehouseP> &
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
                       m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                                deviceNum,
+                                                host_ptr, device_ptr,
+                                                host_bytes, GPUMemcpyDeviceToHost);
 #else
                       m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                                 deviceNum,
                                                 host_ptr, device_ptr,
                                                 host_bytes, cudaMemcpyDeviceToHost);
+#endif
 #else
                       cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
                       cudaError_t retVal;
@@ -4013,12 +4022,15 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                          deviceNum,
+                                          host_ptr, device_ptr,
+                                          host_bytes, GPUMemcpyDeviceToHost);
 #else
                 m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, cudaMemcpyDeviceToHost);
+#endif
 #else
                 cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
                 // ARS cudaMemcpyAsync copy from device to host
@@ -4079,13 +4091,15 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                          deviceNum,
+                                          host_ptr, device_ptr,
+                                          host_bytes, GPUMemcpyDeviceToHost);
 #else
                 m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, cudaMemcpyDeviceToHost);
-
+#endif
 #else
                 cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
                 // ARS cudaMemcpyAsync copy from device to host
@@ -4132,12 +4146,15 @@ DetailedTask::initiateD2H( const ProcessorGroup                * d_myworld,
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
                 m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                          deviceNum,
+                                          host_ptr, device_ptr,
+                                          host_bytes, GPUMemcpyDeviceToHost);
 #else
                 m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                           deviceNum,
                                           host_ptr, device_ptr,
                                           host_bytes, cudaMemcpyDeviceToHost);
+#endif
 #else
                 cudaStream_t* stream = this->getCudaStreamForThisTask(deviceNum);
                 // ARS cudaMemcpyAsync copy from device to host
@@ -4701,12 +4718,15 @@ DetailedTask::copyAllExtGpuDependenciesToHost(std::vector<OnDemandDataWarehouseP
 #ifdef TASK_MANAGES_EXECSPACE
 #ifdef USE_KOKKOS_INSTANCE
           m_task->doKokkosDeepCopy(reinterpret_cast<intptr_t>(this),
+                                    it->second.m_sourceDeviceNum,
+                                    host_ptr, device_ptr,
+                                    host_bytes, GPUMemcpyDeviceToHost);
 #else
           m_task->doCudaMemcpyAsync(reinterpret_cast<intptr_t>(this),
-#endif
                                     it->second.m_sourceDeviceNum,
                                     host_ptr, device_ptr,
                                     host_bytes, cudaMemcpyDeviceToHost);
+#endif
 #else
           cudaStream_t* stream = this->getCudaStreamForThisTask(it->second.m_sourceDeviceNum);
           // ARS cudaMemcpyAsync copy from host to device - replace with

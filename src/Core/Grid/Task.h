@@ -73,6 +73,11 @@ class OnDemandDataWarehouse;
 class ProcessorGroup;
 class Task;
 
+enum GPUMemcpyKind { GPUMemcpyUnknown      = 0,
+		     GPUMemcpyHostToDevice = 1,
+		     GPUMemcpyDeviceToHost = 2,
+};
+
 /**************************************
 
  CLASS
@@ -97,12 +102,6 @@ class Task;
 class Task {
 
 public: // class Task
-
-  enum GPUMemcpyKind {
-    GPUMemcpyUnknown      = 0,
-    GPUMemcpyHostToDevice = 1,
-    GPUMemcpyDeviceToHost = 2,
-  };
 
 protected: // class Task
 
@@ -2460,7 +2459,11 @@ private: // class Task
   // task has to keep track of the device and stream on a DetailedTask
   // basis. The DetailedTask's pointer address is used as the key.
   std::map<intptr_t, deviceNumSet>  m_deviceNums;
+#ifdef USE_KOKKOS_INSTANCE
+  // Instances are defined at the action level.
+#else
   std::map<intptr_t, cudaStreamMap> m_cudaStreams;
+#endif
 #endif
 #endif
 
