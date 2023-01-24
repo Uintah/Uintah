@@ -2176,11 +2176,6 @@ public: // class Task
   //////////
 #if defined(HAVE_GPU)
 #ifdef TASK_MANAGES_EXECSPACE
-  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
-  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
-
-  typedef std::set<unsigned int>       deviceNumSet;
-  typedef deviceNumSet::const_iterator deviceNumSetIter;
 
   // Device and Stream related calls
   void assignDevice(intptr_t dTask, unsigned int device);
@@ -2213,6 +2208,12 @@ public: // class Task
                                       const void* src, int srcDevice,
                                       size_t count );
 #else
+  typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
+  typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
+
+  typedef std::set<unsigned int>       deviceNumSet;
+  typedef deviceNumSet::const_iterator deviceNumSetIter;
+
   virtual void assignDevicesAndStreams(intptr_t dTask);
 
   virtual void assignDevicesAndStreams(intptr_t dTask, unsigned int deviceNum);
