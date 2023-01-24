@@ -924,8 +924,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     } else {
       tsk = scinew Task(taskname, this, &Ray::rayTraceDataOnionGPU<float, UintahSpaces::GPU, UintahSpaces::DeviceSpace>, timeStep, modifies_divQ, NotUsed, sigma_dw, celltype_dw);
     }
-    //Allow it to use up to 4 GPU streams per patch.
-    tsk->usesDevice(true, 4);
+    // Allow it to use up to 4 GPU streams per patch.
+    tsk->usesDevice(true, 1);  // ARS - FIX ME - Only one stream is allowed.
   } else {                                // C P U
 #endif
     taskname = "Ray::rayTrace_dataOnion";

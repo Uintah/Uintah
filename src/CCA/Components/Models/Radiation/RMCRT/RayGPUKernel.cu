@@ -106,7 +106,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 //  sigmaT4_gdw->print();
 
-  // ARS - FIX ME
   sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, level.index);
   cellType_gdw->getLevel( cellType,     "cellType", matl, level.index);
 
@@ -124,7 +123,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
     new_gdw->get( divQ,         "divQ",           patch.ID, matl );         // these should be allocateAndPut() calls
     new_gdw->get( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
     new_gdw->get( radiationVolQ,"radiationVolq",  patch.ID, matl );
-
 
     // Extra Cell Loop
     if ( (tidX >= patch.loEC.x) && (tidY >= patch.loEC.y) && (tidX < patch.hiEC.x) && (tidY < patch.hiEC.y) ) { // patch boundary check
@@ -431,7 +429,6 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
     if (d_levels[l].hasFinerLevel) {
-      // ARS - FIX ME
       if(RT_flags.usingFloats) {
         abskg_gdw->getLevel( abskg[l],  "abskgRMCRT", matl, l);
       } else {
@@ -450,7 +447,6 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
   //  ToDo:  replace get with getRegion() calls so
   //  so the halo can be > 0
   if ( RT_flags.whichROI_algo == patch_based ) {
-    // ARS - FIX ME
     if(RT_flags.usingFloats) {
       abskg_gdw->get(abskg[fineL],           "abskgRMCRT",    finePatch.ID, matl, fineL);
     } else {
@@ -469,7 +465,6 @@ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   //__________________________________
   //  fine level data for this patch
-  // ARS - FIX ME
   if( RT_flags.modifies_divQ ) {
     new_gdw->getModifiable( divQ_fine,         "divQ",           finePatch.ID, matl, fineL );
     new_gdw->getModifiable( boundFlux_fine,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
@@ -1740,8 +1735,7 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
                                     const GPUIntVector Lo,
                                     const GPUIntVector Hi)
 {
-  // ARS - FiX ME - Need GPUDataWarehouse::isThread0()
-#if 0 && SCI_ASSERTION_LEVEL > 0
+#if SCI_ASSERTION_LEVEL > 0
   if (isThread0()) {
     GPUIntVector varLo = Q.getLowIndex();
     GPUIntVector varHi = Q.getHighIndex();
@@ -1897,7 +1891,7 @@ __host__ void launchRayTraceDataOnionKernel( DetailedTask* dtask,
 
   //__________________________________
   // Copy levelParams array to constant memory on device
-  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbolAsync(d_levels, levelP, (maxLevels * sizeof(levelParams)),0, cudaMemcpyHostToDevice,*stream));
+  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbolAsync(d_levels, levelP, (maxLevels * sizeof(levelParams)), 0, cudaMemcpyHostToDevice, *stream));
 
   //_____________________________
   // Setup random number generator states on the device, 1 for each thread

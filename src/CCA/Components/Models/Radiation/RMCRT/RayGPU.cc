@@ -63,7 +63,7 @@ void Ray::rayTraceGPU(const PatchSubset* patches,
     GPUDataWarehouse* oldTaskGpuDW =
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
     GPUDataWarehouse* newTaskGpuDW =
-      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+      static_cast<GPUDataWarehouse*>(uintahParams.getNewTaskGpuDW());
     cudaStream_t* stream = static_cast<cudaStream_t*>(uintahParams.getStream(0));
 
     const Level* level = getLevel(patches);
@@ -245,7 +245,7 @@ void Ray::rayTraceDataOnionGPU( const PatchSubset* finePatches,
     GPUDataWarehouse* oldTaskGpuDW =
       static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
     GPUDataWarehouse* newTaskGpuDW =
-      static_cast<GPUDataWarehouse*>(uintahParams.getOldTaskGpuDW());
+      static_cast<GPUDataWarehouse*>(uintahParams.getNewTaskGpuDW());
     cudaStream_t* stream = static_cast<cudaStream_t*>(uintahParams.getStream(0));
 
     //__________________________________
