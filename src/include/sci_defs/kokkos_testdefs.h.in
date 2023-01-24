@@ -32,6 +32,9 @@
 @DEF_HAVE_KOKKOS_GPU@
 
 #if defined(HAVE_KOKKOS)
+
+#include <Kokkos_Macros.hpp>
+
   #if defined(HAVE_KOKKOS_GPU)
     #define TASK_MANAGES_EXECSPACE
     #define USE_KOKKOS_PARALLEL_FOR
@@ -40,7 +43,7 @@
     #define USE_KOKKOS_INSTANCE
   #endif
 
-#if defined(KOKKOS_ENABLED_SYCL)
+#if defined(KOKKOS_ENABLE_SYCL)
 using int3 = sycl::int3;
 #endif
 
