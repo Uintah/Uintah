@@ -41,7 +41,7 @@
   #endif
 
 #if defined(KOKKOS_ENABLED_SYCL)
-using int3 = sycl::int3
+using int3 = sycl::int3;
 #endif
 
 #endif
