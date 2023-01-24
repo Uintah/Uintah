@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
     // find a conservative estimate of how many cells make up the sphere radius
     int rc = static_cast<int>(rad[ns]/dx)+2;
     // determine the bounding box that contains the sphere
-    int bbx_min = max(0,ic-rc);
-    int bbx_max = min(res[0],ic+rc);
-    int bby_min = max(0,jc-rc);
-    int bby_max = min(res[1],jc+rc);
-    int bbz_min = max(0,kc-rc);
-    int bbz_max = min(res[2],kc+rc);
+    int bbx_min = std::max(0,ic-rc);
+    int bbx_max = std::min(res[0],ic+rc);
+    int bby_min = std::max(0,jc-rc);
+    int bby_max = std::min(res[1],jc+rc);
+    int bbz_min = std::max(0,kc-rc);
+    int bbz_max = std::min(res[2],kc+rc);
   
    // Loop over all voxels of the image to determine which are "inside" the sphere
    for(int i=bbx_min;i<bbx_max;i++){
