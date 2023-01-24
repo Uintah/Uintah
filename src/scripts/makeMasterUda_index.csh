@@ -34,6 +34,11 @@ if ( $status ) then
   exit
 endif
 
+if( ! -e $masterUda ) then
+  echo "ERROR: makeMasterUda.csh: can't find the directory (masterUda)"
+  echo " Create the directory and try again."
+  exit
+endif
 
 echo ""
 echo "---------------------------------------"
