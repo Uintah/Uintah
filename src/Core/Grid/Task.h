@@ -47,6 +47,9 @@
 
 #if defined(HAVE_GPU)
   #include <CCA/Components/Schedulers/GPUMemoryPool.h>
+  #ifdef TASK_MANAGES_EXECSPACE
+    #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+  #endif
 #endif
 
 #ifdef HAVE_KOKKOS
@@ -63,12 +66,6 @@ namespace {
 }
 
 namespace Uintah {
-
-#if defined(HAVE_GPU)
-  #ifdef TASK_MANAGES_EXECSPACE
-    class GPUDataWarehouse;
-  #endif
-#endif
 
 class Level;
 class DataWarehouse;
@@ -2176,6 +2173,8 @@ public: // class Task
   //////////
 #if defined(HAVE_GPU)
 #ifdef TASK_MANAGES_EXECSPACE
+  typedef std::set<unsigned int>       deviceNumSet;
+  typedef deviceNumSet::const_iterator deviceNumSetIter;
 
   // Device and Stream related calls
   void assignDevice(intptr_t dTask, unsigned int device);
@@ -2210,9 +2209,6 @@ public: // class Task
 #else
   typedef std::map<unsigned int, cudaStream_t*> cudaStreamMap;
   typedef cudaStreamMap::const_iterator         cudaStreamMapIter;
-
-  typedef std::set<unsigned int>       deviceNumSet;
-  typedef deviceNumSet::const_iterator deviceNumSetIter;
 
   virtual void assignDevicesAndStreams(intptr_t dTask);
 
