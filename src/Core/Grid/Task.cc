@@ -1469,7 +1469,7 @@ bool Task::checkAllKokkosInstancesDoneForThisTask(intptr_t dTask) const
 //
 void Task::doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
                              void* dst, void* src,
-                             size_t count, cudaMemcpyKind kind)
+                             size_t count, GPUMemcpyKind kind)
 {
   if (m_action)
     m_action->doKokkosDeepCopy(dTask, deviceNum, dst,src, count,

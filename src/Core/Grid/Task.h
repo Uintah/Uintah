@@ -2206,7 +2206,7 @@ public: // class Task
 
   virtual void doKokkosDeepCopy( intptr_t dTask, unsigned int deviceNum,
                                  void* dst, void* src,
-                                 size_t count, cudaMemcpyKind kind);
+                                 size_t count, GPUMemcpyKind kind);
 
   virtual void doKokkosMemcpyPeerAsync( intptr_t dTask, unsigned int deviceNum,
                                             void* dst, int dstDevice,
